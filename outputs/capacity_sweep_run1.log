@@ -1,0 +1,42 @@
+==============================================================================
+Trioron — Step-3 calibration: capacity sweep over latent dim
+==============================================================================
+Latents: [1, 2, 3, 4, 5, 8]   seeds: [0, 1, 2]
+Steps:   3000   batch/pair: 32   margin: 1.0
+
+  latent=1  seed=0  params= 433  plateau=0.2393  slope/step=-5.01e-06
+  latent=1  seed=1  params= 433  plateau=0.2298  slope/step=-1.50e-06
+  latent=1  seed=2  params= 433  plateau=0.2591  slope/step=-5.81e-06
+  latent=2  seed=0  params= 450  plateau=0.0634  slope/step=-1.00e-06
+  latent=2  seed=1  params= 450  plateau=0.0442  slope/step=-5.16e-06
+  latent=2  seed=2  params= 450  plateau=0.0566  slope/step=+1.13e-06
+  latent=3  seed=0  params= 467  plateau=0.0108  slope/step=-2.17e-06
+  latent=3  seed=1  params= 467  plateau=0.0070  slope/step=-1.48e-06
+  latent=3  seed=2  params= 467  plateau=0.0070  slope/step=-2.65e-06
+  latent=4  seed=0  params= 484  plateau=0.0010  slope/step=-5.98e-07
+  latent=4  seed=1  params= 484  plateau=0.0009  slope/step=-1.29e-06
+  latent=4  seed=2  params= 484  plateau=0.0007  slope/step=-2.41e-07
+  latent=5  seed=0  params= 501  plateau=0.0000  slope/step=-1.77e-07
+  latent=5  seed=1  params= 501  plateau=0.0003  slope/step=-4.31e-08
+  latent=5  seed=2  params= 501  plateau=0.0001  slope/step=-2.17e-07
+  latent=8  seed=0  params= 552  plateau=0.0000  slope/step=-9.97e-09
+  latent=8  seed=1  params= 552  plateau=0.0000  slope/step=-4.39e-09
+  latent=8  seed=2  params= 552  plateau=0.0000  slope/step=+5.39e-09
+
+==============================================================================
+Aggregate (mean ± std across seeds)
+==============================================================================
+  latent         plateau      slope/step
+       1    0.2427 ± 0.0122       -4.11e-06
+       2    0.0547 ± 0.0080       -1.68e-06
+       3    0.0083 ± 0.0018       -2.10e-06
+       4    0.0009 ± 0.0001       -7.08e-07
+       5    0.0002 ± 0.0001       -1.46e-07
+       8    0.0000 ± 0.0000       -2.99e-09
+
+Interpretation cues:
+  - plateau should fall monotonically with latent.
+  - slope/step << 0 means the plateau hasn't truly arrived;
+    that magnitude is a floor on step-4's ε_loss threshold.
+  - latent ≥ 5 should put plateau near zero (one dim per pair).
+  log: /home/marcrockhat/trioron-project/outputs/capacity_sweep.csv

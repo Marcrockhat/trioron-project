@@ -1,0 +1,33 @@
+================================================================
+Trioron — Step 2 verification: multi-layer continual learning
+================================================================
+Network: TrioronNetwork(8->16(relu) → 16->16(relu) → 16->4(linear))
+Parameters: 484
+
+Task A: X (256, 8) → Y (256, 4)
+Task B: X (256, 8) → Y (256, 4)
+
+--- Training on Task A ---
+    step    0: task_loss 2.1238
+    step  100: task_loss 0.3425
+    step  200: task_loss 0.2629
+    step  300: task_loss 0.2087
+Final task-A loss: 0.2051
+
+--- Estimating Fisher on Task A (post-convergence) ---
+Mean λ per layer: ['0.000118', '0.000211', '0.001212']
+
+--- Training on Task B (control: NO EWC) ---
+--- Training on Task B (experimental: WITH EWC) ---
+
+================================================================
+Results
+================================================================
+  Task-A loss after training A only:        0.2051
+  Task-A loss after B (NO EWC):             1.2638    [control]
+  Task-A loss after B (WITH EWC=2000):    0.6956    [experimental]
+
+  Task-B loss after B (NO EWC):             0.2984
+  Task-B loss after B (WITH EWC):           0.6224
+
+  PASS: EWC reduces task-A forgetting by 1.82x

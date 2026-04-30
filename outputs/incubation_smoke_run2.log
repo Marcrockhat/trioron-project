@@ -1,0 +1,55 @@
+========================================================================
+Trioron — Step 3 (hardened): capacity-starved contrastive curriculum
+========================================================================
+Network: TrioronNetwork(8->16(relu) → 16->16(relu) → 16->2(tanh))
+Parameters: 450
+Pairs:   ['hungry_stuffed', 'cold_hot', 'threat_safe', 'reachable_unreachable', 'owned_foreign']
+Latent:  2-D bounded by tanh   margin: 1.0
+Steps:   3000   batch/pair: 32   lr: 0.003
+
+    step     0: total 0.6804   hung=0.698  cold=0.640  thre=0.660  reac=0.718  owne=0.686
+    step   100: total 0.0718   hung=0.076  cold=0.039  thre=0.064  reac=0.107  owne=0.073
+    step   200: total 0.0819   hung=0.071  cold=0.035  thre=0.084  reac=0.151  owne=0.068
+    step   300: total 0.0953   hung=0.058  cold=0.009  thre=0.157  reac=0.171  owne=0.081
+    step   400: total 0.0449   hung=0.059  cold=0.005  thre=0.083  reac=0.075  owne=0.003
+    step   500: total 0.0647   hung=0.080  cold=0.003  thre=0.056  reac=0.143  owne=0.041
+    step   600: total 0.0562   hung=0.011  cold=0.013  thre=0.136  reac=0.120  owne=0.002
+    step   700: total 0.0772   hung=0.063  cold=0.056  thre=0.118  reac=0.150  owne=0.000
+    step   800: total 0.0593   hung=0.013  cold=0.033  thre=0.112  reac=0.138  owne=0.000
+    step   900: total 0.0724   hung=0.012  cold=0.053  thre=0.162  reac=0.121  owne=0.014
+    step  1000: total 0.0638   hung=0.035  cold=0.024  thre=0.139  reac=0.110  owne=0.012
+    step  1100: total 0.0505   hung=0.026  cold=0.048  thre=0.118  reac=0.059  owne=0.002
+    step  1200: total 0.0519   hung=0.008  cold=0.051  thre=0.104  reac=0.086  owne=0.011
+    step  1300: total 0.0660   hung=0.074  cold=0.037  thre=0.090  reac=0.118  owne=0.010
+    step  1400: total 0.0355   hung=0.012  cold=0.015  thre=0.058  reac=0.090  owne=0.002
+    step  1500: total 0.0326   hung=0.011  cold=0.021  thre=0.070  reac=0.055  owne=0.006
+    step  1600: total 0.0719   hung=0.029  cold=0.066  thre=0.056  reac=0.209  owne=0.000
+    step  1700: total 0.0658   hung=0.051  cold=0.068  thre=0.044  reac=0.150  owne=0.016
+    step  1800: total 0.0806   hung=0.041  cold=0.041  thre=0.124  reac=0.160  owne=0.036
+    step  1900: total 0.0541   hung=0.013  cold=0.038  thre=0.069  reac=0.149  owne=0.001
+    step  2000: total 0.0639   hung=0.047  cold=0.023  thre=0.072  reac=0.176  owne=0.001
+    step  2100: total 0.0523   hung=0.044  cold=0.035  thre=0.062  reac=0.098  owne=0.023
+    step  2200: total 0.0868   hung=0.036  cold=0.057  thre=0.092  reac=0.232  owne=0.017
+    step  2300: total 0.0714   hung=0.039  cold=0.040  thre=0.120  reac=0.145  owne=0.012
+    step  2400: total 0.0695   hung=0.020  cold=0.022  thre=0.105  reac=0.197  owne=0.004
+    step  2500: total 0.0566   hung=0.036  cold=0.050  thre=0.058  reac=0.107  owne=0.032
+    step  2600: total 0.0643   hung=0.011  cold=0.025  thre=0.124  reac=0.162  owne=0.000
+    step  2700: total 0.0552   hung=0.034  cold=0.040  thre=0.071  reac=0.105  owne=0.025
+    step  2800: total 0.0421   hung=0.033  cold=0.044  thre=0.048  reac=0.079  owne=0.006
+    step  2900: total 0.0833   hung=0.000  cold=0.062  thre=0.149  reac=0.171  owne=0.035
+    step  2999: total 0.0491   hung=0.059  cold=0.004  thre=0.112  reac=0.070  owne=0.000
+
+========================================================================
+Per-pair contrastive loss (margin=1.0; lower = better separation)
+========================================================================
+  pair                            initial      final          Δ
+  hungry_stuffed                   0.6747     0.0354    +0.6393
+  cold_hot                         0.7505     0.0261    +0.7245
+  threat_safe                      0.6638     0.0915    +0.5723
+  reachable_unreachable            0.7491     0.1160    +0.6330
+  owned_foreign                    0.6605     0.0058    +0.6547
+
+  Plateau (mean over last 300 steps): 0.0634
+  Expectation: nonzero (5 binary concepts in 2-D bounded latent cannot all reach margin=1).
+  PASS: all 5 pairs improved; plateau 0.0634 is non-trivial
+  log: /home/marcrockhat/trioron-project/outputs/incubation_smoke_loss.csv

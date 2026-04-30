@@ -1,0 +1,52 @@
+================================================================
+Trioron — Step 3 verification: contrastive curriculum
+================================================================
+Network: TrioronNetwork(8->16(relu) → 16->16(relu) → 16->8(linear))
+Parameters: 552
+Pairs: ['hungry_stuffed', 'cold_hot', 'threat_safe', 'reachable_unreachable', 'owned_foreign']
+Steps: 1500  batch: 32  margin: 1.0
+
+    step     0: pair=reachable_unreachable    loss 0.0606
+    step    50: pair=hungry_stuffed           loss 0.0017
+    step   100: pair=threat_safe              loss 0.0000
+    step   150: pair=cold_hot                 loss 0.0000
+    step   200: pair=reachable_unreachable    loss 0.0063
+    step   250: pair=owned_foreign            loss 0.0000
+    step   300: pair=threat_safe              loss 0.0000
+    step   350: pair=threat_safe              loss 0.0000
+    step   400: pair=hungry_stuffed           loss 0.0000
+    step   450: pair=hungry_stuffed           loss 0.0000
+    step   500: pair=reachable_unreachable    loss 0.0000
+    step   550: pair=reachable_unreachable    loss 0.0000
+    step   600: pair=threat_safe              loss 0.0000
+    step   650: pair=cold_hot                 loss 0.0000
+    step   700: pair=owned_foreign            loss 0.0000
+    step   750: pair=hungry_stuffed           loss 0.0000
+    step   800: pair=cold_hot                 loss 0.0000
+    step   850: pair=cold_hot                 loss 0.0000
+    step   900: pair=hungry_stuffed           loss 0.0000
+    step   950: pair=reachable_unreachable    loss 0.0000
+    step  1000: pair=cold_hot                 loss 0.0000
+    step  1050: pair=cold_hot                 loss 0.0000
+    step  1100: pair=owned_foreign            loss 0.0000
+    step  1150: pair=cold_hot                 loss 0.0000
+    step  1200: pair=reachable_unreachable    loss 0.0000
+    step  1250: pair=reachable_unreachable    loss 0.0000
+    step  1300: pair=cold_hot                 loss 0.0000
+    step  1350: pair=hungry_stuffed           loss 0.0000
+    step  1400: pair=threat_safe              loss 0.0000
+    step  1450: pair=hungry_stuffed           loss 0.0000
+    step  1499: pair=owned_foreign            loss 0.0000
+
+================================================================
+Per-pair contrastive loss (margin=1.0; lower = better separation)
+================================================================
+  pair                            initial      final          Δ
+  hungry_stuffed                   0.0916     0.0000    +0.0916
+  cold_hot                         0.0459     0.0000    +0.0459
+  threat_safe                      0.0351     0.0000    +0.0351
+  reachable_unreachable            0.0931     0.0000    +0.0931
+  owned_foreign                    0.0482     0.0000    +0.0482
+
+  PASS: all 5/5 pairs ≥50% loss reduction
+  log: /home/marcrockhat/trioron-project/outputs/incubation_smoke_loss.csv
