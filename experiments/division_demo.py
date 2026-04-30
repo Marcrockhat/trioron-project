@@ -44,6 +44,7 @@ from trioron.incubator import (
     contrastive_loss,
 )
 from trioron.triggers import GrowthTrigger, total_gradient_norm
+from trioron.ceilings import CeilingsController, REASON_OK
 
 
 N_STEPS = 12000
@@ -67,6 +68,13 @@ TRIGGER_G_MAX = 10.0
 T_STABILIZE = 400
 EWC_STRENGTH_STABILIZE = 50.0   # boosted during stabilization
 EWC_STRENGTH_NORMAL = 1.0       # light EWC after stabilization
+
+# Hard ceilings (§4.2 + §7). Orange-Pi-tier values: this demo runs on
+# WSL but uses the tighter target so the gate is exercised against the
+# constraints the proof-of-concept hardware will enforce. T_div_max=60s
+# is generous for a 400-step stabilization on a CPU; we expect ALLOW.
+M_MAX_BYTES = 2 * 1024 ** 3      # 2 GB
+T_DIV_MAX_SECONDS = 60.0
 
 
 def make_network(latent: int) -> TrioronNetwork:
@@ -135,12 +143,18 @@ def main() -> int:
         g_max=TRIGGER_G_MAX,
     )
 
+    ceilings = CeilingsController(
+        M_max_bytes=M_MAX_BYTES,
+        T_div_max_seconds=T_DIV_MAX_SECONDS,
+    )
+
     print("=" * 78)
-    print("Trioron — Step 5 verification: cellular division on first fire")
+    print("Trioron — Step 5+7 verification: cellular division with ceilings")
     print("=" * 78)
     print(f"Network:      {net}")
     print(f"Params:       {net.n_parameters()}")
     print(f"Trigger:      {trigger}")
+    print(f"Ceilings:     {ceilings}")
     print(f"T_stabilize:  {T_STABILIZE}    EWC boost: {EWC_STRENGTH_STABILIZE}")
     print()
 
@@ -176,81 +190,97 @@ def main() -> int:
             end_of_run_loss_window.append(loss.item())
 
         # ---- Division on first fire ----
-        if s.fire and division_step < 0:
-            division_step = step
+        # The `not ceilings.arrested` guard means once a preflight has
+        # denied (memory or time), this whole branch never re-enters —
+        # the trigger may keep firing but we do not retry.
+        if s.fire and division_step < 0 and not ceilings.arrested:
+            target_layer_idx = len(net.layers) - 1
+            decision = ceilings.preflight(net, target_layer_idx)
             print()
-            print(f"  *** FIRE at step {step}. Initiating cellular division. ***")
-            print(f"      pre-fire loss (last 1000 steps): "
-                  f"mean={sum(pre_division_loss_window[-1000:]) / max(1, len(pre_division_loss_window[-1000:])):.4f}")
-            print(f"      effective rank: {s.effective_rank:.3f} / {trigger.latent_dim}")
-            print(f"      grad norm:      {s.grad_norm:.3f}")
+            print(f"  *** FIRE at step {step}. Preflight: {decision}")
+            if not decision.allowed:
+                # §4.2 arrest. Don't grow; training continues with
+                # plasticity-only updates. Logging falls through normally.
+                print(f"      DIVISION DENIED — reason={decision.reason}. "
+                      f"Network is mature; continuing with weights-only updates.")
+            else:
+                print(f"  *** ALLOWED. Initiating cellular division. ***")
+                print(f"      pre-fire loss (last 1000 steps): "
+                      f"mean={sum(pre_division_loss_window[-1000:]) / max(1, len(pre_division_loss_window[-1000:])):.4f}")
+                print(f"      effective rank: {s.effective_rank:.3f} / {trigger.latent_dim}")
+                print(f"      grad norm:      {s.grad_norm:.3f}")
+                division_step = step
 
-            # 1. Estimate Fisher + anchor BEFORE division (so existing nodes
-            #    have non-zero λ and a snapshot to be pulled toward).
-            def _calibration_batches(n=20):
-                for _ in range(n):
-                    # Use full curriculum loss as the "task" for Fisher.
-                    a_list, b_list = [], []
+                # 1. Estimate Fisher + anchor BEFORE division (so existing nodes
+                #    have non-zero λ and a snapshot to be pulled toward).
+                def _calibration_batches(n=20):
+                    for _ in range(n):
+                        # Use full curriculum loss as the "task" for Fisher.
+                        a_list, b_list = [], []
+                        for name in PAIR_NAMES:
+                            a, b = cur.sample_pair(name, batch=BATCH)
+                            a_list.append(a)
+                            b_list.append(b)
+                        yield torch.cat(a_list, dim=0), torch.cat(b_list, dim=0)
+
+                def _fisher_loss(pred_concat, _y_unused):
+                    # pred_concat is the concatenated A-side latents from one
+                    # batch; for Fisher estimation we want the magnitude of
+                    # gradients under the curriculum loss. Re-run the per-pair
+                    # contrastive losses against fresh B samples.
+                    total = 0.0
+                    offset = 0
                     for name in PAIR_NAMES:
-                        a, b = cur.sample_pair(name, batch=BATCH)
-                        a_list.append(a)
-                        b_list.append(b)
-                    yield torch.cat(a_list, dim=0), torch.cat(b_list, dim=0)
+                        h_a_i = pred_concat[offset:offset + BATCH]
+                        _, b_i = cur.sample_pair(name, batch=BATCH)
+                        h_b_i = net(b_i)
+                        total = total + contrastive_loss(h_a_i, h_b_i, margin=MARGIN)
+                        offset += BATCH
+                    return total / len(PAIR_NAMES)
 
-            def _fisher_loss(pred_concat, _y_unused):
-                # pred_concat is the concatenated A-side latents from one
-                # batch; for Fisher estimation we want the magnitude of
-                # gradients under the curriculum loss. Re-run the per-pair
-                # contrastive losses against fresh B samples.
-                # We approximate with: contrastive loss vs a B sample.
-                total = 0.0
-                offset = 0
-                for name in PAIR_NAMES:
-                    h_a_i = pred_concat[offset:offset + BATCH]
-                    _, b_i = cur.sample_pair(name, batch=BATCH)
-                    h_b_i = net(b_i)
-                    total = total + contrastive_loss(h_a_i, h_b_i, margin=MARGIN)
-                    offset += BATCH
-                return total / len(PAIR_NAMES)
+                net.estimate_fisher(_calibration_batches(20), _fisher_loss, n_batches=20)
+                net.update_lambda_all()
+                net.anchor_all()
+                print(f"      Fisher/λ refreshed; anchor set. "
+                      f"mean λ per layer: "
+                      f"{[round(layer.lam.mean().item(), 5) for layer in net.layers]}")
 
-            net.estimate_fisher(_calibration_batches(20), _fisher_loss, n_batches=20)
-            net.update_lambda_all()
-            net.anchor_all()
-            print(f"      Fisher/λ refreshed; anchor set. "
-                  f"mean λ per layer: "
-                  f"{[round(layer.lam.mean().item(), 5) for layer in net.layers]}")
+                # 2. PCA of residuals → init vec for new node.
+                v = compute_growth_direction(net, cur, batch=128)
+                print(f"      growth direction ‖v‖={v.norm().item():.4f}  "
+                      f"first 5 components: {v[:5].tolist()}")
 
-            # 2. PCA of residuals → init vec for new node.
-            v = compute_growth_direction(net, cur, batch=128)
-            print(f"      growth direction ‖v‖={v.norm().item():.4f}  "
-                  f"first 5 components: {v[:5].tolist()}")
+                # 3. Cellular division.
+                new_idx = net.grow_layer(layer_idx=len(net.layers) - 1, init_vec=v)
+                print(f"      new node added at index {new_idx}; "
+                      f"latent dim now {net.layers[-1].n_nodes}")
 
-            # 3. Cellular division.
-            new_idx = net.grow_layer(layer_idx=len(net.layers) - 1, init_vec=v)
-            print(f"      new node added at index {new_idx}; "
-                  f"latent dim now {net.layers[-1].n_nodes}")
+                # 4. Trigger reset + bookkeeping.
+                trigger.set_latent_dim(net.layers[-1].n_nodes)
+                trigger.reset()
 
-            # 4. Trigger reset + bookkeeping.
-            trigger.set_latent_dim(net.layers[-1].n_nodes)
-            trigger.reset()
+                # 5. Optimizer rebuild — required after structural change.
+                opt = optim.Adam(net.parameters(), lr=LR)
 
-            # 5. Optimizer rebuild — required after structural change.
-            opt = optim.Adam(net.parameters(), lr=LR)
-
-            # 6. Begin stabilization phase.
-            ewc_strength = EWC_STRENGTH_STABILIZE
-            stabilize_remaining = T_STABILIZE
-            print(f"      stabilization phase: {T_STABILIZE} steps "
-                  f"with ewc_strength={EWC_STRENGTH_STABILIZE}")
-            print()
+                # 6. Begin stabilization phase + start the ceilings clock so
+                #    a future preflight can veto on T_div_max if we slip.
+                ewc_strength = EWC_STRENGTH_STABILIZE
+                stabilize_remaining = T_STABILIZE
+                ceilings.mark_stabilization_start()
+                print(f"      stabilization phase: {T_STABILIZE} steps "
+                      f"with ewc_strength={EWC_STRENGTH_STABILIZE}")
+                print()
 
         # Decay stabilization.
         if stabilize_remaining > 0:
             stabilize_remaining -= 1
             if stabilize_remaining == 0:
                 ewc_strength = EWC_STRENGTH_NORMAL
+                stab_seconds = ceilings.mark_stabilization_end()
                 print(f"  step {step}: stabilization phase ended; "
-                      f"ewc_strength → {EWC_STRENGTH_NORMAL}")
+                      f"ewc_strength → {EWC_STRENGTH_NORMAL}; "
+                      f"wall-clock {stab_seconds:.2f}s "
+                      f"(budget {ceilings.T_div_max_seconds:.0f}s)")
 
         log_rows.append([
             step, loss.item(), s.effective_rank, s.grad_norm,
@@ -290,6 +320,11 @@ def main() -> int:
     print(f"  Pre-division loss (last 1000): {pre_mean:.4f}")
     print(f"  Post-division loss (next 1000): {post_mean:.4f}")
     print(f"  End-of-run loss (last 1000):   {end_mean:.4f}")
+    print(f"  Ceilings:                      {ceilings}")
+    if ceilings.last_stab_seconds is not None:
+        print(f"  Stabilization wall-clock:      "
+              f"{ceilings.last_stab_seconds:.2f}s / "
+              f"{ceilings.T_div_max_seconds:.0f}s budget")
     print()
     print("  Calibration sweep predictions (from outputs/capacity_sweep.csv):")
     print("    latent=2 plateau ≈ 0.055      latent=3 plateau ≈ 0.008")
