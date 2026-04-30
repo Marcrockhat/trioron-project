@@ -351,6 +351,55 @@ def test_continual_learning_smoke() -> None:
     )
 
 
+def test_grow_input_shapes():
+    """grow_input adds an input column without changing n_nodes."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3, activation="relu")
+    layer.grow_input()
+    assert layer.fan_in == 5, f"fan_in {layer.fan_in}"
+    assert layer.W.shape == (3, 5), f"W shape {tuple(layer.W.shape)}"
+    assert layer.W_anchor.shape == (3, 5)
+    assert layer.fisher_W.shape == (3, 5)
+    # n_nodes / b / lam / u must be unchanged.
+    assert layer.n_nodes == 3
+    assert layer.b.shape == (3,)
+    assert layer.lam.shape == (3,)
+    assert layer.u.shape == (3,)
+
+
+def test_grow_input_zero_default():
+    """Default init is zeros — the new input contributes nothing initially."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3, activation="linear")
+    x_old = torch.randn(2, 4)
+    y_old = layer(x_old)
+    layer.grow_input()
+    x_new = torch.cat([x_old, torch.randn(2, 1)], dim=1)
+    y_new = layer(x_new)
+    # Output should be identical because the new column is zeros.
+    assert torch.allclose(y_old, y_new), "default zero col must not change output"
+
+
+def test_grow_input_with_init_col():
+    """Custom init_col is placed in the last column of W."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3, activation="relu")
+    init = torch.tensor([0.1, 0.2, 0.3])
+    layer.grow_input(init_col=init)
+    assert torch.allclose(layer.W[:, -1], init), f"new col {layer.W[:, -1]}"
+
+
+def test_grow_input_then_grow_node_consistent():
+    """grow_input then grow_node leaves everything self-consistent."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3, activation="relu")
+    layer.grow_input()        # fan_in: 4 → 5
+    layer.grow_node()         # n_nodes: 3 → 4
+    assert layer.W.shape == (4, 5)
+    assert layer.b.shape == (4,)
+    assert layer.lam.shape == (4,)
+    assert layer.u.shape == (4,)
+    x = torch.randn(2, 5)
+    y = layer(x)
+    assert y.shape == (2, 4)
+
+
 # --------------------------------------------------------------------------- #
 # Main                                                                        #
 # --------------------------------------------------------------------------- #
@@ -376,6 +425,10 @@ def main() -> int:
         ("grow_node_shapes",                 test_grow_node_shapes),
         ("grow_node_with_init_vec",          test_grow_node_with_init_vec),
         ("grow_node_fully_plastic",          test_grow_node_fully_plastic),
+        ("grow_input_shapes",                test_grow_input_shapes),
+        ("grow_input_zero_default",          test_grow_input_zero_default),
+        ("grow_input_with_init_col",         test_grow_input_with_init_col),
+        ("grow_input_then_grow_node",        test_grow_input_then_grow_node_consistent),
         ("prune_node_shapes",                test_prune_node_shapes),
         ("prune_node_removes_correct_row",   test_prune_node_removes_correct_row),
         ("prune_last_node_raises",           test_prune_last_node_raises),

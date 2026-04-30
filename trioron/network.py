@@ -4,17 +4,13 @@ Implements the multi-layer composition of TrioronLayer, with the
 continual-learning aggregations (Fisher estimation, λ refresh, anchoring,
 EWC penalty) lifted to whole-network operations.
 
-This is the architecture used in §8 step 2 of the blueprint to verify EWC
-works at network scale, not just per-layer.
-
-Note on growth: TrioronLayer.grow_node only resizes that layer's output
-dimension. Coordinated cross-layer growth (where adding a node in layer i
-also adds an input column to layer i+1) is implemented in step 5 of the
-build plan, not here.
+Used in §8 step 2 to verify EWC works at network scale and in §8 step 5
+for coordinated cellular division (grow_layer): when a node is added to
+layer i, the corresponding input column is added to layer i+1.
 """
 
 from __future__ import annotations
-from typing import Callable, Iterable, Sequence, Tuple, List
+from typing import Callable, Iterable, Optional, Sequence, Tuple, List
 
 import torch
 import torch.nn as nn
@@ -136,6 +132,53 @@ class TrioronNetwork(nn.Module):
         finally:
             for layer, d in zip(self.layers, saved):
                 layer.fisher_decay = d
+
+    # ----- structural plasticity (§8 step 5: cellular division) -----
+
+    def grow_layer(
+        self,
+        layer_idx: int,
+        init_vec: Optional[torch.Tensor] = None,
+        peer_init_for_next: Optional[torch.Tensor] = None,
+    ) -> int:
+        """Coordinated cellular division: add one node to `layer_idx` and,
+        if a downstream layer exists, extend its fan_in by 1 to accept the
+        new input.
+
+        Per blueprint §4.1:
+          - The new node's incoming weight `w` ← init_vec (PCA of residuals
+            in the caller's task; zero/random fallback if init_vec is None).
+          - λ_new = 0 (fully plastic — handled by TrioronLayer.grow_node).
+          - u_new = 0 (neutral start — same).
+          - The next layer's NEW INPUT COLUMN ← peer_init_for_next, which
+            should be utility-weighted across the next layer's existing
+            nodes (§4.1.4: "connect it to all nodes whose u is currently
+            elevated"). If None, zeros — the network learns by gradient.
+
+        Returns the new node index in `layer_idx`.
+
+        Caveat: any optimizer holding references to this network's
+        parameters MUST be rebuilt after this call.
+        """
+        if not (0 <= layer_idx < len(self.layers)):
+            raise IndexError(
+                f"layer_idx {layer_idx} out of range [0, {len(self.layers)})"
+            )
+        target = self.layers[layer_idx]
+        new_idx = target.grow_node(init_vec=init_vec)
+
+        # Cross-layer coordination: extend next layer's fan_in by 1.
+        if layer_idx + 1 < len(self.layers):
+            next_layer = self.layers[layer_idx + 1]
+            if peer_init_for_next is not None:
+                if peer_init_for_next.shape != (next_layer.n_nodes,):
+                    raise ValueError(
+                        f"peer_init_for_next shape {tuple(peer_init_for_next.shape)} "
+                        f"!= (next_layer.n_nodes={next_layer.n_nodes},)"
+                    )
+            next_layer.grow_input(init_col=peer_init_for_next)
+
+        return new_idx
 
     # ----- introspection -----
 

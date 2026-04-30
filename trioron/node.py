@@ -211,6 +211,39 @@ class TrioronLayer(nn.Module):
 
         return self.n_nodes - 1
 
+    def grow_input(self, init_col: Optional[torch.Tensor] = None) -> None:
+        """Extend fan_in by 1, adding a new column to W. Used for cross-layer
+        growth: when the previous layer adds a node, this layer must accept
+        the extra input.
+
+        init_col: optional length-n_nodes tensor for the new column. If None,
+            zeros — the new input contributes nothing initially, and the
+            network learns to use it via gradient descent.
+
+        Per blueprint §4.1.4 ("Connecting it to all nodes whose `u` is currently
+        elevated"), callers can pass a utility-weighted column to bias toward
+        high-relevance peers.
+
+        Same optimizer-rebuild caveat as grow_node: the W Parameter object
+        is replaced.
+        """
+        device = self.W.device
+        with torch.no_grad():
+            if init_col is None:
+                new_col = torch.zeros(self.n_nodes, 1, device=device)
+            else:
+                new_col = init_col.detach().to(device).reshape(self.n_nodes, 1)
+            new_W = torch.cat([self.W.data, new_col], dim=1)
+            new_W_anchor = torch.cat([self.W_anchor, new_col.clone()], dim=1)
+            new_fisher_W = torch.cat(
+                [self.fisher_W, torch.zeros(self.n_nodes, 1, device=device)], dim=1
+            )
+
+        self.fan_in += 1
+        self._replace_parameter("W", new_W)
+        self._replace_buffer("W_anchor", new_W_anchor)
+        self._replace_buffer("fisher_W", new_fisher_W)
+
     def prune_node(self, idx: int) -> None:
         """Remove the node at index `idx`. Same optimizer rebuild caveat as grow_node."""
         if not (0 <= idx < self.n_nodes):

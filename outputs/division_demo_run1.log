@@ -1,0 +1,95 @@
+==============================================================================
+Trioron — Step 5 verification: cellular division on first fire
+==============================================================================
+Network:      TrioronNetwork(8->16(relu) → 16->16(relu) → 16->2(tanh))
+Params:       450
+Trigger:      GrowthTrigger(d=2, W=1000, ε_loss=0.001, ε_rank=0.1, g∈[0.0001, 10.0])
+T_stabilize:  400    EWC boost: 50.0
+
+  step     0 [pre-fire ] loss 0.6820  rank 1.368/2  L=0 R=0 G=0 fire=0  [warmup]
+  step   200 [pre-fire ] loss 0.0868  rank 1.997/2  L=0 R=0 G=0 fire=0  [warmup]
+  step   400 [pre-fire ] loss 0.0702  rank 2.000/2  L=0 R=0 G=0 fire=0  [warmup]
+  step   600 [pre-fire ] loss 0.0614  rank 1.983/2  L=0 R=0 G=0 fire=0  [warmup]
+  step   800 [pre-fire ] loss 0.0577  rank 1.952/2  L=0 R=0 G=0 fire=0  [warmup]
+  step  1000 [pre-fire ] loss 0.0794  rank 1.984/2  L=0 R=0 G=0 fire=0  [warmup]
+  step  1200 [pre-fire ] loss 0.0729  rank 1.991/2  L=0 R=0 G=0 fire=0  [warmup]
+  step  1400 [pre-fire ] loss 0.0735  rank 1.991/2  L=0 R=0 G=0 fire=0  [warmup]
+  step  1600 [pre-fire ] loss 0.0596  rank 1.998/2  L=0 R=0 G=0 fire=0  [warmup]
+  step  1800 [pre-fire ] loss 0.0750  rank 1.989/2  L=0 R=0 G=0 fire=0  [warmup]
+  step  2000 [pre-fire ] loss 0.0603  rank 1.997/2  L=0 R=1 G=1 fire=0
+  step  2200 [pre-fire ] loss 0.0616  rank 1.968/2  L=0 R=1 G=1 fire=0
+  step  2400 [pre-fire ] loss 0.0692  rank 1.996/2  L=0 R=1 G=1 fire=0
+
+  *** FIRE at step 2590. Initiating cellular division. ***
+      pre-fire loss (last 1000 steps): mean=0.0631
+      effective rank: 1.983 / 2
+      grad norm:      0.214
+      Fisher/λ refreshed; anchor set. mean λ per layer: [9e-05, 5e-05, 0.00038]
+      growth direction ‖v‖=1.0000  first 5 components: [-0.09616972506046295, 0.002961039775982499, 0.25386396050453186, 0.1640736609697342, 0.19770440459251404]
+      new node added at index 2; latent dim now 3
+      stabilization phase: 400 steps with ewc_strength=50.0
+
+  step  2600 [stabilize] loss 0.0488  rank 2.637/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  2800 [stabilize] loss 0.0373  rank 2.676/3  L=0 R=0 G=0 fire=0  [warmup]
+  step 2989: stabilization phase ended; ewc_strength → 1.0
+  step  3000 [post     ] loss 0.0244  rank 2.643/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  3200 [post     ] loss 0.0192  rank 2.770/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  3400 [post     ] loss 0.0364  rank 2.711/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  3600 [post     ] loss 0.0100  rank 2.592/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  3800 [post     ] loss 0.0313  rank 2.753/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  4000 [post     ] loss 0.0383  rank 2.717/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  4200 [post     ] loss 0.0211  rank 2.703/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  4400 [post     ] loss 0.0144  rank 2.700/3  L=0 R=0 G=0 fire=0  [warmup]
+  step  4600 [post     ] loss 0.0163  rank 2.772/3  L=0 R=0 G=1 fire=0
+  step  4800 [post     ] loss 0.0075  rank 2.791/3  L=0 R=0 G=1 fire=0
+  step  5000 [post     ] loss 0.0136  rank 2.698/3  L=0 R=0 G=1 fire=0
+  step  5200 [post     ] loss 0.0078  rank 2.696/3  L=0 R=0 G=1 fire=0
+  step  5400 [post     ] loss 0.0122  rank 2.732/3  L=0 R=0 G=1 fire=0
+  step  5600 [post     ] loss 0.0175  rank 2.727/3  L=0 R=0 G=1 fire=0
+  step  5800 [post     ] loss 0.0058  rank 2.655/3  L=0 R=0 G=1 fire=0
+  step  6000 [post     ] loss 0.0160  rank 2.934/3  L=0 R=0 G=1 fire=0
+  step  6200 [post     ] loss 0.0093  rank 2.918/3  L=0 R=0 G=1 fire=0
+  step  6400 [post     ] loss 0.0031  rank 2.981/3  L=0 R=0 G=1 fire=0
+  step  6600 [post     ] loss 0.0028  rank 2.777/3  L=0 R=0 G=1 fire=0
+  step  6800 [post     ] loss 0.0038  rank 2.842/3  L=0 R=0 G=1 fire=0
+  step  7000 [post     ] loss 0.0033  rank 2.841/3  L=0 R=1 G=1 fire=0
+  step  7200 [post     ] loss 0.0041  rank 2.971/3  L=0 R=1 G=1 fire=0
+  step  7400 [post     ] loss 0.0095  rank 2.831/3  L=0 R=0 G=1 fire=0
+  step  7600 [post     ] loss 0.0138  rank 2.832/3  L=0 R=0 G=1 fire=0
+  step  7800 [post     ] loss 0.0056  rank 2.955/3  L=0 R=0 G=1 fire=0
+  step  8000 [post     ] loss 0.0037  rank 2.941/3  L=0 R=0 G=1 fire=0
+  step  8200 [post     ] loss 0.0014  rank 2.964/3  L=1 R=0 G=1 fire=0
+  step  8400 [post     ] loss 0.0065  rank 2.909/3  L=1 R=0 G=1 fire=0
+  step  8600 [post     ] loss 0.0024  rank 2.906/3  L=1 R=0 G=1 fire=0
+  step  8800 [post     ] loss 0.0020  rank 2.917/3  L=1 R=0 G=1 fire=0
+  step  9000 [post     ] loss 0.0041  rank 2.940/3  L=1 R=0 G=1 fire=0
+  step  9200 [post     ] loss 0.0049  rank 2.903/3  L=1 R=0 G=1 fire=0
+  step  9400 [post     ] loss 0.0063  rank 2.878/3  L=1 R=0 G=1 fire=0
+  step  9600 [post     ] loss 0.0048  rank 2.922/3  L=1 R=0 G=1 fire=0
+  step  9800 [post     ] loss 0.0025  rank 2.890/3  L=1 R=0 G=1 fire=0
+  step 10000 [post     ] loss 0.0026  rank 2.883/3  L=1 R=0 G=1 fire=0
+  step 10200 [post     ] loss 0.0013  rank 2.889/3  L=1 R=0 G=1 fire=0
+  step 10400 [post     ] loss 0.0109  rank 2.984/3  L=1 R=0 G=1 fire=0
+  step 10600 [post     ] loss 0.0039  rank 2.966/3  L=1 R=0 G=1 fire=0
+  step 10800 [post     ] loss 0.0024  rank 2.907/3  L=1 R=1 G=1 fire=1
+  step 11000 [post     ] loss 0.0060  rank 2.965/3  L=1 R=1 G=1 fire=1
+  step 11200 [post     ] loss 0.0093  rank 2.828/3  L=1 R=1 G=1 fire=1
+  step 11400 [post     ] loss 0.0065  rank 2.849/3  L=1 R=1 G=1 fire=1
+  step 11600 [post     ] loss 0.0045  rank 2.975/3  L=1 R=1 G=1 fire=1
+  step 11800 [post     ] loss 0.0036  rank 2.887/3  L=1 R=1 G=1 fire=1
+  step 11999 [post     ] loss 0.0018  rank 2.810/3  L=1 R=1 G=1 fire=1
+
+==============================================================================
+Division summary
+==============================================================================
+  Division step:                 2590
+  Latent dim before/after:       2 → 3
+  Pre-division loss (last 1000): 0.0631
+  Post-division loss (next 1000): 0.0309
+  End-of-run loss (last 1000):   0.0039
+
+  Calibration sweep predictions (from outputs/capacity_sweep.csv):
+    latent=2 plateau ≈ 0.055      latent=3 plateau ≈ 0.008
+
+  PASS: end-of-run loss 0.0039 is substantially below the latent=2 plateau (0.055) — division added real capacity.
+  log: /home/marcrockhat/trioron-project/outputs/division_demo_log.csv

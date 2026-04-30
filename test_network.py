@@ -172,6 +172,101 @@ def test_gradient_flows_through_full_stack():
         assert (layer.W.grad.abs() > 0).any(), f"layer {i} W grad is all zero"
 
 
+def test_grow_layer_last_layer_no_cross_update():
+    """Growing the last layer increases its output dim; nothing else changes."""
+    net = TrioronNetwork([(4, 8, "relu"), (8, 2, "tanh")])
+    pre = [layer.n_nodes for layer in net.layers]
+    new_idx = net.grow_layer(layer_idx=1)
+    assert new_idx == 2, f"new idx {new_idx}"
+    assert net.layers[0].n_nodes == pre[0], "first layer should be untouched"
+    assert net.layers[1].n_nodes == pre[1] + 1
+    # Forward still works.
+    x = torch.randn(3, 4)
+    y = net(x)
+    assert y.shape == (3, 3)
+
+
+def test_grow_layer_middle_layer_propagates_to_next():
+    """Growing layer i extends layer i+1's fan_in by 1."""
+    net = TrioronNetwork(
+        [(4, 8, "relu"), (8, 8, "relu"), (8, 2, "linear")]
+    )
+    fan_in_before = net.layers[2].fan_in
+    n_nodes_before = [layer.n_nodes for layer in net.layers]
+    net.grow_layer(layer_idx=1)
+    # Middle layer's output grows.
+    assert net.layers[1].n_nodes == n_nodes_before[1] + 1
+    # Last layer's input grows to match.
+    assert net.layers[2].fan_in == fan_in_before + 1
+    # First layer untouched.
+    assert net.layers[0].n_nodes == n_nodes_before[0]
+    # End-to-end forward still works.
+    x = torch.randn(3, 4)
+    y = net(x)
+    assert y.shape == (3, 2)
+
+
+def test_grow_layer_zero_peer_init_preserves_output():
+    """With peer_init_for_next defaulting to zeros, the network's output on
+    inputs that don't excite the new node should be unchanged from before."""
+    torch.manual_seed(0)
+    net = TrioronNetwork(
+        [(4, 8, "relu"), (8, 8, "relu"), (8, 2, "linear")]
+    )
+    x = torch.randn(5, 4)
+    with torch.no_grad():
+        y_before = net(x).clone()
+    # Grow with init_vec = zeros so the new node also outputs zero
+    # (relu(0)=0 for any zero pre-activation).
+    init = torch.zeros(net.layers[1].fan_in)
+    net.grow_layer(layer_idx=1, init_vec=init)
+    with torch.no_grad():
+        y_after = net(x)
+    assert torch.allclose(y_before, y_after, atol=1e-6), (
+        f"output diverged: max diff {(y_before - y_after).abs().max().item()}"
+    )
+
+
+def test_grow_layer_invalid_idx_raises():
+    net = TrioronNetwork([(4, 8, "relu"), (8, 2, "linear")])
+    try:
+        net.grow_layer(layer_idx=5)
+    except IndexError:
+        return
+    raise AssertionError("expected IndexError for out-of-range layer_idx")
+
+
+def test_grow_layer_peer_init_shape_check():
+    net = TrioronNetwork(
+        [(4, 8, "relu"), (8, 8, "relu"), (8, 2, "linear")]
+    )
+    bad = torch.zeros(99)  # next layer has 2 nodes, not 99
+    try:
+        net.grow_layer(layer_idx=1, peer_init_for_next=bad)
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError on peer_init shape mismatch")
+
+
+def test_grow_layer_optimizer_can_be_rebuilt():
+    """After grow_layer, a fresh Adam over net.parameters() takes a real step."""
+    import torch.optim as optim
+    net = TrioronNetwork([(4, 8, "relu"), (8, 2, "tanh")])
+    net.grow_layer(layer_idx=1)
+    opt = optim.Adam(net.parameters(), lr=1e-2)
+    x = torch.randn(8, 4)
+    y_target = torch.randn(8, 3)
+    pred = net(x)
+    loss = (pred - y_target).pow(2).mean()
+    opt.zero_grad()
+    loss.backward()
+    # Snapshot a parameter, step, confirm it changed.
+    w0 = net.layers[1].W.detach().clone()
+    opt.step()
+    w1 = net.layers[1].W.detach()
+    assert not torch.allclose(w0, w1), "optimizer step should have moved W"
+
+
 # --------------------------------------------------------------------------- #
 
 
@@ -192,6 +287,12 @@ def main():
         ("state_dict_roundtrip",              test_state_dict_roundtrip),
         ("n_nodes_per_layer",                 test_n_nodes_per_layer),
         ("gradient_flows_through_full_stack", test_gradient_flows_through_full_stack),
+        ("grow_layer_last_layer",             test_grow_layer_last_layer_no_cross_update),
+        ("grow_layer_middle_layer",           test_grow_layer_middle_layer_propagates_to_next),
+        ("grow_layer_zero_peer_preserves",    test_grow_layer_zero_peer_init_preserves_output),
+        ("grow_layer_invalid_idx_raises",     test_grow_layer_invalid_idx_raises),
+        ("grow_layer_peer_init_shape_check",  test_grow_layer_peer_init_shape_check),
+        ("grow_layer_optimizer_rebuild",      test_grow_layer_optimizer_can_be_rebuilt),
     ]
 
     for name, fn in tests:

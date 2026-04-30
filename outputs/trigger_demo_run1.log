@@ -1,0 +1,66 @@
+==============================================================================
+Trioron — Step 4 verification: growth trigger on capacity-bound run
+==============================================================================
+Network:  TrioronNetwork(8->16(relu) → 16->16(relu) → 16->2(tanh))
+Params:   450
+Trigger:  GrowthTrigger(d=2, W=1000, ε_loss=0.001, ε_rank=0.1, g∈[0.0001, 10.0])
+Steps:    8000   batch/pair: 32
+
+  step     0  loss 0.6820  rank 1.368  gnorm 0.624  L=0 R=0 G=0 → fire=0  [warmup]
+  step   200  loss 0.0868  rank 1.997  gnorm 0.133  L=0 R=0 G=0 → fire=0  [warmup]
+  step   400  loss 0.0702  rank 2.000  gnorm 0.123  L=0 R=0 G=0 → fire=0  [warmup]
+  step   600  loss 0.0614  rank 1.983  gnorm 0.374  L=0 R=0 G=0 → fire=0  [warmup]
+  step   800  loss 0.0577  rank 1.952  gnorm 0.156  L=0 R=0 G=0 → fire=0  [warmup]
+  step  1000  loss 0.0794  rank 1.984  gnorm 0.199  L=0 R=0 G=0 → fire=0  [warmup]
+  step  1200  loss 0.0729  rank 1.991  gnorm 0.143  L=0 R=0 G=0 → fire=0  [warmup]
+  step  1400  loss 0.0735  rank 1.991  gnorm 0.230  L=0 R=0 G=0 → fire=0  [warmup]
+  step  1600  loss 0.0596  rank 1.998  gnorm 0.104  L=0 R=0 G=0 → fire=0  [warmup]
+  step  1800  loss 0.0750  rank 1.989  gnorm 0.255  L=0 R=0 G=0 → fire=0  [warmup]
+  step  2000  loss 0.0603  rank 1.997  gnorm 0.143  L=0 R=1 G=1 → fire=0
+  step  2200  loss 0.0616  rank 1.968  gnorm 0.282  L=0 R=1 G=1 → fire=0
+  step  2400  loss 0.0692  rank 1.996  gnorm 0.280  L=0 R=1 G=1 → fire=0
+  step  2600  loss 0.0506  rank 1.984  gnorm 0.155  L=1 R=1 G=1 → fire=1
+  step  2800  loss 0.0592  rank 1.974  gnorm 0.314  L=1 R=1 G=1 → fire=1
+  step  3000  loss 0.0587  rank 1.984  gnorm 0.189  L=1 R=1 G=1 → fire=1
+  step  3200  loss 0.0838  rank 2.000  gnorm 0.122  L=1 R=1 G=1 → fire=1
+  step  3400  loss 0.0723  rank 1.992  gnorm 0.278  L=1 R=1 G=1 → fire=1
+  step  3600  loss 0.0650  rank 1.963  gnorm 0.214  L=1 R=1 G=1 → fire=1
+  step  3800  loss 0.0528  rank 2.000  gnorm 0.222  L=1 R=1 G=1 → fire=1
+  step  4000  loss 0.0648  rank 1.982  gnorm 0.357  L=0 R=1 G=1 → fire=0
+  step  4200  loss 0.0483  rank 1.979  gnorm 0.124  L=0 R=1 G=1 → fire=0
+  step  4400  loss 0.0684  rank 1.978  gnorm 0.240  L=1 R=1 G=1 → fire=1
+  step  4600  loss 0.0505  rank 1.996  gnorm 0.289  L=1 R=1 G=1 → fire=1
+  step  4800  loss 0.0681  rank 1.997  gnorm 0.185  L=0 R=1 G=1 → fire=0
+  step  5000  loss 0.0602  rank 1.998  gnorm 0.280  L=0 R=1 G=1 → fire=0
+  step  5200  loss 0.0606  rank 1.984  gnorm 0.121  L=0 R=1 G=1 → fire=0
+  step  5400  loss 0.0684  rank 1.999  gnorm 0.124  L=0 R=1 G=1 → fire=0
+  step  5600  loss 0.0509  rank 1.996  gnorm 0.111  L=0 R=1 G=1 → fire=0
+  step  5800  loss 0.0702  rank 1.998  gnorm 0.325  L=0 R=1 G=1 → fire=0
+  step  6000  loss 0.0731  rank 1.994  gnorm 0.326  L=1 R=1 G=1 → fire=1
+  step  6200  loss 0.0844  rank 1.994  gnorm 0.186  L=1 R=1 G=1 → fire=1
+  step  6400  loss 0.0673  rank 1.998  gnorm 0.342  L=0 R=1 G=1 → fire=0
+  step  6600  loss 0.0457  rank 1.981  gnorm 0.128  L=0 R=1 G=1 → fire=0
+  step  6800  loss 0.0502  rank 1.997  gnorm 0.292  L=0 R=1 G=1 → fire=0
+  step  7000  loss 0.0590  rank 1.985  gnorm 0.126  L=0 R=1 G=1 → fire=0
+  step  7200  loss 0.0700  rank 1.975  gnorm 0.134  L=0 R=1 G=1 → fire=0
+  step  7400  loss 0.0511  rank 1.984  gnorm 0.125  L=0 R=1 G=1 → fire=0
+  step  7600  loss 0.0442  rank 1.994  gnorm 0.216  L=0 R=1 G=1 → fire=0
+  step  7800  loss 0.0510  rank 1.997  gnorm 0.196  L=0 R=1 G=1 → fire=0
+  step  7999  loss 0.0664  rank 1.994  gnorm 0.158  L=0 R=1 G=1 → fire=0
+
+==============================================================================
+First-True step per condition (−1 = never within run)
+==============================================================================
+  loss_plateau      : 2590
+  rank_saturated    : 1999
+  grad_stable       : 1999
+  fire              : 2590
+
+Total fires across run: 2196
+
+Steady-state (last 1000 steps, fraction of steps True):
+  loss_plateau:    0.000
+  rank_saturated:  1.000
+  grad_stable:     1.000
+  fire (conjunction): 0.000
+  log: /home/marcrockhat/trioron-project/outputs/trigger_demo_log.csv
