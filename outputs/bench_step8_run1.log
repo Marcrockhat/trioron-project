@@ -1,0 +1,380 @@
+==============================================================================
+Trioron — Step 8: moment-of-truth benchmark (§13 falsification gates)
+==============================================================================
+Curriculum:        sequential 5 tasks, one contrastive pair each
+Task ordering:     ['hungry_stuffed', 'cold_hot', 'threat_safe', 'reachable_unreachable', 'owned_foreign']
+Per-task budget:   3000 steps   (total 15000 steps per network)
+EWC schedule:      baseline 1000, stab boost 5000, stab steps 300
+Trigger:           W=800, eps_loss=0.001, eps_rank=0.1, g∈[0.0001, 10.0]
+Ceilings:          M_max=2GB, T_div_max=60s
+Fixed-sweep H ∈    [8, 12, 16, 20, 24]
+Eval:              fixed batches, seed=42, batch=512
+
+
+------------------------------------------------------------------------------
+[grown] curriculum start — arch [16, 16, 1]  params 433  growth=True pruning=True
+------------------------------------------------------------------------------
+
+[grown] === Task 1/5: hungry_stuffed ===
+  [grown] task 1/5 (hungry_stuffed) step     0  loss 0.6746  arch [16, 16, 1]  params 433
+  [grown] task 1/5 (hungry_stuffed) step   499  loss 0.0000  arch [16, 16, 1]  params 433
+  [grown] task 1/5 (hungry_stuffed) step   999  loss 0.0000  arch [16, 16, 1]  params 433
+  [grown] task 1/5 (hungry_stuffed) step  1499  loss 0.0000  arch [16, 16, 1]  params 433
+  [grown] task 1/5 (hungry_stuffed) step  1999  loss 0.0000  arch [16, 16, 1]  params 433
+  [grown] PRUNE @ task 1 step 2000: [(1, 10), (1, 9)] → arch [16, 14, 1]
+  [grown] task 1/5 (hungry_stuffed) step  2499  loss 0.0000  arch [16, 14, 1]  params 397
+  [grown] task 1/5 (hungry_stuffed) step  2999  loss 0.0000  arch [16, 14, 1]  params 397
+[grown] After task 1 eval: hung=0.000 cold=0.383 thre=0.384 reac=0.403 owne=0.396
+
+[grown] === Task 2/5: cold_hot ===
+  [grown] task 2/5 (cold_hot) step     0  loss 0.4603  arch [16, 14, 1]  params 397
+  [grown] task 2/5 (cold_hot) step   499  loss 0.3579  arch [16, 14, 1]  params 397
+  [grown] task 2/5 (cold_hot) step   999  loss 0.3089  arch [16, 14, 1]  params 397
+  [grown] PRUNE @ task 2 step 1000: [(1, 6), (1, 2)] → arch [16, 12, 1]
+  [grown] task 2/5 (cold_hot) step  1499  loss 0.3557  arch [16, 12, 1]  params 361
+  [grown] task 2/5 (cold_hot) step  1999  loss 0.3947  arch [16, 12, 1]  params 361
+  [grown] task 2/5 (cold_hot) step  2499  loss 0.4586  arch [16, 12, 1]  params 361
+  [grown] *** FIRE @ task 2 step 2568: ALLOW; latent 1→2, rank 1.00, grad 1.080
+  [grown] task 2/5 (cold_hot) step  2999  loss 0.1274  arch [16, 12, 2]  params 374
+[grown] After task 2 eval: hung=0.000 cold=0.085 thre=0.137 reac=0.181 owne=0.176
+
+[grown] === Task 3/5: threat_safe ===
+  [grown] task 3/5 (threat_safe) step     0  loss 0.2285  arch [16, 12, 2]  params 374
+  [grown] task 3/5 (threat_safe) step   499  loss 0.0535  arch [16, 12, 2]  params 374
+  [grown] task 3/5 (threat_safe) step   999  loss 0.1956  arch [16, 12, 2]  params 374
+  [grown] task 3/5 (threat_safe) step  1499  loss 0.1219  arch [16, 12, 2]  params 374
+  [grown] task 3/5 (threat_safe) step  1999  loss 0.1306  arch [16, 12, 2]  params 374
+  [grown] PRUNE @ task 3 step 2000: [(1, 2)] → arch [16, 11, 2]
+  [grown] task 3/5 (threat_safe) step  2499  loss 0.1539  arch [16, 11, 2]  params 355
+  [grown] task 3/5 (threat_safe) step  2999  loss 0.1724  arch [16, 11, 2]  params 355
+[grown] After task 3 eval: hung=0.000 cold=0.082 thre=0.144 reac=0.181 owne=0.178
+
+[grown] === Task 4/5: reachable_unreachable ===
+  [grown] task 4/5 (reachable_unreachable) step     0  loss 0.1498  arch [16, 11, 2]  params 355
+  [grown] task 4/5 (reachable_unreachable) step   499  loss 0.1965  arch [16, 11, 2]  params 355
+  [grown] task 4/5 (reachable_unreachable) step   999  loss 0.1257  arch [16, 11, 2]  params 355
+  [grown] task 4/5 (reachable_unreachable) step  1499  loss 0.1684  arch [16, 11, 2]  params 355
+  [grown] *** FIRE @ task 4 step 1732: ALLOW; latent 2→3, rank 1.91, grad 1.666
+  [grown] task 4/5 (reachable_unreachable) step  1999  loss 0.1222  arch [16, 11, 3]  params 367
+  [grown] task 4/5 (reachable_unreachable) step  2499  loss 0.1119  arch [16, 11, 3]  params 367
+  [grown] task 4/5 (reachable_unreachable) step  2999  loss 0.0367  arch [16, 11, 3]  params 367
+[grown] After task 4 eval: hung=0.000 cold=0.041 thre=0.065 reac=0.043 owne=0.067
+
+[grown] === Task 5/5: owned_foreign ===
+  [grown] task 5/5 (owned_foreign) step     0  loss 0.0375  arch [16, 11, 3]  params 367
+  [grown] task 5/5 (owned_foreign) step   499  loss 0.0677  arch [16, 11, 3]  params 367
+  [grown] task 5/5 (owned_foreign) step   999  loss 0.0211  arch [16, 11, 3]  params 367
+  [grown] task 5/5 (owned_foreign) step  1499  loss 0.0715  arch [16, 11, 3]  params 367
+  [grown] *** FIRE @ task 5 step 1599: ALLOW; latent 3→4, rank 2.94, grad 1.340
+  [grown] task 5/5 (owned_foreign) step  1999  loss 0.0006  arch [16, 11, 4]  params 379
+  [grown] task 5/5 (owned_foreign) step  2499  loss 0.0000  arch [16, 11, 4]  params 379
+  [grown] task 5/5 (owned_foreign) step  2999  loss 0.0000  arch [16, 11, 4]  params 379
+[grown] After task 5 eval: hung=0.000 cold=0.018 thre=0.029 reac=0.022 owne=0.003
+
+------------------------------------------------------------------------------
+[fixed_H8] curriculum start — arch [8, 8, 4]  params 180  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H8] === Task 1/5: hungry_stuffed ===
+  [fixed_H8] task 1/5 (hungry_stuffed) step     0  loss 0.5062  arch [8, 8, 4]  params 180
+  [fixed_H8] task 1/5 (hungry_stuffed) step   499  loss 0.0000  arch [8, 8, 4]  params 180
+  [fixed_H8] task 1/5 (hungry_stuffed) step   999  loss 0.0000  arch [8, 8, 4]  params 180
+  [fixed_H8] task 1/5 (hungry_stuffed) step  1499  loss 0.0000  arch [8, 8, 4]  params 180
+  [fixed_H8] task 1/5 (hungry_stuffed) step  1999  loss 0.0000  arch [8, 8, 4]  params 180
+  [fixed_H8] task 1/5 (hungry_stuffed) step  2499  loss 0.0000  arch [8, 8, 4]  params 180
+  [fixed_H8] task 1/5 (hungry_stuffed) step  2999  loss 0.0000  arch [8, 8, 4]  params 180
+[fixed_H8] After task 1 eval: hung=0.000 cold=0.153 thre=0.125 reac=0.167 owne=0.090
+
+[fixed_H8] === Task 2/5: cold_hot ===
+  [fixed_H8] task 2/5 (cold_hot) step     0  loss 0.1566  arch [8, 8, 4]  params 180
+  [fixed_H8] task 2/5 (cold_hot) step   499  loss 0.2303  arch [8, 8, 4]  params 180
+  [fixed_H8] task 2/5 (cold_hot) step   999  loss 0.1736  arch [8, 8, 4]  params 180
+  [fixed_H8] task 2/5 (cold_hot) step  1499  loss 0.1781  arch [8, 8, 4]  params 180
+  [fixed_H8] task 2/5 (cold_hot) step  1999  loss 0.1028  arch [8, 8, 4]  params 180
+  [fixed_H8] task 2/5 (cold_hot) step  2499  loss 0.1587  arch [8, 8, 4]  params 180
+  [fixed_H8] task 2/5 (cold_hot) step  2999  loss 0.1804  arch [8, 8, 4]  params 180
+[fixed_H8] After task 2 eval: hung=0.000 cold=0.153 thre=0.125 reac=0.166 owne=0.090
+
+[fixed_H8] === Task 3/5: threat_safe ===
+  [fixed_H8] task 3/5 (threat_safe) step     0  loss 0.1663  arch [8, 8, 4]  params 180
+  [fixed_H8] task 3/5 (threat_safe) step   499  loss 0.1303  arch [8, 8, 4]  params 180
+  [fixed_H8] task 3/5 (threat_safe) step   999  loss 0.1540  arch [8, 8, 4]  params 180
+  [fixed_H8] task 3/5 (threat_safe) step  1499  loss 0.1409  arch [8, 8, 4]  params 180
+  [fixed_H8] task 3/5 (threat_safe) step  1999  loss 0.1708  arch [8, 8, 4]  params 180
+  [fixed_H8] task 3/5 (threat_safe) step  2499  loss 0.2060  arch [8, 8, 4]  params 180
+  [fixed_H8] task 3/5 (threat_safe) step  2999  loss 0.1424  arch [8, 8, 4]  params 180
+[fixed_H8] After task 3 eval: hung=0.000 cold=0.153 thre=0.125 reac=0.166 owne=0.090
+
+[fixed_H8] === Task 4/5: reachable_unreachable ===
+  [fixed_H8] task 4/5 (reachable_unreachable) step     0  loss 0.1902  arch [8, 8, 4]  params 180
+  [fixed_H8] task 4/5 (reachable_unreachable) step   499  loss 0.0968  arch [8, 8, 4]  params 180
+  [fixed_H8] task 4/5 (reachable_unreachable) step   999  loss 0.1108  arch [8, 8, 4]  params 180
+  [fixed_H8] task 4/5 (reachable_unreachable) step  1499  loss 0.1859  arch [8, 8, 4]  params 180
+  [fixed_H8] task 4/5 (reachable_unreachable) step  1999  loss 0.1369  arch [8, 8, 4]  params 180
+  [fixed_H8] task 4/5 (reachable_unreachable) step  2499  loss 0.1130  arch [8, 8, 4]  params 180
+  [fixed_H8] task 4/5 (reachable_unreachable) step  2999  loss 0.2484  arch [8, 8, 4]  params 180
+[fixed_H8] After task 4 eval: hung=0.000 cold=0.153 thre=0.125 reac=0.166 owne=0.089
+
+[fixed_H8] === Task 5/5: owned_foreign ===
+  [fixed_H8] task 5/5 (owned_foreign) step     0  loss 0.0751  arch [8, 8, 4]  params 180
+  [fixed_H8] task 5/5 (owned_foreign) step   499  loss 0.1157  arch [8, 8, 4]  params 180
+  [fixed_H8] task 5/5 (owned_foreign) step   999  loss 0.1444  arch [8, 8, 4]  params 180
+  [fixed_H8] task 5/5 (owned_foreign) step  1499  loss 0.1210  arch [8, 8, 4]  params 180
+  [fixed_H8] task 5/5 (owned_foreign) step  1999  loss 0.0725  arch [8, 8, 4]  params 180
+  [fixed_H8] task 5/5 (owned_foreign) step  2499  loss 0.0545  arch [8, 8, 4]  params 180
+  [fixed_H8] task 5/5 (owned_foreign) step  2999  loss 0.0870  arch [8, 8, 4]  params 180
+[fixed_H8] After task 5 eval: hung=0.000 cold=0.153 thre=0.125 reac=0.166 owne=0.090
+
+------------------------------------------------------------------------------
+[fixed_H12] curriculum start — arch [12, 12, 4]  params 316  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H12] === Task 1/5: hungry_stuffed ===
+  [fixed_H12] task 1/5 (hungry_stuffed) step     0  loss 0.6125  arch [12, 12, 4]  params 316
+  [fixed_H12] task 1/5 (hungry_stuffed) step   499  loss 0.0000  arch [12, 12, 4]  params 316
+  [fixed_H12] task 1/5 (hungry_stuffed) step   999  loss 0.0000  arch [12, 12, 4]  params 316
+  [fixed_H12] task 1/5 (hungry_stuffed) step  1499  loss 0.0000  arch [12, 12, 4]  params 316
+  [fixed_H12] task 1/5 (hungry_stuffed) step  1999  loss 0.0000  arch [12, 12, 4]  params 316
+  [fixed_H12] task 1/5 (hungry_stuffed) step  2499  loss 0.0000  arch [12, 12, 4]  params 316
+  [fixed_H12] task 1/5 (hungry_stuffed) step  2999  loss 0.0000  arch [12, 12, 4]  params 316
+[fixed_H12] After task 1 eval: hung=0.000 cold=0.095 thre=0.081 reac=0.122 owne=0.122
+
+[fixed_H12] === Task 2/5: cold_hot ===
+  [fixed_H12] task 2/5 (cold_hot) step     0  loss 0.1111  arch [12, 12, 4]  params 316
+  [fixed_H12] task 2/5 (cold_hot) step   499  loss 0.1161  arch [12, 12, 4]  params 316
+  [fixed_H12] task 2/5 (cold_hot) step   999  loss 0.1373  arch [12, 12, 4]  params 316
+  [fixed_H12] task 2/5 (cold_hot) step  1499  loss 0.1658  arch [12, 12, 4]  params 316
+  [fixed_H12] task 2/5 (cold_hot) step  1999  loss 0.1068  arch [12, 12, 4]  params 316
+  [fixed_H12] task 2/5 (cold_hot) step  2499  loss 0.0702  arch [12, 12, 4]  params 316
+  [fixed_H12] task 2/5 (cold_hot) step  2999  loss 0.0896  arch [12, 12, 4]  params 316
+[fixed_H12] After task 2 eval: hung=0.000 cold=0.095 thre=0.081 reac=0.122 owne=0.121
+
+[fixed_H12] === Task 3/5: threat_safe ===
+  [fixed_H12] task 3/5 (threat_safe) step     0  loss 0.0822  arch [12, 12, 4]  params 316
+  [fixed_H12] task 3/5 (threat_safe) step   499  loss 0.0766  arch [12, 12, 4]  params 316
+  [fixed_H12] task 3/5 (threat_safe) step   999  loss 0.1325  arch [12, 12, 4]  params 316
+  [fixed_H12] task 3/5 (threat_safe) step  1499  loss 0.1053  arch [12, 12, 4]  params 316
+  [fixed_H12] task 3/5 (threat_safe) step  1999  loss 0.1224  arch [12, 12, 4]  params 316
+  [fixed_H12] task 3/5 (threat_safe) step  2499  loss 0.0870  arch [12, 12, 4]  params 316
+  [fixed_H12] task 3/5 (threat_safe) step  2999  loss 0.1093  arch [12, 12, 4]  params 316
+[fixed_H12] After task 3 eval: hung=0.000 cold=0.095 thre=0.081 reac=0.122 owne=0.121
+
+[fixed_H12] === Task 4/5: reachable_unreachable ===
+  [fixed_H12] task 4/5 (reachable_unreachable) step     0  loss 0.0981  arch [12, 12, 4]  params 316
+  [fixed_H12] task 4/5 (reachable_unreachable) step   499  loss 0.0890  arch [12, 12, 4]  params 316
+  [fixed_H12] task 4/5 (reachable_unreachable) step   999  loss 0.1179  arch [12, 12, 4]  params 316
+  [fixed_H12] task 4/5 (reachable_unreachable) step  1499  loss 0.2208  arch [12, 12, 4]  params 316
+  [fixed_H12] task 4/5 (reachable_unreachable) step  1999  loss 0.1792  arch [12, 12, 4]  params 316
+  [fixed_H12] task 4/5 (reachable_unreachable) step  2499  loss 0.1205  arch [12, 12, 4]  params 316
+  [fixed_H12] task 4/5 (reachable_unreachable) step  2999  loss 0.1240  arch [12, 12, 4]  params 316
+[fixed_H12] After task 4 eval: hung=0.000 cold=0.095 thre=0.081 reac=0.122 owne=0.121
+
+[fixed_H12] === Task 5/5: owned_foreign ===
+  [fixed_H12] task 5/5 (owned_foreign) step     0  loss 0.1491  arch [12, 12, 4]  params 316
+  [fixed_H12] task 5/5 (owned_foreign) step   499  loss 0.1416  arch [12, 12, 4]  params 316
+  [fixed_H12] task 5/5 (owned_foreign) step   999  loss 0.0742  arch [12, 12, 4]  params 316
+  [fixed_H12] task 5/5 (owned_foreign) step  1499  loss 0.1370  arch [12, 12, 4]  params 316
+  [fixed_H12] task 5/5 (owned_foreign) step  1999  loss 0.0817  arch [12, 12, 4]  params 316
+  [fixed_H12] task 5/5 (owned_foreign) step  2499  loss 0.0786  arch [12, 12, 4]  params 316
+  [fixed_H12] task 5/5 (owned_foreign) step  2999  loss 0.0920  arch [12, 12, 4]  params 316
+[fixed_H12] After task 5 eval: hung=0.000 cold=0.095 thre=0.081 reac=0.122 owne=0.121
+
+------------------------------------------------------------------------------
+[fixed_H16] curriculum start — arch [16, 16, 4]  params 484  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H16] === Task 1/5: hungry_stuffed ===
+  [fixed_H16] task 1/5 (hungry_stuffed) step     0  loss 0.5133  arch [16, 16, 4]  params 484
+  [fixed_H16] task 1/5 (hungry_stuffed) step   499  loss 0.0000  arch [16, 16, 4]  params 484
+  [fixed_H16] task 1/5 (hungry_stuffed) step   999  loss 0.0000  arch [16, 16, 4]  params 484
+  [fixed_H16] task 1/5 (hungry_stuffed) step  1499  loss 0.0000  arch [16, 16, 4]  params 484
+  [fixed_H16] task 1/5 (hungry_stuffed) step  1999  loss 0.0000  arch [16, 16, 4]  params 484
+  [fixed_H16] task 1/5 (hungry_stuffed) step  2499  loss 0.0000  arch [16, 16, 4]  params 484
+  [fixed_H16] task 1/5 (hungry_stuffed) step  2999  loss 0.0000  arch [16, 16, 4]  params 484
+[fixed_H16] After task 1 eval: hung=0.000 cold=0.125 thre=0.137 reac=0.142 owne=0.076
+
+[fixed_H16] === Task 2/5: cold_hot ===
+  [fixed_H16] task 2/5 (cold_hot) step     0  loss 0.1497  arch [16, 16, 4]  params 484
+  [fixed_H16] task 2/5 (cold_hot) step   499  loss 0.1205  arch [16, 16, 4]  params 484
+  [fixed_H16] task 2/5 (cold_hot) step   999  loss 0.1126  arch [16, 16, 4]  params 484
+  [fixed_H16] task 2/5 (cold_hot) step  1499  loss 0.0810  arch [16, 16, 4]  params 484
+  [fixed_H16] task 2/5 (cold_hot) step  1999  loss 0.0815  arch [16, 16, 4]  params 484
+  [fixed_H16] task 2/5 (cold_hot) step  2499  loss 0.1101  arch [16, 16, 4]  params 484
+  [fixed_H16] task 2/5 (cold_hot) step  2999  loss 0.1022  arch [16, 16, 4]  params 484
+[fixed_H16] After task 2 eval: hung=0.000 cold=0.125 thre=0.137 reac=0.142 owne=0.076
+
+[fixed_H16] === Task 3/5: threat_safe ===
+  [fixed_H16] task 3/5 (threat_safe) step     0  loss 0.1418  arch [16, 16, 4]  params 484
+  [fixed_H16] task 3/5 (threat_safe) step   499  loss 0.1615  arch [16, 16, 4]  params 484
+  [fixed_H16] task 3/5 (threat_safe) step   999  loss 0.1244  arch [16, 16, 4]  params 484
+  [fixed_H16] task 3/5 (threat_safe) step  1499  loss 0.1335  arch [16, 16, 4]  params 484
+  [fixed_H16] task 3/5 (threat_safe) step  1999  loss 0.1495  arch [16, 16, 4]  params 484
+  [fixed_H16] task 3/5 (threat_safe) step  2499  loss 0.0848  arch [16, 16, 4]  params 484
+  [fixed_H16] task 3/5 (threat_safe) step  2999  loss 0.1252  arch [16, 16, 4]  params 484
+[fixed_H16] After task 3 eval: hung=0.000 cold=0.125 thre=0.136 reac=0.142 owne=0.075
+
+[fixed_H16] === Task 4/5: reachable_unreachable ===
+  [fixed_H16] task 4/5 (reachable_unreachable) step     0  loss 0.1918  arch [16, 16, 4]  params 484
+  [fixed_H16] task 4/5 (reachable_unreachable) step   499  loss 0.1630  arch [16, 16, 4]  params 484
+  [fixed_H16] task 4/5 (reachable_unreachable) step   999  loss 0.0970  arch [16, 16, 4]  params 484
+  [fixed_H16] task 4/5 (reachable_unreachable) step  1499  loss 0.0952  arch [16, 16, 4]  params 484
+  [fixed_H16] task 4/5 (reachable_unreachable) step  1999  loss 0.1848  arch [16, 16, 4]  params 484
+  [fixed_H16] task 4/5 (reachable_unreachable) step  2499  loss 0.1209  arch [16, 16, 4]  params 484
+  [fixed_H16] task 4/5 (reachable_unreachable) step  2999  loss 0.2035  arch [16, 16, 4]  params 484
+[fixed_H16] After task 4 eval: hung=0.000 cold=0.124 thre=0.136 reac=0.142 owne=0.074
+
+[fixed_H16] === Task 5/5: owned_foreign ===
+  [fixed_H16] task 5/5 (owned_foreign) step     0  loss 0.0896  arch [16, 16, 4]  params 484
+  [fixed_H16] task 5/5 (owned_foreign) step   499  loss 0.0828  arch [16, 16, 4]  params 484
+  [fixed_H16] task 5/5 (owned_foreign) step   999  loss 0.0525  arch [16, 16, 4]  params 484
+  [fixed_H16] task 5/5 (owned_foreign) step  1499  loss 0.0556  arch [16, 16, 4]  params 484
+  [fixed_H16] task 5/5 (owned_foreign) step  1999  loss 0.0963  arch [16, 16, 4]  params 484
+  [fixed_H16] task 5/5 (owned_foreign) step  2499  loss 0.0658  arch [16, 16, 4]  params 484
+  [fixed_H16] task 5/5 (owned_foreign) step  2999  loss 0.0682  arch [16, 16, 4]  params 484
+[fixed_H16] After task 5 eval: hung=0.000 cold=0.124 thre=0.136 reac=0.141 owne=0.074
+
+------------------------------------------------------------------------------
+[fixed_H20] curriculum start — arch [20, 20, 4]  params 684  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H20] === Task 1/5: hungry_stuffed ===
+  [fixed_H20] task 1/5 (hungry_stuffed) step     0  loss 0.5746  arch [20, 20, 4]  params 684
+  [fixed_H20] task 1/5 (hungry_stuffed) step   499  loss 0.0000  arch [20, 20, 4]  params 684
+  [fixed_H20] task 1/5 (hungry_stuffed) step   999  loss 0.0000  arch [20, 20, 4]  params 684
+  [fixed_H20] task 1/5 (hungry_stuffed) step  1499  loss 0.0000  arch [20, 20, 4]  params 684
+  [fixed_H20] task 1/5 (hungry_stuffed) step  1999  loss 0.0000  arch [20, 20, 4]  params 684
+  [fixed_H20] task 1/5 (hungry_stuffed) step  2499  loss 0.0000  arch [20, 20, 4]  params 684
+  [fixed_H20] task 1/5 (hungry_stuffed) step  2999  loss 0.0000  arch [20, 20, 4]  params 684
+[fixed_H20] After task 1 eval: hung=0.000 cold=0.116 thre=0.035 reac=0.105 owne=0.092
+
+[fixed_H20] === Task 2/5: cold_hot ===
+  [fixed_H20] task 2/5 (cold_hot) step     0  loss 0.1242  arch [20, 20, 4]  params 684
+  [fixed_H20] task 2/5 (cold_hot) step   499  loss 0.0735  arch [20, 20, 4]  params 684
+  [fixed_H20] task 2/5 (cold_hot) step   999  loss 0.1307  arch [20, 20, 4]  params 684
+  [fixed_H20] task 2/5 (cold_hot) step  1499  loss 0.0873  arch [20, 20, 4]  params 684
+  [fixed_H20] task 2/5 (cold_hot) step  1999  loss 0.0794  arch [20, 20, 4]  params 684
+  [fixed_H20] task 2/5 (cold_hot) step  2499  loss 0.0943  arch [20, 20, 4]  params 684
+  [fixed_H20] task 2/5 (cold_hot) step  2999  loss 0.1089  arch [20, 20, 4]  params 684
+[fixed_H20] After task 2 eval: hung=0.000 cold=0.115 thre=0.035 reac=0.104 owne=0.092
+
+[fixed_H20] === Task 3/5: threat_safe ===
+  [fixed_H20] task 3/5 (threat_safe) step     0  loss 0.0443  arch [20, 20, 4]  params 684
+  [fixed_H20] task 3/5 (threat_safe) step   499  loss 0.0514  arch [20, 20, 4]  params 684
+  [fixed_H20] task 3/5 (threat_safe) step   999  loss 0.0484  arch [20, 20, 4]  params 684
+  [fixed_H20] task 3/5 (threat_safe) step  1499  loss 0.0036  arch [20, 20, 4]  params 684
+  [fixed_H20] task 3/5 (threat_safe) step  1999  loss 0.0291  arch [20, 20, 4]  params 684
+  [fixed_H20] task 3/5 (threat_safe) step  2499  loss 0.0833  arch [20, 20, 4]  params 684
+  [fixed_H20] task 3/5 (threat_safe) step  2999  loss 0.0356  arch [20, 20, 4]  params 684
+[fixed_H20] After task 3 eval: hung=0.000 cold=0.115 thre=0.034 reac=0.104 owne=0.092
+
+[fixed_H20] === Task 4/5: reachable_unreachable ===
+  [fixed_H20] task 4/5 (reachable_unreachable) step     0  loss 0.1107  arch [20, 20, 4]  params 684
+  [fixed_H20] task 4/5 (reachable_unreachable) step   499  loss 0.0909  arch [20, 20, 4]  params 684
+  [fixed_H20] task 4/5 (reachable_unreachable) step   999  loss 0.0677  arch [20, 20, 4]  params 684
+  [fixed_H20] task 4/5 (reachable_unreachable) step  1499  loss 0.1235  arch [20, 20, 4]  params 684
+  [fixed_H20] task 4/5 (reachable_unreachable) step  1999  loss 0.1053  arch [20, 20, 4]  params 684
+  [fixed_H20] task 4/5 (reachable_unreachable) step  2499  loss 0.0684  arch [20, 20, 4]  params 684
+  [fixed_H20] task 4/5 (reachable_unreachable) step  2999  loss 0.0785  arch [20, 20, 4]  params 684
+[fixed_H20] After task 4 eval: hung=0.000 cold=0.115 thre=0.034 reac=0.104 owne=0.092
+
+[fixed_H20] === Task 5/5: owned_foreign ===
+  [fixed_H20] task 5/5 (owned_foreign) step     0  loss 0.0947  arch [20, 20, 4]  params 684
+  [fixed_H20] task 5/5 (owned_foreign) step   499  loss 0.0979  arch [20, 20, 4]  params 684
+  [fixed_H20] task 5/5 (owned_foreign) step   999  loss 0.0701  arch [20, 20, 4]  params 684
+  [fixed_H20] task 5/5 (owned_foreign) step  1499  loss 0.0741  arch [20, 20, 4]  params 684
+  [fixed_H20] task 5/5 (owned_foreign) step  1999  loss 0.0722  arch [20, 20, 4]  params 684
+  [fixed_H20] task 5/5 (owned_foreign) step  2499  loss 0.0384  arch [20, 20, 4]  params 684
+  [fixed_H20] task 5/5 (owned_foreign) step  2999  loss 0.0460  arch [20, 20, 4]  params 684
+[fixed_H20] After task 5 eval: hung=0.000 cold=0.115 thre=0.034 reac=0.104 owne=0.091
+
+------------------------------------------------------------------------------
+[fixed_H24] curriculum start — arch [24, 24, 4]  params 916  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H24] === Task 1/5: hungry_stuffed ===
+  [fixed_H24] task 1/5 (hungry_stuffed) step     0  loss 0.3564  arch [24, 24, 4]  params 916
+  [fixed_H24] task 1/5 (hungry_stuffed) step   499  loss 0.0000  arch [24, 24, 4]  params 916
+  [fixed_H24] task 1/5 (hungry_stuffed) step   999  loss 0.0000  arch [24, 24, 4]  params 916
+  [fixed_H24] task 1/5 (hungry_stuffed) step  1499  loss 0.0000  arch [24, 24, 4]  params 916
+  [fixed_H24] task 1/5 (hungry_stuffed) step  1999  loss 0.0000  arch [24, 24, 4]  params 916
+  [fixed_H24] task 1/5 (hungry_stuffed) step  2499  loss 0.0000  arch [24, 24, 4]  params 916
+  [fixed_H24] task 1/5 (hungry_stuffed) step  2999  loss 0.0000  arch [24, 24, 4]  params 916
+[fixed_H24] After task 1 eval: hung=0.000 cold=0.112 thre=0.114 reac=0.154 owne=0.062
+
+[fixed_H24] === Task 2/5: cold_hot ===
+  [fixed_H24] task 2/5 (cold_hot) step     0  loss 0.0696  arch [24, 24, 4]  params 916
+  [fixed_H24] task 2/5 (cold_hot) step   499  loss 0.0716  arch [24, 24, 4]  params 916
+  [fixed_H24] task 2/5 (cold_hot) step   999  loss 0.1494  arch [24, 24, 4]  params 916
+  [fixed_H24] task 2/5 (cold_hot) step  1499  loss 0.1354  arch [24, 24, 4]  params 916
+  [fixed_H24] task 2/5 (cold_hot) step  1999  loss 0.0973  arch [24, 24, 4]  params 916
+  [fixed_H24] task 2/5 (cold_hot) step  2499  loss 0.0422  arch [24, 24, 4]  params 916
+  [fixed_H24] task 2/5 (cold_hot) step  2999  loss 0.1864  arch [24, 24, 4]  params 916
+[fixed_H24] After task 2 eval: hung=0.000 cold=0.112 thre=0.114 reac=0.154 owne=0.062
+
+[fixed_H24] === Task 3/5: threat_safe ===
+  [fixed_H24] task 3/5 (threat_safe) step     0  loss 0.1327  arch [24, 24, 4]  params 916
+  [fixed_H24] task 3/5 (threat_safe) step   499  loss 0.0961  arch [24, 24, 4]  params 916
+  [fixed_H24] task 3/5 (threat_safe) step   999  loss 0.0969  arch [24, 24, 4]  params 916
+  [fixed_H24] task 3/5 (threat_safe) step  1499  loss 0.0862  arch [24, 24, 4]  params 916
+  [fixed_H24] task 3/5 (threat_safe) step  1999  loss 0.0839  arch [24, 24, 4]  params 916
+  [fixed_H24] task 3/5 (threat_safe) step  2499  loss 0.1372  arch [24, 24, 4]  params 916
+  [fixed_H24] task 3/5 (threat_safe) step  2999  loss 0.1548  arch [24, 24, 4]  params 916
+[fixed_H24] After task 3 eval: hung=0.000 cold=0.111 thre=0.113 reac=0.153 owne=0.061
+
+[fixed_H24] === Task 4/5: reachable_unreachable ===
+  [fixed_H24] task 4/5 (reachable_unreachable) step     0  loss 0.1485  arch [24, 24, 4]  params 916
+  [fixed_H24] task 4/5 (reachable_unreachable) step   499  loss 0.1391  arch [24, 24, 4]  params 916
+  [fixed_H24] task 4/5 (reachable_unreachable) step   999  loss 0.1288  arch [24, 24, 4]  params 916
+  [fixed_H24] task 4/5 (reachable_unreachable) step  1499  loss 0.1496  arch [24, 24, 4]  params 916
+  [fixed_H24] task 4/5 (reachable_unreachable) step  1999  loss 0.0404  arch [24, 24, 4]  params 916
+  [fixed_H24] task 4/5 (reachable_unreachable) step  2499  loss 0.0938  arch [24, 24, 4]  params 916
+  [fixed_H24] task 4/5 (reachable_unreachable) step  2999  loss 0.1650  arch [24, 24, 4]  params 916
+[fixed_H24] After task 4 eval: hung=0.000 cold=0.111 thre=0.113 reac=0.152 owne=0.060
+
+[fixed_H24] === Task 5/5: owned_foreign ===
+  [fixed_H24] task 5/5 (owned_foreign) step     0  loss 0.0549  arch [24, 24, 4]  params 916
+  [fixed_H24] task 5/5 (owned_foreign) step   499  loss 0.0201  arch [24, 24, 4]  params 916
+  [fixed_H24] task 5/5 (owned_foreign) step   999  loss 0.0618  arch [24, 24, 4]  params 916
+  [fixed_H24] task 5/5 (owned_foreign) step  1499  loss 0.0876  arch [24, 24, 4]  params 916
+  [fixed_H24] task 5/5 (owned_foreign) step  1999  loss 0.0287  arch [24, 24, 4]  params 916
+  [fixed_H24] task 5/5 (owned_foreign) step  2499  loss 0.0520  arch [24, 24, 4]  params 916
+  [fixed_H24] task 5/5 (owned_foreign) step  2999  loss 0.0959  arch [24, 24, 4]  params 916
+[fixed_H24] After task 5 eval: hung=0.000 cold=0.110 thre=0.112 reac=0.151 owne=0.058
+
+==============================================================================
+Step 8 — Final Report
+==============================================================================
+
+Grown (grown):
+  arch:         (16, 16, 1) → (16, 11, 4)
+  params:       433 → 379
+  divisions:    3 allowed / 3 attempted
+  prunings:     5
+  pathology:    1365 steps (L+R but not G — §4 escape-valve indicator)
+  avg final loss (5 pairs):  0.0141
+  avg forgetting (4 pairs):  -0.0509
+  wall-clock:                64.2s
+  [grown] loss matrix M[i][j] = pair-j loss after task i:
+              hung    cold    thre    reac    owne
+    after T1:  0.000   0.383   0.384   0.403   0.396
+    after T2:  0.000   0.085   0.137   0.181   0.176
+    after T3:  0.000   0.082   0.144   0.181   0.178
+    after T4:  0.000   0.041   0.065   0.043   0.067
+    after T5:  0.000   0.018   0.029   0.022   0.003
+
+Fixed-MLP sweep:
+     H   params  avg_final  avg_forget   seconds
+     8      180     0.1066      0.0000      45.3
+    12      316     0.0837     -0.0001      45.9  *
+    16      484     0.0949     -0.0004      46.4
+    20      684     0.0690     -0.0001      46.1
+    24      916     0.0864     -0.0010      47.3
+  (* = closest in n_params to grown final = 379)
+
+§13 falsification gates:
+  (1) Grown matches param-matched fixed on continual benchmark: PASS  (grown 0.0141 vs matched 0.0837)
+  (2) Compute ≤ 2x fixed equivalent: PASS  (grown / matched = 1.40x)
+  (3) Trigger fires only on saturation, not pathology: PASS  (allowed-fires=3, transient-fires=0, pathology-steps=1365)
+
+  OVERALL: PASS — architecture meets all §13 falsification gates.
+  log: /home/marcrockhat/trioron-project/outputs/bench_step8_log.csv

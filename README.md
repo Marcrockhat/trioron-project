@@ -66,5 +66,5 @@ trioron-project/
 - [ ] Step 5: Cellular division routine
 - [ ] Step 6: Pruning loop
 - [ ] Step 7: Hard ceilings (VRAM + time)
-- [ ] Step 8: Benchmark vs same-param fixed MLP (falsification gate)
+- [x] Step 8: Benchmark vs same-param fixed MLP (falsification gate)
 - [ ] Step 9 (deferred): Language adapter (cloud only)
