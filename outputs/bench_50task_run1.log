@@ -1,0 +1,2170 @@
+==============================================================================
+Trioron — bench_50task: capacity stress at 50-task density
+==============================================================================
+State dim:         12
+Tasks:             12 single + 38 compound = 50
+Per-task budget:   1500 steps   (total 75000 steps per network)
+Sweep H ∈          [8, 12, 16]
+Grown init:        H=12, latent=1
+
+
+[grown] curriculum start — arch [12, 12, 1]  params 325  growth=True pruning=True
+
+[grown] === Task 1/50: single_00 ===
+  [grown] task 1/50 (single_00) step     0  loss 0.7228  arch [12, 12, 1]  params 325
+  [grown] task 1/50 (single_00) step   749  loss 0.0000  arch [12, 12, 1]  params 325
+  [grown] task 1/50 (single_00) step  1499  loss 0.0000  arch [12, 12, 1]  params 325
+[grown] After task 1: own=0.000  avg_to_date=0.000  arch=[12, 12, 1] params=325
+
+[grown] === Task 2/50: single_01 ===
+  [grown] task 2/50 (single_01) step     0  loss 0.4213  arch [12, 12, 1]  params 325
+  [grown] PRUNE @ task 2/50 step 500: [(0, 6), (0, 0), (1, 2)] → arch [10, 11, 1]
+  [grown] task 2/50 (single_01) step   749  loss 0.3145  arch [10, 11, 1]  params 263
+  [grown] *** FIRE @ task 2/50 step 799: ALLOW; latent 1→2
+  [grown] task 2/50 (single_01) step  1499  loss 0.1229  arch [10, 11, 2]  params 275
+[grown] After task 2: own=0.150  avg_to_date=0.075  arch=[10, 11, 2] params=275
+
+[grown] === Task 3/50: single_02 ===
+  [grown] task 3/50 (single_02) step     0  loss 0.0874  arch [10, 11, 2]  params 275
+  [grown] task 3/50 (single_02) step   749  loss 0.1196  arch [10, 11, 2]  params 275
+  [grown] *** FIRE @ task 3/50 step 917: ALLOW; latent 2→3
+  [grown] task 3/50 (single_02) step  1499  loss 0.0567  arch [10, 11, 3]  params 287
+[grown] After task 3: own=0.039  avg_to_date=0.036  arch=[10, 11, 3] params=287
+
+[grown] === Task 4/50: single_03 ===
+  [grown] task 4/50 (single_03) step     0  loss 0.1358  arch [10, 11, 3]  params 287
+  [grown] task 4/50 (single_03) step   749  loss 0.0567  arch [10, 11, 3]  params 287
+  [grown] *** FIRE @ task 4/50 step 799: ALLOW; latent 3→4
+  [grown] task 4/50 (single_03) step  1499  loss 0.0965  arch [10, 11, 4]  params 299
+[grown] After task 4: own=0.048  avg_to_date=0.031  arch=[10, 11, 4] params=299
+
+[grown] === Task 5/50: single_04 ===
+  [grown] task 5/50 (single_04) step     0  loss 0.0292  arch [10, 11, 4]  params 299
+  [grown] task 5/50 (single_04) step   749  loss 0.0025  arch [10, 11, 4]  params 299
+  [grown] task 5/50 (single_04) step  1499  loss 0.0330  arch [10, 11, 4]  params 299
+[grown] After task 5: own=0.037  avg_to_date=0.032  arch=[10, 11, 4] params=299
+
+[grown] === Task 6/50: single_05 ===
+  [grown] PRUNE @ task 6/50 step 0: [(0, 7)] → arch [9, 11, 4]
+  [grown] task 6/50 (single_05) step     0  loss 0.0215  arch [9, 11, 4]  params 275
+  [grown] task 6/50 (single_05) step   749  loss 0.0248  arch [9, 11, 4]  params 275
+  [grown] task 6/50 (single_05) step  1499  loss 0.0666  arch [9, 11, 4]  params 275
+[grown] After task 6: own=0.012  avg_to_date=0.035  arch=[9, 11, 4] params=275
+
+[grown] === Task 7/50: single_06 ===
+  [grown] task 7/50 (single_06) step     0  loss 0.0323  arch [9, 11, 4]  params 275
+  [grown] task 7/50 (single_06) step   749  loss 0.0635  arch [9, 11, 4]  params 275
+  [grown] task 7/50 (single_06) step  1499  loss 0.1123  arch [9, 11, 4]  params 275
+[grown] After task 7: own=0.051  avg_to_date=0.037  arch=[9, 11, 4] params=275
+
+[grown] === Task 8/50: single_07 ===
+  [grown] task 8/50 (single_07) step     0  loss 0.0301  arch [9, 11, 4]  params 275
+  [grown] task 8/50 (single_07) step   749  loss 0.0686  arch [9, 11, 4]  params 275
+  [grown] task 8/50 (single_07) step  1499  loss 0.0337  arch [9, 11, 4]  params 275
+[grown] After task 8: own=0.053  avg_to_date=0.039  arch=[9, 11, 4] params=275
+
+[grown] === Task 9/50: single_08 ===
+  [grown] task 9/50 (single_08) step     0  loss 0.0973  arch [9, 11, 4]  params 275
+  [grown] task 9/50 (single_08) step   749  loss 0.0340  arch [9, 11, 4]  params 275
+  [grown] task 9/50 (single_08) step  1499  loss 0.0683  arch [9, 11, 4]  params 275
+[grown] After task 9: own=0.053  avg_to_date=0.040  arch=[9, 11, 4] params=275
+
+[grown] === Task 10/50: single_09 ===
+  [grown] task 10/50 (single_09) step     0  loss 0.0235  arch [9, 11, 4]  params 275
+  [grown] task 10/50 (single_09) step   749  loss 0.0253  arch [9, 11, 4]  params 275
+  [grown] task 10/50 (single_09) step  1499  loss 0.0030  arch [9, 11, 4]  params 275
+[grown] After task 10: own=0.037  avg_to_date=0.040  arch=[9, 11, 4] params=275
+
+[grown] === Task 11/50: single_10 ===
+  [grown] task 11/50 (single_10) step     0  loss 0.0914  arch [9, 11, 4]  params 275
+  [grown] task 11/50 (single_10) step   749  loss 0.0270  arch [9, 11, 4]  params 275
+  [grown] task 11/50 (single_10) step  1499  loss 0.0174  arch [9, 11, 4]  params 275
+[grown] After task 11: own=0.054  avg_to_date=0.041  arch=[9, 11, 4] params=275
+
+[grown] === Task 12/50: single_11 ===
+  [grown] task 12/50 (single_11) step     0  loss 0.0768  arch [9, 11, 4]  params 275
+  [grown] task 12/50 (single_11) step   749  loss 0.0712  arch [9, 11, 4]  params 275
+  [grown] PRUNE @ task 12/50 step 1000: [(1, 0)] → arch [9, 10, 4]
+  [grown] task 12/50 (single_11) step  1499  loss 0.0465  arch [9, 10, 4]  params 261
+[grown] After task 12: own=0.044  avg_to_date=0.041  arch=[9, 10, 4] params=261
+
+[grown] === Task 13/50: compound_00 ===
+  [grown] task 13/50 (compound_00) step     0  loss 0.0209  arch [9, 10, 4]  params 261
+  [grown] task 13/50 (compound_00) step   749  loss 0.0038  arch [9, 10, 4]  params 261
+  [grown] task 13/50 (compound_00) step  1499  loss 0.0340  arch [9, 10, 4]  params 261
+[grown] After task 13: own=0.033  avg_to_date=0.041  arch=[9, 10, 4] params=261
+
+[grown] === Task 14/50: compound_01 ===
+  [grown] task 14/50 (compound_01) step     0  loss 0.0899  arch [9, 10, 4]  params 261
+  [grown] task 14/50 (compound_01) step   749  loss 0.0469  arch [9, 10, 4]  params 261
+  [grown] task 14/50 (compound_01) step  1499  loss 0.0370  arch [9, 10, 4]  params 261
+[grown] After task 14: own=0.051  avg_to_date=0.041  arch=[9, 10, 4] params=261
+
+[grown] === Task 15/50: compound_02 ===
+  [grown] task 15/50 (compound_02) step     0  loss 0.0189  arch [9, 10, 4]  params 261
+  [grown] task 15/50 (compound_02) step   749  loss 0.0129  arch [9, 10, 4]  params 261
+  [grown] task 15/50 (compound_02) step  1499  loss 0.0837  arch [9, 10, 4]  params 261
+[grown] After task 15: own=0.053  avg_to_date=0.042  arch=[9, 10, 4] params=261
+
+[grown] === Task 16/50: compound_03 ===
+  [grown] task 16/50 (compound_03) step     0  loss 0.0000  arch [9, 10, 4]  params 261
+  [grown] task 16/50 (compound_03) step   749  loss 0.0000  arch [9, 10, 4]  params 261
+  [grown] task 16/50 (compound_03) step  1499  loss 0.0000  arch [9, 10, 4]  params 261
+[grown] After task 16: own=0.000  avg_to_date=0.039  arch=[9, 10, 4] params=261
+
+[grown] === Task 17/50: compound_04 ===
+  [grown] task 17/50 (compound_04) step     0  loss 0.0622  arch [9, 10, 4]  params 261
+  [grown] task 17/50 (compound_04) step   749  loss 0.0634  arch [9, 10, 4]  params 261
+  [grown] task 17/50 (compound_04) step  1499  loss 0.0421  arch [9, 10, 4]  params 261
+[grown] After task 17: own=0.050  avg_to_date=0.040  arch=[9, 10, 4] params=261
+
+[grown] === Task 18/50: compound_05 ===
+  [grown] task 18/50 (compound_05) step     0  loss 0.0627  arch [9, 10, 4]  params 261
+  [grown] task 18/50 (compound_05) step   749  loss 0.0041  arch [9, 10, 4]  params 261
+  [grown] task 18/50 (compound_05) step  1499  loss 0.0358  arch [9, 10, 4]  params 261
+[grown] After task 18: own=0.023  avg_to_date=0.039  arch=[9, 10, 4] params=261
+
+[grown] === Task 19/50: compound_06 ===
+  [grown] task 19/50 (compound_06) step     0  loss 0.0000  arch [9, 10, 4]  params 261
+  [grown] task 19/50 (compound_06) step   749  loss 0.0022  arch [9, 10, 4]  params 261
+  [grown] task 19/50 (compound_06) step  1499  loss 0.0000  arch [9, 10, 4]  params 261
+[grown] After task 19: own=0.011  avg_to_date=0.038  arch=[9, 10, 4] params=261
+
+[grown] === Task 20/50: compound_07 ===
+  [grown] task 20/50 (compound_07) step     0  loss 0.0444  arch [9, 10, 4]  params 261
+  [grown] task 20/50 (compound_07) step   749  loss 0.0521  arch [9, 10, 4]  params 261
+  [grown] task 20/50 (compound_07) step  1499  loss 0.0304  arch [9, 10, 4]  params 261
+[grown] After task 20: own=0.038  avg_to_date=0.037  arch=[9, 10, 4] params=261
+
+[grown] === Task 21/50: compound_08 ===
+  [grown] task 21/50 (compound_08) step     0  loss 0.0369  arch [9, 10, 4]  params 261
+  [grown] task 21/50 (compound_08) step   749  loss 0.0122  arch [9, 10, 4]  params 261
+  [grown] task 21/50 (compound_08) step  1499  loss 0.0652  arch [9, 10, 4]  params 261
+[grown] After task 21: own=0.022  avg_to_date=0.037  arch=[9, 10, 4] params=261
+
+[grown] === Task 22/50: compound_09 ===
+  [grown] task 22/50 (compound_09) step     0  loss 0.0182  arch [9, 10, 4]  params 261
+  [grown] task 22/50 (compound_09) step   749  loss 0.0000  arch [9, 10, 4]  params 261
+  [grown] task 22/50 (compound_09) step  1499  loss 0.0179  arch [9, 10, 4]  params 261
+[grown] After task 22: own=0.017  avg_to_date=0.036  arch=[9, 10, 4] params=261
+
+[grown] === Task 23/50: compound_10 ===
+  [grown] task 23/50 (compound_10) step     0  loss 0.0023  arch [9, 10, 4]  params 261
+  [grown] task 23/50 (compound_10) step   749  loss 0.0173  arch [9, 10, 4]  params 261
+  [grown] task 23/50 (compound_10) step  1499  loss 0.0317  arch [9, 10, 4]  params 261
+[grown] After task 23: own=0.044  avg_to_date=0.036  arch=[9, 10, 4] params=261
+
+[grown] === Task 24/50: compound_11 ===
+  [grown] task 24/50 (compound_11) step     0  loss 0.0442  arch [9, 10, 4]  params 261
+  [grown] task 24/50 (compound_11) step   749  loss 0.0180  arch [9, 10, 4]  params 261
+  [grown] task 24/50 (compound_11) step  1499  loss 0.0208  arch [9, 10, 4]  params 261
+[grown] After task 24: own=0.045  avg_to_date=0.036  arch=[9, 10, 4] params=261
+
+[grown] === Task 25/50: compound_12 ===
+  [grown] task 25/50 (compound_12) step     0  loss 0.0390  arch [9, 10, 4]  params 261
+  [grown] task 25/50 (compound_12) step   749  loss 0.0462  arch [9, 10, 4]  params 261
+  [grown] task 25/50 (compound_12) step  1499  loss 0.0271  arch [9, 10, 4]  params 261
+[grown] After task 25: own=0.044  avg_to_date=0.037  arch=[9, 10, 4] params=261
+
+[grown] === Task 26/50: compound_13 ===
+  [grown] PRUNE @ task 26/50 step 0: [(1, 9)] → arch [9, 9, 4]
+  [grown] task 26/50 (compound_13) step     0  loss 0.0566  arch [9, 9, 4]  params 247
+  [grown] task 26/50 (compound_13) step   749  loss 0.0337  arch [9, 9, 4]  params 247
+  [grown] task 26/50 (compound_13) step  1499  loss 0.0767  arch [9, 9, 4]  params 247
+[grown] After task 26: own=0.031  avg_to_date=0.035  arch=[9, 9, 4] params=247
+
+[grown] === Task 27/50: compound_14 ===
+  [grown] task 27/50 (compound_14) step     0  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 27/50 (compound_14) step   749  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 27/50 (compound_14) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 27: own=0.000  avg_to_date=0.034  arch=[9, 9, 4] params=247
+
+[grown] === Task 28/50: compound_15 ===
+  [grown] task 28/50 (compound_15) step     0  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 28/50 (compound_15) step   749  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 28/50 (compound_15) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 28: own=0.000  avg_to_date=0.033  arch=[9, 9, 4] params=247
+
+[grown] === Task 29/50: compound_16 ===
+  [grown] task 29/50 (compound_16) step     0  loss 0.0318  arch [9, 9, 4]  params 247
+  [grown] task 29/50 (compound_16) step   749  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 29/50 (compound_16) step  1499  loss 0.0103  arch [9, 9, 4]  params 247
+[grown] After task 29: own=0.013  avg_to_date=0.032  arch=[9, 9, 4] params=247
+
+[grown] === Task 30/50: compound_17 ===
+  [grown] task 30/50 (compound_17) step     0  loss 0.0570  arch [9, 9, 4]  params 247
+  [grown] task 30/50 (compound_17) step   749  loss 0.0409  arch [9, 9, 4]  params 247
+  [grown] task 30/50 (compound_17) step  1499  loss 0.1023  arch [9, 9, 4]  params 247
+[grown] After task 30: own=0.039  avg_to_date=0.032  arch=[9, 9, 4] params=247
+
+[grown] === Task 31/50: compound_18 ===
+  [grown] task 31/50 (compound_18) step     0  loss 0.0330  arch [9, 9, 4]  params 247
+  [grown] task 31/50 (compound_18) step   749  loss 0.0694  arch [9, 9, 4]  params 247
+  [grown] task 31/50 (compound_18) step  1499  loss 0.0312  arch [9, 9, 4]  params 247
+[grown] After task 31: own=0.043  avg_to_date=0.032  arch=[9, 9, 4] params=247
+
+[grown] === Task 32/50: compound_19 ===
+  [grown] task 32/50 (compound_19) step     0  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 32/50 (compound_19) step   749  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 32/50 (compound_19) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 32: own=0.000  avg_to_date=0.031  arch=[9, 9, 4] params=247
+
+[grown] === Task 33/50: compound_20 ===
+  [grown] task 33/50 (compound_20) step     0  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 33/50 (compound_20) step   749  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 33/50 (compound_20) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 33: own=0.000  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 34/50: compound_21 ===
+  [grown] task 34/50 (compound_21) step     0  loss 0.0045  arch [9, 9, 4]  params 247
+  [grown] task 34/50 (compound_21) step   749  loss 0.0061  arch [9, 9, 4]  params 247
+  [grown] task 34/50 (compound_21) step  1499  loss 0.0121  arch [9, 9, 4]  params 247
+[grown] After task 34: own=0.012  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 35/50: compound_22 ===
+  [grown] task 35/50 (compound_22) step     0  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 35/50 (compound_22) step   749  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 35/50 (compound_22) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 35: own=0.000  avg_to_date=0.029  arch=[9, 9, 4] params=247
+
+[grown] === Task 36/50: compound_23 ===
+  [grown] task 36/50 (compound_23) step     0  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 36/50 (compound_23) step   749  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 36/50 (compound_23) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 36: own=0.000  avg_to_date=0.028  arch=[9, 9, 4] params=247
+
+[grown] === Task 37/50: compound_24 ===
+  [grown] task 37/50 (compound_24) step     0  loss 0.0416  arch [9, 9, 4]  params 247
+  [grown] task 37/50 (compound_24) step   749  loss 0.0359  arch [9, 9, 4]  params 247
+  [grown] task 37/50 (compound_24) step  1499  loss 0.0642  arch [9, 9, 4]  params 247
+[grown] After task 37: own=0.031  avg_to_date=0.028  arch=[9, 9, 4] params=247
+
+[grown] === Task 38/50: compound_25 ===
+  [grown] task 38/50 (compound_25) step     0  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 38/50 (compound_25) step   749  loss 0.0100  arch [9, 9, 4]  params 247
+  [grown] task 38/50 (compound_25) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 38: own=0.004  avg_to_date=0.028  arch=[9, 9, 4] params=247
+
+[grown] === Task 39/50: compound_26 ===
+  [grown] task 39/50 (compound_26) step     0  loss 0.0952  arch [9, 9, 4]  params 247
+  [grown] task 39/50 (compound_26) step   749  loss 0.0214  arch [9, 9, 4]  params 247
+  [grown] task 39/50 (compound_26) step  1499  loss 0.0254  arch [9, 9, 4]  params 247
+[grown] After task 39: own=0.048  avg_to_date=0.028  arch=[9, 9, 4] params=247
+
+[grown] === Task 40/50: compound_27 ===
+  [grown] task 40/50 (compound_27) step     0  loss 0.0555  arch [9, 9, 4]  params 247
+  [grown] task 40/50 (compound_27) step   749  loss 0.0691  arch [9, 9, 4]  params 247
+  [grown] task 40/50 (compound_27) step  1499  loss 0.0248  arch [9, 9, 4]  params 247
+[grown] After task 40: own=0.061  avg_to_date=0.029  arch=[9, 9, 4] params=247
+
+[grown] === Task 41/50: compound_28 ===
+  [grown] task 41/50 (compound_28) step     0  loss 0.0944  arch [9, 9, 4]  params 247
+  [grown] task 41/50 (compound_28) step   749  loss 0.0578  arch [9, 9, 4]  params 247
+  [grown] task 41/50 (compound_28) step  1499  loss 0.0578  arch [9, 9, 4]  params 247
+[grown] After task 41: own=0.054  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 42/50: compound_29 ===
+  [grown] task 42/50 (compound_29) step     0  loss 0.0423  arch [9, 9, 4]  params 247
+  [grown] task 42/50 (compound_29) step   749  loss 0.0169  arch [9, 9, 4]  params 247
+  [grown] task 42/50 (compound_29) step  1499  loss 0.0358  arch [9, 9, 4]  params 247
+[grown] After task 42: own=0.047  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 43/50: compound_30 ===
+  [grown] task 43/50 (compound_30) step     0  loss 0.0095  arch [9, 9, 4]  params 247
+  [grown] task 43/50 (compound_30) step   749  loss 0.0531  arch [9, 9, 4]  params 247
+  [grown] task 43/50 (compound_30) step  1499  loss 0.0364  arch [9, 9, 4]  params 247
+[grown] After task 43: own=0.025  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 44/50: compound_31 ===
+  [grown] task 44/50 (compound_31) step     0  loss 0.0386  arch [9, 9, 4]  params 247
+  [grown] task 44/50 (compound_31) step   749  loss 0.0249  arch [9, 9, 4]  params 247
+  [grown] task 44/50 (compound_31) step  1499  loss 0.0294  arch [9, 9, 4]  params 247
+[grown] After task 44: own=0.050  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 45/50: compound_32 ===
+  [grown] task 45/50 (compound_32) step     0  loss 0.0020  arch [9, 9, 4]  params 247
+  [grown] task 45/50 (compound_32) step   749  loss 0.0036  arch [9, 9, 4]  params 247
+  [grown] task 45/50 (compound_32) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 45: own=0.005  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 46/50: compound_33 ===
+  [grown] task 46/50 (compound_33) step     0  loss 0.0214  arch [9, 9, 4]  params 247
+  [grown] task 46/50 (compound_33) step   749  loss 0.0544  arch [9, 9, 4]  params 247
+  [grown] task 46/50 (compound_33) step  1499  loss 0.0585  arch [9, 9, 4]  params 247
+[grown] After task 46: own=0.029  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 47/50: compound_34 ===
+  [grown] task 47/50 (compound_34) step     0  loss 0.0000  arch [9, 9, 4]  params 247
+  [grown] task 47/50 (compound_34) step   749  loss 0.0241  arch [9, 9, 4]  params 247
+  [grown] task 47/50 (compound_34) step  1499  loss 0.0000  arch [9, 9, 4]  params 247
+[grown] After task 47: own=0.014  avg_to_date=0.029  arch=[9, 9, 4] params=247
+
+[grown] === Task 48/50: compound_35 ===
+  [grown] task 48/50 (compound_35) step     0  loss 0.0606  arch [9, 9, 4]  params 247
+  [grown] task 48/50 (compound_35) step   749  loss 0.0262  arch [9, 9, 4]  params 247
+  [grown] task 48/50 (compound_35) step  1499  loss 0.0012  arch [9, 9, 4]  params 247
+[grown] After task 48: own=0.037  avg_to_date=0.029  arch=[9, 9, 4] params=247
+
+[grown] === Task 49/50: compound_36 ===
+  [grown] task 49/50 (compound_36) step     0  loss 0.0679  arch [9, 9, 4]  params 247
+  [grown] task 49/50 (compound_36) step   749  loss 0.0680  arch [9, 9, 4]  params 247
+  [grown] task 49/50 (compound_36) step  1499  loss 0.0392  arch [9, 9, 4]  params 247
+[grown] After task 49: own=0.054  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[grown] === Task 50/50: compound_37 ===
+  [grown] task 50/50 (compound_37) step     0  loss 0.0312  arch [9, 9, 4]  params 247
+  [grown] task 50/50 (compound_37) step   749  loss 0.0163  arch [9, 9, 4]  params 247
+  [grown] task 50/50 (compound_37) step  1499  loss 0.0275  arch [9, 9, 4]  params 247
+[grown] After task 50: own=0.025  avg_to_date=0.030  arch=[9, 9, 4] params=247
+
+[fixed_ewc_H8] curriculum start — arch [8, 8, 4]  params 212  growth=False pruning=False
+
+[fixed_ewc_H8] === Task 1/50: single_00 ===
+  [fixed_ewc_H8] task 1/50 (single_00) step     0  loss 0.5614  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 1/50 (single_00) step   749  loss 0.0022  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 1/50 (single_00) step  1499  loss 0.0000  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 1: own=0.000  avg_to_date=0.000  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 2/50: single_01 ===
+  [fixed_ewc_H8] task 2/50 (single_01) step     0  loss 0.0936  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 2/50 (single_01) step   749  loss 0.0213  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 2/50 (single_01) step  1499  loss 0.1008  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 2: own=0.074  avg_to_date=0.037  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 3/50: single_02 ===
+  [fixed_ewc_H8] task 3/50 (single_02) step     0  loss 0.0594  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 3/50 (single_02) step   749  loss 0.2024  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 3/50 (single_02) step  1499  loss 0.1186  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 3: own=0.088  avg_to_date=0.054  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 4/50: single_03 ===
+  [fixed_ewc_H8] task 4/50 (single_03) step     0  loss 0.0527  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 4/50 (single_03) step   749  loss 0.1315  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 4/50 (single_03) step  1499  loss 0.0901  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 4: own=0.071  avg_to_date=0.058  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 5/50: single_04 ===
+  [fixed_ewc_H8] task 5/50 (single_04) step     0  loss 0.0544  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 5/50 (single_04) step   749  loss 0.0784  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 5/50 (single_04) step  1499  loss 0.1078  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 5: own=0.080  avg_to_date=0.062  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 6/50: single_05 ===
+  [fixed_ewc_H8] task 6/50 (single_05) step     0  loss 0.0493  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 6/50 (single_05) step   749  loss 0.1521  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 6/50 (single_05) step  1499  loss 0.1022  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 6: own=0.085  avg_to_date=0.066  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 7/50: single_06 ===
+  [fixed_ewc_H8] task 7/50 (single_06) step     0  loss 0.0068  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 7/50 (single_06) step   749  loss 0.0886  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 7/50 (single_06) step  1499  loss 0.0530  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 7: own=0.059  avg_to_date=0.065  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 8/50: single_07 ===
+  [fixed_ewc_H8] task 8/50 (single_07) step     0  loss 0.0364  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 8/50 (single_07) step   749  loss 0.0132  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 8/50 (single_07) step  1499  loss 0.0184  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 8: own=0.039  avg_to_date=0.061  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 9/50: single_08 ===
+  [fixed_ewc_H8] task 9/50 (single_08) step     0  loss 0.0945  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 9/50 (single_08) step   749  loss 0.0526  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 9/50 (single_08) step  1499  loss 0.0827  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 9: own=0.105  avg_to_date=0.065  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 10/50: single_09 ===
+  [fixed_ewc_H8] task 10/50 (single_09) step     0  loss 0.0714  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 10/50 (single_09) step   749  loss 0.1262  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 10/50 (single_09) step  1499  loss 0.0971  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 10: own=0.079  avg_to_date=0.066  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 11/50: single_10 ===
+  [fixed_ewc_H8] task 11/50 (single_10) step     0  loss 0.0690  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 11/50 (single_10) step   749  loss 0.0880  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 11/50 (single_10) step  1499  loss 0.0994  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 11: own=0.069  avg_to_date=0.066  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 12/50: single_11 ===
+  [fixed_ewc_H8] task 12/50 (single_11) step     0  loss 0.0792  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 12/50 (single_11) step   749  loss 0.0782  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 12/50 (single_11) step  1499  loss 0.0881  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 12: own=0.082  avg_to_date=0.066  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 13/50: compound_00 ===
+  [fixed_ewc_H8] task 13/50 (compound_00) step     0  loss 0.1072  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 13/50 (compound_00) step   749  loss 0.0888  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 13/50 (compound_00) step  1499  loss 0.1110  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 13: own=0.090  avg_to_date=0.068  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 14/50: compound_01 ===
+  [fixed_ewc_H8] task 14/50 (compound_01) step     0  loss 0.0359  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 14/50 (compound_01) step   749  loss 0.0363  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 14/50 (compound_01) step  1499  loss 0.0056  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 14: own=0.043  avg_to_date=0.065  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 15/50: compound_02 ===
+  [fixed_ewc_H8] task 15/50 (compound_02) step     0  loss 0.1307  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 15/50 (compound_02) step   749  loss 0.0284  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 15/50 (compound_02) step  1499  loss 0.0915  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 15: own=0.071  avg_to_date=0.064  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 16/50: compound_03 ===
+  [fixed_ewc_H8] task 16/50 (compound_03) step     0  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 16/50 (compound_03) step   749  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 16/50 (compound_03) step  1499  loss 0.0000  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 16: own=0.000  avg_to_date=0.060  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 17/50: compound_04 ===
+  [fixed_ewc_H8] task 17/50 (compound_04) step     0  loss 0.0315  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 17/50 (compound_04) step   749  loss 0.1148  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 17/50 (compound_04) step  1499  loss 0.1106  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 17: own=0.059  avg_to_date=0.060  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 18/50: compound_05 ===
+  [fixed_ewc_H8] task 18/50 (compound_05) step     0  loss 0.1020  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 18/50 (compound_05) step   749  loss 0.1089  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 18/50 (compound_05) step  1499  loss 0.1403  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 18: own=0.089  avg_to_date=0.061  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 19/50: compound_06 ===
+  [fixed_ewc_H8] task 19/50 (compound_06) step     0  loss 0.0341  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 19/50 (compound_06) step   749  loss 0.0224  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 19/50 (compound_06) step  1499  loss 0.0572  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 19: own=0.033  avg_to_date=0.060  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 20/50: compound_07 ===
+  [fixed_ewc_H8] task 20/50 (compound_07) step     0  loss 0.0568  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 20/50 (compound_07) step   749  loss 0.1084  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 20/50 (compound_07) step  1499  loss 0.0511  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 20: own=0.072  avg_to_date=0.059  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 21/50: compound_08 ===
+  [fixed_ewc_H8] task 21/50 (compound_08) step     0  loss 0.0642  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 21/50 (compound_08) step   749  loss 0.0298  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 21/50 (compound_08) step  1499  loss 0.0365  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 21: own=0.084  avg_to_date=0.060  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 22/50: compound_09 ===
+  [fixed_ewc_H8] task 22/50 (compound_09) step     0  loss 0.1115  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 22/50 (compound_09) step   749  loss 0.0504  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 22/50 (compound_09) step  1499  loss 0.1192  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 22: own=0.067  avg_to_date=0.060  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 23/50: compound_10 ===
+  [fixed_ewc_H8] task 23/50 (compound_10) step     0  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 23/50 (compound_10) step   749  loss 0.0158  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 23/50 (compound_10) step  1499  loss 0.0182  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 23: own=0.005  avg_to_date=0.057  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 24/50: compound_11 ===
+  [fixed_ewc_H8] task 24/50 (compound_11) step     0  loss 0.0005  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 24/50 (compound_11) step   749  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 24/50 (compound_11) step  1499  loss 0.0018  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 24: own=0.004  avg_to_date=0.054  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 25/50: compound_12 ===
+  [fixed_ewc_H8] task 25/50 (compound_12) step     0  loss 0.0355  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 25/50 (compound_12) step   749  loss 0.0460  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 25/50 (compound_12) step  1499  loss 0.0426  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 25: own=0.032  avg_to_date=0.053  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 26/50: compound_13 ===
+  [fixed_ewc_H8] task 26/50 (compound_13) step     0  loss 0.0264  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 26/50 (compound_13) step   749  loss 0.0752  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 26/50 (compound_13) step  1499  loss 0.0739  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 26: own=0.066  avg_to_date=0.053  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 27/50: compound_14 ===
+  [fixed_ewc_H8] task 27/50 (compound_14) step     0  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 27/50 (compound_14) step   749  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 27/50 (compound_14) step  1499  loss 0.0000  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 27: own=0.000  avg_to_date=0.051  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 28/50: compound_15 ===
+  [fixed_ewc_H8] task 28/50 (compound_15) step     0  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 28/50 (compound_15) step   749  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 28/50 (compound_15) step  1499  loss 0.0000  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 28: own=0.000  avg_to_date=0.049  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 29/50: compound_16 ===
+  [fixed_ewc_H8] task 29/50 (compound_16) step     0  loss 0.0950  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 29/50 (compound_16) step   749  loss 0.0751  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 29/50 (compound_16) step  1499  loss 0.0518  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 29: own=0.081  avg_to_date=0.050  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 30/50: compound_17 ===
+  [fixed_ewc_H8] task 30/50 (compound_17) step     0  loss 0.0769  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 30/50 (compound_17) step   749  loss 0.1074  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 30/50 (compound_17) step  1499  loss 0.0392  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 30: own=0.059  avg_to_date=0.050  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 31/50: compound_18 ===
+  [fixed_ewc_H8] task 31/50 (compound_18) step     0  loss 0.0869  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 31/50 (compound_18) step   749  loss 0.0393  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 31/50 (compound_18) step  1499  loss 0.0678  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 31: own=0.043  avg_to_date=0.050  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 32/50: compound_19 ===
+  [fixed_ewc_H8] task 32/50 (compound_19) step     0  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 32/50 (compound_19) step   749  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 32/50 (compound_19) step  1499  loss 0.0000  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 32: own=0.000  avg_to_date=0.048  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 33/50: compound_20 ===
+  [fixed_ewc_H8] task 33/50 (compound_20) step     0  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 33/50 (compound_20) step   749  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 33/50 (compound_20) step  1499  loss 0.0000  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 33: own=0.000  avg_to_date=0.047  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 34/50: compound_21 ===
+  [fixed_ewc_H8] task 34/50 (compound_21) step     0  loss 0.0248  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 34/50 (compound_21) step   749  loss 0.0746  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 34/50 (compound_21) step  1499  loss 0.0120  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 34: own=0.034  avg_to_date=0.046  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 35/50: compound_22 ===
+  [fixed_ewc_H8] task 35/50 (compound_22) step     0  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 35/50 (compound_22) step   749  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 35/50 (compound_22) step  1499  loss 0.0000  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 35: own=0.000  avg_to_date=0.045  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 36/50: compound_23 ===
+  [fixed_ewc_H8] task 36/50 (compound_23) step     0  loss 0.0469  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 36/50 (compound_23) step   749  loss 0.0962  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 36/50 (compound_23) step  1499  loss 0.0416  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 36: own=0.088  avg_to_date=0.046  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 37/50: compound_24 ===
+  [fixed_ewc_H8] task 37/50 (compound_24) step     0  loss 0.1307  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 37/50 (compound_24) step   749  loss 0.0561  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 37/50 (compound_24) step  1499  loss 0.0669  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 37: own=0.078  avg_to_date=0.048  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 38/50: compound_25 ===
+  [fixed_ewc_H8] task 38/50 (compound_25) step     0  loss 0.0441  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 38/50 (compound_25) step   749  loss 0.0590  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 38/50 (compound_25) step  1499  loss 0.0638  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 38: own=0.050  avg_to_date=0.047  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 39/50: compound_26 ===
+  [fixed_ewc_H8] task 39/50 (compound_26) step     0  loss 0.0056  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 39/50 (compound_26) step   749  loss 0.0456  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 39/50 (compound_26) step  1499  loss 0.0464  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 39: own=0.047  avg_to_date=0.047  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 40/50: compound_27 ===
+  [fixed_ewc_H8] task 40/50 (compound_27) step     0  loss 0.0612  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 40/50 (compound_27) step   749  loss 0.1246  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 40/50 (compound_27) step  1499  loss 0.1149  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 40: own=0.078  avg_to_date=0.047  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 41/50: compound_28 ===
+  [fixed_ewc_H8] task 41/50 (compound_28) step     0  loss 0.0418  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 41/50 (compound_28) step   749  loss 0.0340  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 41/50 (compound_28) step  1499  loss 0.0376  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 41: own=0.050  avg_to_date=0.046  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 42/50: compound_29 ===
+  [fixed_ewc_H8] task 42/50 (compound_29) step     0  loss 0.0015  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 42/50 (compound_29) step   749  loss 0.0000  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 42/50 (compound_29) step  1499  loss 0.0000  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 42: own=0.016  avg_to_date=0.046  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 43/50: compound_30 ===
+  [fixed_ewc_H8] task 43/50 (compound_30) step     0  loss 0.0084  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 43/50 (compound_30) step   749  loss 0.0204  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 43/50 (compound_30) step  1499  loss 0.0160  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 43: own=0.019  avg_to_date=0.045  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 44/50: compound_31 ===
+  [fixed_ewc_H8] task 44/50 (compound_31) step     0  loss 0.0695  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 44/50 (compound_31) step   749  loss 0.0167  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 44/50 (compound_31) step  1499  loss 0.0589  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 44: own=0.047  avg_to_date=0.045  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 45/50: compound_32 ===
+  [fixed_ewc_H8] task 45/50 (compound_32) step     0  loss 0.1145  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 45/50 (compound_32) step   749  loss 0.0851  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 45/50 (compound_32) step  1499  loss 0.0634  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 45: own=0.090  avg_to_date=0.046  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 46/50: compound_33 ===
+  [fixed_ewc_H8] task 46/50 (compound_33) step     0  loss 0.0099  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 46/50 (compound_33) step   749  loss 0.0309  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 46/50 (compound_33) step  1499  loss 0.0197  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 46: own=0.010  avg_to_date=0.045  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 47/50: compound_34 ===
+  [fixed_ewc_H8] task 47/50 (compound_34) step     0  loss 0.0969  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 47/50 (compound_34) step   749  loss 0.0396  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 47/50 (compound_34) step  1499  loss 0.0491  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 47: own=0.079  avg_to_date=0.046  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 48/50: compound_35 ===
+  [fixed_ewc_H8] task 48/50 (compound_35) step     0  loss 0.0230  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 48/50 (compound_35) step   749  loss 0.0703  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 48/50 (compound_35) step  1499  loss 0.0299  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 48: own=0.031  avg_to_date=0.045  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 49/50: compound_36 ===
+  [fixed_ewc_H8] task 49/50 (compound_36) step     0  loss 0.0086  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 49/50 (compound_36) step   749  loss 0.0086  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 49/50 (compound_36) step  1499  loss 0.0034  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 49: own=0.015  avg_to_date=0.044  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H8] === Task 50/50: compound_37 ===
+  [fixed_ewc_H8] task 50/50 (compound_37) step     0  loss 0.0436  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 50/50 (compound_37) step   749  loss 0.0196  arch [8, 8, 4]  params 212
+  [fixed_ewc_H8] task 50/50 (compound_37) step  1499  loss 0.0093  arch [8, 8, 4]  params 212
+[fixed_ewc_H8] After task 50: own=0.035  avg_to_date=0.043  arch=[8, 8, 4] params=212
+
+[fixed_ewc_H12] curriculum start — arch [12, 12, 4]  params 364  growth=False pruning=False
+
+[fixed_ewc_H12] === Task 1/50: single_00 ===
+  [fixed_ewc_H12] task 1/50 (single_00) step     0  loss 0.5459  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 1/50 (single_00) step   749  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 1/50 (single_00) step  1499  loss 0.0000  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 1: own=0.000  avg_to_date=0.000  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 2/50: single_01 ===
+  [fixed_ewc_H12] task 2/50 (single_01) step     0  loss 0.0788  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 2/50 (single_01) step   749  loss 0.1084  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 2/50 (single_01) step  1499  loss 0.0559  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 2: own=0.099  avg_to_date=0.050  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 3/50: single_02 ===
+  [fixed_ewc_H12] task 3/50 (single_02) step     0  loss 0.1234  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 3/50 (single_02) step   749  loss 0.0506  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 3/50 (single_02) step  1499  loss 0.0893  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 3: own=0.102  avg_to_date=0.067  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 4/50: single_03 ===
+  [fixed_ewc_H12] task 4/50 (single_03) step     0  loss 0.1401  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 4/50 (single_03) step   749  loss 0.1108  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 4/50 (single_03) step  1499  loss 0.0739  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 4: own=0.113  avg_to_date=0.078  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 5/50: single_04 ===
+  [fixed_ewc_H12] task 5/50 (single_04) step     0  loss 0.1933  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 5/50 (single_04) step   749  loss 0.1162  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 5/50 (single_04) step  1499  loss 0.1353  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 5: own=0.116  avg_to_date=0.086  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 6/50: single_05 ===
+  [fixed_ewc_H12] task 6/50 (single_05) step     0  loss 0.1263  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 6/50 (single_05) step   749  loss 0.0953  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 6/50 (single_05) step  1499  loss 0.0972  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 6: own=0.118  avg_to_date=0.091  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 7/50: single_06 ===
+  [fixed_ewc_H12] task 7/50 (single_06) step     0  loss 0.1627  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 7/50 (single_06) step   749  loss 0.1144  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 7/50 (single_06) step  1499  loss 0.0395  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 7: own=0.127  avg_to_date=0.096  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 8/50: single_07 ===
+  [fixed_ewc_H12] task 8/50 (single_07) step     0  loss 0.1433  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 8/50 (single_07) step   749  loss 0.1558  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 8/50 (single_07) step  1499  loss 0.0882  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 8: own=0.132  avg_to_date=0.101  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 9/50: single_08 ===
+  [fixed_ewc_H12] task 9/50 (single_08) step     0  loss 0.0620  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 9/50 (single_08) step   749  loss 0.1156  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 9/50 (single_08) step  1499  loss 0.0704  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 9: own=0.110  avg_to_date=0.102  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 10/50: single_09 ===
+  [fixed_ewc_H12] task 10/50 (single_09) step     0  loss 0.1008  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 10/50 (single_09) step   749  loss 0.0929  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 10/50 (single_09) step  1499  loss 0.1171  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 10: own=0.130  avg_to_date=0.104  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 11/50: single_10 ===
+  [fixed_ewc_H12] task 11/50 (single_10) step     0  loss 0.1643  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 11/50 (single_10) step   749  loss 0.1116  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 11/50 (single_10) step  1499  loss 0.0782  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 11: own=0.131  avg_to_date=0.106  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 12/50: single_11 ===
+  [fixed_ewc_H12] task 12/50 (single_11) step     0  loss 0.0568  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 12/50 (single_11) step   749  loss 0.1099  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 12/50 (single_11) step  1499  loss 0.1146  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 12: own=0.131  avg_to_date=0.108  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 13/50: compound_00 ===
+  [fixed_ewc_H12] task 13/50 (compound_00) step     0  loss 0.0838  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 13/50 (compound_00) step   749  loss 0.0691  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 13/50 (compound_00) step  1499  loss 0.1625  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 13: own=0.131  avg_to_date=0.109  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 14/50: compound_01 ===
+  [fixed_ewc_H12] task 14/50 (compound_01) step     0  loss 0.1023  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 14/50 (compound_01) step   749  loss 0.1648  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 14/50 (compound_01) step  1499  loss 0.0786  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 14: own=0.153  avg_to_date=0.112  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 15/50: compound_02 ===
+  [fixed_ewc_H12] task 15/50 (compound_02) step     0  loss 0.0603  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 15/50 (compound_02) step   749  loss 0.1037  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 15/50 (compound_02) step  1499  loss 0.1108  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 15: own=0.091  avg_to_date=0.110  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 16/50: compound_03 ===
+  [fixed_ewc_H12] task 16/50 (compound_03) step     0  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 16/50 (compound_03) step   749  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 16/50 (compound_03) step  1499  loss 0.0000  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 16: own=0.000  avg_to_date=0.103  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 17/50: compound_04 ===
+  [fixed_ewc_H12] task 17/50 (compound_04) step     0  loss 0.0899  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 17/50 (compound_04) step   749  loss 0.1459  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 17/50 (compound_04) step  1499  loss 0.0838  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 17: own=0.112  avg_to_date=0.104  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 18/50: compound_05 ===
+  [fixed_ewc_H12] task 18/50 (compound_05) step     0  loss 0.1738  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 18/50 (compound_05) step   749  loss 0.1191  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 18/50 (compound_05) step  1499  loss 0.0784  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 18: own=0.107  avg_to_date=0.104  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 19/50: compound_06 ===
+  [fixed_ewc_H12] task 19/50 (compound_06) step     0  loss 0.0635  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 19/50 (compound_06) step   749  loss 0.0621  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 19/50 (compound_06) step  1499  loss 0.1552  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 19: own=0.071  avg_to_date=0.102  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 20/50: compound_07 ===
+  [fixed_ewc_H12] task 20/50 (compound_07) step     0  loss 0.0537  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 20/50 (compound_07) step   749  loss 0.0411  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 20/50 (compound_07) step  1499  loss 0.0461  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 20: own=0.066  avg_to_date=0.100  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 21/50: compound_08 ===
+  [fixed_ewc_H12] task 21/50 (compound_08) step     0  loss 0.0284  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 21/50 (compound_08) step   749  loss 0.0314  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 21/50 (compound_08) step  1499  loss 0.0269  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 21: own=0.049  avg_to_date=0.097  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 22/50: compound_09 ===
+  [fixed_ewc_H12] task 22/50 (compound_09) step     0  loss 0.1198  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 22/50 (compound_09) step   749  loss 0.1749  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 22/50 (compound_09) step  1499  loss 0.1058  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 22: own=0.137  avg_to_date=0.099  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 23/50: compound_10 ===
+  [fixed_ewc_H12] task 23/50 (compound_10) step     0  loss 0.1352  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 23/50 (compound_10) step   749  loss 0.2244  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 23/50 (compound_10) step  1499  loss 0.0591  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 23: own=0.140  avg_to_date=0.101  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 24/50: compound_11 ===
+  [fixed_ewc_H12] task 24/50 (compound_11) step     0  loss 0.1815  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 24/50 (compound_11) step   749  loss 0.1480  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 24/50 (compound_11) step  1499  loss 0.1230  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 24: own=0.112  avg_to_date=0.100  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 25/50: compound_12 ===
+  [fixed_ewc_H12] task 25/50 (compound_12) step     0  loss 0.1182  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 25/50 (compound_12) step   749  loss 0.1525  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 25/50 (compound_12) step  1499  loss 0.1556  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 25: own=0.106  avg_to_date=0.100  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 26/50: compound_13 ===
+  [fixed_ewc_H12] task 26/50 (compound_13) step     0  loss 0.0886  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 26/50 (compound_13) step   749  loss 0.1460  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 26/50 (compound_13) step  1499  loss 0.0571  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 26: own=0.079  avg_to_date=0.100  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 27/50: compound_14 ===
+  [fixed_ewc_H12] task 27/50 (compound_14) step     0  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 27/50 (compound_14) step   749  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 27/50 (compound_14) step  1499  loss 0.0000  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 27: own=0.000  avg_to_date=0.096  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 28/50: compound_15 ===
+  [fixed_ewc_H12] task 28/50 (compound_15) step     0  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 28/50 (compound_15) step   749  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 28/50 (compound_15) step  1499  loss 0.0000  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 28: own=0.000  avg_to_date=0.092  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 29/50: compound_16 ===
+  [fixed_ewc_H12] task 29/50 (compound_16) step     0  loss 0.0226  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 29/50 (compound_16) step   749  loss 0.0246  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 29/50 (compound_16) step  1499  loss 0.0105  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 29: own=0.029  avg_to_date=0.090  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 30/50: compound_17 ===
+  [fixed_ewc_H12] task 30/50 (compound_17) step     0  loss 0.0466  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 30/50 (compound_17) step   749  loss 0.0735  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 30/50 (compound_17) step  1499  loss 0.0551  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 30: own=0.090  avg_to_date=0.090  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 31/50: compound_18 ===
+  [fixed_ewc_H12] task 31/50 (compound_18) step     0  loss 0.0390  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 31/50 (compound_18) step   749  loss 0.0386  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 31/50 (compound_18) step  1499  loss 0.0362  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 31: own=0.031  avg_to_date=0.088  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 32/50: compound_19 ===
+  [fixed_ewc_H12] task 32/50 (compound_19) step     0  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 32/50 (compound_19) step   749  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 32/50 (compound_19) step  1499  loss 0.0000  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 32: own=0.000  avg_to_date=0.085  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 33/50: compound_20 ===
+  [fixed_ewc_H12] task 33/50 (compound_20) step     0  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 33/50 (compound_20) step   749  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 33/50 (compound_20) step  1499  loss 0.0000  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 33: own=0.000  avg_to_date=0.082  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 34/50: compound_21 ===
+  [fixed_ewc_H12] task 34/50 (compound_21) step     0  loss 0.1429  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 34/50 (compound_21) step   749  loss 0.0840  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 34/50 (compound_21) step  1499  loss 0.0796  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 34: own=0.113  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 35/50: compound_22 ===
+  [fixed_ewc_H12] task 35/50 (compound_22) step     0  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 35/50 (compound_22) step   749  loss 0.0000  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 35/50 (compound_22) step  1499  loss 0.0000  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 35: own=0.000  avg_to_date=0.081  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 36/50: compound_23 ===
+  [fixed_ewc_H12] task 36/50 (compound_23) step     0  loss 0.1481  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 36/50 (compound_23) step   749  loss 0.1290  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 36/50 (compound_23) step  1499  loss 0.1544  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 36: own=0.123  avg_to_date=0.082  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 37/50: compound_24 ===
+  [fixed_ewc_H12] task 37/50 (compound_24) step     0  loss 0.0885  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 37/50 (compound_24) step   749  loss 0.0654  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 37/50 (compound_24) step  1499  loss 0.0147  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 37: own=0.104  avg_to_date=0.082  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 38/50: compound_25 ===
+  [fixed_ewc_H12] task 38/50 (compound_25) step     0  loss 0.0995  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 38/50 (compound_25) step   749  loss 0.0931  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 38/50 (compound_25) step  1499  loss 0.0712  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 38: own=0.117  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 39/50: compound_26 ===
+  [fixed_ewc_H12] task 39/50 (compound_26) step     0  loss 0.0608  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 39/50 (compound_26) step   749  loss 0.1922  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 39/50 (compound_26) step  1499  loss 0.1064  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 39: own=0.108  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 40/50: compound_27 ===
+  [fixed_ewc_H12] task 40/50 (compound_27) step     0  loss 0.0824  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 40/50 (compound_27) step   749  loss 0.0659  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 40/50 (compound_27) step  1499  loss 0.0485  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 40: own=0.076  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 41/50: compound_28 ===
+  [fixed_ewc_H12] task 41/50 (compound_28) step     0  loss 0.0333  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 41/50 (compound_28) step   749  loss 0.0482  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 41/50 (compound_28) step  1499  loss 0.0791  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 41: own=0.071  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 42/50: compound_29 ===
+  [fixed_ewc_H12] task 42/50 (compound_29) step     0  loss 0.1581  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 42/50 (compound_29) step   749  loss 0.0646  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 42/50 (compound_29) step  1499  loss 0.0989  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 42: own=0.111  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 43/50: compound_30 ===
+  [fixed_ewc_H12] task 43/50 (compound_30) step     0  loss 0.1413  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 43/50 (compound_30) step   749  loss 0.0810  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 43/50 (compound_30) step  1499  loss 0.1089  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 43: own=0.096  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 44/50: compound_31 ===
+  [fixed_ewc_H12] task 44/50 (compound_31) step     0  loss 0.0663  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 44/50 (compound_31) step   749  loss 0.0670  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 44/50 (compound_31) step  1499  loss 0.0685  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 44: own=0.080  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 45/50: compound_32 ===
+  [fixed_ewc_H12] task 45/50 (compound_32) step     0  loss 0.0626  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 45/50 (compound_32) step   749  loss 0.0547  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 45/50 (compound_32) step  1499  loss 0.1092  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 45: own=0.090  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 46/50: compound_33 ===
+  [fixed_ewc_H12] task 46/50 (compound_33) step     0  loss 0.0856  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 46/50 (compound_33) step   749  loss 0.1045  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 46/50 (compound_33) step  1499  loss 0.1121  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 46: own=0.081  avg_to_date=0.082  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 47/50: compound_34 ===
+  [fixed_ewc_H12] task 47/50 (compound_34) step     0  loss 0.1503  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 47/50 (compound_34) step   749  loss 0.0965  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 47/50 (compound_34) step  1499  loss 0.0942  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 47: own=0.106  avg_to_date=0.083  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 48/50: compound_35 ===
+  [fixed_ewc_H12] task 48/50 (compound_35) step     0  loss 0.1434  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 48/50 (compound_35) step   749  loss 0.0671  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 48/50 (compound_35) step  1499  loss 0.1521  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 48: own=0.085  avg_to_date=0.082  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 49/50: compound_36 ===
+  [fixed_ewc_H12] task 49/50 (compound_36) step     0  loss 0.1358  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 49/50 (compound_36) step   749  loss 0.0656  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 49/50 (compound_36) step  1499  loss 0.0832  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 49: own=0.082  avg_to_date=0.082  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H12] === Task 50/50: compound_37 ===
+  [fixed_ewc_H12] task 50/50 (compound_37) step     0  loss 0.0709  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 50/50 (compound_37) step   749  loss 0.1133  arch [12, 12, 4]  params 364
+  [fixed_ewc_H12] task 50/50 (compound_37) step  1499  loss 0.1160  arch [12, 12, 4]  params 364
+[fixed_ewc_H12] After task 50: own=0.065  avg_to_date=0.082  arch=[12, 12, 4] params=364
+
+[fixed_ewc_H16] curriculum start — arch [16, 16, 4]  params 548  growth=False pruning=False
+
+[fixed_ewc_H16] === Task 1/50: single_00 ===
+  [fixed_ewc_H16] task 1/50 (single_00) step     0  loss 0.7472  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 1/50 (single_00) step   749  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 1/50 (single_00) step  1499  loss 0.0000  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 1: own=0.000  avg_to_date=0.000  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 2/50: single_01 ===
+  [fixed_ewc_H16] task 2/50 (single_01) step     0  loss 0.1021  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 2/50 (single_01) step   749  loss 0.1009  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 2/50 (single_01) step  1499  loss 0.0736  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 2: own=0.112  avg_to_date=0.056  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 3/50: single_02 ===
+  [fixed_ewc_H16] task 3/50 (single_02) step     0  loss 0.0552  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 3/50 (single_02) step   749  loss 0.0964  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 3/50 (single_02) step  1499  loss 0.0595  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 3: own=0.114  avg_to_date=0.075  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 4/50: single_03 ===
+  [fixed_ewc_H16] task 4/50 (single_03) step     0  loss 0.0778  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 4/50 (single_03) step   749  loss 0.0614  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 4/50 (single_03) step  1499  loss 0.0611  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 4: own=0.107  avg_to_date=0.083  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 5/50: single_04 ===
+  [fixed_ewc_H16] task 5/50 (single_04) step     0  loss 0.0744  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 5/50 (single_04) step   749  loss 0.0328  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 5/50 (single_04) step  1499  loss 0.0666  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 5: own=0.058  avg_to_date=0.078  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 6/50: single_05 ===
+  [fixed_ewc_H16] task 6/50 (single_05) step     0  loss 0.0865  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 6/50 (single_05) step   749  loss 0.0575  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 6/50 (single_05) step  1499  loss 0.0939  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 6: own=0.074  avg_to_date=0.077  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 7/50: single_06 ===
+  [fixed_ewc_H16] task 7/50 (single_06) step     0  loss 0.1444  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 7/50 (single_06) step   749  loss 0.0904  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 7/50 (single_06) step  1499  loss 0.0741  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 7: own=0.097  avg_to_date=0.080  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 8/50: single_07 ===
+  [fixed_ewc_H16] task 8/50 (single_07) step     0  loss 0.1069  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 8/50 (single_07) step   749  loss 0.1065  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 8/50 (single_07) step  1499  loss 0.0336  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 8: own=0.116  avg_to_date=0.085  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 9/50: single_08 ===
+  [fixed_ewc_H16] task 9/50 (single_08) step     0  loss 0.1176  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 9/50 (single_08) step   749  loss 0.1266  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 9/50 (single_08) step  1499  loss 0.0953  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 9: own=0.085  avg_to_date=0.085  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 10/50: single_09 ===
+  [fixed_ewc_H16] task 10/50 (single_09) step     0  loss 0.0852  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 10/50 (single_09) step   749  loss 0.1302  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 10/50 (single_09) step  1499  loss 0.1138  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 10: own=0.096  avg_to_date=0.085  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 11/50: single_10 ===
+  [fixed_ewc_H16] task 11/50 (single_10) step     0  loss 0.0467  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 11/50 (single_10) step   749  loss 0.0524  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 11/50 (single_10) step  1499  loss 0.0493  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 11: own=0.031  avg_to_date=0.080  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 12/50: single_11 ===
+  [fixed_ewc_H16] task 12/50 (single_11) step     0  loss 0.0915  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 12/50 (single_11) step   749  loss 0.0705  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 12/50 (single_11) step  1499  loss 0.0562  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 12: own=0.081  avg_to_date=0.080  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 13/50: compound_00 ===
+  [fixed_ewc_H16] task 13/50 (compound_00) step     0  loss 0.0471  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 13/50 (compound_00) step   749  loss 0.0494  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 13/50 (compound_00) step  1499  loss 0.0560  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 13: own=0.055  avg_to_date=0.078  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 14/50: compound_01 ===
+  [fixed_ewc_H16] task 14/50 (compound_01) step     0  loss 0.0060  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 14/50 (compound_01) step   749  loss 0.0280  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 14/50 (compound_01) step  1499  loss 0.0316  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 14: own=0.023  avg_to_date=0.074  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 15/50: compound_02 ===
+  [fixed_ewc_H16] task 15/50 (compound_02) step     0  loss 0.1822  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 15/50 (compound_02) step   749  loss 0.0625  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 15/50 (compound_02) step  1499  loss 0.0656  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 15: own=0.113  avg_to_date=0.076  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 16/50: compound_03 ===
+  [fixed_ewc_H16] task 16/50 (compound_03) step     0  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 16/50 (compound_03) step   749  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 16/50 (compound_03) step  1499  loss 0.0000  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 16: own=0.000  avg_to_date=0.071  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 17/50: compound_04 ===
+  [fixed_ewc_H16] task 17/50 (compound_04) step     0  loss 0.0889  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 17/50 (compound_04) step   749  loss 0.0497  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 17/50 (compound_04) step  1499  loss 0.0494  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 17: own=0.072  avg_to_date=0.071  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 18/50: compound_05 ===
+  [fixed_ewc_H16] task 18/50 (compound_05) step     0  loss 0.1361  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 18/50 (compound_05) step   749  loss 0.0907  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 18/50 (compound_05) step  1499  loss 0.1009  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 18: own=0.118  avg_to_date=0.074  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 19/50: compound_06 ===
+  [fixed_ewc_H16] task 19/50 (compound_06) step     0  loss 0.0072  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 19/50 (compound_06) step   749  loss 0.0216  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 19/50 (compound_06) step  1499  loss 0.0412  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 19: own=0.027  avg_to_date=0.072  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 20/50: compound_07 ===
+  [fixed_ewc_H16] task 20/50 (compound_07) step     0  loss 0.1030  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 20/50 (compound_07) step   749  loss 0.0366  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 20/50 (compound_07) step  1499  loss 0.0916  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 20: own=0.099  avg_to_date=0.073  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 21/50: compound_08 ===
+  [fixed_ewc_H16] task 21/50 (compound_08) step     0  loss 0.0121  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 21/50 (compound_08) step   749  loss 0.0072  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 21/50 (compound_08) step  1499  loss 0.0000  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 21: own=0.007  avg_to_date=0.070  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 22/50: compound_09 ===
+  [fixed_ewc_H16] task 22/50 (compound_09) step     0  loss 0.0266  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 22/50 (compound_09) step   749  loss 0.0633  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 22/50 (compound_09) step  1499  loss 0.0244  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 22: own=0.037  avg_to_date=0.068  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 23/50: compound_10 ===
+  [fixed_ewc_H16] task 23/50 (compound_10) step     0  loss 0.1215  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 23/50 (compound_10) step   749  loss 0.0748  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 23/50 (compound_10) step  1499  loss 0.0838  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 23: own=0.090  avg_to_date=0.069  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 24/50: compound_11 ===
+  [fixed_ewc_H16] task 24/50 (compound_11) step     0  loss 0.0415  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 24/50 (compound_11) step   749  loss 0.0679  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 24/50 (compound_11) step  1499  loss 0.0466  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 24: own=0.093  avg_to_date=0.070  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 25/50: compound_12 ===
+  [fixed_ewc_H16] task 25/50 (compound_12) step     0  loss 0.0304  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 25/50 (compound_12) step   749  loss 0.0666  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 25/50 (compound_12) step  1499  loss 0.0488  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 25: own=0.054  avg_to_date=0.069  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 26/50: compound_13 ===
+  [fixed_ewc_H16] task 26/50 (compound_13) step     0  loss 0.0899  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 26/50 (compound_13) step   749  loss 0.0968  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 26/50 (compound_13) step  1499  loss 0.0987  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 26: own=0.088  avg_to_date=0.069  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 27/50: compound_14 ===
+  [fixed_ewc_H16] task 27/50 (compound_14) step     0  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 27/50 (compound_14) step   749  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 27/50 (compound_14) step  1499  loss 0.0000  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 27: own=0.000  avg_to_date=0.067  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 28/50: compound_15 ===
+  [fixed_ewc_H16] task 28/50 (compound_15) step     0  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 28/50 (compound_15) step   749  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 28/50 (compound_15) step  1499  loss 0.0000  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 28: own=0.000  avg_to_date=0.064  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 29/50: compound_16 ===
+  [fixed_ewc_H16] task 29/50 (compound_16) step     0  loss 0.0886  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 29/50 (compound_16) step   749  loss 0.1597  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 29/50 (compound_16) step  1499  loss 0.1452  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 29: own=0.117  avg_to_date=0.066  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 30/50: compound_17 ===
+  [fixed_ewc_H16] task 30/50 (compound_17) step     0  loss 0.0752  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 30/50 (compound_17) step   749  loss 0.0661  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 30/50 (compound_17) step  1499  loss 0.0528  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 30: own=0.056  avg_to_date=0.066  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 31/50: compound_18 ===
+  [fixed_ewc_H16] task 31/50 (compound_18) step     0  loss 0.1187  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 31/50 (compound_18) step   749  loss 0.0808  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 31/50 (compound_18) step  1499  loss 0.0666  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 31: own=0.099  avg_to_date=0.067  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 32/50: compound_19 ===
+  [fixed_ewc_H16] task 32/50 (compound_19) step     0  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 32/50 (compound_19) step   749  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 32/50 (compound_19) step  1499  loss 0.0000  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 32: own=0.000  avg_to_date=0.065  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 33/50: compound_20 ===
+  [fixed_ewc_H16] task 33/50 (compound_20) step     0  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 33/50 (compound_20) step   749  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 33/50 (compound_20) step  1499  loss 0.0000  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 33: own=0.000  avg_to_date=0.063  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 34/50: compound_21 ===
+  [fixed_ewc_H16] task 34/50 (compound_21) step     0  loss 0.0672  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 34/50 (compound_21) step   749  loss 0.1479  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 34/50 (compound_21) step  1499  loss 0.0650  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 34: own=0.100  avg_to_date=0.064  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 35/50: compound_22 ===
+  [fixed_ewc_H16] task 35/50 (compound_22) step     0  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 35/50 (compound_22) step   749  loss 0.0000  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 35/50 (compound_22) step  1499  loss 0.0000  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 35: own=0.000  avg_to_date=0.062  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 36/50: compound_23 ===
+  [fixed_ewc_H16] task 36/50 (compound_23) step     0  loss 0.0730  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 36/50 (compound_23) step   749  loss 0.0961  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 36/50 (compound_23) step  1499  loss 0.0656  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 36: own=0.074  avg_to_date=0.062  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 37/50: compound_24 ===
+  [fixed_ewc_H16] task 37/50 (compound_24) step     0  loss 0.0737  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 37/50 (compound_24) step   749  loss 0.0881  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 37/50 (compound_24) step  1499  loss 0.0639  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 37: own=0.061  avg_to_date=0.062  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 38/50: compound_25 ===
+  [fixed_ewc_H16] task 38/50 (compound_25) step     0  loss 0.1066  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 38/50 (compound_25) step   749  loss 0.0777  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 38/50 (compound_25) step  1499  loss 0.1095  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 38: own=0.093  avg_to_date=0.063  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 39/50: compound_26 ===
+  [fixed_ewc_H16] task 39/50 (compound_26) step     0  loss 0.1169  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 39/50 (compound_26) step   749  loss 0.1415  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 39/50 (compound_26) step  1499  loss 0.0620  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 39: own=0.104  avg_to_date=0.064  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 40/50: compound_27 ===
+  [fixed_ewc_H16] task 40/50 (compound_27) step     0  loss 0.0332  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 40/50 (compound_27) step   749  loss 0.0593  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 40/50 (compound_27) step  1499  loss 0.0528  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 40: own=0.070  avg_to_date=0.064  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 41/50: compound_28 ===
+  [fixed_ewc_H16] task 41/50 (compound_28) step     0  loss 0.0045  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 41/50 (compound_28) step   749  loss 0.0071  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 41/50 (compound_28) step  1499  loss 0.0070  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 41: own=0.005  avg_to_date=0.062  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 42/50: compound_29 ===
+  [fixed_ewc_H16] task 42/50 (compound_29) step     0  loss 0.0799  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 42/50 (compound_29) step   749  loss 0.0722  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 42/50 (compound_29) step  1499  loss 0.0637  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 42: own=0.037  avg_to_date=0.061  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 43/50: compound_30 ===
+  [fixed_ewc_H16] task 43/50 (compound_30) step     0  loss 0.0186  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 43/50 (compound_30) step   749  loss 0.0625  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 43/50 (compound_30) step  1499  loss 0.0748  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 43: own=0.048  avg_to_date=0.061  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 44/50: compound_31 ===
+  [fixed_ewc_H16] task 44/50 (compound_31) step     0  loss 0.0524  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 44/50 (compound_31) step   749  loss 0.0787  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 44/50 (compound_31) step  1499  loss 0.0577  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 44: own=0.053  avg_to_date=0.061  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 45/50: compound_32 ===
+  [fixed_ewc_H16] task 45/50 (compound_32) step     0  loss 0.0503  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 45/50 (compound_32) step   749  loss 0.0613  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 45/50 (compound_32) step  1499  loss 0.0702  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 45: own=0.080  avg_to_date=0.061  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 46/50: compound_33 ===
+  [fixed_ewc_H16] task 46/50 (compound_33) step     0  loss 0.0862  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 46/50 (compound_33) step   749  loss 0.1268  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 46/50 (compound_33) step  1499  loss 0.0314  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 46: own=0.084  avg_to_date=0.062  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 47/50: compound_34 ===
+  [fixed_ewc_H16] task 47/50 (compound_34) step     0  loss 0.1590  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 47/50 (compound_34) step   749  loss 0.1105  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 47/50 (compound_34) step  1499  loss 0.0571  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 47: own=0.103  avg_to_date=0.062  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 48/50: compound_35 ===
+  [fixed_ewc_H16] task 48/50 (compound_35) step     0  loss 0.0733  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 48/50 (compound_35) step   749  loss 0.0479  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 48/50 (compound_35) step  1499  loss 0.1283  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 48: own=0.092  avg_to_date=0.063  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 49/50: compound_36 ===
+  [fixed_ewc_H16] task 49/50 (compound_36) step     0  loss 0.0418  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 49/50 (compound_36) step   749  loss 0.0364  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 49/50 (compound_36) step  1499  loss 0.0142  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 49: own=0.014  avg_to_date=0.062  arch=[16, 16, 4] params=548
+
+[fixed_ewc_H16] === Task 50/50: compound_37 ===
+  [fixed_ewc_H16] task 50/50 (compound_37) step     0  loss 0.1603  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 50/50 (compound_37) step   749  loss 0.0653  arch [16, 16, 4]  params 548
+  [fixed_ewc_H16] task 50/50 (compound_37) step  1499  loss 0.1041  arch [16, 16, 4]  params 548
+[fixed_ewc_H16] After task 50: own=0.101  avg_to_date=0.062  arch=[16, 16, 4] params=548
+
+[packnet_H8] curriculum start — arch [8, 8, 4]  params 212  PackNet, n_tasks=50
+
+[packnet_H8] === Task 1/50: single_00 ===
+  [packnet_H8] task 1/50 (single_00) step     0  loss 0.4754  frozen=0/212
+  [packnet_H8] task 1/50 (single_00) step   749  loss 0.0000  frozen=0/212
+  [packnet_H8] task 1/50 (single_00) step  1499  loss 0.0000  frozen=0/212
+[packnet_H8] After task 1: own=1.000  avg_to_date=1.000  frozen=7
+
+[packnet_H8] === Task 2/50: single_01 ===
+  [packnet_H8] task 2/50 (single_01) step     0  loss 0.2981  frozen=7/212
+  [packnet_H8] task 2/50 (single_01) step   749  loss 0.0000  frozen=7/212
+  [packnet_H8] task 2/50 (single_01) step  1499  loss 0.0000  frozen=7/212
+[packnet_H8] After task 2: own=1.000  avg_to_date=1.000  frozen=14
+
+[packnet_H8] === Task 3/50: single_02 ===
+  [packnet_H8] task 3/50 (single_02) step     0  loss 0.6367  frozen=14/212
+  [packnet_H8] task 3/50 (single_02) step   749  loss 0.0000  frozen=14/212
+  [packnet_H8] task 3/50 (single_02) step  1499  loss 0.0000  frozen=14/212
+[packnet_H8] After task 3: own=1.000  avg_to_date=1.000  frozen=21
+
+[packnet_H8] === Task 4/50: single_03 ===
+  [packnet_H8] task 4/50 (single_03) step     0  loss 0.4846  frozen=21/212
+  [packnet_H8] task 4/50 (single_03) step   749  loss 0.0000  frozen=21/212
+  [packnet_H8] task 4/50 (single_03) step  1499  loss 0.0000  frozen=21/212
+[packnet_H8] After task 4: own=1.000  avg_to_date=1.000  frozen=28
+
+[packnet_H8] === Task 5/50: single_04 ===
+  [packnet_H8] task 5/50 (single_04) step     0  loss 0.5643  frozen=28/212
+  [packnet_H8] task 5/50 (single_04) step   749  loss 0.0000  frozen=28/212
+  [packnet_H8] task 5/50 (single_04) step  1499  loss 0.0000  frozen=28/212
+[packnet_H8] After task 5: own=0.971  avg_to_date=0.994  frozen=34
+
+[packnet_H8] === Task 6/50: single_05 ===
+  [packnet_H8] task 6/50 (single_05) step     0  loss 0.3953  frozen=34/212
+  [packnet_H8] task 6/50 (single_05) step   749  loss 0.0000  frozen=34/212
+  [packnet_H8] task 6/50 (single_05) step  1499  loss 0.0000  frozen=34/212
+[packnet_H8] After task 6: own=0.970  avg_to_date=0.990  frozen=40
+
+[packnet_H8] === Task 7/50: single_06 ===
+  [packnet_H8] task 7/50 (single_06) step     0  loss 0.5046  frozen=40/212
+  [packnet_H8] task 7/50 (single_06) step   749  loss 0.0000  frozen=40/212
+  [packnet_H8] task 7/50 (single_06) step  1499  loss 0.0000  frozen=40/212
+[packnet_H8] After task 7: own=0.902  avg_to_date=0.978  frozen=46
+
+[packnet_H8] === Task 8/50: single_07 ===
+  [packnet_H8] task 8/50 (single_07) step     0  loss 0.1704  frozen=46/212
+  [packnet_H8] task 8/50 (single_07) step   749  loss 0.0000  frozen=46/212
+  [packnet_H8] task 8/50 (single_07) step  1499  loss 0.0000  frozen=46/212
+[packnet_H8] After task 8: own=0.874  avg_to_date=0.965  frozen=52
+
+[packnet_H8] === Task 9/50: single_08 ===
+  [packnet_H8] task 9/50 (single_08) step     0  loss 0.5128  frozen=52/212
+  [packnet_H8] task 9/50 (single_08) step   749  loss 0.0000  frozen=52/212
+  [packnet_H8] task 9/50 (single_08) step  1499  loss 0.0000  frozen=52/212
+[packnet_H8] After task 9: own=0.606  avg_to_date=0.925  frozen=56
+
+[packnet_H8] === Task 10/50: single_09 ===
+  [packnet_H8] task 10/50 (single_09) step     0  loss 0.6844  frozen=56/212
+  [packnet_H8] task 10/50 (single_09) step   749  loss 0.0000  frozen=56/212
+  [packnet_H8] task 10/50 (single_09) step  1499  loss 0.0000  frozen=56/212
+[packnet_H8] After task 10: own=0.761  avg_to_date=0.908  frozen=60
+
+[packnet_H8] === Task 11/50: single_10 ===
+  [packnet_H8] task 11/50 (single_10) step     0  loss 0.0656  frozen=60/212
+  [packnet_H8] task 11/50 (single_10) step   749  loss 0.0010  frozen=60/212
+  [packnet_H8] task 11/50 (single_10) step  1499  loss 0.0000  frozen=60/212
+[packnet_H8] After task 11: own=0.759  avg_to_date=0.895  frozen=64
+
+[packnet_H8] === Task 12/50: single_11 ===
+  [packnet_H8] task 12/50 (single_11) step     0  loss 0.3528  frozen=64/212
+  [packnet_H8] task 12/50 (single_11) step   749  loss 0.0000  frozen=64/212
+  [packnet_H8] task 12/50 (single_11) step  1499  loss 0.0000  frozen=64/212
+[packnet_H8] After task 12: own=0.642  avg_to_date=0.874  frozen=68
+
+[packnet_H8] === Task 13/50: compound_00 ===
+  [packnet_H8] task 13/50 (compound_00) step     0  loss 0.2264  frozen=68/212
+  [packnet_H8] task 13/50 (compound_00) step   749  loss 0.0000  frozen=68/212
+  [packnet_H8] task 13/50 (compound_00) step  1499  loss 0.0000  frozen=68/212
+[packnet_H8] After task 13: own=0.496  avg_to_date=0.845  frozen=72
+
+[packnet_H8] === Task 14/50: compound_01 ===
+  [packnet_H8] task 14/50 (compound_01) step     0  loss 0.1225  frozen=72/212
+  [packnet_H8] task 14/50 (compound_01) step   749  loss 0.0000  frozen=72/212
+  [packnet_H8] task 14/50 (compound_01) step  1499  loss 0.0000  frozen=72/212
+[packnet_H8] After task 14: own=0.251  avg_to_date=0.802  frozen=76
+
+[packnet_H8] === Task 15/50: compound_02 ===
+  [packnet_H8] task 15/50 (compound_02) step     0  loss 0.1254  frozen=76/212
+  [packnet_H8] task 15/50 (compound_02) step   749  loss 0.0000  frozen=76/212
+  [packnet_H8] task 15/50 (compound_02) step  1499  loss 0.0000  frozen=76/212
+[packnet_H8] After task 15: own=0.162  avg_to_date=0.760  frozen=80
+
+[packnet_H8] === Task 16/50: compound_03 ===
+  [packnet_H8] task 16/50 (compound_03) step     0  loss 0.4149  frozen=80/212
+  [packnet_H8] task 16/50 (compound_03) step   749  loss 0.0000  frozen=80/212
+  [packnet_H8] task 16/50 (compound_03) step  1499  loss 0.0000  frozen=80/212
+[packnet_H8] After task 16: own=0.105  avg_to_date=0.719  frozen=84
+
+[packnet_H8] === Task 17/50: compound_04 ===
+  [packnet_H8] task 17/50 (compound_04) step     0  loss 0.0565  frozen=84/212
+  [packnet_H8] task 17/50 (compound_04) step   749  loss 0.0106  frozen=84/212
+  [packnet_H8] task 17/50 (compound_04) step  1499  loss 0.0000  frozen=84/212
+[packnet_H8] After task 17: own=0.411  avg_to_date=0.700  frozen=88
+
+[packnet_H8] === Task 18/50: compound_05 ===
+  [packnet_H8] task 18/50 (compound_05) step     0  loss 0.0719  frozen=88/212
+  [packnet_H8] task 18/50 (compound_05) step   749  loss 0.0000  frozen=88/212
+  [packnet_H8] task 18/50 (compound_05) step  1499  loss 0.0000  frozen=88/212
+[packnet_H8] After task 18: own=0.355  avg_to_date=0.681  frozen=92
+
+[packnet_H8] === Task 19/50: compound_06 ===
+  [packnet_H8] task 19/50 (compound_06) step     0  loss 0.1325  frozen=92/212
+  [packnet_H8] task 19/50 (compound_06) step   749  loss 0.0025  frozen=92/212
+  [packnet_H8] task 19/50 (compound_06) step  1499  loss 0.0000  frozen=92/212
+[packnet_H8] After task 19: own=0.169  avg_to_date=0.654  frozen=96
+
+[packnet_H8] === Task 20/50: compound_07 ===
+  [packnet_H8] task 20/50 (compound_07) step     0  loss 0.1334  frozen=96/212
+  [packnet_H8] task 20/50 (compound_07) step   749  loss 0.0000  frozen=96/212
+  [packnet_H8] task 20/50 (compound_07) step  1499  loss 0.0000  frozen=96/212
+[packnet_H8] After task 20: own=0.041  avg_to_date=0.624  frozen=100
+
+[packnet_H8] === Task 21/50: compound_08 ===
+  [packnet_H8] task 21/50 (compound_08) step     0  loss 0.5396  frozen=100/212
+  [packnet_H8] task 21/50 (compound_08) step   749  loss 0.0000  frozen=100/212
+  [packnet_H8] task 21/50 (compound_08) step  1499  loss 0.0000  frozen=100/212
+[packnet_H8] After task 21: own=0.385  avg_to_date=0.612  frozen=104
+
+[packnet_H8] === Task 22/50: compound_09 ===
+  [packnet_H8] task 22/50 (compound_09) step     0  loss 0.7456  frozen=104/212
+  [packnet_H8] task 22/50 (compound_09) step   749  loss 0.0000  frozen=104/212
+  [packnet_H8] task 22/50 (compound_09) step  1499  loss 0.0000  frozen=104/212
+[packnet_H8] After task 22: own=0.509  avg_to_date=0.608  frozen=108
+
+[packnet_H8] === Task 23/50: compound_10 ===
+  [packnet_H8] task 23/50 (compound_10) step     0  loss 0.1492  frozen=108/212
+  [packnet_H8] task 23/50 (compound_10) step   749  loss 0.0000  frozen=108/212
+  [packnet_H8] task 23/50 (compound_10) step  1499  loss 0.0000  frozen=108/212
+[packnet_H8] After task 23: own=0.413  avg_to_date=0.599  frozen=113
+
+[packnet_H8] === Task 24/50: compound_11 ===
+  [packnet_H8] task 24/50 (compound_11) step     0  loss 0.9349  frozen=113/212
+  [packnet_H8] task 24/50 (compound_11) step   749  loss 0.0000  frozen=113/212
+  [packnet_H8] task 24/50 (compound_11) step  1499  loss 0.0000  frozen=113/212
+[packnet_H8] After task 24: own=0.020  avg_to_date=0.575  frozen=117
+
+[packnet_H8] === Task 25/50: compound_12 ===
+  [packnet_H8] task 25/50 (compound_12) step     0  loss 0.1357  frozen=117/212
+  [packnet_H8] task 25/50 (compound_12) step   749  loss 0.0000  frozen=117/212
+  [packnet_H8] task 25/50 (compound_12) step  1499  loss 0.0000  frozen=117/212
+[packnet_H8] After task 25: own=0.034  avg_to_date=0.553  frozen=122
+
+[packnet_H8] === Task 26/50: compound_13 ===
+  [packnet_H8] task 26/50 (compound_13) step     0  loss 0.3862  frozen=122/212
+  [packnet_H8] task 26/50 (compound_13) step   749  loss 0.0000  frozen=122/212
+  [packnet_H8] task 26/50 (compound_13) step  1499  loss 0.0000  frozen=122/212
+[packnet_H8] After task 26: own=0.058  avg_to_date=0.534  frozen=126
+
+[packnet_H8] === Task 27/50: compound_14 ===
+  [packnet_H8] task 27/50 (compound_14) step     0  loss 0.1896  frozen=126/212
+  [packnet_H8] task 27/50 (compound_14) step   749  loss 0.0000  frozen=126/212
+  [packnet_H8] task 27/50 (compound_14) step  1499  loss 0.0000  frozen=126/212
+[packnet_H8] After task 27: own=0.023  avg_to_date=0.515  frozen=131
+
+[packnet_H8] === Task 28/50: compound_15 ===
+  [packnet_H8] task 28/50 (compound_15) step     0  loss 0.0453  frozen=131/212
+  [packnet_H8] task 28/50 (compound_15) step   749  loss 0.0000  frozen=131/212
+  [packnet_H8] task 28/50 (compound_15) step  1499  loss 0.0000  frozen=131/212
+[packnet_H8] After task 28: own=0.029  avg_to_date=0.498  frozen=135
+
+[packnet_H8] === Task 29/50: compound_16 ===
+  [packnet_H8] task 29/50 (compound_16) step     0  loss 0.0651  frozen=135/212
+  [packnet_H8] task 29/50 (compound_16) step   749  loss 0.0017  frozen=135/212
+  [packnet_H8] task 29/50 (compound_16) step  1499  loss 0.0000  frozen=135/212
+[packnet_H8] After task 29: own=0.079  avg_to_date=0.484  frozen=140
+
+[packnet_H8] === Task 30/50: compound_17 ===
+  [packnet_H8] task 30/50 (compound_17) step     0  loss 0.2010  frozen=140/212
+  [packnet_H8] task 30/50 (compound_17) step   749  loss 0.0000  frozen=140/212
+  [packnet_H8] task 30/50 (compound_17) step  1499  loss 0.0000  frozen=140/212
+[packnet_H8] After task 30: own=0.031  avg_to_date=0.468  frozen=144
+
+[packnet_H8] === Task 31/50: compound_18 ===
+  [packnet_H8] task 31/50 (compound_18) step     0  loss 0.0425  frozen=144/212
+  [packnet_H8] task 31/50 (compound_18) step   749  loss 0.0000  frozen=144/212
+  [packnet_H8] task 31/50 (compound_18) step  1499  loss 0.0000  frozen=144/212
+[packnet_H8] After task 31: own=0.049  avg_to_date=0.455  frozen=149
+
+[packnet_H8] === Task 32/50: compound_19 ===
+  [packnet_H8] task 32/50 (compound_19) step     0  loss 0.1448  frozen=149/212
+  [packnet_H8] task 32/50 (compound_19) step   749  loss 0.0753  frozen=149/212
+  [packnet_H8] task 32/50 (compound_19) step  1499  loss 0.0028  frozen=149/212
+[packnet_H8] After task 32: own=0.063  avg_to_date=0.443  frozen=153
+
+[packnet_H8] === Task 33/50: compound_20 ===
+  [packnet_H8] task 33/50 (compound_20) step     0  loss 0.3382  frozen=153/212
+  [packnet_H8] task 33/50 (compound_20) step   749  loss 0.0000  frozen=153/212
+  [packnet_H8] task 33/50 (compound_20) step  1499  loss 0.0106  frozen=153/212
+[packnet_H8] After task 33: own=0.033  avg_to_date=0.430  frozen=157
+
+[packnet_H8] === Task 34/50: compound_21 ===
+  [packnet_H8] task 34/50 (compound_21) step     0  loss 0.0764  frozen=157/212
+  [packnet_H8] task 34/50 (compound_21) step   749  loss 0.0395  frozen=157/212
+  [packnet_H8] task 34/50 (compound_21) step  1499  loss 0.0000  frozen=157/212
+[packnet_H8] After task 34: own=0.022  avg_to_date=0.418  frozen=160
+
+[packnet_H8] === Task 35/50: compound_22 ===
+  [packnet_H8] task 35/50 (compound_22) step     0  loss 0.0898  frozen=160/212
+  [packnet_H8] task 35/50 (compound_22) step   749  loss 0.0000  frozen=160/212
+  [packnet_H8] task 35/50 (compound_22) step  1499  loss 0.0000  frozen=160/212
+[packnet_H8] After task 35: own=0.020  avg_to_date=0.407  frozen=164
+
+[packnet_H8] === Task 36/50: compound_23 ===
+  [packnet_H8] task 36/50 (compound_23) step     0  loss 0.0170  frozen=164/212
+  [packnet_H8] task 36/50 (compound_23) step   749  loss 0.0000  frozen=164/212
+  [packnet_H8] task 36/50 (compound_23) step  1499  loss 0.0000  frozen=164/212
+[packnet_H8] After task 36: own=0.062  avg_to_date=0.397  frozen=167
+
+[packnet_H8] === Task 37/50: compound_24 ===
+  [packnet_H8] task 37/50 (compound_24) step     0  loss 0.0782  frozen=167/212
+  [packnet_H8] task 37/50 (compound_24) step   749  loss 0.0555  frozen=167/212
+  [packnet_H8] task 37/50 (compound_24) step  1499  loss 0.0398  frozen=167/212
+[packnet_H8] After task 37: own=0.071  avg_to_date=0.389  frozen=171
+
+[packnet_H8] === Task 38/50: compound_25 ===
+  [packnet_H8] task 38/50 (compound_25) step     0  loss 0.0039  frozen=171/212
+  [packnet_H8] task 38/50 (compound_25) step   749  loss 0.0000  frozen=171/212
+  [packnet_H8] task 38/50 (compound_25) step  1499  loss 0.0006  frozen=171/212
+[packnet_H8] After task 38: own=0.051  avg_to_date=0.380  frozen=174
+
+[packnet_H8] === Task 39/50: compound_26 ===
+  [packnet_H8] task 39/50 (compound_26) step     0  loss 0.1327  frozen=174/212
+  [packnet_H8] task 39/50 (compound_26) step   749  loss 0.0139  frozen=174/212
+  [packnet_H8] task 39/50 (compound_26) step  1499  loss 0.0000  frozen=174/212
+[packnet_H8] After task 39: own=0.023  avg_to_date=0.370  frozen=178
+
+[packnet_H8] === Task 40/50: compound_27 ===
+  [packnet_H8] task 40/50 (compound_27) step     0  loss 0.1448  frozen=178/212
+  [packnet_H8] task 40/50 (compound_27) step   749  loss 0.0027  frozen=178/212
+  [packnet_H8] task 40/50 (compound_27) step  1499  loss 0.0000  frozen=178/212
+[packnet_H8] After task 40: own=0.029  avg_to_date=0.362  frozen=181
+
+[packnet_H8] === Task 41/50: compound_28 ===
+  [packnet_H8] task 41/50 (compound_28) step     0  loss 0.1174  frozen=181/212
+  [packnet_H8] task 41/50 (compound_28) step   749  loss 0.0244  frozen=181/212
+  [packnet_H8] task 41/50 (compound_28) step  1499  loss 0.0000  frozen=181/212
+[packnet_H8] After task 41: own=0.031  avg_to_date=0.354  frozen=185
+
+[packnet_H8] === Task 42/50: compound_29 ===
+  [packnet_H8] task 42/50 (compound_29) step     0  loss 0.0318  frozen=185/212
+  [packnet_H8] task 42/50 (compound_29) step   749  loss 0.0409  frozen=185/212
+  [packnet_H8] task 42/50 (compound_29) step  1499  loss 0.0204  frozen=185/212
+[packnet_H8] After task 42: own=0.010  avg_to_date=0.346  frozen=188
+
+[packnet_H8] === Task 43/50: compound_30 ===
+  [packnet_H8] task 43/50 (compound_30) step     0  loss 0.0302  frozen=188/212
+  [packnet_H8] task 43/50 (compound_30) step   749  loss 0.0137  frozen=188/212
+  [packnet_H8] task 43/50 (compound_30) step  1499  loss 0.0327  frozen=188/212
+[packnet_H8] After task 43: own=0.023  avg_to_date=0.338  frozen=192
+
+[packnet_H8] === Task 44/50: compound_31 ===
+  [packnet_H8] task 44/50 (compound_31) step     0  loss 0.0192  frozen=192/212
+  [packnet_H8] task 44/50 (compound_31) step   749  loss 0.0015  frozen=192/212
+  [packnet_H8] task 44/50 (compound_31) step  1499  loss 0.0253  frozen=192/212
+[packnet_H8] After task 44: own=0.044  avg_to_date=0.331  frozen=194
+
+[packnet_H8] === Task 45/50: compound_32 ===
+  [packnet_H8] task 45/50 (compound_32) step     0  loss 0.0385  frozen=194/212
+  [packnet_H8] task 45/50 (compound_32) step   749  loss 0.0201  frozen=194/212
+  [packnet_H8] task 45/50 (compound_32) step  1499  loss 0.0193  frozen=194/212
+[packnet_H8] After task 45: own=0.023  avg_to_date=0.325  frozen=198
+
+[packnet_H8] === Task 46/50: compound_33 ===
+  [packnet_H8] task 46/50 (compound_33) step     0  loss 0.0933  frozen=198/212
+  [packnet_H8] task 46/50 (compound_33) step   749  loss 0.0000  frozen=198/212
+  [packnet_H8] task 46/50 (compound_33) step  1499  loss 0.0000  frozen=198/212
+[packnet_H8] After task 46: own=0.024  avg_to_date=0.318  frozen=200
+
+[packnet_H8] === Task 47/50: compound_34 ===
+  [packnet_H8] task 47/50 (compound_34) step     0  loss 0.0578  frozen=200/212
+  [packnet_H8] task 47/50 (compound_34) step   749  loss 0.0106  frozen=200/212
+  [packnet_H8] task 47/50 (compound_34) step  1499  loss 0.0000  frozen=200/212
+[packnet_H8] After task 47: own=0.004  avg_to_date=0.311  frozen=204
+
+[packnet_H8] === Task 48/50: compound_35 ===
+  [packnet_H8] task 48/50 (compound_35) step     0  loss 0.0092  frozen=204/212
+  [packnet_H8] task 48/50 (compound_35) step   749  loss 0.0428  frozen=204/212
+  [packnet_H8] task 48/50 (compound_35) step  1499  loss 0.0314  frozen=204/212
+[packnet_H8] After task 48: own=0.017  avg_to_date=0.305  frozen=206
+
+[packnet_H8] === Task 49/50: compound_36 ===
+  [packnet_H8] task 49/50 (compound_36) step     0  loss 0.0519  frozen=206/212
+  [packnet_H8] task 49/50 (compound_36) step   749  loss 0.0000  frozen=206/212
+  [packnet_H8] task 49/50 (compound_36) step  1499  loss 0.0233  frozen=206/212
+[packnet_H8] After task 49: own=0.011  avg_to_date=0.299  frozen=210
+
+[packnet_H8] === Task 50/50: compound_37 ===
+  [packnet_H8] task 50/50 (compound_37) step     0  loss 0.0628  frozen=210/212
+  [packnet_H8] task 50/50 (compound_37) step   749  loss 0.0290  frozen=210/212
+  [packnet_H8] task 50/50 (compound_37) step  1499  loss 0.0700  frozen=210/212
+[packnet_H8] After task 50: own=0.018  avg_to_date=0.294  frozen=212
+
+[packnet_H12] curriculum start — arch [12, 12, 4]  params 364  PackNet, n_tasks=50
+
+[packnet_H12] === Task 1/50: single_00 ===
+  [packnet_H12] task 1/50 (single_00) step     0  loss 0.3572  frozen=0/364
+  [packnet_H12] task 1/50 (single_00) step   749  loss 0.0000  frozen=0/364
+  [packnet_H12] task 1/50 (single_00) step  1499  loss 0.0000  frozen=0/364
+[packnet_H12] After task 1: own=1.000  avg_to_date=1.000  frozen=10
+
+[packnet_H12] === Task 2/50: single_01 ===
+  [packnet_H12] task 2/50 (single_01) step     0  loss 0.5395  frozen=10/364
+  [packnet_H12] task 2/50 (single_01) step   749  loss 0.0000  frozen=10/364
+  [packnet_H12] task 2/50 (single_01) step  1499  loss 0.0000  frozen=10/364
+[packnet_H12] After task 2: own=1.000  avg_to_date=1.000  frozen=20
+
+[packnet_H12] === Task 3/50: single_02 ===
+  [packnet_H12] task 3/50 (single_02) step     0  loss 0.4525  frozen=20/364
+  [packnet_H12] task 3/50 (single_02) step   749  loss 0.0000  frozen=20/364
+  [packnet_H12] task 3/50 (single_02) step  1499  loss 0.0000  frozen=20/364
+[packnet_H12] After task 3: own=1.000  avg_to_date=1.000  frozen=30
+
+[packnet_H12] === Task 4/50: single_03 ===
+  [packnet_H12] task 4/50 (single_03) step     0  loss 0.3200  frozen=30/364
+  [packnet_H12] task 4/50 (single_03) step   749  loss 0.0000  frozen=30/364
+  [packnet_H12] task 4/50 (single_03) step  1499  loss 0.0000  frozen=30/364
+[packnet_H12] After task 4: own=1.000  avg_to_date=1.000  frozen=40
+
+[packnet_H12] === Task 5/50: single_04 ===
+  [packnet_H12] task 5/50 (single_04) step     0  loss 0.2887  frozen=40/364
+  [packnet_H12] task 5/50 (single_04) step   749  loss 0.0000  frozen=40/364
+  [packnet_H12] task 5/50 (single_04) step  1499  loss 0.0000  frozen=40/364
+[packnet_H12] After task 5: own=0.410  avg_to_date=0.882  frozen=49
+
+[packnet_H12] === Task 6/50: single_05 ===
+  [packnet_H12] task 6/50 (single_05) step     0  loss 0.6426  frozen=49/364
+  [packnet_H12] task 6/50 (single_05) step   749  loss 0.0000  frozen=49/364
+  [packnet_H12] task 6/50 (single_05) step  1499  loss 0.0000  frozen=49/364
+[packnet_H12] After task 6: own=0.388  avg_to_date=0.800  frozen=58
+
+[packnet_H12] === Task 7/50: single_06 ===
+  [packnet_H12] task 7/50 (single_06) step     0  loss 0.1986  frozen=58/364
+  [packnet_H12] task 7/50 (single_06) step   749  loss 0.0000  frozen=58/364
+  [packnet_H12] task 7/50 (single_06) step  1499  loss 0.0000  frozen=58/364
+[packnet_H12] After task 7: own=0.370  avg_to_date=0.738  frozen=67
+
+[packnet_H12] === Task 8/50: single_07 ===
+  [packnet_H12] task 8/50 (single_07) step     0  loss 0.2962  frozen=67/364
+  [packnet_H12] task 8/50 (single_07) step   749  loss 0.0000  frozen=67/364
+  [packnet_H12] task 8/50 (single_07) step  1499  loss 0.0000  frozen=67/364
+[packnet_H12] After task 8: own=0.579  avg_to_date=0.718  frozen=76
+
+[packnet_H12] === Task 9/50: single_08 ===
+  [packnet_H12] task 9/50 (single_08) step     0  loss 0.6282  frozen=76/364
+  [packnet_H12] task 9/50 (single_08) step   749  loss 0.0000  frozen=76/364
+  [packnet_H12] task 9/50 (single_08) step  1499  loss 0.0000  frozen=76/364
+[packnet_H12] After task 9: own=0.383  avg_to_date=0.681  frozen=85
+
+[packnet_H12] === Task 10/50: single_09 ===
+  [packnet_H12] task 10/50 (single_09) step     0  loss 0.5284  frozen=85/364
+  [packnet_H12] task 10/50 (single_09) step   749  loss 0.0000  frozen=85/364
+  [packnet_H12] task 10/50 (single_09) step  1499  loss 0.0000  frozen=85/364
+[packnet_H12] After task 10: own=0.289  avg_to_date=0.642  frozen=94
+
+[packnet_H12] === Task 11/50: single_10 ===
+  [packnet_H12] task 11/50 (single_10) step     0  loss 0.1237  frozen=94/364
+  [packnet_H12] task 11/50 (single_10) step   749  loss 0.0000  frozen=94/364
+  [packnet_H12] task 11/50 (single_10) step  1499  loss 0.0000  frozen=94/364
+[packnet_H12] After task 11: own=0.462  avg_to_date=0.625  frozen=103
+
+[packnet_H12] === Task 12/50: single_11 ===
+  [packnet_H12] task 12/50 (single_11) step     0  loss 0.0862  frozen=103/364
+  [packnet_H12] task 12/50 (single_11) step   749  loss 0.0000  frozen=103/364
+  [packnet_H12] task 12/50 (single_11) step  1499  loss 0.0000  frozen=103/364
+[packnet_H12] After task 12: own=0.467  avg_to_date=0.612  frozen=112
+
+[packnet_H12] === Task 13/50: compound_00 ===
+  [packnet_H12] task 13/50 (compound_00) step     0  loss 0.1166  frozen=112/364
+  [packnet_H12] task 13/50 (compound_00) step   749  loss 0.0000  frozen=112/364
+  [packnet_H12] task 13/50 (compound_00) step  1499  loss 0.0000  frozen=112/364
+[packnet_H12] After task 13: own=0.440  avg_to_date=0.599  frozen=119
+
+[packnet_H12] === Task 14/50: compound_01 ===
+  [packnet_H12] task 14/50 (compound_01) step     0  loss 0.2504  frozen=119/364
+  [packnet_H12] task 14/50 (compound_01) step   749  loss 0.0000  frozen=119/364
+  [packnet_H12] task 14/50 (compound_01) step  1499  loss 0.0000  frozen=119/364
+[packnet_H12] After task 14: own=0.465  avg_to_date=0.589  frozen=126
+
+[packnet_H12] === Task 15/50: compound_02 ===
+  [packnet_H12] task 15/50 (compound_02) step     0  loss 0.1891  frozen=126/364
+  [packnet_H12] task 15/50 (compound_02) step   749  loss 0.0000  frozen=126/364
+  [packnet_H12] task 15/50 (compound_02) step  1499  loss 0.0000  frozen=126/364
+[packnet_H12] After task 15: own=0.226  avg_to_date=0.565  frozen=133
+
+[packnet_H12] === Task 16/50: compound_03 ===
+  [packnet_H12] task 16/50 (compound_03) step     0  loss 0.0132  frozen=133/364
+  [packnet_H12] task 16/50 (compound_03) step   749  loss 0.0000  frozen=133/364
+  [packnet_H12] task 16/50 (compound_03) step  1499  loss 0.0000  frozen=133/364
+[packnet_H12] After task 16: own=0.014  avg_to_date=0.531  frozen=140
+
+[packnet_H12] === Task 17/50: compound_04 ===
+  [packnet_H12] task 17/50 (compound_04) step     0  loss 0.0779  frozen=140/364
+  [packnet_H12] task 17/50 (compound_04) step   749  loss 0.0000  frozen=140/364
+  [packnet_H12] task 17/50 (compound_04) step  1499  loss 0.0000  frozen=140/364
+[packnet_H12] After task 17: own=0.029  avg_to_date=0.501  frozen=147
+
+[packnet_H12] === Task 18/50: compound_05 ===
+  [packnet_H12] task 18/50 (compound_05) step     0  loss 0.0056  frozen=147/364
+  [packnet_H12] task 18/50 (compound_05) step   749  loss 0.0000  frozen=147/364
+  [packnet_H12] task 18/50 (compound_05) step  1499  loss 0.0000  frozen=147/364
+[packnet_H12] After task 18: own=0.061  avg_to_date=0.477  frozen=154
+
+[packnet_H12] === Task 19/50: compound_06 ===
+  [packnet_H12] task 19/50 (compound_06) step     0  loss 0.0120  frozen=154/364
+  [packnet_H12] task 19/50 (compound_06) step   749  loss 0.0000  frozen=154/364
+  [packnet_H12] task 19/50 (compound_06) step  1499  loss 0.0000  frozen=154/364
+[packnet_H12] After task 19: own=0.026  avg_to_date=0.453  frozen=161
+
+[packnet_H12] === Task 20/50: compound_07 ===
+  [packnet_H12] task 20/50 (compound_07) step     0  loss 0.0529  frozen=161/364
+  [packnet_H12] task 20/50 (compound_07) step   749  loss 0.0000  frozen=161/364
+  [packnet_H12] task 20/50 (compound_07) step  1499  loss 0.0000  frozen=161/364
+[packnet_H12] After task 20: own=0.050  avg_to_date=0.433  frozen=168
+
+[packnet_H12] === Task 21/50: compound_08 ===
+  [packnet_H12] task 21/50 (compound_08) step     0  loss 0.0593  frozen=168/364
+  [packnet_H12] task 21/50 (compound_08) step   749  loss 0.0000  frozen=168/364
+  [packnet_H12] task 21/50 (compound_08) step  1499  loss 0.0000  frozen=168/364
+[packnet_H12] After task 21: own=0.098  avg_to_date=0.417  frozen=175
+
+[packnet_H12] === Task 22/50: compound_09 ===
+  [packnet_H12] task 22/50 (compound_09) step     0  loss 0.0222  frozen=175/364
+  [packnet_H12] task 22/50 (compound_09) step   749  loss 0.0000  frozen=175/364
+  [packnet_H12] task 22/50 (compound_09) step  1499  loss 0.0000  frozen=175/364
+[packnet_H12] After task 22: own=0.106  avg_to_date=0.403  frozen=182
+
+[packnet_H12] === Task 23/50: compound_10 ===
+  [packnet_H12] task 23/50 (compound_10) step     0  loss 0.2649  frozen=182/364
+  [packnet_H12] task 23/50 (compound_10) step   749  loss 0.0000  frozen=182/364
+  [packnet_H12] task 23/50 (compound_10) step  1499  loss 0.0000  frozen=182/364
+[packnet_H12] After task 23: own=0.061  avg_to_date=0.388  frozen=189
+
+[packnet_H12] === Task 24/50: compound_11 ===
+  [packnet_H12] task 24/50 (compound_11) step     0  loss 0.0241  frozen=189/364
+  [packnet_H12] task 24/50 (compound_11) step   749  loss 0.0000  frozen=189/364
+  [packnet_H12] task 24/50 (compound_11) step  1499  loss 0.0000  frozen=189/364
+[packnet_H12] After task 24: own=0.014  avg_to_date=0.372  frozen=196
+
+[packnet_H12] === Task 25/50: compound_12 ===
+  [packnet_H12] task 25/50 (compound_12) step     0  loss 0.0453  frozen=196/364
+  [packnet_H12] task 25/50 (compound_12) step   749  loss 0.0000  frozen=196/364
+  [packnet_H12] task 25/50 (compound_12) step  1499  loss 0.0000  frozen=196/364
+[packnet_H12] After task 25: own=0.105  avg_to_date=0.362  frozen=203
+
+[packnet_H12] === Task 26/50: compound_13 ===
+  [packnet_H12] task 26/50 (compound_13) step     0  loss 0.0645  frozen=203/364
+  [packnet_H12] task 26/50 (compound_13) step   749  loss 0.0000  frozen=203/364
+  [packnet_H12] task 26/50 (compound_13) step  1499  loss 0.0000  frozen=203/364
+[packnet_H12] After task 26: own=0.103  avg_to_date=0.352  frozen=210
+
+[packnet_H12] === Task 27/50: compound_14 ===
+  [packnet_H12] task 27/50 (compound_14) step     0  loss 0.0615  frozen=210/364
+  [packnet_H12] task 27/50 (compound_14) step   749  loss 0.0000  frozen=210/364
+  [packnet_H12] task 27/50 (compound_14) step  1499  loss 0.0000  frozen=210/364
+[packnet_H12] After task 27: own=0.015  avg_to_date=0.339  frozen=217
+
+[packnet_H12] === Task 28/50: compound_15 ===
+  [packnet_H12] task 28/50 (compound_15) step     0  loss 0.0037  frozen=217/364
+  [packnet_H12] task 28/50 (compound_15) step   749  loss 0.0000  frozen=217/364
+  [packnet_H12] task 28/50 (compound_15) step  1499  loss 0.0000  frozen=217/364
+[packnet_H12] After task 28: own=0.006  avg_to_date=0.327  frozen=224
+
+[packnet_H12] === Task 29/50: compound_16 ===
+  [packnet_H12] task 29/50 (compound_16) step     0  loss 0.0678  frozen=224/364
+  [packnet_H12] task 29/50 (compound_16) step   749  loss 0.0000  frozen=224/364
+  [packnet_H12] task 29/50 (compound_16) step  1499  loss 0.0104  frozen=224/364
+[packnet_H12] After task 29: own=0.017  avg_to_date=0.317  frozen=231
+
+[packnet_H12] === Task 30/50: compound_17 ===
+  [packnet_H12] task 30/50 (compound_17) step     0  loss 0.0808  frozen=231/364
+  [packnet_H12] task 30/50 (compound_17) step   749  loss 0.0000  frozen=231/364
+  [packnet_H12] task 30/50 (compound_17) step  1499  loss 0.0000  frozen=231/364
+[packnet_H12] After task 30: own=0.064  avg_to_date=0.308  frozen=238
+
+[packnet_H12] === Task 31/50: compound_18 ===
+  [packnet_H12] task 31/50 (compound_18) step     0  loss 0.1587  frozen=238/364
+  [packnet_H12] task 31/50 (compound_18) step   749  loss 0.0000  frozen=238/364
+  [packnet_H12] task 31/50 (compound_18) step  1499  loss 0.0000  frozen=238/364
+[packnet_H12] After task 31: own=0.020  avg_to_date=0.299  frozen=245
+
+[packnet_H12] === Task 32/50: compound_19 ===
+  [packnet_H12] task 32/50 (compound_19) step     0  loss 0.0969  frozen=245/364
+  [packnet_H12] task 32/50 (compound_19) step   749  loss 0.0000  frozen=245/364
+  [packnet_H12] task 32/50 (compound_19) step  1499  loss 0.0000  frozen=245/364
+[packnet_H12] After task 32: own=0.048  avg_to_date=0.291  frozen=252
+
+[packnet_H12] === Task 33/50: compound_20 ===
+  [packnet_H12] task 33/50 (compound_20) step     0  loss 0.0801  frozen=252/364
+  [packnet_H12] task 33/50 (compound_20) step   749  loss 0.0000  frozen=252/364
+  [packnet_H12] task 33/50 (compound_20) step  1499  loss 0.0000  frozen=252/364
+[packnet_H12] After task 33: own=0.019  avg_to_date=0.283  frozen=259
+
+[packnet_H12] === Task 34/50: compound_21 ===
+  [packnet_H12] task 34/50 (compound_21) step     0  loss 0.0668  frozen=259/364
+  [packnet_H12] task 34/50 (compound_21) step   749  loss 0.0000  frozen=259/364
+  [packnet_H12] task 34/50 (compound_21) step  1499  loss 0.0000  frozen=259/364
+[packnet_H12] After task 34: own=0.016  avg_to_date=0.275  frozen=266
+
+[packnet_H12] === Task 35/50: compound_22 ===
+  [packnet_H12] task 35/50 (compound_22) step     0  loss 0.0077  frozen=266/364
+  [packnet_H12] task 35/50 (compound_22) step   749  loss 0.0000  frozen=266/364
+  [packnet_H12] task 35/50 (compound_22) step  1499  loss 0.0000  frozen=266/364
+[packnet_H12] After task 35: own=0.024  avg_to_date=0.268  frozen=273
+
+[packnet_H12] === Task 36/50: compound_23 ===
+  [packnet_H12] task 36/50 (compound_23) step     0  loss 0.0475  frozen=273/364
+  [packnet_H12] task 36/50 (compound_23) step   749  loss 0.0000  frozen=273/364
+  [packnet_H12] task 36/50 (compound_23) step  1499  loss 0.0000  frozen=273/364
+[packnet_H12] After task 36: own=0.011  avg_to_date=0.261  frozen=280
+
+[packnet_H12] === Task 37/50: compound_24 ===
+  [packnet_H12] task 37/50 (compound_24) step     0  loss 0.0459  frozen=280/364
+  [packnet_H12] task 37/50 (compound_24) step   749  loss 0.0000  frozen=280/364
+  [packnet_H12] task 37/50 (compound_24) step  1499  loss 0.0000  frozen=280/364
+[packnet_H12] After task 37: own=0.039  avg_to_date=0.255  frozen=287
+
+[packnet_H12] === Task 38/50: compound_25 ===
+  [packnet_H12] task 38/50 (compound_25) step     0  loss 0.0757  frozen=287/364
+  [packnet_H12] task 38/50 (compound_25) step   749  loss 0.0000  frozen=287/364
+  [packnet_H12] task 38/50 (compound_25) step  1499  loss 0.0000  frozen=287/364
+[packnet_H12] After task 38: own=0.006  avg_to_date=0.248  frozen=294
+
+[packnet_H12] === Task 39/50: compound_26 ===
+  [packnet_H12] task 39/50 (compound_26) step     0  loss 0.0420  frozen=294/364
+  [packnet_H12] task 39/50 (compound_26) step   749  loss 0.0000  frozen=294/364
+  [packnet_H12] task 39/50 (compound_26) step  1499  loss 0.0000  frozen=294/364
+[packnet_H12] After task 39: own=0.007  avg_to_date=0.242  frozen=299
+
+[packnet_H12] === Task 40/50: compound_27 ===
+  [packnet_H12] task 40/50 (compound_27) step     0  loss 0.0285  frozen=299/364
+  [packnet_H12] task 40/50 (compound_27) step   749  loss 0.0000  frozen=299/364
+  [packnet_H12] task 40/50 (compound_27) step  1499  loss 0.0000  frozen=299/364
+[packnet_H12] After task 40: own=0.012  avg_to_date=0.236  frozen=306
+
+[packnet_H12] === Task 41/50: compound_28 ===
+  [packnet_H12] task 41/50 (compound_28) step     0  loss 0.1353  frozen=306/364
+  [packnet_H12] task 41/50 (compound_28) step   749  loss 0.0035  frozen=306/364
+  [packnet_H12] task 41/50 (compound_28) step  1499  loss 0.0000  frozen=306/364
+[packnet_H12] After task 41: own=0.014  avg_to_date=0.231  frozen=311
+
+[packnet_H12] === Task 42/50: compound_29 ===
+  [packnet_H12] task 42/50 (compound_29) step     0  loss 0.0152  frozen=311/364
+  [packnet_H12] task 42/50 (compound_29) step   749  loss 0.0000  frozen=311/364
+  [packnet_H12] task 42/50 (compound_29) step  1499  loss 0.0000  frozen=311/364
+[packnet_H12] After task 42: own=0.001  avg_to_date=0.225  frozen=318
+
+[packnet_H12] === Task 43/50: compound_30 ===
+  [packnet_H12] task 43/50 (compound_30) step     0  loss 0.0668  frozen=318/364
+  [packnet_H12] task 43/50 (compound_30) step   749  loss 0.0156  frozen=318/364
+  [packnet_H12] task 43/50 (compound_30) step  1499  loss 0.0000  frozen=318/364
+[packnet_H12] After task 43: own=0.013  avg_to_date=0.220  frozen=323
+
+[packnet_H12] === Task 44/50: compound_31 ===
+  [packnet_H12] task 44/50 (compound_31) step     0  loss 0.1456  frozen=323/364
+  [packnet_H12] task 44/50 (compound_31) step   749  loss 0.0245  frozen=323/364
+  [packnet_H12] task 44/50 (compound_31) step  1499  loss 0.0233  frozen=323/364
+[packnet_H12] After task 44: own=0.013  avg_to_date=0.216  frozen=330
+
+[packnet_H12] === Task 45/50: compound_32 ===
+  [packnet_H12] task 45/50 (compound_32) step     0  loss 0.0044  frozen=330/364
+  [packnet_H12] task 45/50 (compound_32) step   749  loss 0.0414  frozen=330/364
+  [packnet_H12] task 45/50 (compound_32) step  1499  loss 0.0000  frozen=330/364
+[packnet_H12] After task 45: own=0.005  avg_to_date=0.211  frozen=335
+
+[packnet_H12] === Task 46/50: compound_33 ===
+  [packnet_H12] task 46/50 (compound_33) step     0  loss 0.0000  frozen=335/364
+  [packnet_H12] task 46/50 (compound_33) step   749  loss 0.0351  frozen=335/364
+  [packnet_H12] task 46/50 (compound_33) step  1499  loss 0.0179  frozen=335/364
+[packnet_H12] After task 46: own=0.013  avg_to_date=0.207  frozen=342
+
+[packnet_H12] === Task 47/50: compound_34 ===
+  [packnet_H12] task 47/50 (compound_34) step     0  loss 0.0000  frozen=342/364
+  [packnet_H12] task 47/50 (compound_34) step   749  loss 0.0000  frozen=342/364
+  [packnet_H12] task 47/50 (compound_34) step  1499  loss 0.0000  frozen=342/364
+[packnet_H12] After task 47: own=0.003  avg_to_date=0.202  frozen=347
+
+[packnet_H12] === Task 48/50: compound_35 ===
+  [packnet_H12] task 48/50 (compound_35) step     0  loss 0.0213  frozen=347/364
+  [packnet_H12] task 48/50 (compound_35) step   749  loss 0.0017  frozen=347/364
+  [packnet_H12] task 48/50 (compound_35) step  1499  loss 0.0000  frozen=347/364
+[packnet_H12] After task 48: own=0.004  avg_to_date=0.198  frozen=354
+
+[packnet_H12] === Task 49/50: compound_36 ===
+  [packnet_H12] task 49/50 (compound_36) step     0  loss 0.0000  frozen=354/364
+  [packnet_H12] task 49/50 (compound_36) step   749  loss 0.0000  frozen=354/364
+  [packnet_H12] task 49/50 (compound_36) step  1499  loss 0.0085  frozen=354/364
+[packnet_H12] After task 49: own=0.001  avg_to_date=0.194  frozen=358
+
+[packnet_H12] === Task 50/50: compound_37 ===
+  [packnet_H12] task 50/50 (compound_37) step     0  loss 0.0103  frozen=358/364
+  [packnet_H12] task 50/50 (compound_37) step   749  loss 0.0239  frozen=358/364
+  [packnet_H12] task 50/50 (compound_37) step  1499  loss 0.0000  frozen=358/364
+[packnet_H12] After task 50: own=0.000  avg_to_date=0.190  frozen=364
+
+[packnet_H16] curriculum start — arch [16, 16, 4]  params 548  PackNet, n_tasks=50
+
+[packnet_H16] === Task 1/50: single_00 ===
+  [packnet_H16] task 1/50 (single_00) step     0  loss 0.4410  frozen=0/548
+  [packnet_H16] task 1/50 (single_00) step   749  loss 0.0000  frozen=0/548
+  [packnet_H16] task 1/50 (single_00) step  1499  loss 0.0000  frozen=0/548
+[packnet_H16] After task 1: own=1.000  avg_to_date=1.000  frozen=13
+
+[packnet_H16] === Task 2/50: single_01 ===
+  [packnet_H16] task 2/50 (single_01) step     0  loss 0.4950  frozen=13/548
+  [packnet_H16] task 2/50 (single_01) step   749  loss 0.0000  frozen=13/548
+  [packnet_H16] task 2/50 (single_01) step  1499  loss 0.0000  frozen=13/548
+[packnet_H16] After task 2: own=0.833  avg_to_date=0.916  frozen=26
+
+[packnet_H16] === Task 3/50: single_02 ===
+  [packnet_H16] task 3/50 (single_02) step     0  loss 0.3742  frozen=26/548
+  [packnet_H16] task 3/50 (single_02) step   749  loss 0.0000  frozen=26/548
+  [packnet_H16] task 3/50 (single_02) step  1499  loss 0.0000  frozen=26/548
+[packnet_H16] After task 3: own=0.773  avg_to_date=0.869  frozen=39
+
+[packnet_H16] === Task 4/50: single_03 ===
+  [packnet_H16] task 4/50 (single_03) step     0  loss 0.3576  frozen=39/548
+  [packnet_H16] task 4/50 (single_03) step   749  loss 0.0000  frozen=39/548
+  [packnet_H16] task 4/50 (single_03) step  1499  loss 0.0000  frozen=39/548
+[packnet_H16] After task 4: own=0.758  avg_to_date=0.841  frozen=52
+
+[packnet_H16] === Task 5/50: single_04 ===
+  [packnet_H16] task 5/50 (single_04) step     0  loss 0.2494  frozen=52/548
+  [packnet_H16] task 5/50 (single_04) step   749  loss 0.0000  frozen=52/548
+  [packnet_H16] task 5/50 (single_04) step  1499  loss 0.0000  frozen=52/548
+[packnet_H16] After task 5: own=0.778  avg_to_date=0.828  frozen=64
+
+[packnet_H16] === Task 6/50: single_05 ===
+  [packnet_H16] task 6/50 (single_05) step     0  loss 0.4440  frozen=64/548
+  [packnet_H16] task 6/50 (single_05) step   749  loss 0.0000  frozen=64/548
+  [packnet_H16] task 6/50 (single_05) step  1499  loss 0.0000  frozen=64/548
+[packnet_H16] After task 6: own=0.547  avg_to_date=0.781  frozen=76
+
+[packnet_H16] === Task 7/50: single_06 ===
+  [packnet_H16] task 7/50 (single_06) step     0  loss 0.8543  frozen=76/548
+  [packnet_H16] task 7/50 (single_06) step   749  loss 0.0000  frozen=76/548
+  [packnet_H16] task 7/50 (single_06) step  1499  loss 0.0000  frozen=76/548
+[packnet_H16] After task 7: own=0.587  avg_to_date=0.754  frozen=88
+
+[packnet_H16] === Task 8/50: single_07 ===
+  [packnet_H16] task 8/50 (single_07) step     0  loss 0.3096  frozen=88/548
+  [packnet_H16] task 8/50 (single_07) step   749  loss 0.0000  frozen=88/548
+  [packnet_H16] task 8/50 (single_07) step  1499  loss 0.0000  frozen=88/548
+[packnet_H16] After task 8: own=0.464  avg_to_date=0.717  frozen=100
+
+[packnet_H16] === Task 9/50: single_08 ===
+  [packnet_H16] task 9/50 (single_08) step     0  loss 0.3079  frozen=100/548
+  [packnet_H16] task 9/50 (single_08) step   749  loss 0.0000  frozen=100/548
+  [packnet_H16] task 9/50 (single_08) step  1499  loss 0.0000  frozen=100/548
+[packnet_H16] After task 9: own=0.644  avg_to_date=0.709  frozen=112
+
+[packnet_H16] === Task 10/50: single_09 ===
+  [packnet_H16] task 10/50 (single_09) step     0  loss 0.7137  frozen=112/548
+  [packnet_H16] task 10/50 (single_09) step   749  loss 0.0000  frozen=112/548
+  [packnet_H16] task 10/50 (single_09) step  1499  loss 0.0000  frozen=112/548
+[packnet_H16] After task 10: own=0.568  avg_to_date=0.695  frozen=124
+
+[packnet_H16] === Task 11/50: single_10 ===
+  [packnet_H16] task 11/50 (single_10) step     0  loss 0.3971  frozen=124/548
+  [packnet_H16] task 11/50 (single_10) step   749  loss 0.0000  frozen=124/548
+  [packnet_H16] task 11/50 (single_10) step  1499  loss 0.0000  frozen=124/548
+[packnet_H16] After task 11: own=0.340  avg_to_date=0.663  frozen=136
+
+[packnet_H16] === Task 12/50: single_11 ===
+  [packnet_H16] task 12/50 (single_11) step     0  loss 0.4148  frozen=136/548
+  [packnet_H16] task 12/50 (single_11) step   749  loss 0.0000  frozen=136/548
+  [packnet_H16] task 12/50 (single_11) step  1499  loss 0.0000  frozen=136/548
+[packnet_H16] After task 12: own=0.397  avg_to_date=0.641  frozen=148
+
+[packnet_H16] === Task 13/50: compound_00 ===
+  [packnet_H16] task 13/50 (compound_00) step     0  loss 0.1887  frozen=148/548
+  [packnet_H16] task 13/50 (compound_00) step   749  loss 0.0000  frozen=148/548
+  [packnet_H16] task 13/50 (compound_00) step  1499  loss 0.0000  frozen=148/548
+[packnet_H16] After task 13: own=0.426  avg_to_date=0.624  frozen=160
+
+[packnet_H16] === Task 14/50: compound_01 ===
+  [packnet_H16] task 14/50 (compound_01) step     0  loss 0.1861  frozen=160/548
+  [packnet_H16] task 14/50 (compound_01) step   749  loss 0.0000  frozen=160/548
+  [packnet_H16] task 14/50 (compound_01) step  1499  loss 0.0000  frozen=160/548
+[packnet_H16] After task 14: own=0.206  avg_to_date=0.594  frozen=172
+
+[packnet_H16] === Task 15/50: compound_02 ===
+  [packnet_H16] task 15/50 (compound_02) step     0  loss 0.2105  frozen=172/548
+  [packnet_H16] task 15/50 (compound_02) step   749  loss 0.0000  frozen=172/548
+  [packnet_H16] task 15/50 (compound_02) step  1499  loss 0.0000  frozen=172/548
+[packnet_H16] After task 15: own=0.152  avg_to_date=0.565  frozen=184
+
+[packnet_H16] === Task 16/50: compound_03 ===
+  [packnet_H16] task 16/50 (compound_03) step     0  loss 0.1210  frozen=184/548
+  [packnet_H16] task 16/50 (compound_03) step   749  loss 0.0000  frozen=184/548
+  [packnet_H16] task 16/50 (compound_03) step  1499  loss 0.0000  frozen=184/548
+[packnet_H16] After task 16: own=0.142  avg_to_date=0.538  frozen=196
+
+[packnet_H16] === Task 17/50: compound_04 ===
+  [packnet_H16] task 17/50 (compound_04) step     0  loss 0.0993  frozen=196/548
+  [packnet_H16] task 17/50 (compound_04) step   749  loss 0.0000  frozen=196/548
+  [packnet_H16] task 17/50 (compound_04) step  1499  loss 0.0000  frozen=196/548
+[packnet_H16] After task 17: own=0.139  avg_to_date=0.515  frozen=206
+
+[packnet_H16] === Task 18/50: compound_05 ===
+  [packnet_H16] task 18/50 (compound_05) step     0  loss 0.1304  frozen=206/548
+  [packnet_H16] task 18/50 (compound_05) step   749  loss 0.0000  frozen=206/548
+  [packnet_H16] task 18/50 (compound_05) step  1499  loss 0.0000  frozen=206/548
+[packnet_H16] After task 18: own=0.149  avg_to_date=0.495  frozen=216
+
+[packnet_H16] === Task 19/50: compound_06 ===
+  [packnet_H16] task 19/50 (compound_06) step     0  loss 0.0926  frozen=216/548
+  [packnet_H16] task 19/50 (compound_06) step   749  loss 0.0000  frozen=216/548
+  [packnet_H16] task 19/50 (compound_06) step  1499  loss 0.0000  frozen=216/548
+[packnet_H16] After task 19: own=0.089  avg_to_date=0.473  frozen=226
+
+[packnet_H16] === Task 20/50: compound_07 ===
+  [packnet_H16] task 20/50 (compound_07) step     0  loss 0.1016  frozen=226/548
+  [packnet_H16] task 20/50 (compound_07) step   749  loss 0.0000  frozen=226/548
+  [packnet_H16] task 20/50 (compound_07) step  1499  loss 0.0000  frozen=226/548
+[packnet_H16] After task 20: own=0.190  avg_to_date=0.459  frozen=236
+
+[packnet_H16] === Task 21/50: compound_08 ===
+  [packnet_H16] task 21/50 (compound_08) step     0  loss 0.0490  frozen=236/548
+  [packnet_H16] task 21/50 (compound_08) step   749  loss 0.0000  frozen=236/548
+  [packnet_H16] task 21/50 (compound_08) step  1499  loss 0.0000  frozen=236/548
+[packnet_H16] After task 21: own=0.148  avg_to_date=0.444  frozen=246
+
+[packnet_H16] === Task 22/50: compound_09 ===
+  [packnet_H16] task 22/50 (compound_09) step     0  loss 0.1178  frozen=246/548
+  [packnet_H16] task 22/50 (compound_09) step   749  loss 0.0000  frozen=246/548
+  [packnet_H16] task 22/50 (compound_09) step  1499  loss 0.0000  frozen=246/548
+[packnet_H16] After task 22: own=0.097  avg_to_date=0.429  frozen=256
+
+[packnet_H16] === Task 23/50: compound_10 ===
+  [packnet_H16] task 23/50 (compound_10) step     0  loss 0.1852  frozen=256/548
+  [packnet_H16] task 23/50 (compound_10) step   749  loss 0.0000  frozen=256/548
+  [packnet_H16] task 23/50 (compound_10) step  1499  loss 0.0000  frozen=256/548
+[packnet_H16] After task 23: own=0.043  avg_to_date=0.412  frozen=267
+
+[packnet_H16] === Task 24/50: compound_11 ===
+  [packnet_H16] task 24/50 (compound_11) step     0  loss 0.0052  frozen=267/548
+  [packnet_H16] task 24/50 (compound_11) step   749  loss 0.0000  frozen=267/548
+  [packnet_H16] task 24/50 (compound_11) step  1499  loss 0.0000  frozen=267/548
+[packnet_H16] After task 24: own=0.020  avg_to_date=0.395  frozen=277
+
+[packnet_H16] === Task 25/50: compound_12 ===
+  [packnet_H16] task 25/50 (compound_12) step     0  loss 0.0687  frozen=277/548
+  [packnet_H16] task 25/50 (compound_12) step   749  loss 0.0000  frozen=277/548
+  [packnet_H16] task 25/50 (compound_12) step  1499  loss 0.0000  frozen=277/548
+[packnet_H16] After task 25: own=0.063  avg_to_date=0.382  frozen=288
+
+[packnet_H16] === Task 26/50: compound_13 ===
+  [packnet_H16] task 26/50 (compound_13) step     0  loss 0.2905  frozen=288/548
+  [packnet_H16] task 26/50 (compound_13) step   749  loss 0.0000  frozen=288/548
+  [packnet_H16] task 26/50 (compound_13) step  1499  loss 0.0000  frozen=288/548
+[packnet_H16] After task 26: own=0.015  avg_to_date=0.368  frozen=298
+
+[packnet_H16] === Task 27/50: compound_14 ===
+  [packnet_H16] task 27/50 (compound_14) step     0  loss 0.0047  frozen=298/548
+  [packnet_H16] task 27/50 (compound_14) step   749  loss 0.0000  frozen=298/548
+  [packnet_H16] task 27/50 (compound_14) step  1499  loss 0.0000  frozen=298/548
+[packnet_H16] After task 27: own=0.012  avg_to_date=0.355  frozen=309
+
+[packnet_H16] === Task 28/50: compound_15 ===
+  [packnet_H16] task 28/50 (compound_15) step     0  loss 0.2838  frozen=309/548
+  [packnet_H16] task 28/50 (compound_15) step   749  loss 0.0000  frozen=309/548
+  [packnet_H16] task 28/50 (compound_15) step  1499  loss 0.0000  frozen=309/548
+[packnet_H16] After task 28: own=0.039  avg_to_date=0.344  frozen=319
+
+[packnet_H16] === Task 29/50: compound_16 ===
+  [packnet_H16] task 29/50 (compound_16) step     0  loss 0.0794  frozen=319/548
+  [packnet_H16] task 29/50 (compound_16) step   749  loss 0.0000  frozen=319/548
+  [packnet_H16] task 29/50 (compound_16) step  1499  loss 0.0000  frozen=319/548
+[packnet_H16] After task 29: own=0.057  avg_to_date=0.334  frozen=330
+
+[packnet_H16] === Task 30/50: compound_17 ===
+  [packnet_H16] task 30/50 (compound_17) step     0  loss 0.1087  frozen=330/548
+  [packnet_H16] task 30/50 (compound_17) step   749  loss 0.0000  frozen=330/548
+  [packnet_H16] task 30/50 (compound_17) step  1499  loss 0.0000  frozen=330/548
+[packnet_H16] After task 30: own=0.056  avg_to_date=0.324  frozen=340
+
+[packnet_H16] === Task 31/50: compound_18 ===
+  [packnet_H16] task 31/50 (compound_18) step     0  loss 0.1834  frozen=340/548
+  [packnet_H16] task 31/50 (compound_18) step   749  loss 0.0000  frozen=340/548
+  [packnet_H16] task 31/50 (compound_18) step  1499  loss 0.0000  frozen=340/548
+[packnet_H16] After task 31: own=0.066  avg_to_date=0.316  frozen=351
+
+[packnet_H16] === Task 32/50: compound_19 ===
+  [packnet_H16] task 32/50 (compound_19) step     0  loss 0.0599  frozen=351/548
+  [packnet_H16] task 32/50 (compound_19) step   749  loss 0.0000  frozen=351/548
+  [packnet_H16] task 32/50 (compound_19) step  1499  loss 0.0000  frozen=351/548
+[packnet_H16] After task 32: own=0.070  avg_to_date=0.308  frozen=361
+
+[packnet_H16] === Task 33/50: compound_20 ===
+  [packnet_H16] task 33/50 (compound_20) step     0  loss 0.1802  frozen=361/548
+  [packnet_H16] task 33/50 (compound_20) step   749  loss 0.0000  frozen=361/548
+  [packnet_H16] task 33/50 (compound_20) step  1499  loss 0.0000  frozen=361/548
+[packnet_H16] After task 33: own=0.086  avg_to_date=0.302  frozen=372
+
+[packnet_H16] === Task 34/50: compound_21 ===
+  [packnet_H16] task 34/50 (compound_21) step     0  loss 0.0809  frozen=372/548
+  [packnet_H16] task 34/50 (compound_21) step   749  loss 0.0000  frozen=372/548
+  [packnet_H16] task 34/50 (compound_21) step  1499  loss 0.0000  frozen=372/548
+[packnet_H16] After task 34: own=0.118  avg_to_date=0.296  frozen=382
+
+[packnet_H16] === Task 35/50: compound_22 ===
+  [packnet_H16] task 35/50 (compound_22) step     0  loss 0.3367  frozen=382/548
+  [packnet_H16] task 35/50 (compound_22) step   749  loss 0.0000  frozen=382/548
+  [packnet_H16] task 35/50 (compound_22) step  1499  loss 0.0221  frozen=382/548
+[packnet_H16] After task 35: own=0.035  avg_to_date=0.289  frozen=393
+
+[packnet_H16] === Task 36/50: compound_23 ===
+  [packnet_H16] task 36/50 (compound_23) step     0  loss 0.2200  frozen=393/548
+  [packnet_H16] task 36/50 (compound_23) step   749  loss 0.0000  frozen=393/548
+  [packnet_H16] task 36/50 (compound_23) step  1499  loss 0.0000  frozen=393/548
+[packnet_H16] After task 36: own=0.008  avg_to_date=0.281  frozen=402
+
+[packnet_H16] === Task 37/50: compound_24 ===
+  [packnet_H16] task 37/50 (compound_24) step     0  loss 0.0510  frozen=402/548
+  [packnet_H16] task 37/50 (compound_24) step   749  loss 0.0000  frozen=402/548
+  [packnet_H16] task 37/50 (compound_24) step  1499  loss 0.0000  frozen=402/548
+[packnet_H16] After task 37: own=0.052  avg_to_date=0.275  frozen=413
+
+[packnet_H16] === Task 38/50: compound_25 ===
+  [packnet_H16] task 38/50 (compound_25) step     0  loss 0.0491  frozen=413/548
+  [packnet_H16] task 38/50 (compound_25) step   749  loss 0.0000  frozen=413/548
+  [packnet_H16] task 38/50 (compound_25) step  1499  loss 0.0000  frozen=413/548
+[packnet_H16] After task 38: own=0.008  avg_to_date=0.268  frozen=422
+
+[packnet_H16] === Task 39/50: compound_26 ===
+  [packnet_H16] task 39/50 (compound_26) step     0  loss 0.0216  frozen=422/548
+  [packnet_H16] task 39/50 (compound_26) step   749  loss 0.0149  frozen=422/548
+  [packnet_H16] task 39/50 (compound_26) step  1499  loss 0.0000  frozen=422/548
+[packnet_H16] After task 39: own=0.012  avg_to_date=0.261  frozen=434
+
+[packnet_H16] === Task 40/50: compound_27 ===
+  [packnet_H16] task 40/50 (compound_27) step     0  loss 0.0164  frozen=434/548
+  [packnet_H16] task 40/50 (compound_27) step   749  loss 0.0000  frozen=434/548
+  [packnet_H16] task 40/50 (compound_27) step  1499  loss 0.0000  frozen=434/548
+[packnet_H16] After task 40: own=0.012  avg_to_date=0.255  frozen=443
+
+[packnet_H16] === Task 41/50: compound_28 ===
+  [packnet_H16] task 41/50 (compound_28) step     0  loss 0.0429  frozen=443/548
+  [packnet_H16] task 41/50 (compound_28) step   749  loss 0.0000  frozen=443/548
+  [packnet_H16] task 41/50 (compound_28) step  1499  loss 0.0000  frozen=443/548
+[packnet_H16] After task 41: own=0.013  avg_to_date=0.249  frozen=455
+
+[packnet_H16] === Task 42/50: compound_29 ===
+  [packnet_H16] task 42/50 (compound_29) step     0  loss 0.1763  frozen=455/548
+  [packnet_H16] task 42/50 (compound_29) step   749  loss 0.0000  frozen=455/548
+  [packnet_H16] task 42/50 (compound_29) step  1499  loss 0.0000  frozen=455/548
+[packnet_H16] After task 42: own=0.017  avg_to_date=0.244  frozen=464
+
+[packnet_H16] === Task 43/50: compound_30 ===
+  [packnet_H16] task 43/50 (compound_30) step     0  loss 0.0603  frozen=464/548
+  [packnet_H16] task 43/50 (compound_30) step   749  loss 0.0000  frozen=464/548
+  [packnet_H16] task 43/50 (compound_30) step  1499  loss 0.0000  frozen=464/548
+[packnet_H16] After task 43: own=0.005  avg_to_date=0.238  frozen=476
+
+[packnet_H16] === Task 44/50: compound_31 ===
+  [packnet_H16] task 44/50 (compound_31) step     0  loss 0.0358  frozen=476/548
+  [packnet_H16] task 44/50 (compound_31) step   749  loss 0.0249  frozen=476/548
+  [packnet_H16] task 44/50 (compound_31) step  1499  loss 0.0000  frozen=476/548
+[packnet_H16] After task 44: own=0.016  avg_to_date=0.233  frozen=485
+
+[packnet_H16] === Task 45/50: compound_32 ===
+  [packnet_H16] task 45/50 (compound_32) step     0  loss 0.0485  frozen=485/548
+  [packnet_H16] task 45/50 (compound_32) step   749  loss 0.0047  frozen=485/548
+  [packnet_H16] task 45/50 (compound_32) step  1499  loss 0.0000  frozen=485/548
+[packnet_H16] After task 45: own=0.006  avg_to_date=0.228  frozen=497
+
+[packnet_H16] === Task 46/50: compound_33 ===
+  [packnet_H16] task 46/50 (compound_33) step     0  loss 0.0252  frozen=497/548
+  [packnet_H16] task 46/50 (compound_33) step   749  loss 0.0137  frozen=497/548
+  [packnet_H16] task 46/50 (compound_33) step  1499  loss 0.0000  frozen=497/548
+[packnet_H16] After task 46: own=0.021  avg_to_date=0.223  frozen=506
+
+[packnet_H16] === Task 47/50: compound_34 ===
+  [packnet_H16] task 47/50 (compound_34) step     0  loss 0.0376  frozen=506/548
+  [packnet_H16] task 47/50 (compound_34) step   749  loss 0.0000  frozen=506/548
+  [packnet_H16] task 47/50 (compound_34) step  1499  loss 0.0050  frozen=506/548
+[packnet_H16] After task 47: own=0.006  avg_to_date=0.219  frozen=518
+
+[packnet_H16] === Task 48/50: compound_35 ===
+  [packnet_H16] task 48/50 (compound_35) step     0  loss 0.0640  frozen=518/548
+  [packnet_H16] task 48/50 (compound_35) step   749  loss 0.0218  frozen=518/548
+  [packnet_H16] task 48/50 (compound_35) step  1499  loss 0.0000  frozen=518/548
+[packnet_H16] After task 48: own=0.021  avg_to_date=0.215  frozen=527
+
+[packnet_H16] === Task 49/50: compound_36 ===
+  [packnet_H16] task 49/50 (compound_36) step     0  loss 0.0025  frozen=527/548
+  [packnet_H16] task 49/50 (compound_36) step   749  loss 0.0000  frozen=527/548
+  [packnet_H16] task 49/50 (compound_36) step  1499  loss 0.0000  frozen=527/548
+[packnet_H16] After task 49: own=0.003  avg_to_date=0.210  frozen=539
+
+[packnet_H16] === Task 50/50: compound_37 ===
+  [packnet_H16] task 50/50 (compound_37) step     0  loss 0.0071  frozen=539/548
+  [packnet_H16] task 50/50 (compound_37) step   749  loss 0.0210  frozen=539/548
+  [packnet_H16] task 50/50 (compound_37) step  1499  loss 0.0000  frozen=539/548
+[packnet_H16] After task 50: own=0.001  avg_to_date=0.206  frozen=548
+
+==============================================================================
+bench_50task — Final Report
+==============================================================================
+
+Grown:
+  arch:         (12, 12, 1) → (9, 9, 4)
+  params:       325 → 247
+  divisions:    3 allowed (single phase: 3, compound phase: 0)
+  prunings:     6
+  avg final loss:    0.0297
+  avg forgetting:    -0.0030
+  wall-clock:        317.5s
+  [grown] loss summary:
+     diagonal mean (own-task):       0.0326
+     final-row mean (end-of-cur):    0.0297
+     single-pair phase: own=0.0481  end=0.0388
+     compound-pair phase: own=0.0278  end=0.0268
+
+Fixed-EWC sweep:
+     H   params  avg_final  avg_forget   seconds
+     8      212     0.0435     -0.0065     216.1  *
+    12      364     0.0816     -0.0049     249.8
+    16      548     0.0622     -0.0026     209.2
+
+PackNet sweep:
+     H   params  avg_final  avg_forget   seconds
+     8      212     0.2936      0.0000     148.5  *  per-task: min=2 max=7
+    12      364     0.1904      0.0000     148.4  per-task: min=4 max=10
+    16      548     0.2062      0.0000     153.5  per-task: min=9 max=13
+  (* = closest in n_params to grown final = 247)
+
+Headline comparisons:
+  grown 0.0297  vs  fixed-EWC matched (H=8) 0.0435
+  grown 0.0297  vs  PackNet matched (H=8) 0.2936
+
+Caveat: PackNet uses task-ID at inference time (per-task mask).
+Grown / fixed-EWC don't. Standard literature asymmetry, kept in.
+
+  log: /home/marcrockhat/trioron-project/outputs/bench_50task_log.csv
