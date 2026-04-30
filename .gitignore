@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtualenvs
+.venv/
+venv/
+
+# Logs / runtime artifacts (blueprint §10)
+outputs/*.csv
+logs/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store

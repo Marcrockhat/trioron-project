@@ -1,0 +1,15 @@
+# Trioron — Step 1 dependencies.
+#
+# CPU-only PyTorch is intentional. The architecture's whole pitch is small
+# memory footprint; we should NOT need CUDA until step 8 (benchmarking) at
+# the earliest.
+#
+# Install on WSL:
+#   pip install --break-system-packages -r requirements.txt
+#
+# If you hit "externally-managed-environment", that flag is required on
+# Ubuntu 24.04. On 22.04 you can drop --break-system-packages, or use a venv:
+#   python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+
+torch>=2.0,<3.0
+numpy>=1.24
