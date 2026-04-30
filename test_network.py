@@ -248,6 +248,82 @@ def test_grow_layer_peer_init_shape_check():
     raise AssertionError("expected ValueError on peer_init shape mismatch")
 
 
+def test_prune_layer_node_last_layer():
+    """Pruning the last layer reduces its output dim; no cross-layer cleanup."""
+    net = TrioronNetwork([(4, 8, "relu"), (8, 4, "tanh")])
+    net.prune_layer_node(layer_idx=1, node_idx=2, redistribute=True)
+    assert net.layers[0].n_nodes == 8
+    assert net.layers[1].n_nodes == 3
+    x = torch.randn(2, 4)
+    y = net(x)
+    assert y.shape == (2, 3)
+
+
+def test_prune_layer_node_middle_layer_drops_next_input_col():
+    net = TrioronNetwork(
+        [(4, 8, "relu"), (8, 6, "relu"), (6, 2, "linear")]
+    )
+    net.prune_layer_node(layer_idx=1, node_idx=3, redistribute=False)
+    assert net.layers[1].n_nodes == 5
+    assert net.layers[2].fan_in == 5
+    x = torch.randn(2, 4)
+    y = net(x)
+    assert y.shape == (2, 2)
+
+
+def test_prune_layer_node_redistributes_to_nearest_peer():
+    """With redistribute=True, the pruned node's outgoing weights should
+    be added to the cosine-similarity-nearest peer's column."""
+    torch.manual_seed(0)
+    net = TrioronNetwork(
+        [(4, 4, "linear"), (4, 2, "linear")]
+    )
+    # Construct layer-0 weights so node 0 and node 2 are very similar.
+    with torch.no_grad():
+        net.layers[0].W.copy_(torch.tensor([
+            [1.0, 0.0, 0.0, 0.0],     # node 0
+            [0.0, 1.0, 0.0, 0.0],     # node 1
+            [0.99, 0.01, 0.05, 0.05], # node 2 — close to node 0
+            [0.0, 0.0, 0.0, 1.0],     # node 3
+        ]))
+        # Layer 1: distinct outgoing columns so we can spot the merge.
+        net.layers[1].W.copy_(torch.tensor([
+            [0.5, 1.0, 7.0, 0.5],   # row 0; col 2 = 7 (the victim's outgoing)
+            [0.5, 1.0, 3.0, 0.5],   # row 1
+        ]))
+        col_0_before = net.layers[1].W[:, 0].clone()  # peer should absorb col 2
+    # Prune node 2 of layer 0 — should redistribute its outgoing column to node 0.
+    net.prune_layer_node(layer_idx=0, node_idx=2, redistribute=True)
+    # After prune, node 0's outgoing col on layer 1 should be (col_0_before + col_2_before).
+    # Layer 1 fan_in is now 3; col 0 corresponds to original node 0.
+    expected_col_0 = col_0_before + torch.tensor([7.0, 3.0])
+    assert torch.allclose(net.layers[1].W[:, 0], expected_col_0), (
+        f"peer did not absorb victim's column. got {net.layers[1].W[:, 0]}, "
+        f"expected {expected_col_0}"
+    )
+    # Layer 0 has 3 nodes left; layer 1 fan_in is 3.
+    assert net.layers[0].n_nodes == 3
+    assert net.layers[1].fan_in == 3
+
+
+def test_prune_layer_node_refuses_last_node():
+    net = TrioronNetwork([(4, 1, "relu"), (1, 2, "linear")])
+    try:
+        net.prune_layer_node(layer_idx=0, node_idx=0, redistribute=True)
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError")
+
+
+def test_prune_layer_node_invalid_idx_raises():
+    net = TrioronNetwork([(4, 4, "relu"), (4, 2, "linear")])
+    try:
+        net.prune_layer_node(layer_idx=0, node_idx=99)
+    except IndexError:
+        return
+    raise AssertionError("expected IndexError on bad node_idx")
+
+
 def test_grow_layer_optimizer_can_be_rebuilt():
     """After grow_layer, a fresh Adam over net.parameters() takes a real step."""
     import torch.optim as optim
@@ -293,6 +369,11 @@ def main():
         ("grow_layer_invalid_idx_raises",     test_grow_layer_invalid_idx_raises),
         ("grow_layer_peer_init_shape_check",  test_grow_layer_peer_init_shape_check),
         ("grow_layer_optimizer_rebuild",      test_grow_layer_optimizer_can_be_rebuilt),
+        ("prune_layer_node_last_layer",       test_prune_layer_node_last_layer),
+        ("prune_layer_node_middle_layer",     test_prune_layer_node_middle_layer_drops_next_input_col),
+        ("prune_layer_node_redistribute",     test_prune_layer_node_redistributes_to_nearest_peer),
+        ("prune_layer_node_refuses_last",     test_prune_layer_node_refuses_last_node),
+        ("prune_layer_node_invalid_idx",      test_prune_layer_node_invalid_idx_raises),
     ]
 
     for name, fn in tests:

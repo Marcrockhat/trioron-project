@@ -180,6 +180,78 @@ class TrioronNetwork(nn.Module):
 
         return new_idx
 
+    def prune_layer_node(
+        self,
+        layer_idx: int,
+        node_idx: int,
+        redistribute: bool = True,
+    ) -> None:
+        """Coordinated cellular pruning per §3.3.
+
+        Removes node `node_idx` from layer `layer_idx`. If a downstream
+        layer exists and `redistribute=True`, the pruned node's outgoing
+        column is added to its cosine-similarity-nearest peer's outgoing
+        column BEFORE the structural removal — preserving the network's
+        approximate input-output behavior.
+
+        Refuses to prune the last remaining node in any layer (would
+        zero a layer and break the forward pass).
+
+        Caveat: any optimizer holding references to this network's
+        parameters MUST be rebuilt after this call.
+        """
+        if not (0 <= layer_idx < len(self.layers)):
+            raise IndexError(
+                f"layer_idx {layer_idx} out of range [0, {len(self.layers)})"
+            )
+        target = self.layers[layer_idx]
+        if not (0 <= node_idx < target.n_nodes):
+            raise IndexError(
+                f"node_idx {node_idx} out of range [0, {target.n_nodes})"
+            )
+        if target.n_nodes <= 1:
+            raise ValueError(
+                f"Refusing to prune the last node in layer {layer_idx}"
+            )
+
+        has_next = layer_idx + 1 < len(self.layers)
+
+        # §3.3 redistribution: peer absorbs the pruned node's downstream role.
+        if redistribute and has_next:
+            next_layer = self.layers[layer_idx + 1]
+            with torch.no_grad():
+                W = target.W.data
+                victim = W[node_idx]
+                victim_norm = victim.norm()
+                if victim_norm < 1e-12:
+                    # Degenerate node — pick any peer.
+                    peer_idx = 0 if node_idx != 0 else 1
+                else:
+                    sims = torch.zeros(target.n_nodes, device=W.device)
+                    for j in range(target.n_nodes):
+                        if j == node_idx:
+                            sims[j] = -float("inf")
+                            continue
+                        peer_norm = W[j].norm()
+                        if peer_norm < 1e-12:
+                            sims[j] = -float("inf")
+                            continue
+                        sims[j] = torch.dot(victim, W[j]) / (victim_norm * peer_norm)
+                    peer_idx = int(sims.argmax().item())
+
+                next_layer.W.data[:, peer_idx] += next_layer.W.data[:, node_idx]
+                next_layer.W_anchor[:, peer_idx] += next_layer.W_anchor[:, node_idx]
+                # fisher is per-weight; absorbing fisher mass is approximate
+                # but better than zeroing it.
+                next_layer.fisher_W[:, peer_idx] += next_layer.fisher_W[:, node_idx]
+
+        # Remove the node from this layer.
+        target.prune_node(node_idx)
+
+        # Drop the matching input column on the next layer.
+        if has_next:
+            self.layers[layer_idx + 1].prune_input(node_idx)
+
     # ----- introspection -----
 
     def n_parameters(self) -> int:

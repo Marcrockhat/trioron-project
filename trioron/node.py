@@ -244,6 +244,33 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("W_anchor", new_W_anchor)
         self._replace_buffer("fisher_W", new_fisher_W)
 
+    def prune_input(self, col_idx: int) -> None:
+        """Remove the input column at `col_idx`. Inverse of grow_input.
+
+        Used for cross-layer pruning: when the previous layer removes a
+        node, this layer must drop the corresponding input.
+
+        Same optimizer-rebuild caveat as grow_node: the W Parameter object
+        is replaced.
+        """
+        if not (0 <= col_idx < self.fan_in):
+            raise IndexError(f"col_idx {col_idx} out of range [0, {self.fan_in})")
+        if self.fan_in == 1:
+            raise ValueError("Cannot prune the last remaining input column.")
+
+        keep = [i for i in range(self.fan_in) if i != col_idx]
+        keep_t = torch.tensor(keep, device=self.W.device, dtype=torch.long)
+
+        with torch.no_grad():
+            new_W = self.W.data.index_select(1, keep_t)
+            new_W_anchor = self.W_anchor.index_select(1, keep_t)
+            new_fisher_W = self.fisher_W.index_select(1, keep_t)
+
+        self.fan_in -= 1
+        self._replace_parameter("W", new_W)
+        self._replace_buffer("W_anchor", new_W_anchor)
+        self._replace_buffer("fisher_W", new_fisher_W)
+
     def prune_node(self, idx: int) -> None:
         """Remove the node at index `idx`. Same optimizer rebuild caveat as grow_node."""
         if not (0 <= idx < self.n_nodes):

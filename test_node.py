@@ -386,6 +386,47 @@ def test_grow_input_with_init_col():
     assert torch.allclose(layer.W[:, -1], init), f"new col {layer.W[:, -1]}"
 
 
+def test_prune_input_shapes():
+    layer = TrioronLayer(fan_in=5, n_nodes=3, activation="relu")
+    layer.prune_input(col_idx=2)
+    assert layer.fan_in == 4
+    assert layer.W.shape == (3, 4)
+    assert layer.W_anchor.shape == (3, 4)
+    assert layer.fisher_W.shape == (3, 4)
+    # Per-output-node buffers untouched.
+    assert layer.b.shape == (3,)
+    assert layer.lam.shape == (3,)
+    assert layer.u.shape == (3,)
+
+
+def test_prune_input_removes_correct_column():
+    layer = TrioronLayer(fan_in=4, n_nodes=2, activation="linear")
+    with torch.no_grad():
+        layer.W.copy_(torch.tensor([[1.0, 2.0, 3.0, 4.0],
+                                    [5.0, 6.0, 7.0, 8.0]]))
+    layer.prune_input(col_idx=1)
+    expected = torch.tensor([[1.0, 3.0, 4.0], [5.0, 7.0, 8.0]])
+    assert torch.allclose(layer.W, expected), f"got {layer.W}"
+
+
+def test_prune_input_invalid_idx_raises():
+    layer = TrioronLayer(fan_in=4, n_nodes=2, activation="relu")
+    try:
+        layer.prune_input(col_idx=99)
+    except IndexError:
+        return
+    raise AssertionError("expected IndexError")
+
+
+def test_prune_input_last_column_raises():
+    layer = TrioronLayer(fan_in=1, n_nodes=2, activation="relu")
+    try:
+        layer.prune_input(col_idx=0)
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError")
+
+
 def test_grow_input_then_grow_node_consistent():
     """grow_input then grow_node leaves everything self-consistent."""
     layer = TrioronLayer(fan_in=4, n_nodes=3, activation="relu")
@@ -429,6 +470,10 @@ def main() -> int:
         ("grow_input_zero_default",          test_grow_input_zero_default),
         ("grow_input_with_init_col",         test_grow_input_with_init_col),
         ("grow_input_then_grow_node",        test_grow_input_then_grow_node_consistent),
+        ("prune_input_shapes",               test_prune_input_shapes),
+        ("prune_input_removes_correct_col",  test_prune_input_removes_correct_column),
+        ("prune_input_invalid_idx_raises",   test_prune_input_invalid_idx_raises),
+        ("prune_input_last_column_raises",   test_prune_input_last_column_raises),
         ("prune_node_shapes",                test_prune_node_shapes),
         ("prune_node_removes_correct_row",   test_prune_node_removes_correct_row),
         ("prune_last_node_raises",           test_prune_last_node_raises),
