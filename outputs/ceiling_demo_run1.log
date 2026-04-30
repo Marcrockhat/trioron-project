@@ -1,0 +1,36 @@
+==============================================================================
+Trioron — Step 7 verification: ceilings preflight
+==============================================================================
+------------------------------------------------------------------------------
+Scenario A — MEMORY ceiling
+------------------------------------------------------------------------------
+  predicted Δ = 107 floats = 428 B   M_max = 427 B (over by 1 B)
+  attempt 1: [DENY] reason=memory_ceiling layer=1  mem 0.0MB + Δ0.000MB = 0.0MB (M_max=0MB)  last_stab=n/a (T_div_max=60s)
+  attempt 2: [DENY] reason=arrested layer=1  mem 0.0MB + Δ0.000MB = 0.0MB (M_max=0MB)  last_stab=n/a (T_div_max=60s)
+  controller: CeilingsController(M_max=0MB, T_div_max=60s, arrested=True/memory_ceiling, attempts=2, allowed=0)
+  result:     PASS
+
+------------------------------------------------------------------------------
+Scenario B — TIME ceiling
+------------------------------------------------------------------------------
+  attempt 1: [ALLOW] reason=ok layer=0  mem 0.0MB + Δ0.000MB = 0.0MB (M_max=1024MB)  last_stab=n/a (T_div_max=10s)
+  divided: layer 0 → 17 nodes; net = TrioronNetwork(8->17(relu) → 17->16(relu) → 16->4(tanh))
+  stabilization elapsed: 11.00s (budget 10.00s — over)
+  attempt 2: [DENY] reason=time_ceiling layer=0  mem 0.0MB + Δ0.000MB = 0.0MB (M_max=1024MB)  last_stab=11.00s (T_div_max=10s)
+  attempt 3: [DENY] reason=arrested layer=0  mem 0.0MB + Δ0.000MB = 0.0MB (M_max=1024MB)  last_stab=11.00s (T_div_max=10s)
+  controller: CeilingsController(M_max=1024MB, T_div_max=10s, arrested=True/time_ceiling, attempts=3, allowed=1)
+  result:     PASS
+
+------------------------------------------------------------------------------
+Scenario C — happy path (control)
+------------------------------------------------------------------------------
+  attempt 1: [ALLOW] reason=ok layer=0  mem 0.0MB + Δ0.000MB = 0.0MB (M_max=1024MB)  last_stab=n/a (T_div_max=10s)
+  attempt 2: [ALLOW] reason=ok layer=0  mem 0.0MB + Δ0.000MB = 0.0MB (M_max=1024MB)  last_stab=2.00s (T_div_max=10s)
+  controller: CeilingsController(M_max=1024MB, T_div_max=10s, arrested=False, attempts=2, allowed=2)
+  divisions_allowed = 2
+
+  log: /home/marcrockhat/trioron-project/outputs/ceiling_demo_log.csv
+
+==============================================================================
+  Overall: PASS
+==============================================================================
