@@ -1,0 +1,772 @@
+==============================================================================
+Trioron — bench_harder: §13 revisit on a 20-task / 16-dim curriculum
+==============================================================================
+State dim:         16
+Pairs:             12 single-dim + 8 compound = 20
+Per-task budget:   1500 steps   (total 30000 steps per network)
+EWC schedule:      baseline 1000, stab boost 5000, stab steps 300, λ-floor 0.1
+Trigger:           W=400, eps_loss=0.001, eps_rank=0.1, g∈[0.0001, 10.0]
+Fixed-sweep H ∈    [12, 16, 20, 24]
+Eval:              fixed batches, seed=42, batch=512
+
+
+------------------------------------------------------------------------------
+[grown] curriculum start — arch [16, 16, 1]  params 561  growth=True pruning=True
+------------------------------------------------------------------------------
+
+[grown] === Task 1/20: single_00 ===
+  [grown] task 1/20 (single_00) step     0  loss 0.7390  arch [16, 16, 1]  params 561
+  [grown] task 1/20 (single_00) step   499  loss 0.0000  arch [16, 16, 1]  params 561
+  [grown] task 1/20 (single_00) step   999  loss 0.0000  arch [16, 16, 1]  params 561
+  [grown] task 1/20 (single_00) step  1499  loss 0.0000  arch [16, 16, 1]  params 561
+[grown] After task 1: own=0.000  avg over tasks 1..1=0.000  arch=[16, 16, 1] params=561
+
+[grown] === Task 2/20: single_01 ===
+  [grown] task 2/20 (single_01) step     0  loss 0.2745  arch [16, 16, 1]  params 561
+  [grown] task 2/20 (single_01) step   499  loss 0.3470  arch [16, 16, 1]  params 561
+  [grown] PRUNE @ task 2/20 step 500: [(1, 15)] → arch [16, 15, 1]
+  [grown] *** FIRE @ task 2/20 (single_01) step 854: ALLOW; latent 1→2, rank 1.00, grad 1.257
+  [grown] task 2/20 (single_01) step   999  loss 0.1549  arch [16, 15, 2]  params 559
+  [grown] task 2/20 (single_01) step  1499  loss 0.0801  arch [16, 15, 2]  params 559
+[grown] After task 2: own=0.094  avg over tasks 1..2=0.047  arch=[16, 15, 2] params=559
+
+[grown] === Task 3/20: single_02 ===
+  [grown] task 3/20 (single_02) step     0  loss 0.1096  arch [16, 15, 2]  params 559
+  [grown] task 3/20 (single_02) step   499  loss 0.0931  arch [16, 15, 2]  params 559
+  [grown] *** FIRE @ task 3/20 (single_02) step 840: ALLOW; latent 2→3, rank 2.00, grad 1.116
+  [grown] task 3/20 (single_02) step   999  loss 0.1511  arch [16, 15, 3]  params 575
+  [grown] task 3/20 (single_02) step  1499  loss 0.0867  arch [16, 15, 3]  params 575
+[grown] After task 3: own=0.075  avg over tasks 1..3=0.042  arch=[16, 15, 3] params=575
+
+[grown] === Task 4/20: single_03 ===
+  [grown] task 4/20 (single_03) step     0  loss 0.0974  arch [16, 15, 3]  params 575
+  [grown] task 4/20 (single_03) step   499  loss 0.0599  arch [16, 15, 3]  params 575
+  [grown] PRUNE @ task 4/20 step 500: [(1, 13)] → arch [16, 14, 3]
+  [grown] task 4/20 (single_03) step   999  loss 0.0682  arch [16, 14, 3]  params 555
+  [grown] task 4/20 (single_03) step  1499  loss 0.0951  arch [16, 14, 3]  params 555
+[grown] After task 4: own=0.076  avg over tasks 1..4=0.052  arch=[16, 14, 3] params=555
+
+[grown] === Task 5/20: single_04 ===
+  [grown] task 5/20 (single_04) step     0  loss 0.1126  arch [16, 14, 3]  params 555
+  [grown] task 5/20 (single_04) step   499  loss 0.0990  arch [16, 14, 3]  params 555
+  [grown] task 5/20 (single_04) step   999  loss 0.1116  arch [16, 14, 3]  params 555
+  [grown] task 5/20 (single_04) step  1499  loss 0.0472  arch [16, 14, 3]  params 555
+[grown] After task 5: own=0.086  avg over tasks 1..5=0.059  arch=[16, 14, 3] params=555
+
+[grown] === Task 6/20: single_05 ===
+  [grown] task 6/20 (single_05) step     0  loss 0.0161  arch [16, 14, 3]  params 555
+  [grown] task 6/20 (single_05) step   499  loss 0.0459  arch [16, 14, 3]  params 555
+  [grown] task 6/20 (single_05) step   999  loss 0.1008  arch [16, 14, 3]  params 555
+  [grown] task 6/20 (single_05) step  1499  loss 0.1450  arch [16, 14, 3]  params 555
+[grown] After task 6: own=0.078  avg over tasks 1..6=0.062  arch=[16, 14, 3] params=555
+
+[grown] === Task 7/20: single_06 ===
+  [grown] task 7/20 (single_06) step     0  loss 0.0348  arch [16, 14, 3]  params 555
+  [grown] task 7/20 (single_06) step   499  loss 0.0302  arch [16, 14, 3]  params 555
+  [grown] task 7/20 (single_06) step   999  loss 0.0892  arch [16, 14, 3]  params 555
+  [grown] task 7/20 (single_06) step  1499  loss 0.0879  arch [16, 14, 3]  params 555
+[grown] After task 7: own=0.081  avg over tasks 1..7=0.065  arch=[16, 14, 3] params=555
+
+[grown] === Task 8/20: single_07 ===
+  [grown] task 8/20 (single_07) step     0  loss 0.0735  arch [16, 14, 3]  params 555
+  [grown] task 8/20 (single_07) step   499  loss 0.0386  arch [16, 14, 3]  params 555
+  [grown] task 8/20 (single_07) step   999  loss 0.0288  arch [16, 14, 3]  params 555
+  [grown] task 8/20 (single_07) step  1499  loss 0.0230  arch [16, 14, 3]  params 555
+[grown] After task 8: own=0.076  avg over tasks 1..8=0.066  arch=[16, 14, 3] params=555
+
+[grown] === Task 9/20: single_08 ===
+  [grown] task 9/20 (single_08) step     0  loss 0.0709  arch [16, 14, 3]  params 555
+  [grown] task 9/20 (single_08) step   499  loss 0.1207  arch [16, 14, 3]  params 555
+  [grown] task 9/20 (single_08) step   999  loss 0.0690  arch [16, 14, 3]  params 555
+  [grown] task 9/20 (single_08) step  1499  loss 0.0889  arch [16, 14, 3]  params 555
+[grown] After task 9: own=0.054  avg over tasks 1..9=0.065  arch=[16, 14, 3] params=555
+
+[grown] === Task 10/20: single_09 ===
+  [grown] task 10/20 (single_09) step     0  loss 0.0647  arch [16, 14, 3]  params 555
+  [grown] task 10/20 (single_09) step   499  loss 0.1131  arch [16, 14, 3]  params 555
+  [grown] task 10/20 (single_09) step   999  loss 0.0198  arch [16, 14, 3]  params 555
+  [grown] task 10/20 (single_09) step  1499  loss 0.0824  arch [16, 14, 3]  params 555
+[grown] After task 10: own=0.056  avg over tasks 1..10=0.063  arch=[16, 14, 3] params=555
+
+[grown] === Task 11/20: single_10 ===
+  [grown] task 11/20 (single_10) step     0  loss 0.0384  arch [16, 14, 3]  params 555
+  [grown] task 11/20 (single_10) step   499  loss 0.0712  arch [16, 14, 3]  params 555
+  [grown] task 11/20 (single_10) step   999  loss 0.0616  arch [16, 14, 3]  params 555
+  [grown] task 11/20 (single_10) step  1499  loss 0.0694  arch [16, 14, 3]  params 555
+[grown] After task 11: own=0.056  avg over tasks 1..11=0.063  arch=[16, 14, 3] params=555
+
+[grown] === Task 12/20: single_11 ===
+  [grown] task 12/20 (single_11) step     0  loss 0.0958  arch [16, 14, 3]  params 555
+  [grown] task 12/20 (single_11) step   499  loss 0.0332  arch [16, 14, 3]  params 555
+  [grown] task 12/20 (single_11) step   999  loss 0.0433  arch [16, 14, 3]  params 555
+  [grown] task 12/20 (single_11) step  1499  loss 0.0523  arch [16, 14, 3]  params 555
+[grown] After task 12: own=0.047  avg over tasks 1..12=0.061  arch=[16, 14, 3] params=555
+
+[grown] === Task 13/20: compound_00 ===
+  [grown] task 13/20 (compound_00) step     0  loss 0.1062  arch [16, 14, 3]  params 555
+  [grown] task 13/20 (compound_00) step   499  loss 0.1033  arch [16, 14, 3]  params 555
+  [grown] task 13/20 (compound_00) step   999  loss 0.0859  arch [16, 14, 3]  params 555
+  [grown] task 13/20 (compound_00) step  1499  loss 0.1098  arch [16, 14, 3]  params 555
+[grown] After task 13: own=0.067  avg over tasks 1..13=0.061  arch=[16, 14, 3] params=555
+
+[grown] === Task 14/20: compound_01 ===
+  [grown] task 14/20 (compound_01) step     0  loss 0.0259  arch [16, 14, 3]  params 555
+  [grown] task 14/20 (compound_01) step   499  loss 0.0063  arch [16, 14, 3]  params 555
+  [grown] task 14/20 (compound_01) step   999  loss 0.0329  arch [16, 14, 3]  params 555
+  [grown] task 14/20 (compound_01) step  1499  loss 0.0467  arch [16, 14, 3]  params 555
+[grown] After task 14: own=0.035  avg over tasks 1..14=0.059  arch=[16, 14, 3] params=555
+
+[grown] === Task 15/20: compound_02 ===
+  [grown] task 15/20 (compound_02) step     0  loss 0.0834  arch [16, 14, 3]  params 555
+  [grown] task 15/20 (compound_02) step   499  loss 0.0778  arch [16, 14, 3]  params 555
+  [grown] task 15/20 (compound_02) step   999  loss 0.0958  arch [16, 14, 3]  params 555
+  [grown] task 15/20 (compound_02) step  1499  loss 0.0410  arch [16, 14, 3]  params 555
+[grown] After task 15: own=0.090  avg over tasks 1..15=0.061  arch=[16, 14, 3] params=555
+
+[grown] === Task 16/20: compound_03 ===
+  [grown] task 16/20 (compound_03) step     0  loss 0.0816  arch [16, 14, 3]  params 555
+  [grown] task 16/20 (compound_03) step   499  loss 0.0570  arch [16, 14, 3]  params 555
+  [grown] task 16/20 (compound_03) step   999  loss 0.1175  arch [16, 14, 3]  params 555
+  [grown] task 16/20 (compound_03) step  1499  loss 0.1156  arch [16, 14, 3]  params 555
+[grown] After task 16: own=0.074  avg over tasks 1..16=0.062  arch=[16, 14, 3] params=555
+
+[grown] === Task 17/20: compound_04 ===
+  [grown] task 17/20 (compound_04) step     0  loss 0.0031  arch [16, 14, 3]  params 555
+  [grown] task 17/20 (compound_04) step   499  loss 0.0089  arch [16, 14, 3]  params 555
+  [grown] task 17/20 (compound_04) step   999  loss 0.0343  arch [16, 14, 3]  params 555
+  [grown] task 17/20 (compound_04) step  1499  loss 0.0000  arch [16, 14, 3]  params 555
+[grown] After task 17: own=0.008  avg over tasks 1..17=0.059  arch=[16, 14, 3] params=555
+
+[grown] === Task 18/20: compound_05 ===
+  [grown] task 18/20 (compound_05) step     0  loss 0.0874  arch [16, 14, 3]  params 555
+  [grown] task 18/20 (compound_05) step   499  loss 0.1476  arch [16, 14, 3]  params 555
+  [grown] task 18/20 (compound_05) step   999  loss 0.0975  arch [16, 14, 3]  params 555
+  [grown] task 18/20 (compound_05) step  1499  loss 0.0681  arch [16, 14, 3]  params 555
+[grown] After task 18: own=0.068  avg over tasks 1..18=0.059  arch=[16, 14, 3] params=555
+
+[grown] === Task 19/20: compound_06 ===
+  [grown] task 19/20 (compound_06) step     0  loss 0.0936  arch [16, 14, 3]  params 555
+  [grown] task 19/20 (compound_06) step   499  loss 0.0745  arch [16, 14, 3]  params 555
+  [grown] task 19/20 (compound_06) step   999  loss 0.0984  arch [16, 14, 3]  params 555
+  [grown] task 19/20 (compound_06) step  1499  loss 0.0549  arch [16, 14, 3]  params 555
+[grown] After task 19: own=0.065  avg over tasks 1..19=0.059  arch=[16, 14, 3] params=555
+
+[grown] === Task 20/20: compound_07 ===
+  [grown] task 20/20 (compound_07) step     0  loss 0.0502  arch [16, 14, 3]  params 555
+  [grown] task 20/20 (compound_07) step   499  loss 0.0444  arch [16, 14, 3]  params 555
+  [grown] *** FIRE @ task 20/20 (compound_07) step 799: ALLOW; latent 3→4, rank 2.89, grad 1.223
+  [grown] task 20/20 (compound_07) step   999  loss 0.0479  arch [16, 14, 4]  params 570
+  [grown] task 20/20 (compound_07) step  1499  loss 0.0110  arch [16, 14, 4]  params 570
+[grown] After task 20: own=0.042  avg over tasks 1..20=0.047  arch=[16, 14, 4] params=570
+
+------------------------------------------------------------------------------
+[fixed_H12] curriculum start — arch [12, 12, 4]  params 412  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H12] === Task 1/20: single_00 ===
+  [fixed_H12] task 1/20 (single_00) step     0  loss 0.6778  arch [12, 12, 4]  params 412
+  [fixed_H12] task 1/20 (single_00) step   499  loss 0.0000  arch [12, 12, 4]  params 412
+  [fixed_H12] task 1/20 (single_00) step   999  loss 0.0000  arch [12, 12, 4]  params 412
+  [fixed_H12] task 1/20 (single_00) step  1499  loss 0.0000  arch [12, 12, 4]  params 412
+[fixed_H12] After task 1: own=0.000  avg over tasks 1..1=0.000  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 2/20: single_01 ===
+  [fixed_H12] task 2/20 (single_01) step     0  loss 0.1126  arch [12, 12, 4]  params 412
+  [fixed_H12] task 2/20 (single_01) step   499  loss 0.1317  arch [12, 12, 4]  params 412
+  [fixed_H12] task 2/20 (single_01) step   999  loss 0.1031  arch [12, 12, 4]  params 412
+  [fixed_H12] task 2/20 (single_01) step  1499  loss 0.0373  arch [12, 12, 4]  params 412
+[fixed_H12] After task 2: own=0.071  avg over tasks 1..2=0.036  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 3/20: single_02 ===
+  [fixed_H12] task 3/20 (single_02) step     0  loss 0.1210  arch [12, 12, 4]  params 412
+  [fixed_H12] task 3/20 (single_02) step   499  loss 0.0878  arch [12, 12, 4]  params 412
+  [fixed_H12] task 3/20 (single_02) step   999  loss 0.0939  arch [12, 12, 4]  params 412
+  [fixed_H12] task 3/20 (single_02) step  1499  loss 0.0397  arch [12, 12, 4]  params 412
+[fixed_H12] After task 3: own=0.096  avg over tasks 1..3=0.056  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 4/20: single_03 ===
+  [fixed_H12] task 4/20 (single_03) step     0  loss 0.0896  arch [12, 12, 4]  params 412
+  [fixed_H12] task 4/20 (single_03) step   499  loss 0.0598  arch [12, 12, 4]  params 412
+  [fixed_H12] task 4/20 (single_03) step   999  loss 0.0371  arch [12, 12, 4]  params 412
+  [fixed_H12] task 4/20 (single_03) step  1499  loss 0.1309  arch [12, 12, 4]  params 412
+[fixed_H12] After task 4: own=0.063  avg over tasks 1..4=0.057  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 5/20: single_04 ===
+  [fixed_H12] task 5/20 (single_04) step     0  loss 0.0897  arch [12, 12, 4]  params 412
+  [fixed_H12] task 5/20 (single_04) step   499  loss 0.0605  arch [12, 12, 4]  params 412
+  [fixed_H12] task 5/20 (single_04) step   999  loss 0.0272  arch [12, 12, 4]  params 412
+  [fixed_H12] task 5/20 (single_04) step  1499  loss 0.0692  arch [12, 12, 4]  params 412
+[fixed_H12] After task 5: own=0.061  avg over tasks 1..5=0.058  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 6/20: single_05 ===
+  [fixed_H12] task 6/20 (single_05) step     0  loss 0.0511  arch [12, 12, 4]  params 412
+  [fixed_H12] task 6/20 (single_05) step   499  loss 0.0176  arch [12, 12, 4]  params 412
+  [fixed_H12] task 6/20 (single_05) step   999  loss 0.0356  arch [12, 12, 4]  params 412
+  [fixed_H12] task 6/20 (single_05) step  1499  loss 0.0455  arch [12, 12, 4]  params 412
+[fixed_H12] After task 6: own=0.062  avg over tasks 1..6=0.058  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 7/20: single_06 ===
+  [fixed_H12] task 7/20 (single_06) step     0  loss 0.0336  arch [12, 12, 4]  params 412
+  [fixed_H12] task 7/20 (single_06) step   499  loss 0.0788  arch [12, 12, 4]  params 412
+  [fixed_H12] task 7/20 (single_06) step   999  loss 0.0216  arch [12, 12, 4]  params 412
+  [fixed_H12] task 7/20 (single_06) step  1499  loss 0.0813  arch [12, 12, 4]  params 412
+[fixed_H12] After task 7: own=0.071  avg over tasks 1..7=0.059  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 8/20: single_07 ===
+  [fixed_H12] task 8/20 (single_07) step     0  loss 0.0930  arch [12, 12, 4]  params 412
+  [fixed_H12] task 8/20 (single_07) step   499  loss 0.0724  arch [12, 12, 4]  params 412
+  [fixed_H12] task 8/20 (single_07) step   999  loss 0.0622  arch [12, 12, 4]  params 412
+  [fixed_H12] task 8/20 (single_07) step  1499  loss 0.0555  arch [12, 12, 4]  params 412
+[fixed_H12] After task 8: own=0.065  avg over tasks 1..8=0.059  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 9/20: single_08 ===
+  [fixed_H12] task 9/20 (single_08) step     0  loss 0.0736  arch [12, 12, 4]  params 412
+  [fixed_H12] task 9/20 (single_08) step   499  loss 0.0479  arch [12, 12, 4]  params 412
+  [fixed_H12] task 9/20 (single_08) step   999  loss 0.0454  arch [12, 12, 4]  params 412
+  [fixed_H12] task 9/20 (single_08) step  1499  loss 0.0229  arch [12, 12, 4]  params 412
+[fixed_H12] After task 9: own=0.052  avg over tasks 1..9=0.058  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 10/20: single_09 ===
+  [fixed_H12] task 10/20 (single_09) step     0  loss 0.0442  arch [12, 12, 4]  params 412
+  [fixed_H12] task 10/20 (single_09) step   499  loss 0.0637  arch [12, 12, 4]  params 412
+  [fixed_H12] task 10/20 (single_09) step   999  loss 0.0381  arch [12, 12, 4]  params 412
+  [fixed_H12] task 10/20 (single_09) step  1499  loss 0.1127  arch [12, 12, 4]  params 412
+[fixed_H12] After task 10: own=0.062  avg over tasks 1..10=0.059  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 11/20: single_10 ===
+  [fixed_H12] task 11/20 (single_10) step     0  loss 0.0614  arch [12, 12, 4]  params 412
+  [fixed_H12] task 11/20 (single_10) step   499  loss 0.0408  arch [12, 12, 4]  params 412
+  [fixed_H12] task 11/20 (single_10) step   999  loss 0.0973  arch [12, 12, 4]  params 412
+  [fixed_H12] task 11/20 (single_10) step  1499  loss 0.0596  arch [12, 12, 4]  params 412
+[fixed_H12] After task 11: own=0.051  avg over tasks 1..11=0.058  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 12/20: single_11 ===
+  [fixed_H12] task 12/20 (single_11) step     0  loss 0.0999  arch [12, 12, 4]  params 412
+  [fixed_H12] task 12/20 (single_11) step   499  loss 0.0475  arch [12, 12, 4]  params 412
+  [fixed_H12] task 12/20 (single_11) step   999  loss 0.0295  arch [12, 12, 4]  params 412
+  [fixed_H12] task 12/20 (single_11) step  1499  loss 0.0702  arch [12, 12, 4]  params 412
+[fixed_H12] After task 12: own=0.060  avg over tasks 1..12=0.057  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 13/20: compound_00 ===
+  [fixed_H12] task 13/20 (compound_00) step     0  loss 0.0949  arch [12, 12, 4]  params 412
+  [fixed_H12] task 13/20 (compound_00) step   499  loss 0.0313  arch [12, 12, 4]  params 412
+  [fixed_H12] task 13/20 (compound_00) step   999  loss 0.0726  arch [12, 12, 4]  params 412
+  [fixed_H12] task 13/20 (compound_00) step  1499  loss 0.1099  arch [12, 12, 4]  params 412
+[fixed_H12] After task 13: own=0.079  avg over tasks 1..13=0.059  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 14/20: compound_01 ===
+  [fixed_H12] task 14/20 (compound_01) step     0  loss 0.0862  arch [12, 12, 4]  params 412
+  [fixed_H12] task 14/20 (compound_01) step   499  loss 0.0474  arch [12, 12, 4]  params 412
+  [fixed_H12] task 14/20 (compound_01) step   999  loss 0.0801  arch [12, 12, 4]  params 412
+  [fixed_H12] task 14/20 (compound_01) step  1499  loss 0.0595  arch [12, 12, 4]  params 412
+[fixed_H12] After task 14: own=0.070  avg over tasks 1..14=0.059  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 15/20: compound_02 ===
+  [fixed_H12] task 15/20 (compound_02) step     0  loss 0.0558  arch [12, 12, 4]  params 412
+  [fixed_H12] task 15/20 (compound_02) step   499  loss 0.0257  arch [12, 12, 4]  params 412
+  [fixed_H12] task 15/20 (compound_02) step   999  loss 0.0757  arch [12, 12, 4]  params 412
+  [fixed_H12] task 15/20 (compound_02) step  1499  loss 0.1251  arch [12, 12, 4]  params 412
+[fixed_H12] After task 15: own=0.055  avg over tasks 1..15=0.059  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 16/20: compound_03 ===
+  [fixed_H12] task 16/20 (compound_03) step     0  loss 0.0192  arch [12, 12, 4]  params 412
+  [fixed_H12] task 16/20 (compound_03) step   499  loss 0.0654  arch [12, 12, 4]  params 412
+  [fixed_H12] task 16/20 (compound_03) step   999  loss 0.0744  arch [12, 12, 4]  params 412
+  [fixed_H12] task 16/20 (compound_03) step  1499  loss 0.0398  arch [12, 12, 4]  params 412
+[fixed_H12] After task 16: own=0.047  avg over tasks 1..16=0.058  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 17/20: compound_04 ===
+  [fixed_H12] task 17/20 (compound_04) step     0  loss 0.0694  arch [12, 12, 4]  params 412
+  [fixed_H12] task 17/20 (compound_04) step   499  loss 0.0364  arch [12, 12, 4]  params 412
+  [fixed_H12] task 17/20 (compound_04) step   999  loss 0.0692  arch [12, 12, 4]  params 412
+  [fixed_H12] task 17/20 (compound_04) step  1499  loss 0.0387  arch [12, 12, 4]  params 412
+[fixed_H12] After task 17: own=0.058  avg over tasks 1..17=0.058  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 18/20: compound_05 ===
+  [fixed_H12] task 18/20 (compound_05) step     0  loss 0.1008  arch [12, 12, 4]  params 412
+  [fixed_H12] task 18/20 (compound_05) step   499  loss 0.0429  arch [12, 12, 4]  params 412
+  [fixed_H12] task 18/20 (compound_05) step   999  loss 0.0261  arch [12, 12, 4]  params 412
+  [fixed_H12] task 18/20 (compound_05) step  1499  loss 0.0633  arch [12, 12, 4]  params 412
+[fixed_H12] After task 18: own=0.047  avg over tasks 1..18=0.057  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 19/20: compound_06 ===
+  [fixed_H12] task 19/20 (compound_06) step     0  loss 0.0493  arch [12, 12, 4]  params 412
+  [fixed_H12] task 19/20 (compound_06) step   499  loss 0.0095  arch [12, 12, 4]  params 412
+  [fixed_H12] task 19/20 (compound_06) step   999  loss 0.0249  arch [12, 12, 4]  params 412
+  [fixed_H12] task 19/20 (compound_06) step  1499  loss 0.0116  arch [12, 12, 4]  params 412
+[fixed_H12] After task 19: own=0.020  avg over tasks 1..19=0.055  arch=[12, 12, 4] params=412
+
+[fixed_H12] === Task 20/20: compound_07 ===
+  [fixed_H12] task 20/20 (compound_07) step     0  loss 0.0129  arch [12, 12, 4]  params 412
+  [fixed_H12] task 20/20 (compound_07) step   499  loss 0.0360  arch [12, 12, 4]  params 412
+  [fixed_H12] task 20/20 (compound_07) step   999  loss 0.0786  arch [12, 12, 4]  params 412
+  [fixed_H12] task 20/20 (compound_07) step  1499  loss 0.0345  arch [12, 12, 4]  params 412
+[fixed_H12] After task 20: own=0.053  avg over tasks 1..20=0.055  arch=[12, 12, 4] params=412
+
+------------------------------------------------------------------------------
+[fixed_H16] curriculum start — arch [16, 16, 4]  params 612  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H16] === Task 1/20: single_00 ===
+  [fixed_H16] task 1/20 (single_00) step     0  loss 0.4882  arch [16, 16, 4]  params 612
+  [fixed_H16] task 1/20 (single_00) step   499  loss 0.0000  arch [16, 16, 4]  params 612
+  [fixed_H16] task 1/20 (single_00) step   999  loss 0.0000  arch [16, 16, 4]  params 612
+  [fixed_H16] task 1/20 (single_00) step  1499  loss 0.0000  arch [16, 16, 4]  params 612
+[fixed_H16] After task 1: own=0.000  avg over tasks 1..1=0.000  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 2/20: single_01 ===
+  [fixed_H16] task 2/20 (single_01) step     0  loss 0.1316  arch [16, 16, 4]  params 612
+  [fixed_H16] task 2/20 (single_01) step   499  loss 0.0858  arch [16, 16, 4]  params 612
+  [fixed_H16] task 2/20 (single_01) step   999  loss 0.0226  arch [16, 16, 4]  params 612
+  [fixed_H16] task 2/20 (single_01) step  1499  loss 0.0747  arch [16, 16, 4]  params 612
+[fixed_H16] After task 2: own=0.071  avg over tasks 1..2=0.035  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 3/20: single_02 ===
+  [fixed_H16] task 3/20 (single_02) step     0  loss 0.0212  arch [16, 16, 4]  params 612
+  [fixed_H16] task 3/20 (single_02) step   499  loss 0.0069  arch [16, 16, 4]  params 612
+  [fixed_H16] task 3/20 (single_02) step   999  loss 0.0342  arch [16, 16, 4]  params 612
+  [fixed_H16] task 3/20 (single_02) step  1499  loss 0.0714  arch [16, 16, 4]  params 612
+[fixed_H16] After task 3: own=0.046  avg over tasks 1..3=0.039  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 4/20: single_03 ===
+  [fixed_H16] task 4/20 (single_03) step     0  loss 0.0644  arch [16, 16, 4]  params 612
+  [fixed_H16] task 4/20 (single_03) step   499  loss 0.0720  arch [16, 16, 4]  params 612
+  [fixed_H16] task 4/20 (single_03) step   999  loss 0.0530  arch [16, 16, 4]  params 612
+  [fixed_H16] task 4/20 (single_03) step  1499  loss 0.0464  arch [16, 16, 4]  params 612
+[fixed_H16] After task 4: own=0.063  avg over tasks 1..4=0.045  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 5/20: single_04 ===
+  [fixed_H16] task 5/20 (single_04) step     0  loss 0.0447  arch [16, 16, 4]  params 612
+  [fixed_H16] task 5/20 (single_04) step   499  loss 0.0847  arch [16, 16, 4]  params 612
+  [fixed_H16] task 5/20 (single_04) step   999  loss 0.0562  arch [16, 16, 4]  params 612
+  [fixed_H16] task 5/20 (single_04) step  1499  loss 0.0333  arch [16, 16, 4]  params 612
+[fixed_H16] After task 5: own=0.073  avg over tasks 1..5=0.050  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 6/20: single_05 ===
+  [fixed_H16] task 6/20 (single_05) step     0  loss 0.0860  arch [16, 16, 4]  params 612
+  [fixed_H16] task 6/20 (single_05) step   499  loss 0.0404  arch [16, 16, 4]  params 612
+  [fixed_H16] task 6/20 (single_05) step   999  loss 0.0327  arch [16, 16, 4]  params 612
+  [fixed_H16] task 6/20 (single_05) step  1499  loss 0.0496  arch [16, 16, 4]  params 612
+[fixed_H16] After task 6: own=0.056  avg over tasks 1..6=0.051  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 7/20: single_06 ===
+  [fixed_H16] task 7/20 (single_06) step     0  loss 0.0149  arch [16, 16, 4]  params 612
+  [fixed_H16] task 7/20 (single_06) step   499  loss 0.0194  arch [16, 16, 4]  params 612
+  [fixed_H16] task 7/20 (single_06) step   999  loss 0.0539  arch [16, 16, 4]  params 612
+  [fixed_H16] task 7/20 (single_06) step  1499  loss 0.0634  arch [16, 16, 4]  params 612
+[fixed_H16] After task 7: own=0.040  avg over tasks 1..7=0.050  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 8/20: single_07 ===
+  [fixed_H16] task 8/20 (single_07) step     0  loss 0.0564  arch [16, 16, 4]  params 612
+  [fixed_H16] task 8/20 (single_07) step   499  loss 0.0925  arch [16, 16, 4]  params 612
+  [fixed_H16] task 8/20 (single_07) step   999  loss 0.0509  arch [16, 16, 4]  params 612
+  [fixed_H16] task 8/20 (single_07) step  1499  loss 0.0158  arch [16, 16, 4]  params 612
+[fixed_H16] After task 8: own=0.074  avg over tasks 1..8=0.053  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 9/20: single_08 ===
+  [fixed_H16] task 9/20 (single_08) step     0  loss 0.0641  arch [16, 16, 4]  params 612
+  [fixed_H16] task 9/20 (single_08) step   499  loss 0.0290  arch [16, 16, 4]  params 612
+  [fixed_H16] task 9/20 (single_08) step   999  loss 0.0994  arch [16, 16, 4]  params 612
+  [fixed_H16] task 9/20 (single_08) step  1499  loss 0.0526  arch [16, 16, 4]  params 612
+[fixed_H16] After task 9: own=0.059  avg over tasks 1..9=0.053  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 10/20: single_09 ===
+  [fixed_H16] task 10/20 (single_09) step     0  loss 0.0899  arch [16, 16, 4]  params 612
+  [fixed_H16] task 10/20 (single_09) step   499  loss 0.0987  arch [16, 16, 4]  params 612
+  [fixed_H16] task 10/20 (single_09) step   999  loss 0.0229  arch [16, 16, 4]  params 612
+  [fixed_H16] task 10/20 (single_09) step  1499  loss 0.0666  arch [16, 16, 4]  params 612
+[fixed_H16] After task 10: own=0.063  avg over tasks 1..10=0.054  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 11/20: single_10 ===
+  [fixed_H16] task 11/20 (single_10) step     0  loss 0.0632  arch [16, 16, 4]  params 612
+  [fixed_H16] task 11/20 (single_10) step   499  loss 0.0468  arch [16, 16, 4]  params 612
+  [fixed_H16] task 11/20 (single_10) step   999  loss 0.0651  arch [16, 16, 4]  params 612
+  [fixed_H16] task 11/20 (single_10) step  1499  loss 0.0497  arch [16, 16, 4]  params 612
+[fixed_H16] After task 11: own=0.039  avg over tasks 1..11=0.053  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 12/20: single_11 ===
+  [fixed_H16] task 12/20 (single_11) step     0  loss 0.0048  arch [16, 16, 4]  params 612
+  [fixed_H16] task 12/20 (single_11) step   499  loss 0.0840  arch [16, 16, 4]  params 612
+  [fixed_H16] task 12/20 (single_11) step   999  loss 0.0518  arch [16, 16, 4]  params 612
+  [fixed_H16] task 12/20 (single_11) step  1499  loss 0.0450  arch [16, 16, 4]  params 612
+[fixed_H16] After task 12: own=0.057  avg over tasks 1..12=0.053  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 13/20: compound_00 ===
+  [fixed_H16] task 13/20 (compound_00) step     0  loss 0.0007  arch [16, 16, 4]  params 612
+  [fixed_H16] task 13/20 (compound_00) step   499  loss 0.0000  arch [16, 16, 4]  params 612
+  [fixed_H16] task 13/20 (compound_00) step   999  loss 0.0000  arch [16, 16, 4]  params 612
+  [fixed_H16] task 13/20 (compound_00) step  1499  loss 0.0000  arch [16, 16, 4]  params 612
+[fixed_H16] After task 13: own=0.001  avg over tasks 1..13=0.049  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 14/20: compound_01 ===
+  [fixed_H16] task 14/20 (compound_01) step     0  loss 0.0576  arch [16, 16, 4]  params 612
+  [fixed_H16] task 14/20 (compound_01) step   499  loss 0.0607  arch [16, 16, 4]  params 612
+  [fixed_H16] task 14/20 (compound_01) step   999  loss 0.1070  arch [16, 16, 4]  params 612
+  [fixed_H16] task 14/20 (compound_01) step  1499  loss 0.0535  arch [16, 16, 4]  params 612
+[fixed_H16] After task 14: own=0.068  avg over tasks 1..14=0.050  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 15/20: compound_02 ===
+  [fixed_H16] task 15/20 (compound_02) step     0  loss 0.0556  arch [16, 16, 4]  params 612
+  [fixed_H16] task 15/20 (compound_02) step   499  loss 0.0174  arch [16, 16, 4]  params 612
+  [fixed_H16] task 15/20 (compound_02) step   999  loss 0.0646  arch [16, 16, 4]  params 612
+  [fixed_H16] task 15/20 (compound_02) step  1499  loss 0.0354  arch [16, 16, 4]  params 612
+[fixed_H16] After task 15: own=0.047  avg over tasks 1..15=0.050  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 16/20: compound_03 ===
+  [fixed_H16] task 16/20 (compound_03) step     0  loss 0.0462  arch [16, 16, 4]  params 612
+  [fixed_H16] task 16/20 (compound_03) step   499  loss 0.0444  arch [16, 16, 4]  params 612
+  [fixed_H16] task 16/20 (compound_03) step   999  loss 0.0471  arch [16, 16, 4]  params 612
+  [fixed_H16] task 16/20 (compound_03) step  1499  loss 0.0622  arch [16, 16, 4]  params 612
+[fixed_H16] After task 16: own=0.053  avg over tasks 1..16=0.050  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 17/20: compound_04 ===
+  [fixed_H16] task 17/20 (compound_04) step     0  loss 0.0429  arch [16, 16, 4]  params 612
+  [fixed_H16] task 17/20 (compound_04) step   499  loss 0.0213  arch [16, 16, 4]  params 612
+  [fixed_H16] task 17/20 (compound_04) step   999  loss 0.0429  arch [16, 16, 4]  params 612
+  [fixed_H16] task 17/20 (compound_04) step  1499  loss 0.0061  arch [16, 16, 4]  params 612
+[fixed_H16] After task 17: own=0.025  avg over tasks 1..17=0.049  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 18/20: compound_05 ===
+  [fixed_H16] task 18/20 (compound_05) step     0  loss 0.0213  arch [16, 16, 4]  params 612
+  [fixed_H16] task 18/20 (compound_05) step   499  loss 0.0504  arch [16, 16, 4]  params 612
+  [fixed_H16] task 18/20 (compound_05) step   999  loss 0.0381  arch [16, 16, 4]  params 612
+  [fixed_H16] task 18/20 (compound_05) step  1499  loss 0.0711  arch [16, 16, 4]  params 612
+[fixed_H16] After task 18: own=0.054  avg over tasks 1..18=0.049  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 19/20: compound_06 ===
+  [fixed_H16] task 19/20 (compound_06) step     0  loss 0.0784  arch [16, 16, 4]  params 612
+  [fixed_H16] task 19/20 (compound_06) step   499  loss 0.0194  arch [16, 16, 4]  params 612
+  [fixed_H16] task 19/20 (compound_06) step   999  loss 0.1047  arch [16, 16, 4]  params 612
+  [fixed_H16] task 19/20 (compound_06) step  1499  loss 0.0896  arch [16, 16, 4]  params 612
+[fixed_H16] After task 19: own=0.049  avg over tasks 1..19=0.049  arch=[16, 16, 4] params=612
+
+[fixed_H16] === Task 20/20: compound_07 ===
+  [fixed_H16] task 20/20 (compound_07) step     0  loss 0.0425  arch [16, 16, 4]  params 612
+  [fixed_H16] task 20/20 (compound_07) step   499  loss 0.0459  arch [16, 16, 4]  params 612
+  [fixed_H16] task 20/20 (compound_07) step   999  loss 0.0159  arch [16, 16, 4]  params 612
+  [fixed_H16] task 20/20 (compound_07) step  1499  loss 0.0330  arch [16, 16, 4]  params 612
+[fixed_H16] After task 20: own=0.076  avg over tasks 1..20=0.050  arch=[16, 16, 4] params=612
+
+------------------------------------------------------------------------------
+[fixed_H20] curriculum start — arch [20, 20, 4]  params 844  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H20] === Task 1/20: single_00 ===
+  [fixed_H20] task 1/20 (single_00) step     0  loss 0.5189  arch [20, 20, 4]  params 844
+  [fixed_H20] task 1/20 (single_00) step   499  loss 0.0000  arch [20, 20, 4]  params 844
+  [fixed_H20] task 1/20 (single_00) step   999  loss 0.0000  arch [20, 20, 4]  params 844
+  [fixed_H20] task 1/20 (single_00) step  1499  loss 0.0000  arch [20, 20, 4]  params 844
+[fixed_H20] After task 1: own=0.000  avg over tasks 1..1=0.000  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 2/20: single_01 ===
+  [fixed_H20] task 2/20 (single_01) step     0  loss 0.0447  arch [20, 20, 4]  params 844
+  [fixed_H20] task 2/20 (single_01) step   499  loss 0.0085  arch [20, 20, 4]  params 844
+  [fixed_H20] task 2/20 (single_01) step   999  loss 0.0845  arch [20, 20, 4]  params 844
+  [fixed_H20] task 2/20 (single_01) step  1499  loss 0.0300  arch [20, 20, 4]  params 844
+[fixed_H20] After task 2: own=0.050  avg over tasks 1..2=0.025  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 3/20: single_02 ===
+  [fixed_H20] task 3/20 (single_02) step     0  loss 0.0524  arch [20, 20, 4]  params 844
+  [fixed_H20] task 3/20 (single_02) step   499  loss 0.0384  arch [20, 20, 4]  params 844
+  [fixed_H20] task 3/20 (single_02) step   999  loss 0.0774  arch [20, 20, 4]  params 844
+  [fixed_H20] task 3/20 (single_02) step  1499  loss 0.0501  arch [20, 20, 4]  params 844
+[fixed_H20] After task 3: own=0.054  avg over tasks 1..3=0.034  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 4/20: single_03 ===
+  [fixed_H20] task 4/20 (single_03) step     0  loss 0.0243  arch [20, 20, 4]  params 844
+  [fixed_H20] task 4/20 (single_03) step   499  loss 0.0588  arch [20, 20, 4]  params 844
+  [fixed_H20] task 4/20 (single_03) step   999  loss 0.0409  arch [20, 20, 4]  params 844
+  [fixed_H20] task 4/20 (single_03) step  1499  loss 0.0673  arch [20, 20, 4]  params 844
+[fixed_H20] After task 4: own=0.052  avg over tasks 1..4=0.039  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 5/20: single_04 ===
+  [fixed_H20] task 5/20 (single_04) step     0  loss 0.0221  arch [20, 20, 4]  params 844
+  [fixed_H20] task 5/20 (single_04) step   499  loss 0.0212  arch [20, 20, 4]  params 844
+  [fixed_H20] task 5/20 (single_04) step   999  loss 0.0475  arch [20, 20, 4]  params 844
+  [fixed_H20] task 5/20 (single_04) step  1499  loss 0.0110  arch [20, 20, 4]  params 844
+[fixed_H20] After task 5: own=0.045  avg over tasks 1..5=0.040  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 6/20: single_05 ===
+  [fixed_H20] task 6/20 (single_05) step     0  loss 0.0412  arch [20, 20, 4]  params 844
+  [fixed_H20] task 6/20 (single_05) step   499  loss 0.0256  arch [20, 20, 4]  params 844
+  [fixed_H20] task 6/20 (single_05) step   999  loss 0.0647  arch [20, 20, 4]  params 844
+  [fixed_H20] task 6/20 (single_05) step  1499  loss 0.0734  arch [20, 20, 4]  params 844
+[fixed_H20] After task 6: own=0.040  avg over tasks 1..6=0.040  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 7/20: single_06 ===
+  [fixed_H20] task 7/20 (single_06) step     0  loss 0.0851  arch [20, 20, 4]  params 844
+  [fixed_H20] task 7/20 (single_06) step   499  loss 0.0407  arch [20, 20, 4]  params 844
+  [fixed_H20] task 7/20 (single_06) step   999  loss 0.0301  arch [20, 20, 4]  params 844
+  [fixed_H20] task 7/20 (single_06) step  1499  loss 0.0376  arch [20, 20, 4]  params 844
+[fixed_H20] After task 7: own=0.044  avg over tasks 1..7=0.040  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 8/20: single_07 ===
+  [fixed_H20] task 8/20 (single_07) step     0  loss 0.0622  arch [20, 20, 4]  params 844
+  [fixed_H20] task 8/20 (single_07) step   499  loss 0.0307  arch [20, 20, 4]  params 844
+  [fixed_H20] task 8/20 (single_07) step   999  loss 0.0778  arch [20, 20, 4]  params 844
+  [fixed_H20] task 8/20 (single_07) step  1499  loss 0.0270  arch [20, 20, 4]  params 844
+[fixed_H20] After task 8: own=0.042  avg over tasks 1..8=0.040  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 9/20: single_08 ===
+  [fixed_H20] task 9/20 (single_08) step     0  loss 0.0378  arch [20, 20, 4]  params 844
+  [fixed_H20] task 9/20 (single_08) step   499  loss 0.0545  arch [20, 20, 4]  params 844
+  [fixed_H20] task 9/20 (single_08) step   999  loss 0.0237  arch [20, 20, 4]  params 844
+  [fixed_H20] task 9/20 (single_08) step  1499  loss 0.0033  arch [20, 20, 4]  params 844
+[fixed_H20] After task 9: own=0.039  avg over tasks 1..9=0.040  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 10/20: single_09 ===
+  [fixed_H20] task 10/20 (single_09) step     0  loss 0.0470  arch [20, 20, 4]  params 844
+  [fixed_H20] task 10/20 (single_09) step   499  loss 0.0381  arch [20, 20, 4]  params 844
+  [fixed_H20] task 10/20 (single_09) step   999  loss 0.0306  arch [20, 20, 4]  params 844
+  [fixed_H20] task 10/20 (single_09) step  1499  loss 0.0319  arch [20, 20, 4]  params 844
+[fixed_H20] After task 10: own=0.046  avg over tasks 1..10=0.040  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 11/20: single_10 ===
+  [fixed_H20] task 11/20 (single_10) step     0  loss 0.0782  arch [20, 20, 4]  params 844
+  [fixed_H20] task 11/20 (single_10) step   499  loss 0.0364  arch [20, 20, 4]  params 844
+  [fixed_H20] task 11/20 (single_10) step   999  loss 0.0528  arch [20, 20, 4]  params 844
+  [fixed_H20] task 11/20 (single_10) step  1499  loss 0.0234  arch [20, 20, 4]  params 844
+[fixed_H20] After task 11: own=0.048  avg over tasks 1..11=0.041  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 12/20: single_11 ===
+  [fixed_H20] task 12/20 (single_11) step     0  loss 0.0110  arch [20, 20, 4]  params 844
+  [fixed_H20] task 12/20 (single_11) step   499  loss 0.0086  arch [20, 20, 4]  params 844
+  [fixed_H20] task 12/20 (single_11) step   999  loss 0.0164  arch [20, 20, 4]  params 844
+  [fixed_H20] task 12/20 (single_11) step  1499  loss 0.0025  arch [20, 20, 4]  params 844
+[fixed_H20] After task 12: own=0.019  avg over tasks 1..12=0.039  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 13/20: compound_00 ===
+  [fixed_H20] task 13/20 (compound_00) step     0  loss 0.0316  arch [20, 20, 4]  params 844
+  [fixed_H20] task 13/20 (compound_00) step   499  loss 0.0186  arch [20, 20, 4]  params 844
+  [fixed_H20] task 13/20 (compound_00) step   999  loss 0.0052  arch [20, 20, 4]  params 844
+  [fixed_H20] task 13/20 (compound_00) step  1499  loss 0.0142  arch [20, 20, 4]  params 844
+[fixed_H20] After task 13: own=0.015  avg over tasks 1..13=0.037  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 14/20: compound_01 ===
+  [fixed_H20] task 14/20 (compound_01) step     0  loss 0.0375  arch [20, 20, 4]  params 844
+  [fixed_H20] task 14/20 (compound_01) step   499  loss 0.0061  arch [20, 20, 4]  params 844
+  [fixed_H20] task 14/20 (compound_01) step   999  loss 0.0543  arch [20, 20, 4]  params 844
+  [fixed_H20] task 14/20 (compound_01) step  1499  loss 0.0294  arch [20, 20, 4]  params 844
+[fixed_H20] After task 14: own=0.046  avg over tasks 1..14=0.038  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 15/20: compound_02 ===
+  [fixed_H20] task 15/20 (compound_02) step     0  loss 0.0197  arch [20, 20, 4]  params 844
+  [fixed_H20] task 15/20 (compound_02) step   499  loss 0.0098  arch [20, 20, 4]  params 844
+  [fixed_H20] task 15/20 (compound_02) step   999  loss 0.0000  arch [20, 20, 4]  params 844
+  [fixed_H20] task 15/20 (compound_02) step  1499  loss 0.0232  arch [20, 20, 4]  params 844
+[fixed_H20] After task 15: own=0.014  avg over tasks 1..15=0.036  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 16/20: compound_03 ===
+  [fixed_H20] task 16/20 (compound_03) step     0  loss 0.0205  arch [20, 20, 4]  params 844
+  [fixed_H20] task 16/20 (compound_03) step   499  loss 0.0469  arch [20, 20, 4]  params 844
+  [fixed_H20] task 16/20 (compound_03) step   999  loss 0.0358  arch [20, 20, 4]  params 844
+  [fixed_H20] task 16/20 (compound_03) step  1499  loss 0.0735  arch [20, 20, 4]  params 844
+[fixed_H20] After task 16: own=0.054  avg over tasks 1..16=0.037  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 17/20: compound_04 ===
+  [fixed_H20] task 17/20 (compound_04) step     0  loss 0.0000  arch [20, 20, 4]  params 844
+  [fixed_H20] task 17/20 (compound_04) step   499  loss 0.0000  arch [20, 20, 4]  params 844
+  [fixed_H20] task 17/20 (compound_04) step   999  loss 0.0112  arch [20, 20, 4]  params 844
+  [fixed_H20] task 17/20 (compound_04) step  1499  loss 0.0018  arch [20, 20, 4]  params 844
+[fixed_H20] After task 17: own=0.006  avg over tasks 1..17=0.035  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 18/20: compound_05 ===
+  [fixed_H20] task 18/20 (compound_05) step     0  loss 0.0070  arch [20, 20, 4]  params 844
+  [fixed_H20] task 18/20 (compound_05) step   499  loss 0.0338  arch [20, 20, 4]  params 844
+  [fixed_H20] task 18/20 (compound_05) step   999  loss 0.0266  arch [20, 20, 4]  params 844
+  [fixed_H20] task 18/20 (compound_05) step  1499  loss 0.0357  arch [20, 20, 4]  params 844
+[fixed_H20] After task 18: own=0.027  avg over tasks 1..18=0.035  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 19/20: compound_06 ===
+  [fixed_H20] task 19/20 (compound_06) step     0  loss 0.0000  arch [20, 20, 4]  params 844
+  [fixed_H20] task 19/20 (compound_06) step   499  loss 0.0274  arch [20, 20, 4]  params 844
+  [fixed_H20] task 19/20 (compound_06) step   999  loss 0.0179  arch [20, 20, 4]  params 844
+  [fixed_H20] task 19/20 (compound_06) step  1499  loss 0.0332  arch [20, 20, 4]  params 844
+[fixed_H20] After task 19: own=0.019  avg over tasks 1..19=0.034  arch=[20, 20, 4] params=844
+
+[fixed_H20] === Task 20/20: compound_07 ===
+  [fixed_H20] task 20/20 (compound_07) step     0  loss 0.0165  arch [20, 20, 4]  params 844
+  [fixed_H20] task 20/20 (compound_07) step   499  loss 0.0289  arch [20, 20, 4]  params 844
+  [fixed_H20] task 20/20 (compound_07) step   999  loss 0.0135  arch [20, 20, 4]  params 844
+  [fixed_H20] task 20/20 (compound_07) step  1499  loss 0.0507  arch [20, 20, 4]  params 844
+[fixed_H20] After task 20: own=0.034  avg over tasks 1..20=0.034  arch=[20, 20, 4] params=844
+
+------------------------------------------------------------------------------
+[fixed_H24] curriculum start — arch [24, 24, 4]  params 1108  growth=False pruning=False
+------------------------------------------------------------------------------
+
+[fixed_H24] === Task 1/20: single_00 ===
+  [fixed_H24] task 1/20 (single_00) step     0  loss 0.3725  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 1/20 (single_00) step   499  loss 0.0000  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 1/20 (single_00) step   999  loss 0.0000  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 1/20 (single_00) step  1499  loss 0.0000  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 1: own=0.000  avg over tasks 1..1=0.000  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 2/20: single_01 ===
+  [fixed_H24] task 2/20 (single_01) step     0  loss 0.0956  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 2/20 (single_01) step   499  loss 0.1674  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 2/20 (single_01) step   999  loss 0.1700  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 2/20 (single_01) step  1499  loss 0.1759  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 2: own=0.170  avg over tasks 1..2=0.085  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 3/20: single_02 ===
+  [fixed_H24] task 3/20 (single_02) step     0  loss 0.0994  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 3/20 (single_02) step   499  loss 0.1364  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 3/20 (single_02) step   999  loss 0.1550  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 3/20 (single_02) step  1499  loss 0.0852  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 3: own=0.158  avg over tasks 1..3=0.108  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 4/20: single_03 ===
+  [fixed_H24] task 4/20 (single_03) step     0  loss 0.1570  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 4/20 (single_03) step   499  loss 0.1307  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 4/20 (single_03) step   999  loss 0.1730  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 4/20 (single_03) step  1499  loss 0.1005  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 4: own=0.132  avg over tasks 1..4=0.112  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 5/20: single_04 ===
+  [fixed_H24] task 5/20 (single_04) step     0  loss 0.1142  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 5/20 (single_04) step   499  loss 0.1167  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 5/20 (single_04) step   999  loss 0.1042  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 5/20 (single_04) step  1499  loss 0.1132  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 5: own=0.138  avg over tasks 1..5=0.117  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 6/20: single_05 ===
+  [fixed_H24] task 6/20 (single_05) step     0  loss 0.1012  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 6/20 (single_05) step   499  loss 0.1434  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 6/20 (single_05) step   999  loss 0.1409  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 6/20 (single_05) step  1499  loss 0.1246  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 6: own=0.130  avg over tasks 1..6=0.118  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 7/20: single_06 ===
+  [fixed_H24] task 7/20 (single_06) step     0  loss 0.1286  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 7/20 (single_06) step   499  loss 0.1383  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 7/20 (single_06) step   999  loss 0.0585  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 7/20 (single_06) step  1499  loss 0.0771  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 7: own=0.098  avg over tasks 1..7=0.114  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 8/20: single_07 ===
+  [fixed_H24] task 8/20 (single_07) step     0  loss 0.1459  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 8/20 (single_07) step   499  loss 0.1357  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 8/20 (single_07) step   999  loss 0.2389  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 8/20 (single_07) step  1499  loss 0.1783  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 8: own=0.121  avg over tasks 1..8=0.113  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 9/20: single_08 ===
+  [fixed_H24] task 9/20 (single_08) step     0  loss 0.1336  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 9/20 (single_08) step   499  loss 0.0853  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 9/20 (single_08) step   999  loss 0.1693  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 9/20 (single_08) step  1499  loss 0.2128  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 9: own=0.105  avg over tasks 1..9=0.111  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 10/20: single_09 ===
+  [fixed_H24] task 10/20 (single_09) step     0  loss 0.2122  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 10/20 (single_09) step   499  loss 0.2316  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 10/20 (single_09) step   999  loss 0.1468  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 10/20 (single_09) step  1499  loss 0.1114  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 10: own=0.138  avg over tasks 1..10=0.112  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 11/20: single_10 ===
+  [fixed_H24] task 11/20 (single_10) step     0  loss 0.0625  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 11/20 (single_10) step   499  loss 0.1169  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 11/20 (single_10) step   999  loss 0.1326  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 11/20 (single_10) step  1499  loss 0.1224  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 11: own=0.139  avg over tasks 1..11=0.113  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 12/20: single_11 ===
+  [fixed_H24] task 12/20 (single_11) step     0  loss 0.0733  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 12/20 (single_11) step   499  loss 0.1413  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 12/20 (single_11) step   999  loss 0.1723  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 12/20 (single_11) step  1499  loss 0.1266  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 12: own=0.155  avg over tasks 1..12=0.115  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 13/20: compound_00 ===
+  [fixed_H24] task 13/20 (compound_00) step     0  loss 0.1324  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 13/20 (compound_00) step   499  loss 0.1315  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 13/20 (compound_00) step   999  loss 0.0989  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 13/20 (compound_00) step  1499  loss 0.1310  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 13: own=0.109  avg over tasks 1..13=0.113  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 14/20: compound_01 ===
+  [fixed_H24] task 14/20 (compound_01) step     0  loss 0.0390  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 14/20 (compound_01) step   499  loss 0.0481  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 14/20 (compound_01) step   999  loss 0.0844  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 14/20 (compound_01) step  1499  loss 0.1408  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 14: own=0.088  avg over tasks 1..14=0.110  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 15/20: compound_02 ===
+  [fixed_H24] task 15/20 (compound_02) step     0  loss 0.0894  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 15/20 (compound_02) step   499  loss 0.1460  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 15/20 (compound_02) step   999  loss 0.1050  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 15/20 (compound_02) step  1499  loss 0.1367  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 15: own=0.129  avg over tasks 1..15=0.108  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 16/20: compound_03 ===
+  [fixed_H24] task 16/20 (compound_03) step     0  loss 0.1199  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 16/20 (compound_03) step   499  loss 0.0398  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 16/20 (compound_03) step   999  loss 0.1108  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 16/20 (compound_03) step  1499  loss 0.1137  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 16: own=0.090  avg over tasks 1..16=0.105  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 17/20: compound_04 ===
+  [fixed_H24] task 17/20 (compound_04) step     0  loss 0.0425  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 17/20 (compound_04) step   499  loss 0.0516  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 17/20 (compound_04) step   999  loss 0.0670  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 17/20 (compound_04) step  1499  loss 0.1491  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 17: own=0.082  avg over tasks 1..17=0.102  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 18/20: compound_05 ===
+  [fixed_H24] task 18/20 (compound_05) step     0  loss 0.0993  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 18/20 (compound_05) step   499  loss 0.1306  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 18/20 (compound_05) step   999  loss 0.0655  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 18/20 (compound_05) step  1499  loss 0.1685  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 18: own=0.086  avg over tasks 1..18=0.099  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 19/20: compound_06 ===
+  [fixed_H24] task 19/20 (compound_06) step     0  loss 0.0472  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 19/20 (compound_06) step   499  loss 0.0374  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 19/20 (compound_06) step   999  loss 0.0316  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 19/20 (compound_06) step  1499  loss 0.0126  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 19: own=0.031  avg over tasks 1..19=0.095  arch=[24, 24, 4] params=1108
+
+[fixed_H24] === Task 20/20: compound_07 ===
+  [fixed_H24] task 20/20 (compound_07) step     0  loss 0.1200  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 20/20 (compound_07) step   499  loss 0.1059  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 20/20 (compound_07) step   999  loss 0.0895  arch [24, 24, 4]  params 1108
+  [fixed_H24] task 20/20 (compound_07) step  1499  loss 0.1110  arch [24, 24, 4]  params 1108
+[fixed_H24] After task 20: own=0.103  avg over tasks 1..20=0.095  arch=[24, 24, 4] params=1108
+
+==============================================================================
+bench_harder — Final Report
+==============================================================================
+
+Grown:
+  arch:         (16, 16, 1) → (16, 14, 4)
+  params:       561 → 570
+  divisions:    3 allowed / 3 attempted
+  prunings:     2
+  pathology:    635 steps
+  avg final loss (20 pairs):  0.0469
+  avg forgetting (19 pairs): -0.0153
+  wall-clock:                131.0s
+  fire timing:  2 during single-pair phase (tasks 1..12), 1 during compound phase (tasks 13..20)
+  [grown] loss summary:
+     diagonal mean (own-task):       0.0615
+     final-row mean (end-of-cur):    0.0469
+     single-pair phase: own=0.0650  end=0.0485
+     compound-pair phase: own=0.0562  end=0.0446
+
+Fixed-MLP sweep:
+     H   params  avg_final  avg_forget   seconds
+    12      412     0.0546     -0.0028     109.5
+    16      612     0.0502     -0.0005     101.8  *
+    20      844     0.0338     -0.0009      94.9
+    24     1108     0.0946     -0.0162      97.0
+  (* = closest in n_params to grown final = 570)
+
+§13 falsification gates (revisited on harder curriculum):
+  (1) Grown matches param-matched fixed: PASS  (grown 0.0469 vs matched 0.0502)
+  (2) Compute ≤ 2x fixed equivalent: PASS  (grown / matched = 1.29x)
+  (3) Trigger fires only on saturation, not pathology: PASS  (allowed-fires=3, transient-fires=0, pathology-steps=635)
+
+  OVERALL: PASS — architecture survives the harder curriculum.
+  log: /home/marcrockhat/trioron-project/outputs/bench_harder_log.csv
