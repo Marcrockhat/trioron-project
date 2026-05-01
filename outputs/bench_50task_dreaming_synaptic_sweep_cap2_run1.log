@@ -1,0 +1,1124 @@
+==============================================================================
+bench_50task_dreaming_synaptic_sweep — SYNAPTIC DOWNSCALE
+                                       (substrate-preserving)
+==============================================================================
+Thresholds: [0.85]
+Seeds:      [0, 1, 2]
+Cap:        max_downscales_per_layer=2
+Tag:        th0.85_s0-2_cap2
+Replay:     25% × 200 steps   ewc_strength=1000.0   u_threshold=0.001
+Probe:      batch=128   skip_output_layer=True
+50-task curriculum: 12 single + 38 compound on 12-dim state
+Total runs: 3 (1 thresholds × 3 seeds)
+
+
+------------------------------------------------------------------------------
+Run 1/3: ac_threshold=0.85  seed=0
+------------------------------------------------------------------------------
+
+[grown_synaptic_th0.85_seed0] curriculum start — arch [12, 12, 1]  params 325  growth=True pruning=True  dreaming=ON
+
+[grown_synaptic_th0.85_seed0] === Task 1/50: single_00 ===
+  [grown_synaptic_th0.85_seed0] task 1/50 (single_00) step     0  loss 0.8451  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed0] task 1/50 (single_00) step   749  loss 0.0000  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed0] task 1/50 (single_00) step  1499  loss 0.0000  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed0] DREAM @ task 1/50: replay 0.000→0.000 on 1p; merges=2 purges=5 → arch [10, 9, 1] (325→239 params)
+[grown_synaptic_th0.85_seed0] After task 1: own=0.048  avg_to_date=0.048  arch=[10, 9, 1] params=239
+
+[grown_synaptic_th0.85_seed0] === Task 2/50: single_01 ===
+  [grown_synaptic_th0.85_seed0] task 2/50 (single_01) step     0  loss 0.5073  arch [10, 9, 1]  params 239
+  [grown_synaptic_th0.85_seed0] task 2/50 (single_01) step   749  loss 0.3932  arch [10, 9, 1]  params 239
+  [grown_synaptic_th0.85_seed0] *** FIRE @ task 2/50 step 884: ALLOW; latent 1→2
+  [grown_synaptic_th0.85_seed0] task 2/50 (single_01) step  1499  loss 0.1906  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 2/50: replay 0.131→0.312 on 1p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 2: own=0.286  avg_to_date=0.144  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 3/50: single_02 ===
+  [grown_synaptic_th0.85_seed0] task 3/50 (single_02) step     0  loss 0.3200  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 3/50 (single_02) step   749  loss 0.4040  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 3/50 (single_02) step  1499  loss 0.2525  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 3/50: replay 0.234→0.234 on 1p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 3: own=0.260  avg_to_date=0.180  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 4/50: single_03 ===
+  [grown_synaptic_th0.85_seed0] task 4/50 (single_03) step     0  loss 0.3470  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 4/50 (single_03) step   749  loss 0.2864  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 4/50 (single_03) step  1499  loss 0.2431  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 4/50: replay 0.416→0.364 on 1p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 4: own=0.256  avg_to_date=0.197  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 5/50: single_04 ===
+  [grown_synaptic_th0.85_seed0] task 5/50 (single_04) step     0  loss 0.2881  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 5/50 (single_04) step   749  loss 0.2275  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 5/50 (single_04) step  1499  loss 0.2498  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 5/50: replay 0.294→0.271 on 2p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 5: own=0.276  avg_to_date=0.217  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 6/50: single_05 ===
+  [grown_synaptic_th0.85_seed0] task 6/50 (single_05) step     0  loss 0.3105  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 6/50 (single_05) step   749  loss 0.3265  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 6/50 (single_05) step  1499  loss 0.2499  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 6/50: replay 0.213→0.224 on 2p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 6: own=0.249  avg_to_date=0.219  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 7/50: single_06 ===
+  [grown_synaptic_th0.85_seed0] task 7/50 (single_06) step     0  loss 0.2965  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 7/50 (single_06) step   749  loss 0.4044  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 7/50 (single_06) step  1499  loss 0.4150  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 7/50: replay 0.203→0.249 on 2p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 7: own=0.245  avg_to_date=0.222  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 8/50: single_07 ===
+  [grown_synaptic_th0.85_seed0] task 8/50 (single_07) step     0  loss 0.2842  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 8/50 (single_07) step   749  loss 0.3054  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 8/50 (single_07) step  1499  loss 0.3302  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 8/50: replay 0.185→0.250 on 2p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 8: own=0.257  avg_to_date=0.219  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 9/50: single_08 ===
+  [grown_synaptic_th0.85_seed0] task 9/50 (single_08) step     0  loss 0.3798  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 9/50 (single_08) step   749  loss 0.1722  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 9/50 (single_08) step  1499  loss 0.2534  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 9/50: replay 0.320→0.212 on 3p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 9: own=0.255  avg_to_date=0.224  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 10/50: single_09 ===
+  [grown_synaptic_th0.85_seed0] task 10/50 (single_09) step     0  loss 0.3315  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 10/50 (single_09) step   749  loss 0.2919  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 10/50 (single_09) step  1499  loss 0.1535  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 10/50: replay 0.180→0.200 on 3p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 10: own=0.236  avg_to_date=0.225  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 11/50: single_10 ===
+  [grown_synaptic_th0.85_seed0] task 11/50 (single_10) step     0  loss 0.2321  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 11/50 (single_10) step   749  loss 0.1604  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 11/50 (single_10) step  1499  loss 0.2095  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 11/50: replay 0.291→0.238 on 3p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 11: own=0.224  avg_to_date=0.222  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 12/50: single_11 ===
+  [grown_synaptic_th0.85_seed0] task 12/50 (single_11) step     0  loss 0.2577  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 12/50 (single_11) step   749  loss 0.2768  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 12/50 (single_11) step  1499  loss 0.2625  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 12/50: replay 0.221→0.191 on 3p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 12: own=0.270  avg_to_date=0.224  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 13/50: compound_00 ===
+  [grown_synaptic_th0.85_seed0] task 13/50 (compound_00) step     0  loss 0.3676  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 13/50 (compound_00) step   749  loss 0.2389  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 13/50 (compound_00) step  1499  loss 0.1805  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 13/50: replay 0.234→0.226 on 4p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 13: own=0.249  avg_to_date=0.225  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 14/50: compound_01 ===
+  [grown_synaptic_th0.85_seed0] task 14/50 (compound_01) step     0  loss 0.1687  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 14/50 (compound_01) step   749  loss 0.2742  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 14/50 (compound_01) step  1499  loss 0.3338  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 14/50: replay 0.234→0.217 on 4p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 14: own=0.256  avg_to_date=0.225  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 15/50: compound_02 ===
+  [grown_synaptic_th0.85_seed0] task 15/50 (compound_02) step     0  loss 0.2656  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 15/50 (compound_02) step   749  loss 0.1750  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 15/50 (compound_02) step  1499  loss 0.1884  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 15/50: replay 0.218→0.282 on 4p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 15: own=0.215  avg_to_date=0.224  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 16/50: compound_03 ===
+  [grown_synaptic_th0.85_seed0] task 16/50 (compound_03) step     0  loss 0.0000  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 16/50 (compound_03) step   749  loss 0.0000  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 16/50 (compound_03) step  1499  loss 0.0000  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 16/50: replay 0.127→0.140 on 4p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 16: own=0.000  avg_to_date=0.212  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 17/50: compound_04 ===
+  [grown_synaptic_th0.85_seed0] task 17/50 (compound_04) step     0  loss 0.2645  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 17/50 (compound_04) step   749  loss 0.2372  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 17/50 (compound_04) step  1499  loss 0.2669  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 17/50: replay 0.178→0.213 on 5p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 17: own=0.211  avg_to_date=0.210  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 18/50: compound_05 ===
+  [grown_synaptic_th0.85_seed0] task 18/50 (compound_05) step     0  loss 0.2875  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 18/50 (compound_05) step   749  loss 0.1466  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 18/50 (compound_05) step  1499  loss 0.2145  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 18/50: replay 0.288→0.282 on 5p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 18: own=0.221  avg_to_date=0.208  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 19/50: compound_06 ===
+  [grown_synaptic_th0.85_seed0] task 19/50 (compound_06) step     0  loss 0.3148  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 19/50 (compound_06) step   749  loss 0.2845  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 19/50 (compound_06) step  1499  loss 0.2889  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 19/50: replay 0.225→0.179 on 5p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 19: own=0.212  avg_to_date=0.206  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 20/50: compound_07 ===
+  [grown_synaptic_th0.85_seed0] task 20/50 (compound_07) step     0  loss 0.2326  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 20/50 (compound_07) step   749  loss 0.3240  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 20/50 (compound_07) step  1499  loss 0.1961  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 20/50: replay 0.202→0.182 on 5p; merges=2 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 20: own=0.266  avg_to_date=0.210  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 21/50: compound_08 ===
+  [grown_synaptic_th0.85_seed0] task 21/50 (compound_08) step     0  loss 0.2198  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 21/50 (compound_08) step   749  loss 0.3160  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 21/50 (compound_08) step  1499  loss 0.2612  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] DREAM @ task 21/50: replay 0.246→0.314 on 6p; merges=1 purges=0 → arch [10, 9, 2] (249→249 params)
+[grown_synaptic_th0.85_seed0] After task 21: own=0.256  avg_to_date=0.211  arch=[10, 9, 2] params=249
+
+[grown_synaptic_th0.85_seed0] === Task 22/50: compound_09 ===
+  [grown_synaptic_th0.85_seed0] task 22/50 (compound_09) step     0  loss 0.0679  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] task 22/50 (compound_09) step   749  loss 0.1929  arch [10, 9, 2]  params 249
+  [grown_synaptic_th0.85_seed0] *** FIRE @ task 22/50 step 799: ALLOW; latent 2→3
+  [grown_synaptic_th0.85_seed0] task 22/50 (compound_09) step  1499  loss 0.0101  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 22/50: replay 0.128→0.125 on 6p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 22: own=0.010  avg_to_date=0.125  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 23/50: compound_10 ===
+  [grown_synaptic_th0.85_seed0] task 23/50 (compound_10) step     0  loss 0.0785  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 23/50 (compound_10) step   749  loss 0.1500  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 23/50 (compound_10) step  1499  loss 0.1366  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 23/50: replay 0.156→0.112 on 6p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 23: own=0.113  avg_to_date=0.125  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 24/50: compound_11 ===
+  [grown_synaptic_th0.85_seed0] task 24/50 (compound_11) step     0  loss 0.1005  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 24/50 (compound_11) step   749  loss 0.2100  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 24/50 (compound_11) step  1499  loss 0.0943  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 24/50: replay 0.150→0.158 on 6p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 24: own=0.128  avg_to_date=0.124  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 25/50: compound_12 ===
+  [grown_synaptic_th0.85_seed0] task 25/50 (compound_12) step     0  loss 0.0312  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 25/50 (compound_12) step   749  loss 0.0661  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 25/50 (compound_12) step  1499  loss 0.0367  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 25/50: replay 0.144→0.128 on 7p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 25: own=0.039  avg_to_date=0.121  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 26/50: compound_13 ===
+  [grown_synaptic_th0.85_seed0] task 26/50 (compound_13) step     0  loss 0.1433  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 26/50 (compound_13) step   749  loss 0.1768  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 26/50 (compound_13) step  1499  loss 0.1007  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 26/50: replay 0.098→0.133 on 7p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 26: own=0.128  avg_to_date=0.121  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 27/50: compound_14 ===
+  [grown_synaptic_th0.85_seed0] task 27/50 (compound_14) step     0  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 27/50 (compound_14) step   749  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 27/50 (compound_14) step  1499  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 27/50: replay 0.147→0.147 on 7p; merges=1 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 27: own=0.001  avg_to_date=0.117  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 28/50: compound_15 ===
+  [grown_synaptic_th0.85_seed0] task 28/50 (compound_15) step     0  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 28/50 (compound_15) step   749  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 28/50 (compound_15) step  1499  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 28/50: replay 0.153→0.125 on 7p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 28: own=0.000  avg_to_date=0.113  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 29/50: compound_16 ===
+  [grown_synaptic_th0.85_seed0] task 29/50 (compound_16) step     0  loss 0.1550  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 29/50 (compound_16) step   749  loss 0.1864  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 29/50 (compound_16) step  1499  loss 0.1477  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 29/50: replay 0.136→0.124 on 8p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 29: own=0.152  avg_to_date=0.114  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 30/50: compound_17 ===
+  [grown_synaptic_th0.85_seed0] task 30/50 (compound_17) step     0  loss 0.1335  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 30/50 (compound_17) step   749  loss 0.2621  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 30/50 (compound_17) step  1499  loss 0.1678  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 30/50: replay 0.117→0.118 on 8p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 30: own=0.156  avg_to_date=0.115  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 31/50: compound_18 ===
+  [grown_synaptic_th0.85_seed0] task 31/50 (compound_18) step     0  loss 0.1085  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 31/50 (compound_18) step   749  loss 0.1210  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 31/50 (compound_18) step  1499  loss 0.1184  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 31/50: replay 0.118→0.107 on 8p; merges=1 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 31: own=0.148  avg_to_date=0.116  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 32/50: compound_19 ===
+  [grown_synaptic_th0.85_seed0] task 32/50 (compound_19) step     0  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 32/50 (compound_19) step   749  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 32/50 (compound_19) step  1499  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 32/50: replay 0.103→0.094 on 8p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 32: own=0.000  avg_to_date=0.112  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 33/50: compound_20 ===
+  [grown_synaptic_th0.85_seed0] task 33/50 (compound_20) step     0  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 33/50 (compound_20) step   749  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 33/50 (compound_20) step  1499  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 33/50: replay 0.092→0.092 on 9p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 33: own=0.001  avg_to_date=0.109  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 34/50: compound_21 ===
+  [grown_synaptic_th0.85_seed0] task 34/50 (compound_21) step     0  loss 0.1146  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 34/50 (compound_21) step   749  loss 0.1395  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 34/50 (compound_21) step  1499  loss 0.1588  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 34/50: replay 0.140→0.098 on 9p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 34: own=0.130  avg_to_date=0.109  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 35/50: compound_22 ===
+  [grown_synaptic_th0.85_seed0] task 35/50 (compound_22) step     0  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 35/50 (compound_22) step   749  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 35/50 (compound_22) step  1499  loss 0.0000  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 35/50: replay 0.135→0.134 on 9p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 35: own=0.000  avg_to_date=0.105  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 36/50: compound_23 ===
+  [grown_synaptic_th0.85_seed0] task 36/50 (compound_23) step     0  loss 0.1638  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 36/50 (compound_23) step   749  loss 0.1321  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 36/50 (compound_23) step  1499  loss 0.1824  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 36/50: replay 0.112→0.123 on 9p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 36: own=0.168  avg_to_date=0.107  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 37/50: compound_24 ===
+  [grown_synaptic_th0.85_seed0] task 37/50 (compound_24) step     0  loss 0.1692  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 37/50 (compound_24) step   749  loss 0.1728  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 37/50 (compound_24) step  1499  loss 0.1808  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 37/50: replay 0.099→0.116 on 10p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 37: own=0.152  avg_to_date=0.107  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 38/50: compound_25 ===
+  [grown_synaptic_th0.85_seed0] task 38/50 (compound_25) step     0  loss 0.1586  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 38/50 (compound_25) step   749  loss 0.0974  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 38/50 (compound_25) step  1499  loss 0.1021  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 38/50: replay 0.131→0.106 on 10p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 38: own=0.157  avg_to_date=0.109  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 39/50: compound_26 ===
+  [grown_synaptic_th0.85_seed0] task 39/50 (compound_26) step     0  loss 0.1133  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 39/50 (compound_26) step   749  loss 0.1403  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 39/50 (compound_26) step  1499  loss 0.1840  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 39/50: replay 0.122→0.134 on 10p; merges=1 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 39: own=0.162  avg_to_date=0.109  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 40/50: compound_27 ===
+  [grown_synaptic_th0.85_seed0] task 40/50 (compound_27) step     0  loss 0.2419  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 40/50 (compound_27) step   749  loss 0.1192  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 40/50 (compound_27) step  1499  loss 0.2359  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 40/50: replay 0.129→0.126 on 10p; merges=1 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 40: own=0.176  avg_to_date=0.110  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 41/50: compound_28 ===
+  [grown_synaptic_th0.85_seed0] task 41/50 (compound_28) step     0  loss 0.1482  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 41/50 (compound_28) step   749  loss 0.1129  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 41/50 (compound_28) step  1499  loss 0.1250  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 41/50: replay 0.148→0.143 on 11p; merges=1 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 41: own=0.088  avg_to_date=0.110  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 42/50: compound_29 ===
+  [grown_synaptic_th0.85_seed0] task 42/50 (compound_29) step     0  loss 0.0482  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 42/50 (compound_29) step   749  loss 0.1059  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 42/50 (compound_29) step  1499  loss 0.1816  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 42/50: replay 0.096→0.097 on 11p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 42: own=0.083  avg_to_date=0.110  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 43/50: compound_30 ===
+  [grown_synaptic_th0.85_seed0] task 43/50 (compound_30) step     0  loss 0.1687  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 43/50 (compound_30) step   749  loss 0.1199  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 43/50 (compound_30) step  1499  loss 0.0894  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 43/50: replay 0.111→0.099 on 11p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 43: own=0.097  avg_to_date=0.109  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 44/50: compound_31 ===
+  [grown_synaptic_th0.85_seed0] task 44/50 (compound_31) step     0  loss 0.1804  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 44/50 (compound_31) step   749  loss 0.1248  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 44/50 (compound_31) step  1499  loss 0.1932  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 44/50: replay 0.102→0.101 on 11p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 44: own=0.156  avg_to_date=0.110  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 45/50: compound_32 ===
+  [grown_synaptic_th0.85_seed0] task 45/50 (compound_32) step     0  loss 0.0991  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 45/50 (compound_32) step   749  loss 0.1468  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 45/50 (compound_32) step  1499  loss 0.1419  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 45/50: replay 0.080→0.097 on 12p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 45: own=0.127  avg_to_date=0.110  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 46/50: compound_33 ===
+  [grown_synaptic_th0.85_seed0] task 46/50 (compound_33) step     0  loss 0.1796  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 46/50 (compound_33) step   749  loss 0.1330  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 46/50 (compound_33) step  1499  loss 0.1097  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 46/50: replay 0.123→0.115 on 12p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 46: own=0.154  avg_to_date=0.111  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 47/50: compound_34 ===
+  [grown_synaptic_th0.85_seed0] task 47/50 (compound_34) step     0  loss 0.1575  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 47/50 (compound_34) step   749  loss 0.1595  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 47/50 (compound_34) step  1499  loss 0.1007  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 47/50: replay 0.112→0.114 on 12p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 47: own=0.148  avg_to_date=0.112  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 48/50: compound_35 ===
+  [grown_synaptic_th0.85_seed0] task 48/50 (compound_35) step     0  loss 0.1661  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 48/50 (compound_35) step   749  loss 0.1526  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 48/50 (compound_35) step  1499  loss 0.1043  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 48/50: replay 0.112→0.128 on 12p; merges=1 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 48: own=0.149  avg_to_date=0.113  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 49/50: compound_36 ===
+  [grown_synaptic_th0.85_seed0] task 49/50 (compound_36) step     0  loss 0.1260  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 49/50 (compound_36) step   749  loss 0.1465  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 49/50 (compound_36) step  1499  loss 0.0688  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 49/50: replay 0.119→0.116 on 13p; merges=2 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 49: own=0.092  avg_to_date=0.111  arch=[10, 9, 3] params=259
+
+[grown_synaptic_th0.85_seed0] === Task 50/50: compound_37 ===
+  [grown_synaptic_th0.85_seed0] task 50/50 (compound_37) step     0  loss 0.1330  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 50/50 (compound_37) step   749  loss 0.1036  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] task 50/50 (compound_37) step  1499  loss 0.1223  arch [10, 9, 3]  params 259
+  [grown_synaptic_th0.85_seed0] DREAM @ task 50/50: replay 0.105→0.099 on 13p; merges=1 purges=0 → arch [10, 9, 3] (259→259 params)
+[grown_synaptic_th0.85_seed0] After task 50: own=0.150  avg_to_date=0.111  arch=[10, 9, 3] params=259
+  -> seed0 @ ac=0.85: avg_final=0.1114  events=84  purges=5  params=259
+
+------------------------------------------------------------------------------
+Run 2/3: ac_threshold=0.85  seed=1
+------------------------------------------------------------------------------
+
+[grown_synaptic_th0.85_seed1] curriculum start — arch [12, 12, 1]  params 325  growth=True pruning=True  dreaming=ON
+
+[grown_synaptic_th0.85_seed1] === Task 1/50: single_00 ===
+  [grown_synaptic_th0.85_seed1] task 1/50 (single_00) step     0  loss 0.7433  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed1] task 1/50 (single_00) step   749  loss 0.0023  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed1] task 1/50 (single_00) step  1499  loss 0.0000  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed1] DREAM @ task 1/50: replay 0.000→0.000 on 1p; merges=2 purges=2 → arch [11, 11, 1] (325→287 params)
+[grown_synaptic_th0.85_seed1] After task 1: own=0.000  avg_to_date=0.000  arch=[11, 11, 1] params=287
+
+[grown_synaptic_th0.85_seed1] === Task 2/50: single_01 ===
+  [grown_synaptic_th0.85_seed1] task 2/50 (single_01) step     0  loss 0.3009  arch [11, 11, 1]  params 287
+  [grown_synaptic_th0.85_seed1] task 2/50 (single_01) step   749  loss 0.3722  arch [11, 11, 1]  params 287
+  [grown_synaptic_th0.85_seed1] *** FIRE @ task 2/50 step 1471: ALLOW; latent 1→2
+  [grown_synaptic_th0.85_seed1] task 2/50 (single_01) step  1499  loss 0.2877  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 2/50: replay 0.396→0.356 on 1p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 2: own=0.288  avg_to_date=0.144  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 3/50: single_02 ===
+  [grown_synaptic_th0.85_seed1] task 3/50 (single_02) step     0  loss 0.1558  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 3/50 (single_02) step   749  loss 0.1589  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 3/50 (single_02) step  1499  loss 0.1508  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 3/50: replay 0.320→0.218 on 1p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 3: own=0.207  avg_to_date=0.164  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 4/50: single_03 ===
+  [grown_synaptic_th0.85_seed1] task 4/50 (single_03) step     0  loss 0.2499  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 4/50 (single_03) step   749  loss 0.1972  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 4/50 (single_03) step  1499  loss 0.2140  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 4/50: replay 0.237→0.304 on 1p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 4: own=0.232  avg_to_date=0.181  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 5/50: single_04 ===
+  [grown_synaptic_th0.85_seed1] task 5/50 (single_04) step     0  loss 0.2530  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 5/50 (single_04) step   749  loss 0.2083  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 5/50 (single_04) step  1499  loss 0.2679  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 5/50: replay 0.211→0.219 on 2p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 5: own=0.247  avg_to_date=0.193  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 6/50: single_05 ===
+  [grown_synaptic_th0.85_seed1] task 6/50 (single_05) step     0  loss 0.2183  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 6/50 (single_05) step   749  loss 0.1974  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 6/50 (single_05) step  1499  loss 0.1837  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 6/50: replay 0.123→0.115 on 2p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 6: own=0.239  avg_to_date=0.213  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 7/50: single_06 ===
+  [grown_synaptic_th0.85_seed1] task 7/50 (single_06) step     0  loss 0.2687  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 7/50 (single_06) step   749  loss 0.2987  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 7/50 (single_06) step  1499  loss 0.2708  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 7/50: replay 0.244→0.263 on 2p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 7: own=0.277  avg_to_date=0.220  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 8/50: single_07 ===
+  [grown_synaptic_th0.85_seed1] task 8/50 (single_07) step     0  loss 0.3091  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 8/50 (single_07) step   749  loss 0.2641  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 8/50 (single_07) step  1499  loss 0.3630  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 8/50: replay 0.248→0.216 on 2p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 8: own=0.284  avg_to_date=0.228  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 9/50: single_08 ===
+  [grown_synaptic_th0.85_seed1] task 9/50 (single_08) step     0  loss 0.3491  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 9/50 (single_08) step   749  loss 0.2806  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 9/50 (single_08) step  1499  loss 0.2761  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 9/50: replay 0.327→0.274 on 3p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 9: own=0.294  avg_to_date=0.235  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 10/50: single_09 ===
+  [grown_synaptic_th0.85_seed1] task 10/50 (single_09) step     0  loss 0.2556  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 10/50 (single_09) step   749  loss 0.2198  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 10/50 (single_09) step  1499  loss 0.2749  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 10/50: replay 0.282→0.290 on 3p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 10: own=0.244  avg_to_date=0.235  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 11/50: single_10 ===
+  [grown_synaptic_th0.85_seed1] task 11/50 (single_10) step     0  loss 0.2897  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 11/50 (single_10) step   749  loss 0.2783  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 11/50 (single_10) step  1499  loss 0.2835  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 11/50: replay 0.321→0.274 on 3p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 11: own=0.289  avg_to_date=0.239  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 12/50: single_11 ===
+  [grown_synaptic_th0.85_seed1] task 12/50 (single_11) step     0  loss 0.2378  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 12/50 (single_11) step   749  loss 0.2315  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 12/50 (single_11) step  1499  loss 0.2536  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 12/50: replay 0.235→0.290 on 3p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 12: own=0.307  avg_to_date=0.245  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 13/50: compound_00 ===
+  [grown_synaptic_th0.85_seed1] task 13/50 (compound_00) step     0  loss 0.2091  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 13/50 (compound_00) step   749  loss 0.3999  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 13/50 (compound_00) step  1499  loss 0.2646  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 13/50: replay 0.192→0.222 on 4p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 13: own=0.267  avg_to_date=0.247  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 14/50: compound_01 ===
+  [grown_synaptic_th0.85_seed1] task 14/50 (compound_01) step     0  loss 0.2602  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 14/50 (compound_01) step   749  loss 0.2420  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 14/50 (compound_01) step  1499  loss 0.2274  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 14/50: replay 0.268→0.239 on 4p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 14: own=0.282  avg_to_date=0.248  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 15/50: compound_02 ===
+  [grown_synaptic_th0.85_seed1] task 15/50 (compound_02) step     0  loss 0.1803  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 15/50 (compound_02) step   749  loss 0.2082  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 15/50 (compound_02) step  1499  loss 0.2344  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 15/50: replay 0.306→0.189 on 4p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 15: own=0.271  avg_to_date=0.252  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 16/50: compound_03 ===
+  [grown_synaptic_th0.85_seed1] task 16/50 (compound_03) step     0  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 16/50 (compound_03) step   749  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 16/50 (compound_03) step  1499  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 16/50: replay 0.164→0.228 on 4p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 16: own=0.000  avg_to_date=0.236  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 17/50: compound_04 ===
+  [grown_synaptic_th0.85_seed1] task 17/50 (compound_04) step     0  loss 0.1750  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 17/50 (compound_04) step   749  loss 0.2466  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 17/50 (compound_04) step  1499  loss 0.1829  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 17/50: replay 0.197→0.221 on 5p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 17: own=0.275  avg_to_date=0.237  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 18/50: compound_05 ===
+  [grown_synaptic_th0.85_seed1] task 18/50 (compound_05) step     0  loss 0.2186  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 18/50 (compound_05) step   749  loss 0.2243  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 18/50 (compound_05) step  1499  loss 0.3556  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 18/50: replay 0.188→0.237 on 5p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 18: own=0.230  avg_to_date=0.238  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 19/50: compound_06 ===
+  [grown_synaptic_th0.85_seed1] task 19/50 (compound_06) step     0  loss 0.3019  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 19/50 (compound_06) step   749  loss 0.1557  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 19/50 (compound_06) step  1499  loss 0.2957  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 19/50: replay 0.235→0.283 on 5p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 19: own=0.272  avg_to_date=0.237  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 20/50: compound_07 ===
+  [grown_synaptic_th0.85_seed1] task 20/50 (compound_07) step     0  loss 0.2579  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 20/50 (compound_07) step   749  loss 0.3318  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 20/50 (compound_07) step  1499  loss 0.2961  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 20/50: replay 0.238→0.262 on 5p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 20: own=0.226  avg_to_date=0.238  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 21/50: compound_08 ===
+  [grown_synaptic_th0.85_seed1] task 21/50 (compound_08) step     0  loss 0.1471  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 21/50 (compound_08) step   749  loss 0.1765  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 21/50 (compound_08) step  1499  loss 0.1738  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 21/50: replay 0.275→0.247 on 6p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 21: own=0.260  avg_to_date=0.238  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 22/50: compound_09 ===
+  [grown_synaptic_th0.85_seed1] task 22/50 (compound_09) step     0  loss 0.2789  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 22/50 (compound_09) step   749  loss 0.2941  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 22/50 (compound_09) step  1499  loss 0.2108  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 22/50: replay 0.201→0.233 on 6p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 22: own=0.250  avg_to_date=0.237  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 23/50: compound_10 ===
+  [grown_synaptic_th0.85_seed1] task 23/50 (compound_10) step     0  loss 0.3278  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 23/50 (compound_10) step   749  loss 0.2187  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 23/50 (compound_10) step  1499  loss 0.3862  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 23/50: replay 0.215→0.206 on 6p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 23: own=0.236  avg_to_date=0.238  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 24/50: compound_11 ===
+  [grown_synaptic_th0.85_seed1] task 24/50 (compound_11) step     0  loss 0.2294  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 24/50 (compound_11) step   749  loss 0.2524  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 24/50 (compound_11) step  1499  loss 0.2562  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 24/50: replay 0.222→0.237 on 6p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 24: own=0.257  avg_to_date=0.238  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 25/50: compound_12 ===
+  [grown_synaptic_th0.85_seed1] task 25/50 (compound_12) step     0  loss 0.3247  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 25/50 (compound_12) step   749  loss 0.3049  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 25/50 (compound_12) step  1499  loss 0.2037  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 25/50: replay 0.261→0.250 on 7p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 25: own=0.241  avg_to_date=0.239  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 26/50: compound_13 ===
+  [grown_synaptic_th0.85_seed1] task 26/50 (compound_13) step     0  loss 0.2742  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 26/50 (compound_13) step   749  loss 0.2548  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 26/50 (compound_13) step  1499  loss 0.2259  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 26/50: replay 0.267→0.199 on 7p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 26: own=0.209  avg_to_date=0.237  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 27/50: compound_14 ===
+  [grown_synaptic_th0.85_seed1] task 27/50 (compound_14) step     0  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 27/50 (compound_14) step   749  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 27/50 (compound_14) step  1499  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 27/50: replay 0.191→0.239 on 7p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 27: own=0.000  avg_to_date=0.229  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 28/50: compound_15 ===
+  [grown_synaptic_th0.85_seed1] task 28/50 (compound_15) step     0  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 28/50 (compound_15) step   749  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 28/50 (compound_15) step  1499  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 28/50: replay 0.197→0.217 on 7p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 28: own=0.001  avg_to_date=0.220  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 29/50: compound_16 ===
+  [grown_synaptic_th0.85_seed1] task 29/50 (compound_16) step     0  loss 0.1927  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 29/50 (compound_16) step   749  loss 0.1962  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 29/50 (compound_16) step  1499  loss 0.2307  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 29/50: replay 0.209→0.227 on 8p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 29: own=0.236  avg_to_date=0.220  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 30/50: compound_17 ===
+  [grown_synaptic_th0.85_seed1] task 30/50 (compound_17) step     0  loss 0.2228  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 30/50 (compound_17) step   749  loss 0.2641  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 30/50 (compound_17) step  1499  loss 0.2334  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 30/50: replay 0.241→0.211 on 8p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 30: own=0.231  avg_to_date=0.221  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 31/50: compound_18 ===
+  [grown_synaptic_th0.85_seed1] task 31/50 (compound_18) step     0  loss 0.2857  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 31/50 (compound_18) step   749  loss 0.1504  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 31/50 (compound_18) step  1499  loss 0.2617  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 31/50: replay 0.217→0.214 on 8p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 31: own=0.244  avg_to_date=0.221  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 32/50: compound_19 ===
+  [grown_synaptic_th0.85_seed1] task 32/50 (compound_19) step     0  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 32/50 (compound_19) step   749  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 32/50 (compound_19) step  1499  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 32/50: replay 0.214→0.211 on 8p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 32: own=0.000  avg_to_date=0.214  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 33/50: compound_20 ===
+  [grown_synaptic_th0.85_seed1] task 33/50 (compound_20) step     0  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 33/50 (compound_20) step   749  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 33/50 (compound_20) step  1499  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 33/50: replay 0.250→0.243 on 9p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 33: own=0.000  avg_to_date=0.207  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 34/50: compound_21 ===
+  [grown_synaptic_th0.85_seed1] task 34/50 (compound_21) step     0  loss 0.2795  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 34/50 (compound_21) step   749  loss 0.2390  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 34/50 (compound_21) step  1499  loss 0.2357  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 34/50: replay 0.156→0.153 on 9p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 34: own=0.230  avg_to_date=0.209  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 35/50: compound_22 ===
+  [grown_synaptic_th0.85_seed1] task 35/50 (compound_22) step     0  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 35/50 (compound_22) step   749  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 35/50 (compound_22) step  1499  loss 0.0000  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 35/50: replay 0.257→0.213 on 9p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 35: own=0.000  avg_to_date=0.203  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 36/50: compound_23 ===
+  [grown_synaptic_th0.85_seed1] task 36/50 (compound_23) step     0  loss 0.3429  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 36/50 (compound_23) step   749  loss 0.2610  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 36/50 (compound_23) step  1499  loss 0.2309  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 36/50: replay 0.189→0.170 on 9p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 36: own=0.270  avg_to_date=0.205  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 37/50: compound_24 ===
+  [grown_synaptic_th0.85_seed1] task 37/50 (compound_24) step     0  loss 0.2794  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 37/50 (compound_24) step   749  loss 0.0744  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 37/50 (compound_24) step  1499  loss 0.1337  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 37/50: replay 0.180→0.206 on 10p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 37: own=0.251  avg_to_date=0.205  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 38/50: compound_25 ===
+  [grown_synaptic_th0.85_seed1] task 38/50 (compound_25) step     0  loss 0.1818  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 38/50 (compound_25) step   749  loss 0.1683  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 38/50 (compound_25) step  1499  loss 0.2865  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 38/50: replay 0.202→0.209 on 10p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 38: own=0.224  avg_to_date=0.206  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 39/50: compound_26 ===
+  [grown_synaptic_th0.85_seed1] task 39/50 (compound_26) step     0  loss 0.2320  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 39/50 (compound_26) step   749  loss 0.2252  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 39/50 (compound_26) step  1499  loss 0.3094  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 39/50: replay 0.218→0.134 on 10p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 39: own=0.239  avg_to_date=0.207  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 40/50: compound_27 ===
+  [grown_synaptic_th0.85_seed1] task 40/50 (compound_27) step     0  loss 0.1985  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 40/50 (compound_27) step   749  loss 0.2276  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 40/50 (compound_27) step  1499  loss 0.3069  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 40/50: replay 0.219→0.208 on 10p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 40: own=0.270  avg_to_date=0.208  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 41/50: compound_28 ===
+  [grown_synaptic_th0.85_seed1] task 41/50 (compound_28) step     0  loss 0.3487  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 41/50 (compound_28) step   749  loss 0.2645  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 41/50 (compound_28) step  1499  loss 0.2398  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 41/50: replay 0.181→0.207 on 11p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 41: own=0.240  avg_to_date=0.209  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 42/50: compound_29 ===
+  [grown_synaptic_th0.85_seed1] task 42/50 (compound_29) step     0  loss 0.2821  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 42/50 (compound_29) step   749  loss 0.2397  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 42/50 (compound_29) step  1499  loss 0.2533  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 42/50: replay 0.217→0.183 on 11p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 42: own=0.269  avg_to_date=0.210  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 43/50: compound_30 ===
+  [grown_synaptic_th0.85_seed1] task 43/50 (compound_30) step     0  loss 0.2279  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 43/50 (compound_30) step   749  loss 0.2312  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 43/50 (compound_30) step  1499  loss 0.2249  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 43/50: replay 0.277→0.259 on 11p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 43: own=0.257  avg_to_date=0.212  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 44/50: compound_31 ===
+  [grown_synaptic_th0.85_seed1] task 44/50 (compound_31) step     0  loss 0.2288  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 44/50 (compound_31) step   749  loss 0.3487  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 44/50 (compound_31) step  1499  loss 0.2688  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 44/50: replay 0.248→0.229 on 11p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 44: own=0.254  avg_to_date=0.213  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 45/50: compound_32 ===
+  [grown_synaptic_th0.85_seed1] task 45/50 (compound_32) step     0  loss 0.1897  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 45/50 (compound_32) step   749  loss 0.2445  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 45/50 (compound_32) step  1499  loss 0.2600  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 45/50: replay 0.230→0.193 on 12p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 45: own=0.264  avg_to_date=0.213  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 46/50: compound_33 ===
+  [grown_synaptic_th0.85_seed1] task 46/50 (compound_33) step     0  loss 0.3167  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 46/50 (compound_33) step   749  loss 0.3186  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 46/50 (compound_33) step  1499  loss 0.2564  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 46/50: replay 0.217→0.199 on 12p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 46: own=0.276  avg_to_date=0.214  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 47/50: compound_34 ===
+  [grown_synaptic_th0.85_seed1] task 47/50 (compound_34) step     0  loss 0.3097  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 47/50 (compound_34) step   749  loss 0.3702  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 47/50 (compound_34) step  1499  loss 0.2391  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 47/50: replay 0.208→0.186 on 12p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 47: own=0.270  avg_to_date=0.216  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 48/50: compound_35 ===
+  [grown_synaptic_th0.85_seed1] task 48/50 (compound_35) step     0  loss 0.2512  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 48/50 (compound_35) step   749  loss 0.3287  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 48/50 (compound_35) step  1499  loss 0.2491  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 48/50: replay 0.179→0.209 on 12p; merges=2 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 48: own=0.261  avg_to_date=0.216  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 49/50: compound_36 ===
+  [grown_synaptic_th0.85_seed1] task 49/50 (compound_36) step     0  loss 0.2402  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 49/50 (compound_36) step   749  loss 0.2519  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 49/50 (compound_36) step  1499  loss 0.2621  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 49/50: replay 0.229→0.220 on 13p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 49: own=0.240  avg_to_date=0.216  arch=[11, 11, 2] params=299
+
+[grown_synaptic_th0.85_seed1] === Task 50/50: compound_37 ===
+  [grown_synaptic_th0.85_seed1] task 50/50 (compound_37) step     0  loss 0.1955  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 50/50 (compound_37) step   749  loss 0.2339  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] task 50/50 (compound_37) step  1499  loss 0.3251  arch [11, 11, 2]  params 299
+  [grown_synaptic_th0.85_seed1] DREAM @ task 50/50: replay 0.214→0.223 on 13p; merges=1 purges=0 → arch [11, 11, 2] (299→299 params)
+[grown_synaptic_th0.85_seed1] After task 50: own=0.271  avg_to_date=0.217  arch=[11, 11, 2] params=299
+  -> seed1 @ ac=0.85: avg_final=0.2170  events=70  purges=2  params=299
+
+------------------------------------------------------------------------------
+Run 3/3: ac_threshold=0.85  seed=2
+------------------------------------------------------------------------------
+
+[grown_synaptic_th0.85_seed2] curriculum start — arch [12, 12, 1]  params 325  growth=True pruning=True  dreaming=ON
+
+[grown_synaptic_th0.85_seed2] === Task 1/50: single_00 ===
+  [grown_synaptic_th0.85_seed2] task 1/50 (single_00) step     0  loss 0.7941  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed2] task 1/50 (single_00) step   749  loss 0.0000  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed2] task 1/50 (single_00) step  1499  loss 0.0000  arch [12, 12, 1]  params 325
+  [grown_synaptic_th0.85_seed2] DREAM @ task 1/50: replay 0.000→0.000 on 1p; merges=2 purges=1 → arch [11, 12, 1] (325→300 params)
+[grown_synaptic_th0.85_seed2] After task 1: own=0.000  avg_to_date=0.000  arch=[11, 12, 1] params=300
+
+[grown_synaptic_th0.85_seed2] === Task 2/50: single_01 ===
+  [grown_synaptic_th0.85_seed2] task 2/50 (single_01) step     0  loss 0.3284  arch [11, 12, 1]  params 300
+  [grown_synaptic_th0.85_seed2] task 2/50 (single_01) step   749  loss 0.3973  arch [11, 12, 1]  params 300
+  [grown_synaptic_th0.85_seed2] *** FIRE @ task 2/50 step 799: ALLOW; latent 1→2
+  [grown_synaptic_th0.85_seed2] task 2/50 (single_01) step  1499  loss 0.1317  arch [11, 12, 2]  params 313
+  [grown_synaptic_th0.85_seed2] DREAM @ task 2/50: replay 0.000→0.000 on 1p; merges=2 purges=0 → arch [11, 12, 2] (313→313 params)
+[grown_synaptic_th0.85_seed2] After task 2: own=0.197  avg_to_date=0.098  arch=[11, 12, 2] params=313
+
+[grown_synaptic_th0.85_seed2] === Task 3/50: single_02 ===
+  [grown_synaptic_th0.85_seed2] task 3/50 (single_02) step     0  loss 0.1584  arch [11, 12, 2]  params 313
+  [grown_synaptic_th0.85_seed2] task 3/50 (single_02) step   749  loss 0.1666  arch [11, 12, 2]  params 313
+  [grown_synaptic_th0.85_seed2] *** FIRE @ task 3/50 step 799: ALLOW; latent 2→3
+  [grown_synaptic_th0.85_seed2] task 3/50 (single_02) step  1499  loss 0.0133  arch [11, 12, 3]  params 326
+  [grown_synaptic_th0.85_seed2] DREAM @ task 3/50: replay 0.044→0.029 on 1p; merges=2 purges=1 → arch [10, 12, 3] (326→301 params)
+[grown_synaptic_th0.85_seed2] After task 3: own=0.040  avg_to_date=0.044  arch=[10, 12, 3] params=301
+
+[grown_synaptic_th0.85_seed2] === Task 4/50: single_03 ===
+  [grown_synaptic_th0.85_seed2] task 4/50 (single_03) step     0  loss 0.0861  arch [10, 12, 3]  params 301
+  [grown_synaptic_th0.85_seed2] task 4/50 (single_03) step   749  loss 0.0887  arch [10, 12, 3]  params 301
+  [grown_synaptic_th0.85_seed2] task 4/50 (single_03) step  1499  loss 0.1157  arch [10, 12, 3]  params 301
+  [grown_synaptic_th0.85_seed2] DREAM @ task 4/50: replay 0.101→0.118 on 1p; merges=2 purges=1 → arch [10, 11, 3] (301→287 params)
+[grown_synaptic_th0.85_seed2] After task 4: own=0.096  avg_to_date=0.063  arch=[10, 11, 3] params=287
+
+[grown_synaptic_th0.85_seed2] === Task 5/50: single_04 ===
+  [grown_synaptic_th0.85_seed2] task 5/50 (single_04) step     0  loss 0.1506  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 5/50 (single_04) step   749  loss 0.1095  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 5/50 (single_04) step  1499  loss 0.0698  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] DREAM @ task 5/50: replay 0.075→0.076 on 2p; merges=2 purges=0 → arch [10, 11, 3] (287→287 params)
+[grown_synaptic_th0.85_seed2] After task 5: own=0.093  avg_to_date=0.068  arch=[10, 11, 3] params=287
+
+[grown_synaptic_th0.85_seed2] === Task 6/50: single_05 ===
+  [grown_synaptic_th0.85_seed2] task 6/50 (single_05) step     0  loss 0.0778  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 6/50 (single_05) step   749  loss 0.0823  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 6/50 (single_05) step  1499  loss 0.0556  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] DREAM @ task 6/50: replay 0.029→0.043 on 2p; merges=2 purges=0 → arch [10, 11, 3] (287→287 params)
+[grown_synaptic_th0.85_seed2] After task 6: own=0.082  avg_to_date=0.071  arch=[10, 11, 3] params=287
+
+[grown_synaptic_th0.85_seed2] === Task 7/50: single_06 ===
+  [grown_synaptic_th0.85_seed2] task 7/50 (single_06) step     0  loss 0.0750  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 7/50 (single_06) step   749  loss 0.0471  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 7/50 (single_06) step  1499  loss 0.0600  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] DREAM @ task 7/50: replay 0.108→0.090 on 2p; merges=2 purges=0 → arch [10, 11, 3] (287→287 params)
+[grown_synaptic_th0.85_seed2] After task 7: own=0.096  avg_to_date=0.074  arch=[10, 11, 3] params=287
+
+[grown_synaptic_th0.85_seed2] === Task 8/50: single_07 ===
+  [grown_synaptic_th0.85_seed2] task 8/50 (single_07) step     0  loss 0.0707  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 8/50 (single_07) step   749  loss 0.0834  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 8/50 (single_07) step  1499  loss 0.1053  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] DREAM @ task 8/50: replay 0.085→0.107 on 2p; merges=2 purges=0 → arch [10, 11, 3] (287→287 params)
+[grown_synaptic_th0.85_seed2] After task 8: own=0.103  avg_to_date=0.077  arch=[10, 11, 3] params=287
+
+[grown_synaptic_th0.85_seed2] === Task 9/50: single_08 ===
+  [grown_synaptic_th0.85_seed2] task 9/50 (single_08) step     0  loss 0.1424  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 9/50 (single_08) step   749  loss 0.0415  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 9/50 (single_08) step  1499  loss 0.0229  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] DREAM @ task 9/50: replay 0.064→0.057 on 3p; merges=2 purges=0 → arch [10, 11, 3] (287→287 params)
+[grown_synaptic_th0.85_seed2] After task 9: own=0.092  avg_to_date=0.078  arch=[10, 11, 3] params=287
+
+[grown_synaptic_th0.85_seed2] === Task 10/50: single_09 ===
+  [grown_synaptic_th0.85_seed2] task 10/50 (single_09) step     0  loss 0.0671  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 10/50 (single_09) step   749  loss 0.0912  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 10/50 (single_09) step  1499  loss 0.1728  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] DREAM @ task 10/50: replay 0.086→0.093 on 3p; merges=2 purges=0 → arch [10, 11, 3] (287→287 params)
+[grown_synaptic_th0.85_seed2] After task 10: own=0.079  avg_to_date=0.078  arch=[10, 11, 3] params=287
+
+[grown_synaptic_th0.85_seed2] === Task 11/50: single_10 ===
+  [grown_synaptic_th0.85_seed2] task 11/50 (single_10) step     0  loss 0.1225  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 11/50 (single_10) step   749  loss 0.1038  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 11/50 (single_10) step  1499  loss 0.1410  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] DREAM @ task 11/50: replay 0.089→0.123 on 3p; merges=2 purges=0 → arch [10, 11, 3] (287→287 params)
+[grown_synaptic_th0.85_seed2] After task 11: own=0.105  avg_to_date=0.080  arch=[10, 11, 3] params=287
+
+[grown_synaptic_th0.85_seed2] === Task 12/50: single_11 ===
+  [grown_synaptic_th0.85_seed2] task 12/50 (single_11) step     0  loss 0.1003  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] task 12/50 (single_11) step   749  loss 0.0714  arch [10, 11, 3]  params 287
+  [grown_synaptic_th0.85_seed2] *** FIRE @ task 12/50 step 799: ALLOW; latent 3→4
+  [grown_synaptic_th0.85_seed2] task 12/50 (single_11) step  1499  loss 0.0240  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 12/50: replay 0.060→0.036 on 3p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 12: own=0.028  avg_to_date=0.033  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 13/50: compound_00 ===
+  [grown_synaptic_th0.85_seed2] task 13/50 (compound_00) step     0  loss 0.0588  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 13/50 (compound_00) step   749  loss 0.0266  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 13/50 (compound_00) step  1499  loss 0.0230  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 13/50: replay 0.037→0.037 on 4p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 13: own=0.027  avg_to_date=0.032  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 14/50: compound_01 ===
+  [grown_synaptic_th0.85_seed2] task 14/50 (compound_01) step     0  loss 0.0305  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 14/50 (compound_01) step   749  loss 0.0727  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 14/50 (compound_01) step  1499  loss 0.0281  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 14/50: replay 0.016→0.031 on 4p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 14: own=0.047  avg_to_date=0.033  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 15/50: compound_02 ===
+  [grown_synaptic_th0.85_seed2] task 15/50 (compound_02) step     0  loss 0.0620  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 15/50 (compound_02) step   749  loss 0.0199  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 15/50 (compound_02) step  1499  loss 0.0562  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 15/50: replay 0.040→0.044 on 4p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 15: own=0.038  avg_to_date=0.034  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 16/50: compound_03 ===
+  [grown_synaptic_th0.85_seed2] task 16/50 (compound_03) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 16/50 (compound_03) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 16/50 (compound_03) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 16/50: replay 0.035→0.024 on 4p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 16: own=0.000  avg_to_date=0.032  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 17/50: compound_04 ===
+  [grown_synaptic_th0.85_seed2] task 17/50 (compound_04) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 17/50 (compound_04) step   749  loss 0.0392  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 17/50 (compound_04) step  1499  loss 0.0109  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 17/50: replay 0.022→0.025 on 5p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 17: own=0.023  avg_to_date=0.031  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 18/50: compound_05 ===
+  [grown_synaptic_th0.85_seed2] task 18/50 (compound_05) step     0  loss 0.0516  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 18/50 (compound_05) step   749  loss 0.0369  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 18/50 (compound_05) step  1499  loss 0.0182  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 18/50: replay 0.020→0.031 on 5p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 18: own=0.024  avg_to_date=0.031  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 19/50: compound_06 ===
+  [grown_synaptic_th0.85_seed2] task 19/50 (compound_06) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 19/50 (compound_06) step   749  loss 0.0184  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 19/50 (compound_06) step  1499  loss 0.0309  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 19/50: replay 0.027→0.010 on 5p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 19: own=0.022  avg_to_date=0.030  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 20/50: compound_07 ===
+  [grown_synaptic_th0.85_seed2] task 20/50 (compound_07) step     0  loss 0.0285  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 20/50 (compound_07) step   749  loss 0.0518  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 20/50 (compound_07) step  1499  loss 0.0281  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 20/50: replay 0.020→0.015 on 5p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 20: own=0.028  avg_to_date=0.030  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 21/50: compound_08 ===
+  [grown_synaptic_th0.85_seed2] task 21/50 (compound_08) step     0  loss 0.0139  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 21/50 (compound_08) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 21/50 (compound_08) step  1499  loss 0.0067  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 21/50: replay 0.014→0.025 on 6p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 21: own=0.005  avg_to_date=0.029  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 22/50: compound_09 ===
+  [grown_synaptic_th0.85_seed2] task 22/50 (compound_09) step     0  loss 0.0645  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 22/50 (compound_09) step   749  loss 0.0521  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 22/50 (compound_09) step  1499  loss 0.0285  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 22/50: replay 0.037→0.019 on 6p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 22: own=0.033  avg_to_date=0.029  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 23/50: compound_10 ===
+  [grown_synaptic_th0.85_seed2] task 23/50 (compound_10) step     0  loss 0.0082  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 23/50 (compound_10) step   749  loss 0.0044  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 23/50 (compound_10) step  1499  loss 0.0275  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 23/50: replay 0.020→0.022 on 6p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 23: own=0.027  avg_to_date=0.029  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 24/50: compound_11 ===
+  [grown_synaptic_th0.85_seed2] task 24/50 (compound_11) step     0  loss 0.0326  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 24/50 (compound_11) step   749  loss 0.0039  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 24/50 (compound_11) step  1499  loss 0.0004  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 24/50: replay 0.027→0.024 on 6p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 24: own=0.030  avg_to_date=0.029  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 25/50: compound_12 ===
+  [grown_synaptic_th0.85_seed2] task 25/50 (compound_12) step     0  loss 0.0224  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 25/50 (compound_12) step   749  loss 0.0518  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 25/50 (compound_12) step  1499  loss 0.0593  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 25/50: replay 0.027→0.031 on 7p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 25: own=0.050  avg_to_date=0.030  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 26/50: compound_13 ===
+  [grown_synaptic_th0.85_seed2] task 26/50 (compound_13) step     0  loss 0.0413  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 26/50 (compound_13) step   749  loss 0.0376  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 26/50 (compound_13) step  1499  loss 0.0302  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 26/50: replay 0.035→0.036 on 7p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 26: own=0.043  avg_to_date=0.030  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 27/50: compound_14 ===
+  [grown_synaptic_th0.85_seed2] task 27/50 (compound_14) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 27/50 (compound_14) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 27/50 (compound_14) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 27/50: replay 0.041→0.053 on 7p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 27: own=0.000  avg_to_date=0.029  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 28/50: compound_15 ===
+  [grown_synaptic_th0.85_seed2] task 28/50 (compound_15) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 28/50 (compound_15) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 28/50 (compound_15) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 28/50: replay 0.037→0.034 on 7p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 28: own=0.000  avg_to_date=0.028  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 29/50: compound_16 ===
+  [grown_synaptic_th0.85_seed2] task 29/50 (compound_16) step     0  loss 0.0594  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 29/50 (compound_16) step   749  loss 0.0257  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 29/50 (compound_16) step  1499  loss 0.0450  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 29/50: replay 0.048→0.027 on 8p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 29: own=0.050  avg_to_date=0.029  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 30/50: compound_17 ===
+  [grown_synaptic_th0.85_seed2] task 30/50 (compound_17) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 30/50 (compound_17) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 30/50 (compound_17) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 30/50: replay 0.036→0.020 on 8p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 30: own=0.002  avg_to_date=0.027  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 31/50: compound_18 ===
+  [grown_synaptic_th0.85_seed2] task 31/50 (compound_18) step     0  loss 0.0209  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 31/50 (compound_18) step   749  loss 0.0408  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 31/50 (compound_18) step  1499  loss 0.0203  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 31/50: replay 0.017→0.021 on 8p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 31: own=0.032  avg_to_date=0.028  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 32/50: compound_19 ===
+  [grown_synaptic_th0.85_seed2] task 32/50 (compound_19) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 32/50 (compound_19) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 32/50 (compound_19) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 32/50: replay 0.034→0.022 on 8p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 32: own=0.000  avg_to_date=0.027  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 33/50: compound_20 ===
+  [grown_synaptic_th0.85_seed2] task 33/50 (compound_20) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 33/50 (compound_20) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 33/50 (compound_20) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 33/50: replay 0.026→0.011 on 9p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 33: own=0.000  avg_to_date=0.026  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 34/50: compound_21 ===
+  [grown_synaptic_th0.85_seed2] task 34/50 (compound_21) step     0  loss 0.0330  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 34/50 (compound_21) step   749  loss 0.0354  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 34/50 (compound_21) step  1499  loss 0.0572  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 34/50: replay 0.031→0.020 on 9p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 34: own=0.029  avg_to_date=0.026  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 35/50: compound_22 ===
+  [grown_synaptic_th0.85_seed2] task 35/50 (compound_22) step     0  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 35/50 (compound_22) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 35/50 (compound_22) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 35/50: replay 0.020→0.020 on 9p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 35: own=0.000  avg_to_date=0.025  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 36/50: compound_23 ===
+  [grown_synaptic_th0.85_seed2] task 36/50 (compound_23) step     0  loss 0.0086  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 36/50 (compound_23) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 36/50 (compound_23) step  1499  loss 0.0407  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 36/50: replay 0.025→0.032 on 9p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 36: own=0.034  avg_to_date=0.026  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 37/50: compound_24 ===
+  [grown_synaptic_th0.85_seed2] task 37/50 (compound_24) step     0  loss 0.0275  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 37/50 (compound_24) step   749  loss 0.0497  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 37/50 (compound_24) step  1499  loss 0.0589  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 37/50: replay 0.018→0.024 on 10p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 37: own=0.023  avg_to_date=0.026  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 38/50: compound_25 ===
+  [grown_synaptic_th0.85_seed2] task 38/50 (compound_25) step     0  loss 0.0529  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 38/50 (compound_25) step   749  loss 0.0150  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 38/50 (compound_25) step  1499  loss 0.0314  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 38/50: replay 0.013→0.021 on 10p; merges=1 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 38: own=0.039  avg_to_date=0.026  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 39/50: compound_26 ===
+  [grown_synaptic_th0.85_seed2] task 39/50 (compound_26) step     0  loss 0.0317  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 39/50 (compound_26) step   749  loss 0.0421  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 39/50 (compound_26) step  1499  loss 0.0566  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 39/50: replay 0.025→0.019 on 10p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 39: own=0.027  avg_to_date=0.026  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 40/50: compound_27 ===
+  [grown_synaptic_th0.85_seed2] task 40/50 (compound_27) step     0  loss 0.0979  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 40/50 (compound_27) step   749  loss 0.0301  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 40/50 (compound_27) step  1499  loss 0.0211  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 40/50: replay 0.011→0.023 on 10p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 40: own=0.051  avg_to_date=0.027  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 41/50: compound_28 ===
+  [grown_synaptic_th0.85_seed2] task 41/50 (compound_28) step     0  loss 0.0089  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 41/50 (compound_28) step   749  loss 0.0066  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 41/50 (compound_28) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 41/50: replay 0.019→0.032 on 11p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 41: own=0.006  avg_to_date=0.026  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 42/50: compound_29 ===
+  [grown_synaptic_th0.85_seed2] task 42/50 (compound_29) step     0  loss 0.0234  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 42/50 (compound_29) step   749  loss 0.0227  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 42/50 (compound_29) step  1499  loss 0.0068  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 42/50: replay 0.016→0.020 on 11p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 42: own=0.028  avg_to_date=0.026  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 43/50: compound_30 ===
+  [grown_synaptic_th0.85_seed2] task 43/50 (compound_30) step     0  loss 0.0012  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 43/50 (compound_30) step   749  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 43/50 (compound_30) step  1499  loss 0.0029  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 43/50: replay 0.017→0.030 on 11p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 43: own=0.006  avg_to_date=0.025  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 44/50: compound_31 ===
+  [grown_synaptic_th0.85_seed2] task 44/50 (compound_31) step     0  loss 0.0118  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 44/50 (compound_31) step   749  loss 0.0029  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 44/50 (compound_31) step  1499  loss 0.0000  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 44/50: replay 0.021→0.014 on 11p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 44: own=0.013  avg_to_date=0.025  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 45/50: compound_32 ===
+  [grown_synaptic_th0.85_seed2] task 45/50 (compound_32) step     0  loss 0.0209  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 45/50 (compound_32) step   749  loss 0.0016  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 45/50 (compound_32) step  1499  loss 0.0351  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 45/50: replay 0.029→0.022 on 12p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 45: own=0.022  avg_to_date=0.025  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 46/50: compound_33 ===
+  [grown_synaptic_th0.85_seed2] task 46/50 (compound_33) step     0  loss 0.0126  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 46/50 (compound_33) step   749  loss 0.0523  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 46/50 (compound_33) step  1499  loss 0.0538  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 46/50: replay 0.016→0.031 on 12p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 46: own=0.041  avg_to_date=0.025  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 47/50: compound_34 ===
+  [grown_synaptic_th0.85_seed2] task 47/50 (compound_34) step     0  loss 0.0011  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 47/50 (compound_34) step   749  loss 0.0074  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 47/50 (compound_34) step  1499  loss 0.0233  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 47/50: replay 0.034→0.028 on 12p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 47: own=0.007  avg_to_date=0.025  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 48/50: compound_35 ===
+  [grown_synaptic_th0.85_seed2] task 48/50 (compound_35) step     0  loss 0.0258  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 48/50 (compound_35) step   749  loss 0.0258  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 48/50 (compound_35) step  1499  loss 0.0536  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 48/50: replay 0.020→0.021 on 12p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 48: own=0.039  avg_to_date=0.025  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 49/50: compound_36 ===
+  [grown_synaptic_th0.85_seed2] task 49/50 (compound_36) step     0  loss 0.0313  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 49/50 (compound_36) step   749  loss 0.0176  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 49/50 (compound_36) step  1499  loss 0.0083  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 49/50: replay 0.029→0.021 on 13p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 49: own=0.015  avg_to_date=0.025  arch=[10, 11, 4] params=299
+
+[grown_synaptic_th0.85_seed2] === Task 50/50: compound_37 ===
+  [grown_synaptic_th0.85_seed2] task 50/50 (compound_37) step     0  loss 0.0186  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 50/50 (compound_37) step   749  loss 0.0387  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] task 50/50 (compound_37) step  1499  loss 0.0101  arch [10, 11, 4]  params 299
+  [grown_synaptic_th0.85_seed2] DREAM @ task 50/50: replay 0.033→0.018 on 13p; merges=2 purges=0 → arch [10, 11, 4] (299→299 params)
+[grown_synaptic_th0.85_seed2] After task 50: own=0.018  avg_to_date=0.025  arch=[10, 11, 4] params=299
+  -> seed2 @ ac=0.85: avg_final=0.0247  events=99  purges=3  params=299
+
+==============================================================================
+bench_50task_dreaming_synaptic_sweep — Final Report  (total wall-clock 25.6 min)
+==============================================================================
+
+Cached baselines:
+  no-dream            : 0.0530 ± 0.0206
+  act-MERGE @ 0.95    : 0.0415 ± 0.0246  (events: 0/1/0)
+  synaptic @ 0.85     : 0.1344 ± 0.0677  (events: [94, 76, 147])
+  HAT H=8 6-seed      : 0.1166 ± 0.0429  (203p)
+
+  ac_thr            seeds            mean ± std       events (per seed)          purges    σ-vs-HAT                 verdict
+----------------------------------------------------------------------------------------------------------------------------------
+    0.85        [0, 1, 2]      0.1177 ± 0.0963            [84, 70, 99]       [5, 2, 3]      -0.0σ  too many / within noise
+
+Probe trajectory (pre-compress, max activation cosine, per-task):
+  ac=0.85 seed=0:
+    layer 0 act-cos: min=0.543  max=0.779  mean=0.678
+      sample        : t1:0.70  t13:0.69  t26:0.72  t38:0.64  t50:0.64
+    layer 1 act-cos: min=0.857  max=0.945  mean=0.898
+      sample        : t1:0.93  t13:0.86  t26:0.88  t38:0.90  t50:0.88
+  ac=0.85 seed=1:
+    layer 0 act-cos: min=0.441  max=0.682  mean=0.579
+      sample        : t1:0.44  t13:0.57  t26:0.51  t38:0.68  t50:0.56
+    layer 1 act-cos: min=0.965  max=0.985  mean=0.977
+      sample        : t1:0.98  t13:0.98  t26:0.98  t38:0.97  t50:0.97
+  ac=0.85 seed=2:
+    layer 0 act-cos: min=0.417  max=0.657  mean=0.515
+      sample        : t1:0.49  t13:0.51  t26:0.49  t38:0.54  t50:0.45
+    layer 1 act-cos: min=0.881  max=0.948  mean=0.917
+      sample        : t1:0.95  t13:0.88  t26:0.90  t38:0.92  t50:0.91
+
+  log:   /home/marcrockhat/trioron-project/outputs/bench_50task_dreaming_synaptic_sweep_th0.85_s0-2_cap2_log.csv
+  probe: /home/marcrockhat/trioron-project/outputs/bench_50task_dreaming_synaptic_sweep_th0.85_s0-2_cap2_probe.csv
