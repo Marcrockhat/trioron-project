@@ -60,6 +60,13 @@ class MergeEvent:
     victim_idx: int
     cos_sim: float
     arch_after: Tuple[int, ...]
+    # "merge" (legacy: incoming-mean + outgoing-sum + delete victim) or
+    # "downscale" (synaptic downscale: peer.outgoing += victim.outgoing,
+    # victim.outgoing = 0, victim's substrate at layer L preserved). The
+    # field is named `action` not `mechanism` because we expect more to
+    # be added as the dreaming-phase mechanism evolves. Defaults to
+    # "merge" so existing tests / callers see no change.
+    action: str = "merge"
 
 
 @dataclass
@@ -393,6 +400,74 @@ def merge_nodes(
         net.layers[layer_idx + 1].prune_input(victim_idx)
 
 
+def synaptic_downscale(
+    net: TrioronNetwork,
+    layer_idx: int,
+    peer_idx: int,
+    victim_idx: int,
+) -> None:
+    """Substrate-preserving compression: redirect victim's downstream
+    contribution into peer, zero victim's outgoing, but DON'T touch
+    victim's substrate at layer L.
+
+    Phase 4.5 redesign (Rocky 2026-05-01): "neurons are too precious
+    to destroy." Biologically faithful — synaptic homeostasis re-weights
+    connections, the cell body stays. The starved victim is functionally
+    dormant but available for re-recruitment by future tasks (gradient
+    descent on layer L+1's column at victim_idx is unconstrained because
+    fisher_W there is now zero).
+
+    Operations on the next layer (L+1):
+      - W[:, peer]      += W[:, victim]      (peer takes over downstream load)
+      - W_anchor[:, peer] += W_anchor[:, victim]
+      - fisher_W[:, peer] += fisher_W[:, victim]   (peer carries the
+        consolidation weight too — otherwise the post-downscale peer would
+        look "fresh" to EWC and drift unprotected)
+      - W[:, victim]      = 0  (victim no longer routes)
+      - W_anchor[:, victim] = 0
+      - fisher_W[:, victim] = 0  (so EWC doesn't pin zero in place,
+        leaving the substrate available for re-recruitment)
+
+    Layer L (the layer being compressed) is NOT touched. Victim's W_in,
+    bias, anchor, lam, fisher all stay. Architecture (n_nodes per layer)
+    is unchanged — VRAM does not free up immediately.
+
+    The output layer has no L+1; downscale is a no-op there. (compress's
+    skip_output_layer default still applies.)
+
+    Caller does NOT need to rebuild the optimizer — no Parameter objects
+    are replaced (only their .data is mutated).
+    """
+    if peer_idx == victim_idx:
+        raise ValueError("peer_idx == victim_idx")
+    layer = net.layers[layer_idx]
+    if not (0 <= peer_idx < layer.n_nodes and 0 <= victim_idx < layer.n_nodes):
+        raise IndexError(
+            f"peer/victim ({peer_idx},{victim_idx}) out of range "
+            f"[0,{layer.n_nodes})"
+        )
+    if layer_idx + 1 >= len(net.layers):
+        # Output layer — no downstream to redirect. No-op (caller's
+        # responsibility to skip; compress's skip_output_layer covers it
+        # by default).
+        return
+
+    nxt = net.layers[layer_idx + 1]
+    with torch.no_grad():
+        nxt.W.data[:, peer_idx] = (
+            nxt.W.data[:, peer_idx] + nxt.W.data[:, victim_idx]
+        )
+        nxt.W_anchor[:, peer_idx] = (
+            nxt.W_anchor[:, peer_idx] + nxt.W_anchor[:, victim_idx]
+        )
+        nxt.fisher_W[:, peer_idx] = (
+            nxt.fisher_W[:, peer_idx] + nxt.fisher_W[:, victim_idx]
+        )
+        nxt.W.data[:, victim_idx] = 0.0
+        nxt.W_anchor[:, victim_idx] = 0.0
+        nxt.fisher_W[:, victim_idx] = 0.0
+
+
 def compress(
     net: TrioronNetwork,
     *,
@@ -403,6 +478,7 @@ def compress(
     redundancy_signal: str = "weight",
     probe_batch: Optional[torch.Tensor] = None,
     ac_threshold: float = 0.95,
+    compression_action: str = "merge",
 ) -> List[MergeEvent]:
     """Greedy topological compression: repeatedly merge the highest-similarity
     pair on each candidate layer until none exceed the threshold.
@@ -414,22 +490,41 @@ def compress(
                        `probe_batch`. Uses `ac_threshold`. `probe_batch`
                        is required.
 
-    By default the OUTPUT layer is skipped — merging two latent dims
+    `compression_action`:
+      - "merge"     — legacy: incoming-mean + outgoing-sum + delete
+                      victim. Destructive. Optimizer rebuild required
+                      after returning if events fired (Parameter
+                      objects of any modified layer are replaced).
+      - "downscale" — synaptic downscale: peer's outgoing column +=
+                      victim's, victim's outgoing zeroed, victim's
+                      substrate at layer L preserved. Non-destructive,
+                      VRAM unchanged. Optimizer rebuild NOT required.
+                      Re-recruitment is possible (fisher pinned at zero
+                      on victim's outgoing column → no EWC penalty).
+
+    By default the OUTPUT layer is skipped — collapsing two latent dims
     silently changes the representational capacity of the network in a
     way that's distinct from compressing redundant hidden features.
     Override with `layer_idxs` to compress everything.
 
     The MergeEvent.cos_sim field carries whichever similarity score the
     chosen signal produced (W cosine for "weight", activation cosine
-    for "activation").
+    for "activation"). MergeEvent.action records which compression
+    action was applied.
 
-    Returns the sequence of merge events. Caller MUST rebuild any
-    optimizer afterwards if any events occurred.
+    Returns the sequence of compression events. For "merge", caller MUST
+    rebuild any optimizer afterwards if events occurred. For "downscale",
+    optimizer rebuild is not required.
     """
     if redundancy_signal not in ("weight", "activation"):
         raise ValueError(
             f"redundancy_signal must be 'weight' or 'activation', "
             f"got {redundancy_signal!r}"
+        )
+    if compression_action not in ("merge", "downscale"):
+        raise ValueError(
+            f"compression_action must be 'merge' or 'downscale', "
+            f"got {compression_action!r}"
         )
     if redundancy_signal == "activation" and probe_batch is None:
         raise ValueError(
@@ -446,11 +541,26 @@ def compress(
     for L in layer_idxs:
         if L < 0 or L >= len(net.layers):
             continue
+        # Per-layer set of indices that have already been downscaled this
+        # call. With "merge" the victim is physically removed so re-
+        # detection naturally stops; with "downscale" the victim is
+        # still in the layer, so without an explicit exclusion the pair
+        # would be re-found on every iteration. We only exclude the
+        # victim — a downscaled node that became someone else's PEER is
+        # still a valid load-bearer.
+        downscaled_victims: set = set()
+        # For "downscale" on the output layer, synaptic_downscale is a
+        # no-op (no L+1 to redirect into) — drop the layer to keep the
+        # event log honest.
+        if compression_action == "downscale" and L >= len(net.layers) - 1:
+            continue
         # Iterate inside this layer until no eligible pair remains, or we
         # hit max_merges (paranoia bound — prevents pathological loops on
         # an all-collinear layer). For "activation", recompute the probe
-        # forward each iteration so post-merge activations drive the next
-        # candidate decision.
+        # forward each iteration so post-action activations drive the
+        # next candidate decision (downscale changes layer L+1, not L,
+        # so the layer-L activation cosine of (peer, victim) wouldn't
+        # change without the explicit exclusion above).
         while len(events) < max_merges:
             if net.layers[L].n_nodes <= 1:
                 break
@@ -464,11 +574,28 @@ def compress(
                 )
             if not pairs:
                 break
-            i, j, s = pairs[0]
-            merge_nodes(net, L, peer_idx=i, victim_idx=j)
+            # Pick first eligible pair (highest similarity) where neither
+            # index has been downscaled-as-victim already.
+            picked = None
+            for i, j, s in pairs:
+                if (compression_action == "downscale"
+                        and (i in downscaled_victims
+                             or j in downscaled_victims)):
+                    continue
+                picked = (i, j, s)
+                break
+            if picked is None:
+                break
+            i, j, s = picked
+            if compression_action == "merge":
+                merge_nodes(net, L, peer_idx=i, victim_idx=j)
+            else:
+                synaptic_downscale(net, L, peer_idx=i, victim_idx=j)
+                downscaled_victims.add(j)
             events.append(MergeEvent(
                 layer_idx=L, peer_idx=i, victim_idx=j, cos_sim=s,
                 arch_after=tuple(net.n_nodes_per_layer()),
+                action=compression_action,
             ))
     return events
 
@@ -588,6 +715,7 @@ def dreaming_block(
     redundancy_signal: str = "weight",
     ac_threshold: float = 0.95,
     probe_batch_size: int = 128,
+    compression_action: str = "merge",
 ) -> DreamingReport:
     """Run replay → compress → purge in sequence. Returns a DreamingReport.
 
@@ -602,14 +730,29 @@ def dreaming_block(
         empty, falls back to the weight signal silently — no past
         activations are available to correlate.
 
+    `compression_action`:
+      - "merge" (default): destructive merge_nodes (averaging incoming +
+        summing outgoing + deleting victim).
+      - "downscale": synaptic downscale (substrate-preserving — peer
+        absorbs victim's outgoing, victim's outgoing zeroed, victim's
+        row at layer L untouched). The architecture / param count does
+        NOT change.
+
     Caller is responsible for rebuilding the optimizer after this returns
-    if `report.merges` or `report.purges` is non-empty (the W/b Parameter
-    objects of any modified layer have been replaced).
+    if `report.merges` or `report.purges` is non-empty under
+    `compression_action='merge'` (the W/b Parameter objects of any
+    modified layer have been replaced). For 'downscale', only purges
+    require rebuild.
     """
     if redundancy_signal not in ("weight", "activation"):
         raise ValueError(
             f"redundancy_signal must be 'weight' or 'activation', "
             f"got {redundancy_signal!r}"
+        )
+    if compression_action not in ("merge", "downscale"):
+        raise ValueError(
+            f"compression_action must be 'merge' or 'downscale', "
+            f"got {compression_action!r}"
         )
     n_before = net.n_parameters()
     rep = replay(
@@ -657,6 +800,7 @@ def dreaming_block(
             probe_batch=probe_batch,
             ac_threshold=ac_threshold,
             skip_output_layer=skip_output_layer,
+            compression_action=compression_action,
         )
     else:
         # Either signal=='weight', or signal=='activation' but no past
@@ -668,6 +812,7 @@ def dreaming_block(
             net,
             cos_threshold=cos_threshold,
             skip_output_layer=skip_output_layer,
+            compression_action=compression_action,
         )
     purges = purge(
         net, u_threshold=u_threshold, skip_output_layer=skip_output_layer,
