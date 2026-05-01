@@ -85,6 +85,17 @@ class DreamingReport:
     # have fired without lowering the actual cos_threshold. The probe
     # respects skip_output_layer the same way compress does.
     pre_compress_max_cosines: List[Tuple[int, float]]
+    # Activation-correlation analog of `pre_compress_max_cosines`:
+    # max off-diagonal Pearson cosine of post-activation outputs across
+    # the probe batch. Empty list when the activation signal isn't in
+    # use (redundancy_signal == "weight" or no probe batch).
+    pre_compress_max_activation_cosines: List[Tuple[int, float]] = (
+        None  # type: ignore[assignment]
+    )
+
+    def __post_init__(self) -> None:
+        if self.pre_compress_max_activation_cosines is None:
+            self.pre_compress_max_activation_cosines = []
 
 
 # ---------------------------------------------------------------------
@@ -209,6 +220,104 @@ def find_redundant_pairs(
     return pairs
 
 
+# ---- activation-correlation redundancy detector --------------------------
+#
+# Phase 4.5 redesign (per next_session_plan.md, dated 2026-05-01): the
+# W_anchor cosine signal can't find redundancy in this architecture.
+# grow_layer produces orthogonal latent dims by construction (PCA top-1
+# of contrastive residuals, then EWC-pinned), and high hidden-layer
+# W cosines are partial-direction-sharing rather than functional
+# redundancy. The principled signal is "do these two nodes produce the
+# same activation pattern across the data distribution" — Pearson
+# (centered) cosine of post-activation column vectors over a probe batch.
+
+
+def _layer_activations(
+    net: TrioronNetwork, layer_idx: int, probe_batch: torch.Tensor,
+) -> torch.Tensor:
+    """Return the post-activation output of `layer_idx` on `probe_batch`.
+    Shape (batch, n_nodes_at_layer_idx)."""
+    if not (0 <= layer_idx < len(net.layers)):
+        raise IndexError(
+            f"layer_idx {layer_idx} out of range [0, {len(net.layers)})"
+        )
+    was_training = net.training
+    net.eval()
+    try:
+        with torch.no_grad():
+            x = probe_batch
+            for L_i, layer in enumerate(net.layers):
+                x = layer(x)
+                if L_i == layer_idx:
+                    return x.detach()
+    finally:
+        if was_training:
+            net.train()
+    raise RuntimeError("unreachable")  # pragma: no cover
+
+
+def _activation_cosine_matrix(act: torch.Tensor) -> torch.Tensor:
+    """Pearson-style cosine of activation columns: center per-node, then
+    cosine-similarity column-wise. Returns (n_nodes, n_nodes).
+
+    Two columns that are constant (zero variance) cosine to NaN under
+    the centering — clamped to 0 here so they don't fire the threshold.
+    """
+    # act: (batch, n_nodes); we want similarity between columns (nodes),
+    # so transpose: cols become rows of a (n_nodes, batch) matrix.
+    A = act.t().contiguous()  # (n_nodes, batch)
+    A = A - A.mean(dim=1, keepdim=True)  # center per node
+    norms = A.norm(dim=1).clamp_min(1e-12)
+    A_n = A / norms.unsqueeze(1)
+    sim = A_n @ A_n.t()  # (n_nodes, n_nodes)
+    sim = torch.nan_to_num(sim, nan=0.0, posinf=0.0, neginf=0.0)
+    return sim
+
+
+def max_off_diag_activation_cosine(
+    net: TrioronNetwork, layer_idx: int, probe_batch: torch.Tensor,
+) -> float:
+    """Probe analog of `max_off_diag_cosine` using activation-correlation.
+    Returns -inf if the layer has fewer than 2 nodes.
+    """
+    layer = net.layers[layer_idx]
+    if layer.n_nodes < 2:
+        return float("-inf")
+    act = _layer_activations(net, layer_idx, probe_batch)
+    sim = _activation_cosine_matrix(act)
+    sim.fill_diagonal_(float("-inf"))
+    return float(sim.max().item())
+
+
+def find_activation_redundant_pairs(
+    net: TrioronNetwork,
+    layer_idx: int,
+    *,
+    probe_batch: torch.Tensor,
+    ac_threshold: float = 0.95,
+) -> List[Tuple[int, int, float]]:
+    """Find node pairs whose activation patterns across `probe_batch` are
+    Pearson-cosine-similar at or above `ac_threshold`.
+
+    Returns (i, j, sim) with i < j, sorted by similarity descending. Only
+    pairs strictly at/above threshold are returned.
+    """
+    layer = net.layers[layer_idx]
+    if layer.n_nodes < 2:
+        return []
+    act = _layer_activations(net, layer_idx, probe_batch)
+    sim = _activation_cosine_matrix(act)
+    n = sim.shape[0]
+    pairs: List[Tuple[int, int, float]] = []
+    for i in range(n):
+        for j in range(i + 1, n):
+            s = float(sim[i, j].item())
+            if s >= ac_threshold:
+                pairs.append((i, j, s))
+    pairs.sort(key=lambda t: -t[2])
+    return pairs
+
+
 def merge_nodes(
     net: TrioronNetwork,
     layer_idx: int,
@@ -291,18 +400,42 @@ def compress(
     layer_idxs: Optional[Sequence[int]] = None,
     skip_output_layer: bool = True,
     max_merges: int = 64,
+    redundancy_signal: str = "weight",
+    probe_batch: Optional[torch.Tensor] = None,
+    ac_threshold: float = 0.95,
 ) -> List[MergeEvent]:
-    """Greedy topological compression: repeatedly merge the highest-cosine
-    pair on each candidate layer until none exceed `cos_threshold`.
+    """Greedy topological compression: repeatedly merge the highest-similarity
+    pair on each candidate layer until none exceed the threshold.
+
+    `redundancy_signal`:
+      - "weight"     — cosine of W_anchor rows (cheap, the original
+                       Phase 4.5 mechanism). Uses `cos_threshold`.
+      - "activation" — Pearson cosine of post-activation columns over
+                       `probe_batch`. Uses `ac_threshold`. `probe_batch`
+                       is required.
 
     By default the OUTPUT layer is skipped — merging two latent dims
     silently changes the representational capacity of the network in a
     way that's distinct from compressing redundant hidden features.
     Override with `layer_idxs` to compress everything.
 
+    The MergeEvent.cos_sim field carries whichever similarity score the
+    chosen signal produced (W cosine for "weight", activation cosine
+    for "activation").
+
     Returns the sequence of merge events. Caller MUST rebuild any
     optimizer afterwards if any events occurred.
     """
+    if redundancy_signal not in ("weight", "activation"):
+        raise ValueError(
+            f"redundancy_signal must be 'weight' or 'activation', "
+            f"got {redundancy_signal!r}"
+        )
+    if redundancy_signal == "activation" and probe_batch is None:
+        raise ValueError(
+            "redundancy_signal='activation' requires probe_batch"
+        )
+
     if layer_idxs is None:
         last = len(net.layers) - 1
         layer_idxs = list(range(len(net.layers)))
@@ -315,11 +448,20 @@ def compress(
             continue
         # Iterate inside this layer until no eligible pair remains, or we
         # hit max_merges (paranoia bound — prevents pathological loops on
-        # an all-collinear layer).
+        # an all-collinear layer). For "activation", recompute the probe
+        # forward each iteration so post-merge activations drive the next
+        # candidate decision.
         while len(events) < max_merges:
             if net.layers[L].n_nodes <= 1:
                 break
-            pairs = find_redundant_pairs(net, L, cos_threshold=cos_threshold)
+            if redundancy_signal == "weight":
+                pairs = find_redundant_pairs(
+                    net, L, cos_threshold=cos_threshold,
+                )
+            else:
+                pairs = find_activation_redundant_pairs(
+                    net, L, probe_batch=probe_batch, ac_threshold=ac_threshold,
+                )
             if not pairs:
                 break
             i, j, s = pairs[0]
@@ -389,6 +531,45 @@ def purge(
 # ---------------------------------------------------------------------
 
 
+def _build_probe_batch(
+    sample_pair_fn: Callable[[str, int], Tuple[torch.Tensor, torch.Tensor]],
+    past_pair_names: Sequence[str],
+    probe_batch_size: int,
+    rng: Optional[random.Random],
+) -> Optional[torch.Tensor]:
+    """Concatenate `probe_batch_size` rows drawn evenly from past pairs.
+
+    Returns None if `past_pair_names` is empty. Each pair contributes
+    roughly `probe_batch_size / len(past_pair_names)` samples (at least
+    1), capped at probe_batch_size in total. Both halves of the
+    contrastive pair are stacked — the network sees the same data the
+    detector cares about.
+    """
+    if not past_pair_names:
+        return None
+    n = len(past_pair_names)
+    per_pair = max(1, probe_batch_size // (2 * n))  # halved because we
+    # take BOTH a and b from each pair below.
+    chunks: List[torch.Tensor] = []
+    total = 0
+    order = list(past_pair_names)
+    if rng is not None:
+        rng.shuffle(order)
+    for name in order:
+        a, b = sample_pair_fn(name, per_pair)
+        chunks.append(a.detach())
+        chunks.append(b.detach())
+        total += a.shape[0] + b.shape[0]
+        if total >= probe_batch_size:
+            break
+    if not chunks:
+        return None
+    out = torch.cat(chunks, dim=0)
+    if out.shape[0] > probe_batch_size:
+        out = out[:probe_batch_size]
+    return out
+
+
 def dreaming_block(
     net: TrioronNetwork,
     *,
@@ -404,13 +585,32 @@ def dreaming_block(
     u_threshold: float = 1e-3,
     skip_output_layer: bool = True,
     rng: Optional[random.Random] = None,
+    redundancy_signal: str = "weight",
+    ac_threshold: float = 0.95,
+    probe_batch_size: int = 128,
 ) -> DreamingReport:
     """Run replay → compress → purge in sequence. Returns a DreamingReport.
+
+    `redundancy_signal`:
+      - "weight" (default for back-compat): use W_anchor cosine and
+        `cos_threshold` to find redundant pairs.
+      - "activation": build a probe batch of size `probe_batch_size`
+        from `past_pair_names` after replay and BEFORE compress; pass
+        that probe to `compress` with `ac_threshold`. The probe is
+        sampled once per dreaming block (consistent detection / merge
+        decisions across the layer sweep). When past_pair_names is
+        empty, falls back to the weight signal silently — no past
+        activations are available to correlate.
 
     Caller is responsible for rebuilding the optimizer after this returns
     if `report.merges` or `report.purges` is non-empty (the W/b Parameter
     objects of any modified layer have been replaced).
     """
+    if redundancy_signal not in ("weight", "activation"):
+        raise ValueError(
+            f"redundancy_signal must be 'weight' or 'activation', "
+            f"got {redundancy_signal!r}"
+        )
     n_before = net.n_parameters()
     rep = replay(
         net,
@@ -434,9 +634,41 @@ def dreaming_block(
         probe_layers = [i for i in probe_layers if i != last]
     pre_cos = [(L, max_off_diag_cosine(net, L)) for L in probe_layers]
 
-    merges = compress(
-        net, cos_threshold=cos_threshold, skip_output_layer=skip_output_layer,
-    )
+    # Build the probe batch up-front so the activation-cosine probe and
+    # compress see the SAME activations (no resampling drift between
+    # detection and merge).
+    probe_batch: Optional[torch.Tensor] = None
+    if redundancy_signal == "activation":
+        probe_batch = _build_probe_batch(
+            sample_pair_fn, past_pair_names, probe_batch_size, rng,
+        )
+
+    pre_act_cos: List[Tuple[int, float]] = []
+    if redundancy_signal == "activation" and probe_batch is not None:
+        pre_act_cos = [
+            (L, max_off_diag_activation_cosine(net, L, probe_batch))
+            for L in probe_layers
+        ]
+
+    if redundancy_signal == "activation" and probe_batch is not None:
+        merges = compress(
+            net,
+            redundancy_signal="activation",
+            probe_batch=probe_batch,
+            ac_threshold=ac_threshold,
+            skip_output_layer=skip_output_layer,
+        )
+    else:
+        # Either signal=='weight', or signal=='activation' but no past
+        # pairs to build a probe from (first task) — fall through to
+        # the weight signal so the block still completes. The
+        # pre_compress_max_activation_cosines field stays empty so
+        # the caller can see no activation probe was taken.
+        merges = compress(
+            net,
+            cos_threshold=cos_threshold,
+            skip_output_layer=skip_output_layer,
+        )
     purges = purge(
         net, u_threshold=u_threshold, skip_output_layer=skip_output_layer,
     )
@@ -452,4 +684,5 @@ def dreaming_block(
         n_params_before=n_before,
         n_params_after=n_after,
         pre_compress_max_cosines=pre_cos,
+        pre_compress_max_activation_cosines=pre_act_cos,
     )
