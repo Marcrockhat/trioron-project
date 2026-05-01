@@ -1,0 +1,44 @@
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/marcrockhat/trioron-project/experiments/bench_50task_dreaming_synaptic_sweep.py", line 558, in <module>
+    sys.exit(main())
+  File "/home/marcrockhat/trioron-project/experiments/bench_50task_dreaming_synaptic_sweep.py", line 368, in main
+    result = run_ewc_curriculum(
+  File "/home/marcrockhat/trioron-project/experiments/bench_50task.py", line 478, in run_ewc_curriculum
+    result = train_one_task_ewc(
+  File "/home/marcrockhat/trioron-project/experiments/bench_50task.py", line 343, in train_one_task_ewc
+    s = trigger.observe(loss=l_task.item(), hidden=h_a.detach(), grad_norm=gnorm)
+  File "/home/marcrockhat/trioron-project/trioron/triggers.py", line 131, in observe
+    rank = effective_rank(hidden)
+  File "/home/marcrockhat/trioron-project/trioron/triggers.py", line 49, in effective_rank
+    s = torch.linalg.svdvals(H.detach())
+NotImplementedError: "linalg_svd_cpu" not implemented for 'BFloat16'
+==============================================================================
+bench_50task_dreaming_synaptic_sweep — ROUTING STARVATION
+                                       (Experiment 3 — asymmetric per-event ramp)
+==============================================================================
+Thresholds: [0.92]
+Seeds:      [0]
+Action:     starve
+Starvation: alpha=0.7  floor=0.001
+Window:     developmental_window=None (always on)
+Apoptosis:  OFF
+Precision:  bf16 (W/b in torch.bfloat16, buffers FP32)
+Cap:        max_downscales_per_layer=None (uncapped)
+Tag:        th0.92_s0_starve_a0.70_f1e-03_bf16
+Replay:     25% × 200 steps   ewc_strength=1000.0   u_threshold=0.001
+Probe:      batch=128   skip_output_layer=True
+50-task curriculum: 12 single + 38 compound on 12-dim state
+Total runs: 1 (1 thresholds × 1 seeds)
+
+
+------------------------------------------------------------------------------
+Run 1/1: ac_threshold=0.92  seed=0
+------------------------------------------------------------------------------
+
+[grown_synaptic_th0.92_seed0] curriculum start — arch [12, 12, 1]  params 325  growth=True pruning=True  dreaming=ON
+
+[grown_synaptic_th0.92_seed0] === Task 1/50: single_00 ===
