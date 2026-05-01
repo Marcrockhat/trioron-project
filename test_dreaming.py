@@ -39,6 +39,7 @@ from trioron.dreaming import (
     merge_nodes,
     purge,
     replay,
+    synaptic_downscale,
 )
 
 
@@ -635,6 +636,281 @@ def test_dreaming_block_rejects_unknown_signal():
 
 
 # --------------------------------------------------------------------------- #
+# synaptic_downscale (substrate-preserving compression)                       #
+# --------------------------------------------------------------------------- #
+
+
+def _snapshot_layer(layer):
+    """Capture per-node state at a layer so we can assert preservation."""
+    return {
+        "W": layer.W.data.clone(),
+        "b": layer.b.data.clone(),
+        "W_anchor": layer.W_anchor.clone(),
+        "b_anchor": layer.b_anchor.clone(),
+        "lam": layer.lam.clone(),
+        "fisher_W": layer.fisher_W.clone(),
+        "fisher_b": layer.fisher_b.clone(),
+        "u": layer.u.clone(),
+        "n_nodes": layer.n_nodes,
+        "fan_in": layer.fan_in,
+    }
+
+
+def test_downscale_preserves_victim_substrate_at_layer_L():
+    """Layer L is the layer being compressed; victim's row in W, b,
+    anchor, lam, fisher must be unchanged."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=5, fan_in=6, latent=2)
+    L = 0
+    layer = net.layers[L]
+    snap = _snapshot_layer(layer)
+
+    synaptic_downscale(net, layer_idx=L, peer_idx=0, victim_idx=2)
+
+    assert layer.n_nodes == snap["n_nodes"], (
+        "downscale must NOT change architecture"
+    )
+    for key in ("W", "b", "W_anchor", "b_anchor", "lam",
+                "fisher_W", "fisher_b", "u"):
+        before = snap[key]
+        after = getattr(layer, key)
+        if hasattr(after, "data"):
+            after = after.data
+        err = (after - before).abs().max().item()
+        assert err < 1e-9, (
+            f"layer {L} {key} drifted under downscale (max err {err}) — "
+            f"substrate must be preserved"
+        )
+
+
+def test_downscale_zeros_victim_outgoing_at_next_layer():
+    torch.manual_seed(0)
+    net = _make_net(hidden=5, fan_in=6, latent=2)
+    L = 0
+    victim = 2
+    synaptic_downscale(net, layer_idx=L, peer_idx=0, victim_idx=victim)
+    nxt = net.layers[L + 1]
+    assert nxt.W.data[:, victim].abs().max().item() < 1e-9
+    assert nxt.W_anchor[:, victim].abs().max().item() < 1e-9
+    assert nxt.fisher_W[:, victim].abs().max().item() < 1e-9
+
+
+def test_downscale_peer_absorbs_victim_outgoing():
+    torch.manual_seed(0)
+    net = _make_net(hidden=5, fan_in=6, latent=2)
+    L = 0
+    nxt = net.layers[L + 1]
+    with torch.no_grad():
+        peer_W_before = nxt.W.data[:, 0].clone()
+        victim_W_before = nxt.W.data[:, 3].clone()
+        peer_anchor_before = nxt.W_anchor[:, 0].clone()
+        victim_anchor_before = nxt.W_anchor[:, 3].clone()
+        peer_fisher_before = nxt.fisher_W[:, 0].clone()
+        victim_fisher_before = nxt.fisher_W[:, 3].clone()
+
+    synaptic_downscale(net, layer_idx=L, peer_idx=0, victim_idx=3)
+
+    err_w = (nxt.W.data[:, 0]
+             - (peer_W_before + victim_W_before)).abs().max().item()
+    err_anchor = (nxt.W_anchor[:, 0]
+                  - (peer_anchor_before + victim_anchor_before)
+                  ).abs().max().item()
+    err_fisher = (nxt.fisher_W[:, 0]
+                  - (peer_fisher_before + victim_fisher_before)
+                  ).abs().max().item()
+    assert err_w < 1e-6, f"peer outgoing W not absorbed (err {err_w})"
+    assert err_anchor < 1e-6, f"peer outgoing anchor not absorbed (err {err_anchor})"
+    assert err_fisher < 1e-6, f"peer outgoing fisher not absorbed (err {err_fisher})"
+
+
+def test_downscale_self_or_oob_rejected():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4)
+    try:
+        synaptic_downscale(net, layer_idx=0, peer_idx=1, victim_idx=1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for peer == victim")
+    try:
+        synaptic_downscale(net, layer_idx=0, peer_idx=0, victim_idx=99)
+    except IndexError:
+        pass
+    else:
+        raise AssertionError("expected IndexError for OOB victim")
+
+
+def test_downscale_on_output_layer_is_noop():
+    """No L+1 to redirect into → must not raise, must change nothing."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, latent=3)
+    L = len(net.layers) - 1  # output layer
+    snap = _snapshot_layer(net.layers[L])
+    synaptic_downscale(net, layer_idx=L, peer_idx=0, victim_idx=1)
+    layer = net.layers[L]
+    for key in ("W", "b", "W_anchor", "b_anchor"):
+        after = getattr(layer, key)
+        if hasattr(after, "data"):
+            after = after.data
+        err = (after - snap[key]).abs().max().item()
+        assert err < 1e-9, f"output-layer downscale changed {key} (err {err})"
+
+
+def test_downscale_victim_can_be_re_recruited():
+    """Fisher on victim's outgoing is zero → no EWC penalty pinning the
+    column at zero. A subsequent training step should be able to drive
+    the column away from zero (re-recruitment available)."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=5, fan_in=6, latent=2)
+    victim = 2
+    synaptic_downscale(net, layer_idx=0, peer_idx=0, victim_idx=victim)
+    nxt = net.layers[1]
+    # Confirm zeros first.
+    assert nxt.W.data[:, victim].abs().max().item() < 1e-9
+    assert nxt.fisher_W[:, victim].abs().max().item() < 1e-9
+
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=3)
+    opt = optim.Adam(net.parameters(), lr=3e-2)
+    for _ in range(20):
+        a, b = pair_fn("rho", 8)
+        l_task = _contrastive_loss(net(a), net(b))
+        # Add EWC penalty so we're testing that EWC doesn't pin the
+        # zeroed column (fisher_W there is 0, lam at layer L+1 is
+        # whatever it was). EWC contribution on victim column should
+        # therefore be zero, leaving the column free to move.
+        l = l_task + 1000.0 * net.ewc_penalty()
+        opt.zero_grad(); l.backward(); opt.step()
+
+    moved = nxt.W.data[:, victim].abs().max().item()
+    assert moved > 1e-3, (
+        f"victim's outgoing column stuck near zero after 20 training steps "
+        f"(max abs {moved}) — re-recruitment should be possible"
+    )
+
+
+def test_compress_downscale_with_planted_pair_records_action():
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    arch_before = tuple(net.n_nodes_per_layer())
+
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="downscale", layer_idxs=[0],
+        skip_output_layer=False,
+    )
+
+    assert len(events) >= 1, "downscale compress missed planted duplicate"
+    assert tuple(net.n_nodes_per_layer()) == arch_before, (
+        "downscale must preserve architecture"
+    )
+    for ev in events:
+        assert ev.action == "downscale"
+        assert ev.layer_idx == 0
+    # First event should be the planted (0, 4) — highest similarity.
+    first = events[0]
+    assert {first.peer_idx, first.victim_idx} == {0, 4}
+
+
+def test_compress_downscale_terminates_on_static_victim():
+    """With downscale the victim stays in the layer; compress must
+    not infinite-loop. Verified by running with a planted pair and
+    confirming we exit after exactly one event on the picked pair."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="downscale", layer_idxs=[0],
+        skip_output_layer=False, max_merges=10,
+    )
+    # The planted pair fires once; subsequent iterations exclude the
+    # victim from new candidate pairs, and the only above-threshold
+    # pair was the planted one, so the loop exits with 1 event.
+    assert len(events) == 1, (
+        f"expected exactly 1 downscale event, got {len(events)} — "
+        f"loop may not be excluding downscaled victims"
+    )
+
+
+def test_compress_downscale_skips_output_layer_implicitly():
+    """When the only candidate layer is the output (which has no L+1),
+    downscale skips it entirely — no events, no error."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, latent=4)
+    _plant_duplicate(net, layer_idx=2, src=0, dst=1)
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="downscale", layer_idxs=[2],
+        skip_output_layer=False,
+    )
+    assert events == [], (
+        "downscale on output layer should be skipped (no L+1 to absorb into)"
+    )
+
+
+def test_compress_rejects_unknown_action():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4)
+    try:
+        compress(net, compression_action="bogus")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for unknown compression_action")
+
+
+def test_dreaming_block_downscale_preserves_param_count():
+    """End-to-end: dreaming_block(compression_action='downscale') with a
+    planted activation-correlated pair runs an event but leaves the
+    param count exactly equal to before-block."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    n_before = net.n_parameters()
+
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=2, replay_batch=4, ewc_strength=0.0,
+        redundancy_signal="activation", ac_threshold=0.95,
+        probe_batch_size=64,
+        u_threshold=0.0,  # purge drops u < threshold; 0.0 → never fires.
+        compression_action="downscale",
+        rng=random.Random(0),
+    )
+    assert isinstance(rep, DreamingReport)
+    assert rep.n_params_before == n_before
+    assert rep.n_params_after == n_before, (
+        f"downscale should leave param count unchanged, "
+        f"got {rep.n_params_before} → {rep.n_params_after}"
+    )
+    assert len(rep.merges) >= 1
+    for ev in rep.merges:
+        assert ev.action == "downscale"
+
+
+def test_dreaming_block_rejects_unknown_action():
+    torch.manual_seed(0)
+    net = _make_net()
+    pair_fn = _make_pair_fn(state_dim=6)
+    try:
+        dreaming_block(
+            net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+            past_pair_names=["alpha"], replay_steps_per_pair=1,
+            replay_batch=4, compression_action="bogus",
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(
+            "expected ValueError for unknown compression_action"
+        )
+
+
+# --------------------------------------------------------------------------- #
 # dreaming_block end-to-end                                                   #
 # --------------------------------------------------------------------------- #
 
@@ -744,6 +1020,30 @@ def main() -> int:
          test_dreaming_block_activation_falls_back_when_no_past_pairs)
     _run("dreaming_block_rejects_unknown_signal",
          test_dreaming_block_rejects_unknown_signal)
+    _run("downscale_preserves_victim_substrate_at_layer_L",
+         test_downscale_preserves_victim_substrate_at_layer_L)
+    _run("downscale_zeros_victim_outgoing_at_next_layer",
+         test_downscale_zeros_victim_outgoing_at_next_layer)
+    _run("downscale_peer_absorbs_victim_outgoing",
+         test_downscale_peer_absorbs_victim_outgoing)
+    _run("downscale_self_or_oob_rejected",
+         test_downscale_self_or_oob_rejected)
+    _run("downscale_on_output_layer_is_noop",
+         test_downscale_on_output_layer_is_noop)
+    _run("downscale_victim_can_be_re_recruited",
+         test_downscale_victim_can_be_re_recruited)
+    _run("compress_downscale_with_planted_pair_records_action",
+         test_compress_downscale_with_planted_pair_records_action)
+    _run("compress_downscale_terminates_on_static_victim",
+         test_compress_downscale_terminates_on_static_victim)
+    _run("compress_downscale_skips_output_layer_implicitly",
+         test_compress_downscale_skips_output_layer_implicitly)
+    _run("compress_rejects_unknown_action",
+         test_compress_rejects_unknown_action)
+    _run("dreaming_block_downscale_preserves_param_count",
+         test_dreaming_block_downscale_preserves_param_count)
+    _run("dreaming_block_rejects_unknown_action",
+         test_dreaming_block_rejects_unknown_action)
     print("-" * 60)
     n_pass = sum(1 for _, ok, _ in _RESULTS if ok)
     n_fail = len(_RESULTS) - n_pass
