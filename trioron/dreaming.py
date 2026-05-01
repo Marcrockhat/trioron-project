@@ -410,7 +410,7 @@ def synaptic_downscale(
     contribution into peer, zero victim's outgoing, but DON'T touch
     victim's substrate at layer L.
 
-    Phase 4.5 redesign (Rocky 2026-05-01): "neurons are too precious
+    Phase 4.5 redesign (Rocky 2026-05-01): "brain cells are too precious
     to destroy." Biologically faithful — synaptic homeostasis re-weights
     connections, the cell body stays. The starved victim is functionally
     dormant but available for re-recruitment by future tasks (gradient

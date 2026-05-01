@@ -6,7 +6,7 @@ curriculum) but swaps the compression mechanism from MERGE to
 SYNAPTIC DOWNSCALE — the substrate-preserving variant agreed mid-bench
 on 2026-05-01:
 
-  Rocky: "Brain cells such as neuron is to precious to be destroyed."
+  Rocky: "Brain cells such as neurons are too precious to be destroyed."
 
 The merge math (incoming-mean + outgoing-sum + delete victim) was
 doubly destructive when the redundancy signal is activation-
