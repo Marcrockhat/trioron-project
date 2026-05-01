@@ -37,6 +37,12 @@ Usage:
   # 3-seed bench at the chosen sweet-spot threshold (~25 min).
   python3 -m experiments.bench_50task_dreaming_synaptic_sweep \\
       --ac-thresholds 0.94 --seeds 0,1,2
+
+  # Phase 4.5 Experiment 2 — per-block downscale cap. Re-runs the
+  # aggressive ac=0.85 threshold but with cap=1 or cap=2 so replay
+  # absorbs each consolidation before the next one drifts on top.
+  python3 -m experiments.bench_50task_dreaming_synaptic_sweep \\
+      --ac-thresholds 0.85 --seeds 0,1,2 --max-downscales-per-layer 1
 """
 from __future__ import annotations
 import argparse
@@ -124,7 +130,10 @@ def _trajectory_sample(per_task: List[float], n: int = 5) -> str:
     )
 
 
-def _make_dreaming_config(ac_threshold: float) -> dict:
+def _make_dreaming_config(
+    ac_threshold: float,
+    max_downscales_per_layer: "int | None" = None,
+) -> dict:
     return {
         "replay_fraction": DREAM_REPLAY_FRACTION,
         "replay_steps_per_pair": DREAM_REPLAY_STEPS,
@@ -137,6 +146,7 @@ def _make_dreaming_config(ac_threshold: float) -> dict:
         "ac_threshold": ac_threshold,
         "probe_batch_size": PROBE_BATCH_SIZE,
         "compression_action": "downscale",
+        "max_downscales_per_layer": max_downscales_per_layer,
     }
 
 
@@ -154,12 +164,16 @@ def main(argv: List[str] | None = None) -> int:
                    help="Comma-separated list of ac_threshold values, e.g. 0.92,0.95,0.97")
     p.add_argument("--seeds", type=_parse_int_list, required=True,
                    help="Comma-separated list of seeds, e.g. 0  or  0,1,2")
+    p.add_argument("--max-downscales-per-layer", type=int, default=None,
+                   help="Phase 4.5 Experiment 2: cap on downscale events per "
+                        "layer per dreaming block. Omit for uncapped (default).")
     p.add_argument("--tag", type=str, default="",
                    help="Optional output-file tag suffix; if empty, derived from args")
     args = p.parse_args(argv)
 
     thresholds = args.ac_thresholds
     seeds = args.seeds
+    max_downscales_per_layer = args.max_downscales_per_layer
 
     # Derive a default tag if none provided.
     if args.tag:
@@ -171,7 +185,10 @@ def main(argv: List[str] | None = None) -> int:
         s_part = (f"s{seeds[0]}"
                   if len(seeds) == 1
                   else f"s{seeds[0]}-{seeds[-1]}")
-        tag = f"{th_part}_{s_part}"
+        cap_part = (f"_cap{max_downscales_per_layer}"
+                    if max_downscales_per_layer is not None
+                    else "")
+        tag = f"{th_part}_{s_part}{cap_part}"
 
     pair_specs = build_50task_pairs(
         state_dim=STATE_DIM, n_single=N_SINGLE, n_compound=N_COMPOUND, seed=0,
@@ -190,6 +207,8 @@ def main(argv: List[str] | None = None) -> int:
     print("=" * 78)
     print(f"Thresholds: {thresholds}")
     print(f"Seeds:      {seeds}")
+    print(f"Cap:        max_downscales_per_layer="
+          f"{max_downscales_per_layer if max_downscales_per_layer is not None else 'None (uncapped)'}")
     print(f"Tag:        {tag}")
     print(f"Replay:     {DREAM_REPLAY_FRACTION:.0%} × {DREAM_REPLAY_STEPS} "
           f"steps   ewc_strength={DREAM_EWC_STRENGTH}   "
@@ -216,7 +235,10 @@ def main(argv: List[str] | None = None) -> int:
             print("-" * 78)
             torch.manual_seed(s + 11000)
             net = make_network(STATE_DIM, HIDDEN, LATENT_INIT_GROWN)
-            dreaming_config = _make_dreaming_config(ac_threshold)
+            dreaming_config = _make_dreaming_config(
+                ac_threshold,
+                max_downscales_per_layer=max_downscales_per_layer,
+            )
             result = run_ewc_curriculum(
                 net,
                 label=f"grown_synaptic_th{ac_threshold:.2f}_seed{s}",
