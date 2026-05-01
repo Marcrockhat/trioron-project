@@ -80,6 +80,11 @@ class DreamingReport:
     purges: List[PurgeEvent]
     n_params_before: int
     n_params_after: int
+    # Per-layer (layer_idx, max off-diagonal W_anchor cosine) measured
+    # BEFORE compress runs. Lets the caller see what threshold would
+    # have fired without lowering the actual cos_threshold. The probe
+    # respects skip_output_layer the same way compress does.
+    pre_compress_max_cosines: List[Tuple[int, float]]
 
 
 # ---------------------------------------------------------------------
@@ -154,6 +159,25 @@ def replay(
 # ---------------------------------------------------------------------
 # Mechanism 2 — topological compression
 # ---------------------------------------------------------------------
+
+
+def max_off_diag_cosine(net: TrioronNetwork, layer_idx: int) -> float:
+    """Return the maximum off-diagonal W_anchor cosine similarity within a
+    layer. Returns -inf if the layer has fewer than 2 nodes (no pair).
+
+    Cheap diagnostic — used by callers to probe what compress threshold
+    WOULD have fired without actually changing cos_threshold.
+    """
+    layer = net.layers[layer_idx]
+    A = layer.W_anchor.detach()  # (n_nodes, fan_in)
+    n = A.shape[0]
+    if n < 2:
+        return float("-inf")
+    norms = A.norm(dim=1).clamp_min(1e-12)
+    A_n = A / norms.unsqueeze(1)
+    sim = A_n @ A_n.T
+    sim.fill_diagonal_(float("-inf"))
+    return float(sim.max().item())
 
 
 def find_redundant_pairs(
@@ -400,6 +424,16 @@ def dreaming_block(
         lr=replay_lr,
         rng=rng,
     )
+
+    # Probe per-layer max W_anchor cosine BEFORE compress, on the same
+    # set of layers compress would consider. Lets the bench observe
+    # what cos_threshold would fire without lowering the threshold.
+    last = len(net.layers) - 1
+    probe_layers = list(range(len(net.layers)))
+    if skip_output_layer and last >= 0:
+        probe_layers = [i for i in probe_layers if i != last]
+    pre_cos = [(L, max_off_diag_cosine(net, L)) for L in probe_layers]
+
     merges = compress(
         net, cos_threshold=cos_threshold, skip_output_layer=skip_output_layer,
     )
@@ -417,4 +451,5 @@ def dreaming_block(
         purges=purges,
         n_params_before=n_before,
         n_params_after=n_after,
+        pre_compress_max_cosines=pre_cos,
     )
