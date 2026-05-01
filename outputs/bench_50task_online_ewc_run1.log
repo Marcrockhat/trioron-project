@@ -1,0 +1,2758 @@
+==============================================================================
+bench_50task_online_ewc — Online EWC × 3 widths × 3 seeds
+==============================================================================
+Seeds:  [0, 1, 2]
+Widths: [8, 12, 16]
+γ (online discount): 0.95
+Target latent: 3
+
+
+[online_ewc_H8_seed0] Online-EWC curriculum start — arch [8, 8, 3]  params 203  γ=0.95
+
+[online_ewc_H8_seed0] === Task 1/50: single_00 ===
+  [online_ewc_H8_seed0] task 1/50 (single_00) step     0  loss 0.5040
+  [online_ewc_H8_seed0] task 1/50 (single_00) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H8_seed0] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 2/50: single_01 ===
+  [online_ewc_H8_seed0] task 2/50 (single_01) step     0  loss 0.0019
+  [online_ewc_H8_seed0] task 2/50 (single_01) step   749  loss 0.0278
+  [online_ewc_H8_seed0] task 2/50 (single_01) step  1499  loss 0.0374
+[online_ewc_H8_seed0] After task 2: own=0.043  avg_to_date=0.022  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 3/50: single_02 ===
+  [online_ewc_H8_seed0] task 3/50 (single_02) step     0  loss 0.1021
+  [online_ewc_H8_seed0] task 3/50 (single_02) step   749  loss 0.0827
+  [online_ewc_H8_seed0] task 3/50 (single_02) step  1499  loss 0.0450
+[online_ewc_H8_seed0] After task 3: own=0.093  avg_to_date=0.045  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 4/50: single_03 ===
+  [online_ewc_H8_seed0] task 4/50 (single_03) step     0  loss 0.1240
+  [online_ewc_H8_seed0] task 4/50 (single_03) step   749  loss 0.0943
+  [online_ewc_H8_seed0] task 4/50 (single_03) step  1499  loss 0.0869
+[online_ewc_H8_seed0] After task 4: own=0.059  avg_to_date=0.048  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 5/50: single_04 ===
+  [online_ewc_H8_seed0] task 5/50 (single_04) step     0  loss 0.0606
+  [online_ewc_H8_seed0] task 5/50 (single_04) step   749  loss 0.0503
+  [online_ewc_H8_seed0] task 5/50 (single_04) step  1499  loss 0.0354
+[online_ewc_H8_seed0] After task 5: own=0.082  avg_to_date=0.055  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 6/50: single_05 ===
+  [online_ewc_H8_seed0] task 6/50 (single_05) step     0  loss 0.1133
+  [online_ewc_H8_seed0] task 6/50 (single_05) step   749  loss 0.0728
+  [online_ewc_H8_seed0] task 6/50 (single_05) step  1499  loss 0.0757
+[online_ewc_H8_seed0] After task 6: own=0.085  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 7/50: single_06 ===
+  [online_ewc_H8_seed0] task 7/50 (single_06) step     0  loss 0.0467
+  [online_ewc_H8_seed0] task 7/50 (single_06) step   749  loss 0.0313
+  [online_ewc_H8_seed0] task 7/50 (single_06) step  1499  loss 0.0667
+[online_ewc_H8_seed0] After task 7: own=0.038  avg_to_date=0.056  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 8/50: single_07 ===
+  [online_ewc_H8_seed0] task 8/50 (single_07) step     0  loss 0.0854
+  [online_ewc_H8_seed0] task 8/50 (single_07) step   749  loss 0.0812
+  [online_ewc_H8_seed0] task 8/50 (single_07) step  1499  loss 0.0169
+[online_ewc_H8_seed0] After task 8: own=0.101  avg_to_date=0.062  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 9/50: single_08 ===
+  [online_ewc_H8_seed0] task 9/50 (single_08) step     0  loss 0.1077
+  [online_ewc_H8_seed0] task 9/50 (single_08) step   749  loss 0.0984
+  [online_ewc_H8_seed0] task 9/50 (single_08) step  1499  loss 0.1020
+[online_ewc_H8_seed0] After task 9: own=0.083  avg_to_date=0.064  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 10/50: single_09 ===
+  [online_ewc_H8_seed0] task 10/50 (single_09) step     0  loss 0.0805
+  [online_ewc_H8_seed0] task 10/50 (single_09) step   749  loss 0.0159
+  [online_ewc_H8_seed0] task 10/50 (single_09) step  1499  loss 0.0600
+[online_ewc_H8_seed0] After task 10: own=0.074  avg_to_date=0.065  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 11/50: single_10 ===
+  [online_ewc_H8_seed0] task 11/50 (single_10) step     0  loss 0.0799
+  [online_ewc_H8_seed0] task 11/50 (single_10) step   749  loss 0.1046
+  [online_ewc_H8_seed0] task 11/50 (single_10) step  1499  loss 0.0531
+[online_ewc_H8_seed0] After task 11: own=0.083  avg_to_date=0.066  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 12/50: single_11 ===
+  [online_ewc_H8_seed0] task 12/50 (single_11) step     0  loss 0.0917
+  [online_ewc_H8_seed0] task 12/50 (single_11) step   749  loss 0.0608
+  [online_ewc_H8_seed0] task 12/50 (single_11) step  1499  loss 0.0837
+[online_ewc_H8_seed0] After task 12: own=0.088  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 13/50: compound_00 ===
+  [online_ewc_H8_seed0] task 13/50 (compound_00) step     0  loss 0.0693
+  [online_ewc_H8_seed0] task 13/50 (compound_00) step   749  loss 0.0610
+  [online_ewc_H8_seed0] task 13/50 (compound_00) step  1499  loss 0.1162
+[online_ewc_H8_seed0] After task 13: own=0.081  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 14/50: compound_01 ===
+  [online_ewc_H8_seed0] task 14/50 (compound_01) step     0  loss 0.0850
+  [online_ewc_H8_seed0] task 14/50 (compound_01) step   749  loss 0.1217
+  [online_ewc_H8_seed0] task 14/50 (compound_01) step  1499  loss 0.0813
+[online_ewc_H8_seed0] After task 14: own=0.076  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 15/50: compound_02 ===
+  [online_ewc_H8_seed0] task 15/50 (compound_02) step     0  loss 0.0251
+  [online_ewc_H8_seed0] task 15/50 (compound_02) step   749  loss 0.0078
+  [online_ewc_H8_seed0] task 15/50 (compound_02) step  1499  loss 0.0171
+[online_ewc_H8_seed0] After task 15: own=0.030  avg_to_date=0.066  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 16/50: compound_03 ===
+  [online_ewc_H8_seed0] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H8_seed0] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H8_seed0] After task 16: own=0.000  avg_to_date=0.062  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 17/50: compound_04 ===
+  [online_ewc_H8_seed0] task 17/50 (compound_04) step     0  loss 0.0191
+  [online_ewc_H8_seed0] task 17/50 (compound_04) step   749  loss 0.0350
+  [online_ewc_H8_seed0] task 17/50 (compound_04) step  1499  loss 0.0249
+[online_ewc_H8_seed0] After task 17: own=0.033  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 18/50: compound_05 ===
+  [online_ewc_H8_seed0] task 18/50 (compound_05) step     0  loss 0.0712
+  [online_ewc_H8_seed0] task 18/50 (compound_05) step   749  loss 0.0278
+  [online_ewc_H8_seed0] task 18/50 (compound_05) step  1499  loss 0.0253
+[online_ewc_H8_seed0] After task 18: own=0.052  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 19/50: compound_06 ===
+  [online_ewc_H8_seed0] task 19/50 (compound_06) step     0  loss 0.0723
+  [online_ewc_H8_seed0] task 19/50 (compound_06) step   749  loss 0.0768
+  [online_ewc_H8_seed0] task 19/50 (compound_06) step  1499  loss 0.0569
+[online_ewc_H8_seed0] After task 19: own=0.069  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 20/50: compound_07 ===
+  [online_ewc_H8_seed0] task 20/50 (compound_07) step     0  loss 0.0794
+  [online_ewc_H8_seed0] task 20/50 (compound_07) step   749  loss 0.0673
+  [online_ewc_H8_seed0] task 20/50 (compound_07) step  1499  loss 0.0787
+[online_ewc_H8_seed0] After task 20: own=0.082  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 21/50: compound_08 ===
+  [online_ewc_H8_seed0] task 21/50 (compound_08) step     0  loss 0.0637
+  [online_ewc_H8_seed0] task 21/50 (compound_08) step   749  loss 0.0813
+  [online_ewc_H8_seed0] task 21/50 (compound_08) step  1499  loss 0.0310
+[online_ewc_H8_seed0] After task 21: own=0.049  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 22/50: compound_09 ===
+  [online_ewc_H8_seed0] task 22/50 (compound_09) step     0  loss 0.0692
+  [online_ewc_H8_seed0] task 22/50 (compound_09) step   749  loss 0.0415
+  [online_ewc_H8_seed0] task 22/50 (compound_09) step  1499  loss 0.0552
+[online_ewc_H8_seed0] After task 22: own=0.063  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 23/50: compound_10 ===
+  [online_ewc_H8_seed0] task 23/50 (compound_10) step     0  loss 0.0560
+  [online_ewc_H8_seed0] task 23/50 (compound_10) step   749  loss 0.1057
+  [online_ewc_H8_seed0] task 23/50 (compound_10) step  1499  loss 0.0405
+[online_ewc_H8_seed0] After task 23: own=0.077  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 24/50: compound_11 ===
+  [online_ewc_H8_seed0] task 24/50 (compound_11) step     0  loss 0.0401
+  [online_ewc_H8_seed0] task 24/50 (compound_11) step   749  loss 0.0054
+  [online_ewc_H8_seed0] task 24/50 (compound_11) step  1499  loss 0.0121
+[online_ewc_H8_seed0] After task 24: own=0.038  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 25/50: compound_12 ===
+  [online_ewc_H8_seed0] task 25/50 (compound_12) step     0  loss 0.0746
+  [online_ewc_H8_seed0] task 25/50 (compound_12) step   749  loss 0.0586
+  [online_ewc_H8_seed0] task 25/50 (compound_12) step  1499  loss 0.0310
+[online_ewc_H8_seed0] After task 25: own=0.059  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 26/50: compound_13 ===
+  [online_ewc_H8_seed0] task 26/50 (compound_13) step     0  loss 0.0035
+  [online_ewc_H8_seed0] task 26/50 (compound_13) step   749  loss 0.0527
+  [online_ewc_H8_seed0] task 26/50 (compound_13) step  1499  loss 0.0307
+[online_ewc_H8_seed0] After task 26: own=0.034  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 27/50: compound_14 ===
+  [online_ewc_H8_seed0] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H8_seed0] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 27/50 (compound_14) step  1499  loss 0.0001
+[online_ewc_H8_seed0] After task 27: own=0.000  avg_to_date=0.057  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 28/50: compound_15 ===
+  [online_ewc_H8_seed0] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H8_seed0] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H8_seed0] After task 28: own=0.000  avg_to_date=0.055  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 29/50: compound_16 ===
+  [online_ewc_H8_seed0] task 29/50 (compound_16) step     0  loss 0.1031
+  [online_ewc_H8_seed0] task 29/50 (compound_16) step   749  loss 0.0585
+  [online_ewc_H8_seed0] task 29/50 (compound_16) step  1499  loss 0.0883
+[online_ewc_H8_seed0] After task 29: own=0.087  avg_to_date=0.055  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 30/50: compound_17 ===
+  [online_ewc_H8_seed0] task 30/50 (compound_17) step     0  loss 0.1009
+  [online_ewc_H8_seed0] task 30/50 (compound_17) step   749  loss 0.0263
+  [online_ewc_H8_seed0] task 30/50 (compound_17) step  1499  loss 0.0294
+[online_ewc_H8_seed0] After task 30: own=0.055  avg_to_date=0.055  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 31/50: compound_18 ===
+  [online_ewc_H8_seed0] task 31/50 (compound_18) step     0  loss 0.0009
+  [online_ewc_H8_seed0] task 31/50 (compound_18) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 31/50 (compound_18) step  1499  loss 0.0083
+[online_ewc_H8_seed0] After task 31: own=0.004  avg_to_date=0.053  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 32/50: compound_19 ===
+  [online_ewc_H8_seed0] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H8_seed0] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H8_seed0] After task 32: own=0.000  avg_to_date=0.052  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 33/50: compound_20 ===
+  [online_ewc_H8_seed0] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H8_seed0] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H8_seed0] After task 33: own=0.000  avg_to_date=0.050  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 34/50: compound_21 ===
+  [online_ewc_H8_seed0] task 34/50 (compound_21) step     0  loss 0.0452
+  [online_ewc_H8_seed0] task 34/50 (compound_21) step   749  loss 0.0575
+  [online_ewc_H8_seed0] task 34/50 (compound_21) step  1499  loss 0.1000
+[online_ewc_H8_seed0] After task 34: own=0.069  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 35/50: compound_22 ===
+  [online_ewc_H8_seed0] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H8_seed0] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H8_seed0] After task 35: own=0.000  avg_to_date=0.049  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 36/50: compound_23 ===
+  [online_ewc_H8_seed0] task 36/50 (compound_23) step     0  loss 0.0549
+  [online_ewc_H8_seed0] task 36/50 (compound_23) step   749  loss 0.1130
+  [online_ewc_H8_seed0] task 36/50 (compound_23) step  1499  loss 0.0677
+[online_ewc_H8_seed0] After task 36: own=0.086  avg_to_date=0.050  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 37/50: compound_24 ===
+  [online_ewc_H8_seed0] task 37/50 (compound_24) step     0  loss 0.1224
+  [online_ewc_H8_seed0] task 37/50 (compound_24) step   749  loss 0.1267
+  [online_ewc_H8_seed0] task 37/50 (compound_24) step  1499  loss 0.0910
+[online_ewc_H8_seed0] After task 37: own=0.088  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 38/50: compound_25 ===
+  [online_ewc_H8_seed0] task 38/50 (compound_25) step     0  loss 0.0378
+  [online_ewc_H8_seed0] task 38/50 (compound_25) step   749  loss 0.0274
+  [online_ewc_H8_seed0] task 38/50 (compound_25) step  1499  loss 0.0425
+[online_ewc_H8_seed0] After task 38: own=0.034  avg_to_date=0.050  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 39/50: compound_26 ===
+  [online_ewc_H8_seed0] task 39/50 (compound_26) step     0  loss 0.0000
+  [online_ewc_H8_seed0] task 39/50 (compound_26) step   749  loss 0.0000
+  [online_ewc_H8_seed0] task 39/50 (compound_26) step  1499  loss 0.0000
+[online_ewc_H8_seed0] After task 39: own=0.001  avg_to_date=0.049  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 40/50: compound_27 ===
+  [online_ewc_H8_seed0] task 40/50 (compound_27) step     0  loss 0.1138
+  [online_ewc_H8_seed0] task 40/50 (compound_27) step   749  loss 0.0459
+  [online_ewc_H8_seed0] task 40/50 (compound_27) step  1499  loss 0.0849
+[online_ewc_H8_seed0] After task 40: own=0.066  avg_to_date=0.049  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 41/50: compound_28 ===
+  [online_ewc_H8_seed0] task 41/50 (compound_28) step     0  loss 0.0121
+  [online_ewc_H8_seed0] task 41/50 (compound_28) step   749  loss 0.0676
+  [online_ewc_H8_seed0] task 41/50 (compound_28) step  1499  loss 0.0517
+[online_ewc_H8_seed0] After task 41: own=0.064  avg_to_date=0.050  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 42/50: compound_29 ===
+  [online_ewc_H8_seed0] task 42/50 (compound_29) step     0  loss 0.1294
+  [online_ewc_H8_seed0] task 42/50 (compound_29) step   749  loss 0.1066
+  [online_ewc_H8_seed0] task 42/50 (compound_29) step  1499  loss 0.0828
+[online_ewc_H8_seed0] After task 42: own=0.074  avg_to_date=0.050  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 43/50: compound_30 ===
+  [online_ewc_H8_seed0] task 43/50 (compound_30) step     0  loss 0.0895
+  [online_ewc_H8_seed0] task 43/50 (compound_30) step   749  loss 0.0708
+  [online_ewc_H8_seed0] task 43/50 (compound_30) step  1499  loss 0.0224
+[online_ewc_H8_seed0] After task 43: own=0.075  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 44/50: compound_31 ===
+  [online_ewc_H8_seed0] task 44/50 (compound_31) step     0  loss 0.0346
+  [online_ewc_H8_seed0] task 44/50 (compound_31) step   749  loss 0.0343
+  [online_ewc_H8_seed0] task 44/50 (compound_31) step  1499  loss 0.0000
+[online_ewc_H8_seed0] After task 44: own=0.014  avg_to_date=0.050  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 45/50: compound_32 ===
+  [online_ewc_H8_seed0] task 45/50 (compound_32) step     0  loss 0.1057
+  [online_ewc_H8_seed0] task 45/50 (compound_32) step   749  loss 0.1049
+  [online_ewc_H8_seed0] task 45/50 (compound_32) step  1499  loss 0.0410
+[online_ewc_H8_seed0] After task 45: own=0.084  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 46/50: compound_33 ===
+  [online_ewc_H8_seed0] task 46/50 (compound_33) step     0  loss 0.0526
+  [online_ewc_H8_seed0] task 46/50 (compound_33) step   749  loss 0.0706
+  [online_ewc_H8_seed0] task 46/50 (compound_33) step  1499  loss 0.0577
+[online_ewc_H8_seed0] After task 46: own=0.077  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 47/50: compound_34 ===
+  [online_ewc_H8_seed0] task 47/50 (compound_34) step     0  loss 0.0198
+  [online_ewc_H8_seed0] task 47/50 (compound_34) step   749  loss 0.0441
+  [online_ewc_H8_seed0] task 47/50 (compound_34) step  1499  loss 0.0557
+[online_ewc_H8_seed0] After task 47: own=0.058  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 48/50: compound_35 ===
+  [online_ewc_H8_seed0] task 48/50 (compound_35) step     0  loss 0.0073
+  [online_ewc_H8_seed0] task 48/50 (compound_35) step   749  loss 0.0706
+  [online_ewc_H8_seed0] task 48/50 (compound_35) step  1499  loss 0.0511
+[online_ewc_H8_seed0] After task 48: own=0.033  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 49/50: compound_36 ===
+  [online_ewc_H8_seed0] task 49/50 (compound_36) step     0  loss 0.0171
+  [online_ewc_H8_seed0] task 49/50 (compound_36) step   749  loss 0.0412
+  [online_ewc_H8_seed0] task 49/50 (compound_36) step  1499  loss 0.1122
+[online_ewc_H8_seed0] After task 49: own=0.071  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed0] === Task 50/50: compound_37 ===
+  [online_ewc_H8_seed0] task 50/50 (compound_37) step     0  loss 0.0011
+  [online_ewc_H8_seed0] task 50/50 (compound_37) step   749  loss 0.0811
+  [online_ewc_H8_seed0] task 50/50 (compound_37) step  1499  loss 0.0853
+[online_ewc_H8_seed0] After task 50: own=0.035  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] Online-EWC curriculum start — arch [8, 8, 3]  params 203  γ=0.95
+
+[online_ewc_H8_seed1] === Task 1/50: single_00 ===
+  [online_ewc_H8_seed1] task 1/50 (single_00) step     0  loss 0.7956
+  [online_ewc_H8_seed1] task 1/50 (single_00) step   749  loss 0.0000
+  [online_ewc_H8_seed1] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H8_seed1] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 2/50: single_01 ===
+  [online_ewc_H8_seed1] task 2/50 (single_01) step     0  loss 0.1162
+  [online_ewc_H8_seed1] task 2/50 (single_01) step   749  loss 0.1367
+  [online_ewc_H8_seed1] task 2/50 (single_01) step  1499  loss 0.1712
+[online_ewc_H8_seed1] After task 2: own=0.139  avg_to_date=0.070  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 3/50: single_02 ===
+  [online_ewc_H8_seed1] task 3/50 (single_02) step     0  loss 0.0992
+  [online_ewc_H8_seed1] task 3/50 (single_02) step   749  loss 0.1416
+  [online_ewc_H8_seed1] task 3/50 (single_02) step  1499  loss 0.2252
+[online_ewc_H8_seed1] After task 3: own=0.143  avg_to_date=0.094  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 4/50: single_03 ===
+  [online_ewc_H8_seed1] task 4/50 (single_03) step     0  loss 0.1504
+  [online_ewc_H8_seed1] task 4/50 (single_03) step   749  loss 0.1109
+  [online_ewc_H8_seed1] task 4/50 (single_03) step  1499  loss 0.1046
+[online_ewc_H8_seed1] After task 4: own=0.128  avg_to_date=0.102  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 5/50: single_04 ===
+  [online_ewc_H8_seed1] task 5/50 (single_04) step     0  loss 0.1613
+  [online_ewc_H8_seed1] task 5/50 (single_04) step   749  loss 0.0598
+  [online_ewc_H8_seed1] task 5/50 (single_04) step  1499  loss 0.0736
+[online_ewc_H8_seed1] After task 5: own=0.075  avg_to_date=0.096  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 6/50: single_05 ===
+  [online_ewc_H8_seed1] task 6/50 (single_05) step     0  loss 0.1444
+  [online_ewc_H8_seed1] task 6/50 (single_05) step   749  loss 0.1980
+  [online_ewc_H8_seed1] task 6/50 (single_05) step  1499  loss 0.1200
+[online_ewc_H8_seed1] After task 6: own=0.109  avg_to_date=0.099  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 7/50: single_06 ===
+  [online_ewc_H8_seed1] task 7/50 (single_06) step     0  loss 0.1235
+  [online_ewc_H8_seed1] task 7/50 (single_06) step   749  loss 0.1340
+  [online_ewc_H8_seed1] task 7/50 (single_06) step  1499  loss 0.0951
+[online_ewc_H8_seed1] After task 7: own=0.122  avg_to_date=0.101  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 8/50: single_07 ===
+  [online_ewc_H8_seed1] task 8/50 (single_07) step     0  loss 0.1296
+  [online_ewc_H8_seed1] task 8/50 (single_07) step   749  loss 0.1956
+  [online_ewc_H8_seed1] task 8/50 (single_07) step  1499  loss 0.0768
+[online_ewc_H8_seed1] After task 8: own=0.118  avg_to_date=0.103  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 9/50: single_08 ===
+  [online_ewc_H8_seed1] task 9/50 (single_08) step     0  loss 0.2096
+  [online_ewc_H8_seed1] task 9/50 (single_08) step   749  loss 0.1154
+  [online_ewc_H8_seed1] task 9/50 (single_08) step  1499  loss 0.2137
+[online_ewc_H8_seed1] After task 9: own=0.136  avg_to_date=0.106  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 10/50: single_09 ===
+  [online_ewc_H8_seed1] task 10/50 (single_09) step     0  loss 0.1371
+  [online_ewc_H8_seed1] task 10/50 (single_09) step   749  loss 0.1550
+  [online_ewc_H8_seed1] task 10/50 (single_09) step  1499  loss 0.0587
+[online_ewc_H8_seed1] After task 10: own=0.123  avg_to_date=0.108  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 11/50: single_10 ===
+  [online_ewc_H8_seed1] task 11/50 (single_10) step     0  loss 0.0409
+  [online_ewc_H8_seed1] task 11/50 (single_10) step   749  loss 0.0869
+  [online_ewc_H8_seed1] task 11/50 (single_10) step  1499  loss 0.0528
+[online_ewc_H8_seed1] After task 11: own=0.106  avg_to_date=0.107  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 12/50: single_11 ===
+  [online_ewc_H8_seed1] task 12/50 (single_11) step     0  loss 0.1162
+  [online_ewc_H8_seed1] task 12/50 (single_11) step   749  loss 0.0468
+  [online_ewc_H8_seed1] task 12/50 (single_11) step  1499  loss 0.0581
+[online_ewc_H8_seed1] After task 12: own=0.074  avg_to_date=0.104  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 13/50: compound_00 ===
+  [online_ewc_H8_seed1] task 13/50 (compound_00) step     0  loss 0.1748
+  [online_ewc_H8_seed1] task 13/50 (compound_00) step   749  loss 0.0780
+  [online_ewc_H8_seed1] task 13/50 (compound_00) step  1499  loss 0.1129
+[online_ewc_H8_seed1] After task 13: own=0.124  avg_to_date=0.105  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 14/50: compound_01 ===
+  [online_ewc_H8_seed1] task 14/50 (compound_01) step     0  loss 0.1090
+  [online_ewc_H8_seed1] task 14/50 (compound_01) step   749  loss 0.2287
+  [online_ewc_H8_seed1] task 14/50 (compound_01) step  1499  loss 0.1434
+[online_ewc_H8_seed1] After task 14: own=0.152  avg_to_date=0.108  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 15/50: compound_02 ===
+  [online_ewc_H8_seed1] task 15/50 (compound_02) step     0  loss 0.0883
+  [online_ewc_H8_seed1] task 15/50 (compound_02) step   749  loss 0.1147
+  [online_ewc_H8_seed1] task 15/50 (compound_02) step  1499  loss 0.1559
+[online_ewc_H8_seed1] After task 15: own=0.131  avg_to_date=0.109  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 16/50: compound_03 ===
+  [online_ewc_H8_seed1] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H8_seed1] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H8_seed1] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H8_seed1] After task 16: own=0.000  avg_to_date=0.102  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 17/50: compound_04 ===
+  [online_ewc_H8_seed1] task 17/50 (compound_04) step     0  loss 0.0669
+  [online_ewc_H8_seed1] task 17/50 (compound_04) step   749  loss 0.0879
+  [online_ewc_H8_seed1] task 17/50 (compound_04) step  1499  loss 0.0714
+[online_ewc_H8_seed1] After task 17: own=0.062  avg_to_date=0.099  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 18/50: compound_05 ===
+  [online_ewc_H8_seed1] task 18/50 (compound_05) step     0  loss 0.1054
+  [online_ewc_H8_seed1] task 18/50 (compound_05) step   749  loss 0.1963
+  [online_ewc_H8_seed1] task 18/50 (compound_05) step  1499  loss 0.1862
+[online_ewc_H8_seed1] After task 18: own=0.135  avg_to_date=0.101  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 19/50: compound_06 ===
+  [online_ewc_H8_seed1] task 19/50 (compound_06) step     0  loss 0.0924
+  [online_ewc_H8_seed1] task 19/50 (compound_06) step   749  loss 0.0892
+  [online_ewc_H8_seed1] task 19/50 (compound_06) step  1499  loss 0.0494
+[online_ewc_H8_seed1] After task 19: own=0.090  avg_to_date=0.101  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 20/50: compound_07 ===
+  [online_ewc_H8_seed1] task 20/50 (compound_07) step     0  loss 0.1113
+  [online_ewc_H8_seed1] task 20/50 (compound_07) step   749  loss 0.0786
+  [online_ewc_H8_seed1] task 20/50 (compound_07) step  1499  loss 0.0535
+[online_ewc_H8_seed1] After task 20: own=0.117  avg_to_date=0.101  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 21/50: compound_08 ===
+  [online_ewc_H8_seed1] task 21/50 (compound_08) step     0  loss 0.1244
+  [online_ewc_H8_seed1] task 21/50 (compound_08) step   749  loss 0.0491
+  [online_ewc_H8_seed1] task 21/50 (compound_08) step  1499  loss 0.1188
+[online_ewc_H8_seed1] After task 21: own=0.104  avg_to_date=0.101  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 22/50: compound_09 ===
+  [online_ewc_H8_seed1] task 22/50 (compound_09) step     0  loss 0.0852
+  [online_ewc_H8_seed1] task 22/50 (compound_09) step   749  loss 0.1051
+  [online_ewc_H8_seed1] task 22/50 (compound_09) step  1499  loss 0.1357
+[online_ewc_H8_seed1] After task 22: own=0.145  avg_to_date=0.103  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 23/50: compound_10 ===
+  [online_ewc_H8_seed1] task 23/50 (compound_10) step     0  loss 0.0740
+  [online_ewc_H8_seed1] task 23/50 (compound_10) step   749  loss 0.1531
+  [online_ewc_H8_seed1] task 23/50 (compound_10) step  1499  loss 0.0796
+[online_ewc_H8_seed1] After task 23: own=0.131  avg_to_date=0.103  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 24/50: compound_11 ===
+  [online_ewc_H8_seed1] task 24/50 (compound_11) step     0  loss 0.0919
+  [online_ewc_H8_seed1] task 24/50 (compound_11) step   749  loss 0.0897
+  [online_ewc_H8_seed1] task 24/50 (compound_11) step  1499  loss 0.0586
+[online_ewc_H8_seed1] After task 24: own=0.098  avg_to_date=0.103  λ-means=['0.105', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 25/50: compound_12 ===
+  [online_ewc_H8_seed1] task 25/50 (compound_12) step     0  loss 0.1239
+  [online_ewc_H8_seed1] task 25/50 (compound_12) step   749  loss 0.1009
+  [online_ewc_H8_seed1] task 25/50 (compound_12) step  1499  loss 0.0765
+[online_ewc_H8_seed1] After task 25: own=0.107  avg_to_date=0.103  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 26/50: compound_13 ===
+  [online_ewc_H8_seed1] task 26/50 (compound_13) step     0  loss 0.1081
+  [online_ewc_H8_seed1] task 26/50 (compound_13) step   749  loss 0.1302
+  [online_ewc_H8_seed1] task 26/50 (compound_13) step  1499  loss 0.1772
+[online_ewc_H8_seed1] After task 26: own=0.133  avg_to_date=0.103  λ-means=['0.105', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 27/50: compound_14 ===
+  [online_ewc_H8_seed1] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H8_seed1] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H8_seed1] task 27/50 (compound_14) step  1499  loss 0.0000
+[online_ewc_H8_seed1] After task 27: own=0.000  avg_to_date=0.100  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 28/50: compound_15 ===
+  [online_ewc_H8_seed1] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H8_seed1] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H8_seed1] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H8_seed1] After task 28: own=0.000  avg_to_date=0.096  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 29/50: compound_16 ===
+  [online_ewc_H8_seed1] task 29/50 (compound_16) step     0  loss 0.0818
+  [online_ewc_H8_seed1] task 29/50 (compound_16) step   749  loss 0.1158
+  [online_ewc_H8_seed1] task 29/50 (compound_16) step  1499  loss 0.1649
+[online_ewc_H8_seed1] After task 29: own=0.134  avg_to_date=0.097  λ-means=['0.104', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 30/50: compound_17 ===
+  [online_ewc_H8_seed1] task 30/50 (compound_17) step     0  loss 0.0901
+  [online_ewc_H8_seed1] task 30/50 (compound_17) step   749  loss 0.0402
+  [online_ewc_H8_seed1] task 30/50 (compound_17) step  1499  loss 0.0473
+[online_ewc_H8_seed1] After task 30: own=0.098  avg_to_date=0.097  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 31/50: compound_18 ===
+  [online_ewc_H8_seed1] task 31/50 (compound_18) step     0  loss 0.1373
+  [online_ewc_H8_seed1] task 31/50 (compound_18) step   749  loss 0.1654
+  [online_ewc_H8_seed1] task 31/50 (compound_18) step  1499  loss 0.1353
+[online_ewc_H8_seed1] After task 31: own=0.113  avg_to_date=0.098  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 32/50: compound_19 ===
+  [online_ewc_H8_seed1] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H8_seed1] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H8_seed1] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H8_seed1] After task 32: own=0.000  avg_to_date=0.095  λ-means=['0.103', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 33/50: compound_20 ===
+  [online_ewc_H8_seed1] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H8_seed1] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H8_seed1] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H8_seed1] After task 33: own=0.000  avg_to_date=0.092  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 34/50: compound_21 ===
+  [online_ewc_H8_seed1] task 34/50 (compound_21) step     0  loss 0.0815
+  [online_ewc_H8_seed1] task 34/50 (compound_21) step   749  loss 0.0572
+  [online_ewc_H8_seed1] task 34/50 (compound_21) step  1499  loss 0.1227
+[online_ewc_H8_seed1] After task 34: own=0.116  avg_to_date=0.092  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 35/50: compound_22 ===
+  [online_ewc_H8_seed1] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H8_seed1] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H8_seed1] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H8_seed1] After task 35: own=0.000  avg_to_date=0.090  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 36/50: compound_23 ===
+  [online_ewc_H8_seed1] task 36/50 (compound_23) step     0  loss 0.1636
+  [online_ewc_H8_seed1] task 36/50 (compound_23) step   749  loss 0.0962
+  [online_ewc_H8_seed1] task 36/50 (compound_23) step  1499  loss 0.1042
+[online_ewc_H8_seed1] After task 36: own=0.115  avg_to_date=0.090  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 37/50: compound_24 ===
+  [online_ewc_H8_seed1] task 37/50 (compound_24) step     0  loss 0.1792
+  [online_ewc_H8_seed1] task 37/50 (compound_24) step   749  loss 0.0707
+  [online_ewc_H8_seed1] task 37/50 (compound_24) step  1499  loss 0.1410
+[online_ewc_H8_seed1] After task 37: own=0.138  avg_to_date=0.091  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 38/50: compound_25 ===
+  [online_ewc_H8_seed1] task 38/50 (compound_25) step     0  loss 0.1348
+  [online_ewc_H8_seed1] task 38/50 (compound_25) step   749  loss 0.1160
+  [online_ewc_H8_seed1] task 38/50 (compound_25) step  1499  loss 0.1133
+[online_ewc_H8_seed1] After task 38: own=0.123  avg_to_date=0.092  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 39/50: compound_26 ===
+  [online_ewc_H8_seed1] task 39/50 (compound_26) step     0  loss 0.1231
+  [online_ewc_H8_seed1] task 39/50 (compound_26) step   749  loss 0.0595
+  [online_ewc_H8_seed1] task 39/50 (compound_26) step  1499  loss 0.1589
+[online_ewc_H8_seed1] After task 39: own=0.110  avg_to_date=0.092  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 40/50: compound_27 ===
+  [online_ewc_H8_seed1] task 40/50 (compound_27) step     0  loss 0.0798
+  [online_ewc_H8_seed1] task 40/50 (compound_27) step   749  loss 0.1648
+  [online_ewc_H8_seed1] task 40/50 (compound_27) step  1499  loss 0.0912
+[online_ewc_H8_seed1] After task 40: own=0.110  avg_to_date=0.093  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 41/50: compound_28 ===
+  [online_ewc_H8_seed1] task 41/50 (compound_28) step     0  loss 0.0000
+  [online_ewc_H8_seed1] task 41/50 (compound_28) step   749  loss 0.0098
+  [online_ewc_H8_seed1] task 41/50 (compound_28) step  1499  loss 0.0000
+[online_ewc_H8_seed1] After task 41: own=0.014  avg_to_date=0.091  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 42/50: compound_29 ===
+  [online_ewc_H8_seed1] task 42/50 (compound_29) step     0  loss 0.0000
+  [online_ewc_H8_seed1] task 42/50 (compound_29) step   749  loss 0.0051
+  [online_ewc_H8_seed1] task 42/50 (compound_29) step  1499  loss 0.0114
+[online_ewc_H8_seed1] After task 42: own=0.015  avg_to_date=0.089  λ-means=['0.101', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 43/50: compound_30 ===
+  [online_ewc_H8_seed1] task 43/50 (compound_30) step     0  loss 0.0223
+  [online_ewc_H8_seed1] task 43/50 (compound_30) step   749  loss 0.0101
+  [online_ewc_H8_seed1] task 43/50 (compound_30) step  1499  loss 0.0145
+[online_ewc_H8_seed1] After task 43: own=0.026  avg_to_date=0.087  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 44/50: compound_31 ===
+  [online_ewc_H8_seed1] task 44/50 (compound_31) step     0  loss 0.0944
+  [online_ewc_H8_seed1] task 44/50 (compound_31) step   749  loss 0.0126
+  [online_ewc_H8_seed1] task 44/50 (compound_31) step  1499  loss 0.0163
+[online_ewc_H8_seed1] After task 44: own=0.069  avg_to_date=0.087  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 45/50: compound_32 ===
+  [online_ewc_H8_seed1] task 45/50 (compound_32) step     0  loss 0.0893
+  [online_ewc_H8_seed1] task 45/50 (compound_32) step   749  loss 0.0411
+  [online_ewc_H8_seed1] task 45/50 (compound_32) step  1499  loss 0.0839
+[online_ewc_H8_seed1] After task 45: own=0.121  avg_to_date=0.088  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 46/50: compound_33 ===
+  [online_ewc_H8_seed1] task 46/50 (compound_33) step     0  loss 0.0696
+  [online_ewc_H8_seed1] task 46/50 (compound_33) step   749  loss 0.1431
+  [online_ewc_H8_seed1] task 46/50 (compound_33) step  1499  loss 0.0717
+[online_ewc_H8_seed1] After task 46: own=0.087  avg_to_date=0.088  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 47/50: compound_34 ===
+  [online_ewc_H8_seed1] task 47/50 (compound_34) step     0  loss 0.1749
+  [online_ewc_H8_seed1] task 47/50 (compound_34) step   749  loss 0.0681
+  [online_ewc_H8_seed1] task 47/50 (compound_34) step  1499  loss 0.1127
+[online_ewc_H8_seed1] After task 47: own=0.123  avg_to_date=0.088  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 48/50: compound_35 ===
+  [online_ewc_H8_seed1] task 48/50 (compound_35) step     0  loss 0.1271
+  [online_ewc_H8_seed1] task 48/50 (compound_35) step   749  loss 0.0711
+  [online_ewc_H8_seed1] task 48/50 (compound_35) step  1499  loss 0.0968
+[online_ewc_H8_seed1] After task 48: own=0.126  avg_to_date=0.089  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 49/50: compound_36 ===
+  [online_ewc_H8_seed1] task 49/50 (compound_36) step     0  loss 0.1174
+  [online_ewc_H8_seed1] task 49/50 (compound_36) step   749  loss 0.0457
+  [online_ewc_H8_seed1] task 49/50 (compound_36) step  1499  loss 0.0425
+[online_ewc_H8_seed1] After task 49: own=0.080  avg_to_date=0.088  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed1] === Task 50/50: compound_37 ===
+  [online_ewc_H8_seed1] task 50/50 (compound_37) step     0  loss 0.0704
+  [online_ewc_H8_seed1] task 50/50 (compound_37) step   749  loss 0.1451
+  [online_ewc_H8_seed1] task 50/50 (compound_37) step  1499  loss 0.1338
+[online_ewc_H8_seed1] After task 50: own=0.104  avg_to_date=0.089  λ-means=['0.102', '0.100', '0.100']
+
+[online_ewc_H8_seed2] Online-EWC curriculum start — arch [8, 8, 3]  params 203  γ=0.95
+
+[online_ewc_H8_seed2] === Task 1/50: single_00 ===
+  [online_ewc_H8_seed2] task 1/50 (single_00) step     0  loss 0.7700
+  [online_ewc_H8_seed2] task 1/50 (single_00) step   749  loss 0.0000
+  [online_ewc_H8_seed2] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H8_seed2] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 2/50: single_01 ===
+  [online_ewc_H8_seed2] task 2/50 (single_01) step     0  loss 0.1509
+  [online_ewc_H8_seed2] task 2/50 (single_01) step   749  loss 0.0734
+  [online_ewc_H8_seed2] task 2/50 (single_01) step  1499  loss 0.0477
+[online_ewc_H8_seed2] After task 2: own=0.084  avg_to_date=0.042  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 3/50: single_02 ===
+  [online_ewc_H8_seed2] task 3/50 (single_02) step     0  loss 0.1210
+  [online_ewc_H8_seed2] task 3/50 (single_02) step   749  loss 0.0296
+  [online_ewc_H8_seed2] task 3/50 (single_02) step  1499  loss 0.1012
+[online_ewc_H8_seed2] After task 3: own=0.106  avg_to_date=0.063  λ-means=['0.100', '0.100', '0.101']
+
+[online_ewc_H8_seed2] === Task 4/50: single_03 ===
+  [online_ewc_H8_seed2] task 4/50 (single_03) step     0  loss 0.0972
+  [online_ewc_H8_seed2] task 4/50 (single_03) step   749  loss 0.1560
+  [online_ewc_H8_seed2] task 4/50 (single_03) step  1499  loss 0.0657
+[online_ewc_H8_seed2] After task 4: own=0.097  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 5/50: single_04 ===
+  [online_ewc_H8_seed2] task 5/50 (single_04) step     0  loss 0.0604
+  [online_ewc_H8_seed2] task 5/50 (single_04) step   749  loss 0.0467
+  [online_ewc_H8_seed2] task 5/50 (single_04) step  1499  loss 0.0589
+[online_ewc_H8_seed2] After task 5: own=0.068  avg_to_date=0.071  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 6/50: single_05 ===
+  [online_ewc_H8_seed2] task 6/50 (single_05) step     0  loss 0.1338
+  [online_ewc_H8_seed2] task 6/50 (single_05) step   749  loss 0.1033
+  [online_ewc_H8_seed2] task 6/50 (single_05) step  1499  loss 0.1129
+[online_ewc_H8_seed2] After task 6: own=0.099  avg_to_date=0.075  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 7/50: single_06 ===
+  [online_ewc_H8_seed2] task 7/50 (single_06) step     0  loss 0.0809
+  [online_ewc_H8_seed2] task 7/50 (single_06) step   749  loss 0.0869
+  [online_ewc_H8_seed2] task 7/50 (single_06) step  1499  loss 0.0963
+[online_ewc_H8_seed2] After task 7: own=0.099  avg_to_date=0.079  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 8/50: single_07 ===
+  [online_ewc_H8_seed2] task 8/50 (single_07) step     0  loss 0.1256
+  [online_ewc_H8_seed2] task 8/50 (single_07) step   749  loss 0.1417
+  [online_ewc_H8_seed2] task 8/50 (single_07) step  1499  loss 0.1154
+[online_ewc_H8_seed2] After task 8: own=0.101  avg_to_date=0.081  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 9/50: single_08 ===
+  [online_ewc_H8_seed2] task 9/50 (single_08) step     0  loss 0.1021
+  [online_ewc_H8_seed2] task 9/50 (single_08) step   749  loss 0.1267
+  [online_ewc_H8_seed2] task 9/50 (single_08) step  1499  loss 0.1220
+[online_ewc_H8_seed2] After task 9: own=0.090  avg_to_date=0.081  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 10/50: single_09 ===
+  [online_ewc_H8_seed2] task 10/50 (single_09) step     0  loss 0.0984
+  [online_ewc_H8_seed2] task 10/50 (single_09) step   749  loss 0.1135
+  [online_ewc_H8_seed2] task 10/50 (single_09) step  1499  loss 0.0904
+[online_ewc_H8_seed2] After task 10: own=0.074  avg_to_date=0.080  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 11/50: single_10 ===
+  [online_ewc_H8_seed2] task 11/50 (single_10) step     0  loss 0.1130
+  [online_ewc_H8_seed2] task 11/50 (single_10) step   749  loss 0.0656
+  [online_ewc_H8_seed2] task 11/50 (single_10) step  1499  loss 0.0466
+[online_ewc_H8_seed2] After task 11: own=0.080  avg_to_date=0.080  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 12/50: single_11 ===
+  [online_ewc_H8_seed2] task 12/50 (single_11) step     0  loss 0.0308
+  [online_ewc_H8_seed2] task 12/50 (single_11) step   749  loss 0.0637
+  [online_ewc_H8_seed2] task 12/50 (single_11) step  1499  loss 0.0771
+[online_ewc_H8_seed2] After task 12: own=0.068  avg_to_date=0.079  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 13/50: compound_00 ===
+  [online_ewc_H8_seed2] task 13/50 (compound_00) step     0  loss 0.0644
+  [online_ewc_H8_seed2] task 13/50 (compound_00) step   749  loss 0.0376
+  [online_ewc_H8_seed2] task 13/50 (compound_00) step  1499  loss 0.0717
+[online_ewc_H8_seed2] After task 13: own=0.086  avg_to_date=0.079  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 14/50: compound_01 ===
+  [online_ewc_H8_seed2] task 14/50 (compound_01) step     0  loss 0.1262
+  [online_ewc_H8_seed2] task 14/50 (compound_01) step   749  loss 0.1521
+  [online_ewc_H8_seed2] task 14/50 (compound_01) step  1499  loss 0.0879
+[online_ewc_H8_seed2] After task 14: own=0.116  avg_to_date=0.081  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 15/50: compound_02 ===
+  [online_ewc_H8_seed2] task 15/50 (compound_02) step     0  loss 0.0647
+  [online_ewc_H8_seed2] task 15/50 (compound_02) step   749  loss 0.0433
+  [online_ewc_H8_seed2] task 15/50 (compound_02) step  1499  loss 0.0698
+[online_ewc_H8_seed2] After task 15: own=0.049  avg_to_date=0.079  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 16/50: compound_03 ===
+  [online_ewc_H8_seed2] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H8_seed2] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H8_seed2] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H8_seed2] After task 16: own=0.000  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 17/50: compound_04 ===
+  [online_ewc_H8_seed2] task 17/50 (compound_04) step     0  loss 0.0310
+  [online_ewc_H8_seed2] task 17/50 (compound_04) step   749  loss 0.0766
+  [online_ewc_H8_seed2] task 17/50 (compound_04) step  1499  loss 0.0501
+[online_ewc_H8_seed2] After task 17: own=0.047  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 18/50: compound_05 ===
+  [online_ewc_H8_seed2] task 18/50 (compound_05) step     0  loss 0.0966
+  [online_ewc_H8_seed2] task 18/50 (compound_05) step   749  loss 0.1003
+  [online_ewc_H8_seed2] task 18/50 (compound_05) step  1499  loss 0.0696
+[online_ewc_H8_seed2] After task 18: own=0.065  avg_to_date=0.071  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 19/50: compound_06 ===
+  [online_ewc_H8_seed2] task 19/50 (compound_06) step     0  loss 0.0824
+  [online_ewc_H8_seed2] task 19/50 (compound_06) step   749  loss 0.0925
+  [online_ewc_H8_seed2] task 19/50 (compound_06) step  1499  loss 0.1320
+[online_ewc_H8_seed2] After task 19: own=0.090  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 20/50: compound_07 ===
+  [online_ewc_H8_seed2] task 20/50 (compound_07) step     0  loss 0.0460
+  [online_ewc_H8_seed2] task 20/50 (compound_07) step   749  loss 0.0720
+  [online_ewc_H8_seed2] task 20/50 (compound_07) step  1499  loss 0.0372
+[online_ewc_H8_seed2] After task 20: own=0.086  avg_to_date=0.073  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 21/50: compound_08 ===
+  [online_ewc_H8_seed2] task 21/50 (compound_08) step     0  loss 0.1029
+  [online_ewc_H8_seed2] task 21/50 (compound_08) step   749  loss 0.0155
+  [online_ewc_H8_seed2] task 21/50 (compound_08) step  1499  loss 0.1163
+[online_ewc_H8_seed2] After task 21: own=0.106  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 22/50: compound_09 ===
+  [online_ewc_H8_seed2] task 22/50 (compound_09) step     0  loss 0.1147
+  [online_ewc_H8_seed2] task 22/50 (compound_09) step   749  loss 0.1118
+  [online_ewc_H8_seed2] task 22/50 (compound_09) step  1499  loss 0.0822
+[online_ewc_H8_seed2] After task 22: own=0.078  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 23/50: compound_10 ===
+  [online_ewc_H8_seed2] task 23/50 (compound_10) step     0  loss 0.1038
+  [online_ewc_H8_seed2] task 23/50 (compound_10) step   749  loss 0.0357
+  [online_ewc_H8_seed2] task 23/50 (compound_10) step  1499  loss 0.0774
+[online_ewc_H8_seed2] After task 23: own=0.102  avg_to_date=0.075  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 24/50: compound_11 ===
+  [online_ewc_H8_seed2] task 24/50 (compound_11) step     0  loss 0.0782
+  [online_ewc_H8_seed2] task 24/50 (compound_11) step   749  loss 0.0584
+  [online_ewc_H8_seed2] task 24/50 (compound_11) step  1499  loss 0.1342
+[online_ewc_H8_seed2] After task 24: own=0.100  avg_to_date=0.075  λ-means=['0.100', '0.100', '0.101']
+
+[online_ewc_H8_seed2] === Task 25/50: compound_12 ===
+  [online_ewc_H8_seed2] task 25/50 (compound_12) step     0  loss 0.0237
+  [online_ewc_H8_seed2] task 25/50 (compound_12) step   749  loss 0.0293
+  [online_ewc_H8_seed2] task 25/50 (compound_12) step  1499  loss 0.0182
+[online_ewc_H8_seed2] After task 25: own=0.034  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 26/50: compound_13 ===
+  [online_ewc_H8_seed2] task 26/50 (compound_13) step     0  loss 0.0781
+  [online_ewc_H8_seed2] task 26/50 (compound_13) step   749  loss 0.0433
+  [online_ewc_H8_seed2] task 26/50 (compound_13) step  1499  loss 0.0389
+[online_ewc_H8_seed2] After task 26: own=0.082  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 27/50: compound_14 ===
+  [online_ewc_H8_seed2] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H8_seed2] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H8_seed2] task 27/50 (compound_14) step  1499  loss 0.0000
+[online_ewc_H8_seed2] After task 27: own=0.000  avg_to_date=0.071  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 28/50: compound_15 ===
+  [online_ewc_H8_seed2] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H8_seed2] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H8_seed2] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H8_seed2] After task 28: own=0.000  avg_to_date=0.069  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 29/50: compound_16 ===
+  [online_ewc_H8_seed2] task 29/50 (compound_16) step     0  loss 0.0770
+  [online_ewc_H8_seed2] task 29/50 (compound_16) step   749  loss 0.0382
+  [online_ewc_H8_seed2] task 29/50 (compound_16) step  1499  loss 0.1247
+[online_ewc_H8_seed2] After task 29: own=0.100  avg_to_date=0.070  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 30/50: compound_17 ===
+  [online_ewc_H8_seed2] task 30/50 (compound_17) step     0  loss 0.0211
+  [online_ewc_H8_seed2] task 30/50 (compound_17) step   749  loss 0.0238
+  [online_ewc_H8_seed2] task 30/50 (compound_17) step  1499  loss 0.0451
+[online_ewc_H8_seed2] After task 30: own=0.024  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 31/50: compound_18 ===
+  [online_ewc_H8_seed2] task 31/50 (compound_18) step     0  loss 0.1917
+  [online_ewc_H8_seed2] task 31/50 (compound_18) step   749  loss 0.1329
+  [online_ewc_H8_seed2] task 31/50 (compound_18) step  1499  loss 0.1400
+[online_ewc_H8_seed2] After task 31: own=0.121  avg_to_date=0.069  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 32/50: compound_19 ===
+  [online_ewc_H8_seed2] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H8_seed2] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H8_seed2] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H8_seed2] After task 32: own=0.000  avg_to_date=0.067  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 33/50: compound_20 ===
+  [online_ewc_H8_seed2] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H8_seed2] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H8_seed2] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H8_seed2] After task 33: own=0.000  avg_to_date=0.065  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 34/50: compound_21 ===
+  [online_ewc_H8_seed2] task 34/50 (compound_21) step     0  loss 0.0107
+  [online_ewc_H8_seed2] task 34/50 (compound_21) step   749  loss 0.0542
+  [online_ewc_H8_seed2] task 34/50 (compound_21) step  1499  loss 0.0466
+[online_ewc_H8_seed2] After task 34: own=0.039  avg_to_date=0.064  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 35/50: compound_22 ===
+  [online_ewc_H8_seed2] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H8_seed2] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H8_seed2] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H8_seed2] After task 35: own=0.000  avg_to_date=0.062  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 36/50: compound_23 ===
+  [online_ewc_H8_seed2] task 36/50 (compound_23) step     0  loss 0.0371
+  [online_ewc_H8_seed2] task 36/50 (compound_23) step   749  loss 0.1271
+  [online_ewc_H8_seed2] task 36/50 (compound_23) step  1499  loss 0.1022
+[online_ewc_H8_seed2] After task 36: own=0.075  avg_to_date=0.062  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 37/50: compound_24 ===
+  [online_ewc_H8_seed2] task 37/50 (compound_24) step     0  loss 0.0078
+  [online_ewc_H8_seed2] task 37/50 (compound_24) step   749  loss 0.0011
+  [online_ewc_H8_seed2] task 37/50 (compound_24) step  1499  loss 0.0000
+[online_ewc_H8_seed2] After task 37: own=0.003  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 38/50: compound_25 ===
+  [online_ewc_H8_seed2] task 38/50 (compound_25) step     0  loss 0.0469
+  [online_ewc_H8_seed2] task 38/50 (compound_25) step   749  loss 0.0614
+  [online_ewc_H8_seed2] task 38/50 (compound_25) step  1499  loss 0.0312
+[online_ewc_H8_seed2] After task 38: own=0.068  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 39/50: compound_26 ===
+  [online_ewc_H8_seed2] task 39/50 (compound_26) step     0  loss 0.0587
+  [online_ewc_H8_seed2] task 39/50 (compound_26) step   749  loss 0.0973
+  [online_ewc_H8_seed2] task 39/50 (compound_26) step  1499  loss 0.0437
+[online_ewc_H8_seed2] After task 39: own=0.079  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 40/50: compound_27 ===
+  [online_ewc_H8_seed2] task 40/50 (compound_27) step     0  loss 0.0108
+  [online_ewc_H8_seed2] task 40/50 (compound_27) step   749  loss 0.0249
+  [online_ewc_H8_seed2] task 40/50 (compound_27) step  1499  loss 0.1098
+[online_ewc_H8_seed2] After task 40: own=0.065  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 41/50: compound_28 ===
+  [online_ewc_H8_seed2] task 41/50 (compound_28) step     0  loss 0.0496
+  [online_ewc_H8_seed2] task 41/50 (compound_28) step   749  loss 0.0344
+  [online_ewc_H8_seed2] task 41/50 (compound_28) step  1499  loss 0.0882
+[online_ewc_H8_seed2] After task 41: own=0.076  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 42/50: compound_29 ===
+  [online_ewc_H8_seed2] task 42/50 (compound_29) step     0  loss 0.1109
+  [online_ewc_H8_seed2] task 42/50 (compound_29) step   749  loss 0.0694
+  [online_ewc_H8_seed2] task 42/50 (compound_29) step  1499  loss 0.1070
+[online_ewc_H8_seed2] After task 42: own=0.082  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 43/50: compound_30 ===
+  [online_ewc_H8_seed2] task 43/50 (compound_30) step     0  loss 0.0249
+  [online_ewc_H8_seed2] task 43/50 (compound_30) step   749  loss 0.0183
+  [online_ewc_H8_seed2] task 43/50 (compound_30) step  1499  loss 0.0205
+[online_ewc_H8_seed2] After task 43: own=0.031  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 44/50: compound_31 ===
+  [online_ewc_H8_seed2] task 44/50 (compound_31) step     0  loss 0.0264
+  [online_ewc_H8_seed2] task 44/50 (compound_31) step   749  loss 0.0489
+  [online_ewc_H8_seed2] task 44/50 (compound_31) step  1499  loss 0.0987
+[online_ewc_H8_seed2] After task 44: own=0.057  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 45/50: compound_32 ===
+  [online_ewc_H8_seed2] task 45/50 (compound_32) step     0  loss 0.0731
+  [online_ewc_H8_seed2] task 45/50 (compound_32) step   749  loss 0.0546
+  [online_ewc_H8_seed2] task 45/50 (compound_32) step  1499  loss 0.0619
+[online_ewc_H8_seed2] After task 45: own=0.056  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 46/50: compound_33 ===
+  [online_ewc_H8_seed2] task 46/50 (compound_33) step     0  loss 0.0065
+  [online_ewc_H8_seed2] task 46/50 (compound_33) step   749  loss 0.0251
+  [online_ewc_H8_seed2] task 46/50 (compound_33) step  1499  loss 0.0582
+[online_ewc_H8_seed2] After task 46: own=0.058  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 47/50: compound_34 ===
+  [online_ewc_H8_seed2] task 47/50 (compound_34) step     0  loss 0.1221
+  [online_ewc_H8_seed2] task 47/50 (compound_34) step   749  loss 0.0816
+  [online_ewc_H8_seed2] task 47/50 (compound_34) step  1499  loss 0.0484
+[online_ewc_H8_seed2] After task 47: own=0.089  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 48/50: compound_35 ===
+  [online_ewc_H8_seed2] task 48/50 (compound_35) step     0  loss 0.0012
+  [online_ewc_H8_seed2] task 48/50 (compound_35) step   749  loss 0.0168
+  [online_ewc_H8_seed2] task 48/50 (compound_35) step  1499  loss 0.0285
+[online_ewc_H8_seed2] After task 48: own=0.031  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 49/50: compound_36 ===
+  [online_ewc_H8_seed2] task 49/50 (compound_36) step     0  loss 0.0368
+  [online_ewc_H8_seed2] task 49/50 (compound_36) step   749  loss 0.0630
+  [online_ewc_H8_seed2] task 49/50 (compound_36) step  1499  loss 0.1008
+[online_ewc_H8_seed2] After task 49: own=0.049  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H8_seed2] === Task 50/50: compound_37 ===
+  [online_ewc_H8_seed2] task 50/50 (compound_37) step     0  loss 0.0872
+  [online_ewc_H8_seed2] task 50/50 (compound_37) step   749  loss 0.0748
+  [online_ewc_H8_seed2] task 50/50 (compound_37) step  1499  loss 0.0690
+[online_ewc_H8_seed2] After task 50: own=0.088  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] Online-EWC curriculum start — arch [12, 12, 3]  params 351  γ=0.95
+
+[online_ewc_H12_seed0] === Task 1/50: single_00 ===
+  [online_ewc_H12_seed0] task 1/50 (single_00) step     0  loss 0.7078
+  [online_ewc_H12_seed0] task 1/50 (single_00) step   749  loss 0.0000
+  [online_ewc_H12_seed0] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H12_seed0] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 2/50: single_01 ===
+  [online_ewc_H12_seed0] task 2/50 (single_01) step     0  loss 0.1933
+  [online_ewc_H12_seed0] task 2/50 (single_01) step   749  loss 0.1462
+  [online_ewc_H12_seed0] task 2/50 (single_01) step  1499  loss 0.2158
+[online_ewc_H12_seed0] After task 2: own=0.173  avg_to_date=0.087  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 3/50: single_02 ===
+  [online_ewc_H12_seed0] task 3/50 (single_02) step     0  loss 0.1729
+  [online_ewc_H12_seed0] task 3/50 (single_02) step   749  loss 0.1285
+  [online_ewc_H12_seed0] task 3/50 (single_02) step  1499  loss 0.1376
+[online_ewc_H12_seed0] After task 3: own=0.187  avg_to_date=0.120  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 4/50: single_03 ===
+  [online_ewc_H12_seed0] task 4/50 (single_03) step     0  loss 0.1748
+  [online_ewc_H12_seed0] task 4/50 (single_03) step   749  loss 0.1692
+  [online_ewc_H12_seed0] task 4/50 (single_03) step  1499  loss 0.1741
+[online_ewc_H12_seed0] After task 4: own=0.169  avg_to_date=0.132  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 5/50: single_04 ===
+  [online_ewc_H12_seed0] task 5/50 (single_04) step     0  loss 0.1174
+  [online_ewc_H12_seed0] task 5/50 (single_04) step   749  loss 0.1867
+  [online_ewc_H12_seed0] task 5/50 (single_04) step  1499  loss 0.1784
+[online_ewc_H12_seed0] After task 5: own=0.185  avg_to_date=0.143  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 6/50: single_05 ===
+  [online_ewc_H12_seed0] task 6/50 (single_05) step     0  loss 0.1793
+  [online_ewc_H12_seed0] task 6/50 (single_05) step   749  loss 0.2759
+  [online_ewc_H12_seed0] task 6/50 (single_05) step  1499  loss 0.1947
+[online_ewc_H12_seed0] After task 6: own=0.170  avg_to_date=0.147  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 7/50: single_06 ===
+  [online_ewc_H12_seed0] task 7/50 (single_06) step     0  loss 0.2052
+  [online_ewc_H12_seed0] task 7/50 (single_06) step   749  loss 0.2142
+  [online_ewc_H12_seed0] task 7/50 (single_06) step  1499  loss 0.1281
+[online_ewc_H12_seed0] After task 7: own=0.179  avg_to_date=0.151  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 8/50: single_07 ===
+  [online_ewc_H12_seed0] task 8/50 (single_07) step     0  loss 0.1297
+  [online_ewc_H12_seed0] task 8/50 (single_07) step   749  loss 0.1262
+  [online_ewc_H12_seed0] task 8/50 (single_07) step  1499  loss 0.1169
+[online_ewc_H12_seed0] After task 8: own=0.129  avg_to_date=0.148  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 9/50: single_08 ===
+  [online_ewc_H12_seed0] task 9/50 (single_08) step     0  loss 0.2022
+  [online_ewc_H12_seed0] task 9/50 (single_08) step   749  loss 0.1785
+  [online_ewc_H12_seed0] task 9/50 (single_08) step  1499  loss 0.1541
+[online_ewc_H12_seed0] After task 9: own=0.177  avg_to_date=0.151  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 10/50: single_09 ===
+  [online_ewc_H12_seed0] task 10/50 (single_09) step     0  loss 0.1839
+  [online_ewc_H12_seed0] task 10/50 (single_09) step   749  loss 0.1041
+  [online_ewc_H12_seed0] task 10/50 (single_09) step  1499  loss 0.2527
+[online_ewc_H12_seed0] After task 10: own=0.154  avg_to_date=0.151  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 11/50: single_10 ===
+  [online_ewc_H12_seed0] task 11/50 (single_10) step     0  loss 0.1603
+  [online_ewc_H12_seed0] task 11/50 (single_10) step   749  loss 0.0731
+  [online_ewc_H12_seed0] task 11/50 (single_10) step  1499  loss 0.2129
+[online_ewc_H12_seed0] After task 11: own=0.133  avg_to_date=0.149  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 12/50: single_11 ===
+  [online_ewc_H12_seed0] task 12/50 (single_11) step     0  loss 0.1467
+  [online_ewc_H12_seed0] task 12/50 (single_11) step   749  loss 0.1116
+  [online_ewc_H12_seed0] task 12/50 (single_11) step  1499  loss 0.1524
+[online_ewc_H12_seed0] After task 12: own=0.168  avg_to_date=0.151  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 13/50: compound_00 ===
+  [online_ewc_H12_seed0] task 13/50 (compound_00) step     0  loss 0.1012
+  [online_ewc_H12_seed0] task 13/50 (compound_00) step   749  loss 0.1165
+  [online_ewc_H12_seed0] task 13/50 (compound_00) step  1499  loss 0.1601
+[online_ewc_H12_seed0] After task 13: own=0.153  avg_to_date=0.151  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 14/50: compound_01 ===
+  [online_ewc_H12_seed0] task 14/50 (compound_01) step     0  loss 0.1097
+  [online_ewc_H12_seed0] task 14/50 (compound_01) step   749  loss 0.1705
+  [online_ewc_H12_seed0] task 14/50 (compound_01) step  1499  loss 0.2061
+[online_ewc_H12_seed0] After task 14: own=0.131  avg_to_date=0.149  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 15/50: compound_02 ===
+  [online_ewc_H12_seed0] task 15/50 (compound_02) step     0  loss 0.0970
+  [online_ewc_H12_seed0] task 15/50 (compound_02) step   749  loss 0.1817
+  [online_ewc_H12_seed0] task 15/50 (compound_02) step  1499  loss 0.1944
+[online_ewc_H12_seed0] After task 15: own=0.187  avg_to_date=0.151  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 16/50: compound_03 ===
+  [online_ewc_H12_seed0] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H12_seed0] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H12_seed0] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H12_seed0] After task 16: own=0.000  avg_to_date=0.142  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 17/50: compound_04 ===
+  [online_ewc_H12_seed0] task 17/50 (compound_04) step     0  loss 0.1181
+  [online_ewc_H12_seed0] task 17/50 (compound_04) step   749  loss 0.0908
+  [online_ewc_H12_seed0] task 17/50 (compound_04) step  1499  loss 0.1058
+[online_ewc_H12_seed0] After task 17: own=0.117  avg_to_date=0.140  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 18/50: compound_05 ===
+  [online_ewc_H12_seed0] task 18/50 (compound_05) step     0  loss 0.1695
+  [online_ewc_H12_seed0] task 18/50 (compound_05) step   749  loss 0.1817
+  [online_ewc_H12_seed0] task 18/50 (compound_05) step  1499  loss 0.1581
+[online_ewc_H12_seed0] After task 18: own=0.176  avg_to_date=0.142  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 19/50: compound_06 ===
+  [online_ewc_H12_seed0] task 19/50 (compound_06) step     0  loss 0.1860
+  [online_ewc_H12_seed0] task 19/50 (compound_06) step   749  loss 0.1863
+  [online_ewc_H12_seed0] task 19/50 (compound_06) step  1499  loss 0.1728
+[online_ewc_H12_seed0] After task 19: own=0.159  avg_to_date=0.143  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 20/50: compound_07 ===
+  [online_ewc_H12_seed0] task 20/50 (compound_07) step     0  loss 0.2419
+  [online_ewc_H12_seed0] task 20/50 (compound_07) step   749  loss 0.1762
+  [online_ewc_H12_seed0] task 20/50 (compound_07) step  1499  loss 0.1461
+[online_ewc_H12_seed0] After task 20: own=0.187  avg_to_date=0.145  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 21/50: compound_08 ===
+  [online_ewc_H12_seed0] task 21/50 (compound_08) step     0  loss 0.2601
+  [online_ewc_H12_seed0] task 21/50 (compound_08) step   749  loss 0.1535
+  [online_ewc_H12_seed0] task 21/50 (compound_08) step  1499  loss 0.2234
+[online_ewc_H12_seed0] After task 21: own=0.185  avg_to_date=0.147  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 22/50: compound_09 ===
+  [online_ewc_H12_seed0] task 22/50 (compound_09) step     0  loss 0.0248
+  [online_ewc_H12_seed0] task 22/50 (compound_09) step   749  loss 0.0258
+  [online_ewc_H12_seed0] task 22/50 (compound_09) step  1499  loss 0.0482
+[online_ewc_H12_seed0] After task 22: own=0.029  avg_to_date=0.141  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 23/50: compound_10 ===
+  [online_ewc_H12_seed0] task 23/50 (compound_10) step     0  loss 0.1175
+  [online_ewc_H12_seed0] task 23/50 (compound_10) step   749  loss 0.1796
+  [online_ewc_H12_seed0] task 23/50 (compound_10) step  1499  loss 0.1648
+[online_ewc_H12_seed0] After task 23: own=0.139  avg_to_date=0.141  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 24/50: compound_11 ===
+  [online_ewc_H12_seed0] task 24/50 (compound_11) step     0  loss 0.0808
+  [online_ewc_H12_seed0] task 24/50 (compound_11) step   749  loss 0.0391
+  [online_ewc_H12_seed0] task 24/50 (compound_11) step  1499  loss 0.1266
+[online_ewc_H12_seed0] After task 24: own=0.087  avg_to_date=0.138  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 25/50: compound_12 ===
+  [online_ewc_H12_seed0] task 25/50 (compound_12) step     0  loss 0.0391
+  [online_ewc_H12_seed0] task 25/50 (compound_12) step   749  loss 0.0347
+  [online_ewc_H12_seed0] task 25/50 (compound_12) step  1499  loss 0.0913
+[online_ewc_H12_seed0] After task 25: own=0.055  avg_to_date=0.135  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 26/50: compound_13 ===
+  [online_ewc_H12_seed0] task 26/50 (compound_13) step     0  loss 0.1679
+  [online_ewc_H12_seed0] task 26/50 (compound_13) step   749  loss 0.2375
+  [online_ewc_H12_seed0] task 26/50 (compound_13) step  1499  loss 0.2046
+[online_ewc_H12_seed0] After task 26: own=0.172  avg_to_date=0.136  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 27/50: compound_14 ===
+  [online_ewc_H12_seed0] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H12_seed0] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H12_seed0] task 27/50 (compound_14) step  1499  loss 0.0000
+[online_ewc_H12_seed0] After task 27: own=0.000  avg_to_date=0.131  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 28/50: compound_15 ===
+  [online_ewc_H12_seed0] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H12_seed0] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H12_seed0] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H12_seed0] After task 28: own=0.000  avg_to_date=0.126  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 29/50: compound_16 ===
+  [online_ewc_H12_seed0] task 29/50 (compound_16) step     0  loss 0.1530
+  [online_ewc_H12_seed0] task 29/50 (compound_16) step   749  loss 0.2045
+  [online_ewc_H12_seed0] task 29/50 (compound_16) step  1499  loss 0.1911
+[online_ewc_H12_seed0] After task 29: own=0.184  avg_to_date=0.128  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 30/50: compound_17 ===
+  [online_ewc_H12_seed0] task 30/50 (compound_17) step     0  loss 0.2193
+  [online_ewc_H12_seed0] task 30/50 (compound_17) step   749  loss 0.2586
+  [online_ewc_H12_seed0] task 30/50 (compound_17) step  1499  loss 0.1305
+[online_ewc_H12_seed0] After task 30: own=0.129  avg_to_date=0.128  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 31/50: compound_18 ===
+  [online_ewc_H12_seed0] task 31/50 (compound_18) step     0  loss 0.1690
+  [online_ewc_H12_seed0] task 31/50 (compound_18) step   749  loss 0.2092
+  [online_ewc_H12_seed0] task 31/50 (compound_18) step  1499  loss 0.1283
+[online_ewc_H12_seed0] After task 31: own=0.163  avg_to_date=0.129  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 32/50: compound_19 ===
+  [online_ewc_H12_seed0] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H12_seed0] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H12_seed0] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H12_seed0] After task 32: own=0.000  avg_to_date=0.125  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 33/50: compound_20 ===
+  [online_ewc_H12_seed0] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H12_seed0] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H12_seed0] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H12_seed0] After task 33: own=0.000  avg_to_date=0.121  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 34/50: compound_21 ===
+  [online_ewc_H12_seed0] task 34/50 (compound_21) step     0  loss 0.1673
+  [online_ewc_H12_seed0] task 34/50 (compound_21) step   749  loss 0.2048
+  [online_ewc_H12_seed0] task 34/50 (compound_21) step  1499  loss 0.2163
+[online_ewc_H12_seed0] After task 34: own=0.181  avg_to_date=0.123  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 35/50: compound_22 ===
+  [online_ewc_H12_seed0] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H12_seed0] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H12_seed0] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H12_seed0] After task 35: own=0.000  avg_to_date=0.119  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 36/50: compound_23 ===
+  [online_ewc_H12_seed0] task 36/50 (compound_23) step     0  loss 0.0950
+  [online_ewc_H12_seed0] task 36/50 (compound_23) step   749  loss 0.1686
+  [online_ewc_H12_seed0] task 36/50 (compound_23) step  1499  loss 0.1717
+[online_ewc_H12_seed0] After task 36: own=0.181  avg_to_date=0.121  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 37/50: compound_24 ===
+  [online_ewc_H12_seed0] task 37/50 (compound_24) step     0  loss 0.0985
+  [online_ewc_H12_seed0] task 37/50 (compound_24) step   749  loss 0.1097
+  [online_ewc_H12_seed0] task 37/50 (compound_24) step  1499  loss 0.0992
+[online_ewc_H12_seed0] After task 37: own=0.124  avg_to_date=0.121  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 38/50: compound_25 ===
+  [online_ewc_H12_seed0] task 38/50 (compound_25) step     0  loss 0.1844
+  [online_ewc_H12_seed0] task 38/50 (compound_25) step   749  loss 0.0773
+  [online_ewc_H12_seed0] task 38/50 (compound_25) step  1499  loss 0.2753
+[online_ewc_H12_seed0] After task 38: own=0.171  avg_to_date=0.122  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 39/50: compound_26 ===
+  [online_ewc_H12_seed0] task 39/50 (compound_26) step     0  loss 0.1806
+  [online_ewc_H12_seed0] task 39/50 (compound_26) step   749  loss 0.1929
+  [online_ewc_H12_seed0] task 39/50 (compound_26) step  1499  loss 0.2093
+[online_ewc_H12_seed0] After task 39: own=0.172  avg_to_date=0.123  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 40/50: compound_27 ===
+  [online_ewc_H12_seed0] task 40/50 (compound_27) step     0  loss 0.2556
+  [online_ewc_H12_seed0] task 40/50 (compound_27) step   749  loss 0.1611
+  [online_ewc_H12_seed0] task 40/50 (compound_27) step  1499  loss 0.2277
+[online_ewc_H12_seed0] After task 40: own=0.192  avg_to_date=0.125  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 41/50: compound_28 ===
+  [online_ewc_H12_seed0] task 41/50 (compound_28) step     0  loss 0.1074
+  [online_ewc_H12_seed0] task 41/50 (compound_28) step   749  loss 0.1363
+  [online_ewc_H12_seed0] task 41/50 (compound_28) step  1499  loss 0.1084
+[online_ewc_H12_seed0] After task 41: own=0.159  avg_to_date=0.126  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 42/50: compound_29 ===
+  [online_ewc_H12_seed0] task 42/50 (compound_29) step     0  loss 0.1052
+  [online_ewc_H12_seed0] task 42/50 (compound_29) step   749  loss 0.1080
+  [online_ewc_H12_seed0] task 42/50 (compound_29) step  1499  loss 0.2036
+[online_ewc_H12_seed0] After task 42: own=0.167  avg_to_date=0.126  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 43/50: compound_30 ===
+  [online_ewc_H12_seed0] task 43/50 (compound_30) step     0  loss 0.0895
+  [online_ewc_H12_seed0] task 43/50 (compound_30) step   749  loss 0.0791
+  [online_ewc_H12_seed0] task 43/50 (compound_30) step  1499  loss 0.1246
+[online_ewc_H12_seed0] After task 43: own=0.062  avg_to_date=0.124  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 44/50: compound_31 ===
+  [online_ewc_H12_seed0] task 44/50 (compound_31) step     0  loss 0.1191
+  [online_ewc_H12_seed0] task 44/50 (compound_31) step   749  loss 0.2246
+  [online_ewc_H12_seed0] task 44/50 (compound_31) step  1499  loss 0.1246
+[online_ewc_H12_seed0] After task 44: own=0.128  avg_to_date=0.124  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 45/50: compound_32 ===
+  [online_ewc_H12_seed0] task 45/50 (compound_32) step     0  loss 0.1237
+  [online_ewc_H12_seed0] task 45/50 (compound_32) step   749  loss 0.1488
+  [online_ewc_H12_seed0] task 45/50 (compound_32) step  1499  loss 0.0995
+[online_ewc_H12_seed0] After task 45: own=0.149  avg_to_date=0.125  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 46/50: compound_33 ===
+  [online_ewc_H12_seed0] task 46/50 (compound_33) step     0  loss 0.1050
+  [online_ewc_H12_seed0] task 46/50 (compound_33) step   749  loss 0.1222
+  [online_ewc_H12_seed0] task 46/50 (compound_33) step  1499  loss 0.1168
+[online_ewc_H12_seed0] After task 46: own=0.124  avg_to_date=0.125  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 47/50: compound_34 ===
+  [online_ewc_H12_seed0] task 47/50 (compound_34) step     0  loss 0.1611
+  [online_ewc_H12_seed0] task 47/50 (compound_34) step   749  loss 0.1408
+  [online_ewc_H12_seed0] task 47/50 (compound_34) step  1499  loss 0.0840
+[online_ewc_H12_seed0] After task 47: own=0.177  avg_to_date=0.126  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 48/50: compound_35 ===
+  [online_ewc_H12_seed0] task 48/50 (compound_35) step     0  loss 0.0953
+  [online_ewc_H12_seed0] task 48/50 (compound_35) step   749  loss 0.1425
+  [online_ewc_H12_seed0] task 48/50 (compound_35) step  1499  loss 0.2159
+[online_ewc_H12_seed0] After task 48: own=0.145  avg_to_date=0.126  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 49/50: compound_36 ===
+  [online_ewc_H12_seed0] task 49/50 (compound_36) step     0  loss 0.1772
+  [online_ewc_H12_seed0] task 49/50 (compound_36) step   749  loss 0.1628
+  [online_ewc_H12_seed0] task 49/50 (compound_36) step  1499  loss 0.1208
+[online_ewc_H12_seed0] After task 49: own=0.195  avg_to_date=0.128  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed0] === Task 50/50: compound_37 ===
+  [online_ewc_H12_seed0] task 50/50 (compound_37) step     0  loss 0.2501
+  [online_ewc_H12_seed0] task 50/50 (compound_37) step   749  loss 0.1883
+  [online_ewc_H12_seed0] task 50/50 (compound_37) step  1499  loss 0.1689
+[online_ewc_H12_seed0] After task 50: own=0.170  avg_to_date=0.128  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] Online-EWC curriculum start — arch [12, 12, 3]  params 351  γ=0.95
+
+[online_ewc_H12_seed1] === Task 1/50: single_00 ===
+  [online_ewc_H12_seed1] task 1/50 (single_00) step     0  loss 0.6994
+  [online_ewc_H12_seed1] task 1/50 (single_00) step   749  loss 0.0042
+  [online_ewc_H12_seed1] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H12_seed1] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 2/50: single_01 ===
+  [online_ewc_H12_seed1] task 2/50 (single_01) step     0  loss 0.0532
+  [online_ewc_H12_seed1] task 2/50 (single_01) step   749  loss 0.0598
+  [online_ewc_H12_seed1] task 2/50 (single_01) step  1499  loss 0.0983
+[online_ewc_H12_seed1] After task 2: own=0.063  avg_to_date=0.032  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 3/50: single_02 ===
+  [online_ewc_H12_seed1] task 3/50 (single_02) step     0  loss 0.1795
+  [online_ewc_H12_seed1] task 3/50 (single_02) step   749  loss 0.0600
+  [online_ewc_H12_seed1] task 3/50 (single_02) step  1499  loss 0.1791
+[online_ewc_H12_seed1] After task 3: own=0.142  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 4/50: single_03 ===
+  [online_ewc_H12_seed1] task 4/50 (single_03) step     0  loss 0.1477
+  [online_ewc_H12_seed1] task 4/50 (single_03) step   749  loss 0.1166
+  [online_ewc_H12_seed1] task 4/50 (single_03) step  1499  loss 0.1714
+[online_ewc_H12_seed1] After task 4: own=0.126  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 5/50: single_04 ===
+  [online_ewc_H12_seed1] task 5/50 (single_04) step     0  loss 0.1107
+  [online_ewc_H12_seed1] task 5/50 (single_04) step   749  loss 0.1812
+  [online_ewc_H12_seed1] task 5/50 (single_04) step  1499  loss 0.1286
+[online_ewc_H12_seed1] After task 5: own=0.126  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 6/50: single_05 ===
+  [online_ewc_H12_seed1] task 6/50 (single_05) step     0  loss 0.0938
+  [online_ewc_H12_seed1] task 6/50 (single_05) step   749  loss 0.1069
+  [online_ewc_H12_seed1] task 6/50 (single_05) step  1499  loss 0.0765
+[online_ewc_H12_seed1] After task 6: own=0.098  avg_to_date=0.092  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 7/50: single_06 ===
+  [online_ewc_H12_seed1] task 7/50 (single_06) step     0  loss 0.0379
+  [online_ewc_H12_seed1] task 7/50 (single_06) step   749  loss 0.1547
+  [online_ewc_H12_seed1] task 7/50 (single_06) step  1499  loss 0.1388
+[online_ewc_H12_seed1] After task 7: own=0.141  avg_to_date=0.099  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 8/50: single_07 ===
+  [online_ewc_H12_seed1] task 8/50 (single_07) step     0  loss 0.0507
+  [online_ewc_H12_seed1] task 8/50 (single_07) step   749  loss 0.0914
+  [online_ewc_H12_seed1] task 8/50 (single_07) step  1499  loss 0.1044
+[online_ewc_H12_seed1] After task 8: own=0.124  avg_to_date=0.102  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 9/50: single_08 ===
+  [online_ewc_H12_seed1] task 9/50 (single_08) step     0  loss 0.0830
+  [online_ewc_H12_seed1] task 9/50 (single_08) step   749  loss 0.1352
+  [online_ewc_H12_seed1] task 9/50 (single_08) step  1499  loss 0.0920
+[online_ewc_H12_seed1] After task 9: own=0.117  avg_to_date=0.103  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 10/50: single_09 ===
+  [online_ewc_H12_seed1] task 10/50 (single_09) step     0  loss 0.0586
+  [online_ewc_H12_seed1] task 10/50 (single_09) step   749  loss 0.0646
+  [online_ewc_H12_seed1] task 10/50 (single_09) step  1499  loss 0.1289
+[online_ewc_H12_seed1] After task 10: own=0.086  avg_to_date=0.100  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 11/50: single_10 ===
+  [online_ewc_H12_seed1] task 11/50 (single_10) step     0  loss 0.1351
+  [online_ewc_H12_seed1] task 11/50 (single_10) step   749  loss 0.1076
+  [online_ewc_H12_seed1] task 11/50 (single_10) step  1499  loss 0.1292
+[online_ewc_H12_seed1] After task 11: own=0.103  avg_to_date=0.100  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 12/50: single_11 ===
+  [online_ewc_H12_seed1] task 12/50 (single_11) step     0  loss 0.1083
+  [online_ewc_H12_seed1] task 12/50 (single_11) step   749  loss 0.1093
+  [online_ewc_H12_seed1] task 12/50 (single_11) step  1499  loss 0.0925
+[online_ewc_H12_seed1] After task 12: own=0.116  avg_to_date=0.101  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 13/50: compound_00 ===
+  [online_ewc_H12_seed1] task 13/50 (compound_00) step     0  loss 0.0243
+  [online_ewc_H12_seed1] task 13/50 (compound_00) step   749  loss 0.0343
+  [online_ewc_H12_seed1] task 13/50 (compound_00) step  1499  loss 0.0000
+[online_ewc_H12_seed1] After task 13: own=0.023  avg_to_date=0.095  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 14/50: compound_01 ===
+  [online_ewc_H12_seed1] task 14/50 (compound_01) step     0  loss 0.1388
+  [online_ewc_H12_seed1] task 14/50 (compound_01) step   749  loss 0.0505
+  [online_ewc_H12_seed1] task 14/50 (compound_01) step  1499  loss 0.0573
+[online_ewc_H12_seed1] After task 14: own=0.105  avg_to_date=0.095  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 15/50: compound_02 ===
+  [online_ewc_H12_seed1] task 15/50 (compound_02) step     0  loss 0.0767
+  [online_ewc_H12_seed1] task 15/50 (compound_02) step   749  loss 0.0903
+  [online_ewc_H12_seed1] task 15/50 (compound_02) step  1499  loss 0.1200
+[online_ewc_H12_seed1] After task 15: own=0.134  avg_to_date=0.098  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 16/50: compound_03 ===
+  [online_ewc_H12_seed1] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H12_seed1] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H12_seed1] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H12_seed1] After task 16: own=0.000  avg_to_date=0.092  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 17/50: compound_04 ===
+  [online_ewc_H12_seed1] task 17/50 (compound_04) step     0  loss 0.1119
+  [online_ewc_H12_seed1] task 17/50 (compound_04) step   749  loss 0.0563
+  [online_ewc_H12_seed1] task 17/50 (compound_04) step  1499  loss 0.0874
+[online_ewc_H12_seed1] After task 17: own=0.078  avg_to_date=0.090  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 18/50: compound_05 ===
+  [online_ewc_H12_seed1] task 18/50 (compound_05) step     0  loss 0.1111
+  [online_ewc_H12_seed1] task 18/50 (compound_05) step   749  loss 0.0485
+  [online_ewc_H12_seed1] task 18/50 (compound_05) step  1499  loss 0.0918
+[online_ewc_H12_seed1] After task 18: own=0.095  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 19/50: compound_06 ===
+  [online_ewc_H12_seed1] task 19/50 (compound_06) step     0  loss 0.0910
+  [online_ewc_H12_seed1] task 19/50 (compound_06) step   749  loss 0.0888
+  [online_ewc_H12_seed1] task 19/50 (compound_06) step  1499  loss 0.0908
+[online_ewc_H12_seed1] After task 19: own=0.090  avg_to_date=0.090  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 20/50: compound_07 ===
+  [online_ewc_H12_seed1] task 20/50 (compound_07) step     0  loss 0.1375
+  [online_ewc_H12_seed1] task 20/50 (compound_07) step   749  loss 0.1160
+  [online_ewc_H12_seed1] task 20/50 (compound_07) step  1499  loss 0.0973
+[online_ewc_H12_seed1] After task 20: own=0.074  avg_to_date=0.089  λ-means=['0.101', '0.100', '0.101']
+
+[online_ewc_H12_seed1] === Task 21/50: compound_08 ===
+  [online_ewc_H12_seed1] task 21/50 (compound_08) step     0  loss 0.1225
+  [online_ewc_H12_seed1] task 21/50 (compound_08) step   749  loss 0.0723
+  [online_ewc_H12_seed1] task 21/50 (compound_08) step  1499  loss 0.1193
+[online_ewc_H12_seed1] After task 21: own=0.088  avg_to_date=0.088  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 22/50: compound_09 ===
+  [online_ewc_H12_seed1] task 22/50 (compound_09) step     0  loss 0.2393
+  [online_ewc_H12_seed1] task 22/50 (compound_09) step   749  loss 0.1398
+  [online_ewc_H12_seed1] task 22/50 (compound_09) step  1499  loss 0.0598
+[online_ewc_H12_seed1] After task 22: own=0.134  avg_to_date=0.089  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 23/50: compound_10 ===
+  [online_ewc_H12_seed1] task 23/50 (compound_10) step     0  loss 0.0945
+  [online_ewc_H12_seed1] task 23/50 (compound_10) step   749  loss 0.1648
+  [online_ewc_H12_seed1] task 23/50 (compound_10) step  1499  loss 0.0784
+[online_ewc_H12_seed1] After task 23: own=0.114  avg_to_date=0.090  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 24/50: compound_11 ===
+  [online_ewc_H12_seed1] task 24/50 (compound_11) step     0  loss 0.1216
+  [online_ewc_H12_seed1] task 24/50 (compound_11) step   749  loss 0.0897
+  [online_ewc_H12_seed1] task 24/50 (compound_11) step  1499  loss 0.0883
+[online_ewc_H12_seed1] After task 24: own=0.119  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 25/50: compound_12 ===
+  [online_ewc_H12_seed1] task 25/50 (compound_12) step     0  loss 0.0796
+  [online_ewc_H12_seed1] task 25/50 (compound_12) step   749  loss 0.0764
+  [online_ewc_H12_seed1] task 25/50 (compound_12) step  1499  loss 0.0808
+[online_ewc_H12_seed1] After task 25: own=0.098  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 26/50: compound_13 ===
+  [online_ewc_H12_seed1] task 26/50 (compound_13) step     0  loss 0.0919
+  [online_ewc_H12_seed1] task 26/50 (compound_13) step   749  loss 0.0890
+  [online_ewc_H12_seed1] task 26/50 (compound_13) step  1499  loss 0.0571
+[online_ewc_H12_seed1] After task 26: own=0.092  avg_to_date=0.090  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 27/50: compound_14 ===
+  [online_ewc_H12_seed1] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H12_seed1] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H12_seed1] task 27/50 (compound_14) step  1499  loss 0.0000
+[online_ewc_H12_seed1] After task 27: own=0.000  avg_to_date=0.087  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 28/50: compound_15 ===
+  [online_ewc_H12_seed1] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H12_seed1] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H12_seed1] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H12_seed1] After task 28: own=0.000  avg_to_date=0.084  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 29/50: compound_16 ===
+  [online_ewc_H12_seed1] task 29/50 (compound_16) step     0  loss 0.1332
+  [online_ewc_H12_seed1] task 29/50 (compound_16) step   749  loss 0.0817
+  [online_ewc_H12_seed1] task 29/50 (compound_16) step  1499  loss 0.0820
+[online_ewc_H12_seed1] After task 29: own=0.123  avg_to_date=0.085  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 30/50: compound_17 ===
+  [online_ewc_H12_seed1] task 30/50 (compound_17) step     0  loss 0.0696
+  [online_ewc_H12_seed1] task 30/50 (compound_17) step   749  loss 0.0808
+  [online_ewc_H12_seed1] task 30/50 (compound_17) step  1499  loss 0.0445
+[online_ewc_H12_seed1] After task 30: own=0.059  avg_to_date=0.084  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 31/50: compound_18 ===
+  [online_ewc_H12_seed1] task 31/50 (compound_18) step     0  loss 0.0599
+  [online_ewc_H12_seed1] task 31/50 (compound_18) step   749  loss 0.0184
+  [online_ewc_H12_seed1] task 31/50 (compound_18) step  1499  loss 0.0755
+[online_ewc_H12_seed1] After task 31: own=0.070  avg_to_date=0.083  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 32/50: compound_19 ===
+  [online_ewc_H12_seed1] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H12_seed1] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H12_seed1] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H12_seed1] After task 32: own=0.000  avg_to_date=0.081  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 33/50: compound_20 ===
+  [online_ewc_H12_seed1] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H12_seed1] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H12_seed1] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H12_seed1] After task 33: own=0.000  avg_to_date=0.078  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 34/50: compound_21 ===
+  [online_ewc_H12_seed1] task 34/50 (compound_21) step     0  loss 0.0696
+  [online_ewc_H12_seed1] task 34/50 (compound_21) step   749  loss 0.0754
+  [online_ewc_H12_seed1] task 34/50 (compound_21) step  1499  loss 0.0975
+[online_ewc_H12_seed1] After task 34: own=0.082  avg_to_date=0.078  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 35/50: compound_22 ===
+  [online_ewc_H12_seed1] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H12_seed1] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H12_seed1] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H12_seed1] After task 35: own=0.000  avg_to_date=0.075  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 36/50: compound_23 ===
+  [online_ewc_H12_seed1] task 36/50 (compound_23) step     0  loss 0.0822
+  [online_ewc_H12_seed1] task 36/50 (compound_23) step   749  loss 0.0494
+  [online_ewc_H12_seed1] task 36/50 (compound_23) step  1499  loss 0.0863
+[online_ewc_H12_seed1] After task 36: own=0.066  avg_to_date=0.075  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 37/50: compound_24 ===
+  [online_ewc_H12_seed1] task 37/50 (compound_24) step     0  loss 0.1582
+  [online_ewc_H12_seed1] task 37/50 (compound_24) step   749  loss 0.1319
+  [online_ewc_H12_seed1] task 37/50 (compound_24) step  1499  loss 0.1486
+[online_ewc_H12_seed1] After task 37: own=0.101  avg_to_date=0.075  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 38/50: compound_25 ===
+  [online_ewc_H12_seed1] task 38/50 (compound_25) step     0  loss 0.0732
+  [online_ewc_H12_seed1] task 38/50 (compound_25) step   749  loss 0.1171
+  [online_ewc_H12_seed1] task 38/50 (compound_25) step  1499  loss 0.0388
+[online_ewc_H12_seed1] After task 38: own=0.093  avg_to_date=0.075  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 39/50: compound_26 ===
+  [online_ewc_H12_seed1] task 39/50 (compound_26) step     0  loss 0.0695
+  [online_ewc_H12_seed1] task 39/50 (compound_26) step   749  loss 0.0395
+  [online_ewc_H12_seed1] task 39/50 (compound_26) step  1499  loss 0.0234
+[online_ewc_H12_seed1] After task 39: own=0.038  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 40/50: compound_27 ===
+  [online_ewc_H12_seed1] task 40/50 (compound_27) step     0  loss 0.0927
+  [online_ewc_H12_seed1] task 40/50 (compound_27) step   749  loss 0.0499
+  [online_ewc_H12_seed1] task 40/50 (compound_27) step  1499  loss 0.0943
+[online_ewc_H12_seed1] After task 40: own=0.079  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 41/50: compound_28 ===
+  [online_ewc_H12_seed1] task 41/50 (compound_28) step     0  loss 0.1292
+  [online_ewc_H12_seed1] task 41/50 (compound_28) step   749  loss 0.1206
+  [online_ewc_H12_seed1] task 41/50 (compound_28) step  1499  loss 0.0658
+[online_ewc_H12_seed1] After task 41: own=0.072  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 42/50: compound_29 ===
+  [online_ewc_H12_seed1] task 42/50 (compound_29) step     0  loss 0.1436
+  [online_ewc_H12_seed1] task 42/50 (compound_29) step   749  loss 0.0902
+  [online_ewc_H12_seed1] task 42/50 (compound_29) step  1499  loss 0.0720
+[online_ewc_H12_seed1] After task 42: own=0.091  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 43/50: compound_30 ===
+  [online_ewc_H12_seed1] task 43/50 (compound_30) step     0  loss 0.0996
+  [online_ewc_H12_seed1] task 43/50 (compound_30) step   749  loss 0.1552
+  [online_ewc_H12_seed1] task 43/50 (compound_30) step  1499  loss 0.1486
+[online_ewc_H12_seed1] After task 43: own=0.095  avg_to_date=0.075  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 44/50: compound_31 ===
+  [online_ewc_H12_seed1] task 44/50 (compound_31) step     0  loss 0.0144
+  [online_ewc_H12_seed1] task 44/50 (compound_31) step   749  loss 0.0256
+  [online_ewc_H12_seed1] task 44/50 (compound_31) step  1499  loss 0.0085
+[online_ewc_H12_seed1] After task 44: own=0.012  avg_to_date=0.073  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 45/50: compound_32 ===
+  [online_ewc_H12_seed1] task 45/50 (compound_32) step     0  loss 0.0442
+  [online_ewc_H12_seed1] task 45/50 (compound_32) step   749  loss 0.0197
+  [online_ewc_H12_seed1] task 45/50 (compound_32) step  1499  loss 0.0781
+[online_ewc_H12_seed1] After task 45: own=0.053  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 46/50: compound_33 ===
+  [online_ewc_H12_seed1] task 46/50 (compound_33) step     0  loss 0.1166
+  [online_ewc_H12_seed1] task 46/50 (compound_33) step   749  loss 0.0785
+  [online_ewc_H12_seed1] task 46/50 (compound_33) step  1499  loss 0.0505
+[online_ewc_H12_seed1] After task 46: own=0.112  avg_to_date=0.073  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 47/50: compound_34 ===
+  [online_ewc_H12_seed1] task 47/50 (compound_34) step     0  loss 0.0760
+  [online_ewc_H12_seed1] task 47/50 (compound_34) step   749  loss 0.0371
+  [online_ewc_H12_seed1] task 47/50 (compound_34) step  1499  loss 0.0653
+[online_ewc_H12_seed1] After task 47: own=0.050  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 48/50: compound_35 ===
+  [online_ewc_H12_seed1] task 48/50 (compound_35) step     0  loss 0.0203
+  [online_ewc_H12_seed1] task 48/50 (compound_35) step   749  loss 0.0366
+  [online_ewc_H12_seed1] task 48/50 (compound_35) step  1499  loss 0.0964
+[online_ewc_H12_seed1] After task 48: own=0.077  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 49/50: compound_36 ===
+  [online_ewc_H12_seed1] task 49/50 (compound_36) step     0  loss 0.1583
+  [online_ewc_H12_seed1] task 49/50 (compound_36) step   749  loss 0.1022
+  [online_ewc_H12_seed1] task 49/50 (compound_36) step  1499  loss 0.1018
+[online_ewc_H12_seed1] After task 49: own=0.096  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed1] === Task 50/50: compound_37 ===
+  [online_ewc_H12_seed1] task 50/50 (compound_37) step     0  loss 0.1280
+  [online_ewc_H12_seed1] task 50/50 (compound_37) step   749  loss 0.0960
+  [online_ewc_H12_seed1] task 50/50 (compound_37) step  1499  loss 0.0771
+[online_ewc_H12_seed1] After task 50: own=0.102  avg_to_date=0.073  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] Online-EWC curriculum start — arch [12, 12, 3]  params 351  γ=0.95
+
+[online_ewc_H12_seed2] === Task 1/50: single_00 ===
+  [online_ewc_H12_seed2] task 1/50 (single_00) step     0  loss 0.6797
+  [online_ewc_H12_seed2] task 1/50 (single_00) step   749  loss 0.0000
+  [online_ewc_H12_seed2] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 2/50: single_01 ===
+  [online_ewc_H12_seed2] task 2/50 (single_01) step     0  loss 0.0618
+  [online_ewc_H12_seed2] task 2/50 (single_01) step   749  loss 0.0951
+  [online_ewc_H12_seed2] task 2/50 (single_01) step  1499  loss 0.0425
+[online_ewc_H12_seed2] After task 2: own=0.075  avg_to_date=0.037  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 3/50: single_02 ===
+  [online_ewc_H12_seed2] task 3/50 (single_02) step     0  loss 0.0232
+  [online_ewc_H12_seed2] task 3/50 (single_02) step   749  loss 0.0104
+  [online_ewc_H12_seed2] task 3/50 (single_02) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 3: own=0.014  avg_to_date=0.030  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 4/50: single_03 ===
+  [online_ewc_H12_seed2] task 4/50 (single_03) step     0  loss 0.0442
+  [online_ewc_H12_seed2] task 4/50 (single_03) step   749  loss 0.1234
+  [online_ewc_H12_seed2] task 4/50 (single_03) step  1499  loss 0.1024
+[online_ewc_H12_seed2] After task 4: own=0.071  avg_to_date=0.040  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 5/50: single_04 ===
+  [online_ewc_H12_seed2] task 5/50 (single_04) step     0  loss 0.0322
+  [online_ewc_H12_seed2] task 5/50 (single_04) step   749  loss 0.0848
+  [online_ewc_H12_seed2] task 5/50 (single_04) step  1499  loss 0.0668
+[online_ewc_H12_seed2] After task 5: own=0.048  avg_to_date=0.042  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 6/50: single_05 ===
+  [online_ewc_H12_seed2] task 6/50 (single_05) step     0  loss 0.1977
+  [online_ewc_H12_seed2] task 6/50 (single_05) step   749  loss 0.0406
+  [online_ewc_H12_seed2] task 6/50 (single_05) step  1499  loss 0.0507
+[online_ewc_H12_seed2] After task 6: own=0.066  avg_to_date=0.046  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 7/50: single_06 ===
+  [online_ewc_H12_seed2] task 7/50 (single_06) step     0  loss 0.0815
+  [online_ewc_H12_seed2] task 7/50 (single_06) step   749  loss 0.0753
+  [online_ewc_H12_seed2] task 7/50 (single_06) step  1499  loss 0.0500
+[online_ewc_H12_seed2] After task 7: own=0.052  avg_to_date=0.047  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 8/50: single_07 ===
+  [online_ewc_H12_seed2] task 8/50 (single_07) step     0  loss 0.0312
+  [online_ewc_H12_seed2] task 8/50 (single_07) step   749  loss 0.0674
+  [online_ewc_H12_seed2] task 8/50 (single_07) step  1499  loss 0.0455
+[online_ewc_H12_seed2] After task 8: own=0.045  avg_to_date=0.046  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 9/50: single_08 ===
+  [online_ewc_H12_seed2] task 9/50 (single_08) step     0  loss 0.0633
+  [online_ewc_H12_seed2] task 9/50 (single_08) step   749  loss 0.0454
+  [online_ewc_H12_seed2] task 9/50 (single_08) step  1499  loss 0.0712
+[online_ewc_H12_seed2] After task 9: own=0.065  avg_to_date=0.048  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 10/50: single_09 ===
+  [online_ewc_H12_seed2] task 10/50 (single_09) step     0  loss 0.0345
+  [online_ewc_H12_seed2] task 10/50 (single_09) step   749  loss 0.0598
+  [online_ewc_H12_seed2] task 10/50 (single_09) step  1499  loss 0.0471
+[online_ewc_H12_seed2] After task 10: own=0.058  avg_to_date=0.049  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 11/50: single_10 ===
+  [online_ewc_H12_seed2] task 11/50 (single_10) step     0  loss 0.1072
+  [online_ewc_H12_seed2] task 11/50 (single_10) step   749  loss 0.0985
+  [online_ewc_H12_seed2] task 11/50 (single_10) step  1499  loss 0.0438
+[online_ewc_H12_seed2] After task 11: own=0.081  avg_to_date=0.052  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 12/50: single_11 ===
+  [online_ewc_H12_seed2] task 12/50 (single_11) step     0  loss 0.0767
+  [online_ewc_H12_seed2] task 12/50 (single_11) step   749  loss 0.0796
+  [online_ewc_H12_seed2] task 12/50 (single_11) step  1499  loss 0.0443
+[online_ewc_H12_seed2] After task 12: own=0.067  avg_to_date=0.053  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 13/50: compound_00 ===
+  [online_ewc_H12_seed2] task 13/50 (compound_00) step     0  loss 0.0555
+  [online_ewc_H12_seed2] task 13/50 (compound_00) step   749  loss 0.0092
+  [online_ewc_H12_seed2] task 13/50 (compound_00) step  1499  loss 0.0239
+[online_ewc_H12_seed2] After task 13: own=0.032  avg_to_date=0.052  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 14/50: compound_01 ===
+  [online_ewc_H12_seed2] task 14/50 (compound_01) step     0  loss 0.0663
+  [online_ewc_H12_seed2] task 14/50 (compound_01) step   749  loss 0.1009
+  [online_ewc_H12_seed2] task 14/50 (compound_01) step  1499  loss 0.0411
+[online_ewc_H12_seed2] After task 14: own=0.085  avg_to_date=0.054  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 15/50: compound_02 ===
+  [online_ewc_H12_seed2] task 15/50 (compound_02) step     0  loss 0.0566
+  [online_ewc_H12_seed2] task 15/50 (compound_02) step   749  loss 0.0629
+  [online_ewc_H12_seed2] task 15/50 (compound_02) step  1499  loss 0.0972
+[online_ewc_H12_seed2] After task 15: own=0.068  avg_to_date=0.055  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 16/50: compound_03 ===
+  [online_ewc_H12_seed2] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H12_seed2] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H12_seed2] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 16: own=0.000  avg_to_date=0.052  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 17/50: compound_04 ===
+  [online_ewc_H12_seed2] task 17/50 (compound_04) step     0  loss 0.0625
+  [online_ewc_H12_seed2] task 17/50 (compound_04) step   749  loss 0.0462
+  [online_ewc_H12_seed2] task 17/50 (compound_04) step  1499  loss 0.0689
+[online_ewc_H12_seed2] After task 17: own=0.038  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 18/50: compound_05 ===
+  [online_ewc_H12_seed2] task 18/50 (compound_05) step     0  loss 0.0018
+  [online_ewc_H12_seed2] task 18/50 (compound_05) step   749  loss 0.0204
+  [online_ewc_H12_seed2] task 18/50 (compound_05) step  1499  loss 0.0216
+[online_ewc_H12_seed2] After task 18: own=0.006  avg_to_date=0.048  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 19/50: compound_06 ===
+  [online_ewc_H12_seed2] task 19/50 (compound_06) step     0  loss 0.0160
+  [online_ewc_H12_seed2] task 19/50 (compound_06) step   749  loss 0.0056
+  [online_ewc_H12_seed2] task 19/50 (compound_06) step  1499  loss 0.0148
+[online_ewc_H12_seed2] After task 19: own=0.027  avg_to_date=0.047  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 20/50: compound_07 ===
+  [online_ewc_H12_seed2] task 20/50 (compound_07) step     0  loss 0.0038
+  [online_ewc_H12_seed2] task 20/50 (compound_07) step   749  loss 0.0121
+  [online_ewc_H12_seed2] task 20/50 (compound_07) step  1499  loss 0.0038
+[online_ewc_H12_seed2] After task 20: own=0.009  avg_to_date=0.045  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 21/50: compound_08 ===
+  [online_ewc_H12_seed2] task 21/50 (compound_08) step     0  loss 0.0318
+  [online_ewc_H12_seed2] task 21/50 (compound_08) step   749  loss 0.0108
+  [online_ewc_H12_seed2] task 21/50 (compound_08) step  1499  loss 0.0157
+[online_ewc_H12_seed2] After task 21: own=0.031  avg_to_date=0.044  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 22/50: compound_09 ===
+  [online_ewc_H12_seed2] task 22/50 (compound_09) step     0  loss 0.0569
+  [online_ewc_H12_seed2] task 22/50 (compound_09) step   749  loss 0.0967
+  [online_ewc_H12_seed2] task 22/50 (compound_09) step  1499  loss 0.0582
+[online_ewc_H12_seed2] After task 22: own=0.055  avg_to_date=0.045  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 23/50: compound_10 ===
+  [online_ewc_H12_seed2] task 23/50 (compound_10) step     0  loss 0.0882
+  [online_ewc_H12_seed2] task 23/50 (compound_10) step   749  loss 0.0610
+  [online_ewc_H12_seed2] task 23/50 (compound_10) step  1499  loss 0.0669
+[online_ewc_H12_seed2] After task 23: own=0.049  avg_to_date=0.045  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 24/50: compound_11 ===
+  [online_ewc_H12_seed2] task 24/50 (compound_11) step     0  loss 0.0331
+  [online_ewc_H12_seed2] task 24/50 (compound_11) step   749  loss 0.0034
+  [online_ewc_H12_seed2] task 24/50 (compound_11) step  1499  loss 0.0275
+[online_ewc_H12_seed2] After task 24: own=0.026  avg_to_date=0.044  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 25/50: compound_12 ===
+  [online_ewc_H12_seed2] task 25/50 (compound_12) step     0  loss 0.0372
+  [online_ewc_H12_seed2] task 25/50 (compound_12) step   749  loss 0.0636
+  [online_ewc_H12_seed2] task 25/50 (compound_12) step  1499  loss 0.1122
+[online_ewc_H12_seed2] After task 25: own=0.055  avg_to_date=0.044  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 26/50: compound_13 ===
+  [online_ewc_H12_seed2] task 26/50 (compound_13) step     0  loss 0.0133
+  [online_ewc_H12_seed2] task 26/50 (compound_13) step   749  loss 0.0052
+  [online_ewc_H12_seed2] task 26/50 (compound_13) step  1499  loss 0.0525
+[online_ewc_H12_seed2] After task 26: own=0.014  avg_to_date=0.043  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 27/50: compound_14 ===
+  [online_ewc_H12_seed2] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H12_seed2] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H12_seed2] task 27/50 (compound_14) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 27: own=0.000  avg_to_date=0.042  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 28/50: compound_15 ===
+  [online_ewc_H12_seed2] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H12_seed2] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H12_seed2] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 28: own=0.000  avg_to_date=0.040  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 29/50: compound_16 ===
+  [online_ewc_H12_seed2] task 29/50 (compound_16) step     0  loss 0.0000
+  [online_ewc_H12_seed2] task 29/50 (compound_16) step   749  loss 0.0259
+  [online_ewc_H12_seed2] task 29/50 (compound_16) step  1499  loss 0.0165
+[online_ewc_H12_seed2] After task 29: own=0.010  avg_to_date=0.039  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 30/50: compound_17 ===
+  [online_ewc_H12_seed2] task 30/50 (compound_17) step     0  loss 0.0046
+  [online_ewc_H12_seed2] task 30/50 (compound_17) step   749  loss 0.0025
+  [online_ewc_H12_seed2] task 30/50 (compound_17) step  1499  loss 0.0013
+[online_ewc_H12_seed2] After task 30: own=0.012  avg_to_date=0.038  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 31/50: compound_18 ===
+  [online_ewc_H12_seed2] task 31/50 (compound_18) step     0  loss 0.0441
+  [online_ewc_H12_seed2] task 31/50 (compound_18) step   749  loss 0.0663
+  [online_ewc_H12_seed2] task 31/50 (compound_18) step  1499  loss 0.0370
+[online_ewc_H12_seed2] After task 31: own=0.058  avg_to_date=0.039  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 32/50: compound_19 ===
+  [online_ewc_H12_seed2] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H12_seed2] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H12_seed2] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 32: own=0.000  avg_to_date=0.037  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 33/50: compound_20 ===
+  [online_ewc_H12_seed2] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H12_seed2] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H12_seed2] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 33: own=0.000  avg_to_date=0.036  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 34/50: compound_21 ===
+  [online_ewc_H12_seed2] task 34/50 (compound_21) step     0  loss 0.0146
+  [online_ewc_H12_seed2] task 34/50 (compound_21) step   749  loss 0.0129
+  [online_ewc_H12_seed2] task 34/50 (compound_21) step  1499  loss 0.0412
+[online_ewc_H12_seed2] After task 34: own=0.041  avg_to_date=0.036  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 35/50: compound_22 ===
+  [online_ewc_H12_seed2] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H12_seed2] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H12_seed2] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 35: own=0.000  avg_to_date=0.035  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 36/50: compound_23 ===
+  [online_ewc_H12_seed2] task 36/50 (compound_23) step     0  loss 0.0838
+  [online_ewc_H12_seed2] task 36/50 (compound_23) step   749  loss 0.1039
+  [online_ewc_H12_seed2] task 36/50 (compound_23) step  1499  loss 0.0732
+[online_ewc_H12_seed2] After task 36: own=0.082  avg_to_date=0.037  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 37/50: compound_24 ===
+  [online_ewc_H12_seed2] task 37/50 (compound_24) step     0  loss 0.0598
+  [online_ewc_H12_seed2] task 37/50 (compound_24) step   749  loss 0.0563
+  [online_ewc_H12_seed2] task 37/50 (compound_24) step  1499  loss 0.0546
+[online_ewc_H12_seed2] After task 37: own=0.062  avg_to_date=0.037  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 38/50: compound_25 ===
+  [online_ewc_H12_seed2] task 38/50 (compound_25) step     0  loss 0.0356
+  [online_ewc_H12_seed2] task 38/50 (compound_25) step   749  loss 0.0182
+  [online_ewc_H12_seed2] task 38/50 (compound_25) step  1499  loss 0.0682
+[online_ewc_H12_seed2] After task 38: own=0.047  avg_to_date=0.038  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 39/50: compound_26 ===
+  [online_ewc_H12_seed2] task 39/50 (compound_26) step     0  loss 0.1403
+  [online_ewc_H12_seed2] task 39/50 (compound_26) step   749  loss 0.0978
+  [online_ewc_H12_seed2] task 39/50 (compound_26) step  1499  loss 0.0331
+[online_ewc_H12_seed2] After task 39: own=0.067  avg_to_date=0.038  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 40/50: compound_27 ===
+  [online_ewc_H12_seed2] task 40/50 (compound_27) step     0  loss 0.0389
+  [online_ewc_H12_seed2] task 40/50 (compound_27) step   749  loss 0.0751
+  [online_ewc_H12_seed2] task 40/50 (compound_27) step  1499  loss 0.0596
+[online_ewc_H12_seed2] After task 40: own=0.033  avg_to_date=0.038  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 41/50: compound_28 ===
+  [online_ewc_H12_seed2] task 41/50 (compound_28) step     0  loss 0.0573
+  [online_ewc_H12_seed2] task 41/50 (compound_28) step   749  loss 0.0399
+  [online_ewc_H12_seed2] task 41/50 (compound_28) step  1499  loss 0.0334
+[online_ewc_H12_seed2] After task 41: own=0.032  avg_to_date=0.038  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 42/50: compound_29 ===
+  [online_ewc_H12_seed2] task 42/50 (compound_29) step     0  loss 0.0361
+  [online_ewc_H12_seed2] task 42/50 (compound_29) step   749  loss 0.0040
+  [online_ewc_H12_seed2] task 42/50 (compound_29) step  1499  loss 0.0237
+[online_ewc_H12_seed2] After task 42: own=0.031  avg_to_date=0.038  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 43/50: compound_30 ===
+  [online_ewc_H12_seed2] task 43/50 (compound_30) step     0  loss 0.0112
+  [online_ewc_H12_seed2] task 43/50 (compound_30) step   749  loss 0.0098
+  [online_ewc_H12_seed2] task 43/50 (compound_30) step  1499  loss 0.0080
+[online_ewc_H12_seed2] After task 43: own=0.007  avg_to_date=0.037  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 44/50: compound_31 ===
+  [online_ewc_H12_seed2] task 44/50 (compound_31) step     0  loss 0.0506
+  [online_ewc_H12_seed2] task 44/50 (compound_31) step   749  loss 0.0961
+  [online_ewc_H12_seed2] task 44/50 (compound_31) step  1499  loss 0.0773
+[online_ewc_H12_seed2] After task 44: own=0.067  avg_to_date=0.038  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 45/50: compound_32 ===
+  [online_ewc_H12_seed2] task 45/50 (compound_32) step     0  loss 0.0144
+  [online_ewc_H12_seed2] task 45/50 (compound_32) step   749  loss 0.0429
+  [online_ewc_H12_seed2] task 45/50 (compound_32) step  1499  loss 0.0634
+[online_ewc_H12_seed2] After task 45: own=0.058  avg_to_date=0.038  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 46/50: compound_33 ===
+  [online_ewc_H12_seed2] task 46/50 (compound_33) step     0  loss 0.0934
+  [online_ewc_H12_seed2] task 46/50 (compound_33) step   749  loss 0.0952
+  [online_ewc_H12_seed2] task 46/50 (compound_33) step  1499  loss 0.1002
+[online_ewc_H12_seed2] After task 46: own=0.053  avg_to_date=0.039  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 47/50: compound_34 ===
+  [online_ewc_H12_seed2] task 47/50 (compound_34) step     0  loss 0.0525
+  [online_ewc_H12_seed2] task 47/50 (compound_34) step   749  loss 0.0458
+  [online_ewc_H12_seed2] task 47/50 (compound_34) step  1499  loss 0.0553
+[online_ewc_H12_seed2] After task 47: own=0.068  avg_to_date=0.039  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 48/50: compound_35 ===
+  [online_ewc_H12_seed2] task 48/50 (compound_35) step     0  loss 0.0864
+  [online_ewc_H12_seed2] task 48/50 (compound_35) step   749  loss 0.0228
+  [online_ewc_H12_seed2] task 48/50 (compound_35) step  1499  loss 0.0516
+[online_ewc_H12_seed2] After task 48: own=0.053  avg_to_date=0.039  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 49/50: compound_36 ===
+  [online_ewc_H12_seed2] task 49/50 (compound_36) step     0  loss 0.0784
+  [online_ewc_H12_seed2] task 49/50 (compound_36) step   749  loss 0.0313
+  [online_ewc_H12_seed2] task 49/50 (compound_36) step  1499  loss 0.0318
+[online_ewc_H12_seed2] After task 49: own=0.059  avg_to_date=0.040  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H12_seed2] === Task 50/50: compound_37 ===
+  [online_ewc_H12_seed2] task 50/50 (compound_37) step     0  loss 0.0239
+  [online_ewc_H12_seed2] task 50/50 (compound_37) step   749  loss 0.0302
+  [online_ewc_H12_seed2] task 50/50 (compound_37) step  1499  loss 0.0000
+[online_ewc_H12_seed2] After task 50: own=0.017  avg_to_date=0.039  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] Online-EWC curriculum start — arch [16, 16, 3]  params 531  γ=0.95
+
+[online_ewc_H16_seed0] === Task 1/50: single_00 ===
+  [online_ewc_H16_seed0] task 1/50 (single_00) step     0  loss 0.3909
+  [online_ewc_H16_seed0] task 1/50 (single_00) step   749  loss 0.0000
+  [online_ewc_H16_seed0] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H16_seed0] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 2/50: single_01 ===
+  [online_ewc_H16_seed0] task 2/50 (single_01) step     0  loss 0.0782
+  [online_ewc_H16_seed0] task 2/50 (single_01) step   749  loss 0.0368
+  [online_ewc_H16_seed0] task 2/50 (single_01) step  1499  loss 0.0495
+[online_ewc_H16_seed0] After task 2: own=0.089  avg_to_date=0.044  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 3/50: single_02 ===
+  [online_ewc_H16_seed0] task 3/50 (single_02) step     0  loss 0.0540
+  [online_ewc_H16_seed0] task 3/50 (single_02) step   749  loss 0.0905
+  [online_ewc_H16_seed0] task 3/50 (single_02) step  1499  loss 0.0440
+[online_ewc_H16_seed0] After task 3: own=0.063  avg_to_date=0.051  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 4/50: single_03 ===
+  [online_ewc_H16_seed0] task 4/50 (single_03) step     0  loss 0.0754
+  [online_ewc_H16_seed0] task 4/50 (single_03) step   749  loss 0.0365
+  [online_ewc_H16_seed0] task 4/50 (single_03) step  1499  loss 0.0632
+[online_ewc_H16_seed0] After task 4: own=0.094  avg_to_date=0.062  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 5/50: single_04 ===
+  [online_ewc_H16_seed0] task 5/50 (single_04) step     0  loss 0.1040
+  [online_ewc_H16_seed0] task 5/50 (single_04) step   749  loss 0.1240
+  [online_ewc_H16_seed0] task 5/50 (single_04) step  1499  loss 0.0646
+[online_ewc_H16_seed0] After task 5: own=0.096  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 6/50: single_05 ===
+  [online_ewc_H16_seed0] task 6/50 (single_05) step     0  loss 0.1075
+  [online_ewc_H16_seed0] task 6/50 (single_05) step   749  loss 0.0403
+  [online_ewc_H16_seed0] task 6/50 (single_05) step  1499  loss 0.0880
+[online_ewc_H16_seed0] After task 6: own=0.054  avg_to_date=0.066  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 7/50: single_06 ===
+  [online_ewc_H16_seed0] task 7/50 (single_06) step     0  loss 0.0088
+  [online_ewc_H16_seed0] task 7/50 (single_06) step   749  loss 0.1624
+  [online_ewc_H16_seed0] task 7/50 (single_06) step  1499  loss 0.0478
+[online_ewc_H16_seed0] After task 7: own=0.088  avg_to_date=0.069  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 8/50: single_07 ===
+  [online_ewc_H16_seed0] task 8/50 (single_07) step     0  loss 0.0581
+  [online_ewc_H16_seed0] task 8/50 (single_07) step   749  loss 0.0688
+  [online_ewc_H16_seed0] task 8/50 (single_07) step  1499  loss 0.0612
+[online_ewc_H16_seed0] After task 8: own=0.075  avg_to_date=0.069  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 9/50: single_08 ===
+  [online_ewc_H16_seed0] task 9/50 (single_08) step     0  loss 0.0391
+  [online_ewc_H16_seed0] task 9/50 (single_08) step   749  loss 0.0484
+  [online_ewc_H16_seed0] task 9/50 (single_08) step  1499  loss 0.0908
+[online_ewc_H16_seed0] After task 9: own=0.072  avg_to_date=0.070  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 10/50: single_09 ===
+  [online_ewc_H16_seed0] task 10/50 (single_09) step     0  loss 0.1054
+  [online_ewc_H16_seed0] task 10/50 (single_09) step   749  loss 0.0664
+  [online_ewc_H16_seed0] task 10/50 (single_09) step  1499  loss 0.0541
+[online_ewc_H16_seed0] After task 10: own=0.090  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 11/50: single_10 ===
+  [online_ewc_H16_seed0] task 11/50 (single_10) step     0  loss 0.1054
+  [online_ewc_H16_seed0] task 11/50 (single_10) step   749  loss 0.0729
+  [online_ewc_H16_seed0] task 11/50 (single_10) step  1499  loss 0.1142
+[online_ewc_H16_seed0] After task 11: own=0.088  avg_to_date=0.073  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 12/50: single_11 ===
+  [online_ewc_H16_seed0] task 12/50 (single_11) step     0  loss 0.0861
+  [online_ewc_H16_seed0] task 12/50 (single_11) step   749  loss 0.0458
+  [online_ewc_H16_seed0] task 12/50 (single_11) step  1499  loss 0.0455
+[online_ewc_H16_seed0] After task 12: own=0.071  avg_to_date=0.073  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 13/50: compound_00 ===
+  [online_ewc_H16_seed0] task 13/50 (compound_00) step     0  loss 0.0717
+  [online_ewc_H16_seed0] task 13/50 (compound_00) step   749  loss 0.0215
+  [online_ewc_H16_seed0] task 13/50 (compound_00) step  1499  loss 0.0425
+[online_ewc_H16_seed0] After task 13: own=0.039  avg_to_date=0.070  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 14/50: compound_01 ===
+  [online_ewc_H16_seed0] task 14/50 (compound_01) step     0  loss 0.1039
+  [online_ewc_H16_seed0] task 14/50 (compound_01) step   749  loss 0.0659
+  [online_ewc_H16_seed0] task 14/50 (compound_01) step  1499  loss 0.0676
+[online_ewc_H16_seed0] After task 14: own=0.087  avg_to_date=0.072  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 15/50: compound_02 ===
+  [online_ewc_H16_seed0] task 15/50 (compound_02) step     0  loss 0.1352
+  [online_ewc_H16_seed0] task 15/50 (compound_02) step   749  loss 0.1006
+  [online_ewc_H16_seed0] task 15/50 (compound_02) step  1499  loss 0.1081
+[online_ewc_H16_seed0] After task 15: own=0.109  avg_to_date=0.074  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 16/50: compound_03 ===
+  [online_ewc_H16_seed0] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H16_seed0] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H16_seed0] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H16_seed0] After task 16: own=0.000  avg_to_date=0.069  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 17/50: compound_04 ===
+  [online_ewc_H16_seed0] task 17/50 (compound_04) step     0  loss 0.0586
+  [online_ewc_H16_seed0] task 17/50 (compound_04) step   749  loss 0.0395
+  [online_ewc_H16_seed0] task 17/50 (compound_04) step  1499  loss 0.1271
+[online_ewc_H16_seed0] After task 17: own=0.071  avg_to_date=0.069  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 18/50: compound_05 ===
+  [online_ewc_H16_seed0] task 18/50 (compound_05) step     0  loss 0.0714
+  [online_ewc_H16_seed0] task 18/50 (compound_05) step   749  loss 0.0174
+  [online_ewc_H16_seed0] task 18/50 (compound_05) step  1499  loss 0.0401
+[online_ewc_H16_seed0] After task 18: own=0.044  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 19/50: compound_06 ===
+  [online_ewc_H16_seed0] task 19/50 (compound_06) step     0  loss 0.0994
+  [online_ewc_H16_seed0] task 19/50 (compound_06) step   749  loss 0.0697
+  [online_ewc_H16_seed0] task 19/50 (compound_06) step  1499  loss 0.0265
+[online_ewc_H16_seed0] After task 19: own=0.069  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 20/50: compound_07 ===
+  [online_ewc_H16_seed0] task 20/50 (compound_07) step     0  loss 0.0694
+  [online_ewc_H16_seed0] task 20/50 (compound_07) step   749  loss 0.1026
+  [online_ewc_H16_seed0] task 20/50 (compound_07) step  1499  loss 0.0760
+[online_ewc_H16_seed0] After task 20: own=0.074  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 21/50: compound_08 ===
+  [online_ewc_H16_seed0] task 21/50 (compound_08) step     0  loss 0.1274
+  [online_ewc_H16_seed0] task 21/50 (compound_08) step   749  loss 0.0873
+  [online_ewc_H16_seed0] task 21/50 (compound_08) step  1499  loss 0.0697
+[online_ewc_H16_seed0] After task 21: own=0.078  avg_to_date=0.069  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 22/50: compound_09 ===
+  [online_ewc_H16_seed0] task 22/50 (compound_09) step     0  loss 0.1079
+  [online_ewc_H16_seed0] task 22/50 (compound_09) step   749  loss 0.0598
+  [online_ewc_H16_seed0] task 22/50 (compound_09) step  1499  loss 0.1379
+[online_ewc_H16_seed0] After task 22: own=0.091  avg_to_date=0.070  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 23/50: compound_10 ===
+  [online_ewc_H16_seed0] task 23/50 (compound_10) step     0  loss 0.0889
+  [online_ewc_H16_seed0] task 23/50 (compound_10) step   749  loss 0.0368
+  [online_ewc_H16_seed0] task 23/50 (compound_10) step  1499  loss 0.0632
+[online_ewc_H16_seed0] After task 23: own=0.043  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 24/50: compound_11 ===
+  [online_ewc_H16_seed0] task 24/50 (compound_11) step     0  loss 0.1057
+  [online_ewc_H16_seed0] task 24/50 (compound_11) step   749  loss 0.0735
+  [online_ewc_H16_seed0] task 24/50 (compound_11) step  1499  loss 0.0845
+[online_ewc_H16_seed0] After task 24: own=0.082  avg_to_date=0.069  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 25/50: compound_12 ===
+  [online_ewc_H16_seed0] task 25/50 (compound_12) step     0  loss 0.0675
+  [online_ewc_H16_seed0] task 25/50 (compound_12) step   749  loss 0.1891
+  [online_ewc_H16_seed0] task 25/50 (compound_12) step  1499  loss 0.1167
+[online_ewc_H16_seed0] After task 25: own=0.099  avg_to_date=0.070  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 26/50: compound_13 ===
+  [online_ewc_H16_seed0] task 26/50 (compound_13) step     0  loss 0.1015
+  [online_ewc_H16_seed0] task 26/50 (compound_13) step   749  loss 0.1590
+  [online_ewc_H16_seed0] task 26/50 (compound_13) step  1499  loss 0.0252
+[online_ewc_H16_seed0] After task 26: own=0.096  avg_to_date=0.071  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 27/50: compound_14 ===
+  [online_ewc_H16_seed0] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H16_seed0] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H16_seed0] task 27/50 (compound_14) step  1499  loss 0.0000
+[online_ewc_H16_seed0] After task 27: own=0.000  avg_to_date=0.068  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 28/50: compound_15 ===
+  [online_ewc_H16_seed0] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H16_seed0] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H16_seed0] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H16_seed0] After task 28: own=0.000  avg_to_date=0.066  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 29/50: compound_16 ===
+  [online_ewc_H16_seed0] task 29/50 (compound_16) step     0  loss 0.0019
+  [online_ewc_H16_seed0] task 29/50 (compound_16) step   749  loss 0.0178
+  [online_ewc_H16_seed0] task 29/50 (compound_16) step  1499  loss 0.0001
+[online_ewc_H16_seed0] After task 29: own=0.013  avg_to_date=0.064  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 30/50: compound_17 ===
+  [online_ewc_H16_seed0] task 30/50 (compound_17) step     0  loss 0.0121
+  [online_ewc_H16_seed0] task 30/50 (compound_17) step   749  loss 0.0303
+  [online_ewc_H16_seed0] task 30/50 (compound_17) step  1499  loss 0.0141
+[online_ewc_H16_seed0] After task 30: own=0.012  avg_to_date=0.062  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 31/50: compound_18 ===
+  [online_ewc_H16_seed0] task 31/50 (compound_18) step     0  loss 0.1311
+  [online_ewc_H16_seed0] task 31/50 (compound_18) step   749  loss 0.1575
+  [online_ewc_H16_seed0] task 31/50 (compound_18) step  1499  loss 0.1122
+[online_ewc_H16_seed0] After task 31: own=0.094  avg_to_date=0.063  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 32/50: compound_19 ===
+  [online_ewc_H16_seed0] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H16_seed0] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H16_seed0] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H16_seed0] After task 32: own=0.000  avg_to_date=0.061  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 33/50: compound_20 ===
+  [online_ewc_H16_seed0] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H16_seed0] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H16_seed0] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H16_seed0] After task 33: own=0.000  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 34/50: compound_21 ===
+  [online_ewc_H16_seed0] task 34/50 (compound_21) step     0  loss 0.0820
+  [online_ewc_H16_seed0] task 34/50 (compound_21) step   749  loss 0.0578
+  [online_ewc_H16_seed0] task 34/50 (compound_21) step  1499  loss 0.1261
+[online_ewc_H16_seed0] After task 34: own=0.090  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 35/50: compound_22 ===
+  [online_ewc_H16_seed0] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H16_seed0] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H16_seed0] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H16_seed0] After task 35: own=0.000  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 36/50: compound_23 ===
+  [online_ewc_H16_seed0] task 36/50 (compound_23) step     0  loss 0.0000
+  [online_ewc_H16_seed0] task 36/50 (compound_23) step   749  loss 0.0000
+  [online_ewc_H16_seed0] task 36/50 (compound_23) step  1499  loss 0.0001
+[online_ewc_H16_seed0] After task 36: own=0.012  avg_to_date=0.057  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 37/50: compound_24 ===
+  [online_ewc_H16_seed0] task 37/50 (compound_24) step     0  loss 0.0584
+  [online_ewc_H16_seed0] task 37/50 (compound_24) step   749  loss 0.0833
+  [online_ewc_H16_seed0] task 37/50 (compound_24) step  1499  loss 0.1192
+[online_ewc_H16_seed0] After task 37: own=0.099  avg_to_date=0.058  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 38/50: compound_25 ===
+  [online_ewc_H16_seed0] task 38/50 (compound_25) step     0  loss 0.0880
+  [online_ewc_H16_seed0] task 38/50 (compound_25) step   749  loss 0.1188
+  [online_ewc_H16_seed0] task 38/50 (compound_25) step  1499  loss 0.0923
+[online_ewc_H16_seed0] After task 38: own=0.104  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 39/50: compound_26 ===
+  [online_ewc_H16_seed0] task 39/50 (compound_26) step     0  loss 0.0931
+  [online_ewc_H16_seed0] task 39/50 (compound_26) step   749  loss 0.0409
+  [online_ewc_H16_seed0] task 39/50 (compound_26) step  1499  loss 0.0547
+[online_ewc_H16_seed0] After task 39: own=0.065  avg_to_date=0.060  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 40/50: compound_27 ===
+  [online_ewc_H16_seed0] task 40/50 (compound_27) step     0  loss 0.0016
+  [online_ewc_H16_seed0] task 40/50 (compound_27) step   749  loss 0.0042
+  [online_ewc_H16_seed0] task 40/50 (compound_27) step  1499  loss 0.0105
+[online_ewc_H16_seed0] After task 40: own=0.022  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 41/50: compound_28 ===
+  [online_ewc_H16_seed0] task 41/50 (compound_28) step     0  loss 0.0388
+  [online_ewc_H16_seed0] task 41/50 (compound_28) step   749  loss 0.0383
+  [online_ewc_H16_seed0] task 41/50 (compound_28) step  1499  loss 0.1307
+[online_ewc_H16_seed0] After task 41: own=0.078  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 42/50: compound_29 ===
+  [online_ewc_H16_seed0] task 42/50 (compound_29) step     0  loss 0.0225
+  [online_ewc_H16_seed0] task 42/50 (compound_29) step   749  loss 0.0064
+  [online_ewc_H16_seed0] task 42/50 (compound_29) step  1499  loss 0.0035
+[online_ewc_H16_seed0] After task 42: own=0.028  avg_to_date=0.058  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 43/50: compound_30 ===
+  [online_ewc_H16_seed0] task 43/50 (compound_30) step     0  loss 0.0422
+  [online_ewc_H16_seed0] task 43/50 (compound_30) step   749  loss 0.0616
+  [online_ewc_H16_seed0] task 43/50 (compound_30) step  1499  loss 0.0205
+[online_ewc_H16_seed0] After task 43: own=0.055  avg_to_date=0.058  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 44/50: compound_31 ===
+  [online_ewc_H16_seed0] task 44/50 (compound_31) step     0  loss 0.0091
+  [online_ewc_H16_seed0] task 44/50 (compound_31) step   749  loss 0.0325
+  [online_ewc_H16_seed0] task 44/50 (compound_31) step  1499  loss 0.0122
+[online_ewc_H16_seed0] After task 44: own=0.041  avg_to_date=0.058  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 45/50: compound_32 ===
+  [online_ewc_H16_seed0] task 45/50 (compound_32) step     0  loss 0.0316
+  [online_ewc_H16_seed0] task 45/50 (compound_32) step   749  loss 0.0572
+  [online_ewc_H16_seed0] task 45/50 (compound_32) step  1499  loss 0.0757
+[online_ewc_H16_seed0] After task 45: own=0.073  avg_to_date=0.058  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 46/50: compound_33 ===
+  [online_ewc_H16_seed0] task 46/50 (compound_33) step     0  loss 0.0921
+  [online_ewc_H16_seed0] task 46/50 (compound_33) step   749  loss 0.0789
+  [online_ewc_H16_seed0] task 46/50 (compound_33) step  1499  loss 0.0445
+[online_ewc_H16_seed0] After task 46: own=0.071  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 47/50: compound_34 ===
+  [online_ewc_H16_seed0] task 47/50 (compound_34) step     0  loss 0.0204
+  [online_ewc_H16_seed0] task 47/50 (compound_34) step   749  loss 0.0623
+  [online_ewc_H16_seed0] task 47/50 (compound_34) step  1499  loss 0.0563
+[online_ewc_H16_seed0] After task 47: own=0.040  avg_to_date=0.058  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 48/50: compound_35 ===
+  [online_ewc_H16_seed0] task 48/50 (compound_35) step     0  loss 0.0613
+  [online_ewc_H16_seed0] task 48/50 (compound_35) step   749  loss 0.0815
+  [online_ewc_H16_seed0] task 48/50 (compound_35) step  1499  loss 0.0799
+[online_ewc_H16_seed0] After task 48: own=0.065  avg_to_date=0.058  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 49/50: compound_36 ===
+  [online_ewc_H16_seed0] task 49/50 (compound_36) step     0  loss 0.1579
+  [online_ewc_H16_seed0] task 49/50 (compound_36) step   749  loss 0.1473
+  [online_ewc_H16_seed0] task 49/50 (compound_36) step  1499  loss 0.1399
+[online_ewc_H16_seed0] After task 49: own=0.100  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed0] === Task 50/50: compound_37 ===
+  [online_ewc_H16_seed0] task 50/50 (compound_37) step     0  loss 0.0650
+  [online_ewc_H16_seed0] task 50/50 (compound_37) step   749  loss 0.0642
+  [online_ewc_H16_seed0] task 50/50 (compound_37) step  1499  loss 0.0738
+[online_ewc_H16_seed0] After task 50: own=0.066  avg_to_date=0.059  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] Online-EWC curriculum start — arch [16, 16, 3]  params 531  γ=0.95
+
+[online_ewc_H16_seed1] === Task 1/50: single_00 ===
+  [online_ewc_H16_seed1] task 1/50 (single_00) step     0  loss 0.3696
+  [online_ewc_H16_seed1] task 1/50 (single_00) step   749  loss 0.0000
+  [online_ewc_H16_seed1] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H16_seed1] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 2/50: single_01 ===
+  [online_ewc_H16_seed1] task 2/50 (single_01) step     0  loss 0.1629
+  [online_ewc_H16_seed1] task 2/50 (single_01) step   749  loss 0.2247
+  [online_ewc_H16_seed1] task 2/50 (single_01) step  1499  loss 0.0683
+[online_ewc_H16_seed1] After task 2: own=0.160  avg_to_date=0.080  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 3/50: single_02 ===
+  [online_ewc_H16_seed1] task 3/50 (single_02) step     0  loss 0.1030
+  [online_ewc_H16_seed1] task 3/50 (single_02) step   749  loss 0.0959
+  [online_ewc_H16_seed1] task 3/50 (single_02) step  1499  loss 0.0971
+[online_ewc_H16_seed1] After task 3: own=0.121  avg_to_date=0.094  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 4/50: single_03 ===
+  [online_ewc_H16_seed1] task 4/50 (single_03) step     0  loss 0.1774
+  [online_ewc_H16_seed1] task 4/50 (single_03) step   749  loss 0.0391
+  [online_ewc_H16_seed1] task 4/50 (single_03) step  1499  loss 0.0675
+[online_ewc_H16_seed1] After task 4: own=0.094  avg_to_date=0.094  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 5/50: single_04 ===
+  [online_ewc_H16_seed1] task 5/50 (single_04) step     0  loss 0.0366
+  [online_ewc_H16_seed1] task 5/50 (single_04) step   749  loss 0.1114
+  [online_ewc_H16_seed1] task 5/50 (single_04) step  1499  loss 0.1346
+[online_ewc_H16_seed1] After task 5: own=0.122  avg_to_date=0.099  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 6/50: single_05 ===
+  [online_ewc_H16_seed1] task 6/50 (single_05) step     0  loss 0.1034
+  [online_ewc_H16_seed1] task 6/50 (single_05) step   749  loss 0.1691
+  [online_ewc_H16_seed1] task 6/50 (single_05) step  1499  loss 0.0813
+[online_ewc_H16_seed1] After task 6: own=0.121  avg_to_date=0.103  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 7/50: single_06 ===
+  [online_ewc_H16_seed1] task 7/50 (single_06) step     0  loss 0.1426
+  [online_ewc_H16_seed1] task 7/50 (single_06) step   749  loss 0.0953
+  [online_ewc_H16_seed1] task 7/50 (single_06) step  1499  loss 0.1749
+[online_ewc_H16_seed1] After task 7: own=0.148  avg_to_date=0.109  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 8/50: single_07 ===
+  [online_ewc_H16_seed1] task 8/50 (single_07) step     0  loss 0.0824
+  [online_ewc_H16_seed1] task 8/50 (single_07) step   749  loss 0.0857
+  [online_ewc_H16_seed1] task 8/50 (single_07) step  1499  loss 0.0989
+[online_ewc_H16_seed1] After task 8: own=0.098  avg_to_date=0.108  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 9/50: single_08 ===
+  [online_ewc_H16_seed1] task 9/50 (single_08) step     0  loss 0.1689
+  [online_ewc_H16_seed1] task 9/50 (single_08) step   749  loss 0.1176
+  [online_ewc_H16_seed1] task 9/50 (single_08) step  1499  loss 0.1747
+[online_ewc_H16_seed1] After task 9: own=0.149  avg_to_date=0.112  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 10/50: single_09 ===
+  [online_ewc_H16_seed1] task 10/50 (single_09) step     0  loss 0.0850
+  [online_ewc_H16_seed1] task 10/50 (single_09) step   749  loss 0.1440
+  [online_ewc_H16_seed1] task 10/50 (single_09) step  1499  loss 0.1576
+[online_ewc_H16_seed1] After task 10: own=0.114  avg_to_date=0.112  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 11/50: single_10 ===
+  [online_ewc_H16_seed1] task 11/50 (single_10) step     0  loss 0.0476
+  [online_ewc_H16_seed1] task 11/50 (single_10) step   749  loss 0.1673
+  [online_ewc_H16_seed1] task 11/50 (single_10) step  1499  loss 0.1172
+[online_ewc_H16_seed1] After task 11: own=0.134  avg_to_date=0.114  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 12/50: single_11 ===
+  [online_ewc_H16_seed1] task 12/50 (single_11) step     0  loss 0.1307
+  [online_ewc_H16_seed1] task 12/50 (single_11) step   749  loss 0.1255
+  [online_ewc_H16_seed1] task 12/50 (single_11) step  1499  loss 0.1773
+[online_ewc_H16_seed1] After task 12: own=0.121  avg_to_date=0.115  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 13/50: compound_00 ===
+  [online_ewc_H16_seed1] task 13/50 (compound_00) step     0  loss 0.1288
+  [online_ewc_H16_seed1] task 13/50 (compound_00) step   749  loss 0.0774
+  [online_ewc_H16_seed1] task 13/50 (compound_00) step  1499  loss 0.1575
+[online_ewc_H16_seed1] After task 13: own=0.130  avg_to_date=0.116  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 14/50: compound_01 ===
+  [online_ewc_H16_seed1] task 14/50 (compound_01) step     0  loss 0.0383
+  [online_ewc_H16_seed1] task 14/50 (compound_01) step   749  loss 0.0969
+  [online_ewc_H16_seed1] task 14/50 (compound_01) step  1499  loss 0.0800
+[online_ewc_H16_seed1] After task 14: own=0.048  avg_to_date=0.111  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 15/50: compound_02 ===
+  [online_ewc_H16_seed1] task 15/50 (compound_02) step     0  loss 0.0841
+  [online_ewc_H16_seed1] task 15/50 (compound_02) step   749  loss 0.1357
+  [online_ewc_H16_seed1] task 15/50 (compound_02) step  1499  loss 0.1510
+[online_ewc_H16_seed1] After task 15: own=0.135  avg_to_date=0.113  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 16/50: compound_03 ===
+  [online_ewc_H16_seed1] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H16_seed1] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H16_seed1] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H16_seed1] After task 16: own=0.000  avg_to_date=0.106  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 17/50: compound_04 ===
+  [online_ewc_H16_seed1] task 17/50 (compound_04) step     0  loss 0.0581
+  [online_ewc_H16_seed1] task 17/50 (compound_04) step   749  loss 0.1762
+  [online_ewc_H16_seed1] task 17/50 (compound_04) step  1499  loss 0.1143
+[online_ewc_H16_seed1] After task 17: own=0.121  avg_to_date=0.106  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 18/50: compound_05 ===
+  [online_ewc_H16_seed1] task 18/50 (compound_05) step     0  loss 0.1645
+  [online_ewc_H16_seed1] task 18/50 (compound_05) step   749  loss 0.1779
+  [online_ewc_H16_seed1] task 18/50 (compound_05) step  1499  loss 0.1136
+[online_ewc_H16_seed1] After task 18: own=0.115  avg_to_date=0.107  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 19/50: compound_06 ===
+  [online_ewc_H16_seed1] task 19/50 (compound_06) step     0  loss 0.1018
+  [online_ewc_H16_seed1] task 19/50 (compound_06) step   749  loss 0.1328
+  [online_ewc_H16_seed1] task 19/50 (compound_06) step  1499  loss 0.0561
+[online_ewc_H16_seed1] After task 19: own=0.094  avg_to_date=0.106  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 20/50: compound_07 ===
+  [online_ewc_H16_seed1] task 20/50 (compound_07) step     0  loss 0.2051
+  [online_ewc_H16_seed1] task 20/50 (compound_07) step   749  loss 0.0902
+  [online_ewc_H16_seed1] task 20/50 (compound_07) step  1499  loss 0.1856
+[online_ewc_H16_seed1] After task 20: own=0.113  avg_to_date=0.106  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 21/50: compound_08 ===
+  [online_ewc_H16_seed1] task 21/50 (compound_08) step     0  loss 0.1538
+  [online_ewc_H16_seed1] task 21/50 (compound_08) step   749  loss 0.1891
+  [online_ewc_H16_seed1] task 21/50 (compound_08) step  1499  loss 0.0851
+[online_ewc_H16_seed1] After task 21: own=0.131  avg_to_date=0.107  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 22/50: compound_09 ===
+  [online_ewc_H16_seed1] task 22/50 (compound_09) step     0  loss 0.0810
+  [online_ewc_H16_seed1] task 22/50 (compound_09) step   749  loss 0.0983
+  [online_ewc_H16_seed1] task 22/50 (compound_09) step  1499  loss 0.0763
+[online_ewc_H16_seed1] After task 22: own=0.050  avg_to_date=0.105  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 23/50: compound_10 ===
+  [online_ewc_H16_seed1] task 23/50 (compound_10) step     0  loss 0.1384
+  [online_ewc_H16_seed1] task 23/50 (compound_10) step   749  loss 0.1651
+  [online_ewc_H16_seed1] task 23/50 (compound_10) step  1499  loss 0.1499
+[online_ewc_H16_seed1] After task 23: own=0.158  avg_to_date=0.107  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 24/50: compound_11 ===
+  [online_ewc_H16_seed1] task 24/50 (compound_11) step     0  loss 0.0691
+  [online_ewc_H16_seed1] task 24/50 (compound_11) step   749  loss 0.0865
+  [online_ewc_H16_seed1] task 24/50 (compound_11) step  1499  loss 0.0518
+[online_ewc_H16_seed1] After task 24: own=0.113  avg_to_date=0.107  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 25/50: compound_12 ===
+  [online_ewc_H16_seed1] task 25/50 (compound_12) step     0  loss 0.0987
+  [online_ewc_H16_seed1] task 25/50 (compound_12) step   749  loss 0.1804
+  [online_ewc_H16_seed1] task 25/50 (compound_12) step  1499  loss 0.1279
+[online_ewc_H16_seed1] After task 25: own=0.144  avg_to_date=0.109  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 26/50: compound_13 ===
+  [online_ewc_H16_seed1] task 26/50 (compound_13) step     0  loss 0.1159
+  [online_ewc_H16_seed1] task 26/50 (compound_13) step   749  loss 0.1242
+  [online_ewc_H16_seed1] task 26/50 (compound_13) step  1499  loss 0.0766
+[online_ewc_H16_seed1] After task 26: own=0.106  avg_to_date=0.109  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 27/50: compound_14 ===
+  [online_ewc_H16_seed1] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H16_seed1] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H16_seed1] task 27/50 (compound_14) step  1499  loss 0.0000
+[online_ewc_H16_seed1] After task 27: own=0.000  avg_to_date=0.105  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 28/50: compound_15 ===
+  [online_ewc_H16_seed1] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H16_seed1] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H16_seed1] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H16_seed1] After task 28: own=0.000  avg_to_date=0.101  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 29/50: compound_16 ===
+  [online_ewc_H16_seed1] task 29/50 (compound_16) step     0  loss 0.0732
+  [online_ewc_H16_seed1] task 29/50 (compound_16) step   749  loss 0.1132
+  [online_ewc_H16_seed1] task 29/50 (compound_16) step  1499  loss 0.1184
+[online_ewc_H16_seed1] After task 29: own=0.108  avg_to_date=0.101  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 30/50: compound_17 ===
+  [online_ewc_H16_seed1] task 30/50 (compound_17) step     0  loss 0.0379
+  [online_ewc_H16_seed1] task 30/50 (compound_17) step   749  loss 0.0544
+  [online_ewc_H16_seed1] task 30/50 (compound_17) step  1499  loss 0.0543
+[online_ewc_H16_seed1] After task 30: own=0.067  avg_to_date=0.100  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 31/50: compound_18 ===
+  [online_ewc_H16_seed1] task 31/50 (compound_18) step     0  loss 0.1056
+  [online_ewc_H16_seed1] task 31/50 (compound_18) step   749  loss 0.1029
+  [online_ewc_H16_seed1] task 31/50 (compound_18) step  1499  loss 0.0848
+[online_ewc_H16_seed1] After task 31: own=0.080  avg_to_date=0.099  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 32/50: compound_19 ===
+  [online_ewc_H16_seed1] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H16_seed1] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H16_seed1] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H16_seed1] After task 32: own=0.000  avg_to_date=0.096  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 33/50: compound_20 ===
+  [online_ewc_H16_seed1] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H16_seed1] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H16_seed1] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H16_seed1] After task 33: own=0.000  avg_to_date=0.093  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 34/50: compound_21 ===
+  [online_ewc_H16_seed1] task 34/50 (compound_21) step     0  loss 0.0264
+  [online_ewc_H16_seed1] task 34/50 (compound_21) step   749  loss 0.0568
+  [online_ewc_H16_seed1] task 34/50 (compound_21) step  1499  loss 0.0557
+[online_ewc_H16_seed1] After task 34: own=0.029  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 35/50: compound_22 ===
+  [online_ewc_H16_seed1] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H16_seed1] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H16_seed1] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H16_seed1] After task 35: own=0.000  avg_to_date=0.089  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 36/50: compound_23 ===
+  [online_ewc_H16_seed1] task 36/50 (compound_23) step     0  loss 0.1698
+  [online_ewc_H16_seed1] task 36/50 (compound_23) step   749  loss 0.1184
+  [online_ewc_H16_seed1] task 36/50 (compound_23) step  1499  loss 0.1577
+[online_ewc_H16_seed1] After task 36: own=0.151  avg_to_date=0.090  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 37/50: compound_24 ===
+  [online_ewc_H16_seed1] task 37/50 (compound_24) step     0  loss 0.1485
+  [online_ewc_H16_seed1] task 37/50 (compound_24) step   749  loss 0.0917
+  [online_ewc_H16_seed1] task 37/50 (compound_24) step  1499  loss 0.0881
+[online_ewc_H16_seed1] After task 37: own=0.131  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 38/50: compound_25 ===
+  [online_ewc_H16_seed1] task 38/50 (compound_25) step     0  loss 0.1148
+  [online_ewc_H16_seed1] task 38/50 (compound_25) step   749  loss 0.0975
+  [online_ewc_H16_seed1] task 38/50 (compound_25) step  1499  loss 0.1376
+[online_ewc_H16_seed1] After task 38: own=0.138  avg_to_date=0.093  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 39/50: compound_26 ===
+  [online_ewc_H16_seed1] task 39/50 (compound_26) step     0  loss 0.1497
+  [online_ewc_H16_seed1] task 39/50 (compound_26) step   749  loss 0.1390
+  [online_ewc_H16_seed1] task 39/50 (compound_26) step  1499  loss 0.1669
+[online_ewc_H16_seed1] After task 39: own=0.134  avg_to_date=0.094  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 40/50: compound_27 ===
+  [online_ewc_H16_seed1] task 40/50 (compound_27) step     0  loss 0.1701
+  [online_ewc_H16_seed1] task 40/50 (compound_27) step   749  loss 0.1272
+  [online_ewc_H16_seed1] task 40/50 (compound_27) step  1499  loss 0.2157
+[online_ewc_H16_seed1] After task 40: own=0.149  avg_to_date=0.095  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 41/50: compound_28 ===
+  [online_ewc_H16_seed1] task 41/50 (compound_28) step     0  loss 0.2574
+  [online_ewc_H16_seed1] task 41/50 (compound_28) step   749  loss 0.1268
+  [online_ewc_H16_seed1] task 41/50 (compound_28) step  1499  loss 0.1845
+[online_ewc_H16_seed1] After task 41: own=0.138  avg_to_date=0.096  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 42/50: compound_29 ===
+  [online_ewc_H16_seed1] task 42/50 (compound_29) step     0  loss 0.0523
+  [online_ewc_H16_seed1] task 42/50 (compound_29) step   749  loss 0.0170
+  [online_ewc_H16_seed1] task 42/50 (compound_29) step  1499  loss 0.0159
+[online_ewc_H16_seed1] After task 42: own=0.041  avg_to_date=0.094  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 43/50: compound_30 ===
+  [online_ewc_H16_seed1] task 43/50 (compound_30) step     0  loss 0.0354
+  [online_ewc_H16_seed1] task 43/50 (compound_30) step   749  loss 0.0526
+  [online_ewc_H16_seed1] task 43/50 (compound_30) step  1499  loss 0.0331
+[online_ewc_H16_seed1] After task 43: own=0.047  avg_to_date=0.093  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 44/50: compound_31 ===
+  [online_ewc_H16_seed1] task 44/50 (compound_31) step     0  loss 0.0993
+  [online_ewc_H16_seed1] task 44/50 (compound_31) step   749  loss 0.1443
+  [online_ewc_H16_seed1] task 44/50 (compound_31) step  1499  loss 0.1523
+[online_ewc_H16_seed1] After task 44: own=0.134  avg_to_date=0.094  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 45/50: compound_32 ===
+  [online_ewc_H16_seed1] task 45/50 (compound_32) step     0  loss 0.1612
+  [online_ewc_H16_seed1] task 45/50 (compound_32) step   749  loss 0.0211
+  [online_ewc_H16_seed1] task 45/50 (compound_32) step  1499  loss 0.0654
+[online_ewc_H16_seed1] After task 45: own=0.070  avg_to_date=0.094  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 46/50: compound_33 ===
+  [online_ewc_H16_seed1] task 46/50 (compound_33) step     0  loss 0.0573
+  [online_ewc_H16_seed1] task 46/50 (compound_33) step   749  loss 0.1580
+  [online_ewc_H16_seed1] task 46/50 (compound_33) step  1499  loss 0.0754
+[online_ewc_H16_seed1] After task 46: own=0.089  avg_to_date=0.093  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 47/50: compound_34 ===
+  [online_ewc_H16_seed1] task 47/50 (compound_34) step     0  loss 0.1540
+  [online_ewc_H16_seed1] task 47/50 (compound_34) step   749  loss 0.0852
+  [online_ewc_H16_seed1] task 47/50 (compound_34) step  1499  loss 0.1412
+[online_ewc_H16_seed1] After task 47: own=0.137  avg_to_date=0.094  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 48/50: compound_35 ===
+  [online_ewc_H16_seed1] task 48/50 (compound_35) step     0  loss 0.0231
+  [online_ewc_H16_seed1] task 48/50 (compound_35) step   749  loss 0.0403
+  [online_ewc_H16_seed1] task 48/50 (compound_35) step  1499  loss 0.0400
+[online_ewc_H16_seed1] After task 48: own=0.029  avg_to_date=0.093  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 49/50: compound_36 ===
+  [online_ewc_H16_seed1] task 49/50 (compound_36) step     0  loss 0.1286
+  [online_ewc_H16_seed1] task 49/50 (compound_36) step   749  loss 0.1506
+  [online_ewc_H16_seed1] task 49/50 (compound_36) step  1499  loss 0.1463
+[online_ewc_H16_seed1] After task 49: own=0.131  avg_to_date=0.094  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed1] === Task 50/50: compound_37 ===
+  [online_ewc_H16_seed1] task 50/50 (compound_37) step     0  loss 0.1335
+  [online_ewc_H16_seed1] task 50/50 (compound_37) step   749  loss 0.1602
+  [online_ewc_H16_seed1] task 50/50 (compound_37) step  1499  loss 0.1625
+[online_ewc_H16_seed1] After task 50: own=0.159  avg_to_date=0.095  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] Online-EWC curriculum start — arch [16, 16, 3]  params 531  γ=0.95
+
+[online_ewc_H16_seed2] === Task 1/50: single_00 ===
+  [online_ewc_H16_seed2] task 1/50 (single_00) step     0  loss 0.6482
+  [online_ewc_H16_seed2] task 1/50 (single_00) step   749  loss 0.0000
+  [online_ewc_H16_seed2] task 1/50 (single_00) step  1499  loss 0.0000
+[online_ewc_H16_seed2] After task 1: own=0.000  avg_to_date=0.000  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 2/50: single_01 ===
+  [online_ewc_H16_seed2] task 2/50 (single_01) step     0  loss 0.1454
+  [online_ewc_H16_seed2] task 2/50 (single_01) step   749  loss 0.1278
+  [online_ewc_H16_seed2] task 2/50 (single_01) step  1499  loss 0.1438
+[online_ewc_H16_seed2] After task 2: own=0.105  avg_to_date=0.052  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 3/50: single_02 ===
+  [online_ewc_H16_seed2] task 3/50 (single_02) step     0  loss 0.0745
+  [online_ewc_H16_seed2] task 3/50 (single_02) step   749  loss 0.0858
+  [online_ewc_H16_seed2] task 3/50 (single_02) step  1499  loss 0.0525
+[online_ewc_H16_seed2] After task 3: own=0.124  avg_to_date=0.076  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 4/50: single_03 ===
+  [online_ewc_H16_seed2] task 4/50 (single_03) step     0  loss 0.1599
+  [online_ewc_H16_seed2] task 4/50 (single_03) step   749  loss 0.0899
+  [online_ewc_H16_seed2] task 4/50 (single_03) step  1499  loss 0.0950
+[online_ewc_H16_seed2] After task 4: own=0.128  avg_to_date=0.089  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 5/50: single_04 ===
+  [online_ewc_H16_seed2] task 5/50 (single_04) step     0  loss 0.0552
+  [online_ewc_H16_seed2] task 5/50 (single_04) step   749  loss 0.1056
+  [online_ewc_H16_seed2] task 5/50 (single_04) step  1499  loss 0.1286
+[online_ewc_H16_seed2] After task 5: own=0.106  avg_to_date=0.092  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 6/50: single_05 ===
+  [online_ewc_H16_seed2] task 6/50 (single_05) step     0  loss 0.1344
+  [online_ewc_H16_seed2] task 6/50 (single_05) step   749  loss 0.0962
+  [online_ewc_H16_seed2] task 6/50 (single_05) step  1499  loss 0.0742
+[online_ewc_H16_seed2] After task 6: own=0.114  avg_to_date=0.096  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 7/50: single_06 ===
+  [online_ewc_H16_seed2] task 7/50 (single_06) step     0  loss 0.0944
+  [online_ewc_H16_seed2] task 7/50 (single_06) step   749  loss 0.1824
+  [online_ewc_H16_seed2] task 7/50 (single_06) step  1499  loss 0.1056
+[online_ewc_H16_seed2] After task 7: own=0.126  avg_to_date=0.100  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 8/50: single_07 ===
+  [online_ewc_H16_seed2] task 8/50 (single_07) step     0  loss 0.1304
+  [online_ewc_H16_seed2] task 8/50 (single_07) step   749  loss 0.0974
+  [online_ewc_H16_seed2] task 8/50 (single_07) step  1499  loss 0.1026
+[online_ewc_H16_seed2] After task 8: own=0.129  avg_to_date=0.104  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 9/50: single_08 ===
+  [online_ewc_H16_seed2] task 9/50 (single_08) step     0  loss 0.1426
+  [online_ewc_H16_seed2] task 9/50 (single_08) step   749  loss 0.1328
+  [online_ewc_H16_seed2] task 9/50 (single_08) step  1499  loss 0.1221
+[online_ewc_H16_seed2] After task 9: own=0.113  avg_to_date=0.104  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 10/50: single_09 ===
+  [online_ewc_H16_seed2] task 10/50 (single_09) step     0  loss 0.1272
+  [online_ewc_H16_seed2] task 10/50 (single_09) step   749  loss 0.1179
+  [online_ewc_H16_seed2] task 10/50 (single_09) step  1499  loss 0.0948
+[online_ewc_H16_seed2] After task 10: own=0.119  avg_to_date=0.106  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 11/50: single_10 ===
+  [online_ewc_H16_seed2] task 11/50 (single_10) step     0  loss 0.2115
+  [online_ewc_H16_seed2] task 11/50 (single_10) step   749  loss 0.0850
+  [online_ewc_H16_seed2] task 11/50 (single_10) step  1499  loss 0.1675
+[online_ewc_H16_seed2] After task 11: own=0.130  avg_to_date=0.108  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 12/50: single_11 ===
+  [online_ewc_H16_seed2] task 12/50 (single_11) step     0  loss 0.0804
+  [online_ewc_H16_seed2] task 12/50 (single_11) step   749  loss 0.0518
+  [online_ewc_H16_seed2] task 12/50 (single_11) step  1499  loss 0.0835
+[online_ewc_H16_seed2] After task 12: own=0.092  avg_to_date=0.106  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 13/50: compound_00 ===
+  [online_ewc_H16_seed2] task 13/50 (compound_00) step     0  loss 0.0708
+  [online_ewc_H16_seed2] task 13/50 (compound_00) step   749  loss 0.0286
+  [online_ewc_H16_seed2] task 13/50 (compound_00) step  1499  loss 0.0386
+[online_ewc_H16_seed2] After task 13: own=0.044  avg_to_date=0.101  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 14/50: compound_01 ===
+  [online_ewc_H16_seed2] task 14/50 (compound_01) step     0  loss 0.1509
+  [online_ewc_H16_seed2] task 14/50 (compound_01) step   749  loss 0.1565
+  [online_ewc_H16_seed2] task 14/50 (compound_01) step  1499  loss 0.1582
+[online_ewc_H16_seed2] After task 14: own=0.107  avg_to_date=0.101  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 15/50: compound_02 ===
+  [online_ewc_H16_seed2] task 15/50 (compound_02) step     0  loss 0.0458
+  [online_ewc_H16_seed2] task 15/50 (compound_02) step   749  loss 0.0767
+  [online_ewc_H16_seed2] task 15/50 (compound_02) step  1499  loss 0.1704
+[online_ewc_H16_seed2] After task 15: own=0.092  avg_to_date=0.101  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 16/50: compound_03 ===
+  [online_ewc_H16_seed2] task 16/50 (compound_03) step     0  loss 0.0000
+  [online_ewc_H16_seed2] task 16/50 (compound_03) step   749  loss 0.0000
+  [online_ewc_H16_seed2] task 16/50 (compound_03) step  1499  loss 0.0000
+[online_ewc_H16_seed2] After task 16: own=0.000  avg_to_date=0.095  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 17/50: compound_04 ===
+  [online_ewc_H16_seed2] task 17/50 (compound_04) step     0  loss 0.0713
+  [online_ewc_H16_seed2] task 17/50 (compound_04) step   749  loss 0.0359
+  [online_ewc_H16_seed2] task 17/50 (compound_04) step  1499  loss 0.0930
+[online_ewc_H16_seed2] After task 17: own=0.041  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 18/50: compound_05 ===
+  [online_ewc_H16_seed2] task 18/50 (compound_05) step     0  loss 0.0988
+  [online_ewc_H16_seed2] task 18/50 (compound_05) step   749  loss 0.0805
+  [online_ewc_H16_seed2] task 18/50 (compound_05) step  1499  loss 0.0666
+[online_ewc_H16_seed2] After task 18: own=0.082  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 19/50: compound_06 ===
+  [online_ewc_H16_seed2] task 19/50 (compound_06) step     0  loss 0.1290
+  [online_ewc_H16_seed2] task 19/50 (compound_06) step   749  loss 0.1418
+  [online_ewc_H16_seed2] task 19/50 (compound_06) step  1499  loss 0.0899
+[online_ewc_H16_seed2] After task 19: own=0.100  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 20/50: compound_07 ===
+  [online_ewc_H16_seed2] task 20/50 (compound_07) step     0  loss 0.0926
+  [online_ewc_H16_seed2] task 20/50 (compound_07) step   749  loss 0.0925
+  [online_ewc_H16_seed2] task 20/50 (compound_07) step  1499  loss 0.0953
+[online_ewc_H16_seed2] After task 20: own=0.096  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 21/50: compound_08 ===
+  [online_ewc_H16_seed2] task 21/50 (compound_08) step     0  loss 0.0305
+  [online_ewc_H16_seed2] task 21/50 (compound_08) step   749  loss 0.0241
+  [online_ewc_H16_seed2] task 21/50 (compound_08) step  1499  loss 0.0431
+[online_ewc_H16_seed2] After task 21: own=0.037  avg_to_date=0.089  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 22/50: compound_09 ===
+  [online_ewc_H16_seed2] task 22/50 (compound_09) step     0  loss 0.1360
+  [online_ewc_H16_seed2] task 22/50 (compound_09) step   749  loss 0.1117
+  [online_ewc_H16_seed2] task 22/50 (compound_09) step  1499  loss 0.1030
+[online_ewc_H16_seed2] After task 22: own=0.111  avg_to_date=0.090  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 23/50: compound_10 ===
+  [online_ewc_H16_seed2] task 23/50 (compound_10) step     0  loss 0.0704
+  [online_ewc_H16_seed2] task 23/50 (compound_10) step   749  loss 0.1107
+  [online_ewc_H16_seed2] task 23/50 (compound_10) step  1499  loss 0.1109
+[online_ewc_H16_seed2] After task 23: own=0.103  avg_to_date=0.090  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 24/50: compound_11 ===
+  [online_ewc_H16_seed2] task 24/50 (compound_11) step     0  loss 0.0957
+  [online_ewc_H16_seed2] task 24/50 (compound_11) step   749  loss 0.1557
+  [online_ewc_H16_seed2] task 24/50 (compound_11) step  1499  loss 0.1020
+[online_ewc_H16_seed2] After task 24: own=0.131  avg_to_date=0.092  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 25/50: compound_12 ===
+  [online_ewc_H16_seed2] task 25/50 (compound_12) step     0  loss 0.0814
+  [online_ewc_H16_seed2] task 25/50 (compound_12) step   749  loss 0.0595
+  [online_ewc_H16_seed2] task 25/50 (compound_12) step  1499  loss 0.0696
+[online_ewc_H16_seed2] After task 25: own=0.092  avg_to_date=0.091  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 26/50: compound_13 ===
+  [online_ewc_H16_seed2] task 26/50 (compound_13) step     0  loss 0.1609
+  [online_ewc_H16_seed2] task 26/50 (compound_13) step   749  loss 0.1718
+  [online_ewc_H16_seed2] task 26/50 (compound_13) step  1499  loss 0.1382
+[online_ewc_H16_seed2] After task 26: own=0.142  avg_to_date=0.093  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 27/50: compound_14 ===
+  [online_ewc_H16_seed2] task 27/50 (compound_14) step     0  loss 0.0000
+  [online_ewc_H16_seed2] task 27/50 (compound_14) step   749  loss 0.0000
+  [online_ewc_H16_seed2] task 27/50 (compound_14) step  1499  loss 0.0000
+[online_ewc_H16_seed2] After task 27: own=0.000  avg_to_date=0.090  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 28/50: compound_15 ===
+  [online_ewc_H16_seed2] task 28/50 (compound_15) step     0  loss 0.0000
+  [online_ewc_H16_seed2] task 28/50 (compound_15) step   749  loss 0.0000
+  [online_ewc_H16_seed2] task 28/50 (compound_15) step  1499  loss 0.0000
+[online_ewc_H16_seed2] After task 28: own=0.000  avg_to_date=0.087  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 29/50: compound_16 ===
+  [online_ewc_H16_seed2] task 29/50 (compound_16) step     0  loss 0.1128
+  [online_ewc_H16_seed2] task 29/50 (compound_16) step   749  loss 0.1026
+  [online_ewc_H16_seed2] task 29/50 (compound_16) step  1499  loss 0.0534
+[online_ewc_H16_seed2] After task 29: own=0.124  avg_to_date=0.088  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 30/50: compound_17 ===
+  [online_ewc_H16_seed2] task 30/50 (compound_17) step     0  loss 0.0079
+  [online_ewc_H16_seed2] task 30/50 (compound_17) step   749  loss 0.0033
+  [online_ewc_H16_seed2] task 30/50 (compound_17) step  1499  loss 0.0554
+[online_ewc_H16_seed2] After task 30: own=0.048  avg_to_date=0.086  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 31/50: compound_18 ===
+  [online_ewc_H16_seed2] task 31/50 (compound_18) step     0  loss 0.1807
+  [online_ewc_H16_seed2] task 31/50 (compound_18) step   749  loss 0.1157
+  [online_ewc_H16_seed2] task 31/50 (compound_18) step  1499  loss 0.1192
+[online_ewc_H16_seed2] After task 31: own=0.131  avg_to_date=0.088  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 32/50: compound_19 ===
+  [online_ewc_H16_seed2] task 32/50 (compound_19) step     0  loss 0.0000
+  [online_ewc_H16_seed2] task 32/50 (compound_19) step   749  loss 0.0000
+  [online_ewc_H16_seed2] task 32/50 (compound_19) step  1499  loss 0.0000
+[online_ewc_H16_seed2] After task 32: own=0.000  avg_to_date=0.085  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 33/50: compound_20 ===
+  [online_ewc_H16_seed2] task 33/50 (compound_20) step     0  loss 0.0000
+  [online_ewc_H16_seed2] task 33/50 (compound_20) step   749  loss 0.0000
+  [online_ewc_H16_seed2] task 33/50 (compound_20) step  1499  loss 0.0000
+[online_ewc_H16_seed2] After task 33: own=0.000  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 34/50: compound_21 ===
+  [online_ewc_H16_seed2] task 34/50 (compound_21) step     0  loss 0.1676
+  [online_ewc_H16_seed2] task 34/50 (compound_21) step   749  loss 0.1436
+  [online_ewc_H16_seed2] task 34/50 (compound_21) step  1499  loss 0.1152
+[online_ewc_H16_seed2] After task 34: own=0.122  avg_to_date=0.083  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 35/50: compound_22 ===
+  [online_ewc_H16_seed2] task 35/50 (compound_22) step     0  loss 0.0000
+  [online_ewc_H16_seed2] task 35/50 (compound_22) step   749  loss 0.0000
+  [online_ewc_H16_seed2] task 35/50 (compound_22) step  1499  loss 0.0000
+[online_ewc_H16_seed2] After task 35: own=0.000  avg_to_date=0.081  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 36/50: compound_23 ===
+  [online_ewc_H16_seed2] task 36/50 (compound_23) step     0  loss 0.0655
+  [online_ewc_H16_seed2] task 36/50 (compound_23) step   749  loss 0.0582
+  [online_ewc_H16_seed2] task 36/50 (compound_23) step  1499  loss 0.0376
+[online_ewc_H16_seed2] After task 36: own=0.055  avg_to_date=0.080  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 37/50: compound_24 ===
+  [online_ewc_H16_seed2] task 37/50 (compound_24) step     0  loss 0.2225
+  [online_ewc_H16_seed2] task 37/50 (compound_24) step   749  loss 0.1264
+  [online_ewc_H16_seed2] task 37/50 (compound_24) step  1499  loss 0.1207
+[online_ewc_H16_seed2] After task 37: own=0.158  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 38/50: compound_25 ===
+  [online_ewc_H16_seed2] task 38/50 (compound_25) step     0  loss 0.0811
+  [online_ewc_H16_seed2] task 38/50 (compound_25) step   749  loss 0.0397
+  [online_ewc_H16_seed2] task 38/50 (compound_25) step  1499  loss 0.0355
+[online_ewc_H16_seed2] After task 38: own=0.073  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 39/50: compound_26 ===
+  [online_ewc_H16_seed2] task 39/50 (compound_26) step     0  loss 0.1291
+  [online_ewc_H16_seed2] task 39/50 (compound_26) step   749  loss 0.1338
+  [online_ewc_H16_seed2] task 39/50 (compound_26) step  1499  loss 0.0512
+[online_ewc_H16_seed2] After task 39: own=0.068  avg_to_date=0.081  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 40/50: compound_27 ===
+  [online_ewc_H16_seed2] task 40/50 (compound_27) step     0  loss 0.0843
+  [online_ewc_H16_seed2] task 40/50 (compound_27) step   749  loss 0.1219
+  [online_ewc_H16_seed2] task 40/50 (compound_27) step  1499  loss 0.0975
+[online_ewc_H16_seed2] After task 40: own=0.120  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 41/50: compound_28 ===
+  [online_ewc_H16_seed2] task 41/50 (compound_28) step     0  loss 0.1136
+  [online_ewc_H16_seed2] task 41/50 (compound_28) step   749  loss 0.1992
+  [online_ewc_H16_seed2] task 41/50 (compound_28) step  1499  loss 0.0616
+[online_ewc_H16_seed2] After task 41: own=0.109  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 42/50: compound_29 ===
+  [online_ewc_H16_seed2] task 42/50 (compound_29) step     0  loss 0.0817
+  [online_ewc_H16_seed2] task 42/50 (compound_29) step   749  loss 0.0300
+  [online_ewc_H16_seed2] task 42/50 (compound_29) step  1499  loss 0.0480
+[online_ewc_H16_seed2] After task 42: own=0.061  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 43/50: compound_30 ===
+  [online_ewc_H16_seed2] task 43/50 (compound_30) step     0  loss 0.1130
+  [online_ewc_H16_seed2] task 43/50 (compound_30) step   749  loss 0.0762
+  [online_ewc_H16_seed2] task 43/50 (compound_30) step  1499  loss 0.0637
+[online_ewc_H16_seed2] After task 43: own=0.069  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 44/50: compound_31 ===
+  [online_ewc_H16_seed2] task 44/50 (compound_31) step     0  loss 0.0145
+  [online_ewc_H16_seed2] task 44/50 (compound_31) step   749  loss 0.0317
+  [online_ewc_H16_seed2] task 44/50 (compound_31) step  1499  loss 0.0269
+[online_ewc_H16_seed2] After task 44: own=0.027  avg_to_date=0.080  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 45/50: compound_32 ===
+  [online_ewc_H16_seed2] task 45/50 (compound_32) step     0  loss 0.0987
+  [online_ewc_H16_seed2] task 45/50 (compound_32) step   749  loss 0.0683
+  [online_ewc_H16_seed2] task 45/50 (compound_32) step  1499  loss 0.0966
+[online_ewc_H16_seed2] After task 45: own=0.084  avg_to_date=0.080  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 46/50: compound_33 ===
+  [online_ewc_H16_seed2] task 46/50 (compound_33) step     0  loss 0.1409
+  [online_ewc_H16_seed2] task 46/50 (compound_33) step   749  loss 0.1309
+  [online_ewc_H16_seed2] task 46/50 (compound_33) step  1499  loss 0.0853
+[online_ewc_H16_seed2] After task 46: own=0.136  avg_to_date=0.081  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 47/50: compound_34 ===
+  [online_ewc_H16_seed2] task 47/50 (compound_34) step     0  loss 0.1774
+  [online_ewc_H16_seed2] task 47/50 (compound_34) step   749  loss 0.1261
+  [online_ewc_H16_seed2] task 47/50 (compound_34) step  1499  loss 0.1245
+[online_ewc_H16_seed2] After task 47: own=0.127  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 48/50: compound_35 ===
+  [online_ewc_H16_seed2] task 48/50 (compound_35) step     0  loss 0.0438
+  [online_ewc_H16_seed2] task 48/50 (compound_35) step   749  loss 0.1377
+  [online_ewc_H16_seed2] task 48/50 (compound_35) step  1499  loss 0.0493
+[online_ewc_H16_seed2] After task 48: own=0.091  avg_to_date=0.082  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 49/50: compound_36 ===
+  [online_ewc_H16_seed2] task 49/50 (compound_36) step     0  loss 0.1801
+  [online_ewc_H16_seed2] task 49/50 (compound_36) step   749  loss 0.1409
+  [online_ewc_H16_seed2] task 49/50 (compound_36) step  1499  loss 0.0815
+[online_ewc_H16_seed2] After task 49: own=0.125  avg_to_date=0.083  λ-means=['0.100', '0.100', '0.100']
+
+[online_ewc_H16_seed2] === Task 50/50: compound_37 ===
+  [online_ewc_H16_seed2] task 50/50 (compound_37) step     0  loss 0.1583
+  [online_ewc_H16_seed2] task 50/50 (compound_37) step   749  loss 0.1745
+  [online_ewc_H16_seed2] task 50/50 (compound_37) step  1499  loss 0.1134
+[online_ewc_H16_seed2] After task 50: own=0.134  avg_to_date=0.084  λ-means=['0.100', '0.100', '0.101']
+
+==============================================================================
+bench_50task_online_ewc — Final Report  (total wall-clock 31.2 min)
+==============================================================================
+
+Online-EWC (3 seeds × 3 widths):
+     H   params     avg_final mean±std      forget mean±std                       per-seed avg_final
+     8      203    0.0662 ± 0.0200    -0.0037 ± 0.0011    [0.0506, 0.0887, 0.0595]
+    12      351    0.0800 ± 0.0450    -0.0035 ± 0.0030    [0.1283, 0.0725, 0.0392]
+    16      531    0.0793 ± 0.0183    -0.0015 ± 0.0010    [0.0592, 0.0949, 0.0838]
+
+Grown distribution (from bench_50task_seeds_run1):
+  per-seed: [0.0297, 0.0689, 0.0603] → mean ± std: 0.0530 ± 0.0206
+
+Headline: grown vs matched Online-EWC (H=8, ~203 params):
+  grown:        0.0530 ± 0.0206
+  Online EWC:   0.0662 ± 0.0200
+  grown is 25.1% lower than Online-EWC mean
+  gap is 0.3× the combined std — within noise
+
+Best Online-EWC width: H=8 (203 params, 0.80× grown's avg params):
+  grown:      0.0530 ± 0.0206
+  Online EWC: 0.0662 ± 0.0200
+  grown is 25.1% lower than best Online-EWC
+  gap is 0.3× the combined std — within noise
+
+Cross-reference (from bench_50task_seeds_run1, single-anchor EWC):
+  fixed-EWC H=8  (203p): 0.0950 ± 0.0147
+  fixed-EWC H=12 (351p): 0.0730 ± 0.0250  (best)
+  fixed-EWC H=16 (531p): 0.1021 ± 0.0240
+
+  log: /home/marcrockhat/trioron-project/outputs/bench_50task_online_ewc_log.csv
