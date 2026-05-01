@@ -444,6 +444,8 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
                 "n_params_before": report.n_params_before,
                 "n_params_after": report.n_params_after,
                 "arch_after": tuple(net.n_nodes_per_layer()),
+                "pre_compress_max_cosines": list(
+                    report.pre_compress_max_cosines),
             })
             if report.merges or report.purges:
                 # Structural change → optimizer must be rebuilt.
