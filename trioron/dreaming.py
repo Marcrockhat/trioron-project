@@ -479,6 +479,7 @@ def compress(
     probe_batch: Optional[torch.Tensor] = None,
     ac_threshold: float = 0.95,
     compression_action: str = "merge",
+    max_downscales_per_layer: Optional[int] = None,
 ) -> List[MergeEvent]:
     """Greedy topological compression: repeatedly merge the highest-similarity
     pair on each candidate layer until none exceed the threshold.
@@ -501,6 +502,15 @@ def compress(
                       VRAM unchanged. Optimizer rebuild NOT required.
                       Re-recruitment is possible (fisher pinned at zero
                       on victim's outgoing column → no EWC penalty).
+
+    `max_downscales_per_layer` (Experiment 2 of Phase 4.5, 2026-05-01):
+      Hard cap on the number of downscale events per layer per call.
+      Only applies to `compression_action='downscale'` (merge has
+      natural termination via victim deletion). None = uncapped (the
+      original behavior). Set to small integers (1-2) to let replay
+      absorb each consolidation before the next one drifts on top of
+      it; dampens runaway behavior on seeds with high natural
+      activation-cosine ceilings (see dreaming_synaptic_sweep_result).
 
     By default the OUTPUT layer is skipped — collapsing two latent dims
     silently changes the representational capacity of the network in a
@@ -530,6 +540,12 @@ def compress(
         raise ValueError(
             "redundancy_signal='activation' requires probe_batch"
         )
+    if (max_downscales_per_layer is not None
+            and max_downscales_per_layer < 0):
+        raise ValueError(
+            f"max_downscales_per_layer must be >= 0 or None, "
+            f"got {max_downscales_per_layer!r}"
+        )
 
     if layer_idxs is None:
         last = len(net.layers) - 1
@@ -549,6 +565,7 @@ def compress(
         # victim — a downscaled node that became someone else's PEER is
         # still a valid load-bearer.
         downscaled_victims: set = set()
+        n_downscales_this_layer = 0
         # For "downscale" on the output layer, synaptic_downscale is a
         # no-op (no L+1 to redirect into) — drop the layer to keep the
         # event log honest.
@@ -562,6 +579,10 @@ def compress(
         # so the layer-L activation cosine of (peer, victim) wouldn't
         # change without the explicit exclusion above).
         while len(events) < max_merges:
+            if (compression_action == "downscale"
+                    and max_downscales_per_layer is not None
+                    and n_downscales_this_layer >= max_downscales_per_layer):
+                break
             if net.layers[L].n_nodes <= 1:
                 break
             if redundancy_signal == "weight":
@@ -592,6 +613,7 @@ def compress(
             else:
                 synaptic_downscale(net, L, peer_idx=i, victim_idx=j)
                 downscaled_victims.add(j)
+                n_downscales_this_layer += 1
             events.append(MergeEvent(
                 layer_idx=L, peer_idx=i, victim_idx=j, cos_sim=s,
                 arch_after=tuple(net.n_nodes_per_layer()),
@@ -716,6 +738,7 @@ def dreaming_block(
     ac_threshold: float = 0.95,
     probe_batch_size: int = 128,
     compression_action: str = "merge",
+    max_downscales_per_layer: Optional[int] = None,
 ) -> DreamingReport:
     """Run replay → compress → purge in sequence. Returns a DreamingReport.
 
@@ -737,6 +760,11 @@ def dreaming_block(
         absorbs victim's outgoing, victim's outgoing zeroed, victim's
         row at layer L untouched). The architecture / param count does
         NOT change.
+
+    `max_downscales_per_layer` (Phase 4.5 Experiment 2): hard cap on
+    the number of downscale events per layer per call. None = uncapped
+    (the original behavior). Only applies when
+    compression_action='downscale' — merge has natural termination.
 
     Caller is responsible for rebuilding the optimizer after this returns
     if `report.merges` or `report.purges` is non-empty under
@@ -801,6 +829,7 @@ def dreaming_block(
             ac_threshold=ac_threshold,
             skip_output_layer=skip_output_layer,
             compression_action=compression_action,
+            max_downscales_per_layer=max_downscales_per_layer,
         )
     else:
         # Either signal=='weight', or signal=='activation' but no past
@@ -813,6 +842,7 @@ def dreaming_block(
             cos_threshold=cos_threshold,
             skip_output_layer=skip_output_layer,
             compression_action=compression_action,
+            max_downscales_per_layer=max_downscales_per_layer,
         )
     purges = purge(
         net, u_threshold=u_threshold, skip_output_layer=skip_output_layer,
