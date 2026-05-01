@@ -47,6 +47,7 @@ from trioron.triggers import GrowthTrigger, total_gradient_norm
 from trioron.ceilings import CeilingsController
 from trioron.pruner import PruningController, utility_capture
 from trioron.packnet import PackNetController
+from trioron.hat import HATController
 from trioron.frustration import FrustrationTracker
 
 
@@ -462,10 +463,96 @@ def run_packnet_curriculum(net, label, *, train_cur, eval_batches, pair_names,
                       packnet_capacity=ctrl.per_task_capacity())
 
 
+def run_hat_curriculum(
+    net, label, *, train_cur, eval_batches, pair_names,
+    s_min: float = 1.0 / 400.0,
+    s_max: float = 400.0,
+    sparsity_coef: float = 0.75,
+    emb_clip: float = 6.0,
+    frustration: "FrustrationTracker | None" = None,
+):
+    """HAT (Serra et al. 2018) curriculum, analogous to run_packnet_curriculum.
+
+    Per-task: zero embeddings (begin_task), anneal temperature from s_min
+    → s_max across the task's steps, scale grads after each backward to
+    protect prior-task weights, clip embeddings, snapshot at end_task.
+    Inference uses the saved per-task embedding at s_max (effectively
+    binary masks).
+    """
+    print(f"\n[{label}] HAT curriculum start — arch {net.n_nodes_per_layer()}  "
+          f"params {net.n_parameters()}  s∈[{s_min},{s_max}] "
+          f"sparsity_coef={sparsity_coef} emb_clip={emb_clip}"
+          + (f"  frustration={frustration!r}" if frustration is not None else ""))
+
+    K = len(pair_names)
+    ctrl = HATController(
+        net, n_total_tasks=K, s_min=s_min, s_max=s_max,
+        sparsity_coef=sparsity_coef, emb_clip=emb_clip,
+    )
+    loss_matrix: List[List[float]] = [[float("nan")] * K for _ in range(K)]
+    initial_n_params = net.n_parameters()
+    initial_arch = tuple(net.n_nodes_per_layer())
+
+    t0 = time.monotonic()
+    for task_idx, pair_name in enumerate(pair_names):
+        print(f"\n[{label}] === Task {task_idx+1}/{K}: {pair_name} ===")
+        ctrl.begin_task(task_idx + 1)
+        # Optimizer must include both the net's params and the active embeddings.
+        opt = optim.Adam(
+            list(net.parameters()) + list(ctrl.parameters()), lr=LR
+        )
+
+        for step in range(N_STEPS_PER_TASK):
+            ctrl.set_temperature(ctrl.temperature_for_step(step, N_STEPS_PER_TASK))
+            a, b = train_cur.sample_pair(pair_name, batch=BATCH)
+            h_a = net(a); h_b = net(b)
+            l_task = contrastive_loss(h_a, h_b, MARGIN)
+            mult = (frustration.observe(pair_name, l_task.item())
+                    if frustration is not None else 1.0)
+            l = mult * l_task + ctrl.sparsity_coef * ctrl.sparsity_loss()
+            opt.zero_grad()
+            l.backward()
+            ctrl.scale_grads()
+            opt.step()
+            ctrl.clip_embeddings()
+            if step == 0 or (step + 1) % LOG_EVERY == 0 or step == N_STEPS_PER_TASK - 1:
+                cm_dens = ctrl.cumulative_mask_density()
+                print(f"  [{label}] task {task_idx+1}/{K} ({pair_name}) "
+                      f"step {step:5d}  loss {l_task.item():.4f}  "
+                      f"cum_mask={[f'{d:.2f}' for d in cm_dens]}")
+
+        ctrl.end_task(task_idx + 1)
+
+        for j, pname in enumerate(pair_names):
+            if j <= task_idx:
+                snap = ctrl.apply_inference_mask(j + 1)
+                with torch.no_grad():
+                    a, b = eval_batches[pname]
+                    loss_j = float(contrastive_loss(net(a), net(b), MARGIN).item())
+                ctrl.restore(snap)
+                loss_matrix[task_idx][j] = loss_j
+            else:
+                loss_matrix[task_idx][j] = float("nan")
+
+        own = loss_matrix[task_idx][task_idx]
+        avg_so_far = sum(loss_matrix[task_idx][: task_idx + 1]) / (task_idx + 1)
+        cm_dens = ctrl.cumulative_mask_density()
+        print(f"[{label}] After task {task_idx+1}: own={own:.3f}  "
+              f"avg_to_date={avg_so_far:.3f}  "
+              f"cum_mask={[f'{d:.2f}' for d in cm_dens]}")
+
+    elapsed = time.monotonic() - t0
+    return _summarize(label, False, False, initial_arch,
+                      tuple(net.n_nodes_per_layer()), initial_n_params,
+                      net.n_parameters(), net.layers[-1].n_nodes,
+                      loss_matrix, [], [], 0, elapsed,
+                      hat_cumulative_density=ctrl.cumulative_mask_density())
+
+
 def _summarize(label, do_growth, do_pruning, initial_arch, final_arch,
                initial_n_params, final_n_params, final_latent,
                loss_matrix, fires, prunes, pathology_steps, elapsed,
-               packnet_capacity=None):
+               packnet_capacity=None, hat_cumulative_density=None):
     K = len(loss_matrix)
     final_eval = loss_matrix[K - 1]
     avg_final = sum(final_eval) / K
@@ -485,6 +572,7 @@ def _summarize(label, do_growth, do_pruning, initial_arch, final_arch,
         "avg_forgetting": avg_forgetting, "fires": fires, "prunes": prunes,
         "pathology_steps": pathology_steps, "wall_clock_seconds": elapsed,
         "packnet_capacity": packnet_capacity,
+        "hat_cumulative_density": hat_cumulative_density,
     }
 
 
