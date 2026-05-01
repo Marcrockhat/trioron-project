@@ -49,6 +49,7 @@ from trioron.pruner import PruningController, utility_capture
 from trioron.packnet import PackNetController
 from trioron.hat import HATController
 from trioron.frustration import FrustrationTracker
+from trioron.dreaming import dreaming_block, DreamingReport
 
 
 # ---------------------------------------------------------------------
@@ -84,6 +85,15 @@ T_DIV_MAX_SECONDS = 60.0
 PRUNE_U_THRESHOLD = 1e-3
 PRUNE_T = 2000
 PRUNE_CLOCK = 500
+
+# Phase 4.5 dreaming-block defaults (used only when run_ewc_curriculum
+# receives a dreaming_config — None disables the block entirely).
+DREAM_REPLAY_FRACTION = 0.25
+DREAM_REPLAY_STEPS = 200
+DREAM_COS_THRESHOLD = 0.95
+DREAM_U_THRESHOLD = 1e-3
+DREAM_EWC_STRENGTH = EWC_INTERTASK
+DREAM_BATCH = BATCH
 
 SWEEP_HIDDEN_SIZES = [8, 12, 16]
 
@@ -333,10 +343,26 @@ def train_one_task_ewc(
 
 def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
                        train_cur, eval_batches, pair_names,
-                       frustration: "FrustrationTracker | None" = None):
+                       frustration: "FrustrationTracker | None" = None,
+                       dreaming_config: "dict | None" = None,
+                       dreaming_rng: "random.Random | None" = None):
+    """Run the EWC curriculum (used by grown and fixed-EWC arms).
+
+    dreaming_config: when non-None, runs dreaming_block after each
+    task's consolidation (replay → compress → purge). Frustration is
+    intentionally not threaded into dreaming — the spec disables it
+    inside dreaming blocks.
+
+    Recognized dreaming_config keys (all optional, with defaults from
+    DREAM_* module constants):
+      - replay_fraction, replay_steps_per_pair, replay_batch, replay_lr
+      - ewc_strength, cos_threshold, u_threshold
+      - skip_output_layer (default True)
+    """
     print(f"\n[{label}] curriculum start — arch {net.n_nodes_per_layer()}  "
           f"params {net.n_parameters()}  growth={do_growth} pruning={do_pruning}"
-          + (f"  frustration={frustration!r}" if frustration is not None else ""))
+          + (f"  frustration={frustration!r}" if frustration is not None else "")
+          + (f"  dreaming=ON" if dreaming_config is not None else ""))
 
     opt = optim.Adam(net.parameters(), lr=LR)
     trigger = (GrowthTrigger(latent_dim=net.layers[-1].n_nodes, window=TRIGGER_W,
@@ -355,6 +381,8 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
     initial_arch = tuple(net.n_nodes_per_layer())
     all_fires: List[dict] = []
     all_prunes: List[dict] = []
+    all_dreams: List[dict] = []
+    n_params_per_task: List[int] = []
     total_pathology = 0
     cumulative_step = 0
     ewc_baseline = 0.0
@@ -380,21 +408,80 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
         consolidate_task(net, train_cur, pair_name)
         ewc_baseline = EWC_INTERTASK
 
+        # Phase 4.5 dreaming block (grown-only path; passes nothing for
+        # fixed-EWC arms by leaving dreaming_config=None at the call site).
+        if dreaming_config is not None:
+            past_pair_names = pair_names[: task_idx + 1]
+            report = dreaming_block(
+                net,
+                sample_pair_fn=lambda nm, b: train_cur.sample_pair(nm, batch=b),
+                loss_fn=lambda h_a, h_b: contrastive_loss(h_a, h_b, MARGIN),
+                past_pair_names=past_pair_names,
+                replay_fraction=dreaming_config.get(
+                    "replay_fraction", DREAM_REPLAY_FRACTION),
+                replay_steps_per_pair=dreaming_config.get(
+                    "replay_steps_per_pair", DREAM_REPLAY_STEPS),
+                replay_batch=dreaming_config.get("replay_batch", DREAM_BATCH),
+                replay_lr=dreaming_config.get("replay_lr", LR),
+                ewc_strength=dreaming_config.get(
+                    "ewc_strength", DREAM_EWC_STRENGTH),
+                cos_threshold=dreaming_config.get(
+                    "cos_threshold", DREAM_COS_THRESHOLD),
+                u_threshold=dreaming_config.get(
+                    "u_threshold", DREAM_U_THRESHOLD),
+                skip_output_layer=dreaming_config.get(
+                    "skip_output_layer", True),
+                rng=dreaming_rng,
+            )
+            all_dreams.append({
+                "task_idx": task_idx, "pair_name": pair_name,
+                "replay_loss_before": report.replay_loss_before,
+                "replay_loss_after": report.replay_loss_after,
+                "replay_pairs_sampled": report.replay_pairs_sampled,
+                "replay_steps": report.replay_steps,
+                "n_merges": len(report.merges),
+                "n_purges": len(report.purges),
+                "n_params_before": report.n_params_before,
+                "n_params_after": report.n_params_after,
+                "arch_after": tuple(net.n_nodes_per_layer()),
+            })
+            if report.merges or report.purges:
+                # Structural change → optimizer must be rebuilt.
+                opt = optim.Adam(net.parameters(), lr=LR)
+                print(f"  [{label}] DREAM @ task {task_idx+1}/{K}: "
+                      f"replay {report.replay_loss_before:.3f}→"
+                      f"{report.replay_loss_after:.3f} on "
+                      f"{report.replay_pairs_sampled}p; "
+                      f"merges={len(report.merges)} "
+                      f"purges={len(report.purges)} → arch "
+                      f"{net.n_nodes_per_layer()} ({report.n_params_before}→"
+                      f"{report.n_params_after} params)")
+            else:
+                print(f"  [{label}] DREAM @ task {task_idx+1}/{K}: "
+                      f"replay {report.replay_loss_before:.3f}→"
+                      f"{report.replay_loss_after:.3f} on "
+                      f"{report.replay_pairs_sampled}p; "
+                      f"no structural change")
+
         per_pair = evaluate_all_pairs(net, eval_batches, pair_names)
         for j, pname in enumerate(pair_names):
             loss_matrix[task_idx][j] = per_pair[pname]
         avg_so_far = sum(loss_matrix[task_idx][: task_idx + 1]) / (task_idx + 1)
+        n_params_per_task.append(net.n_parameters())
         # Compress per-task summary to one line for 50-task scrolling.
         print(f"[{label}] After task {task_idx+1}: own={per_pair[pair_name]:.3f}  "
               f"avg_to_date={avg_so_far:.3f}  arch={net.n_nodes_per_layer()} "
               f"params={net.n_parameters()}")
 
     elapsed = time.monotonic() - t0
-    return _summarize(label, do_growth, do_pruning, initial_arch,
-                      tuple(net.n_nodes_per_layer()), initial_n_params,
-                      net.n_parameters(), net.layers[-1].n_nodes,
-                      loss_matrix, all_fires, all_prunes, total_pathology,
-                      elapsed)
+    summary = _summarize(label, do_growth, do_pruning, initial_arch,
+                         tuple(net.n_nodes_per_layer()), initial_n_params,
+                         net.n_parameters(), net.layers[-1].n_nodes,
+                         loss_matrix, all_fires, all_prunes, total_pathology,
+                         elapsed)
+    summary["dreams"] = all_dreams
+    summary["n_params_per_task"] = n_params_per_task
+    return summary
 
 
 # ---------------------------------------------------------------------
