@@ -47,6 +47,7 @@ from trioron.triggers import GrowthTrigger, total_gradient_norm
 from trioron.ceilings import CeilingsController
 from trioron.pruner import PruningController, utility_capture
 from trioron.packnet import PackNetController
+from trioron.frustration import FrustrationTracker
 
 
 # ---------------------------------------------------------------------
@@ -231,6 +232,7 @@ def train_one_task_ewc(
     net, task_idx, pair_name, n_steps, opt, train_cur,
     *, ewc_baseline, trigger, ceilings, pruner,
     do_growth, do_pruning, label, global_step_offset, n_total_pairs,
+    frustration: "FrustrationTracker | None" = None,
 ):
     fires: List[dict] = []
     prunes: List[dict] = []
@@ -244,14 +246,22 @@ def train_one_task_ewc(
             with utility_capture(net, mode="combined") as cap:
                 h_a = net(a); h_b = net(b)
                 l_task = contrastive_loss(h_a, h_b, MARGIN)
-                l = l_task + ewc_now * net.ewc_penalty() if ewc_now > 0 else l_task
+                mult = (frustration.observe(pair_name, l_task.item())
+                        if frustration is not None else 1.0)
+                l_scaled = mult * l_task
+                l = (l_scaled + ewc_now * net.ewc_penalty()
+                     if ewc_now > 0 else l_scaled)
                 opt.zero_grad(); l.backward()
                 gnorm = total_gradient_norm(net.parameters())
                 cap.update_layer_utilities()
         else:
             h_a = net(a); h_b = net(b)
             l_task = contrastive_loss(h_a, h_b, MARGIN)
-            l = l_task + ewc_now * net.ewc_penalty() if ewc_now > 0 else l_task
+            mult = (frustration.observe(pair_name, l_task.item())
+                    if frustration is not None else 1.0)
+            l_scaled = mult * l_task
+            l = (l_scaled + ewc_now * net.ewc_penalty()
+                 if ewc_now > 0 else l_scaled)
             opt.zero_grad(); l.backward()
             gnorm = total_gradient_norm(net.parameters())
         opt.step()
@@ -321,9 +331,11 @@ def train_one_task_ewc(
 
 
 def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
-                       train_cur, eval_batches, pair_names):
+                       train_cur, eval_batches, pair_names,
+                       frustration: "FrustrationTracker | None" = None):
     print(f"\n[{label}] curriculum start — arch {net.n_nodes_per_layer()}  "
-          f"params {net.n_parameters()}  growth={do_growth} pruning={do_pruning}")
+          f"params {net.n_parameters()}  growth={do_growth} pruning={do_pruning}"
+          + (f"  frustration={frustration!r}" if frustration is not None else ""))
 
     opt = optim.Adam(net.parameters(), lr=LR)
     trigger = (GrowthTrigger(latent_dim=net.layers[-1].n_nodes, window=TRIGGER_W,
@@ -357,6 +369,7 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
             ceilings=ceilings, pruner=pruner, do_growth=do_growth,
             do_pruning=do_pruning, label=label,
             global_step_offset=cumulative_step, n_total_pairs=K,
+            frustration=frustration,
         )
         opt = result["opt"]; all_fires.extend(result["fires"])
         all_prunes.extend(result["prunes"])
@@ -388,9 +401,11 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
 # ---------------------------------------------------------------------
 
 
-def run_packnet_curriculum(net, label, *, train_cur, eval_batches, pair_names):
+def run_packnet_curriculum(net, label, *, train_cur, eval_batches, pair_names,
+                           frustration: "FrustrationTracker | None" = None):
     print(f"\n[{label}] curriculum start — arch {net.n_nodes_per_layer()}  "
-          f"params {net.n_parameters()}  PackNet, n_tasks={len(pair_names)}")
+          f"params {net.n_parameters()}  PackNet, n_tasks={len(pair_names)}"
+          + (f"  frustration={frustration!r}" if frustration is not None else ""))
 
     K = len(pair_names)
     ctrl = PackNetController(net, n_total_tasks=K)
@@ -407,14 +422,17 @@ def run_packnet_curriculum(net, label, *, train_cur, eval_batches, pair_names):
         for step in range(N_STEPS_PER_TASK):
             a, b = train_cur.sample_pair(pair_name, batch=BATCH)
             h_a = net(a); h_b = net(b)
-            l = contrastive_loss(h_a, h_b, MARGIN)
+            l_task = contrastive_loss(h_a, h_b, MARGIN)
+            mult = (frustration.observe(pair_name, l_task.item())
+                    if frustration is not None else 1.0)
+            l = mult * l_task
             opt.zero_grad()
             l.backward()
             ctrl.freeze_grads()
             opt.step()
             if step == 0 or (step + 1) % LOG_EVERY == 0 or step == N_STEPS_PER_TASK - 1:
                 print(f"  [{label}] task {task_idx+1}/{K} ({pair_name}) "
-                      f"step {step:5d}  loss {l.item():.4f}  "
+                      f"step {step:5d}  loss {l_task.item():.4f}  "
                       f"frozen={ctrl.cumulative_frozen_count()}/{initial_n_params}")
 
         ctrl.end_task(task_idx + 1)

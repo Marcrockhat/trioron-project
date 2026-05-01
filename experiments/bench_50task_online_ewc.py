@@ -50,6 +50,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from trioron.network import TrioronNetwork
 from trioron.incubator import contrastive_loss
 from trioron.curriculum import ParameterizedContrastiveCurriculum
+from trioron.frustration import FrustrationTracker
 
 from experiments.bench_50task import (
     STATE_DIM,
@@ -135,13 +136,18 @@ def consolidate_task_online(
 def train_one_task_online_ewc(
     net, task_idx, pair_name, n_steps, opt, train_cur,
     *, ewc_baseline, label, n_total_pairs,
+    frustration: "FrustrationTracker | None" = None,
 ):
     ewc_now = ewc_baseline
     for step in range(n_steps):
         a, b = train_cur.sample_pair(pair_name, batch=BATCH)
         h_a = net(a); h_b = net(b)
         l_task = contrastive_loss(h_a, h_b, MARGIN)
-        l = l_task + ewc_now * net.ewc_penalty() if ewc_now > 0 else l_task
+        mult = (frustration.observe(pair_name, l_task.item())
+                if frustration is not None else 1.0)
+        l_scaled = mult * l_task
+        l = (l_scaled + ewc_now * net.ewc_penalty()
+             if ewc_now > 0 else l_scaled)
         opt.zero_grad(); l.backward()
         opt.step()
         if step == 0 or (step + 1) % LOG_EVERY == 0 or step == n_steps - 1:
@@ -152,9 +158,11 @@ def train_one_task_online_ewc(
 
 def run_online_ewc_curriculum(
     net, label, *, train_cur, eval_batches, pair_names,
+    frustration: "FrustrationTracker | None" = None,
 ):
     print(f"\n[{label}] Online-EWC curriculum start — arch {net.n_nodes_per_layer()}  "
-          f"params {net.n_parameters()}  γ={GAMMA_ONLINE}")
+          f"params {net.n_parameters()}  γ={GAMMA_ONLINE}"
+          + (f"  frustration={frustration!r}" if frustration is not None else ""))
 
     opt = optim.Adam(net.parameters(), lr=LR)
     K = len(pair_names)
@@ -170,6 +178,7 @@ def run_online_ewc_curriculum(
             net, task_idx, pair_name, n_steps=N_STEPS_PER_TASK, opt=opt,
             train_cur=train_cur, ewc_baseline=ewc_baseline,
             label=label, n_total_pairs=K,
+            frustration=frustration,
         )
 
         consolidate_task_online(net, train_cur, pair_name, task_idx)
