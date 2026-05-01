@@ -94,6 +94,15 @@ DREAM_COS_THRESHOLD = 0.95
 DREAM_U_THRESHOLD = 1e-3
 DREAM_EWC_STRENGTH = EWC_INTERTASK
 DREAM_BATCH = BATCH
+# Phase 4.5 redesign defaults (activation-correlation signal, per
+# next_session_plan.md). The plan has the redundancy_signal default
+# as "activation" but the harness keeps "weight" as the back-compat
+# default — benches that want the new signal must pass it explicitly
+# in their dreaming_config (so cached W-cosine benches don't change
+# behavior on rerun).
+DREAM_REDUNDANCY_SIGNAL = "weight"
+DREAM_AC_THRESHOLD = 0.95
+DREAM_PROBE_BATCH_SIZE = 128
 
 SWEEP_HIDDEN_SIZES = [8, 12, 16]
 
@@ -358,6 +367,12 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
       - replay_fraction, replay_steps_per_pair, replay_batch, replay_lr
       - ewc_strength, cos_threshold, u_threshold
       - skip_output_layer (default True)
+      - redundancy_signal: 'weight' (default, W_anchor cosine) or
+        'activation' (Pearson cosine of post-activation columns)
+      - ac_threshold: float (default 0.95), used when
+        redundancy_signal='activation'
+      - probe_batch_size: int (default 128), probe batch sampled once
+        per dreaming block from past_pair_names
     """
     print(f"\n[{label}] curriculum start — arch {net.n_nodes_per_layer()}  "
           f"params {net.n_parameters()}  growth={do_growth} pruning={do_pruning}"
@@ -431,6 +446,12 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
                     "u_threshold", DREAM_U_THRESHOLD),
                 skip_output_layer=dreaming_config.get(
                     "skip_output_layer", True),
+                redundancy_signal=dreaming_config.get(
+                    "redundancy_signal", DREAM_REDUNDANCY_SIGNAL),
+                ac_threshold=dreaming_config.get(
+                    "ac_threshold", DREAM_AC_THRESHOLD),
+                probe_batch_size=dreaming_config.get(
+                    "probe_batch_size", DREAM_PROBE_BATCH_SIZE),
                 rng=dreaming_rng,
             )
             all_dreams.append({
@@ -446,6 +467,8 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
                 "arch_after": tuple(net.n_nodes_per_layer()),
                 "pre_compress_max_cosines": list(
                     report.pre_compress_max_cosines),
+                "pre_compress_max_activation_cosines": list(
+                    report.pre_compress_max_activation_cosines),
             })
             if report.merges or report.purges:
                 # Structural change → optimizer must be rebuilt.
