@@ -33,6 +33,7 @@ from trioron.dreaming import (
     compress,
     dreaming_block,
     find_redundant_pairs,
+    max_off_diag_cosine,
     merge_nodes,
     purge,
     replay,
@@ -355,6 +356,77 @@ def test_purge_never_drops_last_node():
 
 
 # --------------------------------------------------------------------------- #
+# max_off_diag_cosine probe                                                   #
+# --------------------------------------------------------------------------- #
+
+
+def test_max_off_diag_cosine_random_init_is_low():
+    torch.manual_seed(0)
+    net = _make_net(hidden=8)
+    m = max_off_diag_cosine(net, layer_idx=0)
+    # Random Kaiming 6-d vectors: pairwise cosine should be well below 0.9.
+    assert m < 0.9, f"random-init max cosine unexpectedly high: {m}"
+
+
+def test_max_off_diag_cosine_planted_duplicate_is_one():
+    torch.manual_seed(0)
+    net = _make_net(hidden=6)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=2)
+    m = max_off_diag_cosine(net, layer_idx=0)
+    assert m > 0.999, f"planted duplicate should give cos~1, got {m}"
+
+
+def test_max_off_diag_cosine_handles_singleton_layer():
+    torch.manual_seed(0)
+    # latent=1 layer can be probed but has no off-diagonal pair.
+    net = _make_net(hidden=4, latent=1)
+    m = max_off_diag_cosine(net, layer_idx=2)
+    assert m == float("-inf")
+
+
+def test_dreaming_report_pre_compress_max_cosines_populated():
+    """The probe field reports per-layer max cosines for the layers
+    compress considered (respects skip_output_layer)."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha"], replay_fraction=1.0,
+        replay_steps_per_pair=2, replay_batch=4, ewc_strength=0.0,
+        cos_threshold=0.95, u_threshold=1e9, rng=random.Random(0),
+        skip_output_layer=True,
+    )
+    cosines = dict(rep.pre_compress_max_cosines)
+    assert 0 in cosines and 1 in cosines, (
+        f"hidden layers missing from probe: {rep.pre_compress_max_cosines}"
+    )
+    assert 2 not in cosines, (
+        f"output layer should be skipped under default: {rep.pre_compress_max_cosines}"
+    )
+
+
+def test_dreaming_report_probe_includes_output_when_unskipped():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=3)
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha"], replay_fraction=1.0,
+        replay_steps_per_pair=2, replay_batch=4, ewc_strength=0.0,
+        cos_threshold=2.0, u_threshold=1e9, rng=random.Random(0),
+        skip_output_layer=False,
+    )
+    cosines = dict(rep.pre_compress_max_cosines)
+    assert 2 in cosines, (
+        f"output layer missing from probe under skip=False: "
+        f"{rep.pre_compress_max_cosines}"
+    )
+
+
+# --------------------------------------------------------------------------- #
 # dreaming_block end-to-end                                                   #
 # --------------------------------------------------------------------------- #
 
@@ -432,6 +504,16 @@ def main() -> int:
     _run("purge_skips_output_layer_by_default",
          test_purge_skips_output_layer_by_default)
     _run("purge_never_drops_last_node", test_purge_never_drops_last_node)
+    _run("max_off_diag_cosine_random_init_is_low",
+         test_max_off_diag_cosine_random_init_is_low)
+    _run("max_off_diag_cosine_planted_duplicate_is_one",
+         test_max_off_diag_cosine_planted_duplicate_is_one)
+    _run("max_off_diag_cosine_handles_singleton_layer",
+         test_max_off_diag_cosine_handles_singleton_layer)
+    _run("dreaming_report_pre_compress_max_cosines_populated",
+         test_dreaming_report_pre_compress_max_cosines_populated)
+    _run("dreaming_report_probe_includes_output_when_unskipped",
+         test_dreaming_report_probe_includes_output_when_unskipped)
     _run("dreaming_block_runs_and_returns_report",
          test_dreaming_block_runs_and_returns_report)
     print("-" * 60)
