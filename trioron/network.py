@@ -140,6 +140,7 @@ class TrioronNetwork(nn.Module):
         layer_idx: int,
         init_vec: Optional[torch.Tensor] = None,
         peer_init_for_next: Optional[torch.Tensor] = None,
+        task_idx: int = 0,
     ) -> int:
         """Coordinated cellular division: add one node to `layer_idx` and,
         if a downstream layer exists, extend its fan_in by 1 to accept the
@@ -165,7 +166,7 @@ class TrioronNetwork(nn.Module):
                 f"layer_idx {layer_idx} out of range [0, {len(self.layers)})"
             )
         target = self.layers[layer_idx]
-        new_idx = target.grow_node(init_vec=init_vec)
+        new_idx = target.grow_node(init_vec=init_vec, task_idx=task_idx)
 
         # Cross-layer coordination: extend next layer's fan_in by 1.
         if layer_idx + 1 < len(self.layers):
@@ -253,6 +254,34 @@ class TrioronNetwork(nn.Module):
             self.layers[layer_idx + 1].prune_input(node_idx)
 
     # ----- introspection -----
+
+    def to_mixed_precision(
+        self,
+        weights_dtype: torch.dtype = torch.float16,
+    ) -> "TrioronNetwork":
+        """Convert W and b Parameters to `weights_dtype` (default FP16) on
+        every layer; keep ALL buffers at their current dtype (FP32 for
+        the float buffers, untouched for bool/long ones).
+
+        The point is *mixed* precision: weights ride at the requested
+        narrow type for fast hardware-friendly forward / backward, but
+        the EWC anchors, Fisher accumulator, lambda, routing-scale,
+        apoptosis-pulse all stay FP32 so the consolidation math doesn't
+        suffer from FP16 underflow.
+
+        forward / ewc_penalty / update_fisher / grow_node already
+        cast across the boundary cleanly (see node.py). Returns self
+        for chaining.
+
+        Caller MUST rebuild any optimizer afterwards — the W/b
+        Parameter objects are replaced with new dtypes.
+        """
+        for layer in self.layers:
+            new_W = layer.W.detach().to(weights_dtype)
+            new_b = layer.b.detach().to(weights_dtype)
+            layer._replace_parameter("W", new_W)
+            layer._replace_parameter("b", new_b)
+        return self
 
     def n_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())

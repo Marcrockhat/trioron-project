@@ -46,7 +46,13 @@ def effective_rank(H: torch.Tensor, eps: float = 1e-12) -> float:
     if H.ndim != 2:
         raise ValueError(f"H must be 2D, got shape {tuple(H.shape)}")
     with torch.no_grad():
-        s = torch.linalg.svdvals(H.detach())
+        # CPU SVD is not implemented for BF16/FP16 — cast to FP32 for the
+        # decomposition. This is purely diagnostic (used by the growth
+        # trigger), not on the gradient path, so the cast is free.
+        H_for_svd = H.detach()
+        if H_for_svd.dtype not in (torch.float32, torch.float64):
+            H_for_svd = H_for_svd.float()
+        s = torch.linalg.svdvals(H_for_svd)
         s = s + eps
         p = s / s.sum()
         entropy = -(p * torch.log(p)).sum()

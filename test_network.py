@@ -6,6 +6,7 @@ from __future__ import annotations
 import sys
 import traceback
 import torch
+import torch.optim as optim
 
 from trioron.network import TrioronNetwork
 
@@ -346,6 +347,167 @@ def test_grow_layer_optimizer_can_be_rebuilt():
 # --------------------------------------------------------------------------- #
 
 
+# --------------------------------------------------------------------------- #
+# Mixed precision (FP16 weights / FP32 buffers)                               #
+# --------------------------------------------------------------------------- #
+
+
+def _mp_net():
+    return TrioronNetwork([(4, 4, "relu"), (4, 4, "relu"), (4, 2, "tanh")])
+
+
+def test_to_mixed_precision_converts_weights_only():
+    net = _mp_net()
+    net.to_mixed_precision(weights_dtype=torch.float16)
+    for layer in net.layers:
+        assert layer.W.dtype == torch.float16
+        assert layer.b.dtype == torch.float16
+        # Buffers stay FP32 for the consolidation math.
+        assert layer.W_anchor.dtype == torch.float32
+        assert layer.b_anchor.dtype == torch.float32
+        assert layer.fisher_W.dtype == torch.float32
+        assert layer.fisher_b.dtype == torch.float32
+        assert layer.lam.dtype == torch.float32
+        assert layer.routing_scale.dtype == torch.float32
+        assert layer.apoptosis_pulse.dtype == torch.float32
+
+
+def test_mixed_precision_forward_runs():
+    torch.manual_seed(0)
+    net = _mp_net()
+    net.to_mixed_precision(torch.float16)
+    x = torch.randn(8, 4, dtype=torch.float16)
+    y = net(x)
+    assert y.dtype == torch.float16
+    assert y.shape == (8, 2)
+
+
+def test_mixed_precision_ewc_penalty_matches_fp32_within_tolerance():
+    """EWC penalty value should agree between FP16-weights and FP32-weights
+    networks for the same drift, up to FP16 precision."""
+    torch.manual_seed(0)
+    net_fp32 = _mp_net()
+    # Drift weights so penalty is non-trivial.
+    with torch.no_grad():
+        for layer in net_fp32.layers:
+            layer.W.data += 0.1
+            layer.lam.fill_(1.0)
+    pen_fp32 = float(net_fp32.ewc_penalty().item())
+
+    torch.manual_seed(0)
+    net_fp16 = _mp_net()
+    with torch.no_grad():
+        for layer in net_fp16.layers:
+            layer.W.data += 0.1
+            layer.lam.fill_(1.0)
+    net_fp16.to_mixed_precision(torch.float16)
+    pen_fp16 = float(net_fp16.ewc_penalty().item())
+
+    rel = abs(pen_fp16 - pen_fp32) / max(pen_fp32, 1e-8)
+    assert rel < 1e-2, (
+        f"FP16 EWC penalty too far from FP32: fp32={pen_fp32:.6f} "
+        f"fp16={pen_fp16:.6f} rel={rel:.4f}"
+    )
+
+
+def test_mixed_precision_backward_and_fisher_accumulate():
+    """Train one step at FP16; Fisher (FP32) gets non-zero accumulation."""
+    torch.manual_seed(0)
+    net = _mp_net()
+    net.to_mixed_precision(torch.float16)
+    x = torch.randn(8, 4, dtype=torch.float16)
+    y_target = torch.randn(8, 2, dtype=torch.float16)
+
+    out = net(x)
+    loss = (out - y_target).pow(2).mean()
+    loss.backward()
+    # Grad on W is FP16; Fisher is FP32 — accumulation should upcast cleanly.
+    for layer in net.layers:
+        layer.update_fisher()
+        assert layer.fisher_W.dtype == torch.float32
+        assert (layer.fisher_W > 0).any(), (
+            "Fisher should have positive entries after a non-trivial step"
+        )
+
+
+def test_mixed_precision_grow_layer_preserves_dtypes():
+    torch.manual_seed(0)
+    net = _mp_net()
+    net.to_mixed_precision(torch.float16)
+    new_idx = net.grow_layer(layer_idx=1, task_idx=2)
+    assert new_idx == net.layers[1].n_nodes - 1
+    layer = net.layers[1]
+    assert layer.W.dtype == torch.float16
+    assert layer.b.dtype == torch.float16
+    assert layer.W_anchor.dtype == torch.float32
+    assert layer.fisher_W.dtype == torch.float32
+    assert layer.routing_scale.dtype == torch.float32
+    assert layer.apoptosis_pulse.dtype == torch.float32
+    # Forward still works after growth.
+    x = torch.randn(4, 4, dtype=torch.float16)
+    out = net(x)
+    assert out.dtype == torch.float16
+
+
+def test_mixed_precision_anchor_keeps_fp32_after_anchor_all():
+    """After anchor_all(), W_anchor must still be FP32 even though W is FP16."""
+    torch.manual_seed(0)
+    net = _mp_net()
+    net.to_mixed_precision(torch.float16)
+    with torch.no_grad():
+        for layer in net.layers:
+            layer.W.data += 0.05
+    net.anchor_all()
+    for layer in net.layers:
+        assert layer.W_anchor.dtype == torch.float32, (
+            f"anchor_all replaced FP32 anchor with FP16 — got {layer.W_anchor.dtype}"
+        )
+
+
+def test_mixed_precision_forward_accepts_fp32_input():
+    """Mixed-precision net should auto-cast FP32 inputs to its weight
+    dtype so callers don't need to know the precision."""
+    torch.manual_seed(0)
+    net = _mp_net()
+    net.to_mixed_precision(torch.bfloat16)
+    x_fp32 = torch.randn(8, 4, dtype=torch.float32)
+    out = net(x_fp32)
+    assert out.dtype == torch.bfloat16
+    assert out.shape == (8, 2)
+
+
+def test_mixed_precision_bfloat16_path():
+    torch.manual_seed(0)
+    net = _mp_net()
+    net.to_mixed_precision(torch.bfloat16)
+    for layer in net.layers:
+        assert layer.W.dtype == torch.bfloat16
+        assert layer.W_anchor.dtype == torch.float32
+    x = torch.randn(4, 4, dtype=torch.float32)
+    y_target = torch.randn(4, 2, dtype=torch.float32)
+    out = net(x)
+    loss = (out.float() - y_target).pow(2).mean()
+    loss.backward()
+    for layer in net.layers:
+        layer.update_fisher()
+        assert (layer.fisher_W > 0).any()
+
+
+def test_mixed_precision_optimizer_rebuild_works():
+    torch.manual_seed(0)
+    net = _mp_net()
+    net.to_mixed_precision(torch.float16)
+    opt = optim.Adam(net.parameters(), lr=1e-3)
+    x = torch.randn(8, 4, dtype=torch.float16)
+    y = torch.randn(8, 2, dtype=torch.float16)
+    out = net(x)
+    loss = (out - y).pow(2).mean()
+    opt.zero_grad(); loss.backward(); opt.step()
+    # Weights moved.
+    for layer in net.layers:
+        assert layer.W.dtype == torch.float16
+
+
 def main():
     print("Running TrioronNetwork tests...")
     print(f"  torch version: {torch.__version__}")
@@ -374,6 +536,22 @@ def main():
         ("prune_layer_node_redistribute",     test_prune_layer_node_redistributes_to_nearest_peer),
         ("prune_layer_node_refuses_last",     test_prune_layer_node_refuses_last_node),
         ("prune_layer_node_invalid_idx",      test_prune_layer_node_invalid_idx_raises),
+        ("mp_to_mixed_precision_converts_weights_only",
+                                              test_to_mixed_precision_converts_weights_only),
+        ("mp_forward_runs",                   test_mixed_precision_forward_runs),
+        ("mp_ewc_penalty_matches_fp32",
+                                              test_mixed_precision_ewc_penalty_matches_fp32_within_tolerance),
+        ("mp_backward_and_fisher_accumulate",
+                                              test_mixed_precision_backward_and_fisher_accumulate),
+        ("mp_grow_layer_preserves_dtypes",
+                                              test_mixed_precision_grow_layer_preserves_dtypes),
+        ("mp_anchor_keeps_fp32_after_anchor_all",
+                                              test_mixed_precision_anchor_keeps_fp32_after_anchor_all),
+        ("mp_forward_accepts_fp32_input",
+                                              test_mixed_precision_forward_accepts_fp32_input),
+        ("mp_bfloat16_path",                  test_mixed_precision_bfloat16_path),
+        ("mp_optimizer_rebuild_works",
+                                              test_mixed_precision_optimizer_rebuild_works),
     ]
 
     for name, fn in tests:

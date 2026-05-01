@@ -60,13 +60,20 @@ class MergeEvent:
     victim_idx: int
     cos_sim: float
     arch_after: Tuple[int, ...]
-    # "merge" (legacy: incoming-mean + outgoing-sum + delete victim) or
+    # "merge" (legacy: incoming-mean + outgoing-sum + delete victim),
     # "downscale" (synaptic downscale: peer.outgoing += victim.outgoing,
-    # victim.outgoing = 0, victim's substrate at layer L preserved). The
-    # field is named `action` not `mechanism` because we expect more to
-    # be added as the dreaming-phase mechanism evolves. Defaults to
-    # "merge" so existing tests / callers see no change.
+    # victim.outgoing = 0, victim's substrate at layer L preserved), or
+    # "starve" (routing starvation: victim.routing_scale *= alpha, peer
+    # untouched). The field is named `action` not `mechanism` because we
+    # expect more to be added as the dreaming-phase mechanism evolves.
+    # Defaults to "merge" so existing tests / callers see no change.
     action: str = "merge"
+    # Routing-starvation only: the routing_scale on the victim AFTER the
+    # ramp (informational). NaN for non-starve actions.
+    victim_routing_scale_after: float = float("nan")
+    # Routing-starvation only: True when this event pushed the victim's
+    # routing_scale below the starvation floor and latched it to 0.
+    victim_latched: bool = False
 
 
 @dataclass
@@ -468,6 +475,243 @@ def synaptic_downscale(
         nxt.fisher_W[:, victim_idx] = 0.0
 
 
+def apoptosis_redistribute(
+    net: TrioronNetwork,
+    layer_idx: int,
+    dead_idx: int,
+) -> int:
+    """Phase 4.5 Experiment 5 — outgoing-role transfer at the moment of
+    cell death. Uniformly redistribute the dead cell's outgoing column
+    on layer L+1 across all SURVIVING (non-latched) peers in layer L,
+    then zero the dead cell's outgoing.
+
+    Returns the number of surviving peers that received a share. 0
+    means there were no survivors and the call was a no-op (the dead
+    cell's outgoing is preserved so something still routes downstream).
+
+    No-op when layer_idx is the output layer (no L+1 to redistribute
+    into) or when there are no surviving peers (single-cell layers,
+    or every peer already latched).
+
+    Caller does NOT need to rebuild the optimizer — only buffer .data
+    on layer L+1 is mutated.
+    """
+    if layer_idx + 1 >= len(net.layers):
+        return 0
+    layer = net.layers[layer_idx]
+    nxt = net.layers[layer_idx + 1]
+    survivors = [
+        k for k in range(layer.n_nodes)
+        if k != dead_idx
+        and not bool(layer.routing_latched[k].item())
+    ]
+    if not survivors:
+        return 0
+    n = len(survivors)
+    with torch.no_grad():
+        share_W = nxt.W.data[:, dead_idx] / n
+        share_anchor = nxt.W_anchor[:, dead_idx] / n
+        share_fisher = nxt.fisher_W[:, dead_idx] / n
+        for k in survivors:
+            nxt.W.data[:, k] = nxt.W.data[:, k] + share_W
+            nxt.W_anchor[:, k] = nxt.W_anchor[:, k] + share_anchor
+            nxt.fisher_W[:, k] = nxt.fisher_W[:, k] + share_fisher
+        # Zero the dead cell's outgoing — its bias-driven constant no
+        # longer routes anywhere. The role it carried lives on in the
+        # peers that absorbed its share.
+        nxt.W.data[:, dead_idx] = 0.0
+        nxt.W_anchor[:, dead_idx] = 0.0
+        nxt.fisher_W[:, dead_idx] = 0.0
+    return n
+
+
+def apoptosis_spike(
+    net: TrioronNetwork,
+    layer_idx: int,
+    dead_idx: int,
+    *,
+    spike_init: float = 0.8,
+) -> int:
+    """Phase 4.5 Experiment 5 — strong-signal-that-dies-slowly. At the
+    moment unit `dead_idx` latches, raise apoptosis_pulse on every
+    surviving (non-latched) peer in the same layer to at least
+    `spike_init`. Subsequent dream blocks decay the pulse.
+
+    Uses max() so cumulative deaths don't drive pulse above 1.0 — the
+    signal saturates rather than compounding into negative effective
+    lambda.
+
+    Returns the number of peers spiked.
+    """
+    if not (0.0 <= spike_init <= 1.0):
+        raise ValueError(
+            f"spike_init must be in [0,1], got {spike_init!r}"
+        )
+    layer = net.layers[layer_idx]
+    survivors = [
+        k for k in range(layer.n_nodes)
+        if k != dead_idx
+        and not bool(layer.routing_latched[k].item())
+    ]
+    if not survivors:
+        return 0
+    with torch.no_grad():
+        for k in survivors:
+            cur = float(layer.apoptosis_pulse[k].item())
+            if spike_init > cur:
+                layer.apoptosis_pulse[k] = spike_init
+    return len(survivors)
+
+
+def apoptosis_decay(
+    net: TrioronNetwork,
+    decay_rate: float = 0.7,
+) -> None:
+    """Multiply apoptosis_pulse by `decay_rate` on every layer. Called
+    once per dream block so the spike fades over a handful of blocks.
+
+    decay_rate=0.7 → spike halves in ~2 blocks, drops below 10% in ~7.
+    decay_rate=0.0 → pulse cleared each block (one-shot effect).
+    decay_rate=1.0 → pulse never decays (permanent — usually wrong).
+    """
+    if not (0.0 <= decay_rate <= 1.0):
+        raise ValueError(
+            f"decay_rate must be in [0,1], got {decay_rate!r}"
+        )
+    with torch.no_grad():
+        for layer in net.layers:
+            layer.apoptosis_pulse.mul_(decay_rate)
+
+
+def routing_starve(
+    net: TrioronNetwork,
+    layer_idx: int,
+    victim_idx: int,
+    *,
+    alpha: float = 0.7,
+    floor: float = 1e-3,
+    apoptosis_on: bool = False,
+    apoptosis_spike_init: float = 0.8,
+) -> Tuple[float, bool]:
+    """Routing starvation: multiply victim's routing_scale by `alpha`. If the
+    new scale crosses `floor`, set it to 0 and latch (permanent — no regrow).
+
+    Substrate-preserving in the same spirit as `synaptic_downscale`, but
+    asymmetric: the victim's INPUTS are ramped down (forward applies
+    F.linear(x, W * routing_scale.unsqueeze(1), b)) while its OUTGOING
+    weights are untouched. Bias is untouched too — so as routing_scale → 0
+    the victim continues producing a bias-only constant downstream, and
+    downstream layers learn to absorb that constant via gradient descent
+    on their own weights / biases. The unit "dies slowly" rather than
+    being deleted.
+
+    `apoptosis_on` (Phase 4.5 Experiment 5): when True, the moment a
+    victim transitions from non-latched to latched (scale crosses
+    `floor`) fires both apoptosis_redistribute (uniform outgoing
+    transfer to surviving peers; victim's outgoing zeroed) and
+    apoptosis_spike (raise apoptosis_pulse on surviving peers to
+    `apoptosis_spike_init`). Subsequent dream blocks must apply
+    apoptosis_decay to fade the spike.
+
+    Returns (routing_scale_after, latched_now).
+
+    Caller does NOT need to rebuild the optimizer — only buffer .data is
+    mutated (and L+1's W .data when apoptosis fires).
+    """
+    if not (0.0 < alpha < 1.0):
+        raise ValueError(f"alpha must be in (0,1), got {alpha!r}")
+    if floor < 0.0:
+        raise ValueError(f"floor must be >= 0, got {floor!r}")
+    layer = net.layers[layer_idx]
+    if not (0 <= victim_idx < layer.n_nodes):
+        raise IndexError(
+            f"victim_idx {victim_idx} out of range [0,{layer.n_nodes})"
+        )
+    with torch.no_grad():
+        if bool(layer.routing_latched[victim_idx].item()):
+            return (0.0, True)
+        cur = float(layer.routing_scale[victim_idx].item())
+        new = cur * alpha
+        latched_now = False
+        if new < floor:
+            new = 0.0
+            layer.routing_latched[victim_idx] = True
+            latched_now = True
+        layer.routing_scale[victim_idx] = new
+    if latched_now and apoptosis_on:
+        # Set latched=True is already in place above; helpers will
+        # exclude this index because it's now latched. Do this OUTSIDE
+        # the `with torch.no_grad()` block for symmetry — the helpers
+        # take their own no_grad context.
+        apoptosis_redistribute(net, layer_idx, victim_idx)
+        apoptosis_spike(
+            net, layer_idx, victim_idx, spike_init=apoptosis_spike_init,
+        )
+    return (new, latched_now)
+
+
+def routing_regrow(
+    net: TrioronNetwork,
+    layer_idx: int,
+    victim_idx: int,
+    *,
+    alpha: float = 0.7,
+) -> float:
+    """Inverse of routing_starve: multiply victim's routing_scale by 1/alpha
+    (capped at 1.0). Latched units are NOT regrown (the latch is permanent).
+
+    Returns the routing_scale after the regrow.
+    """
+    if not (0.0 < alpha < 1.0):
+        raise ValueError(f"alpha must be in (0,1), got {alpha!r}")
+    layer = net.layers[layer_idx]
+    with torch.no_grad():
+        if bool(layer.routing_latched[victim_idx].item()):
+            return 0.0
+        cur = float(layer.routing_scale[victim_idx].item())
+        new = min(1.0, cur / alpha)
+        layer.routing_scale[victim_idx] = new
+    return new
+
+
+def _pick_starvation_victim(
+    net: TrioronNetwork,
+    layer_idx: int,
+    idx_a: int,
+    idx_b: int,
+) -> Tuple[int, int]:
+    """Return (peer_idx, victim_idx) — primary keeps, victim gets starved.
+
+    Primary criterion: older task_of_origin = primary. Tiebreak: larger
+    outgoing-norm on layer L+1 = primary. Last-resort tiebreak when both
+    ages and outgoing norms are identical (or no L+1 exists): smaller
+    index = primary, so the choice is deterministic for tests.
+    """
+    layer = net.layers[layer_idx]
+    age_a = int(layer.task_of_origin[idx_a].item())
+    age_b = int(layer.task_of_origin[idx_b].item())
+    if age_a < age_b:
+        return idx_a, idx_b
+    if age_b < age_a:
+        return idx_b, idx_a
+    has_next = layer_idx + 1 < len(net.layers)
+    if has_next:
+        nxt = net.layers[layer_idx + 1]
+        norm_a = float(nxt.W_anchor[:, idx_a].norm().item())
+        norm_b = float(nxt.W_anchor[:, idx_b].norm().item())
+    else:
+        # Output layer fallback — use the unit's own incoming W norm. The
+        # default skip_output_layer policy means we usually don't reach
+        # this path.
+        norm_a = float(layer.W_anchor[idx_a].norm().item())
+        norm_b = float(layer.W_anchor[idx_b].norm().item())
+    if norm_a > norm_b:
+        return idx_a, idx_b
+    if norm_b > norm_a:
+        return idx_b, idx_a
+    return (idx_a, idx_b) if idx_a < idx_b else (idx_b, idx_a)
+
+
 def compress(
     net: TrioronNetwork,
     *,
@@ -480,6 +724,10 @@ def compress(
     ac_threshold: float = 0.95,
     compression_action: str = "merge",
     max_downscales_per_layer: Optional[int] = None,
+    starvation_alpha: float = 0.7,
+    starvation_floor: float = 1e-3,
+    apoptosis_on: bool = False,
+    apoptosis_spike_init: float = 0.8,
 ) -> List[MergeEvent]:
     """Greedy topological compression: repeatedly merge the highest-similarity
     pair on each candidate layer until none exceed the threshold.
@@ -502,15 +750,31 @@ def compress(
                       VRAM unchanged. Optimizer rebuild NOT required.
                       Re-recruitment is possible (fisher pinned at zero
                       on victim's outgoing column → no EWC penalty).
+      - "starve"    — routing starvation (Phase 4.5 Experiment 3,
+                      2026-05-01): victim's routing_scale *= alpha each
+                      event; below `starvation_floor` it latches to 0
+                      permanently. Peer untouched. Asymmetric and
+                      reversible until latched: at the END of each
+                      compress() call, any non-latched node in a
+                      processed layer with 0 < scale < 1.0 that was
+                      NOT selected as a victim this call is regrown
+                      (scale ← min(1.0, scale / alpha)). The "primary"
+                      kept-side is older task_of_origin (tiebreak: larger
+                      outgoing-norm). Optimizer rebuild NOT required.
 
     `max_downscales_per_layer` (Experiment 2 of Phase 4.5, 2026-05-01):
-      Hard cap on the number of downscale events per layer per call.
-      Only applies to `compression_action='downscale'` (merge has
-      natural termination via victim deletion). None = uncapped (the
-      original behavior). Set to small integers (1-2) to let replay
-      absorb each consolidation before the next one drifts on top of
-      it; dampens runaway behavior on seeds with high natural
-      activation-cosine ceilings (see dreaming_synaptic_sweep_result).
+      Hard cap on the number of compression events per layer per call.
+      Applies to BOTH "downscale" and "starve" (merge has natural
+      termination via victim deletion). None = uncapped (the original
+      behavior). Set to small integers (1-2) to let replay absorb each
+      consolidation before the next one drifts on top of it; dampens
+      runaway behavior on seeds with high natural activation-cosine
+      ceilings (see dreaming_synaptic_sweep_result).
+
+    `starvation_alpha`, `starvation_floor` (Experiment 3): per-event
+      multiplicative ramp factor and latch threshold for "starve".
+      Defaults: alpha=0.7, floor=1e-3 — hits floor in ~21 events from
+      scale=1.0, hits 0.1 in ~7 events.
 
     By default the OUTPUT layer is skipped — collapsing two latent dims
     silently changes the representational capacity of the network in a
@@ -531,10 +795,10 @@ def compress(
             f"redundancy_signal must be 'weight' or 'activation', "
             f"got {redundancy_signal!r}"
         )
-    if compression_action not in ("merge", "downscale"):
+    if compression_action not in ("merge", "downscale", "starve"):
         raise ValueError(
-            f"compression_action must be 'merge' or 'downscale', "
-            f"got {compression_action!r}"
+            f"compression_action must be 'merge', 'downscale', or "
+            f"'starve', got {compression_action!r}"
         )
     if redundancy_signal == "activation" and probe_batch is None:
         raise ValueError(
@@ -546,6 +810,16 @@ def compress(
             f"max_downscales_per_layer must be >= 0 or None, "
             f"got {max_downscales_per_layer!r}"
         )
+    if compression_action == "starve":
+        if not (0.0 < starvation_alpha < 1.0):
+            raise ValueError(
+                f"starvation_alpha must be in (0,1), "
+                f"got {starvation_alpha!r}"
+            )
+        if starvation_floor < 0.0:
+            raise ValueError(
+                f"starvation_floor must be >= 0, got {starvation_floor!r}"
+            )
 
     if layer_idxs is None:
         last = len(net.layers) - 1
@@ -557,31 +831,34 @@ def compress(
     for L in layer_idxs:
         if L < 0 or L >= len(net.layers):
             continue
-        # Per-layer set of indices that have already been downscaled this
-        # call. With "merge" the victim is physically removed so re-
-        # detection naturally stops; with "downscale" the victim is
-        # still in the layer, so without an explicit exclusion the pair
-        # would be re-found on every iteration. We only exclude the
-        # victim — a downscaled node that became someone else's PEER is
-        # still a valid load-bearer.
-        downscaled_victims: set = set()
-        n_downscales_this_layer = 0
+        # Per-layer set of indices that have already been chosen as victim
+        # this call. With "merge" the victim is physically removed so re-
+        # detection naturally stops; with "downscale"/"starve" the victim
+        # is still in the layer, so without an explicit exclusion the same
+        # pair would be re-picked. We only exclude the victim — a node
+        # that became someone else's PEER on a later iteration is still a
+        # valid load-bearer.
+        excluded_victims: set = set()
+        n_events_this_layer = 0
         # For "downscale" on the output layer, synaptic_downscale is a
         # no-op (no L+1 to redirect into) — drop the layer to keep the
-        # event log honest.
+        # event log honest. "starve" doesn't need L+1, but the dreaming
+        # spec keeps the output layer off-limits as a representational
+        # invariant.
         if compression_action == "downscale" and L >= len(net.layers) - 1:
             continue
         # Iterate inside this layer until no eligible pair remains, or we
         # hit max_merges (paranoia bound — prevents pathological loops on
         # an all-collinear layer). For "activation", recompute the probe
         # forward each iteration so post-action activations drive the
-        # next candidate decision (downscale changes layer L+1, not L,
-        # so the layer-L activation cosine of (peer, victim) wouldn't
-        # change without the explicit exclusion above).
+        # next candidate decision (downscale/starve change L+1 weights or
+        # routing_scale, not L's W_anchor, so the layer-L activation
+        # cosine of (peer, victim) wouldn't change without the explicit
+        # exclusion above).
         while len(events) < max_merges:
-            if (compression_action == "downscale"
+            if (compression_action in ("downscale", "starve")
                     and max_downscales_per_layer is not None
-                    and n_downscales_this_layer >= max_downscales_per_layer):
+                    and n_events_this_layer >= max_downscales_per_layer):
                 break
             if net.layers[L].n_nodes <= 1:
                 break
@@ -595,14 +872,43 @@ def compress(
                 )
             if not pairs:
                 break
-            # Pick first eligible pair (highest similarity) where neither
-            # index has been downscaled-as-victim already.
+            # Pick first eligible pair (highest similarity).
+            #   merge:     no exclusion needed — victim is deleted.
+            #   downscale: exclude any previously-victimized index (it
+            #              has zero outgoing already).
+            #   starve:    exclude any node already starved this call AND
+            #              skip pairs where BOTH nodes are latched (no
+            #              eligible victim left in the pair).
             picked = None
+            peer_for_pair = None
             for i, j, s in pairs:
                 if (compression_action == "downscale"
-                        and (i in downscaled_victims
-                             or j in downscaled_victims)):
+                        and (i in excluded_victims
+                             or j in excluded_victims)):
                     continue
+                if compression_action == "starve":
+                    if i in excluded_victims or j in excluded_victims:
+                        continue
+                    layer_at_L = net.layers[L]
+                    a_lat = bool(layer_at_L.routing_latched[i].item())
+                    b_lat = bool(layer_at_L.routing_latched[j].item())
+                    if a_lat and b_lat:
+                        continue
+                    # If exactly one is latched, the latched node is forced
+                    # to be the primary (we can't starve it further). The
+                    # un-latched node is the victim.
+                    if a_lat:
+                        peer_for_pair = i
+                        picked = (i, j, s)
+                        break
+                    if b_lat:
+                        peer_for_pair = j
+                        picked = (i, j, s)
+                        break
+                    p_idx, _ = _pick_starvation_victim(net, L, i, j)
+                    peer_for_pair = p_idx
+                    picked = (i, j, s)
+                    break
                 picked = (i, j, s)
                 break
             if picked is None:
@@ -610,15 +916,57 @@ def compress(
             i, j, s = picked
             if compression_action == "merge":
                 merge_nodes(net, L, peer_idx=i, victim_idx=j)
-            else:
+                events.append(MergeEvent(
+                    layer_idx=L, peer_idx=i, victim_idx=j, cos_sim=s,
+                    arch_after=tuple(net.n_nodes_per_layer()),
+                    action=compression_action,
+                ))
+            elif compression_action == "downscale":
                 synaptic_downscale(net, L, peer_idx=i, victim_idx=j)
-                downscaled_victims.add(j)
-                n_downscales_this_layer += 1
-            events.append(MergeEvent(
-                layer_idx=L, peer_idx=i, victim_idx=j, cos_sim=s,
-                arch_after=tuple(net.n_nodes_per_layer()),
-                action=compression_action,
-            ))
+                excluded_victims.add(j)
+                n_events_this_layer += 1
+                events.append(MergeEvent(
+                    layer_idx=L, peer_idx=i, victim_idx=j, cos_sim=s,
+                    arch_after=tuple(net.n_nodes_per_layer()),
+                    action=compression_action,
+                ))
+            else:  # starve
+                victim_idx = j if peer_for_pair == i else i
+                scale_after, latched_now = routing_starve(
+                    net, L, victim_idx,
+                    alpha=starvation_alpha, floor=starvation_floor,
+                    apoptosis_on=apoptosis_on,
+                    apoptosis_spike_init=apoptosis_spike_init,
+                )
+                excluded_victims.add(victim_idx)
+                n_events_this_layer += 1
+                events.append(MergeEvent(
+                    layer_idx=L, peer_idx=peer_for_pair,
+                    victim_idx=victim_idx, cos_sim=s,
+                    arch_after=tuple(net.n_nodes_per_layer()),
+                    action="starve",
+                    victim_routing_scale_after=scale_after,
+                    victim_latched=latched_now,
+                ))
+
+        # Routing-starvation regrow pass: any non-latched node at this
+        # layer with 0 < routing_scale < 1.0 that was NOT chosen as a
+        # victim this call regrows by 1/alpha (capped at 1.0). This is
+        # the "reversible if not yet latched to zero" half of Rocky's
+        # spec — units that drifted away from their redundant peer
+        # recover their routing.
+        if compression_action == "starve":
+            layer = net.layers[L]
+            for k in range(layer.n_nodes):
+                if k in excluded_victims:
+                    continue
+                if bool(layer.routing_latched[k].item()):
+                    continue
+                cur = float(layer.routing_scale[k].item())
+                if 0.0 < cur < 1.0:
+                    routing_regrow(
+                        net, L, k, alpha=starvation_alpha,
+                    )
     return events
 
 
@@ -739,6 +1087,12 @@ def dreaming_block(
     probe_batch_size: int = 128,
     compression_action: str = "merge",
     max_downscales_per_layer: Optional[int] = None,
+    starvation_alpha: float = 0.7,
+    starvation_floor: float = 1e-3,
+    consolidate: bool = True,
+    apoptosis_on: bool = False,
+    apoptosis_spike_init: float = 0.8,
+    apoptosis_decay_rate: float = 0.7,
 ) -> DreamingReport:
     """Run replay → compress → purge in sequence. Returns a DreamingReport.
 
@@ -760,29 +1114,71 @@ def dreaming_block(
         absorbs victim's outgoing, victim's outgoing zeroed, victim's
         row at layer L untouched). The architecture / param count does
         NOT change.
+      - "starve": routing starvation (Phase 4.5 Experiment 3 — see
+        `routing_starve` docstring). Asymmetric: victim's incoming W is
+        scaled by `starvation_alpha` per event; below
+        `starvation_floor` the scale latches to 0 permanently.
+        Reversible while not latched (regrow pass at end of compress).
+        Architecture and param count unchanged.
 
     `max_downscales_per_layer` (Phase 4.5 Experiment 2): hard cap on
-    the number of downscale events per layer per call. None = uncapped
-    (the original behavior). Only applies when
-    compression_action='downscale' — merge has natural termination.
+    the number of compression events per layer per call. None = uncapped
+    (the original behavior). Applies to BOTH 'downscale' and 'starve'
+    — merge has natural termination via victim deletion.
+
+    `starvation_alpha`, `starvation_floor` (Phase 4.5 Experiment 3):
+    only consulted when compression_action='starve'. Defaults
+    alpha=0.7, floor=1e-3.
+
+    `consolidate` (Phase 4.5 Experiment 4 — developmental window,
+    2026-05-02): when False, skip both compress() and purge() — but
+    replay and pre-compress probes still run. The block becomes a
+    pure-rehearsal-and-measure pass. Lets the caller turn off
+    structural consolidation past a developmental window (e.g.,
+    `task_idx < N`) while keeping past-pair memories warm. Default
+    True preserves prior behavior.
+
+    `apoptosis_on` (Phase 4.5 Experiment 5 — apoptosis spike,
+    2026-05-02): when True (and compression_action='starve'), every
+    full-latch transition during compress fires:
+      - apoptosis_redistribute: uniform transfer of the dead cell's
+        outgoing column on layer L+1 across all surviving non-latched
+        peers; victim's outgoing zeroed.
+      - apoptosis_spike: raise apoptosis_pulse on every surviving
+        non-latched peer to `apoptosis_spike_init`.
+    Each dream block also applies `apoptosis_pulse *= apoptosis_decay_rate`
+    on every layer (whether or not consolidate is True), so the spike
+    fades over a few blocks. ewc_penalty uses (1 - pulse).clamp_min(0)
+    as effective lambda — neighbors of fresh deaths train with reduced
+    EWC stiffness so they can adjust to absorb the dead cell's role.
+    Defaults: spike_init=0.8, decay_rate=0.7.
 
     Caller is responsible for rebuilding the optimizer after this returns
     if `report.merges` or `report.purges` is non-empty under
     `compression_action='merge'` (the W/b Parameter objects of any
-    modified layer have been replaced). For 'downscale', only purges
-    require rebuild.
+    modified layer have been replaced). For 'downscale' / 'starve',
+    only purges require rebuild.
     """
     if redundancy_signal not in ("weight", "activation"):
         raise ValueError(
             f"redundancy_signal must be 'weight' or 'activation', "
             f"got {redundancy_signal!r}"
         )
-    if compression_action not in ("merge", "downscale"):
+    if compression_action not in ("merge", "downscale", "starve"):
         raise ValueError(
-            f"compression_action must be 'merge' or 'downscale', "
-            f"got {compression_action!r}"
+            f"compression_action must be 'merge', 'downscale', or "
+            f"'starve', got {compression_action!r}"
         )
     n_before = net.n_parameters()
+
+    # Apoptosis pulse decay — applied at the START of every dream block
+    # (whether or not consolidate is True) so the spike from any
+    # previous block's deaths fades over time. Skipped entirely when
+    # apoptosis is OFF (the pulse stays 0 anyway, but keeping the call
+    # gated avoids touching buffers in the no-apoptosis path).
+    if apoptosis_on:
+        apoptosis_decay(net, decay_rate=apoptosis_decay_rate)
+
     rep = replay(
         net,
         sample_pair_fn=sample_pair_fn,
@@ -821,7 +1217,13 @@ def dreaming_block(
             for L in probe_layers
         ]
 
-    if redundancy_signal == "activation" and probe_batch is not None:
+    if not consolidate:
+        # Developmental-window OFF: replay + probes only, no structural
+        # changes. Empty merge/purge lists let downstream callers see
+        # the cosine trajectory without reacting to it.
+        merges: List[MergeEvent] = []
+        purges: List[PurgeEvent] = []
+    elif redundancy_signal == "activation" and probe_batch is not None:
         merges = compress(
             net,
             redundancy_signal="activation",
@@ -830,6 +1232,14 @@ def dreaming_block(
             skip_output_layer=skip_output_layer,
             compression_action=compression_action,
             max_downscales_per_layer=max_downscales_per_layer,
+            starvation_alpha=starvation_alpha,
+            starvation_floor=starvation_floor,
+            apoptosis_on=apoptosis_on,
+            apoptosis_spike_init=apoptosis_spike_init,
+        )
+        purges = purge(
+            net, u_threshold=u_threshold,
+            skip_output_layer=skip_output_layer,
         )
     else:
         # Either signal=='weight', or signal=='activation' but no past
@@ -843,10 +1253,15 @@ def dreaming_block(
             skip_output_layer=skip_output_layer,
             compression_action=compression_action,
             max_downscales_per_layer=max_downscales_per_layer,
+            starvation_alpha=starvation_alpha,
+            starvation_floor=starvation_floor,
+            apoptosis_on=apoptosis_on,
+            apoptosis_spike_init=apoptosis_spike_init,
         )
-    purges = purge(
-        net, u_threshold=u_threshold, skip_output_layer=skip_output_layer,
-    )
+        purges = purge(
+            net, u_threshold=u_threshold,
+            skip_output_layer=skip_output_layer,
+        )
     n_after = net.n_parameters()
 
     return DreamingReport(

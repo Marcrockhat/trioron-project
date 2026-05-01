@@ -30,6 +30,10 @@ from trioron.dreaming import (
     DreamingReport,
     MergeEvent,
     PurgeEvent,
+    _pick_starvation_victim,
+    apoptosis_decay,
+    apoptosis_redistribute,
+    apoptosis_spike,
     compress,
     dreaming_block,
     find_activation_redundant_pairs,
@@ -39,6 +43,8 @@ from trioron.dreaming import (
     merge_nodes,
     purge,
     replay,
+    routing_regrow,
+    routing_starve,
     synaptic_downscale,
 )
 
@@ -1097,6 +1103,894 @@ def test_dreaming_block_runs_and_returns_report():
 
 
 # --------------------------------------------------------------------------- #
+# Routing starvation (Phase 4.5 Experiment 3)                                 #
+# --------------------------------------------------------------------------- #
+
+
+def test_routing_scale_buffer_exists_and_init_one():
+    """Every layer is born with routing_scale=1.0 per node and unlatched."""
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    for L_i, layer in enumerate(net.layers):
+        assert torch.allclose(
+            layer.routing_scale, torch.ones(layer.n_nodes)
+        ), f"layer {L_i}: routing_scale not all-ones at init"
+        assert not bool(layer.routing_latched.any().item()), (
+            f"layer {L_i}: nothing should be latched at init"
+        )
+        assert torch.equal(
+            layer.task_of_origin,
+            torch.zeros(layer.n_nodes, dtype=torch.long),
+        ), f"layer {L_i}: task_of_origin not zero at init"
+
+
+def test_forward_with_routing_scale_one_matches_unscaled():
+    """Default routing_scale=1.0 → forward identical to plain F.linear."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    x = torch.randn(8, 6)
+    with torch.no_grad():
+        out = net(x)
+    # Compare against the un-scaled compute path manually.
+    h = x
+    for layer in net.layers:
+        z = F.linear(h, layer.W, layer.b)
+        if layer.activation == "relu":
+            h = F.relu(z)
+        elif layer.activation == "tanh":
+            h = torch.tanh(z)
+        else:
+            h = z
+    assert torch.allclose(out, h, atol=1e-6), (
+        "forward with routing_scale=1.0 must match unscaled path"
+    )
+
+
+def test_forward_attenuates_when_routing_scale_zero():
+    """A zeroed routing_scale collapses the unit's pre-activation to bias."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.b.data.zero_()           # bias=0 so the dead unit produces 0
+        layer.routing_scale[2] = 0.0    # kill node 2
+
+    x = torch.randn(8, 6)
+    with torch.no_grad():
+        # First-layer activation only.
+        z = F.linear(x, layer.W * layer.routing_scale.unsqueeze(1), layer.b)
+        h = F.relu(z)
+    assert torch.allclose(h[:, 2], torch.zeros(8)), (
+        f"node-2 activation should be zero with scale=0 + bias=0, got {h[:,2]}"
+    )
+
+
+def test_grow_node_records_task_of_origin_and_routing_scale():
+    """grow_node(task_idx=5) appends task_of_origin=5 and routing_scale=1.0."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    new_idx = net.grow_layer(layer_idx=0, task_idx=5)
+    layer = net.layers[0]
+    assert int(layer.task_of_origin[new_idx].item()) == 5
+    assert float(layer.routing_scale[new_idx].item()) == 1.0
+    assert not bool(layer.routing_latched[new_idx].item())
+
+
+def test_prune_node_drops_routing_buffers():
+    """prune_node removes the corresponding routing_scale / task_of_origin entry."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.routing_scale[1] = 0.5  # mark node 1 distinctly
+        layer.task_of_origin[2] = 7
+    layer.prune_node(1)
+    # After dropping idx=1, the layer has 3 nodes; the original node 2
+    # (task_of_origin=7) is now at index 1.
+    assert layer.routing_scale.shape == (3,)
+    assert layer.task_of_origin.shape == (3,)
+    assert int(layer.task_of_origin[1].item()) == 7, (
+        f"task_of_origin not preserved across prune: {layer.task_of_origin}"
+    )
+
+
+def test_routing_starve_multiplies_scale_and_returns_value():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    scale_after, latched = routing_starve(
+        net, 0, victim_idx=1, alpha=0.5, floor=1e-3,
+    )
+    assert latched is False
+    assert math.isclose(scale_after, 0.5, abs_tol=1e-7)
+    assert math.isclose(
+        float(net.layers[0].routing_scale[1].item()), 0.5, abs_tol=1e-7,
+    )
+
+
+def test_routing_starve_does_not_touch_peer_or_other_layers():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    routing_starve(net, 0, victim_idx=1, alpha=0.5, floor=1e-3)
+    # Node 0 on layer 0 untouched.
+    assert float(net.layers[0].routing_scale[0].item()) == 1.0
+    # Other layers entirely untouched.
+    for L_i in (1, 2):
+        assert torch.allclose(
+            net.layers[L_i].routing_scale,
+            torch.ones(net.layers[L_i].n_nodes),
+        )
+
+
+def test_routing_starve_latches_below_floor():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.routing_scale[2] = 0.005
+    scale_after, latched = routing_starve(
+        net, 0, victim_idx=2, alpha=0.5, floor=0.01,
+    )
+    assert latched is True
+    assert scale_after == 0.0
+    assert bool(layer.routing_latched[2].item())
+    assert float(layer.routing_scale[2].item()) == 0.0
+
+
+def test_routing_starve_already_latched_is_noop():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.routing_latched[3] = True
+        layer.routing_scale[3] = 0.0
+    scale_after, latched = routing_starve(
+        net, 0, victim_idx=3, alpha=0.5, floor=1e-3,
+    )
+    assert (scale_after, latched) == (0.0, True)
+    assert float(layer.routing_scale[3].item()) == 0.0
+
+
+def test_routing_starve_validates_alpha_and_floor():
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    for bad_alpha in (-0.1, 0.0, 1.0, 1.5):
+        try:
+            routing_starve(net, 0, victim_idx=0, alpha=bad_alpha, floor=1e-3)
+        except ValueError:
+            continue
+        raise AssertionError(f"expected ValueError for alpha={bad_alpha}")
+    try:
+        routing_starve(net, 0, victim_idx=0, alpha=0.5, floor=-0.1)
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError for negative floor")
+
+
+def test_routing_regrow_multiplies_by_inv_alpha_capped_at_one():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.routing_scale[1] = 0.49
+    scale = routing_regrow(net, 0, victim_idx=1, alpha=0.7)
+    # 0.49 / 0.7 = 0.7 — still under 1.0
+    assert math.isclose(scale, 0.7, abs_tol=1e-6)
+    # Run again — would push above 1.0, must cap.
+    scale = routing_regrow(net, 0, victim_idx=1, alpha=0.7)
+    assert math.isclose(scale, 1.0, abs_tol=1e-6)
+
+
+def test_routing_regrow_skips_latched():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.routing_latched[2] = True
+        layer.routing_scale[2] = 0.0
+    scale = routing_regrow(net, 0, victim_idx=2, alpha=0.7)
+    assert scale == 0.0
+    assert float(layer.routing_scale[2].item()) == 0.0
+
+
+def test_pick_starvation_victim_older_keeps():
+    """Older task_of_origin → primary."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.task_of_origin[1] = 0
+        layer.task_of_origin[3] = 7
+    peer, victim = _pick_starvation_victim(net, 0, 1, 3)
+    assert (peer, victim) == (1, 3), (
+        f"expected older(idx=1, age=0) primary; got peer={peer} victim={victim}"
+    )
+    # Order of args reversed → same answer.
+    peer, victim = _pick_starvation_victim(net, 0, 3, 1)
+    assert (peer, victim) == (1, 3)
+
+
+def test_pick_starvation_victim_tiebreak_outgoing_norm():
+    """Same age → larger outgoing-norm on layer L+1 = primary."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    nxt = net.layers[1]
+    with torch.no_grad():
+        layer.task_of_origin[1] = 5
+        layer.task_of_origin[2] = 5
+        nxt.W_anchor[:, 1] = 10.0
+        nxt.W_anchor[:, 2] = 0.5
+    peer, victim = _pick_starvation_victim(net, 0, 1, 2)
+    assert (peer, victim) == (1, 2)
+
+
+def test_pick_starvation_victim_tied_falls_back_to_index():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    nxt = net.layers[1]
+    with torch.no_grad():
+        layer.task_of_origin[2] = 0
+        layer.task_of_origin[3] = 0
+        nxt.W_anchor[:, 2] = 0.0
+        nxt.W_anchor[:, 3] = 0.0
+    peer, victim = _pick_starvation_victim(net, 0, 2, 3)
+    assert (peer, victim) == (2, 3), (
+        f"with everything tied, smaller idx is primary; got {peer},{victim}"
+    )
+
+
+def test_compress_starve_picks_younger_victim_and_records_event():
+    """Plant W-cosine pair on layer 0 between an OLD (origin=0) and NEW
+    (origin=7) node. compress(action='starve') must starve the new one."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=3)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.task_of_origin[0] = 0
+        layer.task_of_origin[3] = 7
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="starve", starvation_alpha=0.5,
+        starvation_floor=1e-3, max_downscales_per_layer=1,
+        layer_idxs=[0],
+    )
+    assert len(events) == 1
+    ev = events[0]
+    assert ev.action == "starve"
+    assert ev.peer_idx == 0
+    assert ev.victim_idx == 3
+    assert math.isclose(ev.victim_routing_scale_after, 0.5, abs_tol=1e-6)
+    assert ev.victim_latched is False
+    assert math.isclose(
+        float(layer.routing_scale[3].item()), 0.5, abs_tol=1e-6,
+    )
+    # Peer untouched.
+    assert float(layer.routing_scale[0].item()) == 1.0
+
+
+def test_compress_starve_caps_events_per_layer():
+    """Two planted pairs, cap=1 → only one starve event fires on layer 0."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    _plant_duplicate(net, layer_idx=0, src=1, dst=5)
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="starve", starvation_alpha=0.7,
+        starvation_floor=1e-3, max_downscales_per_layer=1,
+    )
+    layer_0 = [e for e in events if e.layer_idx == 0]
+    assert len(layer_0) == 1, (
+        f"cap=1 should yield exactly one layer-0 event, got {len(layer_0)}"
+    )
+
+
+def test_compress_starve_regrows_non_victim_below_one():
+    """A node with scale<1.0 that ISN'T selected as victim this call regrows."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    # Start node 2 mid-ramp. Plant no redundancy elsewhere.
+    with torch.no_grad():
+        layer.routing_scale[2] = 0.49
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="starve", starvation_alpha=0.7,
+        starvation_floor=1e-3, layer_idxs=[0],
+    )
+    assert events == [], "no redundancy planted; no events expected"
+    # 0.49 / 0.7 = 0.7
+    assert math.isclose(
+        float(layer.routing_scale[2].item()), 0.7, abs_tol=1e-6,
+    ), f"expected regrow to 0.7, got {layer.routing_scale[2]}"
+
+
+def test_compress_starve_latched_does_not_regrow():
+    """A latched unit (scale=0, latched=True) stays at 0 across compress()."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.routing_latched[3] = True
+        layer.routing_scale[3] = 0.0
+    compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="starve", starvation_alpha=0.7,
+        starvation_floor=1e-3,
+    )
+    assert float(layer.routing_scale[3].item()) == 0.0
+    assert bool(layer.routing_latched[3].item())
+
+
+def test_compress_starve_repeated_calls_compound_to_latch():
+    """Repeated compress calls keep ramping the same redundant pair until it
+    crosses the floor and latches. After latching, no further changes."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=3)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.task_of_origin[3] = 9   # younger → victim
+    # alpha=0.5, floor=0.05 → ramp 1 → 0.5 → 0.25 → 0.125 → 0.0625 → latch.
+    last_scale = 1.0
+    latched_seen = False
+    for _ in range(10):
+        compress(
+            net, redundancy_signal="weight", cos_threshold=0.95,
+            compression_action="starve", starvation_alpha=0.5,
+            starvation_floor=0.05, max_downscales_per_layer=1,
+        )
+        s = float(layer.routing_scale[3].item())
+        if bool(layer.routing_latched[3].item()):
+            latched_seen = True
+            assert s == 0.0
+            break
+        assert s < last_scale, f"scale should monotonically decrease: {s}"
+        last_scale = s
+    assert latched_seen, "victim should have latched within 10 iterations"
+
+
+def test_compress_starve_validates_alpha_and_floor():
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    for bad_alpha in (-0.1, 0.0, 1.0, 1.5):
+        try:
+            compress(
+                net, compression_action="starve",
+                starvation_alpha=bad_alpha, starvation_floor=1e-3,
+            )
+        except ValueError:
+            continue
+        raise AssertionError(
+            f"compress should reject starvation_alpha={bad_alpha}"
+        )
+    try:
+        compress(
+            net, compression_action="starve",
+            starvation_alpha=0.5, starvation_floor=-0.1,
+        )
+    except ValueError:
+        return
+    raise AssertionError("compress should reject negative starvation_floor")
+
+
+def test_compress_starve_skips_pair_when_both_latched():
+    """If the only redundant pair has both nodes already latched, no events."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=3)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.routing_latched[0] = True
+        layer.routing_latched[3] = True
+        layer.routing_scale[0] = 0.0
+        layer.routing_scale[3] = 0.0
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="starve", starvation_alpha=0.5,
+        starvation_floor=1e-3, layer_idxs=[0],
+    )
+    assert events == []
+
+
+def test_compress_starve_one_latched_forces_other_as_victim():
+    """If exactly one node in a redundant pair is latched, it MUST be primary
+    (no further starve possible) and the un-latched node becomes victim
+    regardless of age."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=3)
+    layer = net.layers[0]
+    # Make node 0 OLDER than node 3 — normally node 3 would be victim.
+    with torch.no_grad():
+        layer.task_of_origin[0] = 0
+        layer.task_of_origin[3] = 9
+        # Latch node 3 first — ordinary victim is now ineligible.
+        layer.routing_latched[3] = True
+        layer.routing_scale[3] = 0.0
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="starve", starvation_alpha=0.5,
+        starvation_floor=1e-3, max_downscales_per_layer=1,
+        layer_idxs=[0],
+    )
+    assert len(events) == 1
+    assert events[0].victim_idx == 0  # forced — node 3 is latched
+    assert events[0].peer_idx == 3
+    assert math.isclose(
+        float(layer.routing_scale[0].item()), 0.5, abs_tol=1e-6,
+    )
+
+
+def test_compress_starve_preserves_param_count():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=3)
+    n_before = net.n_parameters()
+    compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="starve", starvation_alpha=0.5,
+        starvation_floor=1e-3, max_downscales_per_layer=1,
+    )
+    assert net.n_parameters() == n_before, (
+        "starve must not change parameter count"
+    )
+
+
+def test_dreaming_block_starve_threads_starvation_params():
+    """End-to-end: dreaming_block(compression_action='starve') ramps the
+    victim's routing_scale by the requested alpha and records the action."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=2, replay_batch=4, ewc_strength=0.0,
+        cos_threshold=0.95, ac_threshold=0.95, u_threshold=0.0,
+        rng=random.Random(0),
+        redundancy_signal="weight",
+        compression_action="starve",
+        starvation_alpha=0.6, starvation_floor=1e-3,
+        max_downscales_per_layer=1,
+    )
+    assert rep.n_params_after == rep.n_params_before
+    starves = [m for m in rep.merges if m.action == "starve"]
+    assert len(starves) >= 1
+    ev = starves[0]
+    assert ev.layer_idx == 0
+    assert math.isclose(ev.victim_routing_scale_after, 0.6, abs_tol=1e-6)
+
+
+# --------------------------------------------------------------------------- #
+# Apoptosis spike (Phase 4.5 Experiment 5)                                    #
+# --------------------------------------------------------------------------- #
+
+
+def test_apoptosis_pulse_buffer_init_zero():
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    for layer in net.layers:
+        assert torch.allclose(
+            layer.apoptosis_pulse, torch.zeros(layer.n_nodes)
+        )
+
+
+def test_apoptosis_pulse_extends_with_grow_node():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    new_idx = net.grow_layer(layer_idx=0, task_idx=3)
+    layer = net.layers[0]
+    assert layer.apoptosis_pulse.shape == (layer.n_nodes,)
+    assert float(layer.apoptosis_pulse[new_idx].item()) == 0.0
+
+
+def test_apoptosis_pulse_drops_with_prune_node():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.apoptosis_pulse[2] = 0.7
+    layer.prune_node(0)
+    # After dropping idx=0, the original idx=2 becomes idx=1 — pulse=0.7
+    # should have moved with it.
+    assert layer.apoptosis_pulse.shape == (3,)
+    assert math.isclose(
+        float(layer.apoptosis_pulse[1].item()), 0.7, abs_tol=1e-7,
+    )
+
+
+def test_ewc_penalty_scales_with_apoptosis_pulse():
+    """ewc_penalty uses lambda * (1 - pulse) as effective stiffness."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    # Drift weights so penalty is nonzero.
+    with torch.no_grad():
+        layer.W.data += 0.5
+        layer.lam.fill_(1.0)
+    pen_baseline = float(layer.ewc_penalty().item())
+    with torch.no_grad():
+        layer.apoptosis_pulse.fill_(0.5)  # halve effective lambda everywhere
+    pen_halved = float(layer.ewc_penalty().item())
+    assert math.isclose(pen_halved, 0.5 * pen_baseline, rel_tol=1e-5), (
+        f"pulse=0.5 should halve penalty; baseline={pen_baseline} "
+        f"halved={pen_halved}"
+    )
+    # pulse=1.0 → effective lambda = 0 → penalty = 0
+    with torch.no_grad():
+        layer.apoptosis_pulse.fill_(1.0)
+    pen_zero = float(layer.ewc_penalty().item())
+    assert math.isclose(pen_zero, 0.0, abs_tol=1e-6)
+
+
+def test_ewc_penalty_pulse_above_one_clamps_to_zero():
+    """A pulse value > 1 (shouldn't happen but defensively) clamps to 0
+    effective lambda, never producing negative penalties."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.W.data += 0.5
+        layer.lam.fill_(1.0)
+        layer.apoptosis_pulse.fill_(1.5)
+    pen = float(layer.ewc_penalty().item())
+    assert pen >= 0.0
+    assert math.isclose(pen, 0.0, abs_tol=1e-6)
+
+
+def test_apoptosis_redistribute_uniform_transfer():
+    """Dead cell's outgoing column on L+1 splits uniformly across all
+    surviving (non-latched) peers; dead cell's outgoing zeroed."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    nxt = net.layers[1]
+    # Plant a known outgoing column on the dead-cell-to-be (idx=2).
+    with torch.no_grad():
+        for k in range(nxt.fan_in):
+            nxt.W.data[:, k] = 1.0
+            nxt.W_anchor[:, k] = 1.0
+            nxt.fisher_W[:, k] = 0.0
+        nxt.W.data[:, 2] = 4.0
+        nxt.W_anchor[:, 2] = 4.0
+        nxt.fisher_W[:, 2] = 0.4
+    # All four nodes alive → 3 survivors share 4/3 each.
+    n_survivors = apoptosis_redistribute(net, layer_idx=0, dead_idx=2)
+    assert n_survivors == 3
+    expected = 1.0 + 4.0 / 3.0
+    for k in (0, 1, 3):
+        assert torch.allclose(
+            nxt.W.data[:, k],
+            torch.full_like(nxt.W.data[:, k], expected),
+        ), f"peer {k} did not absorb 4/3 share: {nxt.W.data[:, k]}"
+        assert torch.allclose(
+            nxt.W_anchor[:, k],
+            torch.full_like(nxt.W_anchor[:, k], expected),
+        )
+    assert torch.allclose(nxt.W.data[:, 2], torch.zeros(4))
+    assert torch.allclose(nxt.W_anchor[:, 2], torch.zeros(4))
+    assert torch.allclose(nxt.fisher_W[:, 2], torch.zeros(4))
+
+
+def test_apoptosis_redistribute_excludes_already_latched():
+    """Already-latched peers don't get a share."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    nxt = net.layers[1]
+    with torch.no_grad():
+        layer.routing_latched[1] = True   # peer 1 already dead
+        nxt.W.data[:, 2] = 6.0
+        nxt.W.data[:, 0] = 0.0
+        nxt.W.data[:, 1] = 0.0   # already dead, should stay 0
+        nxt.W.data[:, 3] = 0.0
+    n_survivors = apoptosis_redistribute(net, layer_idx=0, dead_idx=2)
+    # Survivors: nodes 0 and 3 (node 1 is latched, node 2 is the dead cell)
+    assert n_survivors == 2
+    expected = 6.0 / 2
+    assert torch.allclose(nxt.W.data[:, 0],
+                          torch.full_like(nxt.W.data[:, 0], expected))
+    assert torch.allclose(nxt.W.data[:, 3],
+                          torch.full_like(nxt.W.data[:, 3], expected))
+    assert torch.allclose(nxt.W.data[:, 1], torch.zeros(4)), (
+        "already-latched peer must NOT receive a share"
+    )
+
+
+def test_apoptosis_redistribute_output_layer_is_noop():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    out_layer_idx = len(net.layers) - 1
+    n_survivors = apoptosis_redistribute(net, out_layer_idx, dead_idx=0)
+    assert n_survivors == 0
+
+
+def test_apoptosis_redistribute_no_survivors_returns_zero():
+    """All-but-the-dead-cell already latched → no-op (returns 0)."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    nxt = net.layers[1]
+    with torch.no_grad():
+        for k in (0, 1, 3):
+            layer.routing_latched[k] = True
+        nxt.W.data[:, 2] = 5.0
+    n = apoptosis_redistribute(net, layer_idx=0, dead_idx=2)
+    assert n == 0
+    # Dead cell's outgoing preserved (no peers to absorb it).
+    assert torch.allclose(nxt.W.data[:, 2],
+                          torch.full_like(nxt.W.data[:, 2], 5.0))
+
+
+def test_apoptosis_spike_raises_pulse_on_survivors():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    n = apoptosis_spike(net, layer_idx=0, dead_idx=2, spike_init=0.8)
+    assert n == 3
+    for k in (0, 1, 3):
+        assert math.isclose(
+            float(layer.apoptosis_pulse[k].item()), 0.8, abs_tol=1e-6,
+        )
+    # Dead cell's own pulse untouched (it's about to be irrelevant anyway).
+    assert float(layer.apoptosis_pulse[2].item()) == 0.0
+
+
+def test_apoptosis_spike_uses_max_with_existing_pulse():
+    """Repeated deaths don't drive a peer's pulse above the spike value."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    with torch.no_grad():
+        layer.apoptosis_pulse[0] = 0.9   # already higher than the spike
+    apoptosis_spike(net, 0, dead_idx=2, spike_init=0.5)
+    assert math.isclose(
+        float(layer.apoptosis_pulse[0].item()), 0.9, abs_tol=1e-6,
+    )
+    # A new HIGHER spike raises the existing pulse to the new value.
+    apoptosis_spike(net, 0, dead_idx=2, spike_init=0.95)
+    assert math.isclose(
+        float(layer.apoptosis_pulse[0].item()), 0.95, abs_tol=1e-6,
+    )
+
+
+def test_apoptosis_spike_validates_init_range():
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    for bad in (-0.1, 1.1, 2.0):
+        try:
+            apoptosis_spike(net, 0, dead_idx=0, spike_init=bad)
+        except ValueError:
+            continue
+        raise AssertionError(f"expected ValueError for spike_init={bad}")
+
+
+def test_apoptosis_decay_multiplies_all_layers():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    with torch.no_grad():
+        for layer in net.layers:
+            layer.apoptosis_pulse.fill_(0.8)
+    apoptosis_decay(net, decay_rate=0.5)
+    for layer in net.layers:
+        assert torch.allclose(
+            layer.apoptosis_pulse,
+            torch.full_like(layer.apoptosis_pulse, 0.4),
+        )
+
+
+def test_apoptosis_decay_validates_rate_range():
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    for bad in (-0.1, 1.1):
+        try:
+            apoptosis_decay(net, decay_rate=bad)
+        except ValueError:
+            continue
+        raise AssertionError(f"expected ValueError for decay_rate={bad}")
+
+
+def test_routing_starve_apoptosis_off_no_side_effects():
+    """When apoptosis_on=False (default), latching has no effect on
+    L+1 outgoing or apoptosis_pulse."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    nxt = net.layers[1]
+    with torch.no_grad():
+        layer.routing_scale[2] = 0.005
+        nxt.W.data[:, 2] = 7.0
+    routing_starve(
+        net, 0, victim_idx=2, alpha=0.5, floor=0.01,
+    )
+    # Latched, but no apoptosis fired.
+    assert bool(layer.routing_latched[2].item())
+    assert torch.allclose(layer.apoptosis_pulse,
+                          torch.zeros(layer.n_nodes))
+    assert torch.allclose(nxt.W.data[:, 2],
+                          torch.full_like(nxt.W.data[:, 2], 7.0))
+
+
+def test_routing_starve_apoptosis_on_fires_on_latch_only():
+    """apoptosis_on=True: non-latching ramp does NOT fire apoptosis;
+    only the latch-transition step does."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    nxt = net.layers[1]
+    with torch.no_grad():
+        nxt.W.data[:, 2] = 8.0
+    # First call: scale 1.0 → 0.5, no latch. No apoptosis side effects.
+    routing_starve(
+        net, 0, victim_idx=2, alpha=0.5, floor=1e-3,
+        apoptosis_on=True, apoptosis_spike_init=0.8,
+    )
+    assert not bool(layer.routing_latched[2].item())
+    assert torch.allclose(layer.apoptosis_pulse,
+                          torch.zeros(layer.n_nodes))
+    assert torch.allclose(nxt.W.data[:, 2],
+                          torch.full_like(nxt.W.data[:, 2], 8.0))
+
+
+def test_routing_starve_apoptosis_on_fires_redistribute_and_spike():
+    """When the ramp crosses the floor, latch fires both A and C."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    layer = net.layers[0]
+    nxt = net.layers[1]
+    with torch.no_grad():
+        layer.routing_scale[2] = 0.005   # next ramp will cross 0.01 floor
+        nxt.W.data[:, 2] = 9.0
+        nxt.W.data[:, 0] = 0.0
+        nxt.W.data[:, 1] = 0.0
+        nxt.W.data[:, 3] = 0.0
+    scale_after, latched_now = routing_starve(
+        net, 0, victim_idx=2, alpha=0.5, floor=0.01,
+        apoptosis_on=True, apoptosis_spike_init=0.8,
+    )
+    assert latched_now is True
+    # Mechanism A: surviving peers spiked.
+    for k in (0, 1, 3):
+        assert math.isclose(
+            float(layer.apoptosis_pulse[k].item()), 0.8, abs_tol=1e-6,
+        )
+    # Mechanism C: dead cell's outgoing redistributed uniformly.
+    expected = 9.0 / 3
+    for k in (0, 1, 3):
+        assert torch.allclose(
+            nxt.W.data[:, k],
+            torch.full_like(nxt.W.data[:, k], expected),
+        )
+    assert torch.allclose(nxt.W.data[:, 2], torch.zeros(4))
+
+
+def test_dreaming_block_apoptosis_decay_runs_each_block():
+    """Even when nothing latches this block, the pulse decays."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    with torch.no_grad():
+        net.layers[0].apoptosis_pulse.fill_(0.8)
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=1, replay_batch=4, ewc_strength=0.0,
+        cos_threshold=0.95, u_threshold=0.0, rng=random.Random(0),
+        compression_action="merge",
+        apoptosis_on=True, apoptosis_decay_rate=0.5,
+    )
+    assert torch.allclose(
+        net.layers[0].apoptosis_pulse,
+        torch.full_like(net.layers[0].apoptosis_pulse, 0.4),
+    )
+
+
+def test_dreaming_block_apoptosis_off_skips_decay():
+    """apoptosis_on=False leaves pulse untouched (even if non-zero)."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    with torch.no_grad():
+        net.layers[0].apoptosis_pulse.fill_(0.8)
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=1, replay_batch=4, ewc_strength=0.0,
+        cos_threshold=0.95, u_threshold=0.0, rng=random.Random(0),
+        compression_action="merge",
+        apoptosis_on=False, apoptosis_decay_rate=0.5,
+    )
+    assert torch.allclose(
+        net.layers[0].apoptosis_pulse,
+        torch.full_like(net.layers[0].apoptosis_pulse, 0.8),
+    )
+
+
+def test_dreaming_block_consolidate_false_skips_compress_and_purge():
+    """consolidate=False: even with a planted duplicate, no merges/purges fire.
+    Replay still runs (loss probe present)."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    n_before = net.n_parameters()
+
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=2, replay_batch=4, ewc_strength=0.0,
+        cos_threshold=0.95, u_threshold=0.0,
+        rng=random.Random(0),
+        compression_action="merge",
+        consolidate=False,
+    )
+    assert rep.merges == [], (
+        f"consolidate=False must produce no merges, got {len(rep.merges)}"
+    )
+    assert rep.purges == []
+    assert rep.n_params_after == n_before, (
+        "consolidate=False must leave param count unchanged"
+    )
+    # Replay still runs: pair count should equal what we asked for.
+    assert rep.replay_pairs_sampled == 2
+    assert rep.replay_steps == 2 * 2
+
+
+def test_dreaming_block_consolidate_true_default_unchanged():
+    """consolidate=True (default) keeps prior behavior — planted duplicate
+    still produces a merge."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=2, replay_batch=4, ewc_strength=0.0,
+        cos_threshold=0.95, u_threshold=1e-3, rng=random.Random(0),
+        compression_action="merge",
+        # consolidate omitted → True
+    )
+    assert len(rep.merges) >= 1
+
+
+def test_dreaming_block_consolidate_false_starve_no_routing_change():
+    """consolidate=False with starve action: routing_scale stays at 1.0 even
+    on a planted activation-correlated pair."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=2, replay_batch=4, ewc_strength=0.0,
+        cos_threshold=0.95, u_threshold=0.0, rng=random.Random(0),
+        compression_action="starve",
+        starvation_alpha=0.5, starvation_floor=1e-3,
+        consolidate=False,
+    )
+    assert rep.merges == []
+    layer = net.layers[0]
+    assert torch.allclose(
+        layer.routing_scale, torch.ones(layer.n_nodes)
+    ), "routing_scale must stay at 1.0 when consolidate=False"
+
+
+def test_dreaming_block_starve_invalid_alpha_raises():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+    pair_fn = _make_pair_fn(state_dim=6)
+    try:
+        dreaming_block(
+            net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+            past_pair_names=["alpha"], replay_steps_per_pair=1,
+            replay_batch=4, compression_action="starve",
+            starvation_alpha=1.5,
+        )
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError for starvation_alpha=1.5")
+
+
+# --------------------------------------------------------------------------- #
 # Runner                                                                      #
 # --------------------------------------------------------------------------- #
 
@@ -1205,6 +2099,104 @@ def main() -> int:
          test_compress_downscale_cap_negative_raises)
     _run("dreaming_block_threads_max_downscales_per_layer",
          test_dreaming_block_threads_max_downscales_per_layer)
+    # Phase 4.5 Experiment 3 — routing starvation.
+    _run("routing_scale_buffer_exists_and_init_one",
+         test_routing_scale_buffer_exists_and_init_one)
+    _run("forward_with_routing_scale_one_matches_unscaled",
+         test_forward_with_routing_scale_one_matches_unscaled)
+    _run("forward_attenuates_when_routing_scale_zero",
+         test_forward_attenuates_when_routing_scale_zero)
+    _run("grow_node_records_task_of_origin_and_routing_scale",
+         test_grow_node_records_task_of_origin_and_routing_scale)
+    _run("prune_node_drops_routing_buffers",
+         test_prune_node_drops_routing_buffers)
+    _run("routing_starve_multiplies_scale_and_returns_value",
+         test_routing_starve_multiplies_scale_and_returns_value)
+    _run("routing_starve_does_not_touch_peer_or_other_layers",
+         test_routing_starve_does_not_touch_peer_or_other_layers)
+    _run("routing_starve_latches_below_floor",
+         test_routing_starve_latches_below_floor)
+    _run("routing_starve_already_latched_is_noop",
+         test_routing_starve_already_latched_is_noop)
+    _run("routing_starve_validates_alpha_and_floor",
+         test_routing_starve_validates_alpha_and_floor)
+    _run("routing_regrow_multiplies_by_inv_alpha_capped_at_one",
+         test_routing_regrow_multiplies_by_inv_alpha_capped_at_one)
+    _run("routing_regrow_skips_latched",
+         test_routing_regrow_skips_latched)
+    _run("pick_starvation_victim_older_keeps",
+         test_pick_starvation_victim_older_keeps)
+    _run("pick_starvation_victim_tiebreak_outgoing_norm",
+         test_pick_starvation_victim_tiebreak_outgoing_norm)
+    _run("pick_starvation_victim_tied_falls_back_to_index",
+         test_pick_starvation_victim_tied_falls_back_to_index)
+    _run("compress_starve_picks_younger_victim_and_records_event",
+         test_compress_starve_picks_younger_victim_and_records_event)
+    _run("compress_starve_caps_events_per_layer",
+         test_compress_starve_caps_events_per_layer)
+    _run("compress_starve_regrows_non_victim_below_one",
+         test_compress_starve_regrows_non_victim_below_one)
+    _run("compress_starve_latched_does_not_regrow",
+         test_compress_starve_latched_does_not_regrow)
+    _run("compress_starve_repeated_calls_compound_to_latch",
+         test_compress_starve_repeated_calls_compound_to_latch)
+    _run("compress_starve_validates_alpha_and_floor",
+         test_compress_starve_validates_alpha_and_floor)
+    _run("compress_starve_skips_pair_when_both_latched",
+         test_compress_starve_skips_pair_when_both_latched)
+    _run("compress_starve_one_latched_forces_other_as_victim",
+         test_compress_starve_one_latched_forces_other_as_victim)
+    _run("compress_starve_preserves_param_count",
+         test_compress_starve_preserves_param_count)
+    _run("dreaming_block_starve_threads_starvation_params",
+         test_dreaming_block_starve_threads_starvation_params)
+    _run("dreaming_block_consolidate_false_skips_compress_and_purge",
+         test_dreaming_block_consolidate_false_skips_compress_and_purge)
+    _run("dreaming_block_consolidate_true_default_unchanged",
+         test_dreaming_block_consolidate_true_default_unchanged)
+    _run("dreaming_block_consolidate_false_starve_no_routing_change",
+         test_dreaming_block_consolidate_false_starve_no_routing_change)
+    _run("dreaming_block_starve_invalid_alpha_raises",
+         test_dreaming_block_starve_invalid_alpha_raises)
+    # Phase 4.5 Experiment 5 — apoptosis spike.
+    _run("apoptosis_pulse_buffer_init_zero",
+         test_apoptosis_pulse_buffer_init_zero)
+    _run("apoptosis_pulse_extends_with_grow_node",
+         test_apoptosis_pulse_extends_with_grow_node)
+    _run("apoptosis_pulse_drops_with_prune_node",
+         test_apoptosis_pulse_drops_with_prune_node)
+    _run("ewc_penalty_scales_with_apoptosis_pulse",
+         test_ewc_penalty_scales_with_apoptosis_pulse)
+    _run("ewc_penalty_pulse_above_one_clamps_to_zero",
+         test_ewc_penalty_pulse_above_one_clamps_to_zero)
+    _run("apoptosis_redistribute_uniform_transfer",
+         test_apoptosis_redistribute_uniform_transfer)
+    _run("apoptosis_redistribute_excludes_already_latched",
+         test_apoptosis_redistribute_excludes_already_latched)
+    _run("apoptosis_redistribute_output_layer_is_noop",
+         test_apoptosis_redistribute_output_layer_is_noop)
+    _run("apoptosis_redistribute_no_survivors_returns_zero",
+         test_apoptosis_redistribute_no_survivors_returns_zero)
+    _run("apoptosis_spike_raises_pulse_on_survivors",
+         test_apoptosis_spike_raises_pulse_on_survivors)
+    _run("apoptosis_spike_uses_max_with_existing_pulse",
+         test_apoptosis_spike_uses_max_with_existing_pulse)
+    _run("apoptosis_spike_validates_init_range",
+         test_apoptosis_spike_validates_init_range)
+    _run("apoptosis_decay_multiplies_all_layers",
+         test_apoptosis_decay_multiplies_all_layers)
+    _run("apoptosis_decay_validates_rate_range",
+         test_apoptosis_decay_validates_rate_range)
+    _run("routing_starve_apoptosis_off_no_side_effects",
+         test_routing_starve_apoptosis_off_no_side_effects)
+    _run("routing_starve_apoptosis_on_fires_on_latch_only",
+         test_routing_starve_apoptosis_on_fires_on_latch_only)
+    _run("routing_starve_apoptosis_on_fires_redistribute_and_spike",
+         test_routing_starve_apoptosis_on_fires_redistribute_and_spike)
+    _run("dreaming_block_apoptosis_decay_runs_each_block",
+         test_dreaming_block_apoptosis_decay_runs_each_block)
+    _run("dreaming_block_apoptosis_off_skips_decay",
+         test_dreaming_block_apoptosis_off_skips_decay)
     print("-" * 60)
     n_pass = sum(1 for _, ok, _ in _RESULTS if ok)
     n_fail = len(_RESULTS) - n_pass

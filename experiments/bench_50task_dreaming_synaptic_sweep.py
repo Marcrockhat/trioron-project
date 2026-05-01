@@ -43,6 +43,25 @@ Usage:
   # absorbs each consolidation before the next one drifts on top.
   python3 -m experiments.bench_50task_dreaming_synaptic_sweep \\
       --ac-thresholds 0.85 --seeds 0,1,2 --max-downscales-per-layer 1
+
+  # Phase 4.5 Experiment 3 — routing starvation. Asymmetric per-event
+  # multiplicative ramp on the victim's INCOMING weights; victim's
+  # outgoing weights and bias are untouched. Reversible (regrow) until
+  # scale latches below `--starvation-floor`. "Primary" criterion:
+  # older task_of_origin > tiebreak by larger outgoing-norm.
+  python3 -m experiments.bench_50task_dreaming_synaptic_sweep \\
+      --ac-thresholds 0.92 --seeds 0,1,2 \\
+      --compression-action starve \\
+      --starvation-alpha 0.7 --starvation-floor 1e-3
+
+  # Phase 4.5 Experiment 4 — developmental window. Compress + purge
+  # only fire while task_idx < window; replay still runs every task.
+  # Hypothesis: the seed-0 leap in Experiment 3 was a "fire early then
+  # quiesce" pattern; forcing every seed into that schedule should lift
+  # the σ ceiling.
+  python3 -m experiments.bench_50task_dreaming_synaptic_sweep \\
+      --ac-thresholds 0.92 --seeds 0,1,2 \\
+      --compression-action starve --developmental-window 5
 """
 from __future__ import annotations
 import argparse
@@ -133,6 +152,13 @@ def _trajectory_sample(per_task: List[float], n: int = 5) -> str:
 def _make_dreaming_config(
     ac_threshold: float,
     max_downscales_per_layer: "int | None" = None,
+    compression_action: str = "downscale",
+    starvation_alpha: float = 0.7,
+    starvation_floor: float = 1e-3,
+    developmental_window: "int | None" = None,
+    apoptosis_on: bool = False,
+    apoptosis_spike_init: float = 0.8,
+    apoptosis_decay_rate: float = 0.7,
 ) -> dict:
     return {
         "replay_fraction": DREAM_REPLAY_FRACTION,
@@ -145,8 +171,14 @@ def _make_dreaming_config(
         "redundancy_signal": "activation",
         "ac_threshold": ac_threshold,
         "probe_batch_size": PROBE_BATCH_SIZE,
-        "compression_action": "downscale",
+        "compression_action": compression_action,
         "max_downscales_per_layer": max_downscales_per_layer,
+        "starvation_alpha": starvation_alpha,
+        "starvation_floor": starvation_floor,
+        "developmental_window": developmental_window,
+        "apoptosis_on": apoptosis_on,
+        "apoptosis_spike_init": apoptosis_spike_init,
+        "apoptosis_decay_rate": apoptosis_decay_rate,
     }
 
 
@@ -165,8 +197,47 @@ def main(argv: List[str] | None = None) -> int:
     p.add_argument("--seeds", type=_parse_int_list, required=True,
                    help="Comma-separated list of seeds, e.g. 0  or  0,1,2")
     p.add_argument("--max-downscales-per-layer", type=int, default=None,
-                   help="Phase 4.5 Experiment 2: cap on downscale events per "
-                        "layer per dreaming block. Omit for uncapped (default).")
+                   help="Phase 4.5 Experiment 2: cap on compression events per "
+                        "layer per dreaming block (applies to downscale and "
+                        "starve). Omit for uncapped (default).")
+    p.add_argument("--compression-action", type=str, default="downscale",
+                   choices=("downscale", "starve"),
+                   help="downscale = synaptic downscale (Experiment 2). "
+                        "starve = routing starvation (Experiment 3, "
+                        "asymmetric per-event ramp on victim's incoming W).")
+    p.add_argument("--starvation-alpha", type=float, default=0.7,
+                   help="Routing-starvation per-event ramp factor (default 0.7). "
+                        "Only used when --compression-action=starve.")
+    p.add_argument("--starvation-floor", type=float, default=1e-3,
+                   help="Routing-starvation latch floor (default 1e-3). Below "
+                        "this, scale latches to 0 permanently. Only used when "
+                        "--compression-action=starve.")
+    p.add_argument("--developmental-window", type=int, default=None,
+                   help="Phase 4.5 Experiment 4: gate compress+purge to "
+                        "tasks 0..N-1. Replay and probes still run on every "
+                        "task. None = always consolidate (default).")
+    p.add_argument("--apoptosis-on", action="store_true",
+                   help="Phase 4.5 Experiment 5: when a starve event "
+                        "latches a cell, redistribute its outgoing column "
+                        "uniformly across surviving peers AND raise the "
+                        "apoptosis_pulse on those peers. Pulse decays each "
+                        "dream block; ewc_penalty uses (1 - pulse) on "
+                        "lambda. Off by default. Only meaningful when "
+                        "--compression-action=starve.")
+    p.add_argument("--apoptosis-spike-init", type=float, default=0.8,
+                   help="Initial apoptosis pulse magnitude (default 0.8). "
+                        "EWC stiffness = lambda * (1 - pulse).clamp_min(0).")
+    p.add_argument("--apoptosis-decay-rate", type=float, default=0.7,
+                   help="Per-dream-block multiplicative decay on the "
+                        "apoptosis pulse (default 0.7). 0 = one-shot effect, "
+                        "1 = no decay (don't).")
+    p.add_argument("--mixed-precision", type=str, default="fp32",
+                   choices=("fp32", "bf16", "fp16"),
+                   help="Weight precision for the trioron network. fp32 "
+                        "(default) keeps everything FP32. bf16 puts W/b in "
+                        "bfloat16 with FP32 buffers (universal-device path). "
+                        "fp16 needs Adam eps>=1e-3 — DO NOT use without "
+                        "harness changes.")
     p.add_argument("--tag", type=str, default="",
                    help="Optional output-file tag suffix; if empty, derived from args")
     args = p.parse_args(argv)
@@ -174,6 +245,18 @@ def main(argv: List[str] | None = None) -> int:
     thresholds = args.ac_thresholds
     seeds = args.seeds
     max_downscales_per_layer = args.max_downscales_per_layer
+    compression_action = args.compression_action
+    starvation_alpha = args.starvation_alpha
+    starvation_floor = args.starvation_floor
+    developmental_window = args.developmental_window
+    apoptosis_on = args.apoptosis_on
+    apoptosis_spike_init = args.apoptosis_spike_init
+    apoptosis_decay_rate = args.apoptosis_decay_rate
+    weights_dtype = {
+        "fp32": None,
+        "bf16": torch.bfloat16,
+        "fp16": torch.float16,
+    }[args.mixed_precision]
 
     # Derive a default tag if none provided.
     if args.tag:
@@ -188,7 +271,22 @@ def main(argv: List[str] | None = None) -> int:
         cap_part = (f"_cap{max_downscales_per_layer}"
                     if max_downscales_per_layer is not None
                     else "")
-        tag = f"{th_part}_{s_part}{cap_part}"
+        action_part = (f"_{compression_action}"
+                       if compression_action != "downscale" else "")
+        starve_part = ""
+        if compression_action == "starve":
+            starve_part = (f"_a{starvation_alpha:.2f}"
+                           f"_f{starvation_floor:.0e}")
+        window_part = (f"_w{developmental_window}"
+                       if developmental_window is not None else "")
+        apop_part = ""
+        if apoptosis_on:
+            apop_part = (f"_apop_si{apoptosis_spike_init:.2f}"
+                         f"_dr{apoptosis_decay_rate:.2f}")
+        mp_part = (f"_{args.mixed_precision}"
+                   if args.mixed_precision != "fp32" else "")
+        tag = (f"{th_part}_{s_part}{cap_part}{action_part}"
+               f"{starve_part}{window_part}{apop_part}{mp_part}")
 
     pair_specs = build_50task_pairs(
         state_dim=STATE_DIM, n_single=N_SINGLE, n_compound=N_COMPOUND, seed=0,
@@ -202,11 +300,29 @@ def main(argv: List[str] | None = None) -> int:
     eval_batches = make_fixed_eval_batches(pair_names, cur_factory)
 
     print("=" * 78)
-    print("bench_50task_dreaming_synaptic_sweep — SYNAPTIC DOWNSCALE")
-    print("                                       (substrate-preserving)")
+    if compression_action == "starve":
+        print("bench_50task_dreaming_synaptic_sweep — ROUTING STARVATION")
+        print("                                       (Experiment 3 — "
+              "asymmetric per-event ramp)")
+    else:
+        print("bench_50task_dreaming_synaptic_sweep — SYNAPTIC DOWNSCALE")
+        print("                                       (substrate-preserving)")
     print("=" * 78)
     print(f"Thresholds: {thresholds}")
     print(f"Seeds:      {seeds}")
+    print(f"Action:     {compression_action}")
+    if compression_action == "starve":
+        print(f"Starvation: alpha={starvation_alpha}  floor={starvation_floor}")
+    print(f"Window:     developmental_window="
+          f"{developmental_window if developmental_window is not None else 'None (always on)'}")
+    if apoptosis_on:
+        print(f"Apoptosis:  ON  spike_init={apoptosis_spike_init} "
+              f"decay_rate={apoptosis_decay_rate}")
+    else:
+        print("Apoptosis:  OFF")
+    print(f"Precision:  {args.mixed_precision}"
+          + (f" (W/b in {weights_dtype}, buffers FP32)"
+             if weights_dtype is not None else ""))
     print(f"Cap:        max_downscales_per_layer="
           f"{max_downscales_per_layer if max_downscales_per_layer is not None else 'None (uncapped)'}")
     print(f"Tag:        {tag}")
@@ -234,10 +350,20 @@ def main(argv: List[str] | None = None) -> int:
                   f"seed={s}")
             print("-" * 78)
             torch.manual_seed(s + 11000)
-            net = make_network(STATE_DIM, HIDDEN, LATENT_INIT_GROWN)
+            net = make_network(
+                STATE_DIM, HIDDEN, LATENT_INIT_GROWN,
+                weights_dtype=weights_dtype,
+            )
             dreaming_config = _make_dreaming_config(
                 ac_threshold,
                 max_downscales_per_layer=max_downscales_per_layer,
+                compression_action=compression_action,
+                starvation_alpha=starvation_alpha,
+                starvation_floor=starvation_floor,
+                developmental_window=developmental_window,
+                apoptosis_on=apoptosis_on,
+                apoptosis_spike_init=apoptosis_spike_init,
+                apoptosis_decay_rate=apoptosis_decay_rate,
             )
             result = run_ewc_curriculum(
                 net,
@@ -265,9 +391,11 @@ def main(argv: List[str] | None = None) -> int:
                 "wall_clock_seconds": result["wall_clock_seconds"],
             })
             results_by_key[(ac_threshold, s)] = result
+            event_label = ("starves" if compression_action == "starve"
+                           else "downscales")
             print(f"  -> seed{s} @ ac={ac_threshold:.2f}: "
                   f"avg_final={result['avg_final_loss']:.4f}  "
-                  f"events={n_events}  purges={n_purges}  "
+                  f"{event_label}={n_events}  purges={n_purges}  "
                   f"params={result['final_n_params']}")
 
     elapsed_total = time.monotonic() - t_start

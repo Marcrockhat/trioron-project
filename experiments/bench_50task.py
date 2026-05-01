@@ -112,6 +112,24 @@ DREAM_COMPRESSION_ACTION = "merge"
 # this from the CLI to test cap=1 / cap=2 against the synaptic
 # regression at ac_threshold=0.85.
 DREAM_MAX_DOWNSCALES_PER_LAYER: "int | None" = None
+# Phase 4.5 Experiment 3 (2026-05-01): routing-starvation per-event
+# multiplicative ramp factor and latch floor. Defaults match
+# dreaming.routing_starve. Only consulted when
+# compression_action == "starve".
+DREAM_STARVATION_ALPHA: float = 0.7
+DREAM_STARVATION_FLOOR: float = 1e-3
+# Phase 4.5 Experiment 4 (2026-05-02): developmental window — when
+# set, dreaming_block.consolidate is True only for `task_idx < window`.
+# Replay and probes still run on every task; only compress + purge
+# stop firing past the window. None = always consolidate (back-compat).
+DREAM_DEVELOPMENTAL_WINDOW: "int | None" = None
+# Phase 4.5 Experiment 5 (2026-05-02): apoptosis spike. When latched_now,
+# fire apoptosis_redistribute + apoptosis_spike on surviving peers.
+# Pulse decays each dream block. apoptosis_on=False keeps prior behavior
+# (spike never fires, decay never runs).
+DREAM_APOPTOSIS_ON: bool = False
+DREAM_APOPTOSIS_SPIKE_INIT: float = 0.8
+DREAM_APOPTOSIS_DECAY_RATE: float = 0.7
 
 SWEEP_HIDDEN_SIZES = [8, 12, 16]
 
@@ -202,14 +220,33 @@ def evaluate_all_pairs(net, eval_batches, pair_names):
 # ---------------------------------------------------------------------
 
 
-def make_network(state_dim: int, hidden: int, latent: int) -> TrioronNetwork:
-    return TrioronNetwork(
+def make_network(
+    state_dim: int,
+    hidden: int,
+    latent: int,
+    weights_dtype: "torch.dtype | None" = None,
+) -> TrioronNetwork:
+    """Build the standard 3-layer network used by every grown bench.
+
+    `weights_dtype`: when supplied (e.g. torch.bfloat16), W and b on
+    every layer are converted to that dtype while all per-node buffers
+    (W_anchor, fisher_W, lam, routing_scale, apoptosis_pulse, …) stay
+    FP32. The network's forward auto-casts FP32 inputs to the weight
+    dtype so curricula don't need to know the precision.
+
+    Adam's eps default (1e-8) underflows in FP16 — callers training a
+    fp16 network must use eps>=1e-3. BF16 is stable with default eps.
+    """
+    net = TrioronNetwork(
         [
             (state_dim, hidden, "relu"),
             (hidden, hidden, "relu"),
             (hidden, latent, "tanh"),
         ]
     )
+    if weights_dtype is not None:
+        net.to_mixed_precision(weights_dtype=weights_dtype)
+    return net
 
 
 # ---------------------------------------------------------------------
@@ -247,8 +284,12 @@ def compute_growth_direction(net, train_cur, pair_name, batch=128):
             f_a = layer(f_a)
             f_b = layer(f_b)
         D = f_a - f_b
-    _, _, Vh = torch.linalg.svd(D, full_matrices=False)
-    v = Vh[0]
+    # CPU SVD doesn't support BF16/FP16 — promote D to FP32 for the
+    # decomposition, then return the direction in D's original dtype so
+    # downstream init_vec lands in the right precision.
+    D_for_svd = D if D.dtype in (torch.float32, torch.float64) else D.float()
+    _, _, Vh = torch.linalg.svd(D_for_svd, full_matrices=False)
+    v = Vh[0].to(D.dtype)
     return v / (v.norm() + 1e-12)
 
 
@@ -320,7 +361,9 @@ def train_one_task_ewc(
                 if decision.allowed:
                     consolidate_task(net, train_cur, pair_name)
                     v = compute_growth_direction(net, train_cur, pair_name)
-                    new_idx = net.grow_layer(target_idx, init_vec=v)
+                    new_idx = net.grow_layer(
+                        target_idx, init_vec=v, task_idx=task_idx,
+                    )
                     fire_record["new_node_idx"] = new_idx
                     fire_record["latent_after"] = net.layers[-1].n_nodes
                     trigger.set_latent_dim(net.layers[-1].n_nodes)
@@ -357,6 +400,18 @@ def train_one_task_ewc(
 
     return {"opt": opt, "fires": fires, "prunes": prunes,
             "pathology_steps": pathology_steps, "ewc_now": ewc_now}
+
+
+def _developmental_consolidate(
+    task_idx: int, window: "int | None",
+) -> bool:
+    """Phase 4.5 Experiment 4 — developmental-window gate. None means
+    always consolidate (back-compat). Otherwise, consolidate only while
+    task_idx is strictly less than `window` (so window=5 means tasks
+    0..4 consolidate, tasks 5..N-1 are replay-only)."""
+    if window is None:
+        return True
+    return int(task_idx) < int(window)
 
 
 def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
@@ -474,6 +529,22 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
                 max_downscales_per_layer=dreaming_config.get(
                     "max_downscales_per_layer",
                     DREAM_MAX_DOWNSCALES_PER_LAYER),
+                starvation_alpha=dreaming_config.get(
+                    "starvation_alpha", DREAM_STARVATION_ALPHA),
+                starvation_floor=dreaming_config.get(
+                    "starvation_floor", DREAM_STARVATION_FLOOR),
+                consolidate=_developmental_consolidate(
+                    task_idx,
+                    dreaming_config.get(
+                        "developmental_window",
+                        DREAM_DEVELOPMENTAL_WINDOW),
+                ),
+                apoptosis_on=dreaming_config.get(
+                    "apoptosis_on", DREAM_APOPTOSIS_ON),
+                apoptosis_spike_init=dreaming_config.get(
+                    "apoptosis_spike_init", DREAM_APOPTOSIS_SPIKE_INIT),
+                apoptosis_decay_rate=dreaming_config.get(
+                    "apoptosis_decay_rate", DREAM_APOPTOSIS_DECAY_RATE),
                 rng=dreaming_rng,
             )
             all_dreams.append({

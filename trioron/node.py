@@ -85,6 +85,34 @@ class TrioronLayer(nn.Module):
         self.register_buffer("fisher_W", torch.zeros_like(self.W))
         self.register_buffer("fisher_b", torch.zeros_like(self.b))
 
+        # Routing-starvation per-node ramp on incoming weights.
+        # forward applies F.linear(x, W * routing_scale.unsqueeze(1), b),
+        # so as scale → 0 the unit's pre-activation collapses to its bias
+        # and gradient flow into W on that row also collapses. 1.0 = full
+        # routing. routing_latched marks units whose scale has crossed
+        # the starvation floor (permanent — no regrow).
+        self.register_buffer("routing_scale", torch.ones(n_nodes))
+        self.register_buffer(
+            "routing_latched", torch.zeros(n_nodes, dtype=torch.bool),
+        )
+
+        # Task index at which each node was born. Layer-init nodes are 0
+        # (no prior tasks have run). grow_node accepts the current
+        # task_idx so the dreaming phase can pick the YOUNGER of two
+        # redundant nodes as the starvation victim.
+        self.register_buffer(
+            "task_of_origin", torch.zeros(n_nodes, dtype=torch.long),
+        )
+
+        # Apoptosis pulse — per-node float in [0, 1] tracking the
+        # remaining "dying neighbor" signal received since the last
+        # decay step. Spiked at the moment a sibling cell latches
+        # (Phase 4.5 Experiment 5). Decays each dream block. Used by
+        # ewc_penalty to scale this node's effective lambda by
+        # (1 - pulse) — neighbors of a fresh death train at lower
+        # EWC stiffness so they can adjust to fill the lost role.
+        self.register_buffer("apoptosis_pulse", torch.zeros(n_nodes))
+
     # ----- properties -----
     @property
     def n_nodes(self) -> int:
@@ -92,7 +120,20 @@ class TrioronLayer(nn.Module):
 
     # ----- forward -----
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        z = F.linear(x, self.W, self.b)
+        # routing_scale modulates each row's incoming contribution. When
+        # all entries are 1.0 (the default) this is identical to the
+        # plain linear; a starved unit's row is multiplied toward zero,
+        # so its pre-activation collapses to its bias.
+        # Cast routing_scale to W's dtype so mixed-precision (FP16/BF16 W
+        # + FP32 buffer) keeps W_eff in W's dtype.
+        # Cast x to W's dtype too so callers using FP32 inputs against a
+        # mixed-precision network don't need to know the layer's dtype —
+        # F.linear requires matching dtypes and would error otherwise.
+        if x.dtype != self.W.dtype:
+            x = x.to(self.W.dtype)
+        scale = self.routing_scale.unsqueeze(1).to(self.W.dtype)
+        W_eff = self.W * scale
+        z = F.linear(x, W_eff, self.b)
         return _ACTIVATIONS[self.activation](z)
 
     # ----- state updates (call in this order during training) -----
@@ -160,21 +201,35 @@ class TrioronLayer(nn.Module):
         Per-node λ scales the strength. Total task loss should be:
             L = L_task + ewc_strength * layer.ewc_penalty()
 
+        The apoptosis_pulse buffer (Phase 4.5 Experiment 5) lowers each
+        node's effective λ by (1 - pulse) clamped to ≥0 — when a
+        neighbor cell latches dead, surviving peers get a temporary
+        plasticity boost that fades as the pulse decays.
+
         Returns a scalar tensor (autograd-attached when W requires grad).
         """
-        # Per-node λ broadcasts across that node's incoming weights.
-        stiffness = self.lam.unsqueeze(1)  # (n_nodes, 1)
+        # Per-node effective stiffness = λ · (1 - apoptosis_pulse). When
+        # all pulses are 0 (no recent deaths), this equals plain λ.
+        eff_lam = self.lam * (1.0 - self.apoptosis_pulse).clamp_min(0.0)
+        stiffness = eff_lam.unsqueeze(1)  # (n_nodes, 1)
         pen_W = (stiffness * (self.W - self.W_anchor).pow(2)).sum()
-        pen_b = (self.lam * (self.b - self.b_anchor).pow(2)).sum()
+        pen_b = (eff_lam * (self.b - self.b_anchor).pow(2)).sum()
         return pen_W + pen_b
 
     # ----- structural plasticity -----
 
-    def grow_node(self, init_vec: Optional[torch.Tensor] = None) -> int:
+    def grow_node(
+        self,
+        init_vec: Optional[torch.Tensor] = None,
+        task_idx: int = 0,
+    ) -> int:
         """Add one new node to the layer. Returns the index of the new node.
 
         init_vec: optional length-fan_in tensor for the new node's incoming
             weights. If None, uses the same Kaiming-style init as construction.
+        task_idx: current task index (used by dreaming-phase routing
+            starvation to pick the YOUNGER of two redundant nodes as
+            victim). Defaults to 0 so legacy callers / tests are unaffected.
 
         After calling this, REBUILD any optimizer that referenced this layer's
         parameters — the W and b Parameter objects are replaced.
@@ -188,16 +243,53 @@ class TrioronLayer(nn.Module):
             else:
                 new_row = init_vec.detach().to(device).reshape(1, self.fan_in)
 
-            new_W = torch.cat([self.W.data, new_row], dim=0)
-            new_b = torch.cat([self.b.data, torch.zeros(1, device=device)], dim=0)
-            new_lam = torch.cat([self.lam, torch.zeros(1, device=device)])
-            new_u = torch.cat([self.u, torch.zeros(1, device=device)])
-            new_W_anchor = torch.cat([self.W_anchor, new_row.clone()], dim=0)
-            new_b_anchor = torch.cat([self.b_anchor, torch.zeros(1, device=device)])
-            new_fisher_W = torch.cat(
-                [self.fisher_W, torch.zeros(1, self.fan_in, device=device)], dim=0
+            # Mixed-precision support: cast the new row to each
+            # destination's dtype before concat. W may be FP16 while
+            # W_anchor / fisher_W are kept FP32 by to_mixed_precision().
+            new_row_W = new_row.to(self.W.dtype)
+            new_row_anchor = new_row.to(self.W_anchor.dtype)
+            new_W = torch.cat([self.W.data, new_row_W], dim=0)
+            new_b = torch.cat(
+                [self.b.data, torch.zeros(1, dtype=self.b.dtype, device=device)],
+                dim=0,
             )
-            new_fisher_b = torch.cat([self.fisher_b, torch.zeros(1, device=device)])
+            new_lam = torch.cat(
+                [self.lam, torch.zeros(1, dtype=self.lam.dtype, device=device)]
+            )
+            new_u = torch.cat(
+                [self.u, torch.zeros(1, dtype=self.u.dtype, device=device)]
+            )
+            new_W_anchor = torch.cat(
+                [self.W_anchor, new_row_anchor.clone()], dim=0
+            )
+            new_b_anchor = torch.cat(
+                [self.b_anchor,
+                 torch.zeros(1, dtype=self.b_anchor.dtype, device=device)]
+            )
+            new_fisher_W = torch.cat(
+                [self.fisher_W,
+                 torch.zeros(1, self.fan_in, dtype=self.fisher_W.dtype,
+                             device=device)],
+                dim=0,
+            )
+            new_fisher_b = torch.cat(
+                [self.fisher_b,
+                 torch.zeros(1, dtype=self.fisher_b.dtype, device=device)]
+            )
+            new_routing_scale = torch.cat(
+                [self.routing_scale, torch.ones(1, device=device)]
+            )
+            new_routing_latched = torch.cat(
+                [self.routing_latched,
+                 torch.zeros(1, dtype=torch.bool, device=device)]
+            )
+            new_task_of_origin = torch.cat(
+                [self.task_of_origin,
+                 torch.tensor([int(task_idx)], dtype=torch.long, device=device)]
+            )
+            new_apoptosis_pulse = torch.cat(
+                [self.apoptosis_pulse, torch.zeros(1, device=device)]
+            )
 
         # Re-register parameters and buffers with new shapes.
         self._replace_parameter("W", new_W)
@@ -208,6 +300,10 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("b_anchor", new_b_anchor)
         self._replace_buffer("fisher_W", new_fisher_W)
         self._replace_buffer("fisher_b", new_fisher_b)
+        self._replace_buffer("routing_scale", new_routing_scale)
+        self._replace_buffer("routing_latched", new_routing_latched)
+        self._replace_buffer("task_of_origin", new_task_of_origin)
+        self._replace_buffer("apoptosis_pulse", new_apoptosis_pulse)
 
         return self.n_nodes - 1
 
@@ -230,13 +326,23 @@ class TrioronLayer(nn.Module):
         device = self.W.device
         with torch.no_grad():
             if init_col is None:
-                new_col = torch.zeros(self.n_nodes, 1, device=device)
+                new_col = torch.zeros(
+                    self.n_nodes, 1, dtype=self.W.dtype, device=device,
+                )
             else:
                 new_col = init_col.detach().to(device).reshape(self.n_nodes, 1)
-            new_W = torch.cat([self.W.data, new_col], dim=1)
-            new_W_anchor = torch.cat([self.W_anchor, new_col.clone()], dim=1)
+            # Mixed-precision: cast to each destination's dtype.
+            new_col_W = new_col.to(self.W.dtype)
+            new_col_anchor = new_col.to(self.W_anchor.dtype)
+            new_W = torch.cat([self.W.data, new_col_W], dim=1)
+            new_W_anchor = torch.cat(
+                [self.W_anchor, new_col_anchor.clone()], dim=1
+            )
             new_fisher_W = torch.cat(
-                [self.fisher_W, torch.zeros(self.n_nodes, 1, device=device)], dim=1
+                [self.fisher_W,
+                 torch.zeros(self.n_nodes, 1,
+                             dtype=self.fisher_W.dtype, device=device)],
+                dim=1,
             )
 
         self.fan_in += 1
@@ -290,6 +396,10 @@ class TrioronLayer(nn.Module):
             new_b_anchor = self.b_anchor.index_select(0, keep_t)
             new_fisher_W = self.fisher_W.index_select(0, keep_t)
             new_fisher_b = self.fisher_b.index_select(0, keep_t)
+            new_routing_scale = self.routing_scale.index_select(0, keep_t)
+            new_routing_latched = self.routing_latched.index_select(0, keep_t)
+            new_task_of_origin = self.task_of_origin.index_select(0, keep_t)
+            new_apoptosis_pulse = self.apoptosis_pulse.index_select(0, keep_t)
 
         self._replace_parameter("W", new_W)
         self._replace_parameter("b", new_b)
@@ -299,6 +409,10 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("b_anchor", new_b_anchor)
         self._replace_buffer("fisher_W", new_fisher_W)
         self._replace_buffer("fisher_b", new_fisher_b)
+        self._replace_buffer("routing_scale", new_routing_scale)
+        self._replace_buffer("routing_latched", new_routing_latched)
+        self._replace_buffer("task_of_origin", new_task_of_origin)
+        self._replace_buffer("apoptosis_pulse", new_apoptosis_pulse)
 
     # ----- low-level helpers -----
 
