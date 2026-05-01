@@ -103,6 +103,10 @@ DREAM_BATCH = BATCH
 DREAM_REDUNDANCY_SIGNAL = "weight"
 DREAM_AC_THRESHOLD = 0.95
 DREAM_PROBE_BATCH_SIZE = 128
+# Compression action default stays "merge" for back-compat with the
+# closed/open/act benches whose cached numbers depend on the merge math.
+# The synaptic-downscale bench overrides this to "downscale".
+DREAM_COMPRESSION_ACTION = "merge"
 
 SWEEP_HIDDEN_SIZES = [8, 12, 16]
 
@@ -373,6 +377,10 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
         redundancy_signal='activation'
       - probe_batch_size: int (default 128), probe batch sampled once
         per dreaming block from past_pair_names
+      - compression_action: 'merge' (default, destructive) or
+        'downscale' (substrate-preserving — peer absorbs victim's
+        outgoing column, victim's outgoing zeroed, victim's row at
+        layer L preserved; arch / param count unchanged).
     """
     print(f"\n[{label}] curriculum start — arch {net.n_nodes_per_layer()}  "
           f"params {net.n_parameters()}  growth={do_growth} pruning={do_pruning}"
@@ -452,6 +460,8 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
                     "ac_threshold", DREAM_AC_THRESHOLD),
                 probe_batch_size=dreaming_config.get(
                     "probe_batch_size", DREAM_PROBE_BATCH_SIZE),
+                compression_action=dreaming_config.get(
+                    "compression_action", DREAM_COMPRESSION_ACTION),
                 rng=dreaming_rng,
             )
             all_dreams.append({
