@@ -107,6 +107,11 @@ DREAM_PROBE_BATCH_SIZE = 128
 # closed/open/act benches whose cached numbers depend on the merge math.
 # The synaptic-downscale bench overrides this to "downscale".
 DREAM_COMPRESSION_ACTION = "merge"
+# Phase 4.5 Experiment 2 (2026-05-01): per-block per-layer cap on
+# downscale events. None = uncapped (back-compat). Sweep harness sets
+# this from the CLI to test cap=1 / cap=2 against the synaptic
+# regression at ac_threshold=0.85.
+DREAM_MAX_DOWNSCALES_PER_LAYER: "int | None" = None
 
 SWEEP_HIDDEN_SIZES = [8, 12, 16]
 
@@ -381,6 +386,10 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
         'downscale' (substrate-preserving — peer absorbs victim's
         outgoing column, victim's outgoing zeroed, victim's row at
         layer L preserved; arch / param count unchanged).
+      - max_downscales_per_layer: int | None — Phase 4.5 Experiment 2
+        cap on number of downscale events per layer per dreaming
+        block. None = uncapped (default). Only applies to
+        compression_action='downscale'.
     """
     print(f"\n[{label}] curriculum start — arch {net.n_nodes_per_layer()}  "
           f"params {net.n_parameters()}  growth={do_growth} pruning={do_pruning}"
@@ -462,6 +471,9 @@ def run_ewc_curriculum(net, label, *, do_growth, do_pruning,
                     "probe_batch_size", DREAM_PROBE_BATCH_SIZE),
                 compression_action=dreaming_config.get(
                     "compression_action", DREAM_COMPRESSION_ACTION),
+                max_downscales_per_layer=dreaming_config.get(
+                    "max_downscales_per_layer",
+                    DREAM_MAX_DOWNSCALES_PER_LAYER),
                 rng=dreaming_rng,
             )
             all_dreams.append({
