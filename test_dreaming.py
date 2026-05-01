@@ -32,7 +32,9 @@ from trioron.dreaming import (
     PurgeEvent,
     compress,
     dreaming_block,
+    find_activation_redundant_pairs,
     find_redundant_pairs,
+    max_off_diag_activation_cosine,
     max_off_diag_cosine,
     merge_nodes,
     purge,
@@ -427,6 +429,212 @@ def test_dreaming_report_probe_includes_output_when_unskipped():
 
 
 # --------------------------------------------------------------------------- #
+# activation-correlation detector                                             #
+# --------------------------------------------------------------------------- #
+
+
+def test_find_activation_pairs_empty_when_no_correlation():
+    """Random Kaiming init + random probe batch: no pair should clear 0.95
+    activation cosine."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=8, fan_in=6)
+    probe = torch.randn(128, 6)
+    pairs = find_activation_redundant_pairs(
+        net, layer_idx=0, probe_batch=probe, ac_threshold=0.95,
+    )
+    assert pairs == [], (
+        f"random init produced spurious activation-redundant pairs: {pairs}"
+    )
+
+
+def test_find_activation_pairs_finds_planted_duplicate():
+    """Planting a W/b duplicate forces identical activations across any
+    probe batch — activation cosine should hit ~1.0 on that pair."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=3)
+    probe = torch.randn(128, 6)
+    pairs = find_activation_redundant_pairs(
+        net, layer_idx=0, probe_batch=probe, ac_threshold=0.95,
+    )
+    assert len(pairs) >= 1, "planted duplicate not detected by activation probe"
+    i, j, s = pairs[0]
+    assert {i, j} == {0, 3}, f"expected pair (0,3), got ({i},{j})"
+    assert s > 0.999, f"expected cos~1, got {s}"
+
+
+def test_find_activation_pairs_orthogonal_W_correlated_activations():
+    """The case the W-cosine detector misses: two nodes with orthogonal
+    incoming weights whose activation patterns nevertheless correlate
+    because the data distribution lies on a manifold where w1·x ≈ w2·x.
+
+    Construction: hidden layer with 2 nodes, fan_in=2. w1=(1,0), w2=(0,1)
+    are orthogonal (W cosine = 0). Probe batch sampled from the diagonal
+    line x[0] ≈ x[1] → preactivations are nearly identical → identical
+    relu outputs → activation cosine ≈ 1. The grow_layer mechanism
+    produces orthogonal-by-construction dims that may still be
+    functionally correlated when the data sees them on similar slices.
+    """
+    torch.manual_seed(0)
+    net = TrioronNetwork([(2, 2, "relu"), (2, 1, "tanh")])
+    layer0 = net.layers[0]
+    with torch.no_grad():
+        layer0.W.data[0] = torch.tensor([1.0, 0.0])
+        layer0.W.data[1] = torch.tensor([0.0, 1.0])
+        layer0.b.data.zero_()
+        layer0.W_anchor[0] = torch.tensor([1.0, 0.0])
+        layer0.W_anchor[1] = torch.tensor([0.0, 1.0])
+        layer0.b_anchor.zero_()
+
+    # Sanity: W cosine is exactly 0 for these rows.
+    w_cos = max_off_diag_cosine(net, 0)
+    assert abs(w_cos) < 1e-6, f"W cosine should be 0 for orthogonal rows, got {w_cos}"
+
+    # Probe on the diagonal x[0] ≈ x[1] (positive side so relu doesn't zero
+    # everything out — both pre-activations stay > 0).
+    t = torch.rand(128, 1) * 2.0 + 0.1  # values in [0.1, 2.1]
+    probe = torch.cat([t, t + 0.01 * torch.randn(128, 1)], dim=1)
+
+    pairs = find_activation_redundant_pairs(
+        net, layer_idx=0, probe_batch=probe, ac_threshold=0.95,
+    )
+    assert len(pairs) == 1, (
+        f"expected exactly 1 redundant pair on diagonal probe, got {len(pairs)}"
+    )
+    i, j, s = pairs[0]
+    assert {i, j} == {0, 1}
+    assert s > 0.95, f"orthogonal-W diagonal-probe cos should be high, got {s}"
+
+
+def test_max_off_diag_activation_cosine_handles_singleton_layer():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, latent=1)
+    probe = torch.randn(32, 6)
+    m = max_off_diag_activation_cosine(net, layer_idx=2, probe_batch=probe)
+    assert m == float("-inf")
+
+
+def test_compress_activation_signal_requires_probe_batch():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4)
+    try:
+        compress(net, redundancy_signal="activation")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(
+            "compress(redundancy_signal='activation') without probe_batch "
+            "should raise ValueError"
+        )
+
+
+def test_compress_rejects_unknown_signal():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4)
+    try:
+        compress(net, redundancy_signal="bogus")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for unknown redundancy_signal")
+
+
+def test_compress_activation_merges_planted_duplicate():
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    probe = torch.randn(128, 6)
+    n0_before = net.layers[0].n_nodes
+    # Restrict to layer 0 so we measure only the planted pair's effect —
+    # downstream layers can show activation correlations on random probes
+    # that aren't relevant to this assertion.
+    events = compress(
+        net, redundancy_signal="activation",
+        probe_batch=probe, ac_threshold=0.95,
+        layer_idxs=[0], skip_output_layer=False,
+    )
+    assert len(events) >= 1, "activation compress missed planted duplicate"
+    assert net.layers[0].n_nodes == n0_before - len(events)
+    for ev in events:
+        assert ev.layer_idx == 0
+        assert ev.cos_sim >= 0.95
+    # First (highest-similarity) event should capture the planted pair.
+    first = events[0]
+    assert {first.peer_idx, first.victim_idx} == {0, 4}, (
+        f"first merge should be the planted (0,4), got "
+        f"({first.peer_idx},{first.victim_idx})"
+    )
+
+
+def test_dreaming_block_activation_signal_populates_probe_field():
+    """End-to-end: redundancy_signal='activation' with a planted duplicate
+    on a hidden layer should fire at least one merge AND populate
+    pre_compress_max_activation_cosines (and leave pre_compress_max_cosines
+    populated too, for diagnostic comparison)."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=2, replay_batch=4, ewc_strength=0.0,
+        redundancy_signal="activation", ac_threshold=0.95,
+        probe_batch_size=64, u_threshold=1e9,
+        rng=random.Random(0),
+    )
+    assert isinstance(rep, DreamingReport)
+    assert len(rep.pre_compress_max_activation_cosines) >= 1, (
+        "activation probe field should be populated"
+    )
+    assert len(rep.pre_compress_max_cosines) >= 1, (
+        "weight probe field should still be populated for cross-check"
+    )
+    # Plant survived through 2 replay steps with EWC=0 — duplicate weight
+    # state should still produce duplicate activations → at least one merge.
+    assert len(rep.merges) >= 1, (
+        "planted duplicate should be merged via activation signal"
+    )
+
+
+def test_dreaming_block_activation_falls_back_when_no_past_pairs():
+    """First-task case: past_pair_names=[] → no probe batch can be built;
+    block must complete (falling back to the weight signal) without
+    raising, and the activation-probe field stays empty."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=4, fan_in=6, latent=2)
+
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=[],  # ← the trigger
+        replay_fraction=1.0, replay_steps_per_pair=2, replay_batch=4,
+        ewc_strength=0.0, redundancy_signal="activation",
+        ac_threshold=0.95, probe_batch_size=64, u_threshold=1e9,
+        rng=random.Random(0),
+    )
+    assert isinstance(rep, DreamingReport)
+    assert rep.pre_compress_max_activation_cosines == []
+
+
+def test_dreaming_block_rejects_unknown_signal():
+    torch.manual_seed(0)
+    net = _make_net()
+    pair_fn = _make_pair_fn(state_dim=6)
+    try:
+        dreaming_block(
+            net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+            past_pair_names=["alpha"], replay_steps_per_pair=1,
+            replay_batch=4, redundancy_signal="bogus",
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for unknown redundancy_signal")
+
+
+# --------------------------------------------------------------------------- #
 # dreaming_block end-to-end                                                   #
 # --------------------------------------------------------------------------- #
 
@@ -516,6 +724,26 @@ def main() -> int:
          test_dreaming_report_probe_includes_output_when_unskipped)
     _run("dreaming_block_runs_and_returns_report",
          test_dreaming_block_runs_and_returns_report)
+    _run("find_activation_pairs_empty_when_no_correlation",
+         test_find_activation_pairs_empty_when_no_correlation)
+    _run("find_activation_pairs_finds_planted_duplicate",
+         test_find_activation_pairs_finds_planted_duplicate)
+    _run("find_activation_pairs_orthogonal_W_correlated_activations",
+         test_find_activation_pairs_orthogonal_W_correlated_activations)
+    _run("max_off_diag_activation_cosine_handles_singleton_layer",
+         test_max_off_diag_activation_cosine_handles_singleton_layer)
+    _run("compress_activation_signal_requires_probe_batch",
+         test_compress_activation_signal_requires_probe_batch)
+    _run("compress_rejects_unknown_signal",
+         test_compress_rejects_unknown_signal)
+    _run("compress_activation_merges_planted_duplicate",
+         test_compress_activation_merges_planted_duplicate)
+    _run("dreaming_block_activation_signal_populates_probe_field",
+         test_dreaming_block_activation_signal_populates_probe_field)
+    _run("dreaming_block_activation_falls_back_when_no_past_pairs",
+         test_dreaming_block_activation_falls_back_when_no_past_pairs)
+    _run("dreaming_block_rejects_unknown_signal",
+         test_dreaming_block_rejects_unknown_signal)
     print("-" * 60)
     n_pass = sum(1 for _, ok, _ in _RESULTS if ok)
     n_fail = len(_RESULTS) - n_pass
