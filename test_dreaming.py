@@ -861,6 +861,153 @@ def test_compress_rejects_unknown_action():
         raise AssertionError("expected ValueError for unknown compression_action")
 
 
+# --------------------------------------------------------------------------- #
+# Phase 4.5 Experiment 2 — max_downscales_per_layer cap                       #
+# --------------------------------------------------------------------------- #
+
+
+def test_compress_downscale_cap_one_stops_after_first_event():
+    """Two planted pairs on one layer; cap=1 fires exactly one event then
+    breaks the inner loop without touching the second pair."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    _plant_duplicate(net, layer_idx=0, src=1, dst=5)
+
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="downscale", layer_idxs=[0],
+        skip_output_layer=False, max_downscales_per_layer=1,
+    )
+    assert len(events) == 1, (
+        f"cap=1 should stop after one downscale, got {len(events)}"
+    )
+
+
+def test_compress_downscale_cap_zero_blocks_all_events():
+    """cap=0 prevents any downscale even when planted pairs exist."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="downscale", layer_idxs=[0],
+        skip_output_layer=False, max_downscales_per_layer=0,
+    )
+    assert events == [], (
+        f"cap=0 should fire no events, got {len(events)}"
+    )
+
+
+def test_compress_downscale_cap_none_preserves_uncapped_behavior():
+    """cap=None matches the prior 1-pair behavior on a single planted pair
+    (this exists primarily as a sanity baseline against drift in the cap
+    branch — the existing terminates_on_static_victim test is the real
+    uncapped contract)."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="downscale", layer_idxs=[0],
+        skip_output_layer=False, max_downscales_per_layer=None,
+    )
+    assert len(events) == 1, (
+        f"uncapped on 1 planted pair should fire exactly once, "
+        f"got {len(events)}"
+    )
+
+
+def test_compress_downscale_cap_is_per_layer_not_global():
+    """Plant a duplicate on layer 0 and another on layer 1; cap=1 should
+    fire one event PER LAYER (total 2), not one event globally."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    _plant_duplicate(net, layer_idx=1, src=0, dst=4)
+
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="downscale", layer_idxs=[0, 1],
+        skip_output_layer=False, max_downscales_per_layer=1,
+    )
+    assert len(events) == 2, (
+        f"cap=1 per layer with 2 candidate layers should fire 2 events, "
+        f"got {len(events)}"
+    )
+    layers_hit = {ev.layer_idx for ev in events}
+    assert layers_hit == {0, 1}, (
+        f"both layers should fire one event each, got layers {layers_hit}"
+    )
+
+
+def test_compress_downscale_cap_does_not_affect_merge_action():
+    """The cap is downscale-specific. With compression_action='merge' and
+    cap=1, multiple planted pairs should still all merge (merge has its
+    own natural termination via victim deletion + max_merges)."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    _plant_duplicate(net, layer_idx=0, src=1, dst=5)
+
+    events = compress(
+        net, redundancy_signal="weight", cos_threshold=0.95,
+        compression_action="merge", layer_idxs=[0],
+        skip_output_layer=False, max_downscales_per_layer=1,
+    )
+    assert len(events) >= 2, (
+        f"merge action should ignore the downscale cap and merge both "
+        f"planted pairs; got {len(events)} events"
+    )
+    for ev in events:
+        assert ev.action == "merge"
+
+
+def test_compress_downscale_cap_negative_raises():
+    torch.manual_seed(0)
+    net = _make_net(hidden=4)
+    try:
+        compress(net, compression_action="downscale",
+                 max_downscales_per_layer=-1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError(
+            "expected ValueError for negative max_downscales_per_layer"
+        )
+
+
+def test_dreaming_block_threads_max_downscales_per_layer():
+    """End-to-end via dreaming_block with activation signal: planted
+    duplicate on layer 0 fires only once when cap=1, and the report
+    records exactly one downscale event."""
+    torch.manual_seed(0)
+    net = _make_net(hidden=6, fan_in=6, latent=2)
+    _plant_duplicate(net, layer_idx=0, src=0, dst=4)
+    _plant_duplicate(net, layer_idx=0, src=1, dst=5)
+
+    pair_fn = _make_pair_fn(state_dim=6, rng_seed=2)
+    rep = dreaming_block(
+        net, sample_pair_fn=pair_fn, loss_fn=_contrastive_loss,
+        past_pair_names=["alpha", "beta"], replay_fraction=1.0,
+        replay_steps_per_pair=5, replay_batch=8, ewc_strength=10.0,
+        cos_threshold=0.95, ac_threshold=0.95, u_threshold=1e-3,
+        rng=random.Random(0),
+        redundancy_signal="weight",          # weight signal so the planted
+                                             # W-duplicates are reliably found
+        compression_action="downscale",
+        max_downscales_per_layer=1,
+    )
+    # Layer 0 has two planted pairs; cap=1 should stop after the first.
+    layer_0_events = [m for m in rep.merges if m.layer_idx == 0]
+    assert len(layer_0_events) == 1, (
+        f"cap=1 via dreaming_block should produce 1 layer-0 event, "
+        f"got {len(layer_0_events)}"
+    )
+
+
 def test_dreaming_block_downscale_preserves_param_count():
     """End-to-end: dreaming_block(compression_action='downscale') with a
     planted activation-correlated pair runs an event but leaves the
@@ -1044,6 +1191,20 @@ def main() -> int:
          test_dreaming_block_downscale_preserves_param_count)
     _run("dreaming_block_rejects_unknown_action",
          test_dreaming_block_rejects_unknown_action)
+    _run("compress_downscale_cap_one_stops_after_first_event",
+         test_compress_downscale_cap_one_stops_after_first_event)
+    _run("compress_downscale_cap_zero_blocks_all_events",
+         test_compress_downscale_cap_zero_blocks_all_events)
+    _run("compress_downscale_cap_none_preserves_uncapped_behavior",
+         test_compress_downscale_cap_none_preserves_uncapped_behavior)
+    _run("compress_downscale_cap_is_per_layer_not_global",
+         test_compress_downscale_cap_is_per_layer_not_global)
+    _run("compress_downscale_cap_does_not_affect_merge_action",
+         test_compress_downscale_cap_does_not_affect_merge_action)
+    _run("compress_downscale_cap_negative_raises",
+         test_compress_downscale_cap_negative_raises)
+    _run("dreaming_block_threads_max_downscales_per_layer",
+         test_dreaming_block_threads_max_downscales_per_layer)
     print("-" * 60)
     n_pass = sum(1 for _, ok, _ in _RESULTS if ok)
     n_fail = len(_RESULTS) - n_pass
