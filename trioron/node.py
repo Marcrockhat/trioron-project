@@ -159,11 +159,17 @@ class TrioronLayer(nn.Module):
     def update_lambda(self) -> None:
         """Refresh per-node plasticity λ from current Fisher estimate.
 
-        Per blueprint §3.2: λ ≈ mean Fisher info across the node's incoming weights.
+        λ = sum of Fisher mass across the node's incoming weights. The
+        blueprint §3.2 said "mean," but the chained-15 Fisher probe
+        (2026-05-03) showed the mean collapse divides typical fisher_W
+        magnitudes (~1e-3) by fan_in (32–128), pushing per-node λ to
+        1e-4 to 1e-6 — orders of magnitude below any usable floor. Sum
+        recovers the magnitude so real Fisher can express selectivity
+        rather than being drowned by an external λ_floor clamp.
         Higher λ ⇒ this node's weights matter a lot for current loss ⇒ stiffer.
         """
         with torch.no_grad():
-            self.lam.copy_(self.fisher_W.mean(dim=1))
+            self.lam.copy_(self.fisher_W.sum(dim=1))
 
     def update_utility(self, contributions: torch.Tensor) -> None:
         """EMA update of per-node utility scores.

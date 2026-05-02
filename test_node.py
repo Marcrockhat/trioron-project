@@ -77,6 +77,10 @@ def test_fisher_accumulates_after_backward() -> None:
 
 
 def test_update_lambda_from_fisher() -> None:
+    # update_lambda: λ = sum(fisher_W, dim=1). Switched from mean to sum
+    # 2026-05-03 after the chained-15 Fisher probe showed the mean
+    # collapse drowned typical fisher_W magnitudes (~1e-3) below any
+    # usable λ_floor across realistic fan_in (32–128).
     layer = TrioronLayer(fan_in=4, n_nodes=3)
     layer.fisher_W.copy_(torch.tensor([
         [1.0, 1.0, 1.0, 1.0],
@@ -84,7 +88,7 @@ def test_update_lambda_from_fisher() -> None:
         [0.5, 0.5, 0.5, 0.5],
     ]))
     layer.update_lambda()
-    expected = torch.tensor([1.0, 2.0, 0.5])
+    expected = torch.tensor([4.0, 8.0, 2.0])
     assert torch.allclose(layer.lam, expected), f"got {layer.lam.tolist()}"
 
 

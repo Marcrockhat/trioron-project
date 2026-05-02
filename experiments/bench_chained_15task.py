@@ -64,8 +64,10 @@ Run:
 from __future__ import annotations
 import argparse
 import csv
+import math
 import os
 import random
+import statistics
 import sys
 import time
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
@@ -128,7 +130,14 @@ SEED = 0
 # epochs that's 2 / 2; for the full bench at 8 epochs that's 4 / 4.
 K_SETTLE_EPOCHS = 2
 
-LAMBDA_FLOOR = 0.1
+LAMBDA_FLOOR = 1e-3           # epigenetic baseline only — close to zero, not zero.
+                              # Was 0.1 (uniform); the chained-15 Fisher probe
+                              # (2026-05-03) showed 100% of params at that floor
+                              # → no Fisher selectivity. Combined with the
+                              # update_lambda mean→sum patch, real Fisher row-
+                              # sums (head ~0.01-0.5 active, L1 ~0.005-0.05
+                              # active) now sit 5-500× above this floor while
+                              # unused params keep a faint baseline pull.
 EWC_INTERTASK = 30.0          # tuned for fan_in=128 + CE; bench_50task used 1000
 EWC_DREAM_STRENGTH = 30.0     # match intertask strength inside dreaming
 
@@ -1313,6 +1322,220 @@ def report(results: Sequence[Dict[str, object]]) -> None:
     print()
 
 
+# ---------------------------------------------------------------------
+# Multi-seed aggregation
+# ---------------------------------------------------------------------
+
+
+def _mean_std(xs: Sequence[float]) -> Tuple[float, float, int]:
+    """Return (mean, sample-std, n) for a sequence of finite floats.
+    NaNs are filtered out."""
+    finite = [x for x in xs if isinstance(x, (int, float)) and x == x
+              and not math.isinf(x)]
+    n = len(finite)
+    if n == 0:
+        return (float("nan"), float("nan"), 0)
+    if n == 1:
+        return (float(finite[0]), 0.0, 1)
+    return (statistics.mean(finite), statistics.stdev(finite), n)
+
+
+def _phase_means_for_metric(r: Dict[str, object], metric_key: str) -> Dict[str, float]:
+    """Pull per-phase mean accuracies from one result dict for one metric.
+    metric_key in {"last_pass_matrix", "last_pass_matrix_domain",
+    "last_pass_matrix_aware"}."""
+    M = r.get(metric_key) or r["accuracy_matrix"]
+    return _phase_means(M, r["task_names"])
+
+
+def _paired_sigma(
+    by_arm: Dict[str, List[Dict[str, object]]],
+    arm_a: str,
+    arm_b: str,
+    metric: str,
+) -> Tuple[float, float, float, int]:
+    """Paired-difference sigma for arm_a vs arm_b on a scalar metric.
+
+    For each seed where both arms have a finite value, compute
+    diff = a - b. Returns (mean_diff, std_diff, sigma, n).
+    sigma = mean_diff / std_diff (positive ⇒ a > b on that metric).
+    """
+    if arm_a not in by_arm or arm_b not in by_arm:
+        return (float("nan"), float("nan"), float("nan"), 0)
+    # Index by seed so we can pair correctly.
+    a_by_seed = {r["seed"]: r for r in by_arm[arm_a]}
+    b_by_seed = {r["seed"]: r for r in by_arm[arm_b]}
+    seeds = sorted(set(a_by_seed) & set(b_by_seed))
+    diffs: List[float] = []
+    for s in seeds:
+        va = a_by_seed[s].get(metric)
+        vb = b_by_seed[s].get(metric)
+        if (isinstance(va, (int, float)) and isinstance(vb, (int, float))
+                and va == va and vb == vb):
+            diffs.append(float(va) - float(vb))
+    if len(diffs) < 2:
+        m = diffs[0] if diffs else float("nan")
+        return (m, float("nan"), float("nan"), len(diffs))
+    m = statistics.mean(diffs)
+    s = statistics.stdev(diffs)
+    sig = m / s if s > 0 else float("inf") if m != 0 else 0.0
+    return (m, s, sig, len(diffs))
+
+
+def report_multiseed(
+    all_results: Sequence[Dict[str, object]],
+    arms: Sequence[str],
+) -> None:
+    """Aggregate report across seeds. Prints mean ± std for the three
+    headlines (full / domain / task) per arm, per-phase means, and
+    paired σ-differences for the dream-vs-no-dream comparison.
+    """
+    by_arm: Dict[str, List[Dict[str, object]]] = {}
+    for r in all_results:
+        by_arm.setdefault(str(r["label"]), []).append(r)
+
+    seeds_seen = sorted({int(r["seed"]) for r in all_results})
+    n_seeds = len(seeds_seen)
+
+    print()
+    print("=" * 78)
+    print(f"bench_chained_15task — Multi-seed Report (n={n_seeds} seeds)")
+    print("=" * 78)
+    print(f"Seeds: {seeds_seen}")
+    print()
+
+    for arm in arms:
+        rs = by_arm.get(arm, [])
+        if not rs:
+            continue
+        print(f"[{arm}]  ({len(rs)} seeds)")
+        # Three headline scalars
+        for metric_key, metric_label in [
+            ("final_accuracy", "full   "),
+            ("final_accuracy_domain", "domain "),
+            ("final_accuracy_aware", "task   "),
+        ]:
+            xs = [float(r[metric_key]) for r in rs if metric_key in r]
+            m, sd, n = _mean_std(xs)
+            print(f"  final acc {metric_label}: {m:.4f} ± {sd:.4f}  (n={n})")
+        for metric_key, metric_label in [
+            ("avg_forgetting", "full   "),
+            ("avg_forgetting_domain", "domain "),
+            ("avg_forgetting_aware", "task   "),
+        ]:
+            xs = [float(r[metric_key]) for r in rs if metric_key in r]
+            m, sd, n = _mean_std(xs)
+            print(f"  forgetting {metric_label}: {m:+.4f} ± {sd:.4f}")
+        # Per-phase per-metric
+        # Collect phase means across seeds, per metric.
+        for matrix_key, metric_label in [
+            ("last_pass_matrix", "full"),
+            ("last_pass_matrix_domain", "domain"),
+            ("last_pass_matrix_aware", "task"),
+        ]:
+            phase_lists: Dict[str, List[float]] = {}
+            for r in rs:
+                phases = _phase_means_for_metric(r, matrix_key)
+                for k, v in phases.items():
+                    phase_lists.setdefault(k, []).append(v)
+            if phase_lists:
+                print(f"  per-phase {metric_label}:")
+                for k in sorted(phase_lists):
+                    m, sd, n = _mean_std(phase_lists[k])
+                    print(f"     {k:<22s} {m:.4f} ± {sd:.4f}")
+        # Substrate counters
+        for ck, label in [
+            ("cumulative_grows_allowed", "cum grows allowed "),
+            ("cumulative_grows_denied",  "cum grows denied  "),
+            ("cumulative_purges",        "cum dream purges  "),
+        ]:
+            xs = [float(r[ck]) for r in rs if ck in r]
+            m, sd, _ = _mean_std(xs)
+            print(f"  {label}: {m:.2f} ± {sd:.2f}")
+        # Final trainable params (sanity check that arms held to budget)
+        xs = [float(r["final_trainable"]) for r in rs]
+        m, sd, _ = _mean_std(xs)
+        print(f"  final trainable    : {m:.0f} ± {sd:.0f}")
+        print()
+
+    # Cross-arm summary
+    print("Headline (mean ± std across seeds):")
+    print(f"  {'arm':<28s}  {'full':<18s}  {'domain':<18s}  {'task':<18s}")
+    for arm in arms:
+        rs = by_arm.get(arm, [])
+        if not rs:
+            continue
+        cells: List[str] = []
+        for metric_key in ("final_accuracy", "final_accuracy_domain",
+                           "final_accuracy_aware"):
+            xs = [float(r[metric_key]) for r in rs if metric_key in r]
+            m, sd, _ = _mean_std(xs)
+            cells.append(f"{m:.4f}±{sd:.4f}")
+        print(f"  {arm:<28s}  {cells[0]:<18s}  {cells[1]:<18s}  {cells[2]:<18s}")
+    print()
+
+    # Paired σ-differences. The protagonist comparison Rocky cares about
+    # most is grown_capped_dream vs grown_capped_no_dream on task-aware.
+    # Generate all pairs among requested arms.
+    print("Paired σ-differences (arm_a − arm_b across seeds):")
+    print(f"  {'comparison':<48s}  {'metric':<8s}  {'mean Δ':>10s}  "
+          f"{'std Δ':>9s}  {'σ':>6s}  {'n':>3s}")
+    metric_pairs = [
+        ("final_accuracy", "full"),
+        ("final_accuracy_domain", "domain"),
+        ("final_accuracy_aware", "task"),
+    ]
+    arm_list = [a for a in arms if a in by_arm and by_arm[a]]
+    for i, a in enumerate(arm_list):
+        for b in arm_list[i + 1:]:
+            for mkey, mlabel in metric_pairs:
+                m, s, sig, n = _paired_sigma(by_arm, a, b, mkey)
+                comp = f"{a} vs {b}"
+                if n == 0:
+                    continue
+                sig_str = (f"{sig:+6.2f}" if sig == sig and not math.isinf(sig)
+                           else "  inf" if math.isinf(sig) else "   nan")
+                print(f"  {comp:<48s}  {mlabel:<8s}  {m:>+10.4f}  "
+                      f"{s:>9.4f}  {sig_str:>6s}  {n:>3d}")
+    print()
+
+
+def write_csv_multiseed(
+    all_results: Sequence[Dict[str, object]], csv_path: str,
+) -> None:
+    """Per-seed-per-arm scalar summary CSV.
+
+    Wide format: one row per (seed, arm). Excludes the K×K accuracy
+    matrix to keep things readable; matrices are in the .log.
+    """
+    fields = [
+        "seed", "label", "do_growth", "do_dream", "cap_bytes",
+        "initial_arch", "final_arch",
+        "initial_n_params", "final_n_params",
+        "initial_trainable", "final_trainable",
+        "wall_clock_seconds",
+        "final_accuracy", "final_accuracy_domain", "final_accuracy_aware",
+        "avg_forgetting", "avg_forgetting_domain", "avg_forgetting_aware",
+        "cumulative_grows_allowed", "cumulative_grows_denied",
+        "cumulative_purges", "cumulative_latched",
+    ]
+    with open(csv_path, "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(fields)
+        for r in all_results:
+            row = []
+            for f in fields:
+                v = r.get(f, "")
+                if isinstance(v, float):
+                    row.append(f"{v:.6f}")
+                elif isinstance(v, tuple):
+                    row.append(str(v))
+                else:
+                    row.append(v)
+            w.writerow(row)
+    print(f"  log: {csv_path}")
+
+
 def write_csv(results: Sequence[Dict[str, object]], csv_path: str) -> None:
     K = len(results[0]["task_names"]) if results else 0
     with open(csv_path, "w", newline="") as fh:
@@ -1362,6 +1585,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         help="Tiny budget for fast smoke test (1 epoch/task).",
     )
     parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument(
+        "--seeds", default="",
+        help="Comma-separated list of seeds (e.g. 0,1,2,...,11) for "
+             "multi-seed run. Overrides --seed when provided.",
+    )
     parser.add_argument("--data-root", default=DEFAULT_DATA_ROOT)
     parser.add_argument(
         "--arms", default=",".join(DEFAULT_ARMS),
@@ -1380,6 +1608,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             raise SystemExit(
                 f"Unknown arm {a!r}. Available: {list(ARM_DEFINITIONS)}"
             )
+
+    if args.seeds.strip():
+        seeds = [int(s.strip()) for s in args.seeds.split(",") if s.strip()]
+    else:
+        seeds = [args.seed]
 
     print("=" * 78)
     print("Trioron — bench_chained_15task: MNIST → FashionMNIST → EMNIST-letters")
@@ -1400,7 +1633,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"Infancy:            {N_INFANCY_PER_DATASET}/dataset, "
               f"{N_WARMUP_STEPS} warmup steps")
     print(f"Arms:               {arms}")
-    print(f"Seed:               {args.seed}")
+    if len(seeds) == 1:
+        print(f"Seed:               {seeds[0]}")
+    else:
+        print(f"Seeds (n={len(seeds)}):     {seeds}")
     print()
 
     # Build the bundle with the holdout reserved (so we can flip
@@ -1422,27 +1658,46 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     else:
         infancy_view = None
 
-    results: List[Dict[str, object]] = []
-    for arm in arms:
-        r = run_arm(
-            arm,
-            seed=args.seed + (hash(arm) % 7919),
-            n_epochs_per_task=n_epochs,
-            train_views=train_views, eval_views=eval_views,
-            task_class_lists=task_class_lists,
-            infancy_view=infancy_view,
-            n_passes=N_CURRICULUM_PASSES,
-        )
-        results.append(r)
+    all_results: List[Dict[str, object]] = []
+    for seed_idx, seed in enumerate(seeds):
+        if len(seeds) > 1:
+            print()
+            print("#" * 78)
+            print(f"#   SEED {seed}  ({seed_idx+1}/{len(seeds)})")
+            print("#" * 78)
+        seed_results: List[Dict[str, object]] = []
+        for arm in arms:
+            r = run_arm(
+                arm,
+                seed=seed + (hash(arm) % 7919),
+                n_epochs_per_task=n_epochs,
+                train_views=train_views, eval_views=eval_views,
+                task_class_lists=task_class_lists,
+                infancy_view=infancy_view,
+                n_passes=N_CURRICULUM_PASSES,
+            )
+            r["seed"] = seed
+            seed_results.append(r)
+            all_results.append(r)
 
-    report(results)
+        # Per-seed report so each block is readable while the run is in
+        # progress. Single-seed mode looks identical to before.
+        report(seed_results)
 
     out_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs"
     )
     os.makedirs(out_dir, exist_ok=True)
     csv_path = os.path.join(out_dir, args.csv)
-    write_csv(results, csv_path)
+
+    if len(seeds) > 1:
+        report_multiseed(all_results, arms)
+        # Multi-seed CSV: per-(seed, arm) scalar summary. Single-seed
+        # path keeps the legacy K×K-matrix CSV for back-compat.
+        ms_csv_path = csv_path.replace(".csv", "_multiseed.csv")
+        write_csv_multiseed(all_results, ms_csv_path)
+    else:
+        write_csv(all_results, csv_path)
     return 0
 
 

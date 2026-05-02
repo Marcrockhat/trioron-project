@@ -1,0 +1,354 @@
+==============================================================================
+Fisher / λ probe — chained-15 grown_capped_dream, single seed
+==============================================================================
+seed: 0   epochs/task: 4 (smoke)
+LAMBDA_FLOOR (current): 0.1
+EWC_INTERTASK: 30.0
+
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 104674 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=15  passes=1  epochs/task=4
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 32, 2] params=104674 (trainable 4194/8000) ===
+  [grown_capped_dream] task 1/15 (mnist_0_1) epoch 1/4 [settle]  avg_loss 0.1566  last_loss 0.0046  steps 197  arch [128, 32, 2]
+  [grown_capped_dream] task 1/15 (mnist_0_1) epoch 2/4 [settle]  avg_loss 0.0110  last_loss 0.0024  steps 394  arch [128, 32, 2]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 2] params=105198 (trainable 4718)
+  [grown_capped_dream] task 1/15 (mnist_0_1) epoch 3/4 [post-grow]  avg_loss 0.0067  last_loss 0.0002  steps 197  arch [128, 36, 2]
+  [grown_capped_dream] task 1/15 (mnist_0_1) epoch 4/4 [post-grow]  avg_loss 0.0047  last_loss 0.0002  steps 394  arch [128, 36, 2]
+  [PROBE consol task  1 mnist_0_1              active=[0, 1]]
+    head (2 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (36 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=1.17e-06  p90=4.04e-06  p99=5.47e-06  max=5.47e-06  >1e-4=0%  >1e-3=0%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=8.2e-10  p90=1.63e-07  p99=6.65e-07  max=1.61e-06  >1e-4=0%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.0057→0.0013 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 2] (105198→105198 params)
+[grown_capped_dream] After pass 1 task 1: own=0.9986 (domain 0.9986, task 0.9986)  avg=0.9986 (domain 0.9986, task 0.9986)  arch=[128, 36, 2] params=105198 (trainable 4718)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 36, 4] params=105272 (trainable 4792/8000) ===
+  [grown_capped_dream] task 2/15 (mnist_2_3) epoch 1/4 [settle]  avg_loss 0.7154  last_loss 0.5743  steps 188  arch [128, 36, 4]
+  [grown_capped_dream] task 2/15 (mnist_2_3) epoch 2/4 [settle]  avg_loss 0.5488  last_loss 0.5230  steps 376  arch [128, 36, 4]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 40, 4] params=105804 (trainable 5324)
+  [grown_capped_dream] task 2/15 (mnist_2_3) epoch 3/4 [post-grow]  avg_loss 0.3825  last_loss 0.3549  steps 188  arch [128, 40, 4]
+  [grown_capped_dream] task 2/15 (mnist_2_3) epoch 4/4 [post-grow]  avg_loss 0.1944  last_loss 0.0696  steps 376  arch [128, 40, 4]
+  [PROBE consol task  2 mnist_2_3              active=[2, 3]]
+    head (4 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (40 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0.00179  p99=0.00533  max=0.00553  >1e-4=39%  >1e-3=25%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=9.9e-07  p90=3.63e-05  p99=0.000192  max=0.000652  >1e-4=4%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.1047→0.1594 on 1p; merges=0 purges=0 latched=0 → arch [128, 40, 4] (105804→105804 params)
+[grown_capped_dream] After pass 1 task 2: own=0.3242 (domain 0.3242, task 0.9530)  avg=0.6612 (domain 0.6612, task 0.9758)  arch=[128, 40, 4] params=105804 (trainable 5324)  cum_grows=8 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 40, 6] params=105886 (trainable 5406/8000) ===
+  [grown_capped_dream] task 3/15 (mnist_4_5) epoch 1/4 [settle]  avg_loss 0.4988  last_loss 0.4444  steps 175  arch [128, 40, 6]
+  [grown_capped_dream] task 3/15 (mnist_4_5) epoch 2/4 [settle]  avg_loss 0.4002  last_loss 0.3874  steps 350  arch [128, 40, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 44, 6] params=106426 (trainable 5946)
+  [grown_capped_dream] task 3/15 (mnist_4_5) epoch 3/4 [post-grow]  avg_loss 0.2966  last_loss 0.1328  steps 175  arch [128, 44, 6]
+  [grown_capped_dream] task 3/15 (mnist_4_5) epoch 4/4 [post-grow]  avg_loss 0.1441  last_loss 0.1186  steps 350  arch [128, 44, 6]
+  [PROBE consol task  3 mnist_4_5              active=[4, 5]]
+    head (6 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (44 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0.000769  p99=0.00168  max=0.00201  >1e-4=24%  >1e-3=6%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=1.2e-06  p90=2.54e-05  p99=0.000146  max=0.00067  >1e-4=2%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.0007→0.0003 on 1p; merges=0 purges=0 latched=0 → arch [128, 44, 6] (106426→106426 params)
+[grown_capped_dream] After pass 1 task 3: own=0.3090 (domain 0.3090, task 0.9632)  avg=0.5163 (domain 0.5163, task 0.9714)  arch=[128, 44, 6] params=106426 (trainable 5946)  cum_grows=12 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 44, 8] params=106516 (trainable 6036/8000) ===
+  [grown_capped_dream] task 4/15 (mnist_6_7) epoch 1/4 [settle]  avg_loss 0.6600  last_loss 0.4415  steps 189  arch [128, 44, 8]
+  [grown_capped_dream] task 4/15 (mnist_6_7) epoch 2/4 [settle]  avg_loss 0.3962  last_loss 0.3624  steps 378  arch [128, 44, 8]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 48, 8] params=107064 (trainable 6584)
+  [grown_capped_dream] task 4/15 (mnist_6_7) epoch 3/4 [post-grow]  avg_loss 0.2011  last_loss 0.0651  steps 189  arch [128, 48, 8]
+  [grown_capped_dream] task 4/15 (mnist_6_7) epoch 4/4 [post-grow]  avg_loss 0.0488  last_loss 0.0627  steps 378  arch [128, 48, 8]
+  [PROBE consol task  4 mnist_6_7              active=[6, 7]]
+    head (8 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (48 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=5.8e-05  p99=0.000706  max=0.000947  >1e-4=4%  >1e-3=0%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=9.14e-08  p90=2.22e-06  p99=1.07e-05  max=3.55e-05  >1e-4=0%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.1156→0.0862 on 1p; merges=0 purges=0 latched=0 → arch [128, 48, 8] (107064→107064 params)
+[grown_capped_dream] After pass 1 task 4: own=0.6782 (domain 0.6782, task 0.9899)  avg=0.4887 (domain 0.4887, task 0.9760)  arch=[128, 48, 8] params=107064 (trainable 6584)  cum_grows=16 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 48, 10] params=107162 (trainable 6682/8000) ===
+  [grown_capped_dream] task 5/15 (mnist_8_9) epoch 1/4 [settle]  avg_loss 0.4438  last_loss 0.2635  steps 183  arch [128, 48, 10]
+  [grown_capped_dream] task 5/15 (mnist_8_9) epoch 2/4 [settle]  avg_loss 0.2527  last_loss 0.1819  steps 366  arch [128, 48, 10]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 52, 10] params=107718 (trainable 7238)
+  [grown_capped_dream] task 5/15 (mnist_8_9) epoch 3/4 [post-grow]  avg_loss 0.1831  last_loss 0.1955  steps 183  arch [128, 52, 10]
+  [grown_capped_dream] task 5/15 (mnist_8_9) epoch 4/4 [post-grow]  avg_loss 0.1279  last_loss 0.1372  steps 366  arch [128, 52, 10]
+  [PROBE consol task  5 mnist_8_9              active=[8, 9]]
+    head (10 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (52 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0.000205  p99=0.0029  max=0.00505  >1e-4=15%  >1e-3=5%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=6.97e-07  p90=1.49e-05  p99=0.000117  max=0.000354  >1e-4=1%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.0206→0.0527 on 1p; merges=0 purges=0 latched=0 → arch [128, 52, 10] (107718→107718 params)
+[grown_capped_dream] After pass 1 task 5: own=0.1483 (domain 0.1483, task 0.9586)  avg=0.4093 (domain 0.4093, task 0.9730)  arch=[128, 52, 10] params=107718 (trainable 7238)  cum_grows=20 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 52, 12] params=107824 (trainable 7344/8000) ===
+  [grown_capped_dream] task 6/15 (fashion_mnist_0_1) epoch 1/4 [settle]  avg_loss 0.4200  last_loss 0.2909  steps 186  arch [128, 52, 12]
+  [grown_capped_dream] task 6/15 (fashion_mnist_0_1) epoch 2/4 [settle]  avg_loss 0.2394  last_loss 0.1475  steps 372  arch [128, 52, 12]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 56, 12] params=108388 (trainable 7908)
+  [grown_capped_dream] task 6/15 (fashion_mnist_0_1) epoch 3/4 [post-grow]  avg_loss 0.1600  last_loss 0.1072  steps 186  arch [128, 56, 12]
+  [grown_capped_dream] task 6/15 (fashion_mnist_0_1) epoch 4/4 [post-grow]  avg_loss 0.0892  last_loss 0.0205  steps 372  arch [128, 56, 12]
+  [PROBE consol task  6 fashion_mnist_0_1      active=[10, 11]]
+    head (12 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (56 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0.000267  p99=0.00207  max=0.00394  >1e-4=12%  >1e-3=4%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=2.97e-07  p90=2.42e-05  p99=0.000196  max=0.000629  >1e-4=3%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.0680→0.0747 on 2p; merges=0 purges=0 latched=0 → arch [128, 56, 12] (108388→108388 params)
+[grown_capped_dream] After pass 1 task 6: own=0.9135 (domain 0.9720, task 0.9720)  avg=0.4170 (domain 0.5033, task 0.9724)  arch=[128, 56, 12] params=108388 (trainable 7908)  cum_grows=24 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 56, 14] params=108502 (trainable 8022/8000) ===
+  [grown_capped_dream] task 7/15 (fashion_mnist_2_3) epoch 1/4 [settle]  avg_loss 0.4098  last_loss 0.2719  steps 186  arch [128, 56, 14]
+  [grown_capped_dream] task 7/15 (fashion_mnist_2_3) epoch 2/4 [settle]  avg_loss 0.2484  last_loss 0.2492  steps 372  arch [128, 56, 14]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 52, 14] params=107930 (trainable 7450)
+  [grown_capped_dream] task 7/15 (fashion_mnist_2_3) epoch 3/4 [post-grow]  avg_loss 0.1961  last_loss 0.2520  steps 186  arch [128, 52, 14]
+  [grown_capped_dream] task 7/15 (fashion_mnist_2_3) epoch 4/4 [post-grow]  avg_loss 0.1397  last_loss 0.0702  steps 372  arch [128, 52, 14]
+  [PROBE consol task  7 fashion_mnist_2_3      active=[12, 13]]
+    head (14 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (52 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0.000301  p99=0.00437  max=0.00746  >1e-4=13%  >1e-3=5%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=3.89e-07  p90=3.79e-05  p99=0.000191  max=0.00064  >1e-4=3%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.1392→0.1145 on 2p; merges=0 purges=0 latched=0 → arch [128, 52, 14] (107930→107930 params)
+[grown_capped_dream] After pass 1 task 7: own=0.5035 (domain 0.6295, task 0.9515)  avg=0.4011 (domain 0.4954, task 0.9672)  arch=[128, 52, 14] params=107930 (trainable 7450)  cum_grows=28 cum_denied=0 cum_purges=8 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 52, 16] params=108036 (trainable 7556/8000) ===
+  [grown_capped_dream] task 8/15 (fashion_mnist_4_5) epoch 1/4 [settle]  avg_loss 0.4879  last_loss 0.3576  steps 186  arch [128, 52, 16]
+  [grown_capped_dream] task 8/15 (fashion_mnist_4_5) epoch 2/4 [settle]  avg_loss 0.2793  last_loss 0.2269  steps 372  arch [128, 52, 16]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 52, 16] params=108036 (trainable 7556)
+  [grown_capped_dream] task 8/15 (fashion_mnist_4_5) epoch 3/4 [post-grow]  avg_loss 0.1673  last_loss 0.0964  steps 186  arch [128, 52, 16]
+  [grown_capped_dream] task 8/15 (fashion_mnist_4_5) epoch 4/4 [post-grow]  avg_loss 0.0701  last_loss 0.0265  steps 372  arch [128, 52, 16]
+  [PROBE consol task  8 fashion_mnist_4_5      active=[14, 15]]
+    head (16 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (52 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=2.92e-05  p99=0.000356  max=0.00483  >1e-4=7%  >1e-3=0%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=3.28e-07  p90=8.14e-06  p99=4.61e-05  max=0.000171  >1e-4=0%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.0638→0.0753 on 2p; merges=0 purges=0 latched=0 → arch [128, 52, 16] (108036→108036 params)
+[grown_capped_dream] After pass 1 task 8: own=0.0000 (domain 0.0000, task 0.9905)  avg=0.3428 (domain 0.4285, task 0.9703)  arch=[128, 52, 16] params=108036 (trainable 7556)  cum_grows=32 cum_denied=0 cum_purges=12 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 52, 18] params=108142 (trainable 7662/8000) ===
+  [grown_capped_dream] task 9/15 (fashion_mnist_6_7) epoch 1/4 [settle]  avg_loss 0.3033  last_loss 0.1190  steps 186  arch [128, 52, 18]
+  [grown_capped_dream] task 9/15 (fashion_mnist_6_7) epoch 2/4 [settle]  avg_loss 0.1108  last_loss 0.1100  steps 372  arch [128, 52, 18]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 52, 18] params=108142 (trainable 7662)
+  [grown_capped_dream] task 9/15 (fashion_mnist_6_7) epoch 3/4 [post-grow]  avg_loss 0.0923  last_loss 0.0675  steps 186  arch [128, 52, 18]
+  [grown_capped_dream] task 9/15 (fashion_mnist_6_7) epoch 4/4 [post-grow]  avg_loss 0.0282  last_loss 0.0102  steps 372  arch [128, 52, 18]
+  [PROBE consol task  9 fashion_mnist_6_7      active=[16, 17]]
+    head (18 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (52 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=1.88e-06  p99=0.000107  max=0.000644  >1e-4=1%  >1e-3=0%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=4.53e-08  p90=9.91e-07  p99=5.66e-06  max=1.12e-05  >1e-4=0%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.0238→0.0347 on 2p; merges=0 purges=0 latched=0 → arch [128, 52, 18] (108142→108142 params)
+[grown_capped_dream] After pass 1 task 9: own=0.0925 (domain 0.1000, task 0.9980)  avg=0.2550 (domain 0.3432, task 0.9472)  arch=[128, 52, 18] params=108142 (trainable 7662)  cum_grows=36 cum_denied=0 cum_purges=16 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 52, 20] params=108248 (trainable 7768/8000) ===
+  [grown_capped_dream] task 10/15 (fashion_mnist_8_9) epoch 1/4 [settle]  avg_loss 0.3219  last_loss 0.1394  steps 187  arch [128, 52, 20]
+  [grown_capped_dream] task 10/15 (fashion_mnist_8_9) epoch 2/4 [settle]  avg_loss 0.1674  last_loss 0.0383  steps 374  arch [128, 52, 20]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 52, 20] params=108248 (trainable 7768)
+  [grown_capped_dream] task 10/15 (fashion_mnist_8_9) epoch 3/4 [post-grow]  avg_loss 0.0995  last_loss 0.0270  steps 187  arch [128, 52, 20]
+  [grown_capped_dream] task 10/15 (fashion_mnist_8_9) epoch 4/4 [post-grow]  avg_loss 0.0369  last_loss 0.0027  steps 374  arch [128, 52, 20]
+  [PROBE consol task 10 fashion_mnist_8_9      active=[18, 19]]
+    head (20 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (52 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=1.96e-08  p99=0.000499  max=0.000858  >1e-4=5%  >1e-3=0%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=8.65e-08  p90=7.08e-06  p99=3.6e-05  max=0.000105  >1e-4=0%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.0726→0.0673 on 2p; merges=0 purges=0 latched=0 → arch [128, 52, 20] (108248→108248 params)
+[grown_capped_dream] After pass 1 task 10: own=0.0705 (domain 0.1205, task 0.9915)  avg=0.2318 (domain 0.3000, task 0.9521)  arch=[128, 52, 20] params=108248 (trainable 7768)  cum_grows=40 cum_denied=0 cum_purges=20 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 52, 22] params=108354 (trainable 7874/8000) ===
+  [grown_capped_dream] task 11/15 (emnist_letters_0_1) epoch 1/4 [settle]  avg_loss 0.5701  last_loss 0.3975  steps 150  arch [128, 52, 22]
+  [grown_capped_dream] task 11/15 (emnist_letters_0_1) epoch 2/4 [settle]  avg_loss 0.4005  last_loss 0.3919  steps 300  arch [128, 52, 22]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 52, 22] params=108354 (trainable 7874)
+  [grown_capped_dream] task 11/15 (emnist_letters_0_1) epoch 3/4 [post-grow]  avg_loss 0.3237  last_loss 0.2203  steps 150  arch [128, 52, 22]
+  [grown_capped_dream] task 11/15 (emnist_letters_0_1) epoch 4/4 [post-grow]  avg_loss 0.2073  last_loss 0.0813  steps 300  arch [128, 52, 22]
+  [PROBE consol task 11 emnist_letters_0_1     active=[20, 21]]
+    head (22 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (52 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0  p99=0.00118  max=0.00242  >1e-4=8%  >1e-3=1%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=6.66e-07  p90=1.08e-05  p99=6.2e-05  max=0.000205  >1e-4=0%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.2234→0.1569 on 3p; merges=0 purges=0 latched=0 → arch [128, 52, 22] (108354→108354 params)
+[grown_capped_dream] After pass 1 task 11: own=0.0037 (domain 0.9344, task 0.9344)  avg=0.2365 (domain 0.3830, task 0.9525)  arch=[128, 52, 22] params=108354 (trainable 7874)  cum_grows=44 cum_denied=0 cum_purges=24 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 52, 24] params=108460 (trainable 7980/8000) ===
+  [grown_capped_dream] task 12/15 (emnist_letters_2_3) epoch 1/4 [settle]  avg_loss 0.5306  last_loss 0.4128  steps 150  arch [128, 52, 24]
+  [grown_capped_dream] task 12/15 (emnist_letters_2_3) epoch 2/4 [settle]  avg_loss 0.3523  last_loss 0.3286  steps 300  arch [128, 52, 24]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 52, 24] params=108460 (trainable 7980)
+  [grown_capped_dream] task 12/15 (emnist_letters_2_3) epoch 3/4 [post-grow]  avg_loss 0.2700  last_loss 0.2584  steps 150  arch [128, 52, 24]
+  [grown_capped_dream] task 12/15 (emnist_letters_2_3) epoch 4/4 [post-grow]  avg_loss 0.1603  last_loss 0.1097  steps 300  arch [128, 52, 24]
+  [PROBE consol task 12 emnist_letters_2_3     active=[22, 23]]
+    head (24 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (52 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0  p99=0.000734  max=0.0027  >1e-4=6%  >1e-3=1%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=5.78e-07  p90=1.06e-05  p99=4.82e-05  max=0.000297  >1e-4=0%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.0978→0.0826 on 3p; merges=0 purges=0 latched=0 → arch [128, 52, 24] (108460→108460 params)
+[grown_capped_dream] After pass 1 task 12: own=0.0275 (domain 0.7362, task 0.9356)  avg=0.2167 (domain 0.3491, task 0.9242)  arch=[128, 52, 24] params=108460 (trainable 7980)  cum_grows=48 cum_denied=0 cum_purges=28 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 52, 26] params=108566 (trainable 8086/8000) ===
+  [grown_capped_dream] task 13/15 (emnist_letters_4_5) epoch 1/4 [settle]  avg_loss 0.4943  last_loss 0.4098  steps 150  arch [128, 52, 26]
+  [grown_capped_dream] task 13/15 (emnist_letters_4_5) epoch 2/4 [settle]  avg_loss 0.3154  last_loss 0.2957  steps 300  arch [128, 52, 26]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 48, 26] params=107946 (trainable 7466)
+  [grown_capped_dream] task 13/15 (emnist_letters_4_5) epoch 3/4 [post-grow]  avg_loss 0.2637  last_loss 0.1568  steps 150  arch [128, 48, 26]
+  [grown_capped_dream] task 13/15 (emnist_letters_4_5) epoch 4/4 [post-grow]  avg_loss 0.1979  last_loss 0.1529  steps 300  arch [128, 48, 26]
+  [PROBE consol task 13 emnist_letters_4_5     active=[24, 25]]
+    head (26 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (48 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0  p99=0.0026  max=0.00809  >1e-4=7%  >1e-3=2%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=1.71e-06  p90=2.87e-05  p99=0.000148  max=0.000543  >1e-4=2%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.2174→0.2731 on 3p; merges=0 purges=0 latched=0 → arch [128, 48, 26] (107946→107946 params)
+[grown_capped_dream] After pass 1 task 13: own=0.0106 (domain 0.5125, task 0.9406)  avg=0.2022 (domain 0.3300, task 0.9057)  arch=[128, 48, 26] params=107946 (trainable 7466)  cum_grows=52 cum_denied=0 cum_purges=36 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 48, 28] params=108044 (trainable 7564/8000) ===
+  [grown_capped_dream] task 14/15 (emnist_letters_6_7) epoch 1/4 [settle]  avg_loss 0.5909  last_loss 0.5440  steps 150  arch [128, 48, 28]
+  [grown_capped_dream] task 14/15 (emnist_letters_6_7) epoch 2/4 [settle]  avg_loss 0.4284  last_loss 0.5176  steps 300  arch [128, 48, 28]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 48, 28] params=108044 (trainable 7564)
+  [grown_capped_dream] task 14/15 (emnist_letters_6_7) epoch 3/4 [post-grow]  avg_loss 0.3423  last_loss 0.2477  steps 150  arch [128, 48, 28]
+  [grown_capped_dream] task 14/15 (emnist_letters_6_7) epoch 4/4 [post-grow]  avg_loss 0.2355  last_loss 0.1478  steps 300  arch [128, 48, 28]
+  [PROBE consol task 14 emnist_letters_6_7     active=[26, 27]]
+    head (28 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (48 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0  p99=0.0013  max=0.00537  >1e-4=5%  >1e-3=1%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=1.38e-06  p90=1.8e-05  p99=7.82e-05  max=0.000264  >1e-4=1%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.3446→0.2950 on 4p; merges=0 purges=0 latched=0 → arch [128, 48, 28] (108044→108044 params)
+[grown_capped_dream] After pass 1 task 14: own=0.0081 (domain 0.2406, task 0.9294)  avg=0.1864 (domain 0.3145, task 0.9032)  arch=[128, 48, 28] params=108044 (trainable 7564)  cum_grows=56 cum_denied=0 cum_purges=40 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 48, 30] params=108142 (trainable 7662/8000) ===
+  [grown_capped_dream] task 15/15 (emnist_letters_8_9) epoch 1/4 [settle]  avg_loss 0.4809  last_loss 0.4053  steps 150  arch [128, 48, 30]
+  [grown_capped_dream] task 15/15 (emnist_letters_8_9) epoch 2/4 [settle]  avg_loss 0.3454  last_loss 0.1881  steps 300  arch [128, 48, 30]
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 48, 30] params=108142 (trainable 7662)
+  [grown_capped_dream] task 15/15 (emnist_letters_8_9) epoch 3/4 [post-grow]  avg_loss 0.3175  last_loss 0.1936  steps 150  arch [128, 48, 30]
+  [grown_capped_dream] task 15/15 (emnist_letters_8_9) epoch 4/4 [post-grow]  avg_loss 0.2583  last_loss 0.3326  steps 300  arch [128, 48, 30]
+  [PROBE consol task 15 emnist_letters_8_9     active=[28, 29]]
+    head (30 cls): lam min=0.1  p50=0.1  max=0.1  @floor=100%  max_drift=0.0000
+    L1   (48 nodes): lam min=0.1  p50=0.1  p90=0.1  max=0.1  @floor=100%  >10×floor=0%  max_drift=0.0000
+    head fisher_W (per-weight): p50=0  p90=0  p99=0.00612  max=0.0109  >1e-4=6%  >1e-3=4%  >1e-2=0%
+    L1   fisher_W (per-weight): p50=2.18e-06  p90=3.07e-05  p99=0.000155  max=0.000615  >1e-4=2%  >1e-3=0%  >1e-2=0%
+  [grown_capped_dream] post-task DREAM: replay 0.2236→0.2427 on 4p; merges=0 purges=0 latched=0 → arch [128, 48, 30] (108142→108142 params)
+[grown_capped_dream] After pass 1 task 15: own=0.2488 (domain 0.8681, task 0.9075)  avg=0.1552 (domain 0.2786, task 0.8993)  arch=[128, 48, 30] params=108142 (trainable 7662)  cum_grows=60 cum_denied=0 cum_purges=44 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.1552  domain=0.2786  task=0.8993
+
+==============================================================================
+End-of-curriculum head λ per class (n_classes=30):
+==============================================================================
+  class  0 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  1 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  2 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  3 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  4 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  5 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  6 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  7 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  8 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class  9 (MNIST   ): lam = 0.1  ← AT FLOOR
+  class 10 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 11 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 12 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 13 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 14 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 15 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 16 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 17 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 18 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 19 (Fashion ): lam = 0.1  ← AT FLOOR
+  class 20 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 21 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 22 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 23 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 24 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 25 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 26 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 27 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 28 (EMNIST  ): lam = 0.1  ← AT FLOOR
+  class 29 (EMNIST  ): lam = 0.1  ← AT FLOOR
+
+==============================================================================
+Per-task evolution: head λ summary
+==============================================================================
+  tk  task_name             n_cls         min         p50         max  @floor  max_drift
+   1  mnist_0_1                 2         0.1         0.1         0.1    100%     0.0000
+   2  mnist_2_3                 4         0.1         0.1         0.1    100%     0.0000
+   3  mnist_4_5                 6         0.1         0.1         0.1    100%     0.0000
+   4  mnist_6_7                 8         0.1         0.1         0.1    100%     0.0000
+   5  mnist_8_9                10         0.1         0.1         0.1    100%     0.0000
+   6  fashion_mnist_0_1        12         0.1         0.1         0.1    100%     0.0000
+   7  fashion_mnist_2_3        14         0.1         0.1         0.1    100%     0.0000
+   8  fashion_mnist_4_5        16         0.1         0.1         0.1    100%     0.0000
+   9  fashion_mnist_6_7        18         0.1         0.1         0.1    100%     0.0000
+  10  fashion_mnist_8_9        20         0.1         0.1         0.1    100%     0.0000
+  11  emnist_letters_0_1       22         0.1         0.1         0.1    100%     0.0000
+  12  emnist_letters_2_3       24         0.1         0.1         0.1    100%     0.0000
+  13  emnist_letters_4_5       26         0.1         0.1         0.1    100%     0.0000
+  14  emnist_letters_6_7       28         0.1         0.1         0.1    100%     0.0000
+  15  emnist_letters_8_9       30         0.1         0.1         0.1    100%     0.0000
+
+==============================================================================
+Per-task evolution: L1 (growth-target hidden) λ summary
+==============================================================================
+  tk  task_name              n_h         min         p50         p90         max  @floor   >10x
+   1  mnist_0_1               36         0.1         0.1         0.1         0.1    100%     0%
+   2  mnist_2_3               40         0.1         0.1         0.1         0.1    100%     0%
+   3  mnist_4_5               44         0.1         0.1         0.1         0.1    100%     0%
+   4  mnist_6_7               48         0.1         0.1         0.1         0.1    100%     0%
+   5  mnist_8_9               52         0.1         0.1         0.1         0.1    100%     0%
+   6  fashion_mnist_0_1       56         0.1         0.1         0.1         0.1    100%     0%
+   7  fashion_mnist_2_3       52         0.1         0.1         0.1         0.1    100%     0%
+   8  fashion_mnist_4_5       52         0.1         0.1         0.1         0.1    100%     0%
+   9  fashion_mnist_6_7       52         0.1         0.1         0.1         0.1    100%     0%
+  10  fashion_mnist_8_9       52         0.1         0.1         0.1         0.1    100%     0%
+  11  emnist_letters_0_1      52         0.1         0.1         0.1         0.1    100%     0%
+  12  emnist_letters_2_3      52         0.1         0.1         0.1         0.1    100%     0%
+  13  emnist_letters_4_5      48         0.1         0.1         0.1         0.1    100%     0%
+  14  emnist_letters_6_7      48         0.1         0.1         0.1         0.1    100%     0%
+  15  emnist_letters_8_9      48         0.1         0.1         0.1         0.1    100%     0%
+
+==============================================================================
+Per-task evolution: raw fisher_W (per-weight, BEFORE mean-collapse)
+==============================================================================
+  tk  task_name             layer        p50        p90        p99        max  >1e-4  >1e-3  >1e-2
+   1  mnist_0_1             head   1.17e-06   4.04e-06   5.47e-06   5.47e-06     0%     0%     0%
+   1  mnist_0_1             L1      8.2e-10   1.63e-07   6.65e-07   1.61e-06     0%     0%     0%
+   2  mnist_2_3             head          0    0.00179    0.00533    0.00553    39%    25%     0%
+   2  mnist_2_3             L1      9.9e-07   3.63e-05   0.000192   0.000652     4%     0%     0%
+   3  mnist_4_5             head          0   0.000769    0.00168    0.00201    24%     6%     0%
+   3  mnist_4_5             L1      1.2e-06   2.54e-05   0.000146    0.00067     2%     0%     0%
+   4  mnist_6_7             head          0    5.8e-05   0.000706   0.000947     4%     0%     0%
+   4  mnist_6_7             L1     9.14e-08   2.22e-06   1.07e-05   3.55e-05     0%     0%     0%
+   5  mnist_8_9             head          0   0.000205     0.0029    0.00505    15%     5%     0%
+   5  mnist_8_9             L1     6.97e-07   1.49e-05   0.000117   0.000354     1%     0%     0%
+   6  fashion_mnist_0_1     head          0   0.000267    0.00207    0.00394    12%     4%     0%
+   6  fashion_mnist_0_1     L1     2.97e-07   2.42e-05   0.000196   0.000629     3%     0%     0%
+   7  fashion_mnist_2_3     head          0   0.000301    0.00437    0.00746    13%     5%     0%
+   7  fashion_mnist_2_3     L1     3.89e-07   3.79e-05   0.000191    0.00064     3%     0%     0%
+   8  fashion_mnist_4_5     head          0   2.92e-05   0.000356    0.00483     7%     0%     0%
+   8  fashion_mnist_4_5     L1     3.28e-07   8.14e-06   4.61e-05   0.000171     0%     0%     0%
+   9  fashion_mnist_6_7     head          0   1.88e-06   0.000107   0.000644     1%     0%     0%
+   9  fashion_mnist_6_7     L1     4.53e-08   9.91e-07   5.66e-06   1.12e-05     0%     0%     0%
+  10  fashion_mnist_8_9     head          0   1.96e-08   0.000499   0.000858     5%     0%     0%
+  10  fashion_mnist_8_9     L1     8.65e-08   7.08e-06    3.6e-05   0.000105     0%     0%     0%
+  11  emnist_letters_0_1    head          0          0    0.00118    0.00242     8%     1%     0%
+  11  emnist_letters_0_1    L1     6.66e-07   1.08e-05    6.2e-05   0.000205     0%     0%     0%
+  12  emnist_letters_2_3    head          0          0   0.000734     0.0027     6%     1%     0%
+  12  emnist_letters_2_3    L1     5.78e-07   1.06e-05   4.82e-05   0.000297     0%     0%     0%
+  13  emnist_letters_4_5    head          0          0     0.0026    0.00809     7%     2%     0%
+  13  emnist_letters_4_5    L1     1.71e-06   2.87e-05   0.000148   0.000543     2%     0%     0%
+  14  emnist_letters_6_7    head          0          0     0.0013    0.00537     5%     1%     0%
+  14  emnist_letters_6_7    L1     1.38e-06    1.8e-05   7.82e-05   0.000264     1%     0%     0%
+  15  emnist_letters_8_9    head          0          0    0.00612     0.0109     6%     4%     0%
+  15  emnist_letters_8_9    L1     2.18e-06   3.07e-05   0.000155   0.000615     2%     0%     0%
+
+Headline result on this seed (sanity-check vs n=12 means):
+  full   0.1552
+  domain 0.2786
+  task   0.8993
