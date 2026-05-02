@@ -13,3 +13,4 @@
 
 torch>=2.0,<3.0
 numpy>=1.24
+torchvision>=0.15  # split-MNIST + chained-15task benches (Step 9)

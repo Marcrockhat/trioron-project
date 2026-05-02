@@ -10,6 +10,7 @@ venv/
 
 # Logs / runtime artifacts (blueprint §10)
 outputs/*.csv
+outputs/data/
 logs/
 
 # Editor / OS

@@ -1,0 +1,160 @@
+==============================================================================
+Trioron — bench_split_mnist (canary, fan_in=784)
+==============================================================================
+Steps/task:        1500
+H_init grown:      32
+H fixed:           64
+Growth target:     layer 1
+Seed:              0
+
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+
+[grown] curriculum start — arch [32, 32, 2]  params 26242  growth=True  K=5 steps/task=1500
+
+[grown] === Task 1/5: mnist_0_1 (active classes [0, 1]) ===
+  [grown] task 1/5 (mnist_0_1) step     0  loss 0.6672  arch [32, 32, 2]  params 26242
+  [grown] task 1/5 (mnist_0_1) step   249  loss 0.0002  arch [32, 32, 2]  params 26242
+  [grown] task 1/5 (mnist_0_1) step   499  loss 0.0001  arch [32, 32, 2]  params 26242
+  [grown] task 1/5 (mnist_0_1) step   749  loss 0.0001  arch [32, 32, 2]  params 26242
+  [grown] task 1/5 (mnist_0_1) step   999  loss 0.0000  arch [32, 32, 2]  params 26242
+  [grown] task 1/5 (mnist_0_1) step  1249  loss 0.0002  arch [32, 32, 2]  params 26242
+  [grown] task 1/5 (mnist_0_1) step  1499  loss 0.0000  arch [32, 32, 2]  params 26242
+[grown] After task 1: own=0.9991  avg_to_date=0.9991  arch=[32, 32, 2] params=26242
+[grown] head: extend by 2 → 4 outputs
+
+[grown] === Task 2/5: mnist_2_3 (active classes [2, 3]) ===
+  [grown] task 2/5 (mnist_2_3) step     0  loss 3.1051  arch [32, 32, 4]  params 26308
+  [grown] task 2/5 (mnist_2_3) step   249  loss 0.6136  arch [32, 32, 4]  params 26308
+  [grown] task 2/5 (mnist_2_3) step   499  loss 0.5301  arch [32, 32, 4]  params 26308
+  [grown] task 2/5 (mnist_2_3) step   749  loss 0.4789  arch [32, 32, 4]  params 26308
+  [grown] task 2/5 (mnist_2_3) step   999  loss 0.4312  arch [32, 32, 4]  params 26308
+  [grown] task 2/5 (mnist_2_3) step  1249  loss 0.3708  arch [32, 32, 4]  params 26308
+  [grown] task 2/5 (mnist_2_3) step  1499  loss 0.4064  arch [32, 32, 4]  params 26308
+[grown] After task 2: own=0.1876  avg_to_date=0.5928  arch=[32, 32, 4] params=26308
+[grown] head: extend by 2 → 6 outputs
+
+[grown] === Task 3/5: mnist_4_5 (active classes [4, 5]) ===
+  [grown] task 3/5 (mnist_4_5) step     0  loss 1.0834  arch [32, 32, 6]  params 26374
+  [grown] task 3/5 (mnist_4_5) step   249  loss 0.5160  arch [32, 32, 6]  params 26374
+  [grown] task 3/5 (mnist_4_5) step   499  loss 0.4173  arch [32, 32, 6]  params 26374
+  [grown] task 3/5 (mnist_4_5) step   749  loss 0.3101  arch [32, 32, 6]  params 26374
+  [grown] task 3/5 (mnist_4_5) step   999  loss 0.2784  arch [32, 32, 6]  params 26374
+  [grown] task 3/5 (mnist_4_5) step  1249  loss 0.1810  arch [32, 32, 6]  params 26374
+  [grown] task 3/5 (mnist_4_5) step  1499  loss 0.1620  arch [32, 32, 6]  params 26374
+[grown] After task 3: own=0.1852  avg_to_date=0.4344  arch=[32, 32, 6] params=26374
+[grown] head: extend by 2 → 8 outputs
+
+[grown] === Task 4/5: mnist_6_7 (active classes [6, 7]) ===
+  [grown] task 4/5 (mnist_6_7) step     0  loss 1.1023  arch [32, 32, 8]  params 26440
+  [grown] task 4/5 (mnist_6_7) step   249  loss 0.4405  arch [32, 32, 8]  params 26440
+  [grown] task 4/5 (mnist_6_7) step   499  loss 0.3715  arch [32, 32, 8]  params 26440
+  [grown] task 4/5 (mnist_6_7) step   749  loss 0.3323  arch [32, 32, 8]  params 26440
+  [grown] task 4/5 (mnist_6_7) step   999  loss 0.2449  arch [32, 32, 8]  params 26440
+  [grown] task 4/5 (mnist_6_7) step  1249  loss 0.2735  arch [32, 32, 8]  params 26440
+  [grown] task 4/5 (mnist_6_7) step  1499  loss 0.1662  arch [32, 32, 8]  params 26440
+[grown] After task 4: own=0.1410  avg_to_date=0.3611  arch=[32, 32, 8] params=26440
+[grown] head: extend by 2 → 10 outputs
+
+[grown] === Task 5/5: mnist_8_9 (active classes [8, 9]) ===
+  [grown] task 5/5 (mnist_8_9) step     0  loss 0.9742  arch [32, 32, 10]  params 26506
+  [grown] task 5/5 (mnist_8_9) step   249  loss 0.5393  arch [32, 32, 10]  params 26506
+  [grown] task 5/5 (mnist_8_9) step   499  loss 0.4332  arch [32, 32, 10]  params 26506
+  [grown] task 5/5 (mnist_8_9) step   749  loss 0.4024  arch [32, 32, 10]  params 26506
+  [grown] task 5/5 (mnist_8_9) step   999  loss 0.3584  arch [32, 32, 10]  params 26506
+  [grown] task 5/5 (mnist_8_9) step  1249  loss 0.3270  arch [32, 32, 10]  params 26506
+  [grown] task 5/5 (mnist_8_9) step  1499  loss 0.3154  arch [32, 32, 10]  params 26506
+[grown] After task 5: own=0.0101  avg_to_date=0.2891  arch=[32, 32, 10] params=26506
+
+[fixed_ewc_H64] curriculum start — arch [64, 64, 2]  params 54530  growth=False  K=5 steps/task=1500
+
+[fixed_ewc_H64] === Task 1/5: mnist_0_1 (active classes [0, 1]) ===
+  [fixed_ewc_H64] task 1/5 (mnist_0_1) step     0  loss 0.6558  arch [64, 64, 2]  params 54530
+  [fixed_ewc_H64] task 1/5 (mnist_0_1) step   249  loss 0.0008  arch [64, 64, 2]  params 54530
+  [fixed_ewc_H64] task 1/5 (mnist_0_1) step   499  loss 0.0001  arch [64, 64, 2]  params 54530
+  [fixed_ewc_H64] task 1/5 (mnist_0_1) step   749  loss 0.0000  arch [64, 64, 2]  params 54530
+  [fixed_ewc_H64] task 1/5 (mnist_0_1) step   999  loss 0.0000  arch [64, 64, 2]  params 54530
+  [fixed_ewc_H64] task 1/5 (mnist_0_1) step  1249  loss 0.0149  arch [64, 64, 2]  params 54530
+  [fixed_ewc_H64] task 1/5 (mnist_0_1) step  1499  loss 0.0003  arch [64, 64, 2]  params 54530
+[fixed_ewc_H64] After task 1: own=0.9995  avg_to_date=0.9995  arch=[64, 64, 2] params=54530
+[fixed_ewc_H64] head: extend by 2 → 4 outputs
+
+[fixed_ewc_H64] === Task 2/5: mnist_2_3 (active classes [2, 3]) ===
+  [fixed_ewc_H64] task 2/5 (mnist_2_3) step     0  loss 1.7208  arch [64, 64, 4]  params 54660
+  [fixed_ewc_H64] task 2/5 (mnist_2_3) step   249  loss 0.5269  arch [64, 64, 4]  params 54660
+  [fixed_ewc_H64] task 2/5 (mnist_2_3) step   499  loss 0.3298  arch [64, 64, 4]  params 54660
+  [fixed_ewc_H64] task 2/5 (mnist_2_3) step   749  loss 0.2823  arch [64, 64, 4]  params 54660
+  [fixed_ewc_H64] task 2/5 (mnist_2_3) step   999  loss 0.3205  arch [64, 64, 4]  params 54660
+  [fixed_ewc_H64] task 2/5 (mnist_2_3) step  1249  loss 0.3165  arch [64, 64, 4]  params 54660
+  [fixed_ewc_H64] task 2/5 (mnist_2_3) step  1499  loss 0.2055  arch [64, 64, 4]  params 54660
+[fixed_ewc_H64] After task 2: own=0.1939  avg_to_date=0.5958  arch=[64, 64, 4] params=54660
+[fixed_ewc_H64] head: extend by 2 → 6 outputs
+
+[fixed_ewc_H64] === Task 3/5: mnist_4_5 (active classes [4, 5]) ===
+  [fixed_ewc_H64] task 3/5 (mnist_4_5) step     0  loss 0.7707  arch [64, 64, 6]  params 54790
+  [fixed_ewc_H64] task 3/5 (mnist_4_5) step   249  loss 0.3383  arch [64, 64, 6]  params 54790
+  [fixed_ewc_H64] task 3/5 (mnist_4_5) step   499  loss 0.2751  arch [64, 64, 6]  params 54790
+  [fixed_ewc_H64] task 3/5 (mnist_4_5) step   749  loss 0.2800  arch [64, 64, 6]  params 54790
+  [fixed_ewc_H64] task 3/5 (mnist_4_5) step   999  loss 0.1874  arch [64, 64, 6]  params 54790
+  [fixed_ewc_H64] task 3/5 (mnist_4_5) step  1249  loss 0.2777  arch [64, 64, 6]  params 54790
+  [fixed_ewc_H64] task 3/5 (mnist_4_5) step  1499  loss 0.2310  arch [64, 64, 6]  params 54790
+[fixed_ewc_H64] After task 3: own=0.1259  avg_to_date=0.4323  arch=[64, 64, 6] params=54790
+[fixed_ewc_H64] head: extend by 2 → 8 outputs
+
+[fixed_ewc_H64] === Task 4/5: mnist_6_7 (active classes [6, 7]) ===
+  [fixed_ewc_H64] task 4/5 (mnist_6_7) step     0  loss 0.7337  arch [64, 64, 8]  params 54920
+  [fixed_ewc_H64] task 4/5 (mnist_6_7) step   249  loss 0.2974  arch [64, 64, 8]  params 54920
+  [fixed_ewc_H64] task 4/5 (mnist_6_7) step   499  loss 0.2105  arch [64, 64, 8]  params 54920
+  [fixed_ewc_H64] task 4/5 (mnist_6_7) step   749  loss 0.1314  arch [64, 64, 8]  params 54920
+  [fixed_ewc_H64] task 4/5 (mnist_6_7) step   999  loss 0.1141  arch [64, 64, 8]  params 54920
+  [fixed_ewc_H64] task 4/5 (mnist_6_7) step  1249  loss 0.0740  arch [64, 64, 8]  params 54920
+  [fixed_ewc_H64] task 4/5 (mnist_6_7) step  1499  loss 0.1004  arch [64, 64, 8]  params 54920
+[fixed_ewc_H64] After task 4: own=0.2578  avg_to_date=0.3802  arch=[64, 64, 8] params=54920
+[fixed_ewc_H64] head: extend by 2 → 10 outputs
+
+[fixed_ewc_H64] === Task 5/5: mnist_8_9 (active classes [8, 9]) ===
+  [fixed_ewc_H64] task 5/5 (mnist_8_9) step     0  loss 0.9595  arch [64, 64, 10]  params 55050
+  [fixed_ewc_H64] task 5/5 (mnist_8_9) step   249  loss 0.4656  arch [64, 64, 10]  params 55050
+  [fixed_ewc_H64] task 5/5 (mnist_8_9) step   499  loss 0.3173  arch [64, 64, 10]  params 55050
+  [fixed_ewc_H64] task 5/5 (mnist_8_9) step   749  loss 0.2899  arch [64, 64, 10]  params 55050
+  [fixed_ewc_H64] task 5/5 (mnist_8_9) step   999  loss 0.2099  arch [64, 64, 10]  params 55050
+  [fixed_ewc_H64] task 5/5 (mnist_8_9) step  1249  loss 0.3437  arch [64, 64, 10]  params 55050
+  [fixed_ewc_H64] task 5/5 (mnist_8_9) step  1499  loss 0.2507  arch [64, 64, 10]  params 55050
+[fixed_ewc_H64] After task 5: own=0.0570  avg_to_date=0.3126  arch=[64, 64, 10] params=55050
+
+==============================================================================
+bench_split_mnist — Final Report
+==============================================================================
+
+[grown]
+  arch:               (32, 32, 2) → (32, 32, 10)
+  params:             26242 → 26506
+  divisions:          0 allowed, 0 denied
+  pathology steps:    0
+  final accuracy:     0.2891
+  avg forgetting:     0.0194
+  wall-clock:         28.1s
+     mnist_0_1         0.9981
+     mnist_2_3         0.1146
+     mnist_4_5         0.1857
+     mnist_6_7         0.1370
+     mnist_8_9         0.0101
+
+[fixed_ewc_H64]
+  arch:               (64, 64, 2) → (64, 64, 10)
+  params:             54530 → 55050
+  divisions:          0 allowed, 0 denied
+  pathology steps:    0
+  final accuracy:     0.3126
+  avg forgetting:     0.0178
+  wall-clock:         32.6s
+     mnist_0_1         0.9972
+     mnist_2_3         0.1513
+     mnist_4_5         0.0987
+     mnist_6_7         0.2588
+     mnist_8_9         0.0570
+
+Headline:
+  grown 0.2891  vs  fixed_ewc_H64 0.3126
+
+  log: /home/marcrockhat/trioron-project/outputs/bench_split_mnist_log.csv

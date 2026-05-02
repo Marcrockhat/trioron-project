@@ -11,6 +11,17 @@ from .ceilings import (
     PreflightDecision,
     division_param_delta,
 )
+from .classification import (
+    SplitClassificationTask,
+    SplitClassificationReport,
+    split_mnist_tasks,
+    split_cifar100_tasks,
+    extend_output_head,
+    masked_cross_entropy,
+    predict_full,
+    accuracy,
+    summarize,
+)
 
 __all__ = [
     "TrioronLayer",
@@ -19,5 +30,14 @@ __all__ = [
     "DivisionDelta",
     "PreflightDecision",
     "division_param_delta",
+    "SplitClassificationTask",
+    "SplitClassificationReport",
+    "split_mnist_tasks",
+    "split_cifar100_tasks",
+    "extend_output_head",
+    "masked_cross_entropy",
+    "predict_full",
+    "accuracy",
+    "summarize",
 ]
 __version__ = "0.0.2"
