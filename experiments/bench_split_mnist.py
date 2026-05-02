@@ -393,7 +393,35 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     parser.add_argument("--seed", type=int, default=SEED)
     parser.add_argument("--data-root", default=DEFAULT_DATA_ROOT)
+    parser.add_argument(
+        "--ewc-intertask", type=float, default=EWC_INTERTASK,
+        help=f"EWC strength used between tasks (default {EWC_INTERTASK}). "
+             f"Tune this for fan_in=784 + CE-loss; the bench_50task value "
+             f"(1000) is too stiff and prevents new-task learning.",
+    )
+    parser.add_argument(
+        "--ewc-stab-boost", type=float, default=EWC_STAB_BOOST,
+        help="EWC strength used briefly after a division (irrelevant when "
+             "do_growth=False).",
+    )
+    parser.add_argument(
+        "--no-grown", action="store_true",
+        help="Skip the grown arm (used by the EWC-strength sweep — only "
+             "fixed_ewc behavior depends on the strength).",
+    )
+    parser.add_argument(
+        "--label-suffix", default="",
+        help="Appended to the per-arm label so multiple sweep runs can "
+             "share an output CSV without clobbering.",
+    )
     args = parser.parse_args(argv)
+
+    # Mutate module-level EWC constants so the helpers (which read these
+    # at call time) see the override. Cleaner than threading every
+    # function through a config object.
+    global EWC_INTERTASK, EWC_STAB_BOOST
+    EWC_INTERTASK = float(args.ewc_intertask)
+    EWC_STAB_BOOST = float(args.ewc_stab_boost)
 
     n_steps = 200 if args.smoke else N_STEPS_PER_TASK
 

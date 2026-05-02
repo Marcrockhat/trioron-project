@@ -36,6 +36,10 @@ _DATASET_CTORS = {
     "mnist": tvd.MNIST,
     "fashion_mnist": tvd.FashionMNIST,
     "kmnist": tvd.KMNIST,
+    # emnist_letters: EMNIST 'letters' split (26 letters, labels 1..26).
+    # Loaded via the constructor wrapper below because EMNIST takes an
+    # extra `split` kwarg the others don't.
+    "emnist_letters": "EMNIST_LETTERS_SENTINEL",
 }
 
 IMAGE_DIM = 28 * 28  # 784
@@ -58,12 +62,21 @@ def _load_split(name: str, train: bool, root: str) -> Tuple[torch.Tensor, torch.
             f"unknown dataset {name!r}; supported: {list(_DATASET_CTORS)}"
         )
     os.makedirs(root, exist_ok=True)
+
+    if name == "emnist_letters":
+        ds = tvd.EMNIST(root=root, split="letters", train=train, download=True)
+        # EMNIST 'letters' has labels in {1..26} (1=A). Remap to {0..25}
+        # so downstream views can use 0-indexed class lists naturally.
+        # EMNIST also stores its images transposed relative to MNIST —
+        # the canonical orientation is image.t() per Cohen 2017 Fig. 2.
+        # Apply the transpose once here so flattened bytes mirror MNIST.
+        images = ds.data.to(torch.float32).div_(255.0)
+        images = images.transpose(1, 2).contiguous().view(-1, IMAGE_DIM)
+        labels = ds.targets.to(torch.long).clone() - 1
+        return images, labels
+
     ctor = _DATASET_CTORS[name]
     ds = ctor(root=root, train=train, download=True)
-
-    # torchvision's MNIST-family puts uint8 images in `data` (N, 28, 28)
-    # and labels in `targets`. Skip the PIL transform layer entirely —
-    # we just want flat floats.
     images = ds.data.to(torch.float32).div_(255.0).view(-1, IMAGE_DIM)
     labels = ds.targets.to(torch.long).clone()
     return images, labels
@@ -228,18 +241,24 @@ def split_mnist_specs() -> List[ChainedTaskSpec]:
 
 
 def chained_15_specs() -> List[ChainedTaskSpec]:
-    """Chained 15-task curriculum: split-MNIST → split-FashionMNIST → split-KMNIST.
+    """Chained 15-task curriculum: MNIST → FashionMNIST → EMNIST-letters.
+
+    KMNIST was the originally-planned third block but its only
+    torchvision mirror (codh.rois.ac.jp) is unreachable. EMNIST-letters
+    (NIST source, reachable) covers the same role: a distinct glyph
+    distribution from digits and clothing, 28x28 grayscale, 10 of its
+    26 letter classes split into 5 binary tasks (A/B, C/D, E/F, G/H, I/J).
 
     Global class layout:
-      MNIST 0..9          → global 0..9
-      FashionMNIST 0..9   → global 10..19
-      KMNIST 0..9         → global 20..29
+      MNIST 0..9                 → global 0..9
+      FashionMNIST 0..9          → global 10..19
+      EMNIST letters A..J (0..9) → global 20..29
     """
     out: List[ChainedTaskSpec] = []
     blocks = [
         ("mnist", 0),
         ("fashion_mnist", 10),
-        ("kmnist", 20),
+        ("emnist_letters", 20),
     ]
     for ds, offset in blocks:
         for i in range(5):
