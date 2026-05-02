@@ -110,12 +110,45 @@ class TaskDataView:
         generator: Optional[torch.Generator] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Uniform-with-replacement minibatch sample. Cheaper than per-task
-        DataLoader+shuffle and matches the patterns in bench_50task."""
+        DataLoader+shuffle and matches the patterns in bench_50task.
+
+        Use `iter_epoch` instead when you want every sample seen exactly
+        once per pass — this is preferred for proper task training; the
+        random-with-replacement firehose was producing
+        37%-of-samples-never-seen on smoke-budget runs and disrupting
+        the model's ability to settle on stable representations.
+        """
         n = self.images.shape[0]
         if n == 0:
             raise RuntimeError(f"task {self.name!r} has 0 examples")
         idx = torch.randint(0, n, (batch,), generator=generator)
         return self.images[idx], self.labels_global[idx]
+
+    def iter_epoch(
+        self,
+        batch: int,
+        generator: Optional[torch.Generator] = None,
+    ):
+        """Yield shuffled minibatches that traverse the task data
+        EXACTLY ONCE.
+
+        Each call to iter_epoch produces a fresh shuffle. The last batch
+        may be smaller than `batch` — fine for training. Caller can
+        loop iter_epoch(...) inside an outer epoch loop to get N
+        complete passes through the data.
+
+        Per Gemma's framing: the random-with-replacement firehose is
+        the equivalent of bombarding a developing cell with a flickering
+        stimulus distribution. Proper epoch iteration lets the network
+        commit to representations on stable input shape.
+        """
+        n = self.images.shape[0]
+        if n == 0:
+            raise RuntimeError(f"task {self.name!r} has 0 examples")
+        perm = torch.randperm(n, generator=generator)
+        for start in range(0, n, batch):
+            idx = perm[start:start + batch]
+            yield self.images[idx], self.labels_global[idx]
 
     def all_examples(self) -> Tuple[torch.Tensor, torch.Tensor]:
         """Full set — used to construct the fixed eval batches."""
@@ -137,19 +170,55 @@ class DatasetBundle:
 
     Repeated calls to `.task_view(...)` with the same args reuse the
     same filtered tensors (cheap — they're sliced via index_select).
+
+    `n_holdout_per_dataset`: optional non-negative int. When >0, the
+    FIRST n_holdout samples of each train split are reserved as
+    "infancy" data — `task_view` will not draw from them. The held-out
+    portion is exposed via `infancy_view(specs)`. Used by the chained-15
+    bench to give L0 a brief developmental warmup on disjoint data
+    before the continual stream begins. Lickliter (2002) — too much
+    sensory input during a developmental window disrupts perceptual
+    cascading; default 0 (no holdout) preserves prior bench behavior.
     """
 
     def __init__(
         self,
         names: Sequence[str],
         root: str = DEFAULT_DATA_ROOT,
+        n_holdout_per_dataset: int = 0,
     ):
+        if n_holdout_per_dataset < 0:
+            raise ValueError(
+                f"n_holdout_per_dataset must be >= 0, got {n_holdout_per_dataset}"
+            )
         self.root = root
+        self.n_holdout_per_dataset = int(n_holdout_per_dataset)
+        # Train tensors AFTER holdout is removed — task_view sees these.
         self._train: Dict[str, Tuple[torch.Tensor, torch.Tensor]] = {}
         self._test: Dict[str, Tuple[torch.Tensor, torch.Tensor]] = {}
+        # Holdout tensors (raw, with original local labels). Keys exist
+        # only when n_holdout_per_dataset > 0.
+        self._holdout: Dict[str, Tuple[torch.Tensor, torch.Tensor]] = {}
         for name in names:
             print(f"[datasets] loading {name} (train) ...")
-            self._train[name] = _load_split(name, train=True, root=root)
+            full_images, full_labels = _load_split(name, train=True, root=root)
+            if self.n_holdout_per_dataset > 0:
+                hold = self.n_holdout_per_dataset
+                if hold > full_images.shape[0]:
+                    raise ValueError(
+                        f"n_holdout_per_dataset={hold} exceeds {name} "
+                        f"train size {full_images.shape[0]}"
+                    )
+                self._holdout[name] = (
+                    full_images[:hold].clone(),
+                    full_labels[:hold].clone(),
+                )
+                self._train[name] = (
+                    full_images[hold:].clone(),
+                    full_labels[hold:].clone(),
+                )
+            else:
+                self._train[name] = (full_images, full_labels)
             print(f"[datasets] loading {name} (test)  ...")
             self._test[name] = _load_split(name, train=False, root=root)
 
@@ -206,6 +275,81 @@ class DatasetBundle:
             labels_global=sub_labels_global,
             local_classes=list(local_classes),
             global_classes=list(global_classes),
+        )
+
+    def infancy_view(
+        self,
+        specs: Sequence["ChainedTaskSpec"],
+    ) -> TaskDataView:
+        """Combine the held-out portions of each dataset into a single
+        TaskDataView spanning ALL global classes that appear in `specs`.
+
+        Used for the L0 warmup: brief, disjoint-from-training exposure
+        that develops a feature extractor before the continual stream
+        starts. Requires the bundle was constructed with
+        n_holdout_per_dataset > 0; raises otherwise.
+
+        The returned view's labels_global use the SAME global class
+        layout as the chained curriculum, so the warmup classifier
+        trains on a head wide enough to cover all 30 classes (10 per
+        dataset, 3 datasets).
+        """
+        if self.n_holdout_per_dataset == 0:
+            raise RuntimeError(
+                "infancy_view requires the bundle to be built with "
+                "n_holdout_per_dataset > 0"
+            )
+
+        # Build a per-dataset {local_class -> global_class} map from the
+        # chained specs. For datasets that span multiple specs (e.g.
+        # MNIST has 5 specs covering classes 0..9), merge the maps.
+        per_dataset_remap: Dict[str, Dict[int, int]] = {}
+        for s in specs:
+            mapping = per_dataset_remap.setdefault(s.dataset_name, {})
+            for L, G in zip(s.local_classes, s.global_classes):
+                mapping[L] = G
+
+        chunks_x: List[torch.Tensor] = []
+        chunks_y: List[torch.Tensor] = []
+        for ds_name, remap in per_dataset_remap.items():
+            if ds_name not in self._holdout:
+                raise RuntimeError(
+                    f"dataset {ds_name!r} appears in specs but isn't loaded"
+                )
+            images, labels_local = self._holdout[ds_name]
+            # Mask: keep only samples whose local label appears in remap.
+            local_t = torch.tensor(
+                sorted(remap.keys()), dtype=torch.long,
+            )
+            mask = (labels_local.unsqueeze(1) == local_t.unsqueeze(0)).any(dim=1)
+            keep = torch.nonzero(mask, as_tuple=False).squeeze(1)
+            if keep.numel() == 0:
+                continue
+            sub_images = images.index_select(0, keep)
+            sub_labels_local = labels_local.index_select(0, keep)
+            # Remap to global.
+            max_local = int(local_t.max().item())
+            remap_t = torch.full((max_local + 1,), -1, dtype=torch.long)
+            for L, G in remap.items():
+                remap_t[L] = G
+            sub_labels_global = remap_t[sub_labels_local]
+            chunks_x.append(sub_images)
+            chunks_y.append(sub_labels_global)
+
+        if not chunks_x:
+            raise RuntimeError(
+                "infancy_view: no held-out samples matched any spec class"
+            )
+        all_x = torch.cat(chunks_x, dim=0)
+        all_y = torch.cat(chunks_y, dim=0)
+        all_globals = sorted({int(g) for m in per_dataset_remap.values()
+                              for g in m.values()})
+        return TaskDataView(
+            name="infancy",
+            images=all_x,
+            labels_global=all_y,
+            local_classes=[-1] * len(all_globals),  # not meaningful here
+            global_classes=all_globals,
         )
 
 

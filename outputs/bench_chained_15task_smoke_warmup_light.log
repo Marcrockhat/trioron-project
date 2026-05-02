@@ -1,0 +1,158 @@
+==============================================================================
+Trioron — bench_chained_15task: MNIST → FashionMNIST → EMNIST-letters
+==============================================================================
+Steps/task:         200 [SMOKE]
+L0 width (frozen):  128
+H_init grown (L1):  32
+H fixed:            64
+N_grow_per_task:    4
+Cap (trainable):    32_000 B = 8_000 params
+EWC intertask:      30.0
+Curriculum passes:  1
+Infancy:            500/dataset, 100 warmup steps
+Arms:               ['grown_capped_dream']
+Seed:               0
+
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+[infancy] view built: 1195 samples covering 30 global classes
+
+[grown_capped_dream] L0 warmup (100 steps on 1195 infancy samples) ...
+  [warmup] step    0  loss 3.5091
+  [warmup] step   99  loss 0.7298
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 104674 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=15  passes=1  steps/task=200
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1]) growth: 4/4 allowed, 0 denied  arch=[128, 36, 2] params=105198 (trainable 4718/8000) ===
+  [grown_capped_dream] task 1/15 (mnist_0_1) step     0  loss 1.1204  arch [128, 36, 2]  params 105198
+  [grown_capped_dream] task 1/15 (mnist_0_1) step   199  loss 0.0012  arch [128, 36, 2]  params 105198
+  [grown_capped_dream] post-task DREAM: replay 0.0061→0.0028 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 2] (105198→105198 params)
+[grown_capped_dream] After pass 1 task 1: own=0.9991  avg=0.9991  arch=[128, 36, 2] params=105198 (trainable 4718)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3]) growth: 4/4 allowed, 0 denied  arch=[128, 40, 4] params=105804 (trainable 5324/8000) ===
+  [grown_capped_dream] task 2/15 (mnist_2_3) step     0  loss 1.2692  arch [128, 40, 4]  params 105804
+  [grown_capped_dream] task 2/15 (mnist_2_3) step   199  loss 0.2196  arch [128, 40, 4]  params 105804
+  [grown_capped_dream] post-task DREAM: replay 0.0020→0.0095 on 1p; merges=0 purges=0 latched=0 → arch [128, 40, 4] (105804→105804 params)
+[grown_capped_dream] After pass 1 task 2: own=0.9158  avg=0.8766  arch=[128, 40, 4] params=105804 (trainable 5324)  cum_grows=8 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5]) growth: 4/4 allowed, 0 denied  arch=[128, 44, 6] params=106426 (trainable 5946/8000) ===
+  [grown_capped_dream] task 3/15 (mnist_4_5) step     0  loss 2.1177  arch [128, 44, 6]  params 106426
+  [grown_capped_dream] task 3/15 (mnist_4_5) step   199  loss 0.0784  arch [128, 44, 6]  params 106426
+  [grown_capped_dream] post-task DREAM: replay 0.1009→0.0655 on 1p; merges=0 purges=0 latched=0 → arch [128, 44, 6] (106426→106426 params)
+[grown_capped_dream] After pass 1 task 3: own=0.3885  avg=0.6336  arch=[128, 44, 6] params=106426 (trainable 5946)  cum_grows=12 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7]) growth: 4/4 allowed, 0 denied  arch=[128, 48, 8] params=107064 (trainable 6584/8000) ===
+  [grown_capped_dream] task 4/15 (mnist_6_7) step     0  loss 2.8978  arch [128, 48, 8]  params 107064
+  [grown_capped_dream] task 4/15 (mnist_6_7) step   199  loss 0.0567  arch [128, 48, 8]  params 107064
+  [grown_capped_dream] post-task DREAM: replay 0.0791→0.0640 on 1p; merges=0 purges=0 latched=0 → arch [128, 48, 8] (107064→107064 params)
+[grown_capped_dream] After pass 1 task 4: own=0.6631  avg=0.4388  arch=[128, 48, 8] params=107064 (trainable 6584)  cum_grows=16 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9]) growth: 4/4 allowed, 0 denied  arch=[128, 52, 10] params=107718 (trainable 7238/8000) ===
+  [grown_capped_dream] task 5/15 (mnist_8_9) step     0  loss 1.3515  arch [128, 52, 10]  params 107718
+  [grown_capped_dream] task 5/15 (mnist_8_9) step   199  loss 0.1601  arch [128, 52, 10]  params 107718
+  [grown_capped_dream] post-task DREAM: replay 0.2215→0.1567 on 1p; merges=0 purges=0 latched=0 → arch [128, 52, 10] (107718→107718 params)
+[grown_capped_dream] After pass 1 task 5: own=0.0000  avg=0.3463  arch=[128, 52, 10] params=107718 (trainable 7238)  cum_grows=20 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11]) growth: 4/4 allowed, 0 denied  arch=[128, 56, 12] params=108388 (trainable 7908/8000) ===
+  [grown_capped_dream] task 6/15 (fashion_mnist_0_1) step     0  loss 0.9163  arch [128, 56, 12]  params 108388
+  [grown_capped_dream] task 6/15 (fashion_mnist_0_1) step   199  loss 0.1155  arch [128, 56, 12]  params 108388
+  [grown_capped_dream] post-task DREAM: replay 0.0531→0.0706 on 2p; merges=0 purges=0 latched=0 → arch [128, 56, 12] (108388→108388 params)
+[grown_capped_dream] After pass 1 task 6: own=0.0000  avg=0.2882  arch=[128, 56, 12] params=108388 (trainable 7908)  cum_grows=24 cum_denied=0 cum_purges=0 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13]) growth: 4/4 allowed, 0 denied  arch=[128, 52, 14] params=107930 (trainable 7450/8000) ===
+  [grown_capped_dream] task 7/15 (fashion_mnist_2_3) step     0  loss 0.7363  arch [128, 52, 14]  params 107930
+  [grown_capped_dream] task 7/15 (fashion_mnist_2_3) step   199  loss 0.0598  arch [128, 52, 14]  params 107930
+  [grown_capped_dream] post-task DREAM: replay 0.1372→0.0952 on 2p; merges=0 purges=0 latched=0 → arch [128, 52, 14] (107930→107930 params)
+[grown_capped_dream] After pass 1 task 7: own=0.0000  avg=0.2038  arch=[128, 52, 14] params=107930 (trainable 7450)  cum_grows=28 cum_denied=0 cum_purges=8 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15]) growth: 4/4 allowed, 0 denied  arch=[128, 52, 16] params=108036 (trainable 7556/8000) ===
+  [grown_capped_dream] task 8/15 (fashion_mnist_4_5) step     0  loss 4.0984  arch [128, 52, 16]  params 108036
+  [grown_capped_dream] task 8/15 (fashion_mnist_4_5) step   199  loss 0.0218  arch [128, 52, 16]  params 108036
+  [grown_capped_dream] post-task DREAM: replay 0.1657→0.1289 on 2p; merges=0 purges=0 latched=0 → arch [128, 52, 16] (108036→108036 params)
+[grown_capped_dream] After pass 1 task 8: own=0.9380  avg=0.1683  arch=[128, 52, 16] params=108036 (trainable 7556)  cum_grows=32 cum_denied=0 cum_purges=12 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17]) growth: 4/4 allowed, 0 denied  arch=[128, 52, 18] params=108142 (trainable 7662/8000) ===
+  [grown_capped_dream] task 9/15 (fashion_mnist_6_7) step     0  loss 1.9400  arch [128, 52, 18]  params 108142
+  [grown_capped_dream] task 9/15 (fashion_mnist_6_7) step   199  loss 0.0241  arch [128, 52, 18]  params 108142
+  [grown_capped_dream] post-task DREAM: replay 0.2085→0.0909 on 2p; merges=0 purges=0 latched=0 → arch [128, 52, 18] (108142→108142 params)
+[grown_capped_dream] After pass 1 task 9: own=0.0000  avg=0.1424  arch=[128, 52, 18] params=108142 (trainable 7662)  cum_grows=36 cum_denied=0 cum_purges=16 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19]) growth: 4/4 allowed, 0 denied  arch=[128, 52, 20] params=108248 (trainable 7768/8000) ===
+  [grown_capped_dream] task 10/15 (fashion_mnist_8_9) step     0  loss 3.0637  arch [128, 52, 20]  params 108248
+  [grown_capped_dream] task 10/15 (fashion_mnist_8_9) step   199  loss 0.0302  arch [128, 52, 20]  params 108248
+  [grown_capped_dream] post-task DREAM: replay 0.0265→0.0184 on 2p; merges=0 purges=0 latched=0 → arch [128, 52, 20] (108248→108248 params)
+[grown_capped_dream] After pass 1 task 10: own=0.0000  avg=0.1235  arch=[128, 52, 20] params=108248 (trainable 7768)  cum_grows=40 cum_denied=0 cum_purges=20 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21]) growth: 4/4 allowed, 0 denied  arch=[128, 52, 22] params=108354 (trainable 7874/8000) ===
+  [grown_capped_dream] task 11/15 (emnist_letters_0_1) step     0  loss 3.6805  arch [128, 52, 22]  params 108354
+  [grown_capped_dream] task 11/15 (emnist_letters_0_1) step   199  loss 0.3694  arch [128, 52, 22]  params 108354
+  [grown_capped_dream] post-task DREAM: replay 0.1014→0.1500 on 3p; merges=0 purges=0 latched=0 → arch [128, 52, 22] (108354→108354 params)
+[grown_capped_dream] After pass 1 task 11: own=0.0500  avg=0.0730  arch=[128, 52, 22] params=108354 (trainable 7874)  cum_grows=44 cum_denied=0 cum_purges=24 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23]) growth: 4/4 allowed, 0 denied  arch=[128, 52, 24] params=108460 (trainable 7980/8000) ===
+  [grown_capped_dream] task 12/15 (emnist_letters_2_3) step     0  loss 1.6520  arch [128, 52, 24]  params 108460
+  [grown_capped_dream] task 12/15 (emnist_letters_2_3) step   199  loss 0.1748  arch [128, 52, 24]  params 108460
+  [grown_capped_dream] post-task DREAM: replay 0.7315→0.1971 on 3p; merges=0 purges=0 latched=0 → arch [128, 52, 24] (108460→108460 params)
+[grown_capped_dream] After pass 1 task 12: own=0.0244  avg=0.0742  arch=[128, 52, 24] params=108460 (trainable 7980)  cum_grows=48 cum_denied=0 cum_purges=28 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25]) growth: 4/4 allowed, 0 denied  arch=[128, 48, 26] params=107946 (trainable 7466/8000) ===
+  [grown_capped_dream] task 13/15 (emnist_letters_4_5) step     0  loss 5.4962  arch [128, 48, 26]  params 107946
+  [grown_capped_dream] task 13/15 (emnist_letters_4_5) step   199  loss 0.3584  arch [128, 48, 26]  params 107946
+  [grown_capped_dream] post-task DREAM: replay 0.4260→0.2930 on 3p; merges=0 purges=0 latched=0 → arch [128, 48, 26] (107946→107946 params)
+[grown_capped_dream] After pass 1 task 13: own=0.0000  avg=0.0752  arch=[128, 48, 26] params=107946 (trainable 7466)  cum_grows=52 cum_denied=0 cum_purges=36 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27]) growth: 4/4 allowed, 0 denied  arch=[128, 48, 28] params=108044 (trainable 7564/8000) ===
+  [grown_capped_dream] task 14/15 (emnist_letters_6_7) step     0  loss 2.6220  arch [128, 48, 28]  params 108044
+  [grown_capped_dream] task 14/15 (emnist_letters_6_7) step   199  loss 0.2193  arch [128, 48, 28]  params 108044
+  [grown_capped_dream] post-task DREAM: replay 0.2209→0.2047 on 4p; merges=0 purges=0 latched=0 → arch [128, 48, 28] (108044→108044 params)
+[grown_capped_dream] After pass 1 task 14: own=0.0000  avg=0.0695  arch=[128, 48, 28] params=108044 (trainable 7564)  cum_grows=56 cum_denied=0 cum_purges=40 cum_latched=0
+  [grown_capped_dream] dream-rescue freed room: purges=4 → grow OK
+
+[grown_capped_dream] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29]) growth: 4/4 allowed, 0 denied  arch=[128, 48, 30] params=108142 (trainable 7662/8000) ===
+  [grown_capped_dream] task 15/15 (emnist_letters_8_9) step     0  loss 1.8632  arch [128, 48, 30]  params 108142
+  [grown_capped_dream] task 15/15 (emnist_letters_8_9) step   199  loss 0.2220  arch [128, 48, 30]  params 108142
+  [grown_capped_dream] post-task DREAM: replay 1.0299→0.7276 on 4p; merges=0 purges=0 latched=0 → arch [128, 48, 30] (108142→108142 params)
+[grown_capped_dream] After pass 1 task 15: own=0.0000  avg=0.0658  arch=[128, 48, 30] params=108142 (trainable 7662)  cum_grows=60 cum_denied=0 cum_purges=44 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — final_accuracy=0.0658
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[grown_capped_dream]
+  arch:               (128, 32, 2) → (128, 48, 30)
+  params total:       104674 → 108142
+  params trainable:   4194 → 7662  (cap-relevant)
+  cap_bytes:          32_000  (= 8_000 trainable params)
+  cum grows allowed:  60
+  cum grows denied:   0
+  cum dream purges:   44
+  cum dream latched:  0
+  final accuracy:     0.0658
+  avg forgetting:     0.2137
+  wall-clock:         34.6s
+     phase1_mnist         0.0420
+     phase2_fashion       0.0998
+     phase3_emnist        0.0557
+
+Headline (final accuracy across arms):
+  grown_capped_dream            0.0658  (forgetting +0.2137)
+
+  log: /home/marcrockhat/trioron-project/outputs/bench_chained_15task_log.csv
