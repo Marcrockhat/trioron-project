@@ -14,8 +14,9 @@ from typing import Callable, Iterable, Optional, Sequence, Tuple, List
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-from .node import TrioronLayer
+from .node import TrioronLayer, _ACTIVATIONS
 
 
 LayerSpec = Tuple[int, int, str]  # (fan_in, n_nodes, activation)
@@ -52,6 +53,49 @@ class TrioronNetwork(nn.Module):
         for layer in self.layers:
             x = layer(x)
         return x
+
+    def forward_with_anchors(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass using each layer's W_anchor (consolidated weights)
+        instead of live W. No gradients tracked.
+
+        Used for Parasitic-Dream / LwF distillation: at the start of each
+        task, the network is in its just-consolidated state (W ≈ W_anchor
+        for all anchored layers). As live W drifts during the new task's
+        training, this method re-creates the consolidated network's
+        response on any input — supplying the "old network's view of new
+        data" supervisory signal that distills past-task decision
+        boundaries forward into the new task.
+        """
+        with torch.no_grad():
+            h = x
+            for layer in self.layers:
+                if h.dtype != layer.W_anchor.dtype:
+                    h = h.to(layer.W_anchor.dtype)
+                scale = layer.routing_scale.unsqueeze(1).to(layer.W_anchor.dtype)
+                W_eff = layer.W_anchor * scale
+                z = F.linear(h, W_eff, layer.b_anchor)
+                h = _ACTIVATIONS[layer.activation](z)
+            return h
+
+    def forward_from_layer(
+        self, h: torch.Tensor, start_layer: int,
+    ) -> torch.Tensor:
+        """Forward starting from `start_layer` with live W. h is the input
+        to layer `start_layer` (i.e., the post-activation output of layer
+        `start_layer - 1`).
+
+        Used for Brainstem-Spark latent rehearsal: synthetic activations
+        sampled at a bottleneck (e.g., L1 output) get fed directly into
+        the head, skipping the upstream layers entirely.
+        """
+        if start_layer < 0 or start_layer >= len(self.layers):
+            raise ValueError(
+                f"start_layer={start_layer} out of range "
+                f"[0, {len(self.layers)})"
+            )
+        for layer in self.layers[start_layer:]:
+            h = layer(h)
+        return h
 
     # ----- aggregations across layers -----
 

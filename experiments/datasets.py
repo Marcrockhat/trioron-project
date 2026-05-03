@@ -236,6 +236,90 @@ class MemoryBuffer:
         return all_x[idx], all_y[idx]
 
 
+class BrainstemBuffer:
+    """Per-class (μ, σ) Gaussian statistics at a bottleneck layer for
+    latent rehearsal (Brainstem-Spark / latent generative replay).
+
+    Stores ONE diagonal Gaussian per global class, computed from the
+    L1 output activations on that class's training data at consolidation
+    time. At rehearsal time, sample synthetic latents `z ~ N(μ_c, σ_c²)`
+    for random classes, feed them directly into the head (bypassing L0
+    and L1 entirely). The head learns to classify synthetic in-
+    distribution latents, regularizing it against drift on classes
+    whose actual training data is no longer available.
+
+    Handles L1 growth: stored stats from earlier tasks are at the L1
+    width prevailing at storage time. When `sample()` is called with a
+    larger `current_l1_width`, the stored vector is zero-padded — new
+    L1 units (initialized fresh) didn't fire on the old class's data,
+    so their expected contribution to the old class is ~zero.
+
+    Storage cost is small: 30 classes × (μ, σ) × ~60 dims × 4 bytes ≈
+    30 KB total at chained-15 scale.
+    """
+
+    def __init__(self):
+        # class_idx → (mu, sigma) tensors. Each tensor has shape
+        # (l1_width_at_storage,). When the network's L1 has grown past
+        # this width, we zero-pad on sample.
+        self._stats: Dict[int, Tuple[torch.Tensor, torch.Tensor]] = {}
+
+    def add_class(
+        self, class_idx: int, mu: torch.Tensor, sigma: torch.Tensor,
+    ) -> None:
+        """Store stats for one class. mu, sigma must have shape
+        (l1_width,). Overwrites any prior entry for this class."""
+        if mu.dim() != 1 or sigma.dim() != 1:
+            raise ValueError(
+                f"mu/sigma must be 1-D, got {mu.shape}, {sigma.shape}"
+            )
+        if mu.shape != sigma.shape:
+            raise ValueError(
+                f"mu/sigma shape mismatch: {mu.shape} vs {sigma.shape}"
+            )
+        self._stats[int(class_idx)] = (
+            mu.detach().clone(),
+            sigma.detach().clone(),
+        )
+
+    def has_classes(self) -> bool:
+        return len(self._stats) > 0
+
+    def n_classes_stored(self) -> int:
+        return len(self._stats)
+
+    def sample(
+        self,
+        n_samples: int,
+        current_l1_width: int,
+        generator: Optional[torch.Generator] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return (z, y) with z shape (n_samples, current_l1_width) and
+        y shape (n_samples,). Each row of z is sampled from a randomly
+        chosen stored class's per-feature Gaussian, zero-padded if the
+        stored width is smaller than `current_l1_width`."""
+        if not self._stats:
+            return None, None  # type: ignore
+        classes = list(self._stats.keys())
+        # Random class assignment per row.
+        choice_idx = torch.randint(
+            0, len(classes), (n_samples,), generator=generator,
+        )
+        ys = torch.tensor(
+            [classes[int(i)] for i in choice_idx], dtype=torch.long,
+        )
+        zs = torch.zeros(n_samples, current_l1_width)
+        for i in range(n_samples):
+            c = classes[int(choice_idx[i])]
+            mu, sigma = self._stats[c]
+            old_dim = mu.shape[0]
+            d = min(old_dim, current_l1_width)
+            noise = torch.randn(d, generator=generator)
+            zs[i, :d] = mu[:d] + sigma[:d] * noise
+            # zs[i, d:] left zero
+        return zs, ys
+
+
 # ---------------------------------------------------------------------------
 # Dataset bundle — caches train + test tensors per dataset name
 # ---------------------------------------------------------------------------

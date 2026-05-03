@@ -73,6 +73,7 @@ import time
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import torch
+import torch.nn.functional as F
 import torch.optim as optim
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -94,6 +95,7 @@ from trioron.dreaming import (
 
 from experiments.datasets import (
     DEFAULT_DATA_ROOT,
+    BrainstemBuffer,
     DatasetBundle,
     MemoryBuffer,
     TaskDataView,
@@ -253,11 +255,56 @@ N_CURRICULUM_PASSES = 1
 # revealed argmax drift across the 30-class output. Rehearsal with
 # all-classes-seen-so-far mask gives explicit gradient on cross-class
 # discrimination.
-REHEARSAL_ENABLED = True
-REHEARSAL_SAMPLES_PER_TASK = 100   # 15 tasks × 100 = 1500 total budget.
-                                    # Within iCaRL's 2000 typical budget.
-REHEARSAL_BATCH = 64                # same as training batch
-REHEARSAL_LOSS_WEIGHT = 1.0         # equal weight to current-task loss
+REHEARSAL_ENABLED = False           # raw-sample buffer rehearsal — disabled
+                                     # in favor of A+B (LwF + Brainstem). Flag
+                                     # preserved for ablation runs.
+REHEARSAL_SAMPLES_PER_TASK = 100
+REHEARSAL_BATCH = 64
+REHEARSAL_LOSS_WEIGHT = 1.0
+
+# Parasitic-Dream (Learning without Forgetting, Li & Hoiem 2017).
+# At task k+1, BEFORE training, we forward each batch through the
+# network using W_anchor (the just-consolidated weights) to get Z_old —
+# the "old network's view of new data." We then add a temperature-
+# softened KL distillation penalty pulling the live network's logits
+# toward Z_old on the OLD-class columns only. This preserves the
+# consolidated decision boundaries without storing any old-task data.
+# Storage cost: zero new (W_anchor already exists per layer).
+# Biology: maps onto sleep-dependent cortical consolidation — the cortex
+# preserves its pre-update response while integrating new experience.
+LWF_ENABLED = True
+LWF_TEMPERATURE = 2.0               # standard distillation temperature
+LWF_LOSS_WEIGHT = 0.7               # modestly under 1.0 — proxy signal is
+                                     # noisier than direct CE on the new task
+                                     # because the anchor network includes
+                                     # newly-grown L1 units at random init
+                                     # (their W_anchor is set at grow time,
+                                     # not at consolidate time). Empirical
+                                     # tuning may push this back to ~1.0.
+
+# Brainstem-Spark (latent Gaussian rehearsal). After consolidating a
+# task, compute per-class (μ, σ) at the L1 output (the discriminative
+# bottleneck). During training of subsequent tasks, sample synthetic
+# latents from these per-class Gaussians and feed directly into the
+# head, bypassing L0+L1 entirely. The head learns to maintain class
+# boundaries even when fed synthetic activations sampled in-distribution.
+# Storage cost: ~30 KB (30 classes × 2 stats × ~60 dims × 4 bytes).
+# Biology: maps onto REM dreaming — brainstem-driven internal pattern
+# generation propagating through cortex without external sensory drive.
+# L1-bottleneck choice: L0 separability is too marginal (probe ratio
+# 1.063 — see memory/l0_prototype_separation.md). L1 is the
+# discriminative layer; per-class Gaussians at L1 output separate well.
+# L1 grows during the curriculum; stored stats are zero-padded when L1
+# widens (new units initialized fresh activate ~zero on old-class data).
+BRAINSTEM_ENABLED = True
+BRAINSTEM_BATCH = 64
+BRAINSTEM_LOSS_WEIGHT = 0.2         # secondary regularizer; the per-class L1
+                                     # Gaussians become STALE as L1 drifts
+                                     # under EWC + LwF, so the synthetic
+                                     # latents only approximate the current
+                                     # network's L1 distribution. Keep weight
+                                     # low so this acts as a head regularizer
+                                     # rather than a primary signal.
 
 LOG_EVERY = 500
 
@@ -484,6 +531,44 @@ def consolidate_task(
         for layer in net.layers:
             layer.lam.clamp_(min=LAMBDA_FLOOR)
     net.anchor_all()
+
+
+def _store_brainstem_stats(
+    net: TrioronNetwork,
+    train_view: TaskDataView,
+    active_classes: Sequence[int],
+    brainstem: BrainstemBuffer,
+    max_samples_per_class: int = 1000,
+) -> None:
+    """Compute per-class (μ, σ) at the L1 output on this task's training
+    data and store in the brainstem buffer. Caps at max_samples_per_class
+    to keep wall-clock manageable on the larger MNIST tasks (~6000 per
+    class). The cap is enough to estimate diagonal Gaussian stats with
+    low variance.
+    """
+    net.eval()
+    try:
+        with torch.no_grad():
+            x_all, y_all = train_view.all_examples()
+            for c in active_classes:
+                mask = (y_all == c)
+                x_c = x_all[mask]
+                if x_c.shape[0] == 0:
+                    continue
+                if x_c.shape[0] > max_samples_per_class:
+                    idx = torch.randperm(x_c.shape[0])[:max_samples_per_class]
+                    x_c = x_c[idx]
+                # Forward through L0 + L1, stopping at the bottleneck
+                # (L1 output, the head's input).
+                h = x_c
+                for layer in net.layers[: GROWTH_TARGET_LAYER_IDX + 1]:
+                    h = layer(h)
+                # h is now (n, l1_width); diagonal Gaussian.
+                mu = h.mean(dim=0).detach()
+                sigma = h.std(dim=0).detach()
+                brainstem.add_class(int(c), mu, sigma)
+    finally:
+        net.train()
 
 
 # ---------------------------------------------------------------------
@@ -728,6 +813,8 @@ def train_one_task(
     total_epochs_outer: Optional[int] = None,
     epoch_label_suffix: str = "",
     memory: Optional[MemoryBuffer] = None,
+    lwf_old_classes: Optional[Sequence[int]] = None,
+    brainstem: Optional[BrainstemBuffer] = None,
 ) -> optim.Optimizer:
     """Train on one task for `n_epochs` proper minibatch epochs.
 
@@ -754,11 +841,8 @@ def train_one_task(
             logits = net(x)
             l_task = masked_cross_entropy(logits, y_global, active_classes=active)
 
-            # Rehearsal (Path 2): if memory has stored past tasks, mix
-            # in a rehearsal batch with full-head active classes. The
-            # all-classes-seen mask gives a direct gradient against
-            # cross-class head drift (the dominant failure mode on
-            # full-softmax accuracy).
+            # Rehearsal (Path 2 raw-sample): default off; preserved for
+            # ablation. See REHEARSAL_ENABLED.
             l_rehearsal = None
             if memory is not None and memory.has_samples():
                 head_size = net.layers[-1].n_nodes
@@ -770,8 +854,66 @@ def train_one_task(
                         logits_r, y_r, active_classes=all_seen,
                     )
 
-            l_data = (l_task if l_rehearsal is None
-                      else l_task + REHEARSAL_LOSS_WEIGHT * l_rehearsal)
+            # A — Parasitic Dream / LwF distillation. Compute the
+            # anchored network's logits on the SAME current batch (no
+            # grad) and KL-distill the live network's response toward
+            # the anchor's response on the OLD-class columns only. New-
+            # class columns are excluded — their anchor is just init.
+            l_lwf = None
+            if (lwf_old_classes is not None
+                    and len(lwf_old_classes) > 0
+                    and LWF_LOSS_WEIGHT > 0):
+                with torch.no_grad():
+                    z_old = net.forward_with_anchors(x)
+                T = LWF_TEMPERATURE
+                old_idx = torch.as_tensor(
+                    list(lwf_old_classes), dtype=torch.long,
+                    device=logits.device,
+                )
+                # Slice to old-class columns; if head isn't yet that
+                # wide (shouldn't happen in normal flow but guard
+                # anyway), drop any out-of-range entries.
+                in_range = old_idx[old_idx < logits.shape[1]]
+                if in_range.numel() > 1:
+                    z_old_old = z_old.index_select(1, in_range)
+                    z_cur_old = logits.index_select(1, in_range)
+                    p_old = F.softmax(z_old_old / T, dim=1)
+                    log_p_cur = F.log_softmax(z_cur_old / T, dim=1)
+                    l_lwf = F.kl_div(
+                        log_p_cur, p_old, reduction="batchmean",
+                    ) * (T * T)
+
+            # B — Brainstem Spark / latent Gaussian rehearsal. Sample
+            # synthetic L1-output latents from per-class Gaussians
+            # stored at consolidation time; feed directly into the head
+            # (skipping L0+L1) and CE-supervise to maintain the class
+            # boundary on synthetic in-distribution latents.
+            l_brainstem = None
+            if (brainstem is not None
+                    and brainstem.has_classes()
+                    and BRAINSTEM_LOSS_WEIGHT > 0):
+                head_in_dim = net.layers[GROWTH_TARGET_LAYER_IDX].n_nodes
+                z_b, y_b = brainstem.sample(BRAINSTEM_BATCH, head_in_dim)
+                if z_b is not None:
+                    head_W = net.layers[-1].W
+                    z_b = z_b.to(device=head_W.device, dtype=head_W.dtype)
+                    y_b = y_b.to(device=head_W.device)
+                    logits_b = net.forward_from_layer(
+                        z_b, start_layer=GROWTH_TARGET_LAYER_IDX + 1,
+                    )
+                    head_size = net.layers[-1].n_nodes
+                    all_seen_b = list(range(head_size))
+                    l_brainstem = masked_cross_entropy(
+                        logits_b, y_b, active_classes=all_seen_b,
+                    )
+
+            l_data = l_task
+            if l_rehearsal is not None:
+                l_data = l_data + REHEARSAL_LOSS_WEIGHT * l_rehearsal
+            if l_lwf is not None:
+                l_data = l_data + LWF_LOSS_WEIGHT * l_lwf
+            if l_brainstem is not None:
+                l_data = l_data + BRAINSTEM_LOSS_WEIGHT * l_brainstem
             l = (l_data + ewc_baseline * net.ewc_penalty()
                  if ewc_baseline > 0 else l_data)
             opt.zero_grad()
@@ -909,16 +1051,21 @@ def run_chained_curriculum(
     initial_arch = tuple(net.n_nodes_per_layer())
     rng = random.Random(rng_seed)
     # Path 2 rehearsal buffer. Built once per arm; persists across passes.
-    # Seeded torch generator for reproducible sampling (uses bench seed).
     memory: Optional[MemoryBuffer] = None
     if REHEARSAL_ENABLED:
         memory = MemoryBuffer(samples_per_task=REHEARSAL_SAMPLES_PER_TASK)
+    # B — Brainstem-Spark per-class latent stats at L1 output.
+    brainstem: Optional[BrainstemBuffer] = None
+    if BRAINSTEM_ENABLED:
+        brainstem = BrainstemBuffer()
     print(f"\n[{label}] start — arch {initial_arch}  "
           f"params {initial_n_params} (trainable {initial_trainable})  "
           f"growth={do_growth} dream={do_dream}  "
           f"cap_bytes={cap_bytes}  K={K}  passes={n_passes}  "
           f"epochs/task={n_epochs_per_task}  "
-          f"rehearsal={'on' if REHEARSAL_ENABLED else 'off'}")
+          f"rehearsal={'on' if REHEARSAL_ENABLED else 'off'}  "
+          f"lwf={'on' if LWF_ENABLED else 'off'}  "
+          f"brainstem={'on' if BRAINSTEM_ENABLED else 'off'}")
 
     opt = optim.Adam(trainable_param_iter(net), lr=LR)
     # Accuracy matrix shape: (n_total, K). Row i = state after the i-th
@@ -953,6 +1100,19 @@ def run_chained_curriculum(
         for local_task_idx, train_view in enumerate(train_views):
             active = list(task_class_lists[local_task_idx])
             global_step_idx = pass_idx * K + local_task_idx
+
+            # Old classes (everything seen before THIS task in any pass)
+            # — used for LwF distillation masking.
+            old_classes_seen: List[int] = []
+            for k in range(local_task_idx):
+                old_classes_seen.extend(task_class_lists[k])
+            if pass_idx > 0:
+                # On revisit passes, every class has been seen; include
+                # all of them (even the ones from later in this pass).
+                for k in range(K):
+                    old_classes_seen.extend(task_class_lists[k])
+            old_classes_seen = sorted(set(old_classes_seen))
+            lwf_old = old_classes_seen if LWF_ENABLED else None
 
             # 1. Extend output head to fit this task's classes (idempotent
             #    on revisit — the head already covers earlier tasks).
@@ -997,6 +1157,8 @@ def run_chained_curriculum(
                     total_epochs_outer=n_epochs_per_task,
                     epoch_label_suffix=" [settle]",
                     memory=memory,
+                    lwf_old_classes=lwf_old,
+                    brainstem=brainstem,
                 )
 
             # 3b. Deterministic hidden growth (with optional dream-rescue).
@@ -1071,6 +1233,8 @@ def run_chained_curriculum(
                         total_epochs_outer=n_epochs_per_task,
                         epoch_label_suffix=" [post-grow]",
                         memory=memory,
+                        lwf_old_classes=lwf_old,
+                        brainstem=brainstem,
                     )
             else:
                 opt = train_one_task(
@@ -1079,6 +1243,8 @@ def run_chained_curriculum(
                     ewc_baseline=ewc_baseline,
                     label=label, n_total_tasks=K,
                     memory=memory,
+                    lwf_old_classes=lwf_old,
+                    brainstem=brainstem,
                 )
 
             # 4. Consolidate.
@@ -1092,6 +1258,13 @@ def run_chained_curriculum(
             if memory is not None and pass_idx == 0:
                 x_pool, y_pool = train_view.all_examples()
                 memory.add_task(x_pool, y_pool)
+
+            # 4c. Brainstem-Spark: compute per-class (μ, σ) at L1
+            #     output on this task's training data and store. Done
+            #     AFTER consolidate so the L1 reflects the consolidated
+            #     state. Pass-1 only.
+            if brainstem is not None and pass_idx == 0:
+                _store_brainstem_stats(net, train_view, active, brainstem)
 
             # 5. Post-task dreaming = REPLAY ONLY (keeps memories warm;
             #    does NOT touch substrate). Structural reclamation is
