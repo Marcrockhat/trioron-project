@@ -160,7 +160,22 @@ M_MAX_BYTES_UNCAPPED = 2 * 1024 ** 3
 
 # Dreaming-block configuration — substrate-preserving compression with
 # apoptosis spike, plus aggressive purge so room actually frees.
+#
+# DREAM_REPLAY_FRACTION = fraction of past tasks sampled during the
+# post-task replay_only mode (consolidation only; doesn't drive purge).
+# Kept at 0.25 to bound per-task wall-clock — replay_only fires after
+# every task and full coverage gets expensive late in the curriculum.
+#
+# DREAM_RECLAIM_REPLAY_FRACTION = fraction of past tasks sampled during
+# dream-rescue (the cap-binding replay that drives purge victim
+# selection). Set to 1.0 (full coverage) on 2026-05-03 after the
+# n=12 saliency bench showed seed 6's catastrophic Fashion regression
+# was caused by the 0.25 fraction sampling only 1-2 of 6 past tasks
+# during a rescue → the saliency u was blind to non-replayed tasks
+# → purge picked units that were critical for non-replayed tasks.
+# Full coverage ensures all past tasks contribute to u before purge.
 DREAM_REPLAY_FRACTION = 0.25
+DREAM_RECLAIM_REPLAY_FRACTION = 1.0
 DREAM_REPLAY_STEPS = 50       # smaller than bench_50task's 200 because the
                                # task data here is bigger and replay is
                                # called more often (post-task + on-deny)
@@ -491,9 +506,17 @@ def _classification_replay(
     lr: float,
     ewc_strength: float,
     rng: random.Random,
+    update_utilities: bool = False,
 ) -> Tuple[float, float, int, int]:
     """CE-shaped analog of dreaming.replay. Returns
-    (avg_loss_before, avg_loss_after, n_tasks_sampled, total_steps)."""
+    (avg_loss_before, avg_loss_after, n_tasks_sampled, total_steps).
+
+    If update_utilities is True, the per-step backward updates the
+    per-node utility u via OBD saliency. Tasks are visited round-robin
+    (one batch per task per outer loop) so the u-EMA ends up reflecting
+    a mix of past tasks rather than only the last task — fixes the
+    seed-6-Fashion failure mode (n=12 saliency bench, 2026-05-03).
+    """
     if not past_views:
         return (0.0, 0.0, 0, 0)
     n = len(past_views)
@@ -514,20 +537,24 @@ def _classification_replay(
 
     loss_before = _avg_loss()
     opt = optim.Adam(trainable_param_iter(net), lr=lr)
-    total_steps = 0
-    for i in idxs:
+    # Round-robin: total_steps = n_steps_per_task × tasks_sampled, but
+    # each outer step samples ONE batch from ONE task and cycles
+    # through tasks in order. Equivalent total work to the old
+    # task-by-task loop but the EMA-weighted u at the end spans tasks.
+    total_steps = n_steps_per_task * len(idxs)
+    for step in range(total_steps):
+        i = idxs[step % len(idxs)]
         v = past_views[i]
         active = list(past_active_classes[i])
-        for _ in range(n_steps_per_task):
-            x, y = v.sample(batch)
-            l_task = masked_cross_entropy(net(x), y, active)
-            l = (l_task + ewc_strength * net.ewc_penalty()
-                 if ewc_strength > 0 else l_task)
-            opt.zero_grad()
-            l.backward()
-            update_layer_utilities(net)  # keep purge signal warm
-            opt.step()
-            total_steps += 1
+        x, y = v.sample(batch)
+        l_task = masked_cross_entropy(net(x), y, active)
+        l = (l_task + ewc_strength * net.ewc_penalty()
+             if ewc_strength > 0 else l_task)
+        opt.zero_grad()
+        l.backward()
+        if update_utilities:
+            update_layer_utilities(net)
+        opt.step()
     loss_after = _avg_loss()
     return (loss_before, loss_after, len(idxs), total_steps)
 
@@ -584,14 +611,27 @@ def classification_dreaming_block(
     if DREAM_APOPTOSIS_ON:
         apoptosis_decay(net, decay_rate=DREAM_APOPTOSIS_DECAY_RATE)
 
+    # Reclaim mode: reset u and use full-coverage replay so the post-
+    # replay u reflects EVERY past task's saliency, not a sampled
+    # subset. Replay_only mode keeps the cheaper sampled-replay since
+    # its u writes are inert (no purge follows).
+    if mode == "reclaim":
+        net.reset_utilities_all()
+        replay_fraction = DREAM_RECLAIM_REPLAY_FRACTION
+        replay_writes_u = True
+    else:
+        replay_fraction = DREAM_REPLAY_FRACTION
+        replay_writes_u = False
+
     loss_before, loss_after, n_tasks, n_steps = _classification_replay(
         net, past_views, past_active_classes,
-        fraction=DREAM_REPLAY_FRACTION,
+        fraction=replay_fraction,
         n_steps_per_task=DREAM_REPLAY_STEPS,
         batch=DREAM_REPLAY_BATCH,
         lr=LR,
         ewc_strength=EWC_DREAM_STRENGTH,
         rng=rng,
+        update_utilities=replay_writes_u,
     )
 
     merges: List[MergeEvent] = []
@@ -694,7 +734,15 @@ def train_one_task(
                  if ewc_baseline > 0 else l_task)
             opt.zero_grad()
             l.backward()
-            update_layer_utilities(net)
+            # Note: NOT updating per-node utilities during normal
+            # training — u is now driven exclusively by dream-rescue
+            # replay (set in classification_dreaming_block when
+            # mode='reclaim'). Writing u during training would mix
+            # current-task saliency into u, biasing purge victim
+            # selection toward "what doesn't help the current task"
+            # rather than "what doesn't help any past task" — the
+            # exact failure mode that produced seed-6's catastrophic
+            # Fashion regression in the n=12 saliency bench.
             opt.step()
             total_steps += 1
             last_loss = float(l_task.item())

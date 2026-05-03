@@ -88,6 +88,16 @@ class TrioronNetwork(nn.Module):
         for layer in self.layers:
             layer.update_utility(layer.saliency_utility())
 
+    def reset_utilities_all(self) -> None:
+        """Zero each layer's per-node utility u. Used to reset the
+        utility signal at the start of a dream-rescue replay, so the
+        post-replay u reflects exclusively saliency on this round of
+        replayed past tasks (and not stale current-task or
+        previous-block contributions)."""
+        with torch.no_grad():
+            for layer in self.layers:
+                layer.u.zero_()
+
     def update_lambda_all(self) -> None:
         for layer in self.layers:
             layer.update_lambda()
