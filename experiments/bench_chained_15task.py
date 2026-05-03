@@ -95,6 +95,7 @@ from trioron.dreaming import (
 from experiments.datasets import (
     DEFAULT_DATA_ROOT,
     DatasetBundle,
+    MemoryBuffer,
     TaskDataView,
     build_task_views,
     chained_15_specs,
@@ -236,6 +237,27 @@ WARMUP_HEAD_WIDTH = 30                # all global classes (full 30-class CE)
 # TEMPORARILY 1 to isolate the warmup effect — switch to 2 after we
 # confirm warmup is at-least-neutral vs the no-warmup baseline.
 N_CURRICULUM_PASSES = 1
+
+# Path 2 — rehearsal during training. After each task finishes, a small
+# random subset of its examples gets stored in MemoryBuffer. During
+# every training step on subsequent tasks, a rehearsal batch is sampled
+# from the union of stored tasks and contributes a CE loss masked to
+# ALL classes seen so far (not just the current binary pair). This is
+# the standard CL rehearsal recipe (iCaRL / ER family); the difference
+# from dream-replay is that rehearsal happens at every training step,
+# not just between tasks.
+#
+# The full-head active-class masking is what fights cross-class head
+# drift directly — task-aware metric measured the head drift was
+# benign within a known task (0.93+) but full-softmax (0.13-0.21)
+# revealed argmax drift across the 30-class output. Rehearsal with
+# all-classes-seen-so-far mask gives explicit gradient on cross-class
+# discrimination.
+REHEARSAL_ENABLED = True
+REHEARSAL_SAMPLES_PER_TASK = 100   # 15 tasks × 100 = 1500 total budget.
+                                    # Within iCaRL's 2000 typical budget.
+REHEARSAL_BATCH = 64                # same as training batch
+REHEARSAL_LOSS_WEIGHT = 1.0         # equal weight to current-task loss
 
 LOG_EVERY = 500
 
@@ -705,6 +727,7 @@ def train_one_task(
     epoch_offset: int = 0,
     total_epochs_outer: Optional[int] = None,
     epoch_label_suffix: str = "",
+    memory: Optional[MemoryBuffer] = None,
 ) -> optim.Optimizer:
     """Train on one task for `n_epochs` proper minibatch epochs.
 
@@ -730,8 +753,27 @@ def train_one_task(
         for x, y_global in train_view.iter_epoch(BATCH):
             logits = net(x)
             l_task = masked_cross_entropy(logits, y_global, active_classes=active)
-            l = (l_task + ewc_baseline * net.ewc_penalty()
-                 if ewc_baseline > 0 else l_task)
+
+            # Rehearsal (Path 2): if memory has stored past tasks, mix
+            # in a rehearsal batch with full-head active classes. The
+            # all-classes-seen mask gives a direct gradient against
+            # cross-class head drift (the dominant failure mode on
+            # full-softmax accuracy).
+            l_rehearsal = None
+            if memory is not None and memory.has_samples():
+                head_size = net.layers[-1].n_nodes
+                x_r, y_r = memory.sample(REHEARSAL_BATCH)
+                if x_r is not None:
+                    logits_r = net(x_r)
+                    all_seen = list(range(head_size))
+                    l_rehearsal = masked_cross_entropy(
+                        logits_r, y_r, active_classes=all_seen,
+                    )
+
+            l_data = (l_task if l_rehearsal is None
+                      else l_task + REHEARSAL_LOSS_WEIGHT * l_rehearsal)
+            l = (l_data + ewc_baseline * net.ewc_penalty()
+                 if ewc_baseline > 0 else l_data)
             opt.zero_grad()
             l.backward()
             # Note: NOT updating per-node utilities during normal
@@ -866,11 +908,17 @@ def run_chained_curriculum(
     initial_trainable = trainable_params(net)
     initial_arch = tuple(net.n_nodes_per_layer())
     rng = random.Random(rng_seed)
+    # Path 2 rehearsal buffer. Built once per arm; persists across passes.
+    # Seeded torch generator for reproducible sampling (uses bench seed).
+    memory: Optional[MemoryBuffer] = None
+    if REHEARSAL_ENABLED:
+        memory = MemoryBuffer(samples_per_task=REHEARSAL_SAMPLES_PER_TASK)
     print(f"\n[{label}] start — arch {initial_arch}  "
           f"params {initial_n_params} (trainable {initial_trainable})  "
           f"growth={do_growth} dream={do_dream}  "
           f"cap_bytes={cap_bytes}  K={K}  passes={n_passes}  "
-          f"epochs/task={n_epochs_per_task}")
+          f"epochs/task={n_epochs_per_task}  "
+          f"rehearsal={'on' if REHEARSAL_ENABLED else 'off'}")
 
     opt = optim.Adam(trainable_param_iter(net), lr=LR)
     # Accuracy matrix shape: (n_total, K). Row i = state after the i-th
@@ -948,6 +996,7 @@ def run_chained_curriculum(
                     epoch_offset=0,
                     total_epochs_outer=n_epochs_per_task,
                     epoch_label_suffix=" [settle]",
+                    memory=memory,
                 )
 
             # 3b. Deterministic hidden growth (with optional dream-rescue).
@@ -1021,6 +1070,7 @@ def run_chained_curriculum(
                         epoch_offset=K_SETTLE_EPOCHS,
                         total_epochs_outer=n_epochs_per_task,
                         epoch_label_suffix=" [post-grow]",
+                        memory=memory,
                     )
             else:
                 opt = train_one_task(
@@ -1028,11 +1078,20 @@ def run_chained_curriculum(
                     n_epochs=n_epochs_per_task, opt=opt,
                     ewc_baseline=ewc_baseline,
                     label=label, n_total_tasks=K,
+                    memory=memory,
                 )
 
             # 4. Consolidate.
             consolidate_task(net, train_view, active)
             ewc_baseline = EWC_INTERTASK
+
+            # 4b. Add a random subset of this task's training samples
+            #     to the rehearsal memory buffer (Path 2). Skipped on
+            #     revisit passes — re-adding the same task's samples
+            #     would just bias the buffer. Pass-1 only.
+            if memory is not None and pass_idx == 0:
+                x_pool, y_pool = train_view.all_examples()
+                memory.add_task(x_pool, y_pool)
 
             # 5. Post-task dreaming = REPLAY ONLY (keeps memories warm;
             #    does NOT touch substrate). Structural reclamation is

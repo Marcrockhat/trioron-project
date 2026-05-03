@@ -159,6 +159,84 @@ class TaskDataView:
 
 
 # ---------------------------------------------------------------------------
+# Rehearsal memory buffer (Path 2)
+# ---------------------------------------------------------------------------
+
+
+class MemoryBuffer:
+    """Bounded per-task memory of past examples for rehearsal during
+    continual training.
+
+    For each task, stores a random subset of `samples_per_task` examples
+    (image, global_label) drawn from that task's training pool. During
+    rehearsal, `sample()` returns a uniform random batch drawn from the
+    union of all stored tasks.
+
+    Used in `train_one_task` to mix a rehearsal batch into each training
+    step, with the rehearsal CE loss masked to ALL classes seen so far
+    (not just the current binary pair) — so the gradient directly fights
+    cross-class head drift, the dominant failure mode on full-softmax
+    accuracy in the chained-15 bench (head columns from the most-recent
+    task dominate argmax across the 30-class output).
+
+    Reservoir-style: each task gets a fixed allotment, sampling is
+    uniform across the stored union. Keeps memory bounded; total budget
+    is `samples_per_task * n_tasks_seen`.
+    """
+
+    def __init__(self, samples_per_task: int = 100):
+        self.samples_per_task = int(samples_per_task)
+        self._x: List[torch.Tensor] = []
+        self._y: List[torch.Tensor] = []
+
+    def add_task(
+        self,
+        x_pool: torch.Tensor,
+        y_global_pool: torch.Tensor,
+        generator: Optional[torch.Generator] = None,
+    ) -> int:
+        """Sample `samples_per_task` random examples from the pool and
+        append to the buffer. Returns the number of samples actually
+        stored (may be less if the pool is small)."""
+        n = x_pool.shape[0]
+        if n == 0:
+            return 0
+        k = min(self.samples_per_task, n)
+        idx = torch.randperm(n, generator=generator)[:k]
+        self._x.append(x_pool[idx].detach().clone())
+        self._y.append(y_global_pool[idx].detach().clone())
+        return k
+
+    def has_samples(self) -> bool:
+        return len(self._x) > 0
+
+    def n_total_samples(self) -> int:
+        return sum(int(t.shape[0]) for t in self._x)
+
+    def n_tasks_stored(self) -> int:
+        return len(self._x)
+
+    def sample(
+        self,
+        batch: int,
+        generator: Optional[torch.Generator] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Uniform-random batch across all stored tasks.
+
+        Returns (None, None) if the buffer is empty. Returned batch may
+        be smaller than `batch` if the buffer total is smaller.
+        """
+        if not self._x:
+            return None, None  # type: ignore
+        all_x = torch.cat(self._x, dim=0)
+        all_y = torch.cat(self._y, dim=0)
+        total = all_x.shape[0]
+        k = min(batch, total)
+        idx = torch.randperm(total, generator=generator)[:k]
+        return all_x[idx], all_y[idx]
+
+
+# ---------------------------------------------------------------------------
 # Dataset bundle — caches train + test tensors per dataset name
 # ---------------------------------------------------------------------------
 
