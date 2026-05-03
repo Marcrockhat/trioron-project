@@ -454,35 +454,25 @@ def consolidate_task(
 # ---------------------------------------------------------------------
 
 
-def utility_contributions(net: TrioronNetwork, x: torch.Tensor, layer_idx: int) -> torch.Tensor:
-    """|activation * grad| averaged over batch for layer `layer_idx`.
-
-    We hook into the forward pass after .backward() — this is similar
-    to the pruner's combined-mode signal. For dreaming-phase purge the
-    distinction (vs strict |a·g|) doesn't matter because we just need
-    "low utility ⇒ unused".
-    """
-    layer = net.layers[layer_idx]
-    # Layer's outputs are not retained on default; instead approximate
-    # contribution as |W * grad_W| row-sum, which is a per-node summary
-    # of "how much do we depend on this node's incoming weights now".
-    if layer.W.grad is None:
-        return torch.zeros(layer.n_nodes, device=layer.W.device)
-    contrib = (layer.W.detach().abs() * layer.W.grad.detach().abs()).sum(dim=1)
-    return contrib
-
-
 def update_layer_utilities(net: TrioronNetwork) -> None:
-    """Capture a per-node utility update on every layer based on the
-    current gradients. Call after .backward(), before optimizer.step().
-    Cheap — just a row-sum on each layer's W * W.grad.
+    """Capture a per-node utility update via |y · ∂L/∂y| saliency.
+
+    Switched from |W|·|grad_W| to true OBD saliency on 2026-05-03 after
+    the chained-15 n=12 sum+floor result showed dream-vs-no_dream still
+    +1.33σ no_dream-better with a variance balloon. The old |W|·|grad_W|
+    summary is biased toward weight-magnitude rather than functional
+    contribution: it can flag dead-relu nodes with large incoming
+    weights as "important" (false positive) and active small-weight
+    nodes as "unimportant" (false negative). Saliency directly answers
+    "if I clamped this node's output to zero, by how much would loss
+    change," which is exactly what purge victim selection needs.
+
+    Call after .backward(), before optimizer.step(). Layers cache the
+    forward y and capture upstream ∂L/∂y via a backward hook
+    (trioron/node.py). On a no-grad/eval forward, no hook fires and
+    the cached saliency from the previous training forward survives.
     """
-    for L in range(len(net.layers)):
-        layer = net.layers[L]
-        if layer.W.grad is None:
-            continue
-        contrib = (layer.W.detach().abs() * layer.W.grad.detach().abs()).sum(dim=1)
-        layer.update_utility(contrib)
+    net.update_utilities_from_saliency()
 
 
 # ---------------------------------------------------------------------

@@ -76,6 +76,18 @@ class TrioronNetwork(nn.Module):
         for layer in self.layers:
             layer.update_fisher()
 
+    def update_utilities_from_saliency(self) -> None:
+        """EMA-update each layer's per-node utility u from the most recent
+        forward+backward via |y · ∂L/∂y| saliency (the OBD signal).
+
+        Call after loss.backward() and before optimizer.step(), exactly
+        like update_fisher_all(). Replaces the older |W|·|grad_W|
+        heuristic that was biased toward weight-magnitude rather than
+        functional contribution.
+        """
+        for layer in self.layers:
+            layer.update_utility(layer.saliency_utility())
+
     def update_lambda_all(self) -> None:
         for layer in self.layers:
             layer.update_lambda()

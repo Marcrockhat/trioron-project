@@ -113,6 +113,15 @@ class TrioronLayer(nn.Module):
         # EWC stiffness so they can adjust to fill the lost role.
         self.register_buffer("apoptosis_pulse", torch.zeros(n_nodes))
 
+        # Saliency caches for |a · g| utility (Mozer & Smolensky 1989,
+        # OBD/blueprint §3.2). _last_y is stashed on each grad-enabled
+        # forward; _last_upstream is captured by a backward hook on y
+        # when .backward() propagates through. saliency_utility()
+        # combines them. Both are transient — NOT registered as
+        # buffers so they don't pollute state_dict / serialization.
+        self._last_y: Optional[torch.Tensor] = None
+        self._last_upstream: Optional[torch.Tensor] = None
+
     # ----- properties -----
     @property
     def n_nodes(self) -> int:
@@ -134,7 +143,21 @@ class TrioronLayer(nn.Module):
         scale = self.routing_scale.unsqueeze(1).to(self.W.dtype)
         W_eff = self.W * scale
         z = F.linear(x, W_eff, self.b)
-        return _ACTIVATIONS[self.activation](z)
+        y = _ACTIVATIONS[self.activation](z)
+        # Stash post-activation y + register a backward hook for
+        # upstream gradient ∂L/∂y. Together these enable
+        # saliency_utility() to compute |y · ∂L/∂y| (the OBD-style
+        # per-node utility). Only fires when y is part of a backward
+        # graph (training forwards), so eval/no-grad forwards don't
+        # overwrite the most recent saliency state.
+        if y.requires_grad:
+            self._last_y = y.detach()
+            y.register_hook(self._capture_upstream)
+        return y
+
+    def _capture_upstream(self, grad: torch.Tensor) -> None:
+        """Backward hook: record ∂L/∂y for saliency_utility()."""
+        self._last_upstream = grad.detach()
 
     # ----- state updates (call in this order during training) -----
 
@@ -188,6 +211,29 @@ class TrioronLayer(nn.Module):
                 contributions.detach().to(self.u.device),
                 alpha=1.0 - self.u_decay,
             )
+
+    def saliency_utility(self) -> torch.Tensor:
+        """Per-node saliency |y · ∂L/∂y| from the most recent grad-enabled
+        forward + backward.
+
+        This is the standard OBD / Mozer-Smolensky pruning saliency: a
+        first-order approximation of "how much would the loss change if
+        I clamped this node's output to zero." The right signal for
+        purge victim selection in dreaming.
+
+        For relu activations, dead nodes (y=0 always) score 0 here even
+        if their incoming weights are large, which is the desired
+        behavior: their removal genuinely costs nothing.
+
+        Returns a (n_nodes,) tensor on self.W.device. Returns zeros if
+        no grad-enabled forward+backward has run yet (e.g., right after
+        construction, or after only no_grad/eval forwards).
+        """
+        if self._last_y is None or self._last_upstream is None:
+            return torch.zeros(self.n_nodes, device=self.W.device)
+        # _last_y, _last_upstream: (batch, n_nodes). Mean across batch.
+        contrib = (self._last_y.abs() * self._last_upstream.abs()).mean(dim=0)
+        return contrib.to(device=self.W.device, dtype=torch.float32)
 
     # ----- EWC anchor / penalty -----
 

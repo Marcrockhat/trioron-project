@@ -118,6 +118,86 @@ def test_update_utility_wrong_shape_raises() -> None:
     assert raised, "expected ValueError on wrong-shape contributions"
 
 
+def test_saliency_zero_before_any_forward() -> None:
+    """Right after construction, saliency_utility returns zeros."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    sal = layer.saliency_utility()
+    assert sal.shape == (3,)
+    assert torch.allclose(sal, torch.zeros(3))
+
+
+def test_saliency_dead_relu_node_zero() -> None:
+    """A dead-relu node (output always 0) should score 0 saliency, even
+    if its incoming weights are large. This is the bug the |W|·|grad_W|
+    heuristic missed: large W on a dead node was scored "important"."""
+    torch.manual_seed(0)
+    layer = TrioronLayer(fan_in=4, n_nodes=3, activation="relu")
+    # Force node 1 to be permanently dead: large negative bias overpowers
+    # any input. Other nodes left at random init (will have some activity).
+    with torch.no_grad():
+        layer.W[1].fill_(0.5)   # large incoming weights
+        layer.b[1].fill_(-100.0)  # but always dead
+    x = torch.randn(8, 4)
+    y = layer(x)
+    # Sanity: node 1 outputs are all zero.
+    assert torch.allclose(y[:, 1], torch.zeros(8))
+    loss = y.sum()
+    loss.backward()
+    sal = layer.saliency_utility()
+    # Dead node has zero saliency.
+    assert sal[1].item() == 0.0
+    # At least one other node has non-zero saliency (otherwise the test
+    # is vacuous).
+    assert sal[0].item() > 0 or sal[2].item() > 0
+
+
+def test_saliency_active_node_positive() -> None:
+    """A node with non-zero output on at least some inputs and a non-zero
+    upstream gradient has strictly-positive saliency averaged over the
+    batch."""
+    torch.manual_seed(0)
+    layer = TrioronLayer(fan_in=4, n_nodes=2, activation="relu")
+    # Bias positive so most inputs activate (some still hit dead-relu
+    # for adversarial inputs — that's fine, average will still be > 0).
+    with torch.no_grad():
+        layer.b.fill_(1.0)
+    x = torch.randn(8, 4)
+    y = layer(x)
+    # Sanity: at least some outputs are non-zero per node.
+    assert (y > 0).any(dim=0).all(), (
+        "test setup invalid — both nodes are dead on this input batch"
+    )
+    loss = y.sum()
+    loss.backward()
+    sal = layer.saliency_utility()
+    assert sal.shape == (2,)
+    assert (sal > 0).all(), f"expected positive saliency, got {sal.tolist()}"
+
+
+def test_saliency_no_grad_forward_preserves_state() -> None:
+    """A no_grad forward (e.g. eval) must NOT overwrite the cached
+    saliency from a prior training forward. Otherwise running eval
+    between train step and saliency read would zero everything."""
+    torch.manual_seed(0)
+    layer = TrioronLayer(fan_in=4, n_nodes=3, activation="relu")
+    with torch.no_grad():
+        layer.b.fill_(1.0)
+    # Training forward + backward → populates _last_y / _last_upstream.
+    x = torch.randn(8, 4)
+    y = layer(x)
+    loss = y.sum()
+    loss.backward()
+    sal_before = layer.saliency_utility().clone()
+    # Eval-mode forward must not corrupt those buffers.
+    with torch.no_grad():
+        _ = layer(torch.randn(8, 4))
+    sal_after = layer.saliency_utility()
+    assert torch.allclose(sal_before, sal_after), (
+        f"no_grad forward overwrote saliency cache: "
+        f"before {sal_before.tolist()} after {sal_after.tolist()}"
+    )
+
+
 def test_ewc_penalty_zero_at_anchor() -> None:
     layer = TrioronLayer(fan_in=4, n_nodes=3)
     # Even with high lambda, if W == W_anchor the penalty is zero.
@@ -463,6 +543,10 @@ def main() -> int:
         ("utility_decay_only",               test_update_utility_decay_only),
         ("utility_with_signal",              test_update_utility_with_signal),
         ("utility_wrong_shape_raises",       test_update_utility_wrong_shape_raises),
+        ("saliency_zero_before_forward",     test_saliency_zero_before_any_forward),
+        ("saliency_dead_relu_zero",          test_saliency_dead_relu_node_zero),
+        ("saliency_active_positive",         test_saliency_active_node_positive),
+        ("saliency_no_grad_preserves",       test_saliency_no_grad_forward_preserves_state),
         ("ewc_zero_at_anchor",               test_ewc_penalty_zero_at_anchor),
         ("ewc_positive_after_drift",         test_ewc_penalty_positive_after_drift),
         ("anchor_resets_penalty",            test_anchor_resets_penalty),
