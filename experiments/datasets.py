@@ -236,6 +236,83 @@ class MemoryBuffer:
         return all_x[idx], all_y[idx]
 
 
+class EngramBuffer:
+    """Per-class synthetic input prototype storage for Engram Replay
+    (triparametric pseudo-rehearsal). After each task's consolidation,
+    one prototype `x_c` per just-learned class is found by running
+    gradient ascent on the input through the *anchored* network to
+    maximize logit_c. The resulting `x_c` is what the consolidated
+    network considers a canonical class-c input — its "engram."
+
+    During training of subsequent tasks, engrams are sampled in
+    minibatches and fed through both the live and the anchored network;
+    a KL distillation term keeps the live response on engram inputs
+    aligned with the anchored response on those inputs (the trioron-
+    native LwF — distilling on synthetic in-distribution past-class
+    inputs rather than OOD new-task data).
+
+    Storage cost: ~3 KB per class at 28×28×float32 (784 floats × 4 B).
+    For 30 classes ≈ 90 KB total — manageable on edge hardware.
+
+    Why input-space (784-dim) and not L0 output (128-dim): per Rocky's
+    framing, the rehearsal signal must traverse all layers, including
+    L0. L0-output engrams would constrain the L1-input pattern directly,
+    which can lead to "trioron cannibalization" — L1 nodes locked to
+    specific engram patterns lose plasticity for repurposing on new
+    tasks. Input-space engrams pass through L0's frozen random
+    projection first, which decorrelates the gradient signal across
+    L1 nodes.
+    """
+
+    def __init__(self):
+        # class_idx → x_c tensor of shape (input_dim,)
+        self._engrams: Dict[int, torch.Tensor] = {}
+
+    def add_class(
+        self, class_idx: int, x_c: torch.Tensor,
+    ) -> None:
+        """Store a single engram for one class. x_c must be 1-D
+        (input_dim,). Overwrites any prior entry for this class.
+        """
+        if x_c.dim() != 1:
+            raise ValueError(
+                f"x_c must be 1-D (input_dim,), got {tuple(x_c.shape)}"
+            )
+        self._engrams[int(class_idx)] = x_c.detach().clone()
+
+    def has_classes(self) -> bool:
+        return len(self._engrams) > 0
+
+    def n_classes_stored(self) -> int:
+        return len(self._engrams)
+
+    def stored_classes(self) -> List[int]:
+        return sorted(self._engrams.keys())
+
+    def sample(
+        self,
+        n_samples: int,
+        generator: Optional[torch.Generator] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return (x, y) with x shape (n_samples, input_dim) and y shape
+        (n_samples,). Each row is one stored engram, with class assigned
+        uniformly at random across stored classes (with replacement).
+        Returns (None, None) if buffer is empty.
+        """
+        if not self._engrams:
+            return None, None  # type: ignore
+        classes = list(self._engrams.keys())
+        choice_idx = torch.randint(
+            0, len(classes), (n_samples,), generator=generator,
+        )
+        ys = torch.tensor(
+            [classes[int(i)] for i in choice_idx], dtype=torch.long,
+        )
+        rows = [self._engrams[classes[int(i)]] for i in choice_idx]
+        xs = torch.stack(rows, dim=0)
+        return xs, ys
+
+
 class BrainstemBuffer:
     """Per-class (μ, σ) Gaussian statistics at a bottleneck layer for
     latent rehearsal (Brainstem-Spark / latent generative replay).

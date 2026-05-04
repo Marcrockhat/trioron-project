@@ -75,15 +75,29 @@ class TrioronNetwork(nn.Module):
         LwF target whenever dream-rescue purges fire mid-task.
         """
         with torch.no_grad():
-            h = x
-            for layer in self.layers:
-                if h.dtype != layer.W_anchor.dtype:
-                    h = h.to(layer.W_anchor.dtype)
-                scale = layer.routing_scale_anchor.unsqueeze(1).to(layer.W_anchor.dtype)
-                W_eff = layer.W_anchor * scale
-                z = F.linear(h, W_eff, layer.b_anchor)
-                h = _ACTIVATIONS[layer.activation](z)
-            return h
+            return self._forward_with_anchors_inner(x)
+
+    def forward_with_anchors_grad(self, x: torch.Tensor) -> torch.Tensor:
+        """Gradient-tracking sister of `forward_with_anchors`. Used by
+        Engram-Replay consolidation, which runs gradient ascent on the
+        input through the anchored network to find per-class engram
+        prototypes. The anchored W / b / routing_scale buffers are not
+        leaves of the autograd graph (they're registered buffers, not
+        Parameters), so backward will only populate `x.grad`, never
+        modify the anchored state.
+        """
+        return self._forward_with_anchors_inner(x)
+
+    def _forward_with_anchors_inner(self, x: torch.Tensor) -> torch.Tensor:
+        h = x
+        for layer in self.layers:
+            if h.dtype != layer.W_anchor.dtype:
+                h = h.to(layer.W_anchor.dtype)
+            scale = layer.routing_scale_anchor.unsqueeze(1).to(layer.W_anchor.dtype)
+            W_eff = layer.W_anchor * scale
+            z = F.linear(h, W_eff, layer.b_anchor)
+            h = _ACTIVATIONS[layer.activation](z)
+        return h
 
     def forward_from_layer(
         self, h: torch.Tensor, start_layer: int,

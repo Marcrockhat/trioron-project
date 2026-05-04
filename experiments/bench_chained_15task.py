@@ -97,6 +97,7 @@ from experiments.datasets import (
     DEFAULT_DATA_ROOT,
     BrainstemBuffer,
     DatasetBundle,
+    EngramBuffer,
     MemoryBuffer,
     TaskDataView,
     build_task_views,
@@ -305,6 +306,40 @@ BRAINSTEM_LOSS_WEIGHT = 0.2         # secondary regularizer; the per-class L1
                                      # network's L1 distribution. Keep weight
                                      # low so this acts as a head regularizer
                                      # rather than a primary signal.
+
+# Engram Replay (triparametric A+B redesign). After each task's
+# consolidation, run gradient ascent on the input through the *anchored*
+# network to find one prototype x_c per class — the consolidated
+# network's idealized class-c input ("engram"). During subsequent
+# tasks, sample engrams and feed them through both live and anchored
+# networks; KL-distill live → anchor on old-class output columns. This
+# replaces both A (LwF on new-task data, OOD-weak) and B (Brainstem
+# Gaussian on post-ReLU L1, stale-prone): the engram is a stable input
+# upstream of L1; the anchored network's response to engrams is sharp
+# by construction (we found the engram by maximizing it); the
+# distillation target is therefore strong even on heterogeneous chained
+# curricula. Triparametric: forward_with_anchors uses W_anchor +
+# b_anchor + routing_scale_anchor, so all three legs of the consolidated
+# trioron node contribute to the LwF target.
+ENGRAM_ENABLED = False               # off by default — turn on for the
+                                      # ablation. When True, brainstem and
+                                      # standard LwF should be turned off too
+                                      # (set BRAINSTEM_ENABLED=False and
+                                      # LWF_ENABLED=False) to test engram
+                                      # alone vs A+B.
+ENGRAM_LOSS_WEIGHT = 1.0             # engrams are the primary in-weights
+                                      # rehearsal signal in this redesign;
+                                      # weight at parity with new-task CE.
+ENGRAM_BATCH = 64
+ENGRAM_TEMPERATURE = 2.0             # KL distillation temperature
+ENGRAM_GA_STEPS = 80                 # gradient-ascent steps per engram
+ENGRAM_GA_LR = 0.05                  # gradient-ascent step size
+ENGRAM_GA_L2 = 1e-3                  # L2 regularization weight on x —
+                                      # prevents adversarial degeneracy by
+                                      # bounding magnitude
+ENGRAM_GA_INIT_NOISE_SCALE = 0.1     # init scale for x ~ noise * scale
+ENGRAM_GA_CLIP_RANGE = (0.0, 1.0)    # input-space clipping (image domain
+                                      # for chained-15 datasets)
 
 LOG_EVERY = 500
 
@@ -531,6 +566,74 @@ def consolidate_task(
         for layer in net.layers:
             layer.lam.clamp_(min=LAMBDA_FLOOR)
     net.anchor_all()
+
+
+def _consolidate_engrams(
+    net: TrioronNetwork,
+    active_classes: Sequence[int],
+    engrams: EngramBuffer,
+    *,
+    input_dim: int = INPUT_DIM,
+    n_steps: int = ENGRAM_GA_STEPS,
+    lr: float = ENGRAM_GA_LR,
+    l2_weight: float = ENGRAM_GA_L2,
+    init_noise_scale: float = ENGRAM_GA_INIT_NOISE_SCALE,
+    clip_range: Tuple[float, float] = ENGRAM_GA_CLIP_RANGE,
+) -> None:
+    """Find one engram per class in `active_classes` by gradient ascent
+    on the input through the anchored network. Stores each x_c in the
+    `engrams` buffer. Call AFTER `consolidate_task` (so anchors reflect
+    the just-finished task's consolidated state) and AFTER any other
+    consolidation step (Brainstem, archive) that depends on the live
+    state — engram consolidation only reads from the anchored forward.
+
+    Procedure (per class c):
+      1. Initialize x ~ uniform noise scaled by `init_noise_scale`,
+         clipped to `clip_range`.
+      2. Repeat n_steps times:
+         - logits = net.forward_with_anchors(x.unsqueeze(0))
+         - loss = -logits[0, c] + l2_weight * x.pow(2).sum()
+         - x ← clip(x - lr * dloss/dx, *clip_range)
+           (gradient ASCENT on logit_c → minus sign on the logit term;
+            descent on L2 keeps magnitude bounded.)
+      3. Store the resulting x as the engram for class c.
+
+    Note: forward_with_anchors uses W_anchor + b_anchor +
+    routing_scale_anchor (the full triparametric anchored state, after
+    the routing-scale fix). Gradient flows through every layer
+    including the frozen L0, so the engram is an end-to-end input-space
+    prototype — what the consolidated network thinks the most class-c-
+    confident input pattern is.
+    """
+    net.eval()
+    try:
+        for c in active_classes:
+            x = torch.empty(input_dim).uniform_(
+                clip_range[0],
+                clip_range[0] + init_noise_scale
+                * (clip_range[1] - clip_range[0]),
+            )
+            x.requires_grad_(True)
+            for _ in range(n_steps):
+                logits = net.forward_with_anchors_grad(x.unsqueeze(0))
+                if c >= logits.shape[1]:
+                    # Head not yet wide enough to cover this class —
+                    # shouldn't happen given engrams are consolidated
+                    # AFTER head extension and CE training on the class,
+                    # but guard anyway.
+                    break
+                loss = -logits[0, c] + l2_weight * x.pow(2).sum()
+                if x.grad is not None:
+                    x.grad.zero_()
+                loss.backward()
+                with torch.no_grad():
+                    x.data = (
+                        (x.data - lr * x.grad)
+                        .clamp_(clip_range[0], clip_range[1])
+                    )
+            engrams.add_class(int(c), x.detach())
+    finally:
+        net.train()
 
 
 def _store_brainstem_stats(
@@ -815,6 +918,8 @@ def train_one_task(
     memory: Optional[MemoryBuffer] = None,
     lwf_old_classes: Optional[Sequence[int]] = None,
     brainstem: Optional[BrainstemBuffer] = None,
+    engrams: Optional[EngramBuffer] = None,
+    engram_old_classes: Optional[Sequence[int]] = None,
 ) -> optim.Optimizer:
     """Train on one task for `n_epochs` proper minibatch epochs.
 
@@ -907,6 +1012,42 @@ def train_one_task(
                         logits_b, y_b, active_classes=all_seen_b,
                     )
 
+            # Engram Replay (triparametric A+B redesign). Sample stored
+            # input-space engrams; forward them through both live and
+            # anchored networks; KL-distill live → anchor on old-class
+            # output columns. This is the trioron-native LwF: the
+            # rehearsal signal (engrams) traverses ALL three legs of
+            # the consolidated triparametric trioron via
+            # forward_with_anchors (W_anchor + b_anchor +
+            # routing_scale_anchor). Old-class slice keeps current-task
+            # CE the dominant signal on new classes.
+            l_engram_lwf = None
+            if (engrams is not None
+                    and engrams.has_classes()
+                    and engram_old_classes is not None
+                    and len(engram_old_classes) > 0
+                    and ENGRAM_LOSS_WEIGHT > 0):
+                x_e, _y_e = engrams.sample(ENGRAM_BATCH)
+                if x_e is not None:
+                    x_e = x_e.to(device=net.layers[0].W.device)
+                    z_live = net(x_e)
+                    with torch.no_grad():
+                        z_anchor = net.forward_with_anchors(x_e)
+                    T_eng = ENGRAM_TEMPERATURE
+                    e_old_idx = torch.as_tensor(
+                        list(engram_old_classes), dtype=torch.long,
+                        device=z_live.device,
+                    )
+                    e_in_range = e_old_idx[e_old_idx < z_live.shape[1]]
+                    if e_in_range.numel() > 1:
+                        z_a_old = z_anchor.index_select(1, e_in_range)
+                        z_l_old = z_live.index_select(1, e_in_range)
+                        p_a = F.softmax(z_a_old / T_eng, dim=1)
+                        log_p_l = F.log_softmax(z_l_old / T_eng, dim=1)
+                        l_engram_lwf = F.kl_div(
+                            log_p_l, p_a, reduction="batchmean",
+                        ) * (T_eng * T_eng)
+
             l_data = l_task
             if l_rehearsal is not None:
                 l_data = l_data + REHEARSAL_LOSS_WEIGHT * l_rehearsal
@@ -914,6 +1055,8 @@ def train_one_task(
                 l_data = l_data + LWF_LOSS_WEIGHT * l_lwf
             if l_brainstem is not None:
                 l_data = l_data + BRAINSTEM_LOSS_WEIGHT * l_brainstem
+            if l_engram_lwf is not None:
+                l_data = l_data + ENGRAM_LOSS_WEIGHT * l_engram_lwf
             l = (l_data + ewc_baseline * net.ewc_penalty()
                  if ewc_baseline > 0 else l_data)
             opt.zero_grad()
@@ -1058,6 +1201,12 @@ def run_chained_curriculum(
     brainstem: Optional[BrainstemBuffer] = None
     if BRAINSTEM_ENABLED:
         brainstem = BrainstemBuffer()
+    # Engram Replay — input-space prototypes per class, found by
+    # gradient ascent through the anchored network at consolidation
+    # time. Replaces / augments brainstem when ENGRAM_ENABLED.
+    engrams: Optional[EngramBuffer] = None
+    if ENGRAM_ENABLED:
+        engrams = EngramBuffer()
     print(f"\n[{label}] start — arch {initial_arch}  "
           f"params {initial_n_params} (trainable {initial_trainable})  "
           f"growth={do_growth} dream={do_dream}  "
@@ -1065,7 +1214,8 @@ def run_chained_curriculum(
           f"epochs/task={n_epochs_per_task}  "
           f"rehearsal={'on' if REHEARSAL_ENABLED else 'off'}  "
           f"lwf={'on' if LWF_ENABLED else 'off'}  "
-          f"brainstem={'on' if BRAINSTEM_ENABLED else 'off'}")
+          f"brainstem={'on' if BRAINSTEM_ENABLED else 'off'}  "
+          f"engrams={'on' if ENGRAM_ENABLED else 'off'}")
 
     opt = optim.Adam(trainable_param_iter(net), lr=LR)
     # Accuracy matrix shape: (n_total, K). Row i = state after the i-th
@@ -1113,6 +1263,7 @@ def run_chained_curriculum(
                     old_classes_seen.extend(task_class_lists[k])
             old_classes_seen = sorted(set(old_classes_seen))
             lwf_old = old_classes_seen if LWF_ENABLED else None
+            engram_old = old_classes_seen if ENGRAM_ENABLED else None
 
             # 1. Extend output head to fit this task's classes (idempotent
             #    on revisit — the head already covers earlier tasks).
@@ -1159,6 +1310,8 @@ def run_chained_curriculum(
                     memory=memory,
                     lwf_old_classes=lwf_old,
                     brainstem=brainstem,
+                    engrams=engrams,
+                    engram_old_classes=engram_old,
                 )
 
             # 3b. Deterministic hidden growth (with optional dream-rescue).
@@ -1245,6 +1398,8 @@ def run_chained_curriculum(
                     memory=memory,
                     lwf_old_classes=lwf_old,
                     brainstem=brainstem,
+                    engrams=engrams,
+                    engram_old_classes=engram_old,
                 )
 
             # 4. Consolidate.
@@ -1265,6 +1420,17 @@ def run_chained_curriculum(
             #     state. Pass-1 only.
             if brainstem is not None and pass_idx == 0:
                 _store_brainstem_stats(net, train_view, active, brainstem)
+
+            # 4d. Engram Replay consolidation: for each just-learned
+            #     class, run gradient ascent on the input through the
+            #     anchored network to find a per-class prototype x_c.
+            #     Triparametric: forward_with_anchors uses W_anchor +
+            #     b_anchor + routing_scale_anchor, so the engram is the
+            #     consolidated network's idealized input across all
+            #     three legs of the trioron node. Done AFTER consolidate
+            #     so anchors reflect the just-finished task. Pass-1 only.
+            if engrams is not None and pass_idx == 0:
+                _consolidate_engrams(net, active, engrams)
 
             # 5. Post-task dreaming = REPLAY ONLY (keeps memories warm;
             #    does NOT touch substrate). Structural reclamation is
