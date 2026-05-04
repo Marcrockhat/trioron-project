@@ -360,7 +360,7 @@ ENGRAM_ENABLED = False               # DROPPED per probe diagnostic
 # Single real-sample-per-class already beats every in-weights mechanism
 # tested (LwF, brainstem, engram). Diversity probe confirmed real
 # samples retain 7.5x wider pairwise spread than generated prototypes.
-HIPPOCAMPAL_ENABLED = True
+HIPPOCAMPAL_ENABLED = False
 HIPPOCAMPAL_K_PER_CLASS = 50         # matched-K to raw rehearsal's
                                       # 100 samples / 2-class task.
                                       # Storage: 30 cls × 50 × 128 × 4
