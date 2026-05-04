@@ -236,6 +236,108 @@ class MemoryBuffer:
         return all_x[idx], all_y[idx]
 
 
+class DifferentialReplayBuffer:
+    """Per-class multi-layer differential storage. For each class c at
+    consolidation time, store δL_c = L(x_c) - L(0) at every relevant
+    layer's output (L0, L1, head). Replay drives the live network to
+    maintain the SAME differential signature regardless of how its
+    biases / weights drift on subsequent tasks.
+
+    Why differentials, not absolutes (Rocky 2026-05-04): the network
+    embodies its memory; forward(0) reveals the network's accumulated
+    memory state as bias-and-routing patterns shift across tasks. The
+    differential isolates the TASK-SPECIFIC contribution from this
+    drifting memory baseline. Storing absolutes (hippocampal) couples
+    rehearsal to a specific bias state at consolidation time; storing
+    differentials decouples rehearsal from bias drift — a class-c
+    differential remains valid even as L1+head biases drift on later
+    tasks.
+
+    Storage scales with TOTAL NETWORK SIZE (sum of layer widths), not
+    input_dim. Per class: L0_width + L1_width + head_size floats. For
+    chained-15 with L0=128, L1≈48, head=30: ~206 floats × 4 = 824 B
+    per class. 30 classes total ≈ 25 KB.
+
+    Dimension growth handling: if L1 or head grow after a class's
+    differential is stored, the stored differential is zero-padded at
+    sample time to match the current dimensionality (new units don't
+    contribute to old classes' differentials).
+    """
+
+    def __init__(self):
+        # class_idx → dict with keys 'dL0', 'dL1', 'dlogit'
+        self._deltas: Dict[int, Dict[str, torch.Tensor]] = {}
+
+    def add_class(
+        self,
+        class_idx: int,
+        dL0: torch.Tensor,
+        dL1: torch.Tensor,
+        dlogit: torch.Tensor,
+    ) -> None:
+        """Store differentials for one class. Each must be 1-D."""
+        for name, t in [("dL0", dL0), ("dL1", dL1), ("dlogit", dlogit)]:
+            if t.dim() != 1:
+                raise ValueError(
+                    f"{name} must be 1-D, got {tuple(t.shape)}"
+                )
+        self._deltas[int(class_idx)] = {
+            "dL0": dL0.detach().clone(),
+            "dL1": dL1.detach().clone(),
+            "dlogit": dlogit.detach().clone(),
+        }
+
+    def has_classes(self) -> bool:
+        return len(self._deltas) > 0
+
+    def n_classes_stored(self) -> int:
+        return len(self._deltas)
+
+    def stored_classes(self) -> List[int]:
+        return sorted(self._deltas.keys())
+
+    def storage_bytes(self) -> int:
+        return sum(
+            t.numel() * t.element_size()
+            for d in self._deltas.values()
+            for t in d.values()
+        )
+
+    def sample(
+        self,
+        n_samples: int,
+        l0_width: int,
+        l1_width: int,
+        head_size: int,
+        generator: Optional[torch.Generator] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Return (dL0, dL1, dlogit, y) batches. Each delta is zero-
+        padded if the layer has grown since storage time. Returns
+        (None,)*4 if buffer is empty."""
+        if not self._deltas:
+            return None, None, None, None  # type: ignore
+        classes = list(self._deltas.keys())
+        choice_idx = torch.randint(
+            0, len(classes), (n_samples,), generator=generator,
+        )
+        dL0_rows = torch.zeros(n_samples, l0_width)
+        dL1_rows = torch.zeros(n_samples, l1_width)
+        dlogit_rows = torch.zeros(n_samples, head_size)
+        ys: List[int] = []
+        for i in range(n_samples):
+            c = classes[int(choice_idx[i])]
+            d = self._deltas[c]
+            d0 = d["dL0"]; d1 = d["dL1"]; dlg = d["dlogit"]
+            dL0_rows[i, : min(d0.shape[0], l0_width)] = d0[: min(d0.shape[0], l0_width)]
+            dL1_rows[i, : min(d1.shape[0], l1_width)] = d1[: min(d1.shape[0], l1_width)]
+            dlogit_rows[i, : min(dlg.shape[0], head_size)] = (
+                dlg[: min(dlg.shape[0], head_size)]
+            )
+            ys.append(c)
+        ys_t = torch.tensor(ys, dtype=torch.long)
+        return dL0_rows, dL1_rows, dlogit_rows, ys_t
+
+
 class HippocampalBuffer:
     """Per-class compressed-code storage. K canonical L0 outputs per
     class, stored at consolidation time by forwarding K real samples

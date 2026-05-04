@@ -97,6 +97,7 @@ from experiments.datasets import (
     DEFAULT_DATA_ROOT,
     BrainstemBuffer,
     DatasetBundle,
+    DifferentialReplayBuffer,
     EngramBuffer,
     HippocampalBuffer,
     MemoryBuffer,
@@ -359,7 +360,7 @@ ENGRAM_ENABLED = False               # DROPPED per probe diagnostic
 # Single real-sample-per-class already beats every in-weights mechanism
 # tested (LwF, brainstem, engram). Diversity probe confirmed real
 # samples retain 7.5x wider pairwise spread than generated prototypes.
-HIPPOCAMPAL_ENABLED = True
+HIPPOCAMPAL_ENABLED = False
 HIPPOCAMPAL_K_PER_CLASS = 50         # matched-K to raw rehearsal's
                                       # 100 samples / 2-class task.
                                       # Storage: 30 cls × 50 × 128 × 4
@@ -373,6 +374,35 @@ HIPPOCAMPAL_K_PER_CLASS = 50         # matched-K to raw rehearsal's
                                       # matched K.
 HIPPOCAMPAL_BATCH = 64               # per-step replay batch size
 HIPPOCAMPAL_LOSS_WEIGHT = 1.0        # parity with new-task CE
+
+# Differential Replay (per Rocky 2026-05-04, post-hippocampal).
+# The trioron network IS its memory; forward(x=0) reveals the
+# accumulated memory state. Storing the DIFFERENTIAL between blank and
+# task at each layer captures the task-specific signal independent of
+# how the underlying memory drifts. The rehearsal "tuple" is
+# (δL0_c, δL1_c, δlogit_c); injection happens in the middle (L1
+# supervision via differential matching), with the full multi-level
+# loss enforcing the network to maintain a stable per-class signature
+# even as its biases evolve.
+#
+# Bias-drift invariance: hippocampal stores absolute L0(x_c). Live
+# network's L1 may drift; stored L0(x_c) replayed through drifted L1
+# produces a different L1 output than at consolidation. Differential
+# replay says: regardless of how L1 drifts, the GAP between L1's blank
+# response and L1's class-c response should equal the stored δL1_c.
+# That's what's preserved across tasks.
+#
+# Storage scales with sum-of-layer-widths, not input_dim. Per class
+# at chained-15: 128 (L0) + ~48 (L1) + 30 (head) = ~206 floats × 4 B
+# = ~825 B. 30 classes ≈ 25 KB total.
+DIFFERENTIAL_ENABLED = True          # ablation: differential alone
+                                      # (HIPPO/ENGRAM/LWF/BRAINSTEM all
+                                      # off). Tests bias-drift-invariant
+                                      # multi-level rehearsal.
+DIFFERENTIAL_BATCH = 64
+DIFFERENTIAL_TEMPERATURE = 2.0       # KL temperature on logit-level
+DIFFERENTIAL_WEIGHT_L1 = 0.5         # MSE on L1-output differential
+DIFFERENTIAL_WEIGHT_LOGIT = 1.0      # KL on head-output differential
 ENGRAM_LOSS_WEIGHT = 1.0             # engrams are the primary in-weights
                                       # rehearsal signal in this redesign;
                                       # weight at parity with new-task CE.
@@ -612,6 +642,58 @@ def consolidate_task(
         for layer in net.layers:
             layer.lam.clamp_(min=LAMBDA_FLOOR)
     net.anchor_all()
+
+
+def _store_differential_codes(
+    net: TrioronNetwork,
+    train_view: TaskDataView,
+    active_classes: Sequence[int],
+    diff_buf: DifferentialReplayBuffer,
+) -> None:
+    """For each just-learned class, capture (δL0, δL1, δlogit) — the
+    per-layer activation differential between processing one canonical
+    real x_c and processing blank (zero) input. Stored as a tuple per
+    class.
+
+    The differential isolates the task-specific signal from the
+    network's accumulated bias / memory state. Replay later forces
+    the live network to maintain the SAME differential signature even
+    as its memory shifts.
+
+    Single-sample-per-class (K=1 by construction): the differential
+    captures the network's interpretation of one canonical example.
+    Multi-K averaging is possible but loses sharpness — the K=1
+    biological-engram-cell mapping matches one cell ≈ one prototype.
+
+    Call AFTER consolidate_task. For frozen-L0 arms, δL0 stays valid
+    indefinitely; for trainable-L0 arms (skipped in this config), δL0
+    would go stale.
+    """
+    net.eval()
+    try:
+        with torch.no_grad():
+            x_all, y_all = train_view.all_examples()
+            # Compute blank-input baselines once
+            blank = torch.zeros(1, INPUT_DIM, device=net.layers[0].W.device)
+            a0_blank = net.layers[0](blank)         # (1, L0_width)
+            a1_blank = net.layers[1](a0_blank)      # (1, L1_width)
+            a_logit_blank = net.layers[-1](a1_blank)  # (1, n_classes)
+            for c in active_classes:
+                mask = (y_all == c)
+                x_c = x_all[mask]
+                if x_c.shape[0] == 0:
+                    continue
+                idx = int(torch.randperm(x_c.shape[0])[:1].item())
+                x_one = x_c[idx:idx + 1]  # (1, INPUT_DIM)
+                a0 = net.layers[0](x_one)
+                a1 = net.layers[1](a0)
+                alogit = net.layers[-1](a1)
+                dL0 = (a0 - a0_blank).squeeze(0)
+                dL1 = (a1 - a1_blank).squeeze(0)
+                dlogit = (alogit - a_logit_blank).squeeze(0)
+                diff_buf.add_class(int(c), dL0, dL1, dlogit)
+    finally:
+        net.train()
 
 
 def _store_hippocampal_codes(
@@ -1011,6 +1093,7 @@ def train_one_task(
     engrams: Optional[EngramBuffer] = None,
     engram_old_classes: Optional[Sequence[int]] = None,
     hippocampus: Optional[HippocampalBuffer] = None,
+    differential: Optional[DifferentialReplayBuffer] = None,
 ) -> optim.Optimizer:
     """Train on one task for `n_epochs` proper minibatch epochs.
 
@@ -1139,6 +1222,66 @@ def train_one_task(
                             log_p_l, p_a, reduction="batchmean",
                         ) * (T_eng * T_eng)
 
+            # Differential Replay: bias-drift-invariant rehearsal.
+            # Sample stored class-c differentials at L0/L1/head; force
+            # the live network to maintain the same differential
+            # signature regardless of memory drift. Injection is at L1
+            # (the middle): we feed (live_blank_L0 + δL0_c) into live
+            # L1 and check that the live differential matches the
+            # stored δL1_c at the L1-output level (MSE) and the
+            # δlogit_c at the head level (KL).
+            l_diff = None
+            if (differential is not None
+                    and differential.has_classes()
+                    and (DIFFERENTIAL_WEIGHT_L1 > 0
+                         or DIFFERENTIAL_WEIGHT_LOGIT > 0)):
+                l0_w = net.layers[0].n_nodes
+                l1_w = net.layers[GROWTH_TARGET_LAYER_IDX].n_nodes
+                head_w = net.layers[-1].n_nodes
+                dL0_b, dL1_b, dlogit_b, _y_d = differential.sample(
+                    DIFFERENTIAL_BATCH, l0_w, l1_w, head_w,
+                )
+                if dL0_b is not None:
+                    device = net.layers[0].W.device
+                    dL0_b = dL0_b.to(device)
+                    dL1_b = dL1_b.to(device)
+                    dlogit_b = dlogit_b.to(device)
+                    blank = torch.zeros(1, INPUT_DIM, device=device)
+                    with torch.no_grad():
+                        a0_blank = net.layers[0](blank)              # (1, L0)
+                        a1_blank_nograd = net.layers[1](a0_blank)    # (1, L1)
+                        a_logit_blank_nograd = net.layers[-1](a1_blank_nograd)
+                    # synth L0 input batch: (B, L0_width)
+                    synth_L0 = a0_blank.expand(DIFFERENTIAL_BATCH, -1) + dL0_b
+                    # live L1 forward — gradient-tracked
+                    a1_live = net.layers[1](synth_L0)                # (B, L1)
+                    a_logit_live = net.layers[-1](a1_live)           # (B, n_classes)
+                    # live differentials (broadcast blank to batch)
+                    live_dL1 = a1_live - a1_blank_nograd             # (B, L1)
+                    live_dlogit = a_logit_live - a_logit_blank_nograd # (B, n_classes)
+                    l_diff_terms: List[torch.Tensor] = []
+                    if DIFFERENTIAL_WEIGHT_L1 > 0:
+                        l_diff_terms.append(
+                            DIFFERENTIAL_WEIGHT_L1
+                            * F.mse_loss(live_dL1, dL1_b)
+                        )
+                    if DIFFERENTIAL_WEIGHT_LOGIT > 0:
+                        T_d = DIFFERENTIAL_TEMPERATURE
+                        # Match logit-differential distributions via KL
+                        # (after softmax). The differential here can be
+                        # negative on some classes (suppressed) and
+                        # positive on the target — softmax normalizes.
+                        p_target = F.softmax(dlogit_b / T_d, dim=1)
+                        log_p_live = F.log_softmax(live_dlogit / T_d, dim=1)
+                        l_diff_terms.append(
+                            DIFFERENTIAL_WEIGHT_LOGIT
+                            * F.kl_div(log_p_live, p_target,
+                                       reduction="batchmean")
+                            * (T_d * T_d)
+                        )
+                    if l_diff_terms:
+                        l_diff = sum(l_diff_terms)
+
             # Hippocampal Replay: sample stored L0 codes and feed
             # them directly into L1 via forward_from_layer(start=1).
             # CE supervises against the all-classes-seen mask so the
@@ -1170,6 +1313,8 @@ def train_one_task(
                 l_data = l_data + ENGRAM_LOSS_WEIGHT * l_engram_lwf
             if l_hippo is not None:
                 l_data = l_data + HIPPOCAMPAL_LOSS_WEIGHT * l_hippo
+            if l_diff is not None:
+                l_data = l_data + l_diff
             l = (l_data + ewc_baseline * net.ewc_penalty()
                  if ewc_baseline > 0 else l_data)
             opt.zero_grad()
@@ -1328,6 +1473,11 @@ def run_chained_curriculum(
     arm_l0_frozen = not bool(net.layers[0].W.requires_grad)
     if HIPPOCAMPAL_ENABLED and arm_l0_frozen:
         hippocampus = HippocampalBuffer()
+    # Differential Replay — multi-layer task differentials vs blank.
+    # Same frozen-L0 precondition as hippocampal (δL0 stays valid).
+    differential: Optional[DifferentialReplayBuffer] = None
+    if DIFFERENTIAL_ENABLED and arm_l0_frozen:
+        differential = DifferentialReplayBuffer()
     print(f"\n[{label}] start — arch {initial_arch}  "
           f"params {initial_n_params} (trainable {initial_trainable})  "
           f"growth={do_growth} dream={do_dream}  "
@@ -1337,7 +1487,8 @@ def run_chained_curriculum(
           f"lwf={'on' if LWF_ENABLED else 'off'}  "
           f"brainstem={'on' if BRAINSTEM_ENABLED else 'off'}  "
           f"engrams={'on' if ENGRAM_ENABLED else 'off'}  "
-          f"hippocampus={'on' if hippocampus is not None else 'off'}")
+          f"hippocampus={'on' if hippocampus is not None else 'off'}  "
+          f"differential={'on' if differential is not None else 'off'}")
 
     opt = optim.Adam(trainable_param_iter(net), lr=LR)
     # Accuracy matrix shape: (n_total, K). Row i = state after the i-th
@@ -1435,6 +1586,7 @@ def run_chained_curriculum(
                     engrams=engrams,
                     engram_old_classes=engram_old,
                     hippocampus=hippocampus,
+                    differential=differential,
                 )
 
             # 3b. Deterministic hidden growth (with optional dream-rescue).
@@ -1524,6 +1676,7 @@ def run_chained_curriculum(
                     engrams=engrams,
                     engram_old_classes=engram_old,
                     hippocampus=hippocampus,
+                    differential=differential,
                 )
 
             # 4. Consolidate.
@@ -1564,6 +1717,14 @@ def run_chained_curriculum(
                 _store_hippocampal_codes(
                     net, train_view, active, hippocampus,
                     K=HIPPOCAMPAL_K_PER_CLASS,
+                )
+
+            # 4f. Differential Replay consolidation: capture per-layer
+            #     activation differentials (blank vs canonical class
+            #     example) at L0, L1, head. Triple stored per class.
+            if differential is not None and pass_idx == 0:
+                _store_differential_codes(
+                    net, train_view, active, differential,
                 )
 
             # 5. Post-task dreaming = REPLAY ONLY (keeps memories warm;
