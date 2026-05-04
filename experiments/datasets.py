@@ -236,6 +236,92 @@ class MemoryBuffer:
         return all_x[idx], all_y[idx]
 
 
+class HippocampalBuffer:
+    """Per-class compressed-code storage. K canonical L0 outputs per
+    class, stored at consolidation time by forwarding K real samples
+    through the (frozen) L0 layer. Replay feeds these codes directly
+    into L1 via forward_from_layer(start=1), bypassing L0 entirely.
+
+    Biological mapping: hippocampal place/concept cells store sparse
+    codes that index into cortical activation patterns, not raw sensory
+    data. The cortex (here L1+head) reconstructs the rich representation
+    by integrating the index through its recurrent dynamics. Sharp-wave
+    ripples replay these compressed codes during sleep to drive cortical
+    consolidation. trioron's frozen L0 plays the role of the cortical
+    sensory hierarchy; HippocampalBuffer plays the role of CA3 + place
+    cells.
+
+    Why L0 output and not raw input: storage scales with L0_width
+    (constant), not input_dim (grows with resolution). MNIST 784 → 128
+    is a 6× compression; ImageNet 150528 → 128 is a 1200× compression;
+    the buffer for ImageNet-scale problems uses the same RAM as for
+    MNIST-scale problems. Real samples retain natural diversity at L0
+    output (unlike gradient-ascent engrams which collapse adversarially
+    — see experiments/probe_engram_diversity.py for the diagnostic).
+
+    L0 must be frozen for stored codes to remain valid across tasks
+    (encoding stable). For arms with trainable L0 (e.g., fixed_ewc) the
+    buffer would go stale and either re-encoding-per-task or fallback to
+    raw input is needed; for grown_capped_* / grown_uncapped_* arms with
+    freeze_l0=True this is the natural design.
+    """
+
+    def __init__(self):
+        # class_idx → tensor of shape (K, l0_width)
+        self._codes: Dict[int, torch.Tensor] = {}
+
+    def add_class(
+        self, class_idx: int, codes: torch.Tensor,
+    ) -> None:
+        """Store K codes for one class. codes must be (K, l0_width).
+        Overwrites any prior entry for this class."""
+        if codes.dim() != 2:
+            raise ValueError(
+                f"codes must be 2-D (K, l0_width), got {tuple(codes.shape)}"
+            )
+        self._codes[int(class_idx)] = codes.detach().clone()
+
+    def has_classes(self) -> bool:
+        return len(self._codes) > 0
+
+    def n_classes_stored(self) -> int:
+        return len(self._codes)
+
+    def stored_classes(self) -> List[int]:
+        return sorted(self._codes.keys())
+
+    def storage_bytes(self) -> int:
+        return sum(c.numel() * c.element_size() for c in self._codes.values())
+
+    def sample(
+        self,
+        n_samples: int,
+        generator: Optional[torch.Generator] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return (z, y) with z shape (n_samples, l0_width) and y
+        shape (n_samples,). Uniform-with-replacement across stored
+        classes; for each chosen class, uniformly samples one of its
+        K stored codes. Returns (None, None) if buffer is empty."""
+        if not self._codes:
+            return None, None  # type: ignore
+        classes = list(self._codes.keys())
+        choice_idx = torch.randint(
+            0, len(classes), (n_samples,), generator=generator,
+        )
+        rows = []; ys = []
+        for i in range(n_samples):
+            c = classes[int(choice_idx[i])]
+            bank = self._codes[c]
+            ridx = int(torch.randint(
+                0, bank.shape[0], (1,), generator=generator,
+            ).item())
+            rows.append(bank[ridx])
+            ys.append(c)
+        zs = torch.stack(rows, dim=0)
+        ys_t = torch.tensor(ys, dtype=torch.long)
+        return zs, ys_t
+
+
 class EngramBuffer:
     """Per-class synthetic input prototype storage for Engram Replay
     (triparametric pseudo-rehearsal). After each task's consolidation,

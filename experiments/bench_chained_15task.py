@@ -98,6 +98,7 @@ from experiments.datasets import (
     BrainstemBuffer,
     DatasetBundle,
     EngramBuffer,
+    HippocampalBuffer,
     MemoryBuffer,
     TaskDataView,
     build_task_views,
@@ -256,14 +257,12 @@ N_CURRICULUM_PASSES = 1
 # revealed argmax drift across the 30-class output. Rehearsal with
 # all-classes-seen-so-far mask gives explicit gradient on cross-class
 # discrimination.
-REHEARSAL_ENABLED = True            # SANITY-CHECK RUN: reproducing the
-                                     # historical rehearsal-n=12 baseline
-                                     # (full ~0.615 / task ~0.961 on
-                                     # grown_capped_dream) to verify the
-                                     # bench still produces the expected
-                                     # magnitudes before further LwF
-                                     # redesign work. Restore to False
-                                     # after this run.
+REHEARSAL_ENABLED = False           # raw-input rehearsal — superseded
+                                     # by HippocampalBuffer (L0-output
+                                     # rehearsal, biologically modeled
+                                     # on hippocampal place-cell coding).
+                                     # Sanity-check at n=3 verified the
+                                     # historical magnitudes reproduce.
 REHEARSAL_SAMPLES_PER_TASK = 100
 REHEARSAL_BATCH = 64
 REHEARSAL_LOSS_WEIGHT = 1.0
@@ -326,12 +325,49 @@ BRAINSTEM_LOSS_WEIGHT = 0.2         # secondary regularizer; the per-class L1
 # curricula. Triparametric: forward_with_anchors uses W_anchor +
 # b_anchor + routing_scale_anchor, so all three legs of the consolidated
 # trioron node contribute to the LwF target.
-ENGRAM_ENABLED = False               # off for rehearsal sanity-check.
-                                      # Engram run was killed at 4 seeds
-                                      # for this diagnostic; partial log
-                                      # at outputs/...ENGRAM_partial_4seed.log
-                                      # Restore to True after rehearsal
-                                      # baseline is verified.
+ENGRAM_ENABLED = False               # DROPPED per probe diagnostic
+                                      # 2026-05-04. Gradient-ascent
+                                      # engrams collapse to one
+                                      # adversarial cluster (7.5x
+                                      # narrower than real samples,
+                                      # 9x further from the data
+                                      # manifold) and don't scale with
+                                      # K. Single real sample beats 100
+                                      # engrams. See
+                                      # experiments/probe_engram_diversity.py
+                                      # for the full diagnostic.
+                                      # Replaced by HippocampalBuffer
+                                      # (real L0 codes, not generated).
+                                      # Code paths preserved but dark.
+
+# Hippocampal Replay (replaces engrams; replaces raw rehearsal too).
+# Stores K real-sample L0 outputs per class at consolidation time;
+# replays them via forward_from_layer(start=1), bypassing L0. Storage
+# scales with L0_width (=128), not input_dim — buffer for ImageNet-
+# scale inputs is the same size as for MNIST.
+#
+# Biological mapping: hippocampal place/concept cells encode sparse
+# indices into cortical patterns (Quian Quiroga concept cells, O'Keefe
+# place cells); CA3 recurrent attractor pattern-completes from those
+# indices; sharp-wave ripples replay the compressed codes during sleep,
+# driving cortical consolidation. trioron's frozen L0 plays the role
+# of the cortical sensory hierarchy; this buffer plays CA3 + place
+# cells.
+#
+# Real-sample probe (chained-5 MNIST, 2026-05-04):
+#   real-K=1   full=0.559    real-K=10   full=0.656    real-K=100  0.736
+# Single real-sample-per-class already beats every in-weights mechanism
+# tested (LwF, brainstem, engram). Diversity probe confirmed real
+# samples retain 7.5x wider pairwise spread than generated prototypes.
+HIPPOCAMPAL_ENABLED = True
+HIPPOCAMPAL_K_PER_CLASS = 1          # canonical-example mode (matches
+                                      # the biological place-cell story
+                                      # AND the probe's strong K=1
+                                      # signal). Increase for higher-K
+                                      # ablations; storage scales
+                                      # linearly with K.
+HIPPOCAMPAL_BATCH = 64               # per-step replay batch size
+HIPPOCAMPAL_LOSS_WEIGHT = 1.0        # parity with new-task CE
 ENGRAM_LOSS_WEIGHT = 1.0             # engrams are the primary in-weights
                                       # rehearsal signal in this redesign;
                                       # weight at parity with new-task CE.
@@ -571,6 +607,50 @@ def consolidate_task(
         for layer in net.layers:
             layer.lam.clamp_(min=LAMBDA_FLOOR)
     net.anchor_all()
+
+
+def _store_hippocampal_codes(
+    net: TrioronNetwork,
+    train_view: TaskDataView,
+    active_classes: Sequence[int],
+    hippo: HippocampalBuffer,
+    *,
+    K: int = HIPPOCAMPAL_K_PER_CLASS,
+) -> None:
+    """For each just-learned class, sample K real training examples,
+    forward them through the (frozen) L0 layer, and store the L0
+    outputs as compressed codes in the hippocampal buffer. Call AFTER
+    consolidate_task — by then the network's anchored state reflects
+    the just-finished task; for frozen L0 it doesn't actually matter
+    when this fires (L0 is unchanged), but ordering keeps it parallel
+    with brainstem / engram consolidation.
+
+    Storage: K * L0_width float32 per class. For chained-15 with
+    K=1, L0=128: 30 classes × 128 × 4 = 15 KB total. Compare raw
+    rehearsal (REHEARSAL_SAMPLES_PER_TASK=100, INPUT_DIM=784): 30 ×
+    100 × 784 × 4 = 9.4 MB. ~600× compression at K=1; ~6× at matched K.
+
+    Frozen-L0 only: assumes L0 is not being updated. For a trainable-L0
+    arm the codes would go stale and need re-encoding per task (or
+    fallback to raw-input rehearsal).
+    """
+    net.eval()
+    try:
+        with torch.no_grad():
+            x_all, y_all = train_view.all_examples()
+            l0 = net.layers[0]
+            for c in active_classes:
+                mask = (y_all == c)
+                x_c = x_all[mask]
+                if x_c.shape[0] == 0:
+                    continue
+                k = min(K, x_c.shape[0])
+                idx = torch.randperm(x_c.shape[0])[:k]
+                x_sample = x_c[idx]
+                code = l0(x_sample)  # frozen L0 forward — post-ReLU
+                hippo.add_class(int(c), code)
+    finally:
+        net.train()
 
 
 def _consolidate_engrams(
@@ -925,6 +1005,7 @@ def train_one_task(
     brainstem: Optional[BrainstemBuffer] = None,
     engrams: Optional[EngramBuffer] = None,
     engram_old_classes: Optional[Sequence[int]] = None,
+    hippocampus: Optional[HippocampalBuffer] = None,
 ) -> optim.Optimizer:
     """Train on one task for `n_epochs` proper minibatch epochs.
 
@@ -1053,6 +1134,26 @@ def train_one_task(
                             log_p_l, p_a, reduction="batchmean",
                         ) * (T_eng * T_eng)
 
+            # Hippocampal Replay: sample stored L0 codes and feed
+            # them directly into L1 via forward_from_layer(start=1).
+            # CE supervises against the all-classes-seen mask so the
+            # head learns to discriminate every class via the
+            # canonical L0 codes.
+            l_hippo = None
+            if (hippocampus is not None
+                    and hippocampus.has_classes()
+                    and HIPPOCAMPAL_LOSS_WEIGHT > 0):
+                z_h, y_h = hippocampus.sample(HIPPOCAMPAL_BATCH)
+                if z_h is not None:
+                    z_h = z_h.to(device=net.layers[1].W.device)
+                    y_h = y_h.to(device=net.layers[1].W.device)
+                    logits_h = net.forward_from_layer(z_h, start_layer=1)
+                    head_size = net.layers[-1].n_nodes
+                    all_seen_h = list(range(head_size))
+                    l_hippo = masked_cross_entropy(
+                        logits_h, y_h, active_classes=all_seen_h,
+                    )
+
             l_data = l_task
             if l_rehearsal is not None:
                 l_data = l_data + REHEARSAL_LOSS_WEIGHT * l_rehearsal
@@ -1062,6 +1163,8 @@ def train_one_task(
                 l_data = l_data + BRAINSTEM_LOSS_WEIGHT * l_brainstem
             if l_engram_lwf is not None:
                 l_data = l_data + ENGRAM_LOSS_WEIGHT * l_engram_lwf
+            if l_hippo is not None:
+                l_data = l_data + HIPPOCAMPAL_LOSS_WEIGHT * l_hippo
             l = (l_data + ewc_baseline * net.ewc_penalty()
                  if ewc_baseline > 0 else l_data)
             opt.zero_grad()
@@ -1212,6 +1315,14 @@ def run_chained_curriculum(
     engrams: Optional[EngramBuffer] = None
     if ENGRAM_ENABLED:
         engrams = EngramBuffer()
+    # Hippocampal Replay — K real-sample L0 outputs per class.
+    # Pre-conditions: this arm has a frozen L0 (so stored codes don't
+    # go stale across tasks). For trainable-L0 arms, fall back to
+    # MemoryBuffer (raw rehearsal) instead.
+    hippocampus: Optional[HippocampalBuffer] = None
+    arm_l0_frozen = not bool(net.layers[0].W.requires_grad)
+    if HIPPOCAMPAL_ENABLED and arm_l0_frozen:
+        hippocampus = HippocampalBuffer()
     print(f"\n[{label}] start — arch {initial_arch}  "
           f"params {initial_n_params} (trainable {initial_trainable})  "
           f"growth={do_growth} dream={do_dream}  "
@@ -1220,7 +1331,8 @@ def run_chained_curriculum(
           f"rehearsal={'on' if REHEARSAL_ENABLED else 'off'}  "
           f"lwf={'on' if LWF_ENABLED else 'off'}  "
           f"brainstem={'on' if BRAINSTEM_ENABLED else 'off'}  "
-          f"engrams={'on' if ENGRAM_ENABLED else 'off'}")
+          f"engrams={'on' if ENGRAM_ENABLED else 'off'}  "
+          f"hippocampus={'on' if hippocampus is not None else 'off'}")
 
     opt = optim.Adam(trainable_param_iter(net), lr=LR)
     # Accuracy matrix shape: (n_total, K). Row i = state after the i-th
@@ -1317,6 +1429,7 @@ def run_chained_curriculum(
                     brainstem=brainstem,
                     engrams=engrams,
                     engram_old_classes=engram_old,
+                    hippocampus=hippocampus,
                 )
 
             # 3b. Deterministic hidden growth (with optional dream-rescue).
@@ -1405,6 +1518,7 @@ def run_chained_curriculum(
                     brainstem=brainstem,
                     engrams=engrams,
                     engram_old_classes=engram_old,
+                    hippocampus=hippocampus,
                 )
 
             # 4. Consolidate.
@@ -1436,6 +1550,16 @@ def run_chained_curriculum(
             #     so anchors reflect the just-finished task. Pass-1 only.
             if engrams is not None and pass_idx == 0:
                 _consolidate_engrams(net, active, engrams)
+
+            # 4e. Hippocampal consolidation: sample K real examples per
+            #     class, forward through (frozen) L0, store the
+            #     compressed codes. Pass-1 only — buffer persists across
+            #     passes. Storage = K * L0_width per class.
+            if hippocampus is not None and pass_idx == 0:
+                _store_hippocampal_codes(
+                    net, train_view, active, hippocampus,
+                    K=HIPPOCAMPAL_K_PER_CLASS,
+                )
 
             # 5. Post-task dreaming = REPLAY ONLY (keeps memories warm;
             #    does NOT touch substrate). Structural reclamation is
