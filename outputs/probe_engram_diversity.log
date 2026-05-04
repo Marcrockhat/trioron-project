@@ -1,0 +1,46 @@
+[probe] loading datasets ...
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[probe] real-K=1                  full=0.5585 task=0.9768
+[probe] real-K=10                 full=0.6561 task=0.9770
+[probe] real-K=100                full=0.7363 task=0.9836
+[probe] engram-K=1-CE             full=0.4503 task=0.9790
+[probe] engram-K=10-CE            full=0.3789 task=0.9721
+[probe] engram-K=100-CE           full=0.4892 task=0.9262
+[probe] engram-K=1-LwF            full=0.3591 task=0.9775
+[probe] engram-K=10-LwF           full=0.2670 task=0.9699
+[probe] engram-K=100-LwF          full=0.5106 task=0.9713
+[probe] none                      full=0.4309 task=0.9652
+
+=== Summary (chained-5 MNIST, single seed) ===
+condition                     full     task
+real-K=1                    0.5585   0.9768
+real-K=10                   0.6561   0.9770
+real-K=100                  0.7363   0.9836
+engram-K=1-CE               0.4503   0.9790
+engram-K=10-CE              0.3789   0.9721
+engram-K=100-CE             0.4892   0.9262
+engram-K=1-LwF              0.3591   0.9775
+engram-K=10-LwF             0.2670   0.9699
+engram-K=100-LwF            0.5106   0.9713
+none                        0.4309   0.9652
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+class 0:
+  engram pairwise-divergence (mean dist / mean mag): 0.1263
+  real   pairwise-divergence:                       0.9410
+  engram anchor confidence on class 0: 1.0000
+  real   anchor confidence on class 0: 1.0000
+  engram L2 magnitude (mean): 7.3420
+  real   L2 magnitude (mean): 10.4756
+  closest engram-engram pair distance: 0.8425
+  closest engram-real distance:        7.6850
+class 1:
+  engram pairwise-divergence (mean dist / mean mag): 0.1260
+  real   pairwise-divergence:                       0.9443
+  engram anchor confidence on class 1: 1.0000
+  real   anchor confidence on class 1: 1.0000
+  engram L2 magnitude (mean): 7.3267
+  real   L2 magnitude (mean): 6.9180
+  closest engram-engram pair distance: 0.8507
+  closest engram-real distance:        7.1114

@@ -256,9 +256,14 @@ N_CURRICULUM_PASSES = 1
 # revealed argmax drift across the 30-class output. Rehearsal with
 # all-classes-seen-so-far mask gives explicit gradient on cross-class
 # discrimination.
-REHEARSAL_ENABLED = False           # raw-sample buffer rehearsal — disabled
-                                     # in favor of A+B (LwF + Brainstem). Flag
-                                     # preserved for ablation runs.
+REHEARSAL_ENABLED = True            # SANITY-CHECK RUN: reproducing the
+                                     # historical rehearsal-n=12 baseline
+                                     # (full ~0.615 / task ~0.961 on
+                                     # grown_capped_dream) to verify the
+                                     # bench still produces the expected
+                                     # magnitudes before further LwF
+                                     # redesign work. Restore to False
+                                     # after this run.
 REHEARSAL_SAMPLES_PER_TASK = 100
 REHEARSAL_BATCH = 64
 REHEARSAL_LOSS_WEIGHT = 1.0
@@ -321,11 +326,12 @@ BRAINSTEM_LOSS_WEIGHT = 0.2         # secondary regularizer; the per-class L1
 # curricula. Triparametric: forward_with_anchors uses W_anchor +
 # b_anchor + routing_scale_anchor, so all three legs of the consolidated
 # trioron node contribute to the LwF target.
-ENGRAM_ENABLED = True                # engram-only ablation: LWF and
-                                      # BRAINSTEM both off, engram alone
-                                      # carries pseudo-rehearsal. Toggle
-                                      # back to False to restore the A+B
-                                      # configuration.
+ENGRAM_ENABLED = False               # off for rehearsal sanity-check.
+                                      # Engram run was killed at 4 seeds
+                                      # for this diagnostic; partial log
+                                      # at outputs/...ENGRAM_partial_4seed.log
+                                      # Restore to True after rehearsal
+                                      # baseline is verified.
 ENGRAM_LOSS_WEIGHT = 1.0             # engrams are the primary in-weights
                                       # rehearsal signal in this redesign;
                                       # weight at parity with new-task CE.
