@@ -1439,6 +1439,16 @@ ARM_DEFINITIONS = {
         "h_init": H_FIXED, "do_growth": False, "do_dream": False,
         "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": False,
     },
+    # Matched-trainable baseline. H=56 + freeze_l0 yields
+    # (128+1)*56 + (56+1)*30 = 7224 + 1710 = 8934 trainable params at
+    # task 15 — identical to grown_capped_no_dream's final state. Same
+    # frozen warmed-up L0 as the grown arms, so the comparison isolates
+    # "growth helps" from "L0 trainable helps" or "L0 width helps."
+    # Tests the matched-params claim that motivated the architecture.
+    "fixed_ewc_small": {
+        "h_init": 56, "do_growth": False, "do_dream": False,
+        "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": True,
+    },
     "grown_capped_no_dream": {
         "h_init": H_INIT_GROWN, "do_growth": True, "do_dream": False,
         "cap_bytes": M_MAX_BYTES_CAPPED, "freeze_l0": True,
