@@ -1,0 +1,88 @@
+Injection-mechanism diagnostic
+seed: 0
+==============================================================================
+Test A — Forward math equivalence
+==============================================================================
+
+Applying simulated curriculum mutations to L1...
+  after growth: arch = [128, 12, 30]
+  routing_scale (L1): [0.44999998807907104, 1.0, 0.10000000149011612, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  archived (L1): [3]
+
+  L0 self-determinism (re-run diff): 0.00e+00
+  Head logits   max |Δ| = 0.00e+00    mean |Δ| = 0.00e+00
+  (head |out_A| mean for scale)     = 0.3464
+
+  Verdict: PASS — forward math is equivalent
+
+==============================================================================
+Test B — Curriculum: stored codes vs raw inputs at end-of-curriculum
+==============================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+[probe] L0 warmup (100 steps)...
+  [warmup] step    0  loss 3.3179
+  [warmup] step   99  loss 0.0009
+
+[probe] running grown_capped_dream curriculum (3 tasks)...
+
+[grown_capped_dream_probe] start — arch (128, 32, 2)  params 104674 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=3  passes=1  epochs/task=2  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=on
+
+[grown_capped_dream_probe] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream_probe] === Pass 1/1 Task 1/3: mnist_0_1 (active [0, 1])  pre-arch=[128, 32, 2] params=104674 (trainable 4194/8000) ===
+  [grown_capped_dream_probe] task 1/3 (mnist_0_1) epoch 1/2 [settle]  avg_loss 0.0623  last_loss 0.0023  steps 198  arch [128, 32, 2]
+  [grown_capped_dream_probe] task 1/3 (mnist_0_1) epoch 2/2 [settle]  avg_loss 0.0055  last_loss 0.0005  steps 396  arch [128, 32, 2]
+  [grown_capped_dream_probe] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 2] params=105198 (trainable 4718)
+  [grown_capped_dream_probe] post-task DREAM: replay 0.0018→0.0006 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 2] (105198→105198 params)
+[grown_capped_dream_probe] After pass 1 task 1: own=0.9995 (domain 0.9995, task 0.9995)  avg=0.9995 (domain 0.9995, task 0.9995)  arch=[128, 36, 2] params=105198 (trainable 4718)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream_probe] === Pass 1/1 Task 2/3: mnist_2_3 (active [2, 3])  pre-arch=[128, 36, 4] params=105272 (trainable 4792/8000) ===
+  [grown_capped_dream_probe] task 2/3 (mnist_2_3) epoch 1/2 [settle]  avg_loss 0.4676  last_loss 0.1858  steps 189  arch [128, 36, 4]
+  [grown_capped_dream_probe] task 2/3 (mnist_2_3) epoch 2/2 [settle]  avg_loss 0.2402  last_loss 0.1278  steps 378  arch [128, 36, 4]
+  [grown_capped_dream_probe] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 40, 4] params=105804 (trainable 5324)
+  [grown_capped_dream_probe] post-task DREAM: replay 0.0007→0.0003 on 1p; merges=0 purges=0 latched=0 → arch [128, 40, 4] (105804→105804 params)
+[grown_capped_dream_probe] After pass 1 task 2: own=0.3428 (domain 0.3428, task 0.9432)  avg=0.6705 (domain 0.6705, task 0.9714)  arch=[128, 40, 4] params=105804 (trainable 5324)  cum_grows=8 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream_probe] === Pass 1/1 Task 3/3: mnist_4_5 (active [4, 5])  pre-arch=[128, 40, 6] params=105886 (trainable 5406/8000) ===
+  [grown_capped_dream_probe] task 3/3 (mnist_4_5) epoch 1/2 [settle]  avg_loss 0.4744  last_loss 0.3875  steps 176  arch [128, 40, 6]
+  [grown_capped_dream_probe] task 3/3 (mnist_4_5) epoch 2/2 [settle]  avg_loss 0.2448  last_loss 0.2161  steps 352  arch [128, 40, 6]
+  [grown_capped_dream_probe] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 44, 6] params=106426 (trainable 5946)
+  [grown_capped_dream_probe] post-task DREAM: replay 0.2009→0.2555 on 1p; merges=0 purges=0 latched=0 → arch [128, 44, 6] (106426→106426 params)
+[grown_capped_dream_probe] After pass 1 task 3: own=0.4253 (domain 0.4253, task 0.9610)  avg=0.5189 (domain 0.5189, task 0.9715)  arch=[128, 44, 6] params=106426 (trainable 5946)  cum_grows=12 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream_probe] <<< PASS 1/1 done — full=0.5189  domain=0.5189  task=0.9715
+
+[probe] L0 state across curriculum:
+  max |ΔW|            = 0.00e+00
+  max |Δb|            = 0.00e+00
+  max |Δrouting_scale| = 0.00e+00
+  L0 stayed frozen — staleness NOT the cause.
+
+[probe] final arch: [128, 44, 6]
+
+[probe] path comparison on stored past-task samples:
+task      n     head max|Δ|     head mean|Δ|      L1 max|Δ|
+    0     20        0.00e+00         0.00e+00       0.00e+00
+    1     20        0.00e+00         0.00e+00       0.00e+00
+    2     20        0.00e+00         0.00e+00       0.00e+00
+
+  Verdict: PASS — forward equivalence holds end-to-end
+
+==============================================================================
+Summary
+==============================================================================
+  Test A (forward math)     : PASS
+  Test B (curriculum)       : PASS
+
+Forward path is identical. The hippocampal-vs-rehearsal gap
+is NOT caused by forward divergence. Investigate next:
+  - sampling distribution (HippocampalBuffer vs MemoryBuffer)
+  - gradient flow / autograd graph differences
+  - loss weighting / reduction differences
+  - per-task storage timing vs. raw-batch composition

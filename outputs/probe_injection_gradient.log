@@ -1,0 +1,45 @@
+/home/marcrockhat/trioron-project/experiments/probe_injection_gradient.py:139: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+  print(f"  l_A (memory)       = {float(l_A):.6f}")
+==============================================================================
+Injection gradient/loss equivalence probe
+==============================================================================
+
+net arch: [128, 40, 30]
+L1 archived: [3]
+L1 routing_scale: [0.44999998807907104, 1.0, 0.05000000074505806, 1.0, 1.0, 1.0, 1.0, 1.0] ...
+
+Loss comparison:
+  l_A (memory)       = 3.892676
+  l_B (hippocampal)  = 3.892676
+  |l_A − l_B|        = 0.00e+00
+
+Logits comparison:
+  max|logits_A − logits_B| = 0.00e+00
+
+Gradient comparison (after backward):
+  L1.W.grad   shape (40, 128)  max|Δ| = 0.00e+00  mean|Δ| = 0.00e+00
+            |grad_A| max = 0.0977  |grad_B| max = 0.0977
+  head.W.grad shape (30, 40)  max|Δ| = 0.00e+00  mean|Δ| = 0.00e+00
+            |grad_A| max = 0.1558  |grad_B| max = 0.1558
+
+VERDICT: PASS — losses and gradients are identical between paths.
+
+Implication: forward + backward through the two injection
+paths is mathematically equivalent. The bench-time gap
+(memory 0.62 vs hippo 0.27 on grown arms) must come from
+something OUTSIDE the loss path:
+  1. Per-batch sampling distribution differs (class balance,
+     replacement policy, batch composition).
+  2. Storage timing differs (memory stores raw x; hippo
+     stores L0(x) snapshotted at consolidate). For frozen
+     L0 these are identical, so this should NOT matter — but
+     verify the storage path doesn't apply any subtle
+     transformation (dtype cast, normalization, ReLU mask).
+  3. The batch the bench actually feeds at each step.
+     Memory.sample(64) draws 64 from a union of 100×n_tasks
+     unique reals; HippocampalBuffer.sample(64) draws 64
+     class-uniform with replacement from K codes per class.
+     At K=50 the per-class diversity matches, but per-batch
+     class composition variance differs (with-replacement
+     over 30 classes vs without-replacement over the union).

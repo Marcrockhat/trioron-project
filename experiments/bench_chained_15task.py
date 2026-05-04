@@ -360,7 +360,7 @@ ENGRAM_ENABLED = False               # DROPPED per probe diagnostic
 # Single real-sample-per-class already beats every in-weights mechanism
 # tested (LwF, brainstem, engram). Diversity probe confirmed real
 # samples retain 7.5x wider pairwise spread than generated prototypes.
-HIPPOCAMPAL_ENABLED = False
+HIPPOCAMPAL_ENABLED = True
 HIPPOCAMPAL_K_PER_CLASS = 50         # matched-K to raw rehearsal's
                                       # 100 samples / 2-class task.
                                       # Storage: 30 cls × 50 × 128 × 4
@@ -395,7 +395,7 @@ HIPPOCAMPAL_LOSS_WEIGHT = 1.0        # parity with new-task CE
 # Storage scales with sum-of-layer-widths, not input_dim. Per class
 # at chained-15: 128 (L0) + ~48 (L1) + 30 (head) = ~206 floats × 4 B
 # = ~825 B. 30 classes ≈ 25 KB total.
-DIFFERENTIAL_ENABLED = True          # ablation: differential alone
+DIFFERENTIAL_ENABLED = False         # ablation: differential alone
                                       # (HIPPO/ENGRAM/LWF/BRAINSTEM all
                                       # off). Tests bias-drift-invariant
                                       # multi-level rehearsal.
@@ -1663,6 +1663,10 @@ def run_chained_curriculum(
                         memory=memory,
                         lwf_old_classes=lwf_old,
                         brainstem=brainstem,
+                        engrams=engrams,
+                        engram_old_classes=engram_old,
+                        hippocampus=hippocampus,
+                        differential=differential,
                     )
             else:
                 opt = train_one_task(
