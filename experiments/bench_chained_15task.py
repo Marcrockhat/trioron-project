@@ -273,7 +273,7 @@ REHEARSAL_LOSS_WEIGHT = 1.0
 # Storage cost: zero new (W_anchor already exists per layer).
 # Biology: maps onto sleep-dependent cortical consolidation — the cortex
 # preserves its pre-update response while integrating new experience.
-LWF_ENABLED = True
+LWF_ENABLED = False
 LWF_TEMPERATURE = 2.0               # standard distillation temperature
 LWF_LOSS_WEIGHT = 0.7               # modestly under 1.0 — proxy signal is
                                      # noisier than direct CE on the new task
@@ -297,7 +297,7 @@ LWF_LOSS_WEIGHT = 0.7               # modestly under 1.0 — proxy signal is
 # discriminative layer; per-class Gaussians at L1 output separate well.
 # L1 grows during the curriculum; stored stats are zero-padded when L1
 # widens (new units initialized fresh activate ~zero on old-class data).
-BRAINSTEM_ENABLED = True
+BRAINSTEM_ENABLED = False
 BRAINSTEM_BATCH = 64
 BRAINSTEM_LOSS_WEIGHT = 0.2         # secondary regularizer; the per-class L1
                                      # Gaussians become STALE as L1 drifts
@@ -321,12 +321,11 @@ BRAINSTEM_LOSS_WEIGHT = 0.2         # secondary regularizer; the per-class L1
 # curricula. Triparametric: forward_with_anchors uses W_anchor +
 # b_anchor + routing_scale_anchor, so all three legs of the consolidated
 # trioron node contribute to the LwF target.
-ENGRAM_ENABLED = False               # off by default — turn on for the
-                                      # ablation. When True, brainstem and
-                                      # standard LwF should be turned off too
-                                      # (set BRAINSTEM_ENABLED=False and
-                                      # LWF_ENABLED=False) to test engram
-                                      # alone vs A+B.
+ENGRAM_ENABLED = True                # engram-only ablation: LWF and
+                                      # BRAINSTEM both off, engram alone
+                                      # carries pseudo-rehearsal. Toggle
+                                      # back to False to restore the A+B
+                                      # configuration.
 ENGRAM_LOSS_WEIGHT = 1.0             # engrams are the primary in-weights
                                       # rehearsal signal in this redesign;
                                       # weight at parity with new-task CE.
