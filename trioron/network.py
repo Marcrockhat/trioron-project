@@ -55,23 +55,31 @@ class TrioronNetwork(nn.Module):
         return x
 
     def forward_with_anchors(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass using each layer's W_anchor (consolidated weights)
-        instead of live W. No gradients tracked.
+        """Forward pass using each layer's anchored triparametric state
+        (W_anchor, b_anchor, routing_scale_anchor) instead of live state.
+        No gradients tracked.
 
         Used for Parasitic-Dream / LwF distillation: at the start of each
         task, the network is in its just-consolidated state (W ≈ W_anchor
-        for all anchored layers). As live W drifts during the new task's
-        training, this method re-creates the consolidated network's
+        for all anchored layers). As live state drifts during the new
+        task's training — including via dream-rescue mutating routing
+        mid-task — this method re-creates the consolidated network's
         response on any input — supplying the "old network's view of new
         data" supervisory signal that distills past-task decision
         boundaries forward into the new task.
+
+        Reads routing_scale_anchor (not live routing_scale): the trioron
+        node is triparametric (w, b, u-via-routing). Mixing anchored W
+        with live routing produces a fictional network that never existed
+        at any point in training history, which silently corrupts the
+        LwF target whenever dream-rescue purges fire mid-task.
         """
         with torch.no_grad():
             h = x
             for layer in self.layers:
                 if h.dtype != layer.W_anchor.dtype:
                     h = h.to(layer.W_anchor.dtype)
-                scale = layer.routing_scale.unsqueeze(1).to(layer.W_anchor.dtype)
+                scale = layer.routing_scale_anchor.unsqueeze(1).to(layer.W_anchor.dtype)
                 W_eff = layer.W_anchor * scale
                 z = F.linear(h, W_eff, layer.b_anchor)
                 h = _ACTIVATIONS[layer.activation](z)

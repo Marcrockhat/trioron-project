@@ -95,6 +95,15 @@ class TrioronLayer(nn.Module):
         self.register_buffer(
             "routing_latched", torch.zeros(n_nodes, dtype=torch.bool),
         )
+        # Anchored routing_scale: snapshot of routing_scale at the most
+        # recent consolidate. The trioron node is triparametric (w, λ, u);
+        # u feeds forward via routing_scale, so reconstructing the
+        # consolidated network requires anchoring routing_scale alongside
+        # W and b. Without this, forward_with_anchors mixes anchored W
+        # with live routing_scale — which diverges from the consolidated
+        # state whenever dream-rescue mutates routing mid-task. Used by
+        # forward_with_anchors (LwF distillation target).
+        self.register_buffer("routing_scale_anchor", torch.ones(n_nodes))
 
         # Task index at which each node was born. Layer-init nodes are 0
         # (no prior tasks have run). grow_node accepts the current
@@ -242,10 +251,13 @@ class TrioronLayer(nn.Module):
 
         Call after a successful learning plateau to lock current state in.
         Subsequent EWC penalty drags W back toward this snapshot.
+        Also snapshots routing_scale so forward_with_anchors can
+        reconstruct the consolidated triparametric (w, b, routing) state.
         """
         with torch.no_grad():
             self.W_anchor.copy_(self.W.detach())
             self.b_anchor.copy_(self.b.detach())
+            self.routing_scale_anchor.copy_(self.routing_scale.detach())
 
     def ewc_penalty(self) -> torch.Tensor:
         """Quadratic penalty pulling weights toward the anchor.
@@ -331,6 +343,9 @@ class TrioronLayer(nn.Module):
             new_routing_scale = torch.cat(
                 [self.routing_scale, torch.ones(1, device=device)]
             )
+            new_routing_scale_anchor = torch.cat(
+                [self.routing_scale_anchor, torch.ones(1, device=device)]
+            )
             new_routing_latched = torch.cat(
                 [self.routing_latched,
                  torch.zeros(1, dtype=torch.bool, device=device)]
@@ -353,6 +368,7 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("fisher_W", new_fisher_W)
         self._replace_buffer("fisher_b", new_fisher_b)
         self._replace_buffer("routing_scale", new_routing_scale)
+        self._replace_buffer("routing_scale_anchor", new_routing_scale_anchor)
         self._replace_buffer("routing_latched", new_routing_latched)
         self._replace_buffer("task_of_origin", new_task_of_origin)
         self._replace_buffer("apoptosis_pulse", new_apoptosis_pulse)
@@ -449,6 +465,7 @@ class TrioronLayer(nn.Module):
             new_fisher_W = self.fisher_W.index_select(0, keep_t)
             new_fisher_b = self.fisher_b.index_select(0, keep_t)
             new_routing_scale = self.routing_scale.index_select(0, keep_t)
+            new_routing_scale_anchor = self.routing_scale_anchor.index_select(0, keep_t)
             new_routing_latched = self.routing_latched.index_select(0, keep_t)
             new_task_of_origin = self.task_of_origin.index_select(0, keep_t)
             new_apoptosis_pulse = self.apoptosis_pulse.index_select(0, keep_t)
@@ -462,6 +479,7 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("fisher_W", new_fisher_W)
         self._replace_buffer("fisher_b", new_fisher_b)
         self._replace_buffer("routing_scale", new_routing_scale)
+        self._replace_buffer("routing_scale_anchor", new_routing_scale_anchor)
         self._replace_buffer("routing_latched", new_routing_latched)
         self._replace_buffer("task_of_origin", new_task_of_origin)
         self._replace_buffer("apoptosis_pulse", new_apoptosis_pulse)
