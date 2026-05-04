@@ -360,12 +360,17 @@ ENGRAM_ENABLED = False               # DROPPED per probe diagnostic
 # tested (LwF, brainstem, engram). Diversity probe confirmed real
 # samples retain 7.5x wider pairwise spread than generated prototypes.
 HIPPOCAMPAL_ENABLED = True
-HIPPOCAMPAL_K_PER_CLASS = 1          # canonical-example mode (matches
-                                      # the biological place-cell story
-                                      # AND the probe's strong K=1
-                                      # signal). Increase for higher-K
-                                      # ablations; storage scales
-                                      # linearly with K.
+HIPPOCAMPAL_K_PER_CLASS = 50         # matched-K to raw rehearsal's
+                                      # 100 samples / 2-class task.
+                                      # Storage: 30 cls × 50 × 128 × 4
+                                      # = 768 KB (vs raw rehearsal
+                                      # 30 × 50 × 784 × 4 = 4.7 MB —
+                                      # 6x compression at matched K).
+                                      # K=1 ablation gave 0.19-0.36
+                                      # full (chained-15 n=3); K=50
+                                      # tests whether L0-output replay
+                                      # matches raw-input replay at
+                                      # matched K.
 HIPPOCAMPAL_BATCH = 64               # per-step replay batch size
 HIPPOCAMPAL_LOSS_WEIGHT = 1.0        # parity with new-task CE
 ENGRAM_LOSS_WEIGHT = 1.0             # engrams are the primary in-weights
