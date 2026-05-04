@@ -552,6 +552,7 @@ def apoptosis_spike(
         k for k in range(layer.n_nodes)
         if k != dead_idx
         and not bool(layer.routing_latched[k].item())
+        and not bool(layer.archived[k].item())
     ]
     if not survivors:
         return 0
@@ -627,6 +628,10 @@ def routing_starve(
         raise IndexError(
             f"victim_idx {victim_idx} out of range [0,{layer.n_nodes})"
         )
+    if bool(layer.archived[victim_idx].item()):
+        # Archived rows are off-limits to starvation. Caller bug if we
+        # got here — return current scale unchanged (no latch transition).
+        return (float(layer.routing_scale[victim_idx].item()), False)
     with torch.no_grad():
         if bool(layer.routing_latched[victim_idx].item()):
             return (0.0, True)
@@ -881,7 +886,17 @@ def compress(
             #              eligible victim left in the pair).
             picked = None
             peer_for_pair = None
+            layer_at_L = net.layers[L]
             for i, j, s in pairs:
+                # Archive guard: archived rows are developmentally closed
+                # and off-limits to every compression action (merge,
+                # downscale, starve). If either side of the candidate
+                # pair is archived, skip the pair entirely — its
+                # contribution is locked at consolidated state and must
+                # not be mutated by dreaming.
+                if (bool(layer_at_L.archived[i].item())
+                        or bool(layer_at_L.archived[j].item())):
+                    continue
                 if (compression_action == "downscale"
                         and (i in excluded_victims
                              or j in excluded_victims)):
@@ -889,7 +904,6 @@ def compress(
                 if compression_action == "starve":
                     if i in excluded_victims or j in excluded_victims:
                         continue
-                    layer_at_L = net.layers[L]
                     a_lat = bool(layer_at_L.routing_latched[i].item())
                     b_lat = bool(layer_at_L.routing_latched[j].item())
                     if a_lat and b_lat:
@@ -962,6 +976,8 @@ def compress(
                     continue
                 if bool(layer.routing_latched[k].item()):
                     continue
+                if bool(layer.archived[k].item()):
+                    continue
                 cur = float(layer.routing_scale[k].item())
                 if 0.0 < cur < 1.0:
                     routing_regrow(
@@ -1010,6 +1026,13 @@ def purge(
                 break
             u = layer.u.detach()
             below = (u < u_threshold).nonzero(as_tuple=False).flatten().tolist()
+            # Archived rows are off-limits to purge — locked at
+            # consolidated state, dropping them would lose protected
+            # structure.
+            if layer.archived.any():
+                archived_set = set(int(i) for i in
+                                   layer.archived.nonzero(as_tuple=False).flatten().tolist())
+                below = [i for i in below if i not in archived_set]
             if not below:
                 break
             # Drop the lowest-utility node first.
@@ -1021,6 +1044,120 @@ def purge(
                 arch_after=tuple(net.n_nodes_per_layer()),
             ))
     return events
+
+
+# ---------------------------------------------------------------------
+# Archive — Phase 1 of dream-archive stage.
+#
+# Triggers (per memory/dream_archive_stage.md): a row gets archived when
+# its λ has been in the layer's top-percentile band for N consecutive
+# consolidations AND its recent gradient magnitude is low AND no
+# apoptosis pulse is on it (archive is "this is GOOD, lock it"; pulse
+# means "a neighbor just died, you may need to retrain"). The streak is
+# updated each call by comparing this consolidation's λ against the
+# layer-percentile threshold.
+#
+# Phase 1 only marks rows; it does NOT yet drop W_anchor / fisher_W /
+# Adam moments. The structural mechanism (developmentally-closed rows
+# that growth/apoptosis/purge skip and that don't drift) lands first;
+# the int8-quantization RAM payoff is Phase 2.
+# ---------------------------------------------------------------------
+
+
+def archive_block(
+    net: TrioronNetwork,
+    *,
+    streak_threshold: int = 3,
+    lam_top_percentile: float = 0.75,
+    grad_mag_floor: float = 0.1,
+    pulse_max: float = 0.1,
+    layer_idxs: Optional[Sequence[int]] = None,
+    skip_output_layer: bool = True,
+    max_archives_per_layer: int = 8,
+) -> List[Tuple[int, int]]:
+    """Update lam_high_streak counters and archive eligible rows.
+
+    Call AFTER `consolidate_task` (so λ is freshly refreshed) and AFTER
+    Fisher EMA is updated (so fisher_W reflects recent gradient
+    magnitude). Idempotent: archived rows stay archived.
+
+    streak_threshold: archive a row only after this many consecutive
+        consolidations with λ in the top percentile. Default 3.
+    lam_top_percentile: per-layer percentile boundary on λ. Default 0.75
+        means "row's λ must be ≥ the 75th-percentile λ across non-
+        archived rows." A row in the top quartile counts as a "high λ"
+        consolidation; otherwise the streak resets.
+    grad_mag_floor: archive only if sqrt(fisher_W[row].sum()) ≤ this
+        threshold. Fisher_W is the EMA of squared gradients, so its
+        sqrt-sum is a magnitude of recent gradient pull. Low magnitude
+        = row is settled (not contested by current task). Default 0.1
+        is a conservative starting point at fan_in=128 scales; calibrate
+        from per-task fisher_W magnitudes when wiring into the bench.
+    pulse_max: archive only if apoptosis_pulse[row] ≤ this. A row near
+        a recent death needs plasticity, not closure.
+    skip_output_layer: archive doesn't fire on the head (its rows are
+        per-class outputs; closing one would freeze that class's logits
+        forever). Default True.
+    max_archives_per_layer: per-call cap. Defaults to 8 to avoid bulk
+        archiving in a single consolidation step.
+
+    Returns a list of (layer_idx, row_idx) tuples for newly-archived
+    rows. Streak counters are updated in-place on every call.
+    """
+    if layer_idxs is None:
+        last = len(net.layers) - 1
+        layer_idxs = list(range(len(net.layers)))
+        if skip_output_layer and last >= 0:
+            layer_idxs = [i for i in layer_idxs if i != last]
+
+    archived_now: List[Tuple[int, int]] = []
+    for L in layer_idxs:
+        if L < 0 or L >= len(net.layers):
+            continue
+        layer = net.layers[L]
+        if layer.n_nodes <= 1:
+            continue
+
+        # Compute per-layer top-percentile λ threshold over NON-archived
+        # rows. If all rows are already archived (degenerate edge case),
+        # nothing to do.
+        active_mask = ~layer.archived
+        if int(active_mask.sum().item()) == 0:
+            continue
+        active_lam = layer.lam[active_mask]
+        if active_lam.numel() == 0:
+            continue
+        threshold = float(
+            torch.quantile(active_lam.float(), lam_top_percentile).item()
+        )
+
+        # Update streak: increment for active rows whose λ ≥ threshold,
+        # reset for active rows below. Archived rows' streaks stay 0.
+        with torch.no_grad():
+            high = (layer.lam >= threshold) & active_mask
+            layer.lam_high_streak[high] += 1
+            layer.lam_high_streak[active_mask & ~high] = 0
+
+        # Find archive candidates: streak ≥ threshold, low grad mag,
+        # low apoptosis pulse, and not already archived.
+        grad_mag = layer.fisher_W.sum(dim=1).sqrt()
+        pulse = layer.apoptosis_pulse
+        candidates = (
+            (layer.lam_high_streak >= streak_threshold)
+            & (grad_mag <= grad_mag_floor)
+            & (pulse <= pulse_max)
+            & active_mask
+        )
+        candidate_idxs = candidates.nonzero(as_tuple=False).flatten().tolist()
+
+        # Cap per-call. Among candidates, archive the rows with the
+        # HIGHEST λ first (most-stable-most-stiff first).
+        candidate_idxs.sort(key=lambda i: -float(layer.lam[i].item()))
+        for idx in candidate_idxs[:max_archives_per_layer]:
+            layer.archive_row(int(idx))
+            archived_now.append((L, int(idx)))
+
+    return archived_now
 
 
 # ---------------------------------------------------------------------

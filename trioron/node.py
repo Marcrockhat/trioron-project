@@ -122,6 +122,26 @@ class TrioronLayer(nn.Module):
         # EWC stiffness so they can adjust to fill the lost role.
         self.register_buffer("apoptosis_pulse", torch.zeros(n_nodes))
 
+        # Archive flag (Phase 1 of dream-archive stage). A row marked
+        # archived is "developmentally closed": its W is locked at the
+        # consolidated state, gradients don't accumulate, EWC and Fisher
+        # skip it, growth and apoptosis don't target it. Maps onto
+        # cortical long-term consolidation — settled memories move from
+        # active machinery to durable read-only state. Phase 2 will
+        # additionally drop W_anchor / fisher / Adam moments and
+        # quantize W to int8 for actual RAM savings.
+        self.register_buffer(
+            "archived", torch.zeros(n_nodes, dtype=torch.bool),
+        )
+        # Streak counter: number of consecutive consolidations during
+        # which this row's λ was in the layer's top percentile. Used by
+        # archive_block as one of the triggers (high λ across N
+        # consolidations = candidate for archive). Reset on percentile
+        # miss; incremented on hit by the archive trigger logic.
+        self.register_buffer(
+            "lam_high_streak", torch.zeros(n_nodes, dtype=torch.long),
+        )
+
         # Saliency caches for |a · g| utility (Mozer & Smolensky 1989,
         # OBD/blueprint §3.2). _last_y is stashed on each grad-enabled
         # forward; _last_upstream is captured by a backward hook on y
@@ -173,19 +193,27 @@ class TrioronLayer(nn.Module):
     def update_fisher(self) -> None:
         """Update running estimate of diagonal Fisher info from current gradients.
 
-        Call AFTER loss.backward() and BEFORE optimizer.step().
+        Call AFTER loss.backward() and BEFORE optimizer.step(). Archived
+        rows are skipped — they're locked at consolidated state and have
+        no gradient signal worth tracking.
         """
         if self.W.grad is None:
             return
         with torch.no_grad():
+            grad_W_sq = self.W.grad.detach().pow(2)
+            if self.archived.any():
+                grad_W_sq = grad_W_sq.clone()
+                grad_W_sq[self.archived] = 0.0
             self.fisher_W.mul_(self.fisher_decay).add_(
-                self.W.grad.detach().pow(2),
-                alpha=1.0 - self.fisher_decay,
+                grad_W_sq, alpha=1.0 - self.fisher_decay,
             )
             if self.b.grad is not None:
+                grad_b_sq = self.b.grad.detach().pow(2)
+                if self.archived.any():
+                    grad_b_sq = grad_b_sq.clone()
+                    grad_b_sq[self.archived] = 0.0
                 self.fisher_b.mul_(self.fisher_decay).add_(
-                    self.b.grad.detach().pow(2),
-                    alpha=1.0 - self.fisher_decay,
+                    grad_b_sq, alpha=1.0 - self.fisher_decay,
                 )
 
     def update_lambda(self) -> None:
@@ -259,6 +287,50 @@ class TrioronLayer(nn.Module):
             self.b_anchor.copy_(self.b.detach())
             self.routing_scale_anchor.copy_(self.routing_scale.detach())
 
+    def archive_row(self, idx: int) -> None:
+        """Mark row `idx` as archived: snap W and b to their anchored
+        values, zero its Fisher row, set λ to 0, mark archived. The row
+        becomes "developmentally closed" — gradients still flow through
+        it (so upstream layers can adapt to its fixed contribution) but
+        do not accumulate to it (mask_archived_grads zeros W.grad and
+        b.grad at archived rows after backward, before optimizer.step).
+
+        Idempotent: archiving an already-archived row is a no-op.
+        """
+        if not (0 <= idx < self.n_nodes):
+            raise IndexError(
+                f"archive_row idx {idx} out of range [0, {self.n_nodes})"
+            )
+        if bool(self.archived[idx]):
+            return
+        with torch.no_grad():
+            # Lock W at consolidated state.
+            self.W.data[idx].copy_(self.W_anchor[idx])
+            self.b.data[idx].copy_(self.b_anchor[idx])
+            # Drop Fisher / λ contributions for this row.
+            self.fisher_W[idx].zero_()
+            self.fisher_b[idx].zero_()
+            self.lam[idx] = 0.0
+            # Reset utility / streak / apoptosis pulse — archive is a
+            # terminal state; these signals don't apply anymore.
+            self.u[idx] = 0.0
+            self.lam_high_streak[idx] = 0
+            self.apoptosis_pulse[idx] = 0.0
+            self.archived[idx] = True
+
+    def mask_archived_grads(self) -> None:
+        """Zero W.grad / b.grad at archived rows. Call AFTER .backward()
+        and BEFORE optimizer.step() (and before update_fisher, so Fisher
+        sees the masked grads consistently). No-op if no rows archived.
+        """
+        if not self.archived.any():
+            return
+        with torch.no_grad():
+            if self.W.grad is not None:
+                self.W.grad[self.archived] = 0.0
+            if self.b.grad is not None:
+                self.b.grad[self.archived] = 0.0
+
     def ewc_penalty(self) -> torch.Tensor:
         """Quadratic penalty pulling weights toward the anchor.
 
@@ -274,7 +346,13 @@ class TrioronLayer(nn.Module):
         """
         # Per-node effective stiffness = λ · (1 - apoptosis_pulse). When
         # all pulses are 0 (no recent deaths), this equals plain λ.
+        # Archived rows contribute zero — they're locked at consolidated
+        # state by gradient masking, so their EWC term would be 0 anyway,
+        # but skipping explicitly keeps the penalty term clean and saves
+        # the squared-difference compute.
         eff_lam = self.lam * (1.0 - self.apoptosis_pulse).clamp_min(0.0)
+        if self.archived.any():
+            eff_lam = eff_lam * (~self.archived).to(eff_lam.dtype)
         stiffness = eff_lam.unsqueeze(1)  # (n_nodes, 1)
         pen_W = (stiffness * (self.W - self.W_anchor).pow(2)).sum()
         pen_b = (eff_lam * (self.b - self.b_anchor).pow(2)).sum()
@@ -357,6 +435,14 @@ class TrioronLayer(nn.Module):
             new_apoptosis_pulse = torch.cat(
                 [self.apoptosis_pulse, torch.zeros(1, device=device)]
             )
+            new_archived = torch.cat(
+                [self.archived,
+                 torch.zeros(1, dtype=torch.bool, device=device)]
+            )
+            new_lam_high_streak = torch.cat(
+                [self.lam_high_streak,
+                 torch.zeros(1, dtype=torch.long, device=device)]
+            )
 
         # Re-register parameters and buffers with new shapes.
         self._replace_parameter("W", new_W)
@@ -372,6 +458,8 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("routing_latched", new_routing_latched)
         self._replace_buffer("task_of_origin", new_task_of_origin)
         self._replace_buffer("apoptosis_pulse", new_apoptosis_pulse)
+        self._replace_buffer("archived", new_archived)
+        self._replace_buffer("lam_high_streak", new_lam_high_streak)
 
         return self.n_nodes - 1
 
@@ -469,6 +557,8 @@ class TrioronLayer(nn.Module):
             new_routing_latched = self.routing_latched.index_select(0, keep_t)
             new_task_of_origin = self.task_of_origin.index_select(0, keep_t)
             new_apoptosis_pulse = self.apoptosis_pulse.index_select(0, keep_t)
+            new_archived = self.archived.index_select(0, keep_t)
+            new_lam_high_streak = self.lam_high_streak.index_select(0, keep_t)
 
         self._replace_parameter("W", new_W)
         self._replace_parameter("b", new_b)
@@ -483,6 +573,8 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("routing_latched", new_routing_latched)
         self._replace_buffer("task_of_origin", new_task_of_origin)
         self._replace_buffer("apoptosis_pulse", new_apoptosis_pulse)
+        self._replace_buffer("archived", new_archived)
+        self._replace_buffer("lam_high_streak", new_lam_high_streak)
 
     # ----- low-level helpers -----
 

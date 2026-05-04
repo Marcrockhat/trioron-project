@@ -123,6 +123,18 @@ class TrioronNetwork(nn.Module):
         for layer in self.layers:
             layer.anchor_weights()
 
+    def mask_archived_grads_all(self) -> None:
+        """Zero W.grad / b.grad at archived rows across every layer.
+        Call AFTER .backward() and BEFORE update_fisher_all() and
+        optimizer.step(), so archived rows neither contribute to Fisher
+        EMA nor receive optimizer updates."""
+        for layer in self.layers:
+            layer.mask_archived_grads()
+
+    def n_archived_per_layer(self) -> List[int]:
+        """Number of archived rows in each layer (diagnostic)."""
+        return [int(layer.archived.sum().item()) for layer in self.layers]
+
     def update_fisher_all(self) -> None:
         """Call after loss.backward() and before optimizer.step()."""
         for layer in self.layers:
