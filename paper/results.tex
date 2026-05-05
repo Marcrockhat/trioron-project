@@ -10,6 +10,7 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{xcolor}
+\usepackage{pifont}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linkcolor=black, urlcolor=blue}
 
@@ -343,5 +344,160 @@ it. The defensible claim is: \textbf{$0.95+$ task-aware on $23$
 class-incremental tasks at $168$~KB total deployment, with on-device
 continual learning capability across deployment cycles} --- a regime no
 existing method occupies.
+
+\subsection{Multi-Branch Absorption}
+\label{sec:absorption-results}
+
+Extension within a single organism (\S\ref{sec:extension-results}) shows
+the architecture supports continual learning across deployment cycles.
+Multi-branch absorption asks the next question: can two organisms
+trained \emph{independently} on disjoint task streams be \emph{composed}
+into a single recipient with no retraining of either? With the shared
+L0 invariant (\S\ref{sec:absorption}) this is paste-and-go.
+
+\paragraph{Setup.} Donors are produced by separate runs of the same
+\arm{grown\_uncapped\_dream} arm at L0 seed $42$ on disjoint
+chained-15 / chained-extension sub-blocks: \arm{digits} (MNIST,
+classes $0$--$9$), \arm{fashion} (Fashion-MNIST, $10$--$19$),
+\arm{emnist} (EMNIST $A$--$J$, $20$--$29$), \arm{emnist\_kt} (EMNIST
+$K$--$T$, $30$--$39$), \arm{emnist\_uz} (EMNIST $U$--$Z$ partial,
+$40$--$45$). Each donor reaches its own task-aware ceiling. We assemble
+a recipient organism by loading branches in increasing-$N$ prefixes,
+evaluating on the union test set under \emph{soft + per-branch
+log-softmax} routing.
+
+\paragraph{Headline: lossless task-aware out to $N = 5$.}
+Donor-standalone task-aware accuracy (averaged over the donors in the
+prefix) is the upper bound; the assembled organism matches it exactly
+at every $N$ tested.
+
+\begin{center}
+\begin{tabular}{rcccc}
+\toprule
+$N$ & upper bound (TA) & organism (TA) & gap & full-union \\
+\midrule
+$1$ & $0.9809$ & $0.9809$ & $+0.0000$ & $0.6910$ \\
+$2$ & $0.9823$ & $0.9823$ & $+0.0000$ & $0.6099$ \\
+$3$ & $0.9695$ & $0.9695$ & $+0.0000$ & $0.5314$ \\
+$4$ & $0.9624$ & $0.9624$ & $+0.0000$ & $0.4716$ \\
+$5$ & $0.9616$ & $0.9618$ & $+0.0002$ & $0.4462$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The bleed-flip point we were hunting --- where soft-routing bleed flips
+from additive to destructive as branches multiply --- did not appear at
+$N = 5 / 46$ classes on chained-$15$-scale data. The actual limit at
+this scale is dataset variety; we ran out of disjoint class blocks
+within MNIST $\cup$ Fashion-MNIST $\cup$ EMNIST.
+
+\paragraph{Bleed manifests where you'd predict, but does not damage
+task-aware.} Diagnostic mean per-branch gate weight per task at
+$N = 5$:
+
+\begin{center}
+\begin{tabular}{lrrrrr}
+\toprule
+task (true branch) & \arm{digits} & \arm{fashion} & \arm{emnist} & \arm{emnist\_kt} & \arm{emnist\_uz} \\
+\midrule
+\texttt{mnist\_0\_1} (\arm{digits}) & $0.81$ & $0.00$ & $0.03$ & $0.14$ & $0.02$ \\
+\texttt{mnist\_4\_5} (\arm{digits}) & $0.74$ & $0.03$ & $0.05$ & $0.16$ & $0.03$ \\
+\texttt{fashion\_0\_1} (\arm{fashion}) & $0.01$ & $0.97$ & $0.01$ & $0.01$ & $0.00$ \\
+\texttt{emnist\_8\_9} (\arm{emnist}) & $0.49^*$ & $0.02$ & $0.48^*$ & $0.01$ & $0.00$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Digit inputs pull up to $0.16$ gate weight on \arm{emnist\_kt} ($O$
+resembles $0$, $S$ resembles $5$ in code space). EMNIST letters $I, J$
+yield a near $50/50$ digits/emnist gate split (starred). Yet task-aware
+accuracy on \texttt{emnist\_8\_9} stays at $0.9244$, identical to
+donor-standalone, because per-branch log-softmax pushes non-covered
+slot contributions to $-\infty$ in log-probability space --- the digits
+branch's $0.49$ gate cannot win the within-task argmax over class slots
+$28, 29$ that only the emnist branch covers. \textbf{Soft-routing bleed
+is benign under principled composition.}
+
+\paragraph{Comparison vs Branch-Train-Merge family ($N = 3$).}
+We benchmark against two BTM variants on the same donors, replicating
+both the parameter-averaging and learned-router lines of the BTM /
+Branch-Train-Mix family (Li et al.\ 2022; Sukhbaatar et al.\ 2024).
+
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+method & zero-shot & task-aware & full-union & training cost \\
+\midrule
+donor-standalone (upper bound) & --- & $0.9695$ & --- & --- \\
+\textbf{Ours} (archive route, soft+norm) & \ding{51} & $\mathbf{0.9695}$ & $0.5314$ & $0$ \\
+BTM-avg (param averaging) & \ding{51} & $0.7396$ & $0.0845$ & $0$ \\
+BTM-MoE (learned router, soft+norm) & \ding{55} & $\mathbf{0.9695}$ & $0.5610$ & $400$ steps \\
+BTM-MoE (learned router, raw) & \ding{55} & $0.9695$ & $0.1725$ & $400$ steps \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+BTM-avg averages L1 substrate across donors entry-wise; the resulting
+hidden units are the mean of three different feature detectors and none
+of the donors' specialty features survive. This replicates the
+documented BTM-avg weakness ($-0.23$ absolute task-aware here).
+BTM-MoE substitutes our archive-likelihood gate with a learned MLP
+router trained $400$ steps on \texttt{(L0(x), branch\_id)} pairs from
+each donor's training images; it ties our task-aware exactly at the
+upper bound but requires the router-training pass on real data. The
+zero-shot AND lossless intersection is what this architecture occupies.
+
+\paragraph{Dream-cycle calibration as a tunable knob.}
+For deployments where full-softmax is load-bearing, a tiny additive
+bias offset trained on synthetic samples drawn from each branch's
+archive (no real data, no L1 retraining) closes most of the
+calibration gap.
+
+\begin{center}
+\begin{tabular}{lcrrr}
+\toprule
+variant & params & $\Delta$ task-aware & $\Delta$ full-union \\
+\midrule
+no calibration (baseline) & $0$ & --- & --- \\
+per-branch bias (lr=$5e\!-\!2$, $400$ st) & $3$ & $+0.0000$ & $+0.0018$ \\
+per-class bias (lr=$5e\!-\!3$, $200$ st) & $30$ & $-0.0005$ & $+0.0047$ \\
+per-class bias (lr=$5e\!-\!2$, $400$ st) & $30$ & $-0.0021$ & $+0.0245$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The per-branch knob is mathematically task-aware-safe (one uniform
+per-donor shift is monotonic on within-task argmax under disjoint
+coverage). The per-class knob trades a small amount of task-aware for
+a larger full-softmax lift, landing at full-union $0.5560$ ---
+$\approx 80\%$ of the BTM-MoE level ($0.5610$) without the
+router-training pass on real data. Storage cost: $30$ floats $\times$
+$4$ B $= 120$ B at $N = 3$, $<\!0.03\%$ of the organism.
+
+\paragraph{Storage at $N = 3$.}
+Shared L0 = $401$~KB (fixed regardless of $N$); branch substrate
+$\approx 90$~KB; archives $\approx 30$~KB. \textbf{Per-skill marginal
+cost is $\approx 40$~KB} (substrate $+$ archive); L0 amortizes across
+all branches. A device that ships with the L0 footprint already
+present can absorb new skills at $40$~KB each.
+
+\paragraph{The verdict.} The architecture supports zero-shot lossless
+composition of independently-trained organisms under the shared-L0
+invariant. We tie the strongest BTM baseline on the task-aware metric
+while requiring zero training; we beat the parameter-averaging baseline
+by $0.23$ absolute. The mechanism is robust to soft-routing bleed at
+$N \leq 5$ on chained-$15$-scale data, with per-branch log-softmax as
+the load-bearing inference-only calibration step.
+
+\paragraph{Limits we are honest about.}
+This is $N \leq 5$ on a $46$-class image-classification benchmark.
+LLM-scale Branch-Train-Merge benchmarks --- where BTM-MoE was
+originally evaluated --- have qualitatively different dynamics in
+expert specialization, gate-network capacity, and class-space size; we
+make no scale-extrapolation claim. The shared-L0 invariant is a
+hard prerequisite: organisms with mismatched L0 seeds require a
+distillation-through-paired-codes step that we have not measured here
+and which is no longer instantaneous. Saturation must exist at some
+$N$; we did not find it within the data variety chained-$15$ supports.
 
 \end{document}

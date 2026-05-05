@@ -545,6 +545,91 @@ controlled handoff: the network ``sleeps long'' before going to market,
 locking in the rows it will never need to move again, then wakes on new
 data in the field.
 
+\subsection{Multi-Branch Absorption}
+\label{sec:absorption}
+
+The ship-wake-extend loop (\S\ref{sec:ship-wake-extend}) lets a single
+organism continue learning across deployment cycles. A natural next
+question is whether two organisms trained \emph{independently} on
+disjoint task streams can be \emph{composed} into a single recipient
+without retraining either of them. We construct a multi-branch
+organism that does exactly this, with a shared frozen L0 random
+projection as the only structural prerequisite.
+
+\paragraph{Architecture.} A multi-branch organism comprises a shared
+frozen L0 (the same Kaiming-initialized random projection used in
+single-branch trioron, \S\ref{sec:methods}) and $N$ parallel
+\emph{branches}. Each branch is a self-contained donor produced by an
+independent training run: a frozen L1 substrate, a frozen head slice
+over its own covered class subset, and the per-class manifold archive
+$\{(\mu_c, \Sigma_c)\}_{c \in C_b}$ that is already computed for
+manifold replay (\S\ref{sec:manifold}). The branches share the same
+L0 random projection by being born at the same seed; this is the
+\emph{shared-seed invariant}, and is what makes donor weights
+semantically valid in recipient code-space without distillation. We
+enforce non-overlap of class coverage across branches:
+$C_b \cap C_{b'} = \emptyset$ for $b \neq b'$.
+
+\paragraph{Forward pass.} For input $x$:
+\begin{enumerate}[leftmargin=2em]
+  \item Project to code space: $z = \sigma(W_{L_0} x + b_{L_0})$ using
+        the shared L0.
+  \item For each branch $b$, compute the per-branch head logits
+        $\ell^{(b)} = \text{branch}_b(z)$ over $C_b$.
+  \item Compute per-branch generative log-likelihoods from the archive
+        as a uniform mixture of per-class diagonal Gaussians:
+        $$\log p_b(z) = \log\!\left(\tfrac{1}{|C_b|} \sum_{c \in C_b} \mathcal{N}(z;\mu_c, \Sigma_c)\right).$$
+  \item Compute branch gates by softmax over branches:
+        $$g_b(z) = \frac{\exp(\log p_b(z) / T)}{\sum_{b'} \exp(\log p_{b'}(z) / T)},$$
+        where $T$ is a temperature ($T = 1$ default). Rocky's bet that
+        bleed adds new function rather than destroys it is licensed
+        here: multiple branches can co-fire.
+  \item Compose into combined logits over the union
+        $C_{\cup} = \bigsqcup_b C_b$ via the principled mixture-of-experts
+        log-probability:
+        $$\text{combined}_c(z) = \log g_{b(c)}(z) + \log\text{softmax}_c(\ell^{(b(c))}),$$
+        where $b(c)$ is the unique branch covering $c$. Slots not covered
+        by any branch are not in $C_{\cup}$.
+\end{enumerate}
+
+\paragraph{Why per-branch log-softmax.} Each donor's head was trained
+under its own active-class mask, so absolute logit \emph{magnitudes}
+across donors are not comparable. Combining raw logits weighted by gates
+produces a biased argmax at full-softmax. Passing each branch's logits
+through a log-softmax restricted to its own coverage normalizes the
+contributions to a common log-probability scale, after which the
+mixture combine is well-posed. This is an inference-only fix; no
+parameters are added.
+
+\paragraph{Why the mechanism is zero-shot.} Donor weights are byte-valid
+in the recipient because L0 is shared (matched random projection
+$\Rightarrow$ matched code distribution), and donor logits are placed
+into recipient class-namespace via per-class indexing. The gate is
+computed analytically from the archive --- a generative
+\emph{Expert-Gate}-style router (Aljundi et al.\ 2017) using the
+manifold buffer trioron already produces. No router training, no
+fusion-layer learning, no calibration pass; pure paste-and-go.
+
+\paragraph{Optional dream-cycle calibration.} For deployments where the
+full-softmax metric is load-bearing, a tiny additive bias offset can be
+trained to compensate for residual cross-donor magnitude mismatch. We
+sample synthetic codes $z \sim \mathcal{N}(\mu_c, \Sigma_c)$ from the
+union archive, forward through the assembled organism, and apply
+cross-entropy on the global label. Two variants:
+\begin{itemize}[leftmargin=1.5em]
+  \item \emph{per-branch} ($N$ scalars): one bias broadcast uniformly
+        over each donor's covered slots. Mathematically task-aware-safe
+        (a uniform per-donor shift is monotonic on within-task argmax
+        because active classes within a chained-15 task always belong
+        to a single donor by disjoint coverage).
+  \item \emph{per-class} ($|C_{\cup}|$ scalars): one bias per union
+        class. Higher capacity, but \emph{can} perturb within-task
+        argmax; trades a small task-aware loss for a larger full-softmax
+        gain.
+\end{itemize}
+The dream cycle uses only the donors' own archives --- no real-data
+retraining is performed.
+
 \subsection{Experiment Design}
 \label{sec:experiment-design}
 
