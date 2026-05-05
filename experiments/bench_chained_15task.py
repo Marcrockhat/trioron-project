@@ -2116,6 +2116,7 @@ def run_chained_curriculum(
     extension_task_class_lists: Optional[Sequence[Sequence[int]]] = None,
     extension_cap_bytes: Optional[int] = None,
     extension_permanent_int8: bool = False,
+    return_state: bool = False,
 ) -> Dict[str, object]:
     """Run the chained curriculum, optionally repeated for `n_passes`.
 
@@ -2884,6 +2885,7 @@ def run_chained_curriculum(
         "per_task_log": per_task_log,
         "task_names": [v.name for v in eval_views],
         "wall_clock_seconds": elapsed,
+        **({"net": net, "manifold": manifold} if return_state else {}),
     }
 
 
@@ -2995,6 +2997,7 @@ def run_arm(
     extension_task_class_lists=None,
     extension_cap_bytes: Optional[int] = None,
     extension_permanent_int8: bool = False,
+    return_state: bool = False,
 ) -> Dict[str, object]:
     cfg = ARM_DEFINITIONS[arm]
     torch.manual_seed(seed)
@@ -3043,6 +3046,7 @@ def run_arm(
         extension_task_class_lists=extension_task_class_lists,
         extension_cap_bytes=extension_cap_bytes,
         extension_permanent_int8=extension_permanent_int8,
+        return_state=return_state,
     )
 
 
