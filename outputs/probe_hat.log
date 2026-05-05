@@ -1,0 +1,413 @@
+HAT single-seed sanity probe (chained-15)
+==============================================================================
+Trioron — bench_chained_15task: MNIST → FashionMNIST → EMNIST-letters
+==============================================================================
+Epochs/task:        8
+K_settle epochs:    2  (Fix B — growth deferred until after settle)
+L0 width (frozen):  128
+H_init grown (L1):  32
+H fixed:            64
+N_grow_per_task:    4
+Cap (trainable):    32_000 B = 8_000 params
+EWC intertask:      30.0
+Curriculum passes:  1
+Warmup enabled:     False
+Arms:               ['hat_matched', 'hat_standard']
+Seed:               0
+
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+[hat_matched] start — arch (128, 92, 30)  params 115138 (trainable 14658)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[hat_matched] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[hat_matched] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.1716  last_loss 0.0412  steps 197  arch [128, 92, 30]
+  [hat_matched] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0271  last_loss 0.0105  steps 394  arch [128, 92, 30]
+  [hat_matched] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0189  last_loss 0.0056  steps 591  arch [128, 92, 30]
+  [hat_matched] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0150  last_loss 0.0032  steps 788  arch [128, 92, 30]
+  [hat_matched] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0138  last_loss 0.0027  steps 985  arch [128, 92, 30]
+  [hat_matched] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0130  last_loss 0.0064  steps 1182  arch [128, 92, 30]
+  [hat_matched] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0120  last_loss 0.0003  steps 1379  arch [128, 92, 30]
+  [hat_matched] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0115  last_loss 0.0003  steps 1576  arch [128, 92, 30]
+[hat_matched] After pass 1 task 1: own=0.9939 (domain 0.9943, task 0.9981)  avg=0.9939 (domain 0.9943, task 0.9981)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.3616  last_loss 0.3764  steps 188  arch [128, 92, 30]
+  [hat_matched] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.1656  last_loss 0.1117  steps 376  arch [128, 92, 30]
+  [hat_matched] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.1540  last_loss 0.1774  steps 564  arch [128, 92, 30]
+  [hat_matched] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.1524  last_loss 0.1100  steps 752  arch [128, 92, 30]
+  [hat_matched] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.1506  last_loss 0.1277  steps 940  arch [128, 92, 30]
+  [hat_matched] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.1497  last_loss 0.0421  steps 1128  arch [128, 92, 30]
+  [hat_matched] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.1492  last_loss 0.1024  steps 1316  arch [128, 92, 30]
+  [hat_matched] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.1500  last_loss 0.4898  steps 1504  arch [128, 92, 30]
+[hat_matched] After pass 1 task 2: own=0.6709 (domain 0.6753, task 0.9417)  avg=0.7622 (domain 0.7660, task 0.9699)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.4069  last_loss 0.2080  steps 175  arch [128, 92, 30]
+  [hat_matched] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.1412  last_loss 0.1952  steps 350  arch [128, 92, 30]
+  [hat_matched] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.1159  last_loss 0.1167  steps 525  arch [128, 92, 30]
+  [hat_matched] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.1084  last_loss 0.0572  steps 700  arch [128, 92, 30]
+  [hat_matched] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.1047  last_loss 0.1377  steps 875  arch [128, 92, 30]
+  [hat_matched] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0997  last_loss 0.0328  steps 1050  arch [128, 92, 30]
+  [hat_matched] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0974  last_loss 0.1182  steps 1225  arch [128, 92, 30]
+  [hat_matched] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0967  last_loss 0.0626  steps 1400  arch [128, 92, 30]
+[hat_matched] After pass 1 task 3: own=0.8276 (domain 0.8335, task 0.9717)  avg=0.4091 (domain 0.4141, task 0.9705)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.3910  last_loss 0.1241  steps 189  arch [128, 92, 30]
+  [hat_matched] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0812  last_loss 0.0418  steps 378  arch [128, 92, 30]
+  [hat_matched] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0592  last_loss 0.0371  steps 567  arch [128, 92, 30]
+  [hat_matched] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0519  last_loss 0.0192  steps 756  arch [128, 92, 30]
+  [hat_matched] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0487  last_loss 0.0138  steps 945  arch [128, 92, 30]
+  [hat_matched] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0474  last_loss 0.0280  steps 1134  arch [128, 92, 30]
+  [hat_matched] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0464  last_loss 0.0178  steps 1323  arch [128, 92, 30]
+  [hat_matched] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0458  last_loss 0.0177  steps 1512  arch [128, 92, 30]
+[hat_matched] After pass 1 task 4: own=0.8938 (domain 0.8963, task 0.9733)  avg=0.4808 (domain 0.4860, task 0.9712)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.3912  last_loss 0.1677  steps 183  arch [128, 92, 30]
+  [hat_matched] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1906  last_loss 0.2117  steps 366  arch [128, 92, 30]
+  [hat_matched] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.1607  last_loss 0.2226  steps 549  arch [128, 92, 30]
+  [hat_matched] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.1539  last_loss 0.1296  steps 732  arch [128, 92, 30]
+  [hat_matched] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.1493  last_loss 0.0837  steps 915  arch [128, 92, 30]
+  [hat_matched] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.1461  last_loss 0.0786  steps 1098  arch [128, 92, 30]
+  [hat_matched] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.1450  last_loss 0.1340  steps 1281  arch [128, 92, 30]
+  [hat_matched] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.1445  last_loss 0.1580  steps 1464  arch [128, 92, 30]
+[hat_matched] After pass 1 task 5: own=0.5537 (domain 0.5613, task 0.9460)  avg=0.3079 (domain 0.3137, task 0.9662)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.4994  last_loss 0.3467  steps 186  arch [128, 92, 30]
+  [hat_matched] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.2679  last_loss 0.2364  steps 372  arch [128, 92, 30]
+  [hat_matched] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.1998  last_loss 0.1534  steps 558  arch [128, 92, 30]
+  [hat_matched] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.1757  last_loss 0.1345  steps 744  arch [128, 92, 30]
+  [hat_matched] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.1652  last_loss 0.2229  steps 930  arch [128, 92, 30]
+  [hat_matched] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.1600  last_loss 0.1346  steps 1116  arch [128, 92, 30]
+  [hat_matched] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.1567  last_loss 0.1383  steps 1302  arch [128, 92, 30]
+  [hat_matched] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.1545  last_loss 0.1570  steps 1488  arch [128, 92, 30]
+[hat_matched] After pass 1 task 6: own=0.0165 (domain 0.8145, task 0.9390)  avg=0.2862 (domain 0.4333, task 0.9617)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.4798  last_loss 0.2191  steps 186  arch [128, 92, 30]
+  [hat_matched] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.1924  last_loss 0.1323  steps 372  arch [128, 92, 30]
+  [hat_matched] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.1616  last_loss 0.1776  steps 558  arch [128, 92, 30]
+  [hat_matched] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.1525  last_loss 0.1570  steps 744  arch [128, 92, 30]
+  [hat_matched] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.1474  last_loss 0.1488  steps 930  arch [128, 92, 30]
+  [hat_matched] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.1455  last_loss 0.1738  steps 1116  arch [128, 92, 30]
+  [hat_matched] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.1432  last_loss 0.1022  steps 1302  arch [128, 92, 30]
+  [hat_matched] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.1421  last_loss 0.0641  steps 1488  arch [128, 92, 30]
+[hat_matched] After pass 1 task 7: own=0.0600 (domain 0.6135, task 0.9410)  avg=0.2641 (domain 0.4105, task 0.9587)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.3788  last_loss 0.1056  steps 186  arch [128, 92, 30]
+  [hat_matched] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.1070  last_loss 0.0631  steps 372  arch [128, 92, 30]
+  [hat_matched] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0784  last_loss 0.0696  steps 558  arch [128, 92, 30]
+  [hat_matched] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0634  last_loss 0.0223  steps 744  arch [128, 92, 30]
+  [hat_matched] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0548  last_loss 0.0560  steps 930  arch [128, 92, 30]
+  [hat_matched] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0496  last_loss 0.0339  steps 1116  arch [128, 92, 30]
+  [hat_matched] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0458  last_loss 0.1189  steps 1302  arch [128, 92, 30]
+  [hat_matched] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0434  last_loss 0.0221  steps 1488  arch [128, 92, 30]
+[hat_matched] After pass 1 task 8: own=0.2215 (domain 0.9350, task 0.9875)  avg=0.1708 (domain 0.2766, task 0.9623)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.3385  last_loss 0.1293  steps 186  arch [128, 92, 30]
+  [hat_matched] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0900  last_loss 0.0670  steps 372  arch [128, 92, 30]
+  [hat_matched] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0651  last_loss 0.0476  steps 558  arch [128, 92, 30]
+  [hat_matched] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0514  last_loss 0.0434  steps 744  arch [128, 92, 30]
+  [hat_matched] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0428  last_loss 0.0222  steps 930  arch [128, 92, 30]
+  [hat_matched] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0375  last_loss 0.0461  steps 1116  arch [128, 92, 30]
+  [hat_matched] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0337  last_loss 0.0299  steps 1302  arch [128, 92, 30]
+  [hat_matched] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0308  last_loss 0.0207  steps 1488  arch [128, 92, 30]
+[hat_matched] After pass 1 task 9: own=0.3660 (domain 0.4905, task 0.9970)  avg=0.1945 (domain 0.2779, task 0.9662)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.4213  last_loss 0.1935  steps 187  arch [128, 92, 30]
+  [hat_matched] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.1552  last_loss 0.1259  steps 374  arch [128, 92, 30]
+  [hat_matched] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.1096  last_loss 0.1082  steps 561  arch [128, 92, 30]
+  [hat_matched] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0847  last_loss 0.0618  steps 748  arch [128, 92, 30]
+  [hat_matched] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0698  last_loss 0.0670  steps 935  arch [128, 92, 30]
+  [hat_matched] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0610  last_loss 0.0653  steps 1122  arch [128, 92, 30]
+  [hat_matched] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0549  last_loss 0.0045  steps 1309  arch [128, 92, 30]
+  [hat_matched] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0509  last_loss 0.0128  steps 1496  arch [128, 92, 30]
+[hat_matched] After pass 1 task 10: own=0.4955 (domain 0.9240, task 0.9880)  avg=0.1938 (domain 0.2987, task 0.9683)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.5883  last_loss 0.3788  steps 150  arch [128, 92, 30]
+  [hat_matched] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.4630  last_loss 0.4785  steps 300  arch [128, 92, 30]
+  [hat_matched] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.4571  last_loss 0.4109  steps 450  arch [128, 92, 30]
+  [hat_matched] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.4574  last_loss 0.4943  steps 600  arch [128, 92, 30]
+  [hat_matched] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.4577  last_loss 0.6276  steps 750  arch [128, 92, 30]
+  [hat_matched] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.4567  last_loss 0.4302  steps 900  arch [128, 92, 30]
+  [hat_matched] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.4565  last_loss 0.4291  steps 1050  arch [128, 92, 30]
+  [hat_matched] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.4561  last_loss 0.3504  steps 1200  arch [128, 92, 30]
+[hat_matched] After pass 1 task 11: own=0.0000 (domain 0.3081, task 0.8475)  avg=0.1399 (domain 0.2260, task 0.9574)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.5647  last_loss 0.4230  steps 150  arch [128, 92, 30]
+  [hat_matched] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.3926  last_loss 0.4324  steps 300  arch [128, 92, 30]
+  [hat_matched] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.3677  last_loss 0.3256  steps 450  arch [128, 92, 30]
+  [hat_matched] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.3561  last_loss 0.3036  steps 600  arch [128, 92, 30]
+  [hat_matched] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.3483  last_loss 0.3808  steps 750  arch [128, 92, 30]
+  [hat_matched] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.3405  last_loss 0.2813  steps 900  arch [128, 92, 30]
+  [hat_matched] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.3356  last_loss 0.4160  steps 1050  arch [128, 92, 30]
+  [hat_matched] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.3303  last_loss 0.4170  steps 1200  arch [128, 92, 30]
+[hat_matched] After pass 1 task 12: own=0.0231 (domain 0.6956, task 0.8819)  avg=0.0857 (domain 0.1981, task 0.9511)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.5230  last_loss 0.3267  steps 150  arch [128, 92, 30]
+  [hat_matched] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.3553  last_loss 0.4381  steps 300  arch [128, 92, 30]
+  [hat_matched] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.3285  last_loss 0.2918  steps 450  arch [128, 92, 30]
+  [hat_matched] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.3151  last_loss 0.2567  steps 600  arch [128, 92, 30]
+  [hat_matched] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.3072  last_loss 0.3436  steps 750  arch [128, 92, 30]
+  [hat_matched] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.3036  last_loss 0.2768  steps 900  arch [128, 92, 30]
+  [hat_matched] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.3021  last_loss 0.2522  steps 1050  arch [128, 92, 30]
+  [hat_matched] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.3008  last_loss 0.2593  steps 1200  arch [128, 92, 30]
+[hat_matched] After pass 1 task 13: own=0.0000 (domain 0.0088, task 0.9194)  avg=0.0720 (domain 0.1673, task 0.9486)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.5507  last_loss 0.4545  steps 150  arch [128, 92, 30]
+  [hat_matched] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.4165  last_loss 0.4874  steps 300  arch [128, 92, 30]
+  [hat_matched] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.4102  last_loss 0.3444  steps 450  arch [128, 92, 30]
+  [hat_matched] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.4093  last_loss 0.4005  steps 600  arch [128, 92, 30]
+  [hat_matched] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.4097  last_loss 0.4498  steps 750  arch [128, 92, 30]
+  [hat_matched] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.4082  last_loss 0.4356  steps 900  arch [128, 92, 30]
+  [hat_matched] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.4118  last_loss 0.3828  steps 1050  arch [128, 92, 30]
+  [hat_matched] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.4134  last_loss 0.3847  steps 1200  arch [128, 92, 30]
+[hat_matched] After pass 1 task 14: own=0.0000 (domain 0.1081, task 0.8825)  avg=0.1291 (domain 0.2343, task 0.9439)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [hat_matched] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.5209  last_loss 0.3727  steps 150  arch [128, 92, 30]
+  [hat_matched] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.3528  last_loss 0.2509  steps 300  arch [128, 92, 30]
+  [hat_matched] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.3385  last_loss 0.3365  steps 450  arch [128, 92, 30]
+  [hat_matched] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.3280  last_loss 0.3704  steps 600  arch [128, 92, 30]
+  [hat_matched] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.3214  last_loss 0.4853  steps 750  arch [128, 92, 30]
+  [hat_matched] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.3155  last_loss 0.4150  steps 900  arch [128, 92, 30]
+  [hat_matched] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.3101  last_loss 0.1886  steps 1050  arch [128, 92, 30]
+  [hat_matched] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.3073  last_loss 0.2332  steps 1200  arch [128, 92, 30]
+[hat_matched] After pass 1 task 15: own=0.0000 (domain 0.0737, task 0.8694)  avg=0.0603 (domain 0.1512, task 0.9389)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_matched] <<< PASS 1/1 done — full=0.0603  domain=0.1512  task=0.9389
+
+[hat_standard] start — arch (56, 56, 30)  params 48862 (trainable 48862)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[hat_standard] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[hat_standard] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.0668  last_loss 0.0029  steps 197  arch [56, 56, 30]
+  [hat_standard] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0084  last_loss 0.0043  steps 394  arch [56, 56, 30]
+  [hat_standard] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0045  last_loss 0.0006  steps 591  arch [56, 56, 30]
+  [hat_standard] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0032  last_loss 0.0001  steps 788  arch [56, 56, 30]
+  [hat_standard] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0024  last_loss 0.0000  steps 985  arch [56, 56, 30]
+  [hat_standard] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0017  last_loss 0.0000  steps 1182  arch [56, 56, 30]
+  [hat_standard] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0017  last_loss 0.0000  steps 1379  arch [56, 56, 30]
+  [hat_standard] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0013  last_loss 0.0001  steps 1576  arch [56, 56, 30]
+[hat_standard] After pass 1 task 1: own=0.9882 (domain 0.9967, task 0.9991)  avg=0.9882 (domain 0.9967, task 0.9991)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.1723  last_loss 0.0562  steps 188  arch [56, 56, 30]
+  [hat_standard] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.0876  last_loss 0.0809  steps 376  arch [56, 56, 30]
+  [hat_standard] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.0779  last_loss 0.0871  steps 564  arch [56, 56, 30]
+  [hat_standard] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.0697  last_loss 0.0131  steps 752  arch [56, 56, 30]
+  [hat_standard] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.0648  last_loss 0.1789  steps 940  arch [56, 56, 30]
+  [hat_standard] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.0602  last_loss 0.0855  steps 1128  arch [56, 56, 30]
+  [hat_standard] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.0555  last_loss 0.0043  steps 1316  arch [56, 56, 30]
+  [hat_standard] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.0523  last_loss 0.0093  steps 1504  arch [56, 56, 30]
+[hat_standard] After pass 1 task 2: own=0.4887 (domain 0.5005, task 0.9848)  avg=0.7354 (domain 0.7415, task 0.9919)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.2033  last_loss 0.0808  steps 175  arch [56, 56, 30]
+  [hat_standard] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.0430  last_loss 0.0247  steps 350  arch [56, 56, 30]
+  [hat_standard] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.0331  last_loss 0.0066  steps 525  arch [56, 56, 30]
+  [hat_standard] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.0289  last_loss 0.0076  steps 700  arch [56, 56, 30]
+  [hat_standard] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.0260  last_loss 0.0073  steps 875  arch [56, 56, 30]
+  [hat_standard] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0227  last_loss 0.0099  steps 1050  arch [56, 56, 30]
+  [hat_standard] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0201  last_loss 0.0077  steps 1225  arch [56, 56, 30]
+  [hat_standard] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0194  last_loss 0.0241  steps 1400  arch [56, 56, 30]
+[hat_standard] After pass 1 task 3: own=0.0347 (domain 0.0347, task 0.9941)  avg=0.1800 (domain 0.1800, task 0.9902)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.0616  last_loss 0.0285  steps 189  arch [56, 56, 30]
+  [hat_standard] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0121  last_loss 0.0217  steps 378  arch [56, 56, 30]
+  [hat_standard] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0093  last_loss 0.0093  steps 567  arch [56, 56, 30]
+  [hat_standard] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0060  last_loss 0.0062  steps 756  arch [56, 56, 30]
+  [hat_standard] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0046  last_loss 0.0008  steps 945  arch [56, 56, 30]
+  [hat_standard] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0038  last_loss 0.0008  steps 1134  arch [56, 56, 30]
+  [hat_standard] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0031  last_loss 0.0007  steps 1323  arch [56, 56, 30]
+  [hat_standard] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0026  last_loss 0.0016  steps 1512  arch [56, 56, 30]
+[hat_standard] After pass 1 task 4: own=0.0141 (domain 0.0141, task 0.9980)  avg=0.2359 (domain 0.2359, task 0.9158)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.3395  last_loss 0.0587  steps 183  arch [56, 56, 30]
+  [hat_standard] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.0740  last_loss 0.0714  steps 366  arch [56, 56, 30]
+  [hat_standard] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.0625  last_loss 0.0333  steps 549  arch [56, 56, 30]
+  [hat_standard] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.0545  last_loss 0.0166  steps 732  arch [56, 56, 30]
+  [hat_standard] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.0492  last_loss 0.0567  steps 915  arch [56, 56, 30]
+  [hat_standard] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.0450  last_loss 0.0537  steps 1098  arch [56, 56, 30]
+  [hat_standard] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.0412  last_loss 0.0106  steps 1281  arch [56, 56, 30]
+  [hat_standard] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.0374  last_loss 0.1152  steps 1464  arch [56, 56, 30]
+[hat_standard] After pass 1 task 5: own=0.0136 (domain 0.0141, task 0.9859)  avg=0.2900 (domain 0.2910, task 0.9116)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.1742  last_loss 0.0483  steps 186  arch [56, 56, 30]
+  [hat_standard] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.0608  last_loss 0.1281  steps 372  arch [56, 56, 30]
+  [hat_standard] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.0477  last_loss 0.0569  steps 558  arch [56, 56, 30]
+  [hat_standard] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0414  last_loss 0.0627  steps 744  arch [56, 56, 30]
+  [hat_standard] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0403  last_loss 0.0291  steps 930  arch [56, 56, 30]
+  [hat_standard] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0386  last_loss 0.0097  steps 1116  arch [56, 56, 30]
+  [hat_standard] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0356  last_loss 0.0251  steps 1302  arch [56, 56, 30]
+  [hat_standard] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0345  last_loss 0.0590  steps 1488  arch [56, 56, 30]
+[hat_standard] After pass 1 task 6: own=0.0165 (domain 0.2320, task 0.9850)  avg=0.1679 (domain 0.2038, task 0.9368)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.1765  last_loss 0.0608  steps 186  arch [56, 56, 30]
+  [hat_standard] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.0934  last_loss 0.0365  steps 372  arch [56, 56, 30]
+  [hat_standard] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.0894  last_loss 0.0920  steps 558  arch [56, 56, 30]
+  [hat_standard] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.0843  last_loss 0.0472  steps 744  arch [56, 56, 30]
+  [hat_standard] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.0798  last_loss 0.0232  steps 930  arch [56, 56, 30]
+  [hat_standard] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.0766  last_loss 0.0166  steps 1116  arch [56, 56, 30]
+  [hat_standard] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.0740  last_loss 0.0269  steps 1302  arch [56, 56, 30]
+  [hat_standard] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.0723  last_loss 0.1345  steps 1488  arch [56, 56, 30]
+[hat_standard] After pass 1 task 7: own=0.3605 (domain 0.4665, task 0.9695)  avg=0.1354 (domain 0.2657, task 0.9342)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.1725  last_loss 0.0116  steps 186  arch [56, 56, 30]
+  [hat_standard] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0147  last_loss 0.0097  steps 372  arch [56, 56, 30]
+  [hat_standard] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0098  last_loss 0.0036  steps 558  arch [56, 56, 30]
+  [hat_standard] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0084  last_loss 0.0034  steps 744  arch [56, 56, 30]
+  [hat_standard] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0060  last_loss 0.0009  steps 930  arch [56, 56, 30]
+  [hat_standard] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0046  last_loss 0.0067  steps 1116  arch [56, 56, 30]
+  [hat_standard] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0039  last_loss 0.0007  steps 1302  arch [56, 56, 30]
+  [hat_standard] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0034  last_loss 0.0014  steps 1488  arch [56, 56, 30]
+[hat_standard] After pass 1 task 8: own=0.3920 (domain 0.9850, task 0.9995)  avg=0.1161 (domain 0.1911, task 0.9387)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.0552  last_loss 0.0092  steps 186  arch [56, 56, 30]
+  [hat_standard] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0118  last_loss 0.0070  steps 372  arch [56, 56, 30]
+  [hat_standard] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0086  last_loss 0.0061  steps 558  arch [56, 56, 30]
+  [hat_standard] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0066  last_loss 0.0526  steps 744  arch [56, 56, 30]
+  [hat_standard] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0054  last_loss 0.0009  steps 930  arch [56, 56, 30]
+  [hat_standard] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0041  last_loss 0.0104  steps 1116  arch [56, 56, 30]
+  [hat_standard] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0040  last_loss 0.0062  steps 1302  arch [56, 56, 30]
+  [hat_standard] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0044  last_loss 0.0023  steps 1488  arch [56, 56, 30]
+[hat_standard] After pass 1 task 9: own=0.3945 (domain 0.4965, task 1.0000)  avg=0.1959 (domain 0.2119, task 0.8938)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.5718  last_loss 0.0010  steps 187  arch [56, 56, 30]
+  [hat_standard] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0270  last_loss 0.0009  steps 374  arch [56, 56, 30]
+  [hat_standard] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0210  last_loss 0.0071  steps 561  arch [56, 56, 30]
+  [hat_standard] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0168  last_loss 0.0007  steps 748  arch [56, 56, 30]
+  [hat_standard] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0148  last_loss 0.0022  steps 935  arch [56, 56, 30]
+  [hat_standard] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0127  last_loss 0.0098  steps 1122  arch [56, 56, 30]
+  [hat_standard] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0114  last_loss 0.0002  steps 1309  arch [56, 56, 30]
+  [hat_standard] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0106  last_loss 0.0012  steps 1496  arch [56, 56, 30]
+[hat_standard] After pass 1 task 10: own=0.3790 (domain 0.3800, task 0.9975)  avg=0.1298 (domain 0.2348, task 0.9047)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.5139  last_loss 0.2363  steps 150  arch [56, 56, 30]
+  [hat_standard] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.1485  last_loss 0.0645  steps 300  arch [56, 56, 30]
+  [hat_standard] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.1240  last_loss 0.2309  steps 450  arch [56, 56, 30]
+  [hat_standard] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.1154  last_loss 0.0891  steps 600  arch [56, 56, 30]
+  [hat_standard] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.1077  last_loss 0.0738  steps 750  arch [56, 56, 30]
+  [hat_standard] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.1009  last_loss 0.0878  steps 900  arch [56, 56, 30]
+  [hat_standard] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.0996  last_loss 0.1224  steps 1050  arch [56, 56, 30]
+  [hat_standard] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.0997  last_loss 0.0480  steps 1200  arch [56, 56, 30]
+[hat_standard] After pass 1 task 11: own=0.0000 (domain 0.0188, task 0.9762)  avg=0.0816 (domain 0.1220, task 0.9110)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.1499  last_loss 0.0450  steps 150  arch [56, 56, 30]
+  [hat_standard] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.0646  last_loss 0.0807  steps 300  arch [56, 56, 30]
+  [hat_standard] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.0539  last_loss 0.0437  steps 450  arch [56, 56, 30]
+  [hat_standard] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.0473  last_loss 0.0383  steps 600  arch [56, 56, 30]
+  [hat_standard] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.0437  last_loss 0.0024  steps 750  arch [56, 56, 30]
+  [hat_standard] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.0422  last_loss 0.0905  steps 900  arch [56, 56, 30]
+  [hat_standard] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.0415  last_loss 0.0056  steps 1050  arch [56, 56, 30]
+  [hat_standard] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.0378  last_loss 0.0116  steps 1200  arch [56, 56, 30]
+[hat_standard] After pass 1 task 12: own=0.0094 (domain 0.5562, task 0.9775)  avg=0.0983 (domain 0.1936, task 0.8950)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.8580  last_loss 0.2248  steps 150  arch [56, 56, 30]
+  [hat_standard] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.1196  last_loss 0.2880  steps 300  arch [56, 56, 30]
+  [hat_standard] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.0827  last_loss 0.0884  steps 450  arch [56, 56, 30]
+  [hat_standard] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.0692  last_loss 0.0110  steps 600  arch [56, 56, 30]
+  [hat_standard] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.0630  last_loss 0.0256  steps 750  arch [56, 56, 30]
+  [hat_standard] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.0601  last_loss 0.0217  steps 900  arch [56, 56, 30]
+  [hat_standard] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.0554  last_loss 0.0048  steps 1050  arch [56, 56, 30]
+  [hat_standard] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.0506  last_loss 0.0188  steps 1200  arch [56, 56, 30]
+[hat_standard] After pass 1 task 13: own=0.0050 (domain 0.8206, task 0.9837)  avg=0.0641 (domain 0.1773, task 0.8867)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.4600  last_loss 0.1090  steps 150  arch [56, 56, 30]
+  [hat_standard] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.1012  last_loss 0.1161  steps 300  arch [56, 56, 30]
+  [hat_standard] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.0889  last_loss 0.0402  steps 450  arch [56, 56, 30]
+  [hat_standard] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.0756  last_loss 0.0674  steps 600  arch [56, 56, 30]
+  [hat_standard] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.0707  last_loss 0.0027  steps 750  arch [56, 56, 30]
+  [hat_standard] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.0666  last_loss 0.0260  steps 900  arch [56, 56, 30]
+  [hat_standard] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.0629  last_loss 0.1059  steps 1050  arch [56, 56, 30]
+  [hat_standard] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.0594  last_loss 0.0046  steps 1200  arch [56, 56, 30]
+[hat_standard] After pass 1 task 14: own=0.0000 (domain 0.0000, task 0.9775)  avg=0.0472 (domain 0.1749, task 0.8811)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [hat_standard] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.3724  last_loss 0.1620  steps 150  arch [56, 56, 30]
+  [hat_standard] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.1820  last_loss 0.0615  steps 300  arch [56, 56, 30]
+  [hat_standard] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.1649  last_loss 0.1765  steps 450  arch [56, 56, 30]
+  [hat_standard] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.1531  last_loss 0.2598  steps 600  arch [56, 56, 30]
+  [hat_standard] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.1415  last_loss 0.0966  steps 750  arch [56, 56, 30]
+  [hat_standard] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.1350  last_loss 0.3442  steps 900  arch [56, 56, 30]
+  [hat_standard] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.1294  last_loss 0.3739  steps 1050  arch [56, 56, 30]
+  [hat_standard] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.1236  last_loss 0.0312  steps 1200  arch [56, 56, 30]
+[hat_standard] After pass 1 task 15: own=0.0000 (domain 0.0000, task 0.9513)  avg=0.0776 (domain 0.1761, task 0.8855)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[hat_standard] <<< PASS 1/1 done — full=0.0776  domain=0.1761  task=0.8855
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[hat_matched]
+  arch:               (128, 92, 30) → (128, 92, 30)
+  params total:       115138 → 115138
+  params trainable:   14658 → 14658  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.0603  (30-class full-softmax — headline)
+  final acc domain:   0.1512  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9389  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.3013  domain 0.4761  task 0.0000
+  wall-clock:         84.4s
+  per-phase (full / domain / task):
+     phase1_mnist         0.1775  /  0.1817  /  0.9662
+     phase2_fashion       0.0016  /  0.1532  /  0.9705
+     phase3_emnist        0.0017  /  0.1186  /  0.8801
+
+[hat_standard]
+  arch:               (56, 56, 30) → (56, 56, 30)
+  params total:       48862 → 48862
+  params trainable:   48862 → 48862  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.0776  (30-class full-softmax — headline)
+  final acc domain:   0.1761  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.8855  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.1380  domain 0.2053  task 0.1070
+  wall-clock:         91.8s
+  per-phase (full / domain / task):
+     phase1_mnist         0.2316  /  0.2336  /  0.9280
+     phase2_fashion       0.0012  /  0.1522  /  0.8336
+     phase3_emnist        0.0000  /  0.1425  /  0.8949
+
+Headline (full / domain / task across arms):
+  hat_matched                   full 0.0603  domain 0.1512  task 0.9389  (full-forget +0.3013)
+  hat_standard                  full 0.0776  domain 0.1761  task 0.8855  (full-forget +0.1380)
+
+  log: /home/marcrockhat/trioron-project/outputs/probe_hat.csv

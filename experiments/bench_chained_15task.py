@@ -79,6 +79,8 @@ import torch.optim as optim
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from trioron.network import TrioronNetwork
+from trioron.packnet import PackNetController
+from trioron.hat import HATController
 from trioron.classification import (
     accuracy,
     extend_output_head,
@@ -564,6 +566,18 @@ def trainable_params(net: TrioronNetwork) -> int:
 
 def trainable_param_iter(net: TrioronNetwork):
     return (p for p in net.parameters() if p.requires_grad)
+
+
+def _build_optimizer(
+    net: TrioronNetwork,
+    hat_ctrl: Optional["HATController"] = None,
+) -> optim.Optimizer:
+    """Build Adam over net's trainable params, plus HAT's task
+    embeddings if a HATController is present."""
+    params = list(trainable_param_iter(net))
+    if hat_ctrl is not None:
+        params = params + list(hat_ctrl.parameters())
+    return optim.Adam(params, lr=LR)
 
 
 def warmup_l0(
@@ -1375,6 +1389,8 @@ def train_one_task(
     hippocampus: Optional[HippocampalBuffer] = None,
     differential: Optional[DifferentialReplayBuffer] = None,
     manifold: Optional[ManifoldBuffer] = None,
+    packnet_ctrl: Optional[PackNetController] = None,
+    hat_ctrl: Optional[HATController] = None,
 ) -> optim.Optimizer:
     """Train on one task for `n_epochs` proper minibatch epochs.
 
@@ -1394,10 +1410,20 @@ def train_one_task(
     total_steps = 0
     last_loss = float("nan")
     outer_total = total_epochs_outer if total_epochs_outer is not None else n_epochs
+    # HAT temperature anneal — linear from s_min to s_max over the
+    # task's full training. Estimate step budget from data size.
+    if hat_ctrl is not None:
+        n_per_epoch = (train_view.n_examples() + BATCH - 1) // BATCH
+        hat_total_in_call = max(1, n_epochs * n_per_epoch)
+    else:
+        hat_total_in_call = 1
     for epoch in range(n_epochs):
         epoch_loss_sum = 0.0
         epoch_n_batches = 0
         for x, y_global in train_view.iter_epoch(BATCH):
+            if hat_ctrl is not None:
+                s = hat_ctrl.temperature_for_step(total_steps, hat_total_in_call)
+                hat_ctrl.set_temperature(s)
             logits = net(x)
             l_task = masked_cross_entropy(logits, y_global, active_classes=active)
 
@@ -1646,10 +1672,26 @@ def train_one_task(
                 l_data = l_data + MANIFOLD_REPLAY_LOSS_WEIGHT * l_manifold
             if l_diff is not None:
                 l_data = l_data + l_diff
+            # HAT sparsity regularizer — pushes the current task to share
+            # mask units with prior tasks (Serrà §3.3).
+            if hat_ctrl is not None:
+                l_data = l_data + (
+                    hat_ctrl.sparsity_coef * hat_ctrl.sparsity_loss()
+                )
             l = (l_data + ewc_baseline * net.ewc_penalty()
                  if ewc_baseline > 0 else l_data)
             opt.zero_grad()
             l.backward()
+            # PackNet: zero gradients on weights belonging to past tasks
+            # so the optimizer can't update them. Must fire after
+            # backward() and before step().
+            if packnet_ctrl is not None:
+                packnet_ctrl.freeze_grads()
+            # HAT: scale gradients on weights protected by prior-task
+            # masks (input-side and output-side). Same lifecycle slot
+            # as PackNet's freeze_grads.
+            if hat_ctrl is not None:
+                hat_ctrl.scale_grads()
             # Note: NOT updating per-node utilities during normal
             # training — u is now driven exclusively by dream-rescue
             # replay (set in classification_dreaming_block when
@@ -1660,6 +1702,9 @@ def train_one_task(
             # exact failure mode that produced seed-6's catastrophic
             # Fashion regression in the n=12 saliency bench.
             opt.step()
+            # HAT: clamp |e| to keep sigmoid in a learnable regime.
+            if hat_ctrl is not None:
+                hat_ctrl.clip_embeddings()
             total_steps += 1
             last_loss = float(l_task.item())
             epoch_loss_sum += last_loss
@@ -1682,6 +1727,8 @@ def evaluate_all_tasks(
     net: TrioronNetwork,
     eval_views: Sequence[TaskDataView],
     task_class_lists: Sequence[Sequence[int]],
+    packnet_ctrl: Optional[PackNetController] = None,
+    hat_ctrl: Optional[HATController] = None,
 ) -> Tuple[List[float], List[float], List[float]]:
     """Evaluate every task with THREE metrics in one pass.
 
@@ -1711,18 +1758,66 @@ def evaluate_all_tasks(
     full_accs: List[float] = []
     aware_accs: List[float] = []
     domain_accs: List[float] = []
+    # PackNet / HAT inference protocols share the same dual approach:
+    #   task-aware  → apply that task's mask (uses task-ID at inference)
+    #   full/domain → apply the most-recent-tasks_done mask (PackNet
+    #                  union mask) or the cumulative hooks (HAT)
+    # Both produce different forwards, so we run two passes per view.
+    use_packnet = (
+        packnet_ctrl is not None and packnet_ctrl.tasks_done > 0
+    )
+    use_hat = (
+        hat_ctrl is not None and hat_ctrl.tasks_done > 0
+    )
     with torch.no_grad():
         for i, v in enumerate(eval_views):
             x, y = v.all_examples()
-            logits = net(x)
+
+            if use_packnet:
+                # task-aware: this view's own mask. Skip if this view's
+                # task hasn't been trained yet (i+1 > tasks_done).
+                eval_task_id = i + 1
+                if eval_task_id <= packnet_ctrl.tasks_done:
+                    snap = packnet_ctrl.apply_inference_mask(eval_task_id)
+                    logits_aware = net(x)
+                    packnet_ctrl.restore(snap)
+                else:
+                    logits_aware = None
+                # full / domain: union of all tasks-done masks.
+                snap = packnet_ctrl.apply_inference_mask(
+                    packnet_ctrl.tasks_done,
+                )
+                logits = net(x)
+                packnet_ctrl.restore(snap)
+            elif use_hat:
+                # task-aware: install hooks for this view's task.
+                eval_task_id = i + 1
+                if eval_task_id <= hat_ctrl.tasks_done:
+                    snap = hat_ctrl.apply_inference_mask(eval_task_id)
+                    logits_aware = net(x)
+                    hat_ctrl.restore(snap)
+                else:
+                    logits_aware = None
+                # full / domain: HAT has no native union-mask. Use the
+                # most-recent task's mask as the "task-blind" eval —
+                # standard treatment for HAT in class-incremental
+                # benches (acknowledged weakness vs methods that can
+                # operate without task ID).
+                snap = hat_ctrl.apply_inference_mask(hat_ctrl.tasks_done)
+                logits = net(x)
+                hat_ctrl.restore(snap)
+            else:
+                logits = net(x)
+                logits_aware = logits
+
             head_size = logits.shape[1]
             full_accs.append(accuracy(logits, y))
 
             # Task-aware: restrict to the binary pair.
             active = task_class_lists[i]
-            if max(active) < head_size:
+            if logits_aware is not None and max(active) < head_size:
                 aware_accs.append(accuracy(
-                    logits, y, restrict_to=active,
+                    logits_aware, y, restrict_to=active,
                 ))
             else:
                 aware_accs.append(float("nan"))
@@ -1766,6 +1861,8 @@ def run_chained_curriculum(
     n_epochs_per_task: int,
     rng_seed: int,
     n_passes: int = 1,
+    packnet_mode: Optional[str] = None,
+    hat_mode: Optional[str] = None,
 ) -> Dict[str, object]:
     """Run the chained curriculum, optionally repeated for `n_passes`.
 
@@ -1814,6 +1911,28 @@ def run_chained_curriculum(
     manifold: Optional[ManifoldBuffer] = None
     if MANIFOLD_REPLAY_ENABLED and arm_l0_frozen:
         manifold = ManifoldBuffer()
+
+    # PackNet baseline — per-task disjoint subnets via magnitude pruning.
+    # In 'matched' mode, L0 is treated as a shared frozen feature
+    # extractor (skipped from PackNet's partition pool). In 'standard'
+    # mode, the entire network (including L0) is partitioned across
+    # tasks. PackNet uses task-ID at task-aware inference time.
+    packnet_ctrl: Optional[PackNetController] = None
+    if packnet_mode is not None:
+        skip_ids: List[int] = [0] if packnet_mode == "matched" else []
+        packnet_ctrl = PackNetController(
+            net, n_total_tasks=K, frozen_layer_ids=skip_ids,
+        )
+
+    # HAT baseline — sigmoid-attention masks per task, gradient surgery
+    # to protect prior-task weights. HAT's task embeddings are trainable
+    # parameters that must be in the optimizer alongside net params.
+    hat_ctrl: Optional[HATController] = None
+    if hat_mode is not None:
+        hat_ctrl = HATController(net, n_total_tasks=K)
+        # Move HAT to the network's device so its embeddings live where
+        # gradients flow.
+        hat_ctrl = hat_ctrl.to(net.layers[0].W.device)
     print(f"\n[{label}] start — arch {initial_arch}  "
           f"params {initial_n_params} (trainable {initial_trainable})  "
           f"growth={do_growth} dream={do_dream}  "
@@ -1827,7 +1946,7 @@ def run_chained_curriculum(
           f"differential={'on' if differential is not None else 'off'}  "
           f"manifold={'on' if manifold is not None else 'off'}")
 
-    opt = optim.Adam(trainable_param_iter(net), lr=LR)
+    opt = _build_optimizer(net, hat_ctrl)
     # Accuracy matrix shape: (n_total, K). Row i = state after the i-th
     # task encounter; col j = accuracy on eval task j. Each pass adds
     # K rows. Final headline = last row.
@@ -1885,7 +2004,22 @@ def run_chained_curriculum(
             if max_active >= head_size:
                 n_new_head = max_active - head_size + 1
                 extend_output_head(net, n_new_head)
-                opt = optim.Adam(trainable_param_iter(net), lr=LR)
+                opt = _build_optimizer(net, hat_ctrl)
+
+            # PackNet begin_task: re-init free weights for the new task
+            # (frozen weights from prior tasks preserved). Adam state is
+            # stale across the re-init, so rebuild the optimizer.
+            if packnet_ctrl is not None and pass_idx == 0:
+                packnet_ctrl.begin_task(local_task_idx + 1)
+                opt = _build_optimizer(net, hat_ctrl)
+
+            # HAT begin_task: zero active embeddings, install hooks,
+            # set temperature to s_min (will anneal up to s_max during
+            # training). Rebuild optimizer so Adam moments for the
+            # newly-zeroed embeddings start clean.
+            if hat_ctrl is not None and pass_idx == 0:
+                hat_ctrl.begin_task(local_task_idx + 1)
+                opt = _build_optimizer(net, hat_ctrl)
 
             # 2. Print task header (pre-settle). Fix B's growth comes
             #    after a settle phase; arch shown here is pre-growth.
@@ -1925,6 +2059,8 @@ def run_chained_curriculum(
                     hippocampus=hippocampus,
                     differential=differential,
                     manifold=manifold,
+                    packnet_ctrl=packnet_ctrl,
+                    hat_ctrl=hat_ctrl,
                 )
 
             # 3b. Deterministic hidden growth (with optional dream-rescue).
@@ -1964,7 +2100,7 @@ def run_chained_curriculum(
                                     and (rescue["n_purges"] > 0
                                          or rescue["n_latched"] > 0)):
                                 net.reanchor_routing_only()
-                            opt = optim.Adam(trainable_param_iter(net), lr=LR)
+                            opt = _build_optimizer(net, hat_ctrl)
                             ok2, reason2 = try_grow_one(
                                 net, GROWTH_TARGET_LAYER_IDX, cap_bytes,
                                 local_task_idx,
@@ -1986,7 +2122,7 @@ def run_chained_curriculum(
             cumulative_grows_denied += denied
 
             if allowed > 0:
-                opt = optim.Adam(trainable_param_iter(net), lr=LR)
+                opt = _build_optimizer(net, hat_ctrl)
                 print(f"  [{label}] GROWTH after settle: "
                       f"{allowed}/{attempted} allowed, {denied} denied  "
                       f"new arch={net.n_nodes_per_layer()} "
@@ -2015,6 +2151,8 @@ def run_chained_curriculum(
                         hippocampus=hippocampus,
                         differential=differential,
                         manifold=manifold,
+                        packnet_ctrl=packnet_ctrl,
+                        hat_ctrl=hat_ctrl,
                     )
             else:
                 opt = train_one_task(
@@ -2030,11 +2168,29 @@ def run_chained_curriculum(
                     hippocampus=hippocampus,
                     differential=differential,
                     manifold=manifold,
+                    packnet_ctrl=packnet_ctrl,
+                    hat_ctrl=hat_ctrl,
                 )
 
             # 4. Consolidate.
             consolidate_task(net, train_view, active)
-            ewc_baseline = EWC_INTERTASK
+            # PackNet / HAT replace EWC anchor-pull with their own
+            # protection mechanisms. Disable ewc_baseline for the next
+            # task so we don't double-supervise.
+            if packnet_ctrl is None and hat_ctrl is None:
+                ewc_baseline = EWC_INTERTASK
+            # PackNet end_task: claim 1/(n-t+1) of currently-free
+            # weights as task t's mask, zero the rest. Must fire AFTER
+            # consolidate_task and BEFORE the eval at the bottom of
+            # the task loop (eval applies per-task masks).
+            if packnet_ctrl is not None:
+                packnet_ctrl.end_task(local_task_idx + 1)
+            # HAT end_task: snapshot current active embeddings as
+            # task t's saved mask, update cumulative mask, remove
+            # forward hooks. Must fire BEFORE eval (apply_inference_mask
+            # reads task_embeddings).
+            if hat_ctrl is not None:
+                hat_ctrl.end_task(local_task_idx + 1)
 
             # 4b. Add a random subset of this task's training samples
             #     to the rehearsal memory buffer (Path 2). Skipped on
@@ -2127,7 +2283,7 @@ def run_chained_curriculum(
                     net, past_views, past_actives,
                     rng=rng, mode="replay_only",
                 )
-                opt = optim.Adam(trainable_param_iter(net), lr=LR)
+                opt = _build_optimizer(net, hat_ctrl)
                 print(f"  [{label}] post-task DREAM: replay "
                       f"{dream_rep['replay_loss_before']:.4f}→"
                       f"{dream_rep['replay_loss_after']:.4f} on "
@@ -2141,7 +2297,11 @@ def run_chained_curriculum(
             #    accuracy on revisit passes, since by pass 2 every
             #    task has been "seen" in the prior pass).
             per_task_acc, per_task_acc_aware, per_task_acc_domain = (
-                evaluate_all_tasks(net, eval_views, task_class_lists)
+                evaluate_all_tasks(
+                    net, eval_views, task_class_lists,
+                    packnet_ctrl=packnet_ctrl,
+                    hat_ctrl=hat_ctrl,
+                )
             )
             row = global_step_idx
             for j in range(K):
@@ -2303,6 +2463,53 @@ ARM_DEFINITIONS = {
         "h_init": H_INIT_GROWN, "do_growth": True, "do_dream": True,
         "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": True,
     },
+    # PackNet baselines (Mallya & Lazebnik 2018) — per-task disjoint
+    # subnets carved by magnitude pruning. Reports task-aware inference
+    # via apply_inference_mask(eval_task_id) for the task-aware metric;
+    # full-softmax uses the union mask.
+    #
+    # packnet_matched: H=92 fixes total trainable to (128+1)*92 +
+    # (92+1)*30 = 11868+2790 = 14658 — exactly grown_uncapped_dream's
+    # final budget. L0 is frozen and shared (skipped from PackNet's
+    # partition pool); PackNet allocates only L1+head, partitioned
+    # 1/15 per task = ~977 trainable params per task.
+    "packnet_matched": {
+        "h_init": 92, "do_growth": False, "do_dream": False,
+        "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": True,
+        "packnet_mode": "matched",
+    },
+    # packnet_standard: full network (trainable L0), PackNet partitions
+    # everything. Total trainable ≈ 109,414 (L0 dominates), partitioned
+    # 1/15 per task ≈ 7,294 trainable params per task. Generous
+    # capacity vs grown's 14,658 final — favors PackNet on raw budget,
+    # disadvantages it on shared-feature reuse. Honest dual comparison.
+    "packnet_standard": {
+        "h_init": 56, "do_growth": False, "do_dream": False,
+        "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": False,
+        "packnet_mode": "standard",
+    },
+    # HAT baselines (Serrà et al. 2018) — task-conditional sigmoid
+    # attention masks over hidden activations + gradient surgery to
+    # protect prior-task weights. Like PackNet uses task-ID at task-
+    # aware inference (apply_inference_mask).
+    #
+    # hat_matched: frozen L0 (matches grown_uncapped_dream's feature
+    # condition), HAT masks gate L0+L1 outputs per task. H=92 →
+    # 14,658 trainable params + HAT's task-embedding parameters
+    # (small overhead).
+    "hat_matched": {
+        "h_init": 92, "do_growth": False, "do_dream": False,
+        "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": True,
+        "hat_mode": "matched",
+    },
+    # hat_standard: full network (trainable L0), standard HAT protocol.
+    # Larger trainable budget — favors HAT in capacity, but loses the
+    # feature-sharing benefit of matched.
+    "hat_standard": {
+        "h_init": 56, "do_growth": False, "do_dream": False,
+        "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": False,
+        "hat_mode": "standard",
+    },
 }
 
 DEFAULT_ARMS = list(ARM_DEFINITIONS.keys())
@@ -2321,8 +2528,15 @@ def run_arm(
 ) -> Dict[str, object]:
     cfg = ARM_DEFINITIONS[arm]
     torch.manual_seed(seed)
+    # PackNet / HAT need a fixed network shape across the curriculum
+    # (their per-layer masks are bound to layer shapes at __init__).
+    # Pre-extend the head to the full class count instead of growing
+    # it incrementally.
+    init_classes = INIT_CLASSES
+    if cfg.get("packnet_mode") is not None or cfg.get("hat_mode") is not None:
+        init_classes = sum(2 for _ in range(15))  # 2 × 15 = 30
     net = make_classifier(
-        INPUT_DIM, L0_WIDTH, cfg["h_init"], INIT_CLASSES,
+        INPUT_DIM, L0_WIDTH, cfg["h_init"], init_classes,
         freeze_l0=cfg["freeze_l0"],
     )
 
@@ -2351,6 +2565,8 @@ def run_arm(
         n_epochs_per_task=n_epochs_per_task,
         rng_seed=seed + 7919,
         n_passes=n_passes,
+        packnet_mode=cfg.get("packnet_mode"),
+        hat_mode=cfg.get("hat_mode"),
     )
 
 

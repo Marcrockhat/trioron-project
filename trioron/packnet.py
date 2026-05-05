@@ -70,16 +70,42 @@ class PackNetController:
     corresponding parameter (W is (n_nodes, fan_in); b is (n_nodes,)).
     """
 
-    def __init__(self, net: TrioronNetwork, n_total_tasks: int):
+    def __init__(
+        self,
+        net: TrioronNetwork,
+        n_total_tasks: int,
+        frozen_layer_ids: List[int] = None,
+    ):
+        """
+        frozen_layer_ids: list of layer indices that PackNet should leave
+        ALONE — their weights are not re-initialized at begin_task, not
+        claimed at end_task, and not zeroed at apply_inference_mask. Used
+        when an upstream layer (e.g., a warmed-L0 random projection) must
+        be shared across all tasks rather than partitioned.
+        """
         if n_total_tasks < 1:
             raise ValueError("n_total_tasks must be >= 1")
         self.net = net
         self.n_total_tasks = int(n_total_tasks)
         self.tasks_done: int = 0
+        self.frozen_layer_ids = sorted(set(int(i) for i in (frozen_layer_ids or [])))
+        for li in self.frozen_layer_ids:
+            if li < 0 or li >= len(net.layers):
+                raise ValueError(
+                    f"frozen_layer_ids contains {li} outside [0, {len(net.layers)})"
+                )
 
         # Per-layer cumulative-frozen masks. True = belongs to some past task,
         # gradient must be zeroed and value preserved.
+        # For frozen_layer_ids: mark ALL weights as frozen up front so
+        # begin_task / end_task / apply_inference_mask all leave them alone.
         self.frozen: List[Tuple[torch.Tensor, torch.Tensor]] = self._init_zero_masks()
+        for li in self.frozen_layer_ids:
+            layer = self.net.layers[li]
+            self.frozen[li] = (
+                torch.ones_like(layer.W, dtype=torch.bool),
+                torch.ones_like(layer.b, dtype=torch.bool),
+            )
 
         # task_id -> [(W_mask, b_mask) per layer]. Stored at end_task time.
         self.task_masks: Dict[int, List[Tuple[torch.Tensor, torch.Tensor]]] = {}
@@ -203,6 +229,11 @@ class PackNetController:
                 snap_W = layer.W.data.clone()
                 snap_b = layer.b.data.clone()
                 snapshots.append((snap_W, snap_b))
+
+                # Layers in frozen_layer_ids are shared across all tasks —
+                # don't zero anything in them, just snapshot+restore.
+                if li in self.frozen_layer_ids:
+                    continue
 
                 W_union = torch.zeros_like(layer.W, dtype=torch.bool)
                 b_union = torch.zeros_like(layer.b, dtype=torch.bool)

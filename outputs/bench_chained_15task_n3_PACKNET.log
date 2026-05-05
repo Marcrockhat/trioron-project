@@ -1,0 +1,1269 @@
+PackNet n=3 multi-seed (chained-15)
+
+==============================================================================
+Trioron — bench_chained_15task: MNIST → FashionMNIST → EMNIST-letters
+==============================================================================
+Epochs/task:        8
+K_settle epochs:    2  (Fix B — growth deferred until after settle)
+L0 width (frozen):  128
+H_init grown (L1):  32
+H fixed:            64
+N_grow_per_task:    4
+Cap (trainable):    32_000 B = 8_000 params
+EWC intertask:      30.0
+Curriculum passes:  1
+Warmup enabled:     False
+Arms:               ['packnet_matched', 'packnet_standard']
+Seeds (n=3):     [0, 1, 2]
+
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+##############################################################################
+#   SEED 0  (1/3)
+##############################################################################
+
+[packnet_matched] start — arch (128, 92, 30)  params 115138 (trainable 14658)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[packnet_matched] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[packnet_matched] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.0870  last_loss 0.0018  steps 197  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0092  last_loss 0.0013  steps 394  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0061  last_loss 0.0003  steps 591  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0046  last_loss 0.0000  steps 788  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0039  last_loss 0.0001  steps 985  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0031  last_loss 0.0005  steps 1182  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0023  last_loss 0.0001  steps 1379  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0022  last_loss 0.0020  steps 1576  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 1: own=0.9962 (domain 0.9976, task 0.9986)  avg=0.9962 (domain 0.9976, task 0.9986)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.2097  last_loss 0.1717  steps 188  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.0997  last_loss 0.0540  steps 376  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.0825  last_loss 0.1260  steps 564  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.0706  last_loss 0.2422  steps 752  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.0609  last_loss 0.0282  steps 940  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.0525  last_loss 0.0054  steps 1128  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.0459  last_loss 0.0355  steps 1316  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.0406  last_loss 0.1807  steps 1504  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 2: own=0.4833 (domain 0.4863, task 0.9706)  avg=0.6925 (domain 0.6949, task 0.9846)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.1666  last_loss 0.0298  steps 175  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.0492  last_loss 0.0247  steps 350  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.0376  last_loss 0.0149  steps 525  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.0308  last_loss 0.0047  steps 700  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.0262  last_loss 0.0097  steps 875  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0223  last_loss 0.0104  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0192  last_loss 0.0053  steps 1225  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0167  last_loss 0.0245  steps 1400  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 3: own=0.4477 (domain 0.4632, task 0.9493)  avg=0.4546 (domain 0.4634, task 0.9728)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.1301  last_loss 0.0599  steps 189  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0204  last_loss 0.0610  steps 378  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0137  last_loss 0.0109  steps 567  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0100  last_loss 0.0036  steps 756  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0078  last_loss 0.0093  steps 945  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0062  last_loss 0.0009  steps 1134  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0053  last_loss 0.0004  steps 1323  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0043  last_loss 0.0035  steps 1512  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 4: own=0.3671 (domain 0.3988, task 0.9869)  avg=0.3438 (domain 0.3878, task 0.9764)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.2507  last_loss 0.0677  steps 183  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1040  last_loss 0.0479  steps 366  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.0823  last_loss 0.0752  steps 549  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.0713  last_loss 0.1182  steps 732  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.0630  last_loss 0.0109  steps 915  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.0580  last_loss 0.0306  steps 1098  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.0524  last_loss 0.0487  steps 1281  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.0470  last_loss 0.0171  steps 1464  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 5: own=0.4342 (domain 0.4574, task 0.9299)  avg=0.2565 (domain 0.2727, task 0.9671)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.1796  last_loss 0.1277  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.0681  last_loss 0.0374  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.0552  last_loss 0.0946  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0490  last_loss 0.0677  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0450  last_loss 0.0261  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0425  last_loss 0.0179  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0396  last_loss 0.0270  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0370  last_loss 0.0054  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 6: own=0.3950 (domain 0.7145, task 0.9345)  avg=0.2334 (domain 0.3349, task 0.9616)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.2366  last_loss 0.0862  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.1034  last_loss 0.1156  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.0914  last_loss 0.1483  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.0858  last_loss 0.1178  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.0821  last_loss 0.0948  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.0790  last_loss 0.1114  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.0764  last_loss 0.2242  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.0744  last_loss 0.0273  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 7: own=0.0000 (domain 0.0310, task 0.9130)  avg=0.1666 (domain 0.3088, task 0.9547)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.1730  last_loss 0.0122  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0280  last_loss 0.0304  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0162  last_loss 0.0253  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0120  last_loss 0.0185  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0093  last_loss 0.0050  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0078  last_loss 0.0037  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0071  last_loss 0.0019  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0060  last_loss 0.0202  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 8: own=0.1345 (domain 0.3570, task 0.9980)  avg=0.0759 (domain 0.2332, task 0.9601)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.2263  last_loss 0.0233  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0247  last_loss 0.0184  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0129  last_loss 0.0074  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0088  last_loss 0.0033  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0067  last_loss 0.0010  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0054  last_loss 0.0047  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0046  last_loss 0.0022  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0040  last_loss 0.0004  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 9: own=0.0030 (domain 0.1815, task 0.9865)  avg=0.0757 (domain 0.2608, task 0.9630)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.2514  last_loss 0.2679  steps 187  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0482  last_loss 0.0307  steps 374  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0319  last_loss 0.1770  steps 561  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0238  last_loss 0.0008  steps 748  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0199  last_loss 0.0006  steps 935  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0197  last_loss 0.5059  steps 1122  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0163  last_loss 0.0270  steps 1309  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0139  last_loss 0.0001  steps 1496  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 10: own=0.0300 (domain 0.1135, task 0.9850)  avg=0.0617 (domain 0.2104, task 0.9652)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.5604  last_loss 0.1876  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2596  last_loss 0.1735  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.2092  last_loss 0.2199  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.1857  last_loss 0.2059  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.1696  last_loss 0.0947  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.1607  last_loss 0.5157  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.1502  last_loss 0.0618  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.1437  last_loss 0.0967  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 11: own=0.0000 (domain 0.0006, task 0.9119)  avg=0.0373 (domain 0.1921, task 0.9604)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.7064  last_loss 0.2892  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.2256  last_loss 0.1140  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.1496  last_loss 0.1433  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.1183  last_loss 0.0795  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.1023  last_loss 0.0407  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.0916  last_loss 0.2074  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.0842  last_loss 0.2135  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.0778  last_loss 0.0187  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 12: own=0.0050 (domain 0.0069, task 0.9231)  avg=0.0159 (domain 0.1791, task 0.9573)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.6393  last_loss 0.2949  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.2391  last_loss 0.1216  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.1731  last_loss 0.1418  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.1442  last_loss 0.0646  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1281  last_loss 0.2233  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1163  last_loss 0.1130  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1082  last_loss 0.1638  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1009  last_loss 0.0517  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 13: own=0.4531 (domain 0.6069, task 0.9650)  avg=0.0722 (domain 0.1831, task 0.9579)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 1.0823  last_loss 0.7440  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.5539  last_loss 0.3907  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.4020  last_loss 0.3843  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.3222  last_loss 0.1754  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.2746  last_loss 0.2522  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.2426  last_loss 0.1329  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.2210  last_loss 0.2795  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.2039  last_loss 0.1076  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 14: own=0.1069 (domain 0.3469, task 0.9150)  avg=0.0833 (domain 0.2063, task 0.9548)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.7134  last_loss 0.5634  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.5211  last_loss 0.1593  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.4328  last_loss 0.3666  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.3776  last_loss 0.3062  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.3396  last_loss 0.3533  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.3110  last_loss 0.3023  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.2886  last_loss 0.1457  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.2723  last_loss 0.4065  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 15: own=0.1581 (domain 0.4050, task 0.8881)  avg=0.0929 (domain 0.2248, task 0.9504)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] <<< PASS 1/1 done — full=0.0929  domain=0.2248  task=0.9504
+
+[packnet_standard] start — arch (56, 56, 30)  params 48862 (trainable 48862)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[packnet_standard] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[packnet_standard] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.0395  last_loss 0.0006  steps 197  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0029  last_loss 0.0002  steps 394  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0021  last_loss 0.0000  steps 591  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0016  last_loss 0.0000  steps 788  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0008  last_loss 0.0000  steps 985  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0011  last_loss 0.0000  steps 1182  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0005  last_loss 0.0001  steps 1379  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0005  last_loss 0.0000  steps 1576  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 1: own=0.0288 (domain 0.0340, task 0.9995)  avg=0.0288 (domain 0.0340, task 0.9995)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.1318  last_loss 0.0089  steps 188  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.0416  last_loss 0.0124  steps 376  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.0244  last_loss 0.0098  steps 564  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.0164  last_loss 0.0606  steps 752  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.0119  last_loss 0.0639  steps 940  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.0083  last_loss 0.0033  steps 1128  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.0057  last_loss 0.0014  steps 1316  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.0032  last_loss 0.0004  steps 1504  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 2: own=0.0264 (domain 0.0539, task 0.9055)  avg=0.0132 (domain 0.0300, task 0.9525)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.0682  last_loss 0.0048  steps 175  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.0144  last_loss 0.0017  steps 350  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.0068  last_loss 0.0009  steps 525  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.0030  last_loss 0.0091  steps 700  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.0018  last_loss 0.0004  steps 875  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0010  last_loss 0.0012  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0004  last_loss 0.0003  steps 1225  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0002  last_loss 0.0001  steps 1400  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 3: own=0.0726 (domain 0.1756, task 0.9835)  avg=0.0390 (domain 0.1349, task 0.9628)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.0568  last_loss 0.0049  steps 189  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0044  last_loss 0.0013  steps 378  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0020  last_loss 0.0003  steps 567  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0012  last_loss 0.0001  steps 756  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0008  last_loss 0.0002  steps 945  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0004  last_loss 0.0003  steps 1134  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0002  last_loss 0.0002  steps 1323  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0001  last_loss 0.0002  steps 1512  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 4: own=0.0000 (domain 0.0237, task 0.9648)  avg=0.0065 (domain 0.0903, task 0.9633)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.1322  last_loss 0.0218  steps 183  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.0383  last_loss 0.0372  steps 366  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.0259  last_loss 0.0491  steps 549  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.0206  last_loss 0.0207  steps 732  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.0137  last_loss 0.0025  steps 915  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.0107  last_loss 0.0022  steps 1098  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.0076  last_loss 0.0107  steps 1281  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.0056  last_loss 0.0191  steps 1464  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 5: own=0.1962 (domain 0.3041, task 0.7756)  avg=0.1074 (domain 0.2216, task 0.9258)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.1195  last_loss 0.1070  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.0396  last_loss 0.0057  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.0299  last_loss 0.0217  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0245  last_loss 0.0040  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0202  last_loss 0.0297  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0185  last_loss 0.0097  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0154  last_loss 0.0326  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0149  last_loss 0.0476  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 6: own=0.0690 (domain 0.2115, task 0.8000)  avg=0.0843 (domain 0.1630, task 0.9048)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.1226  last_loss 0.0297  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.0819  last_loss 0.0062  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.0709  last_loss 0.1978  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.0632  last_loss 0.1069  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.0579  last_loss 0.0521  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.0540  last_loss 0.0278  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.0533  last_loss 0.1088  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.0447  last_loss 0.0324  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 7: own=0.0000 (domain 0.0150, task 0.7815)  avg=0.0511 (domain 0.0847, task 0.8872)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.0672  last_loss 0.0069  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0047  last_loss 0.0004  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0023  last_loss 0.0002  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0014  last_loss 0.0003  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0010  last_loss 0.0002  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0004  last_loss 0.0002  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0003  last_loss 0.0000  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0002  last_loss 0.0000  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 8: own=0.1730 (domain 0.8385, task 0.9675)  avg=0.0824 (domain 0.1779, task 0.8972)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.0296  last_loss 0.0034  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0012  last_loss 0.0004  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0007  last_loss 0.0014  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0006  last_loss 0.0002  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0002  last_loss 0.0000  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0001  last_loss 0.0001  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0001  last_loss 0.0000  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0001  last_loss 0.0006  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 9: own=0.0000 (domain 0.0090, task 0.9960)  avg=0.0909 (domain 0.1698, task 0.9082)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.2818  last_loss 0.0016  steps 187  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0124  last_loss 0.0026  steps 374  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0082  last_loss 0.0000  steps 561  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0056  last_loss 0.0001  steps 748  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0044  last_loss 0.0001  steps 935  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0035  last_loss 0.0000  steps 1122  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0027  last_loss 0.0000  steps 1309  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0022  last_loss 0.0000  steps 1496  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 10: own=0.0000 (domain 0.0000, task 0.8590)  avg=0.0971 (domain 0.1317, task 0.9033)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.5565  last_loss 0.4457  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.1377  last_loss 0.3501  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.0934  last_loss 0.0107  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.0731  last_loss 0.0350  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.0605  last_loss 0.0367  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.0516  last_loss 0.0417  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.0429  last_loss 0.0412  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.0369  last_loss 0.0232  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 11: own=0.0000 (domain 0.0056, task 0.8906)  avg=0.0560 (domain 0.1210, task 0.9021)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.3378  last_loss 0.2390  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.0718  last_loss 0.1811  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.0515  last_loss 0.1095  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.0406  last_loss 0.0032  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.0327  last_loss 0.0024  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.0280  last_loss 0.0044  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.0242  last_loss 0.0692  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.0208  last_loss 0.0217  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 12: own=0.0019 (domain 0.0056, task 0.9300)  avg=0.0165 (domain 0.0754, task 0.9045)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.5065  last_loss 0.0751  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.1443  last_loss 0.2151  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.0975  last_loss 0.0731  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.0769  last_loss 0.2800  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.0632  last_loss 0.0040  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.0548  last_loss 0.1577  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.0469  last_loss 0.0601  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.0418  last_loss 0.0264  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 13: own=0.0400 (domain 0.6756, task 0.9594)  avg=0.0481 (domain 0.1112, task 0.9087)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 1.2682  last_loss 0.3179  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.2486  last_loss 0.5432  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.1395  last_loss 0.1434  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.1068  last_loss 0.0173  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.0913  last_loss 0.3448  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.0788  last_loss 0.1073  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.0701  last_loss 0.0061  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.0621  last_loss 0.0111  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 14: own=0.0006 (domain 0.0525, task 0.9688)  avg=0.0477 (domain 0.1108, task 0.9130)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.7226  last_loss 0.3523  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.3024  last_loss 0.1867  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2464  last_loss 0.1761  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2154  last_loss 0.2018  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.1932  last_loss 0.0781  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.1772  last_loss 0.2134  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.1641  last_loss 0.0303  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.1542  last_loss 0.0227  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 15: own=0.0050 (domain 0.1969, task 0.9300)  avg=0.0535 (domain 0.1083, task 0.9141)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] <<< PASS 1/1 done — full=0.0535  domain=0.1083  task=0.9141
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[packnet_matched]
+  arch:               (128, 92, 30) → (128, 92, 30)
+  params total:       115138 → 115138
+  params trainable:   14658 → 14658  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.0929  (30-class full-softmax — headline)
+  final acc domain:   0.2248  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9504  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.1872  domain 0.1567  task 0.0000
+  wall-clock:         59.5s
+  per-phase (full / domain / task):
+     phase1_mnist         0.1109  /  0.2077  /  0.9671
+     phase2_fashion       0.0223  /  0.1677  /  0.9634
+     phase3_emnist        0.1454  /  0.2991  /  0.9206
+
+[packnet_standard]
+  arch:               (56, 56, 30) → (56, 56, 30)
+  params total:       48862 → 48862
+  params trainable:   48862 → 48862  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.0535  (30-class full-softmax — headline)
+  final acc domain:   0.1083  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9141  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full -0.0135  domain 0.0698  task 0.0000
+  wall-clock:         70.6s
+  per-phase (full / domain / task):
+     phase1_mnist         0.0562  /  0.0734  /  0.9258
+     phase2_fashion       0.0899  /  0.1020  /  0.8808
+     phase3_emnist        0.0144  /  0.1495  /  0.9358
+
+Headline (full / domain / task across arms):
+  packnet_matched               full 0.0929  domain 0.2248  task 0.9504  (full-forget +0.1872)
+  packnet_standard              full 0.0535  domain 0.1083  task 0.9141  (full-forget -0.0135)
+
+
+##############################################################################
+#   SEED 1  (2/3)
+##############################################################################
+
+[packnet_matched] start — arch (128, 92, 30)  params 115138 (trainable 14658)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[packnet_matched] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[packnet_matched] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.0932  last_loss 0.0068  steps 197  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0061  last_loss 0.0005  steps 394  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0039  last_loss 0.0008  steps 591  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0032  last_loss 0.0001  steps 788  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0026  last_loss 0.0006  steps 985  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0021  last_loss 0.0077  steps 1182  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0018  last_loss 0.0000  steps 1379  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0015  last_loss 0.0000  steps 1576  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 1: own=0.9981 (domain 0.9986, task 0.9986)  avg=0.9981 (domain 0.9986, task 0.9986)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.2210  last_loss 0.2035  steps 188  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.1145  last_loss 0.1902  steps 376  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.0968  last_loss 0.3241  steps 564  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.0826  last_loss 0.1233  steps 752  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.0701  last_loss 0.0129  steps 940  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.0604  last_loss 0.0945  steps 1128  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.0529  last_loss 0.0205  steps 1316  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.0474  last_loss 0.0467  steps 1504  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 2: own=0.1528 (domain 0.1538, task 0.9427)  avg=0.5471 (domain 0.5483, task 0.9706)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.1673  last_loss 0.0908  steps 175  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.0524  last_loss 0.0786  steps 350  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.0382  last_loss 0.0096  steps 525  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.0307  last_loss 0.0043  steps 700  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.0252  last_loss 0.0046  steps 875  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0211  last_loss 0.0022  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0179  last_loss 0.0250  steps 1225  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0151  last_loss 0.0104  steps 1400  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 3: own=0.1499 (domain 0.1676, task 0.9594)  avg=0.3663 (domain 0.3776, task 0.9669)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.1283  last_loss 0.0428  steps 189  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0202  last_loss 0.0091  steps 378  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0135  last_loss 0.0059  steps 567  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0102  last_loss 0.0030  steps 756  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0082  last_loss 0.0305  steps 945  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0068  last_loss 0.0127  steps 1134  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0058  last_loss 0.0011  steps 1323  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0048  last_loss 0.0037  steps 1512  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 4: own=0.6057 (domain 0.6269, task 0.9809)  avg=0.3853 (domain 0.3941, task 0.9704)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.2503  last_loss 0.0871  steps 183  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.0986  last_loss 0.1065  steps 366  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.0776  last_loss 0.0969  steps 549  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.0670  last_loss 0.1092  steps 732  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.0612  last_loss 0.0997  steps 915  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.0552  last_loss 0.0346  steps 1098  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.0516  last_loss 0.1673  steps 1281  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.0470  last_loss 0.0332  steps 1464  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 5: own=0.0262 (domain 0.0343, task 0.9430)  avg=0.2305 (domain 0.2465, task 0.9649)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.2333  last_loss 0.0778  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.0784  last_loss 0.0867  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.0601  last_loss 0.0522  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0512  last_loss 0.0226  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0450  last_loss 0.0479  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0415  last_loss 0.0338  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0388  last_loss 0.0408  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0373  last_loss 0.0154  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 6: own=0.0060 (domain 0.1570, task 0.9150)  avg=0.1841 (domain 0.2129, task 0.9566)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.1750  last_loss 0.1603  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.0971  last_loss 0.0664  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.0912  last_loss 0.0686  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.0885  last_loss 0.0428  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.0852  last_loss 0.0180  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.0818  last_loss 0.0258  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.0785  last_loss 0.1181  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.0772  last_loss 0.0763  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 7: own=0.0295 (domain 0.7170, task 0.8750)  avg=0.1511 (domain 0.2814, task 0.9449)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.1304  last_loss 0.0208  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0240  last_loss 0.0487  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0153  last_loss 0.0550  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0117  last_loss 0.0087  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0097  last_loss 0.0012  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0081  last_loss 0.0065  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0069  last_loss 0.0024  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0057  last_loss 0.0005  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 8: own=0.0220 (domain 0.3290, task 0.9975)  avg=0.1186 (domain 0.2591, task 0.9515)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.0654  last_loss 0.0224  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0147  last_loss 0.0261  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0086  last_loss 0.0039  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0060  last_loss 0.0049  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0046  last_loss 0.0078  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0035  last_loss 0.0015  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0030  last_loss 0.0024  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0026  last_loss 0.0003  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 9: own=0.2770 (domain 0.4710, task 0.9985)  avg=0.1405 (domain 0.1863, task 0.9567)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.2241  last_loss 0.0364  steps 187  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0417  last_loss 0.0132  steps 374  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0267  last_loss 0.0341  steps 561  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0205  last_loss 0.0454  steps 748  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0170  last_loss 0.0027  steps 935  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0152  last_loss 0.0966  steps 1122  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0134  last_loss 0.0010  steps 1309  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0122  last_loss 0.0001  steps 1496  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 10: own=0.1590 (domain 0.4220, task 0.9680)  avg=0.1384 (domain 0.2148, task 0.9579)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.5590  last_loss 0.4724  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2549  last_loss 0.1741  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.2114  last_loss 0.2594  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.1888  last_loss 0.0608  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.1751  last_loss 0.0385  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.1665  last_loss 0.1700  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.1590  last_loss 0.2153  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.1512  last_loss 0.0832  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 11: own=0.0000 (domain 0.0194, task 0.8850)  avg=0.0892 (domain 0.1779, task 0.9512)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.3857  last_loss 0.1907  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.1699  last_loss 0.1637  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.1212  last_loss 0.0795  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.0998  last_loss 0.0660  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.0872  last_loss 0.0155  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.0791  last_loss 0.0481  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.0729  last_loss 0.0081  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.0688  last_loss 0.0852  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 12: own=0.1519 (domain 0.6687, task 0.9606)  avg=0.0777 (domain 0.1959, task 0.9520)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.8661  last_loss 0.2750  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.3119  last_loss 0.5538  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.2134  last_loss 0.1261  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.1732  last_loss 0.2499  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1487  last_loss 0.0545  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1324  last_loss 0.1107  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1201  last_loss 0.0209  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1119  last_loss 0.0234  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 13: own=0.1488 (domain 0.3994, task 0.9050)  avg=0.0818 (domain 0.2015, task 0.9484)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.8178  last_loss 0.5560  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.4137  last_loss 0.3527  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.3009  last_loss 0.2426  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.2476  last_loss 0.4046  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.2158  last_loss 0.2349  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.1962  last_loss 0.2152  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.1819  last_loss 0.1885  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.1714  last_loss 0.1192  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 14: own=0.0031 (domain 0.0506, task 0.9331)  avg=0.0786 (domain 0.1928, task 0.9473)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.5303  last_loss 0.3806  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.3756  last_loss 0.6389  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.3230  last_loss 0.2133  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2957  last_loss 0.4071  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.2761  last_loss 0.2816  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.2625  last_loss 0.4670  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.2508  last_loss 0.1932  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.2410  last_loss 0.1543  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 15: own=0.0600 (domain 0.2069, task 0.9031)  avg=0.0627 (domain 0.1704, task 0.9444)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] <<< PASS 1/1 done — full=0.0627  domain=0.1704  task=0.9444
+
+[packnet_standard] start — arch (56, 56, 30)  params 48862 (trainable 48862)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[packnet_standard] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[packnet_standard] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.0310  last_loss 0.0001  steps 197  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0035  last_loss 0.0004  steps 394  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0010  last_loss 0.0000  steps 591  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0010  last_loss 0.0000  steps 788  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0013  last_loss 0.0000  steps 985  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0009  last_loss 0.0000  steps 1182  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0003  last_loss 0.0000  steps 1379  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0003  last_loss 0.0000  steps 1576  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 1: own=0.1636 (domain 0.7423, task 0.9664)  avg=0.1636 (domain 0.7423, task 0.9664)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.1273  last_loss 0.1499  steps 188  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.0436  last_loss 0.0602  steps 376  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.0266  last_loss 0.0076  steps 564  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.0180  last_loss 0.0265  steps 752  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.0165  last_loss 0.0307  steps 940  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.0083  last_loss 0.0005  steps 1128  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.0067  last_loss 0.0009  steps 1316  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.0047  last_loss 0.0002  steps 1504  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 2: own=0.0867 (domain 0.1690, task 0.9682)  avg=0.1797 (domain 0.3571, task 0.9673)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.0661  last_loss 0.0156  steps 175  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.0123  last_loss 0.0169  steps 350  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.0052  last_loss 0.0005  steps 525  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.0025  last_loss 0.0011  steps 700  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.0010  last_loss 0.0001  steps 875  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0006  last_loss 0.0000  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0003  last_loss 0.0000  steps 1225  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0002  last_loss 0.0000  steps 1400  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 3: own=0.3052 (domain 0.3228, task 0.8207)  avg=0.1803 (domain 0.2268, task 0.9184)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.0298  last_loss 0.0004  steps 189  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0026  last_loss 0.0001  steps 378  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0012  last_loss 0.0007  steps 567  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0006  last_loss 0.0001  steps 756  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0002  last_loss 0.0000  steps 945  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0001  last_loss 0.0000  steps 1134  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0001  last_loss 0.0000  steps 1323  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0001  last_loss 0.0000  steps 1512  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 4: own=0.2644 (domain 0.3766, task 0.9522)  avg=0.1694 (domain 0.2510, task 0.9269)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.1439  last_loss 0.1961  steps 183  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.0420  last_loss 0.0622  steps 366  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.0294  last_loss 0.0171  steps 549  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.0218  last_loss 0.0144  steps 732  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.0167  last_loss 0.0030  steps 915  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.0146  last_loss 0.0014  steps 1098  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.0098  last_loss 0.0019  steps 1281  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.0075  last_loss 0.0061  steps 1464  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 5: own=0.0000 (domain 0.0000, task 0.9501)  avg=0.0440 (domain 0.1516, task 0.9315)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.1743  last_loss 0.0618  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.0432  last_loss 0.0153  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.0314  last_loss 0.0180  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0261  last_loss 0.0050  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0235  last_loss 0.1506  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0187  last_loss 0.0018  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0159  last_loss 0.0080  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0151  last_loss 0.0006  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 6: own=0.0000 (domain 0.0000, task 0.5935)  avg=0.0469 (domain 0.0848, task 0.8752)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.1424  last_loss 0.0551  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.0849  last_loss 0.0395  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.0759  last_loss 0.0383  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.0698  last_loss 0.0535  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.0645  last_loss 0.1050  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.0587  last_loss 0.0078  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.0526  last_loss 0.1201  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.0506  last_loss 0.0052  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 7: own=0.4550 (domain 0.4985, task 0.8535)  avg=0.0896 (domain 0.1785, task 0.8721)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.0718  last_loss 0.0025  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0049  last_loss 0.0007  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0025  last_loss 0.0002  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0017  last_loss 0.0005  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0011  last_loss 0.0002  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0007  last_loss 0.0002  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0006  last_loss 0.0020  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0003  last_loss 0.0000  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 8: own=0.0120 (domain 0.0965, task 0.9810)  avg=0.0226 (domain 0.1435, task 0.8857)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.1033  last_loss 0.0001  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0042  last_loss 0.0002  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0019  last_loss 0.0000  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0010  last_loss 0.0005  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0005  last_loss 0.0002  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0003  last_loss 0.0003  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0002  last_loss 0.0003  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0002  last_loss 0.0001  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 9: own=0.2155 (domain 0.2465, task 0.8785)  avg=0.0532 (domain 0.1917, task 0.8849)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.2911  last_loss 0.0140  steps 187  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0128  last_loss 0.0002  steps 374  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0086  last_loss 0.0011  steps 561  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0063  last_loss 0.0021  steps 748  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0050  last_loss 0.0002  steps 935  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0042  last_loss 0.0000  steps 1122  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0034  last_loss 0.0000  steps 1309  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0025  last_loss 0.0010  steps 1496  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 10: own=0.0005 (domain 0.0145, task 0.9885)  avg=0.0692 (domain 0.2070, task 0.8953)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.2958  last_loss 0.2232  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.1066  last_loss 0.1101  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.0794  last_loss 0.2826  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.0639  last_loss 0.0285  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.0513  last_loss 0.0150  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.0409  last_loss 0.0219  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.0367  last_loss 0.0075  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.0304  last_loss 0.0042  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 11: own=0.0031 (domain 0.0631, task 0.9281)  avg=0.1342 (domain 0.2441, task 0.8982)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.2522  last_loss 0.0192  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.0607  last_loss 0.0346  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.0437  last_loss 0.2128  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.0343  last_loss 0.0042  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.0278  last_loss 0.0073  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.0248  last_loss 0.0325  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.0200  last_loss 0.0025  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.0171  last_loss 0.0303  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 12: own=0.0019 (domain 0.1294, task 0.9331)  avg=0.1174 (domain 0.2005, task 0.9011)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 1.1455  last_loss 0.1365  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.1439  last_loss 0.0402  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.0873  last_loss 0.0318  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.0660  last_loss 0.0069  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.0549  last_loss 0.0018  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.0471  last_loss 0.0032  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.0415  last_loss 0.0075  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.0370  last_loss 0.0024  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 13: own=0.0369 (domain 0.4538, task 0.8606)  avg=0.0824 (domain 0.2009, task 0.8980)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.4520  last_loss 0.1974  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.1407  last_loss 0.0989  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.1016  last_loss 0.1470  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.0822  last_loss 0.0842  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.0691  last_loss 0.0124  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.0591  last_loss 0.0129  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.0523  last_loss 0.0334  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.0462  last_loss 0.0230  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 14: own=0.0169 (domain 0.5319, task 0.9794)  avg=0.0625 (domain 0.2208, task 0.9038)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 1.5354  last_loss 0.6213  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.3995  last_loss 0.3599  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2945  last_loss 0.0809  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2509  last_loss 0.1725  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.2250  last_loss 0.1456  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.2084  last_loss 0.1241  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.1963  last_loss 0.2531  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.1845  last_loss 0.0951  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 15: own=0.0000 (domain 0.0150, task 0.9275)  avg=0.0609 (domain 0.1812, task 0.9054)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] <<< PASS 1/1 done — full=0.0609  domain=0.1812  task=0.9054
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[packnet_matched]
+  arch:               (128, 92, 30) → (128, 92, 30)
+  params total:       115138 → 115138
+  params trainable:   14658 → 14658  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.0627  (30-class full-softmax — headline)
+  final acc domain:   0.1704  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9444  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.1321  domain 0.2047  task 0.0000
+  wall-clock:         66.3s
+  per-phase (full / domain / task):
+     phase1_mnist         0.1260  /  0.1662  /  0.9649
+     phase2_fashion       0.0131  /  0.1427  /  0.9508
+     phase3_emnist        0.0489  /  0.2024  /  0.9174
+
+[packnet_standard]
+  arch:               (56, 56, 30) → (56, 56, 30)
+  params total:       48862 → 48862
+  params trainable:   48862 → 48862  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.0609  (30-class full-softmax — headline)
+  final acc domain:   0.1812  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9054  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.0463  domain 0.0673  task 0.0000
+  wall-clock:         71.8s
+  per-phase (full / domain / task):
+     phase1_mnist         0.0036  /  0.1232  /  0.9315
+     phase2_fashion       0.1712  /  0.1841  /  0.8590
+     phase3_emnist        0.0080  /  0.2363  /  0.9258
+
+Headline (full / domain / task across arms):
+  packnet_matched               full 0.0627  domain 0.1704  task 0.9444  (full-forget +0.1321)
+  packnet_standard              full 0.0609  domain 0.1812  task 0.9054  (full-forget +0.0463)
+
+
+##############################################################################
+#   SEED 2  (3/3)
+##############################################################################
+
+[packnet_matched] start — arch (128, 92, 30)  params 115138 (trainable 14658)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[packnet_matched] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[packnet_matched] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.0772  last_loss 0.0009  steps 197  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0077  last_loss 0.0048  steps 394  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0048  last_loss 0.0005  steps 591  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0036  last_loss 0.0013  steps 788  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0031  last_loss 0.0001  steps 985  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0022  last_loss 0.0001  steps 1182  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0019  last_loss 0.0004  steps 1379  arch [128, 92, 30]
+  [packnet_matched] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0015  last_loss 0.0002  steps 1576  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 1: own=0.9466 (domain 0.9849, task 0.9972)  avg=0.9466 (domain 0.9849, task 0.9972)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.2542  last_loss 0.1518  steps 188  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.1178  last_loss 0.2490  steps 376  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.0950  last_loss 0.0276  steps 564  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.0834  last_loss 0.0261  steps 752  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.0723  last_loss 0.0127  steps 940  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.0634  last_loss 0.0271  steps 1128  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.0563  last_loss 0.1122  steps 1316  arch [128, 92, 30]
+  [packnet_matched] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.0502  last_loss 0.0062  steps 1504  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 2: own=0.6846 (domain 0.7571, task 0.9466)  avg=0.6265 (domain 0.6800, task 0.9719)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.2312  last_loss 0.2018  steps 175  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.0571  last_loss 0.0090  steps 350  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.0392  last_loss 0.0220  steps 525  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.0319  last_loss 0.0412  steps 700  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.0274  last_loss 0.0159  steps 875  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0232  last_loss 0.0069  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0207  last_loss 0.0202  steps 1225  arch [128, 92, 30]
+  [packnet_matched] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0179  last_loss 0.0018  steps 1400  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 3: own=0.6585 (domain 0.7369, task 0.9819)  avg=0.4242 (domain 0.4819, task 0.9752)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.1512  last_loss 0.0116  steps 189  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0221  last_loss 0.0349  steps 378  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0147  last_loss 0.0111  steps 567  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0116  last_loss 0.0020  steps 756  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0097  last_loss 0.0024  steps 945  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0080  last_loss 0.0022  steps 1134  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0069  last_loss 0.0012  steps 1323  arch [128, 92, 30]
+  [packnet_matched] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0062  last_loss 0.0123  steps 1512  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 4: own=0.4028 (domain 0.4325, task 0.9723)  avg=0.3914 (domain 0.4148, task 0.9745)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.2367  last_loss 0.1092  steps 183  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1067  last_loss 0.0823  steps 366  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.0877  last_loss 0.1122  steps 549  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.0762  last_loss 0.0256  steps 732  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.0680  last_loss 0.0649  steps 915  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.0613  last_loss 0.0406  steps 1098  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.0555  last_loss 0.0746  steps 1281  arch [128, 92, 30]
+  [packnet_matched] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.0502  last_loss 0.0163  steps 1464  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 5: own=0.0444 (domain 0.3232, task 0.9233)  avg=0.0965 (domain 0.3252, task 0.9643)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.1424  last_loss 0.0800  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.0592  last_loss 0.0271  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.0484  last_loss 0.0304  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0445  last_loss 0.0201  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0408  last_loss 0.0371  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0378  last_loss 0.0388  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0355  last_loss 0.0219  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0336  last_loss 0.1207  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 6: own=0.1860 (domain 0.5070, task 0.9455)  avg=0.0744 (domain 0.3121, task 0.9611)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.1687  last_loss 0.0304  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.0951  last_loss 0.2161  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.0887  last_loss 0.0497  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.0860  last_loss 0.0478  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.0826  last_loss 0.0192  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.0794  last_loss 0.0309  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.0767  last_loss 0.0715  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.0752  last_loss 0.1317  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 7: own=0.0115 (domain 0.7435, task 0.9040)  avg=0.0441 (domain 0.3450, task 0.9530)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.1992  last_loss 0.0676  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0251  last_loss 0.0353  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0137  last_loss 0.0060  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0096  last_loss 0.0025  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0074  last_loss 0.0059  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0061  last_loss 0.0031  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0052  last_loss 0.0014  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0045  last_loss 0.0015  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 8: own=0.2245 (domain 0.8205, task 0.9950)  avg=0.0765 (domain 0.3249, task 0.9582)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.1630  last_loss 0.0233  steps 186  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0183  last_loss 0.0191  steps 372  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0102  last_loss 0.0042  steps 558  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0072  last_loss 0.0129  steps 744  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0056  last_loss 0.0063  steps 930  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0048  last_loss 0.0008  steps 1116  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0041  last_loss 0.0067  steps 1302  arch [128, 92, 30]
+  [packnet_matched] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0035  last_loss 0.0027  steps 1488  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 9: own=0.0445 (domain 0.4500, task 0.9990)  avg=0.0690 (domain 0.2837, task 0.9628)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.3783  last_loss 0.0778  steps 187  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0368  last_loss 0.0096  steps 374  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0218  last_loss 0.0013  steps 561  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0163  last_loss 0.0002  steps 748  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0134  last_loss 0.0022  steps 935  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0115  last_loss 0.0024  steps 1122  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0102  last_loss 0.0047  steps 1309  arch [128, 92, 30]
+  [packnet_matched] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0091  last_loss 0.0001  steps 1496  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 10: own=0.0000 (domain 0.0270, task 0.9585)  avg=0.0233 (domain 0.2227, task 0.9623)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.6011  last_loss 0.4651  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2337  last_loss 0.1982  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.1847  last_loss 0.1419  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.1633  last_loss 0.1228  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.1507  last_loss 0.0735  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.1428  last_loss 0.0459  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.1333  last_loss 0.0548  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.1290  last_loss 0.1713  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 11: own=0.0000 (domain 0.0000, task 0.8956)  avg=0.0086 (domain 0.2213, task 0.9563)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.9931  last_loss 0.4420  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.3154  last_loss 0.2806  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.2192  last_loss 0.0995  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.1726  last_loss 0.2060  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.1446  last_loss 0.0836  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.1273  last_loss 0.1762  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.1141  last_loss 0.1109  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.1036  last_loss 0.0431  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 12: own=0.4456 (domain 0.6019, task 0.8500)  avg=0.0503 (domain 0.2519, task 0.9474)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 1.0176  last_loss 0.7776  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.3400  last_loss 0.2250  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.2469  last_loss 0.3129  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.2045  last_loss 0.1901  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1777  last_loss 0.1589  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1603  last_loss 0.1694  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1470  last_loss 0.1238  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1370  last_loss 0.0927  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 13: own=0.0919 (domain 0.1231, task 0.9025)  avg=0.0700 (domain 0.2339, task 0.9440)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.8183  last_loss 0.4900  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.3905  last_loss 0.2717  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.2830  last_loss 0.1366  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.2315  last_loss 0.1872  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.2007  last_loss 0.1594  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.1796  last_loss 0.0982  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.1653  last_loss 0.1746  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.1536  last_loss 0.2040  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 14: own=0.0844 (domain 0.1281, task 0.9312)  avg=0.0791 (domain 0.2304, task 0.9430)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 92, 30] params=115138 (trainable 14658/∞) ===
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.7480  last_loss 0.4691  steps 150  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.5244  last_loss 0.3817  steps 300  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.4164  last_loss 0.3410  steps 450  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.3547  last_loss 0.3487  steps 600  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.3161  last_loss 0.5846  steps 750  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.2874  last_loss 0.1743  steps 900  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.2687  last_loss 0.3853  steps 1050  arch [128, 92, 30]
+  [packnet_matched] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.2536  last_loss 0.2809  steps 1200  arch [128, 92, 30]
+[packnet_matched] After pass 1 task 15: own=0.0044 (domain 0.0088, task 0.9031)  avg=0.0675 (domain 0.2094, task 0.9404)  arch=[128, 92, 30] params=115138 (trainable 14658)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_matched] <<< PASS 1/1 done — full=0.0675  domain=0.2094  task=0.9404
+
+[packnet_standard] start — arch (56, 56, 30)  params 48862 (trainable 48862)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[packnet_standard] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[packnet_standard] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.0283  last_loss 0.0001  steps 197  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0024  last_loss 0.0001  steps 394  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0017  last_loss 0.0001  steps 591  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0015  last_loss 0.0000  steps 788  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0008  last_loss 0.0000  steps 985  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0007  last_loss 0.0000  steps 1182  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0007  last_loss 0.0000  steps 1379  arch [56, 56, 30]
+  [packnet_standard] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0003  last_loss 0.0000  steps 1576  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 1: own=0.0005 (domain 0.0180, task 0.9920)  avg=0.0005 (domain 0.0180, task 0.9920)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.1122  last_loss 0.3044  steps 188  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.0417  last_loss 0.0046  steps 376  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.0276  last_loss 0.0019  steps 564  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.0171  last_loss 0.0111  steps 752  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.0106  last_loss 0.0018  steps 940  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.0097  last_loss 0.0007  steps 1128  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.0053  last_loss 0.0001  steps 1316  arch [56, 56, 30]
+  [packnet_standard] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.0041  last_loss 0.0022  steps 1504  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 2: own=0.0411 (domain 0.1293, task 0.8932)  avg=0.0206 (domain 0.0646, task 0.9426)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.0870  last_loss 0.0129  steps 175  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.0145  last_loss 0.0077  steps 350  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.0069  last_loss 0.0152  steps 525  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.0042  last_loss 0.0007  steps 700  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.0020  last_loss 0.0013  steps 875  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0012  last_loss 0.0001  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0006  last_loss 0.0016  steps 1225  arch [56, 56, 30]
+  [packnet_standard] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0003  last_loss 0.0000  steps 1400  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 3: own=0.2220 (domain 0.3218, task 0.9755)  avg=0.0773 (domain 0.1183, task 0.9536)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.0387  last_loss 0.0057  steps 189  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0040  last_loss 0.0001  steps 378  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0019  last_loss 0.0001  steps 567  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0007  last_loss 0.0000  steps 756  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0004  last_loss 0.0000  steps 945  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0002  last_loss 0.0000  steps 1134  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0001  last_loss 0.0000  steps 1323  arch [56, 56, 30]
+  [packnet_standard] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0001  last_loss 0.0001  steps 1512  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 4: own=0.2336 (domain 0.5765, task 0.9914)  avg=0.1047 (domain 0.2479, task 0.9630)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.0911  last_loss 0.0329  steps 183  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.0352  last_loss 0.1714  steps 366  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.0241  last_loss 0.0056  steps 549  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.0176  last_loss 0.0333  steps 732  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.0126  last_loss 0.0058  steps 915  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.0099  last_loss 0.0196  steps 1098  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.0073  last_loss 0.0022  steps 1281  arch [56, 56, 30]
+  [packnet_standard] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.0064  last_loss 0.0005  steps 1464  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 5: own=0.1573 (domain 0.3510, task 0.9158)  avg=0.0607 (domain 0.2096, task 0.9536)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.0698  last_loss 0.0117  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.0365  last_loss 0.0199  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.0280  last_loss 0.0145  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0224  last_loss 0.0009  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0210  last_loss 0.0373  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0161  last_loss 0.0619  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0144  last_loss 0.0199  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0106  last_loss 0.0093  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 6: own=0.0050 (domain 0.0225, task 0.5500)  avg=0.0710 (domain 0.1712, task 0.8863)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.1324  last_loss 0.0837  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.0820  last_loss 0.1107  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.0694  last_loss 0.0286  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.0649  last_loss 0.0702  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.0599  last_loss 0.0239  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.0527  last_loss 0.0200  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.0507  last_loss 0.0219  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.0481  last_loss 0.0344  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 7: own=0.0000 (domain 0.0000, task 0.8975)  avg=0.0544 (domain 0.1282, task 0.8879)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.0543  last_loss 0.0051  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0040  last_loss 0.0032  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0023  last_loss 0.0005  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0012  last_loss 0.0010  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0010  last_loss 0.0001  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0003  last_loss 0.0001  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0002  last_loss 0.0000  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0001  last_loss 0.0001  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 8: own=0.0650 (domain 0.8265, task 0.9975)  avg=0.0333 (domain 0.2214, task 0.9016)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.0156  last_loss 0.0005  steps 186  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0019  last_loss 0.0013  steps 372  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0009  last_loss 0.0002  steps 558  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0003  last_loss 0.0000  steps 744  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0002  last_loss 0.0001  steps 930  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0001  last_loss 0.0001  steps 1116  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0001  last_loss 0.0000  steps 1302  arch [56, 56, 30]
+  [packnet_standard] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0001  last_loss 0.0001  steps 1488  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 9: own=0.0000 (domain 0.0195, task 1.0000)  avg=0.0094 (domain 0.1470, task 0.9125)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.0483  last_loss 0.0111  steps 187  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0067  last_loss 0.0081  steps 374  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0051  last_loss 0.0008  steps 561  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0029  last_loss 0.0001  steps 748  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0020  last_loss 0.0040  steps 935  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0027  last_loss 0.1469  steps 1122  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0044  last_loss 0.0000  steps 1309  arch [56, 56, 30]
+  [packnet_standard] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0011  last_loss 0.0000  steps 1496  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 10: own=0.0120 (domain 0.5600, task 0.9950)  avg=0.0132 (domain 0.1943, task 0.9208)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.6439  last_loss 0.1444  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.1398  last_loss 0.2017  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.0969  last_loss 0.2260  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.0770  last_loss 0.0461  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.0640  last_loss 0.0320  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.0525  last_loss 0.0148  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.0463  last_loss 0.0414  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.0389  last_loss 0.0480  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 11: own=0.1625 (domain 0.2163, task 0.6219)  avg=0.0443 (domain 0.1580, task 0.8936)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.5396  last_loss 0.0032  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.0619  last_loss 0.0361  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.0412  last_loss 0.0358  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.0321  last_loss 0.0041  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.0272  last_loss 0.3471  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.0222  last_loss 0.0037  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.0184  last_loss 0.0063  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.0162  last_loss 0.0089  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 12: own=0.2663 (domain 0.4888, task 0.8206)  avg=0.0428 (domain 0.1593, task 0.8875)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.4396  last_loss 0.3487  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.0944  last_loss 0.2152  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.0597  last_loss 0.0428  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.0454  last_loss 0.0755  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.0376  last_loss 0.0596  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.0314  last_loss 0.0085  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.0275  last_loss 0.0058  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.0250  last_loss 0.0063  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 13: own=0.0531 (domain 0.1344, task 0.9800)  avg=0.0397 (domain 0.1427, task 0.8946)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 1.6082  last_loss 0.6357  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.2029  last_loss 0.1643  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.1423  last_loss 0.0565  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.1121  last_loss 0.0172  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.0929  last_loss 0.0618  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.0787  last_loss 0.0201  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.0685  last_loss 0.0507  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.0608  last_loss 0.0760  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 14: own=0.0000 (domain 0.0019, task 0.9688)  avg=0.0355 (domain 0.1208, task 0.8999)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[56, 56, 30] params=48862 (trainable 48862/∞) ===
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.6823  last_loss 0.4262  steps 150  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.3240  last_loss 0.2934  steps 300  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2545  last_loss 0.0987  steps 450  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2187  last_loss 0.2211  steps 600  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.1940  last_loss 0.1582  steps 750  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.1765  last_loss 0.1899  steps 900  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.1633  last_loss 0.2575  steps 1050  arch [56, 56, 30]
+  [packnet_standard] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.1517  last_loss 0.0534  steps 1200  arch [56, 56, 30]
+[packnet_standard] After pass 1 task 15: own=0.1831 (domain 0.3769, task 0.9400)  avg=0.0324 (domain 0.1317, task 0.9026)  arch=[56, 56, 30] params=48862 (trainable 48862)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[packnet_standard] <<< PASS 1/1 done — full=0.0324  domain=0.1317  task=0.9026
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[packnet_matched]
+  arch:               (128, 92, 30) → (128, 92, 30)
+  params total:       115138 → 115138
+  params trainable:   14658 → 14658  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.0675  (30-class full-softmax — headline)
+  final acc domain:   0.2094  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9404  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.2012  domain 0.2503  task 0.0000
+  wall-clock:         57.3s
+  per-phase (full / domain / task):
+     phase1_mnist         0.0365  /  0.2227  /  0.9643
+     phase2_fashion       0.0143  /  0.2327  /  0.9604
+     phase3_emnist        0.1518  /  0.1728  /  0.8965
+
+[packnet_standard]
+  arch:               (56, 56, 30) → (56, 56, 30)
+  params total:       48862 → 48862
+  params trainable:   48862 → 48862  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.0324  (30-class full-softmax — headline)
+  final acc domain:   0.1317  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9026  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.0654  domain 0.1477  task 0.0000
+  wall-clock:         81.7s
+  per-phase (full / domain / task):
+     phase1_mnist         0.0028  /  0.1083  /  0.9536
+     phase2_fashion       0.0180  /  0.1217  /  0.8880
+     phase3_emnist        0.0765  /  0.1650  /  0.8663
+
+Headline (full / domain / task across arms):
+  packnet_matched               full 0.0675  domain 0.2094  task 0.9404  (full-forget +0.2012)
+  packnet_standard              full 0.0324  domain 0.1317  task 0.9026  (full-forget +0.0654)
+
+
+==============================================================================
+bench_chained_15task — Multi-seed Report (n=3 seeds)
+==============================================================================
+Seeds: [0, 1, 2]
+
+[packnet_matched]  (3 seeds)
+  final acc full   : 0.0744 ± 0.0162  (n=3)
+  final acc domain : 0.2016 ± 0.0280  (n=3)
+  final acc task   : 0.9450 ± 0.0050  (n=3)
+  forgetting full   : +0.1735 ± 0.0365
+  forgetting domain : +0.2039 ± 0.0468
+  forgetting task   : +0.0000 ± 0.0000
+  per-phase full:
+     phase1_mnist           0.0912 ± 0.0479
+     phase2_fashion         0.0166 ± 0.0050
+     phase3_emnist          0.1153 ± 0.0576
+  per-phase domain:
+     phase1_mnist           0.1989 ± 0.0293
+     phase2_fashion         0.1810 ± 0.0465
+     phase3_emnist          0.2247 ± 0.0661
+  per-phase task:
+     phase1_mnist           0.9654 ± 0.0015
+     phase2_fashion         0.9582 ± 0.0066
+     phase3_emnist          0.9115 ± 0.0131
+  cum grows allowed : 0.00 ± 0.00
+  cum grows denied  : 0.00 ± 0.00
+  cum dream purges  : 0.00 ± 0.00
+  final trainable    : 14658 ± 0
+
+[packnet_standard]  (3 seeds)
+  final acc full   : 0.0490 ± 0.0148  (n=3)
+  final acc domain : 0.1404 ± 0.0372  (n=3)
+  final acc task   : 0.9074 ± 0.0060  (n=3)
+  forgetting full   : +0.0327 ± 0.0411
+  forgetting domain : +0.0949 ± 0.0457
+  forgetting task   : +0.0000 ± 0.0000
+  per-phase full:
+     phase1_mnist           0.0209 ± 0.0306
+     phase2_fashion         0.0930 ± 0.0766
+     phase3_emnist          0.0330 ± 0.0378
+  per-phase domain:
+     phase1_mnist           0.1016 ± 0.0256
+     phase2_fashion         0.1359 ± 0.0429
+     phase3_emnist          0.1836 ± 0.0463
+  per-phase task:
+     phase1_mnist           0.9369 ± 0.0147
+     phase2_fashion         0.8759 ± 0.0151
+     phase3_emnist          0.9093 ± 0.0376
+  cum grows allowed : 0.00 ± 0.00
+  cum grows denied  : 0.00 ± 0.00
+  cum dream purges  : 0.00 ± 0.00
+  final trainable    : 48862 ± 0
+
+Headline (mean ± std across seeds):
+  arm                           full                domain              task              
+  packnet_matched               0.0744±0.0162       0.2016±0.0280       0.9450±0.0050     
+  packnet_standard              0.0490±0.0148       0.1404±0.0372       0.9074±0.0060     
+
+Paired σ-differences (arm_a − arm_b across seeds):
+  comparison                                        metric        mean Δ      std Δ       σ    n
+  packnet_matched vs packnet_standard               full         +0.0254     0.0206   +1.23    3
+  packnet_matched vs packnet_standard               domain       +0.0612     0.0652   +0.94    3
+  packnet_matched vs packnet_standard               task         +0.0377     0.0013  +27.95    3
+
+  log: /home/marcrockhat/trioron-project/outputs/bench_chained_15task_n3_PACKNET_multiseed.csv
