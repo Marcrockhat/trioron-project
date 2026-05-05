@@ -1,0 +1,98 @@
+Dream-cycle calibration — donors=['digits', 'fashion', 'emnist']
+  steps=200 batch=128 lr=0.005 noise_scale=1.0
+  loaded digits     arch=[128, 52, 10]  classes=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  loaded fashion    arch=[128, 52, 20]  classes=[10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  loaded emnist     arch=[128, 52, 30]  classes=[20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+  union_classes=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+  n_union=30
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+==============================================================================
+BEFORE dream-cycle (per-branch log-softmax only)
+==============================================================================
+  soft + per-branch log-softmax task-aware=0.9695  full-union=0.5314
+
+==============================================================================
+DREAM CYCLE  bias_mode=per_class  (200 steps, params=30)
+==============================================================================
+  step    1/200  loss 1.4571  archive_acc 0.7188  ||bias||=0.027  max|bias|=0.005
+  step   20/200  loss 1.2355  archive_acc 0.7422  ||bias||=0.395  max|bias|=0.100
+  step   40/200  loss 1.3638  archive_acc 0.7266  ||bias||=0.789  max|bias|=0.195
+  step   60/200  loss 1.4845  archive_acc 0.6875  ||bias||=1.175  max|bias|=0.287
+  step   80/200  loss 1.1412  archive_acc 0.7109  ||bias||=1.565  max|bias|=0.373
+  step  100/200  loss 1.4465  archive_acc 0.6797  ||bias||=1.950  max|bias|=0.467
+  step  120/200  loss 1.2767  archive_acc 0.7578  ||bias||=2.311  max|bias|=0.565
+  step  140/200  loss 1.1985  archive_acc 0.6797  ||bias||=2.689  max|bias|=0.662
+  step  160/200  loss 0.9349  archive_acc 0.7891  ||bias||=3.057  max|bias|=0.746
+  step  180/200  loss 1.2610  archive_acc 0.7578  ||bias||=3.423  max|bias|=0.827
+  step  200/200  loss 1.1099  archive_acc 0.7734  ||bias||=3.796  max|bias|=0.922
+
+==============================================================================
+AFTER dream-cycle (per-branch log-softmax + global bias)
+==============================================================================
+  soft + log-softmax + bias    task-aware=0.9689  full-union=0.5362
+
+Per-task full-union delta (before → after):
+  task                        before     after         Δ
+  mnist_0_1                   0.9215    0.9215   +0.0000
+  mnist_2_3                   0.7478    0.7493   +0.0015
+  mnist_4_5                   0.7161    0.7070   -0.0091
+  mnist_6_7                   0.8046    0.8051   +0.0005
+  mnist_8_9                   0.0015    0.0474   +0.0459
+  fashion_mnist_0_1           0.8665    0.8495   -0.0170
+  fashion_mnist_2_3           0.6490    0.6995   +0.0505
+  fashion_mnist_4_5           0.6150    0.5780   -0.0370
+  fashion_mnist_6_7           0.5665    0.5885   +0.0220
+  fashion_mnist_8_9           0.0000    0.0010   +0.0010
+  emnist_letters_0_1          0.5194    0.5337   +0.0144
+  emnist_letters_2_3          0.5619    0.5775   +0.0156
+  emnist_letters_4_5          0.5869    0.5719   -0.0150
+  emnist_letters_6_7          0.4150    0.4119   -0.0031
+  emnist_letters_8_9          0.0000    0.0006   +0.0006
+
+Learned bias offsets:
+  class   0 → bias -0.5506
+  class   1 → bias -0.6586
+  class   2 → bias -0.5602
+  class   3 → bias -0.7397
+  class   4 → bias -0.8821
+  class   5 → bias -0.7469
+  class   6 → bias -0.5929
+  class   7 → bias -0.7954
+  class   8 → bias +0.8897
+  class   9 → bias +0.8922
+  class  10 → bias -0.5874
+  class  11 → bias -0.5091
+  class  12 → bias -0.2703
+  class  13 → bias +0.4114
+  class  14 → bias -0.6500
+  class  15 → bias -0.9216
+  class  16 → bias -0.3285
+  class  17 → bias -0.7236
+  class  18 → bias +0.8899
+  class  19 → bias +0.9074
+  class  20 → bias -0.3917
+  class  21 → bias -0.5572
+  class  22 → bias +0.0564
+  class  23 → bias -0.8450
+  class  24 → bias -0.5079
+  class  25 → bias -0.7876
+  class  26 → bias -0.7577
+  class  27 → bias -0.5493
+  class  28 → bias +0.9115
+  class  29 → bias +0.8780
+
+Calibration storage: bias_param 30 floats × 4 B = 120 B (<0.023% of organism)
+
+==============================================================================
+HEADLINE
+==============================================================================
+  before  task-aware=0.9695  full-union=0.5314
+  after   task-aware=0.9689  full-union=0.5362  (Δfull = +0.0047, Δta = -0.0005)
+
+Done.

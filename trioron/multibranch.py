@@ -295,6 +295,57 @@ class MultiBranchOrganism(nn.Module):
             return F.softmax(log_lik / max(temperature, 1e-6), dim=-1)
         raise ValueError(f"Unknown routing mode: {mode}")
 
+    def forward_from_z(
+        self,
+        z: torch.Tensor,
+        *,
+        routing: str = "soft",
+        temperature: float = 1.0,
+        normalize_per_branch: bool = False,
+        bias_offset: Optional[torch.Tensor] = None,
+        return_extras: bool = False,
+    ):
+        """Combine path starting from a code-space tensor z (skips L0).
+        Used by the dream-cycle calibration trainer, which samples z
+        directly from the union manifold archive — no need to round-trip
+        through pixel space. `bias_offset` (shape (n_union,)) is added
+        to combined logits if supplied; that's the calibrator parameter.
+        """
+        gates = self.gates(z, mode=routing, temperature=temperature)
+        n_union = len(self._union_classes)
+        B = z.shape[0]
+        if normalize_per_branch:
+            combined = z.new_full((B, n_union), float("-inf"))
+            log_g = torch.log(gates.clamp_min(1e-30))
+        else:
+            combined = z.new_zeros(B, n_union)
+            log_g = None
+        branch_padded = z.new_zeros(B, len(self._branches), n_union) \
+            if return_extras else None
+        for bi, b in enumerate(self._branches):
+            head_logits = b.forward_from_l0(z)
+            cov = b.classes_covered
+            cols = head_logits[:, cov]
+            if normalize_per_branch:
+                cols = F.log_softmax(cols, dim=-1)
+                cols = cols + log_g[:, bi:bi + 1]
+            else:
+                cols = gates[:, bi:bi + 1] * cols
+            for j, c in enumerate(cov):
+                ui = self._class_to_union[c]
+                combined[:, ui] = cols[:, j]
+                if branch_padded is not None:
+                    branch_padded[:, bi, ui] = cols[:, j]
+        if bias_offset is not None:
+            combined = combined + bias_offset
+        if return_extras:
+            return combined, {
+                "z": z,
+                "gates": gates,
+                "branch_logits_padded": branch_padded,
+            }
+        return combined
+
     def forward(
         self,
         x: torch.Tensor,
@@ -302,6 +353,7 @@ class MultiBranchOrganism(nn.Module):
         routing: str = "soft",
         temperature: float = 1.0,
         normalize_per_branch: bool = False,
+        bias_offset: Optional[torch.Tensor] = None,
         return_extras: bool = False,
     ):
         """Run x through the organism. Returns logits over `union_classes`
@@ -326,44 +378,12 @@ class MultiBranchOrganism(nn.Module):
         `branch_logits_padded` (B, N_branches, n_union_classes).
         """
         z = self.project_l0(x)
-        gates = self.gates(z, mode=routing, temperature=temperature)
-        n_union = len(self._union_classes)
-        B = z.shape[0]
-        if normalize_per_branch:
-            # Combined log-probability over the union. Slots not covered
-            # by any branch (impossible by construction — union_classes
-            # is the union of branch coverage) would stay at -inf.
-            combined = z.new_full((B, n_union), float("-inf"))
-        else:
-            combined = z.new_zeros(B, n_union)
-        branch_padded = z.new_zeros(B, len(self._branches), n_union) \
-            if return_extras else None
-        log_g = None
-        if normalize_per_branch:
-            log_g = torch.log(gates.clamp_min(1e-30))      # (B, N_branches)
-        for bi, b in enumerate(self._branches):
-            head_logits = b.forward_from_l0(z)              # (B, head_size_b)
-            cov = b.classes_covered
-            cols = head_logits[:, cov]                      # (B, |C_b|)
-            if normalize_per_branch:
-                cols = F.log_softmax(cols, dim=-1)          # log P_b over C_b
-                cols = cols + log_g[:, bi:bi + 1]           # + log(g_b)
-            else:
-                cols = gates[:, bi:bi + 1] * cols           # g_b · logits_b
-            for j, c in enumerate(cov):
-                ui = self._class_to_union[c]
-                # Non-overlap is enforced in add_branch, so each union
-                # slot is covered by exactly one branch — direct write.
-                combined[:, ui] = cols[:, j]
-                if branch_padded is not None:
-                    branch_padded[:, bi, ui] = cols[:, j]
-        if return_extras:
-            return combined, {
-                "z": z,
-                "gates": gates,
-                "branch_logits_padded": branch_padded,
-            }
-        return combined
+        return self.forward_from_z(
+            z, routing=routing, temperature=temperature,
+            normalize_per_branch=normalize_per_branch,
+            bias_offset=bias_offset,
+            return_extras=return_extras,
+        )
 
     # ----- diagnostics -----
 
