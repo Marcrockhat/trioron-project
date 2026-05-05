@@ -100,6 +100,7 @@ from experiments.datasets import (
     DifferentialReplayBuffer,
     EngramBuffer,
     HippocampalBuffer,
+    ManifoldBuffer,
     MemoryBuffer,
     TaskDataView,
     build_task_views,
@@ -374,6 +375,41 @@ HIPPOCAMPAL_K_PER_CLASS = 50         # matched-K to raw rehearsal's
                                       # matched K.
 HIPPOCAMPAL_BATCH = 64               # per-step replay batch size
 HIPPOCAMPAL_LOSS_WEIGHT = 1.0        # parity with new-task CE
+
+# DeepInversion-style synthesis (Phase A, 2026-05-05). Replaces
+# _store_hippocampal_codes' real-sample encoding with logit-driven
+# inversion against the just-consolidated network. Storage shape is
+# unchanged — (K, L0_WIDTH) per class — so the replay path is byte-
+# identical. The benefit is "no real samples retained at consolidation"
+# (the synthesizer needs only the network itself + class label). Phase B
+# will skip the buffer entirely (synthesize-on-demand at replay).
+HIPPOCAMPAL_SYNTHETIC = False        # True = invert logits to make codes;
+                                      # False = legacy real-sample L0(x).
+HIPPOCAMPAL_SYNTH_STEPS = 50         # inner Adam steps per class
+HIPPOCAMPAL_SYNTH_LR = 0.05          # Adam lr on raw_z
+HIPPOCAMPAL_SYNTH_L2 = 1e-3          # L2 reg on z (post-softplus)
+HIPPOCAMPAL_SYNTH_INIT_SIGMA = 0.1   # init scale: raw_z ~ N(0, sigma^2)
+HIPPOCAMPAL_SYNTH_DIV_WEIGHT = 1.0   # within-K diversity reg: penalize
+                                      # squared cosine similarity between
+                                      # the K codes of the same class to
+                                      # break attractor-spike collapse.
+
+# Manifold Replay — trioron-native pseudo-rehearsal (2026-05-05).
+# Stores per-class diagonal Gaussian (μ_c, σ_c) at L0 output instead of
+# K real-sample codes. Codes are SAMPLED on demand at each replay step
+# from N(μ_c, σ_c²) — synthesize-on-demand, not synthesize-and-store.
+# Storage = 30 classes × (mean+var) × L0_WIDTH × 4 = 30 KB total at
+# chained-15 (vs hippo K=50 = 768 KB; vs raw rehearsal = 4.7 MB).
+# Replay path identical to hippo: forward_from_layer(z, start=1) +
+# masked_cross_entropy. Frozen-L0 only.
+MANIFOLD_REPLAY_ENABLED = False
+MANIFOLD_REPLAY_BATCH = 64           # per-step sample count
+MANIFOLD_REPLAY_LOSS_WEIGHT = 1.0    # parity with new-task CE
+MANIFOLD_NOISE_SCALE = 1.0           # multiplier on σ when sampling;
+                                      # 0 = use mean only, 1 = full
+                                      # diagonal Gaussian draw.
+MANIFOLD_MAX_SAMPLES_PER_CLASS = 1000  # cap when computing stats; matches
+                                        # brainstem's pattern.
 
 # Differential Replay (per Rocky 2026-05-04, post-hippocampal).
 # The trioron network IS its memory; forward(x=0) reveals the
@@ -832,6 +868,83 @@ def _store_hippocampal_codes(
         net.train()
 
 
+def _synthesize_hippocampal_codes(
+    net: TrioronNetwork,
+    active_classes: Sequence[int],
+    seen_classes: Sequence[int],
+    hippo: HippocampalBuffer,
+    *,
+    K: int = HIPPOCAMPAL_K_PER_CLASS,
+    n_steps: int = HIPPOCAMPAL_SYNTH_STEPS,
+    lr: float = HIPPOCAMPAL_SYNTH_LR,
+    l2_weight: float = HIPPOCAMPAL_SYNTH_L2,
+    init_sigma: float = HIPPOCAMPAL_SYNTH_INIT_SIGMA,
+    div_weight: float = HIPPOCAMPAL_SYNTH_DIV_WEIGHT,
+) -> None:
+    """DeepInversion-style synthesis of K L0-output codes per class.
+
+    For each class c in active_classes, optimize a (K, L0_WIDTH) tensor z
+    via Adam to minimize masked_cross_entropy(forward_from_layer(z, 1), c)
+    + L2(z), with z = softplus(raw_z) so post-ReLU non-negativity is
+    enforced by reparameterization. Network params are frozen during
+    inversion (requires_grad disabled, then restored).
+
+    Active class set for the masked CE is `seen_classes` — all classes
+    consolidated so far including the current task — so the synthesized
+    code peaks at c relative to every other already-known class, not
+    just the current task's pair.
+
+    Storage shape is identical to _store_hippocampal_codes' real-sample
+    output (K, l0_width); replay path is unchanged. Net effect: same
+    buffer footprint, no peek at real training samples at consolidation.
+    """
+    device = net.layers[1].W.device
+    l0_width = net.layers[0].n_nodes
+    seen_set = sorted(set(int(c) for c in seen_classes))
+    if not seen_set:
+        return
+
+    saved_grad = [(p, p.requires_grad) for p in net.parameters()]
+    for p in net.parameters():
+        p.requires_grad_(False)
+    net.eval()
+    try:
+        for c in active_classes:
+            raw_z = (init_sigma * torch.randn(
+                K, l0_width, device=device,
+            )).requires_grad_(True)
+            opt = torch.optim.Adam([raw_z], lr=lr)
+            target = torch.full(
+                (K,), int(c), dtype=torch.long, device=device,
+            )
+            eye_K = torch.eye(K, dtype=torch.bool, device=device)
+            for _ in range(n_steps):
+                z = F.softplus(raw_z)
+                logits = net.forward_from_layer(z, start_layer=1)
+                ce = masked_cross_entropy(
+                    logits, target, active_classes=seen_set,
+                )
+                l2 = (z * z).mean()
+                # Within-K diversity: penalize squared cosine similarity
+                # between every pair of codes for class c. Forces the K
+                # codes to spread across the class-c attractor basin
+                # instead of collapsing to a single spike.
+                z_n = F.normalize(z, dim=1, eps=1e-8)
+                sim = z_n @ z_n.T
+                div = (sim[~eye_K] ** 2).mean()
+                loss = ce + l2_weight * l2 + div_weight * div
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+            with torch.no_grad():
+                z_final = F.softplus(raw_z).detach()
+            hippo.add_class(int(c), z_final)
+    finally:
+        for p, was in saved_grad:
+            p.requires_grad_(was)
+        net.train()
+
+
 def _consolidate_engrams(
     net: TrioronNetwork,
     active_classes: Sequence[int],
@@ -933,6 +1046,44 @@ def _consolidate_engrams(
                         .clamp_(clip_range[0], clip_range[1])
                     )
             engrams.add_class(int(c), x.detach())
+    finally:
+        net.train()
+
+
+def _store_manifold_stats(
+    net: TrioronNetwork,
+    train_view: TaskDataView,
+    active_classes: Sequence[int],
+    manifold: ManifoldBuffer,
+    max_samples_per_class: int = MANIFOLD_MAX_SAMPLES_PER_CLASS,
+) -> None:
+    """Capture per-class (μ, σ) at L0 output. Forward each class's real
+    samples through the (frozen) L0 layer once and fit a diagonal
+    Gaussian. Frozen-L0 only — for trainable-L0 arms the stats would
+    drift; the bench gates on arm_l0_frozen.
+
+    Storage cost: 30 classes × (mean + var) × 128 × 4 = ~30 KB total.
+    Independent of K — codes are sampled at replay time, not stored.
+    """
+    net.eval()
+    try:
+        with torch.no_grad():
+            x_all, y_all = train_view.all_examples()
+            l0 = net.layers[0]
+            for c in active_classes:
+                mask = (y_all == c)
+                x_c = x_all[mask]
+                if x_c.shape[0] == 0:
+                    continue
+                if x_c.shape[0] > max_samples_per_class:
+                    idx = torch.randperm(
+                        x_c.shape[0]
+                    )[:max_samples_per_class]
+                    x_c = x_c[idx]
+                z_c = l0(x_c)  # (n, l0_width), post-ReLU
+                mu = z_c.mean(dim=0).detach()
+                sigma = z_c.std(dim=0).detach()
+                manifold.add_class(int(c), mu, sigma)
     finally:
         net.train()
 
@@ -1223,6 +1374,7 @@ def train_one_task(
     engram_old_classes: Optional[Sequence[int]] = None,
     hippocampus: Optional[HippocampalBuffer] = None,
     differential: Optional[DifferentialReplayBuffer] = None,
+    manifold: Optional[ManifoldBuffer] = None,
 ) -> optim.Optimizer:
     """Train on one task for `n_epochs` proper minibatch epochs.
 
@@ -1458,6 +1610,27 @@ def train_one_task(
                         logits_h, y_h, active_classes=all_seen_h,
                     )
 
+            # Manifold Replay: sample fresh L0 codes from per-class
+            # diagonal Gaussian and feed via the same path as hippo.
+            # No stored codes — codes are drawn on demand each step.
+            l_manifold = None
+            if (manifold is not None
+                    and manifold.has_classes()
+                    and MANIFOLD_REPLAY_LOSS_WEIGHT > 0):
+                z_m, y_m = manifold.sample(
+                    MANIFOLD_REPLAY_BATCH,
+                    noise_scale=MANIFOLD_NOISE_SCALE,
+                )
+                if z_m is not None:
+                    z_m = z_m.to(device=net.layers[1].W.device)
+                    y_m = y_m.to(device=net.layers[1].W.device)
+                    logits_m = net.forward_from_layer(z_m, start_layer=1)
+                    head_size = net.layers[-1].n_nodes
+                    all_seen_m = list(range(head_size))
+                    l_manifold = masked_cross_entropy(
+                        logits_m, y_m, active_classes=all_seen_m,
+                    )
+
             l_data = l_task
             if l_rehearsal is not None:
                 l_data = l_data + REHEARSAL_LOSS_WEIGHT * l_rehearsal
@@ -1469,6 +1642,8 @@ def train_one_task(
                 l_data = l_data + ENGRAM_LOSS_WEIGHT * l_engram_lwf
             if l_hippo is not None:
                 l_data = l_data + HIPPOCAMPAL_LOSS_WEIGHT * l_hippo
+            if l_manifold is not None:
+                l_data = l_data + MANIFOLD_REPLAY_LOSS_WEIGHT * l_manifold
             if l_diff is not None:
                 l_data = l_data + l_diff
             l = (l_data + ewc_baseline * net.ewc_penalty()
@@ -1634,6 +1809,11 @@ def run_chained_curriculum(
     differential: Optional[DifferentialReplayBuffer] = None
     if DIFFERENTIAL_ENABLED and arm_l0_frozen:
         differential = DifferentialReplayBuffer()
+    # Manifold Replay — per-class L0 diagonal Gaussian, sampled on demand.
+    # Same frozen-L0 precondition; trainable-L0 arms would have stale stats.
+    manifold: Optional[ManifoldBuffer] = None
+    if MANIFOLD_REPLAY_ENABLED and arm_l0_frozen:
+        manifold = ManifoldBuffer()
     print(f"\n[{label}] start — arch {initial_arch}  "
           f"params {initial_n_params} (trainable {initial_trainable})  "
           f"growth={do_growth} dream={do_dream}  "
@@ -1644,7 +1824,8 @@ def run_chained_curriculum(
           f"brainstem={'on' if BRAINSTEM_ENABLED else 'off'}  "
           f"engrams={'on' if ENGRAM_ENABLED else 'off'}  "
           f"hippocampus={'on' if hippocampus is not None else 'off'}  "
-          f"differential={'on' if differential is not None else 'off'}")
+          f"differential={'on' if differential is not None else 'off'}  "
+          f"manifold={'on' if manifold is not None else 'off'}")
 
     opt = optim.Adam(trainable_param_iter(net), lr=LR)
     # Accuracy matrix shape: (n_total, K). Row i = state after the i-th
@@ -1743,6 +1924,7 @@ def run_chained_curriculum(
                     engram_old_classes=engram_old,
                     hippocampus=hippocampus,
                     differential=differential,
+                    manifold=manifold,
                 )
 
             # 3b. Deterministic hidden growth (with optional dream-rescue).
@@ -1832,6 +2014,7 @@ def run_chained_curriculum(
                         engram_old_classes=engram_old,
                         hippocampus=hippocampus,
                         differential=differential,
+                        manifold=manifold,
                     )
             else:
                 opt = train_one_task(
@@ -1846,6 +2029,7 @@ def run_chained_curriculum(
                     engram_old_classes=engram_old,
                     hippocampus=hippocampus,
                     differential=differential,
+                    manifold=manifold,
                 )
 
             # 4. Consolidate.
@@ -1884,11 +2068,28 @@ def run_chained_curriculum(
             #     class, forward through (frozen) L0, store the
             #     compressed codes. Pass-1 only — buffer persists across
             #     passes. Storage = K * L0_width per class.
+            #     If HIPPOCAMPAL_SYNTHETIC, replace real-sample encoding
+            #     with logit-driven inversion against the just-
+            #     consolidated network. Storage shape unchanged.
             if hippocampus is not None and pass_idx == 0:
-                _store_hippocampal_codes(
-                    net, train_view, active, hippocampus,
-                    K=HIPPOCAMPAL_K_PER_CLASS,
-                )
+                if HIPPOCAMPAL_SYNTHETIC:
+                    # Refresh-all: re-synthesize codes for every class
+                    # seen so far against the current (post-growth) head,
+                    # not just the just-learned classes. Fixes the
+                    # cross-task-discrimination collapse seen in the
+                    # one-shot variant: codes inverted against an old
+                    # narrow head don't separate from later-task classes.
+                    # Cost grows O(C·T_inv) per boundary; storage unchanged.
+                    seen_so_far = sorted(set(old_classes_seen + active))
+                    _synthesize_hippocampal_codes(
+                        net, seen_so_far, seen_so_far, hippocampus,
+                        K=HIPPOCAMPAL_K_PER_CLASS,
+                    )
+                else:
+                    _store_hippocampal_codes(
+                        net, train_view, active, hippocampus,
+                        K=HIPPOCAMPAL_K_PER_CLASS,
+                    )
 
             # 4f. Differential Replay consolidation: capture per-layer
             #     activation differentials (blank vs canonical class
@@ -1896,6 +2097,15 @@ def run_chained_curriculum(
             if differential is not None and pass_idx == 0:
                 _store_differential_codes(
                     net, train_view, active, differential,
+                )
+
+            # 4g. Manifold Replay consolidation: per-class diagonal
+            #     Gaussian fit at L0 output. Storage = O(C·d_L0); codes
+            #     are sampled on demand at replay time (no per-sample
+            #     storage). Trioron-native pseudo-rehearsal.
+            if manifold is not None and pass_idx == 0:
+                _store_manifold_stats(
+                    net, train_view, active, manifold,
                 )
 
             # 5. Post-task dreaming = REPLAY ONLY (keeps memories warm;

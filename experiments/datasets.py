@@ -585,6 +585,97 @@ class BrainstemBuffer:
         return zs, ys
 
 
+class ManifoldBuffer:
+    """Per-class diagonal Gaussian over L0 outputs — trioron-native
+    pseudo-rehearsal that samples codes on demand from the consolidated
+    L0 distribution rather than storing K real-sample codes.
+
+    Stores ONE diagonal Gaussian per global class, computed from real
+    samples of the class forwarded through the (frozen) L0 layer at
+    consolidation time. Each replay step samples synthetic z ~ N(μ_c,
+    σ_c²) and feeds via forward_from_layer(z, start=1), so L1 AND head
+    are supervised — distinct from BrainstemBuffer which stores L1
+    stats and bypasses L1 (head-only supervision).
+
+    Compared to HippocampalBuffer (K real codes per class, ~768 KB at
+    chained-15 K=50): storage drops to 30 KB total (per-class μ + σ at
+    L0 width 128). Buffer/network ratio shrinks as the curriculum grows
+    because per-class storage is constant in K.
+
+    Trioron framing: differential's δL0 captures the per-class L0 mean
+    (one moment); ManifoldBuffer adds the per-dim variance (second
+    moment) and uses both as a sample generator rather than as a KL
+    distillation target. The replay path is byte-identical to hippo
+    (CE on forward_from_layer output) but the codes are sampled rather
+    than stored.
+
+    Frozen-L0 only: stored stats stay valid as long as L0 doesn't drift.
+    For trainable-L0 arms the buffer would go stale; the bench gates
+    consolidation on arm_l0_frozen.
+    """
+
+    def __init__(self):
+        self._stats: Dict[int, Tuple[torch.Tensor, torch.Tensor]] = {}
+
+    def add_class(
+        self, class_idx: int, mu: torch.Tensor, sigma: torch.Tensor,
+    ) -> None:
+        if mu.dim() != 1 or sigma.dim() != 1:
+            raise ValueError(
+                f"mu/sigma must be 1-D, got {mu.shape}, {sigma.shape}"
+            )
+        if mu.shape != sigma.shape:
+            raise ValueError(
+                f"mu/sigma shape mismatch: {mu.shape} vs {sigma.shape}"
+            )
+        self._stats[int(class_idx)] = (
+            mu.detach().clone(),
+            sigma.detach().clone(),
+        )
+
+    def has_classes(self) -> bool:
+        return len(self._stats) > 0
+
+    def n_classes_stored(self) -> int:
+        return len(self._stats)
+
+    def stored_classes(self) -> List[int]:
+        return sorted(self._stats.keys())
+
+    def storage_bytes(self) -> int:
+        return sum(
+            mu.numel() * mu.element_size() + sg.numel() * sg.element_size()
+            for (mu, sg) in self._stats.values()
+        )
+
+    def sample(
+        self,
+        n_samples: int,
+        noise_scale: float = 1.0,
+        generator: Optional[torch.Generator] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return (z, y) with z shape (n_samples, l0_width). Each row
+        sampled from a randomly chosen class's per-feature Gaussian.
+        L0 is frozen → stored width is constant; no zero-pad logic."""
+        if not self._stats:
+            return None, None  # type: ignore
+        classes = list(self._stats.keys())
+        choice_idx = torch.randint(
+            0, len(classes), (n_samples,), generator=generator,
+        )
+        ys = torch.tensor(
+            [classes[int(i)] for i in choice_idx], dtype=torch.long,
+        )
+        d = next(iter(self._stats.values()))[0].shape[0]
+        zs = torch.zeros(n_samples, d)
+        for i in range(n_samples):
+            c = classes[int(choice_idx[i])]
+            mu, sigma = self._stats[c]
+            noise = torch.randn(d, generator=generator) * noise_scale
+            zs[i] = mu + sigma * noise
+        return zs, ys
+
+
 # ---------------------------------------------------------------------------
 # Dataset bundle — caches train + test tensors per dataset name
 # ---------------------------------------------------------------------------
