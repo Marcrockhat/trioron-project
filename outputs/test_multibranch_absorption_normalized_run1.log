@@ -1,0 +1,145 @@
+Multi-branch absorption test
+  donors              = ['digits', 'fashion']
+  soft routing T      = 1.0
+
+  digits   ckpt=outputs/poc_donor_digits.pt
+    arch=[128, 52, 10]  classes=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  l0_seed=42  arm=grown_uncapped_dream
+
+  fashion  ckpt=outputs/poc_donor_fashion.pt
+    arch=[128, 52, 20]  classes=[10, 11, 12, 13, 14, 15, 16, 17, 18, 19]  l0_seed=42  arm=grown_uncapped_dream
+
+Organism assembled with 2 branch(es).
+  union_classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  storage:
+    l0_bytes                         401920  (   392.5 KB)
+    branch_substrate_bytes            60024  (    58.6 KB)
+    archive_bytes                     20480  (    20.0 KB)
+    total_bytes                      482424  (   471.1 KB)
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+
+==============================================================================
+DONOR STANDALONE (upper bound — each donor on its own tasks)
+==============================================================================
+task                  donor          n  active          task-aware
+----------------------------------------------------------------
+mnist_0_1             digits      2115  [0, 1]              0.9981
+mnist_2_3             digits      2042  [2, 3]              0.9662
+mnist_4_5             digits      1874  [4, 5]              0.9851
+mnist_6_7             digits      1986  [6, 7]              0.9879
+mnist_8_9             digits      1983  [8, 9]              0.9672
+fashion_mnist_0_1     fashion     2000  [10, 11]            0.9740
+fashion_mnist_2_3     fashion     2000  [12, 13]            0.9595
+fashion_mnist_4_5     fashion     2000  [14, 15]            0.9920
+fashion_mnist_6_7     fashion     2000  [16, 17]            0.9975
+fashion_mnist_8_9     fashion     2000  [18, 19]            0.9950
+  donor-standalone mean task-aware = 0.9823
+
+==============================================================================
+ORGANISM (assembled multi-branch, no re-training)
+==============================================================================
+
+--- HARD routing (argmax over branches)
+task                       n  active          task-aware  full-union
+--------------------------------------------------------------------
+mnist_0_1               2115  [0, 1]              0.9953      0.6823
+mnist_2_3               2042  [2, 3]              0.9535      0.1832
+mnist_4_5               1874  [4, 5]              0.9562      0.0011
+mnist_6_7               1986  [6, 7]              0.9854      0.0151
+mnist_8_9               1983  [8, 9]              0.9627      0.0000
+fashion_mnist_0_1       2000  [10, 11]            0.9655      0.7335
+fashion_mnist_2_3       2000  [12, 13]            0.9455      0.1790
+fashion_mnist_4_5       2000  [14, 15]            0.9370      0.2925
+fashion_mnist_6_7       2000  [16, 17]            0.9975      0.3765
+fashion_mnist_8_9       2000  [18, 19]            0.9930      0.0000
+mean                                              0.9692      0.2463
+
+--- SOFT routing (T=1.0)
+task                       n  active          task-aware  full-union
+--------------------------------------------------------------------
+mnist_0_1               2115  [0, 1]              0.9981      0.6818
+mnist_2_3               2042  [2, 3]              0.9662      0.2008
+mnist_4_5               1874  [4, 5]              0.9851      0.0315
+mnist_6_7               1986  [6, 7]              0.9879      0.0327
+mnist_8_9               1983  [8, 9]              0.9672      0.0005
+fashion_mnist_0_1       2000  [10, 11]            0.9735      0.7350
+fashion_mnist_2_3       2000  [12, 13]            0.9585      0.1920
+fashion_mnist_4_5       2000  [14, 15]            0.9920      0.3385
+fashion_mnist_6_7       2000  [16, 17]            0.9975      0.3775
+fashion_mnist_8_9       2000  [18, 19]            0.9950      0.0000
+mean                                              0.9821      0.2590
+
+--- UNIFORM gates (ablation; routing disabled)
+task                       n  active          task-aware  full-union
+--------------------------------------------------------------------
+mnist_0_1               2115  [0, 1]              0.9981      0.7418
+mnist_2_3               2042  [2, 3]              0.9662      0.3712
+mnist_4_5               1874  [4, 5]              0.9851      0.2524
+mnist_6_7               1986  [6, 7]              0.9879      0.3746
+mnist_8_9               1983  [8, 9]              0.9672      0.0000
+fashion_mnist_0_1       2000  [10, 11]            0.9740      0.8825
+fashion_mnist_2_3       2000  [12, 13]            0.9595      0.6645
+fashion_mnist_4_5       2000  [14, 15]            0.9920      0.6720
+fashion_mnist_6_7       2000  [16, 17]            0.9975      0.5680
+fashion_mnist_8_9       2000  [18, 19]            0.9950      0.0000
+mean                                              0.9823      0.4527
+
+--- SOFT routing + per-branch log-softmax (T=1.0)
+task                       n  active          task-aware  full-union
+--------------------------------------------------------------------
+mnist_0_1               2115  [0, 1]              0.9981      0.9626
+mnist_2_3               2042  [2, 3]              0.9662      0.7977
+mnist_4_5               1874  [4, 5]              0.9851      0.7785
+mnist_6_7               1986  [6, 7]              0.9879      0.8328
+mnist_8_9               1983  [8, 9]              0.9672      0.0015
+fashion_mnist_0_1       2000  [10, 11]            0.9740      0.8680
+fashion_mnist_2_3       2000  [12, 13]            0.9595      0.6515
+fashion_mnist_4_5       2000  [14, 15]            0.9920      0.6385
+fashion_mnist_6_7       2000  [16, 17]            0.9975      0.5680
+fashion_mnist_8_9       2000  [18, 19]            0.9950      0.0000
+mean                                              0.9823      0.6099
+
+--- HARD routing + per-branch log-softmax
+task                       n  active          task-aware  full-union
+--------------------------------------------------------------------
+mnist_0_1               2115  [0, 1]              0.9981      0.9631
+mnist_2_3               2042  [2, 3]              0.9662      0.7977
+mnist_4_5               1874  [4, 5]              0.9851      0.7791
+mnist_6_7               1986  [6, 7]              0.9879      0.8328
+mnist_8_9               1983  [8, 9]              0.9672      0.0015
+fashion_mnist_0_1       2000  [10, 11]            0.9740      0.8680
+fashion_mnist_2_3       2000  [12, 13]            0.9595      0.6515
+fashion_mnist_4_5       2000  [14, 15]            0.9920      0.6375
+fashion_mnist_6_7       2000  [16, 17]            0.9975      0.5680
+fashion_mnist_8_9       2000  [18, 19]            0.9950      0.0000
+mean                                              0.9823      0.6099
+
+==============================================================================
+GATE FIRING (soft routing — mean per-branch gate weight per task)
+==============================================================================
+task                        digits     fashion
+----------------------------------------------
+mnist_0_1                   0.9893      0.0107
+mnist_2_3                   0.9633      0.0367
+mnist_4_5                   0.9482      0.0518
+mnist_6_7                   0.9709      0.0291
+mnist_8_9                   0.9669      0.0331
+fashion_mnist_0_1           0.0234      0.9766
+fashion_mnist_2_3           0.0262      0.9738
+fashion_mnist_4_5           0.0599      0.9401
+fashion_mnist_6_7           0.0094      0.9906
+fashion_mnist_8_9           0.0128      0.9872
+
+==============================================================================
+HEADLINE
+==============================================================================
+  donor-standalone mean task-aware       = 0.9823  (upper bound)
+  HARD              task-aware = 0.9692  full-union = 0.2463
+  SOFT              task-aware = 0.9821  full-union = 0.2590
+  UNIFORM           task-aware = 0.9823  full-union = 0.4527
+  HARD + log-softmax task-aware = 0.9823  full-union = 0.6099
+  SOFT + log-softmax task-aware = 0.9823  full-union = 0.6099
+
+Done.

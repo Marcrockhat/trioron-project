@@ -301,33 +301,62 @@ class MultiBranchOrganism(nn.Module):
         *,
         routing: str = "soft",
         temperature: float = 1.0,
+        normalize_per_branch: bool = False,
         return_extras: bool = False,
     ):
         """Run x through the organism. Returns logits over `union_classes`
         in the order they appear in that list.
 
-        With `return_extras=True`, also returns a dict containing `z`
-        (the shared L0 projection), `gates` (B, N_branches), and
-        `branch_logits_padded` (B, N_branches, n_union_classes) — useful
-        for the absorption test to compare per-branch contributions.
+        normalize_per_branch=False (default) — combine raw head logits
+            weighted by gates: combined[c] = Σ_b g_b · pad(logits_b)[c].
+            Preserves task-aware accuracy, but full-union argmax is
+            biased by per-donor calibration mismatch.
+
+        normalize_per_branch=True — each branch's logits are passed
+            through log_softmax restricted to its OWN covered classes
+            before combining; gate weight enters in log space:
+                combined[c] = log(g_b(c)) + log P_b(c | x)
+            where b(c) is the branch covering c (non-overlap is enforced
+            in add_branch). This is the principled mixture-of-experts
+            log-probability and the right argmax target for full-union
+            without retraining. Inference-only fix.
+
+        With `return_extras=True`, also returns a dict with `z` (the
+        shared L0 projection), `gates` (B, N_branches), and
+        `branch_logits_padded` (B, N_branches, n_union_classes).
         """
         z = self.project_l0(x)
         gates = self.gates(z, mode=routing, temperature=temperature)
         n_union = len(self._union_classes)
         B = z.shape[0]
-        # Lay each branch's logits into the union class layout.
-        branch_padded = z.new_zeros(B, len(self._branches), n_union)
+        if normalize_per_branch:
+            # Combined log-probability over the union. Slots not covered
+            # by any branch (impossible by construction — union_classes
+            # is the union of branch coverage) would stay at -inf.
+            combined = z.new_full((B, n_union), float("-inf"))
+        else:
+            combined = z.new_zeros(B, n_union)
+        branch_padded = z.new_zeros(B, len(self._branches), n_union) \
+            if return_extras else None
+        log_g = None
+        if normalize_per_branch:
+            log_g = torch.log(gates.clamp_min(1e-30))      # (B, N_branches)
         for bi, b in enumerate(self._branches):
-            head_logits = b.forward_from_l0(z)   # (B, head_size_b)
-            for c in b.classes_covered:
+            head_logits = b.forward_from_l0(z)              # (B, head_size_b)
+            cov = b.classes_covered
+            cols = head_logits[:, cov]                      # (B, |C_b|)
+            if normalize_per_branch:
+                cols = F.log_softmax(cols, dim=-1)          # log P_b over C_b
+                cols = cols + log_g[:, bi:bi + 1]           # + log(g_b)
+            else:
+                cols = gates[:, bi:bi + 1] * cols           # g_b · logits_b
+            for j, c in enumerate(cov):
                 ui = self._class_to_union[c]
-                if c < head_logits.shape[-1]:
-                    branch_padded[:, bi, ui] = head_logits[:, c]
-                # else: head was extended past this class but it's still
-                # zero — shouldn't happen because classes_covered is
-                # exactly the trained subset, but be safe.
-        # Combine: (B, N_branches, 1) * (B, N_branches, n_union) → sum over branches.
-        combined = (gates.unsqueeze(-1) * branch_padded).sum(dim=1)
+                # Non-overlap is enforced in add_branch, so each union
+                # slot is covered by exactly one branch — direct write.
+                combined[:, ui] = cols[:, j]
+                if branch_padded is not None:
+                    branch_padded[:, bi, ui] = cols[:, j]
         if return_extras:
             return combined, {
                 "z": z,

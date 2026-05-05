@@ -65,7 +65,10 @@ def full_softmax_accuracy(
     return float((pred_global == labels_global).float().mean().item())
 
 
-def evaluate(org, eval_views, *, routing, temperature=1.0, batch=512):
+def evaluate(
+    org, eval_views, *, routing, temperature=1.0,
+    normalize_per_branch=False, batch=512,
+):
     """Forward each task's full eval set in batches, collect logits."""
     union = org.union_classes
     rows = []
@@ -76,7 +79,11 @@ def evaluate(org, eval_views, *, routing, temperature=1.0, batch=512):
             logits_chunks = []
             for s in range(0, n, batch):
                 logits_chunks.append(
-                    org(x[s:s + batch], routing=routing, temperature=temperature)
+                    org(
+                        x[s:s + batch], routing=routing,
+                        temperature=temperature,
+                        normalize_per_branch=normalize_per_branch,
+                    )
                 )
             logits = torch.cat(logits_chunks, dim=0)
             ta = task_aware_accuracy(logits, union, y, list(v.global_classes))
@@ -129,13 +136,37 @@ def gate_stats(org, eval_views, *, routing, temperature=1.0, batch=512):
     return rows
 
 
+def _spec_block_for_donor(donor_label, all_specs):
+    """Map a donor label to the chained_15 sub-block it was trained on
+    (used to pick test specs for that donor's classes)."""
+    if donor_label == "digits":
+        return all_specs[0:5]   # MNIST     (global 0..9)
+    if donor_label == "fashion":
+        return all_specs[5:10]  # Fashion   (global 10..19)
+    if donor_label == "emnist":
+        return all_specs[10:15] # EMNIST    (global 20..29)
+    raise ValueError(f"Unknown donor label: {donor_label}")
+
+
+def _datasets_for_donors(donor_labels):
+    """Map donor labels to the dataset names DatasetBundle should load."""
+    name_for = {"digits": "mnist", "fashion": "fashion_mnist",
+                "emnist": "emnist_letters"}
+    return [name_for[d] for d in donor_labels]
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--digits-ckpt", default="outputs/poc_donor_digits.pt",
+        "--donors", default="digits,fashion",
+        help=("Comma-separated donor labels in load order. Each label "
+              "maps to outputs/poc_donor_<label>.pt and to the chained-15 "
+              "sub-block that produced it. Supported: digits, fashion, "
+              "emnist."),
     )
     parser.add_argument(
-        "--fashion-ckpt", default="outputs/poc_donor_fashion.pt",
+        "--ckpt-prefix", default="outputs/poc_donor_",
+        help="Path prefix for donor checkpoints (default outputs/poc_donor_).",
     )
     parser.add_argument(
         "--temperature", type=float, default=1.0,
@@ -144,40 +175,45 @@ def main(argv=None) -> int:
     parser.add_argument("--data-root", default=DEFAULT_DATA_ROOT)
     args = parser.parse_args(argv)
 
+    donor_labels = [d.strip() for d in args.donors.split(",") if d.strip()]
     print("Multi-branch absorption test")
-    print(f"  donor_digits   ckpt = {args.digits_ckpt}")
-    print(f"  donor_fashion  ckpt = {args.fashion_ckpt}")
+    print(f"  donors              = {donor_labels}")
     print(f"  soft routing T      = {args.temperature}")
 
-    b_digits = Branch.from_checkpoint(args.digits_ckpt, label="digits")
-    b_fashion = Branch.from_checkpoint(args.fashion_ckpt, label="fashion")
-    print()
-    print(f"  digits  arch={list(b_digits.net.n_nodes_per_layer())}  "
-          f"classes={b_digits.classes_covered}  "
-          f"l0_seed={b_digits.l0_seed}  arm={b_digits.arm}")
-    print(f"  fashion arch={list(b_fashion.net.n_nodes_per_layer())}  "
-          f"classes={b_fashion.classes_covered}  "
-          f"l0_seed={b_fashion.l0_seed}  arm={b_fashion.arm}")
+    branches = []
+    for lab in donor_labels:
+        ckpt_path = f"{args.ckpt_prefix}{lab}.pt"
+        b = Branch.from_checkpoint(ckpt_path, label=lab)
+        branches.append(b)
+        print()
+        print(f"  {lab:<8} ckpt={ckpt_path}")
+        print(f"    arch={list(b.net.n_nodes_per_layer())}  "
+              f"classes={b.classes_covered}  "
+              f"l0_seed={b.l0_seed}  arm={b.arm}")
 
-    if b_digits.l0_seed != b_fashion.l0_seed:
-        print(f"\n[WARN] donors have different l0_seed: "
-              f"{b_digits.l0_seed} vs {b_fashion.l0_seed} — "
+    seeds = {b.l0_seed for b in branches}
+    if len(seeds) > 1:
+        print(f"\n[WARN] donors have different l0_seed: {seeds} — "
               "absorption requires shared seed.")
 
-    org = MultiBranchOrganism.from_branches([b_digits, b_fashion])
-    print(f"\nOrganism assembled.")
+    org = MultiBranchOrganism.from_branches(branches)
+    print(f"\nOrganism assembled with {len(branches)} branch(es).")
     print(f"  union_classes = {org.union_classes}")
     sb = org.storage_bytes()
     print(f"  storage:")
     for k, v in sb.items():
         print(f"    {k:<28} {v:>10}  ({v/1024:>8.1f} KB)")
 
-    # Eval views over the union (digits + fashion) of chained-15.
+    # Eval views over the union of all donors' chained-15 sub-blocks.
+    all_specs = chained_15_specs()
+    union_specs = [
+        s for lab in donor_labels for s in _spec_block_for_donor(lab, all_specs)
+    ]
     bundle = DatasetBundle(
-        ["mnist", "fashion_mnist"], root=args.data_root,
+        _datasets_for_donors(donor_labels),
+        root=args.data_root,
         n_holdout_per_dataset=0,
     )
-    union_specs = chained_15_specs()[0:10]
     eval_views = build_task_views(bundle, union_specs, split="test")
 
     # Donor-standalone upper bound: each donor evaluated through its OWN
@@ -189,15 +225,11 @@ def main(argv=None) -> int:
     print("=" * 78)
     donor_rows = []
     with torch.no_grad():
-        for branch, specs_subset in [
-            (b_digits, union_specs[0:5]),
-            (b_fashion, union_specs[5:10]),
-        ]:
-            tag = branch.label
+        for branch in branches:
+            specs_subset = _spec_block_for_donor(branch.label, all_specs)
             for v in build_task_views(bundle, specs_subset, split="test"):
                 x, y = v.all_examples()
-                logits = branch.net(x)   # full forward through donor
-                # Task-aware: argmax over active classes only.
+                logits = branch.net(x)
                 cols = list(v.global_classes)
                 sub = logits[:, cols]
                 pred_local = sub.argmax(dim=-1)
@@ -206,7 +238,8 @@ def main(argv=None) -> int:
                 )
                 ta = float((pred_global == y).float().mean().item())
                 donor_rows.append(
-                    {"task": v.name, "donor": tag, "n": int(x.shape[0]),
+                    {"task": v.name, "donor": branch.label,
+                     "n": int(x.shape[0]),
                      "active": cols, "task_aware": ta}
                 )
     print(f"{'task':<22}{'donor':<10}{'n':>6}  {'active':<14}{'task-aware':>12}")
@@ -217,7 +250,9 @@ def main(argv=None) -> int:
     print(f"  donor-standalone mean task-aware = "
           f"{sum(r['task_aware'] for r in donor_rows)/len(donor_rows):.4f}")
 
-    # Organism evaluation under three routing modes.
+    # Organism evaluation under four configurations:
+    #   HARD / SOFT / UNIFORM (raw-logit combine), and SOFT+norm
+    #   (per-branch log-softmax — fixes full-union calibration mismatch).
     print()
     print("=" * 78)
     print("ORGANISM (assembled multi-branch, no re-training)")
@@ -226,9 +261,24 @@ def main(argv=None) -> int:
     rows_soft = evaluate(org, eval_views, routing="soft",
                          temperature=args.temperature)
     rows_unif = evaluate(org, eval_views, routing="uniform")
+    rows_soft_norm = evaluate(
+        org, eval_views, routing="soft",
+        temperature=args.temperature, normalize_per_branch=True,
+    )
+    rows_hard_norm = evaluate(
+        org, eval_views, routing="hard", normalize_per_branch=True,
+    )
     report_block("HARD routing (argmax over branches)", rows_hard)
     report_block(f"SOFT routing (T={args.temperature})", rows_soft)
     report_block("UNIFORM gates (ablation; routing disabled)", rows_unif)
+    report_block(
+        f"SOFT routing + per-branch log-softmax (T={args.temperature})",
+        rows_soft_norm,
+    )
+    report_block(
+        "HARD routing + per-branch log-softmax",
+        rows_hard_norm,
+    )
 
     # Gate-firing diagnostic — under soft routing, what fraction of
     # weight does each task pull from each branch?
@@ -255,14 +305,20 @@ def main(argv=None) -> int:
     print("HEADLINE")
     print("=" * 78)
     donor_mean = sum(r["task_aware"] for r in donor_rows) / len(donor_rows)
-    print(f"  donor-standalone mean task-aware  = {donor_mean:.4f}  "
+    print(f"  donor-standalone mean task-aware       = {donor_mean:.4f}  "
           "(upper bound)")
-    print(f"  organism HARD     mean task-aware = {mean_ta(rows_hard):.4f}  "
+    print(f"  HARD              task-aware = {mean_ta(rows_hard):.4f}  "
           f"full-union = {mean_full(rows_hard):.4f}")
-    print(f"  organism SOFT     mean task-aware = {mean_ta(rows_soft):.4f}  "
+    print(f"  SOFT              task-aware = {mean_ta(rows_soft):.4f}  "
           f"full-union = {mean_full(rows_soft):.4f}")
-    print(f"  organism UNIFORM  mean task-aware = {mean_ta(rows_unif):.4f}  "
+    print(f"  UNIFORM           task-aware = {mean_ta(rows_unif):.4f}  "
           f"full-union = {mean_full(rows_unif):.4f}")
+    print(f"  HARD + log-softmax task-aware = "
+          f"{mean_ta(rows_hard_norm):.4f}  "
+          f"full-union = {mean_full(rows_hard_norm):.4f}")
+    print(f"  SOFT + log-softmax task-aware = "
+          f"{mean_ta(rows_soft_norm):.4f}  "
+          f"full-union = {mean_full(rows_soft_norm):.4f}")
     print()
     print("Done.")
     return 0
