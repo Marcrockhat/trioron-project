@@ -1,0 +1,147 @@
+BTM baselines vs ours — donors=['digits', 'fashion', 'emnist']
+  loaded digits     arch=[128, 52, 10]  classes=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  loaded fashion    arch=[128, 52, 20]  classes=[10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  loaded emnist     arch=[128, 52, 30]  classes=[20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+==============================================================================
+DONOR STANDALONE (upper bound)
+==============================================================================
+
+--- Donor standalone (each donor on its own tasks)
+task                         n  active          task-aware  full-union
+----------------------------------------------------------------------
+mnist_0_1                 2115  [0, 1]              0.9981         nan
+mnist_2_3                 2042  [2, 3]              0.9662         nan
+mnist_4_5                 1874  [4, 5]              0.9851         nan
+mnist_6_7                 1986  [6, 7]              0.9879         nan
+mnist_8_9                 1983  [8, 9]              0.9672         nan
+fashion_mnist_0_1         2000  [10, 11]            0.9740         nan
+fashion_mnist_2_3         2000  [12, 13]            0.9595         nan
+fashion_mnist_4_5         2000  [14, 15]            0.9920         nan
+fashion_mnist_6_7         2000  [16, 17]            0.9975         nan
+fashion_mnist_8_9         2000  [18, 19]            0.9950         nan
+emnist_letters_0_1        1600  [20, 21]            0.9431         nan
+emnist_letters_2_3        1600  [22, 23]            0.9594         nan
+emnist_letters_4_5        1600  [24, 25]            0.9450         nan
+emnist_letters_6_7        1600  [26, 27]            0.9475         nan
+emnist_letters_8_9        1600  [28, 29]            0.9244         nan
+  mean    task-aware = 0.9695    full-union = nan
+
+==============================================================================
+OURS — archive-routed, soft + log-softmax (ZERO-SHOT)
+==============================================================================
+
+--- Ours (soft+norm, T=1.0)
+task                         n  active          task-aware  full-union
+----------------------------------------------------------------------
+mnist_0_1                 2115  [0, 1]              0.9981      0.9215
+mnist_2_3                 2042  [2, 3]              0.9662      0.7478
+mnist_4_5                 1874  [4, 5]              0.9851      0.7161
+mnist_6_7                 1986  [6, 7]              0.9879      0.8046
+mnist_8_9                 1983  [8, 9]              0.9672      0.0015
+fashion_mnist_0_1         2000  [10, 11]            0.9740      0.8665
+fashion_mnist_2_3         2000  [12, 13]            0.9595      0.6490
+fashion_mnist_4_5         2000  [14, 15]            0.9920      0.6150
+fashion_mnist_6_7         2000  [16, 17]            0.9975      0.5665
+fashion_mnist_8_9         2000  [18, 19]            0.9950      0.0000
+emnist_letters_0_1        1600  [20, 21]            0.9431      0.5194
+emnist_letters_2_3        1600  [22, 23]            0.9594      0.5619
+emnist_letters_4_5        1600  [24, 25]            0.9450      0.5869
+emnist_letters_6_7        1600  [26, 27]            0.9475      0.4150
+emnist_letters_8_9        1600  [28, 29]            0.9244      0.0000
+  mean    task-aware = 0.9695    full-union = 0.5314
+
+==============================================================================
+BTM-avg — average L1 substrate, concatenate head (ZERO-SHOT)
+==============================================================================
+
+--- BTM-avg (param averaging)
+task                         n  active          task-aware  full-union
+----------------------------------------------------------------------
+mnist_0_1                 2115  [0, 1]              0.9981      0.0000
+mnist_2_3                 2042  [2, 3]              0.5015      0.0137
+mnist_4_5                 1874  [4, 5]              0.5347      0.0005
+mnist_6_7                 1986  [6, 7]              0.8192      0.0000
+mnist_8_9                 1983  [8, 9]              0.8785      0.0000
+fashion_mnist_0_1         2000  [10, 11]            0.9070      0.2715
+fashion_mnist_2_3         2000  [12, 13]            0.5005      0.3995
+fashion_mnist_4_5         2000  [14, 15]            0.7670      0.0340
+fashion_mnist_6_7         2000  [16, 17]            0.8045      0.5390
+fashion_mnist_8_9         2000  [18, 19]            0.7045      0.0000
+emnist_letters_0_1        1600  [20, 21]            0.7563      0.0000
+emnist_letters_2_3        1600  [22, 23]            0.5731      0.0088
+emnist_letters_4_5        1600  [24, 25]            0.8306      0.0000
+emnist_letters_6_7        1600  [26, 27]            0.6225      0.0000
+emnist_letters_8_9        1600  [28, 29]            0.8963      0.0000
+  mean    task-aware = 0.7396    full-union = 0.0845
+
+==============================================================================
+BTM-MoE — learned router (400 training steps on real images)
+==============================================================================
+[router] training 400 steps, batch=128, lr=0.001
+  step    1/400  loss 1.1130  router_acc 0.2143
+  step   50/400  loss 0.7227  router_acc 0.7619
+  step  100/400  loss 0.5067  router_acc 0.8254
+  step  150/400  loss 0.3443  router_acc 0.8492
+  step  200/400  loss 0.3557  router_acc 0.8492
+  step  250/400  loss 0.3304  router_acc 0.8651
+  step  300/400  loss 0.2742  router_acc 0.9127
+  step  350/400  loss 0.3251  router_acc 0.9048
+  step  400/400  loss 0.2187  router_acc 0.8968
+
+--- BTM-MoE (learned router, soft+norm, T=1.0)
+task                         n  active          task-aware  full-union
+----------------------------------------------------------------------
+mnist_0_1                 2115  [0, 1]              0.9981      0.9333
+mnist_2_3                 2042  [2, 3]              0.9662      0.7517
+mnist_4_5                 1874  [4, 5]              0.9851      0.7460
+mnist_6_7                 1986  [6, 7]              0.9879      0.8177
+mnist_8_9                 1983  [8, 9]              0.9672      0.0010
+fashion_mnist_0_1         2000  [10, 11]            0.9740      0.8675
+fashion_mnist_2_3         2000  [12, 13]            0.9595      0.6450
+fashion_mnist_4_5         2000  [14, 15]            0.9920      0.6110
+fashion_mnist_6_7         2000  [16, 17]            0.9975      0.5615
+fashion_mnist_8_9         2000  [18, 19]            0.9950      0.0000
+emnist_letters_0_1        1600  [20, 21]            0.9431      0.6413
+emnist_letters_2_3        1600  [22, 23]            0.9594      0.6150
+emnist_letters_4_5        1600  [24, 25]            0.9450      0.7113
+emnist_letters_6_7        1600  [26, 27]            0.9475      0.5125
+emnist_letters_8_9        1600  [28, 29]            0.9244      0.0000
+  mean    task-aware = 0.9695    full-union = 0.5610
+
+--- BTM-MoE (learned router, soft, raw logits)
+task                         n  active          task-aware  full-union
+----------------------------------------------------------------------
+mnist_0_1                 2115  [0, 1]              0.9981      0.6794
+mnist_2_3                 2042  [2, 3]              0.9662      0.1876
+mnist_4_5                 1874  [4, 5]              0.9851      0.0080
+mnist_6_7                 1986  [6, 7]              0.9879      0.0312
+mnist_8_9                 1983  [8, 9]              0.9672      0.0000
+fashion_mnist_0_1         2000  [10, 11]            0.9740      0.7440
+fashion_mnist_2_3         2000  [12, 13]            0.9595      0.2010
+fashion_mnist_4_5         2000  [14, 15]            0.9920      0.3515
+fashion_mnist_6_7         2000  [16, 17]            0.9975      0.3810
+fashion_mnist_8_9         2000  [18, 19]            0.9950      0.0000
+emnist_letters_0_1        1600  [20, 21]            0.9431      0.0012
+emnist_letters_2_3        1600  [22, 23]            0.9594      0.0012
+emnist_letters_4_5        1600  [24, 25]            0.9450      0.0000
+emnist_letters_6_7        1600  [26, 27]            0.9475      0.0006
+emnist_letters_8_9        1600  [28, 29]            0.9244      0.0000
+  mean    task-aware = 0.9695    full-union = 0.1725
+
+==============================================================================
+HEADLINE
+==============================================================================
+  donor-standalone (upper bound) task-aware = 0.9695
+  Ours (zero-shot, archive route) task-aware = 0.9695  full-union = 0.5314
+  BTM-avg (zero-shot, param avg)  task-aware = 0.7396  full-union = 0.0845
+  BTM-MoE (learned router, +norm) task-aware = 0.9695  full-union = 0.5610
+  BTM-MoE (learned router, raw)   task-aware = 0.9695  full-union = 0.1725
+
+Done.
