@@ -137,6 +137,21 @@ class TrioronNetwork(nn.Module):
         for layer in self.layers:
             layer.anchor_weights()
 
+    def reanchor_routing_only(self) -> None:
+        """Copy live routing_scale into routing_scale_anchor on every layer
+        WITHOUT touching W_anchor or b_anchor. Used after a dream-rescue
+        purge mutates routing on grown arms: feature-distillation losses
+        (engram L1-MSE, differential δL1) compare live activations against
+        anchored activations, and if anchor still references pre-purge
+        routing while live uses post-purge routing, the loss fights the
+        purge mutation. Re-anchoring routing only (not W) keeps EWC
+        anchoring intact (which depends on W_anchor) while letting the
+        feature-distillation losses see consistent routing on both sides.
+        """
+        with torch.no_grad():
+            for layer in self.layers:
+                layer.routing_scale_anchor.copy_(layer.routing_scale)
+
     def mask_archived_grads_all(self) -> None:
         """Zero W.grad / b.grad at archived rows across every layer.
         Call AFTER .backward() and BEFORE update_fisher_all() and

@@ -1,0 +1,48 @@
+==============================================================================
+Engram real-seed vs uniform-init diversity probe
+==============================================================================
+seed: 0
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+[probe] L0 warmup (100 steps)...
+  [warmup] step    0  loss 3.3179
+  [warmup] step   99  loss 0.0009
+
+[probe] training task 1 (active [0, 1]) for 2 epochs...
+  [probe] task 1/1 (mnist_0_1) epoch 1/2  avg_loss 0.0623  last_loss 0.0023  steps 198  arch [128, 32, 2]
+  [probe] task 1/1 (mnist_0_1) epoch 2/2  avg_loss 0.0055  last_loss 0.0005  steps 396  arch [128, 32, 2]
+
+[probe] building LEGACY (uniform-noise init) engrams...
+[probe] building REAL-SEED engrams...
+
+=== LEGACY (uniform-noise init) ===
+stored classes: [0, 1]
+engram-engram (cross-class): min = 7.529  mean = 7.529  max = 7.529
+  class   0: engram-real (own class) min=6.748  median=9.211  max=10.744
+  class   1: engram-real (own class) min=7.419  median=8.154  max=9.843
+engram-real (own class) AGGREGATE: min = 6.748  median = 8.530  mean = 8.657
+real-real (within class) AGGREGATE: min = 1.510  median = 8.367  mean = 8.190
+
+  Off-manifold ratio (engram-real / real-real) = 1.057
+  ✓ engrams are on-manifold (comparable to real-real spread)
+
+=== REAL-SEED (Gaussian-perturbed real-x init) ===
+stored classes: [0, 1]
+engram-engram (cross-class): min = 12.109  mean = 12.109  max = 12.109
+  class   0: engram-real (own class) min=8.601  median=9.945  max=11.665
+  class   1: engram-real (own class) min=6.662  median=7.747  max=9.739
+engram-real (own class) AGGREGATE: min = 6.662  median = 8.923  mean = 8.957
+real-real (within class) AGGREGATE: min = 1.510  median = 8.367  mean = 8.190
+
+  Off-manifold ratio (engram-real / real-real) = 1.094
+  ✓ engrams are on-manifold (comparable to real-real spread)
+
+==============================================================================
+Verdict: compare off-manifold ratios above. If REAL-SEED's ratio
+is ≤ 1.5 and LEGACY's is > 3, the construction repair works.
+==============================================================================

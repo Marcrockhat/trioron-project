@@ -403,6 +403,27 @@ DIFFERENTIAL_BATCH = 64
 DIFFERENTIAL_TEMPERATURE = 2.0       # KL temperature on logit-level
 DIFFERENTIAL_WEIGHT_L1 = 0.5         # MSE on L1-output differential
 DIFFERENTIAL_WEIGHT_LOGIT = 1.0      # KL on head-output differential
+REANCHOR_AFTER_PURGE = False         # 2026-05-05: when a dream-rescue
+                                      # purge mutates routing_scale on L1,
+                                      # copy live routing_scale into
+                                      # routing_scale_anchor so feature-
+                                      # distillation losses (engram L1-MSE,
+                                      # diff δL1) don't fight the purge
+                                      # mutation. Targets gcd's task-aware
+                                      # drop in combined-storage-free path.
+DIFFERENTIAL_USE_ENGRAM = True       # 2026-05-05 chain-B: at storage
+                                      # time, generate the per-class
+                                      # source x_c via engram gradient
+                                      # ascent (Gaussian-perturbed real-
+                                      # seed init), then capture the
+                                      # (δL0, δL1, δlogit) signature of
+                                      # that GA-sharpened class anchor.
+                                      # Hypothesis: GA-sharpened deltas
+                                      # carry more class-specific signal
+                                      # than the real class-mean a single
+                                      # random sample provides.
+                                      # False = legacy (one random real
+                                      # x_c per class).
 ENGRAM_LOSS_WEIGHT = 1.0             # engrams are the primary in-weights
                                       # rehearsal signal in this redesign;
                                       # weight at parity with new-task CE.
@@ -416,6 +437,33 @@ ENGRAM_GA_L2 = 1e-3                  # L2 regularization weight on x —
 ENGRAM_GA_INIT_NOISE_SCALE = 0.1     # init scale for x ~ noise * scale
 ENGRAM_GA_CLIP_RANGE = (0.0, 1.0)    # input-space clipping (image domain
                                       # for chained-15 datasets)
+ENGRAM_SEED_FROM_REAL = True         # 2026-05-05 construction repair:
+                                      # initialize gradient ascent from a
+                                      # random real x_c (Gaussian-perturbed)
+                                      # instead of uniform noise. Anchors
+                                      # the engram to the data manifold so
+                                      # it isn't an adversarial off-manifold
+                                      # collapse (probe_engram_diversity
+                                      # 2026-05-04 found 7.5x narrower than
+                                      # real samples, 9x off-manifold).
+ENGRAM_SEED_NOISE_SIGMA = 0.05       # std of Gaussian noise added to the
+                                      # real-sample init (post-clip).
+ENGRAM_DISTILL_LEVEL = "l1"          # 2026-05-05 construction repair v2:
+                                      # "l1"     — MSE on L1-output features
+                                      #            between live and anchored
+                                      #            networks (this version).
+                                      # "logit"  — KL on output logits (the
+                                      #            legacy mechanism that
+                                      #            failed; preserved for
+                                      #            ablation).
+                                      # Hypothesis: logit-alignment at the
+                                      # adversarial engram point trivially
+                                      # holds (KL ≈ 0) and doesn't transfer
+                                      # to real-data classification.
+                                      # Feature-alignment is smoother and
+                                      # constrains internal representation,
+                                      # which transfers to nearby points on
+                                      # the data manifold.
 
 LOG_EVERY = 500
 
@@ -649,21 +697,33 @@ def _store_differential_codes(
     train_view: TaskDataView,
     active_classes: Sequence[int],
     diff_buf: DifferentialReplayBuffer,
+    *,
+    use_engram: bool = DIFFERENTIAL_USE_ENGRAM,
+    engram_n_steps: int = ENGRAM_GA_STEPS,
+    engram_lr: float = ENGRAM_GA_LR,
+    engram_l2: float = ENGRAM_GA_L2,
+    engram_clip: Tuple[float, float] = ENGRAM_GA_CLIP_RANGE,
+    engram_seed_noise_sigma: float = ENGRAM_SEED_NOISE_SIGMA,
 ) -> None:
     """For each just-learned class, capture (δL0, δL1, δlogit) — the
     per-layer activation differential between processing one canonical
-    real x_c and processing blank (zero) input. Stored as a tuple per
-    class.
+    class-c source and processing blank (zero) input. Stored as a
+    tuple per class.
 
-    The differential isolates the task-specific signal from the
-    network's accumulated bias / memory state. Replay later forces
-    the live network to maintain the SAME differential signature even
-    as its memory shifts.
+    Two modes for the per-class source:
 
-    Single-sample-per-class (K=1 by construction): the differential
-    captures the network's interpretation of one canonical example.
-    Multi-K averaging is possible but loses sharpness — the K=1
-    biological-engram-cell mapping matches one cell ≈ one prototype.
+    - `use_engram=False` (legacy): one random real x_c sample. The
+      differential captures the network's interpretation of one
+      arbitrary class-c example.
+
+    - `use_engram=True` (2026-05-05 chain-B): generate the source via
+      gradient ascent through the *anchored* network (same procedure as
+      `_consolidate_engrams`, with Gaussian-perturbed real-seed init),
+      then capture deltas from that GA-sharpened class anchor. The
+      engram itself is NOT stored — only the per-layer differential
+      signature it produces is. Hypothesis: GA-sharpened deltas carry
+      more class-specific signal than a single random real sample's
+      deltas.
 
     Call AFTER consolidate_task. For frozen-L0 arms, δL0 stays valid
     indefinitely; for trainable-L0 arms (skipped in this config), δL0
@@ -671,20 +731,52 @@ def _store_differential_codes(
     """
     net.eval()
     try:
+        x_all, y_all = train_view.all_examples()
+        device = net.layers[0].W.device
+
+        # Pass 1: pick (or synthesize) the per-class source x_c.
+        sources: Dict[int, torch.Tensor] = {}
+        for c in active_classes:
+            mask = (y_all == c)
+            x_c = x_all[mask]
+            if x_c.shape[0] == 0:
+                continue
+            idx = int(torch.randperm(x_c.shape[0])[:1].item())
+            if use_engram:
+                # Real-seeded gradient ascent through the anchored
+                # network. Mirrors `_consolidate_engrams` so the deltas
+                # captured here reflect the same class anchor that
+                # engram-replay would distill toward, just stored as a
+                # multi-level differential instead of an input-space
+                # prototype.
+                seed = x_c[idx].detach().clone().flatten()
+                noise = torch.randn_like(seed) * engram_seed_noise_sigma
+                x_init = (seed + noise).clamp_(*engram_clip)
+                x_ga = x_init.detach().clone().requires_grad_(True)
+                for _ in range(engram_n_steps):
+                    logits = net.forward_with_anchors_grad(x_ga.unsqueeze(0))
+                    if c >= logits.shape[1]:
+                        break
+                    loss = -logits[0, c] + engram_l2 * x_ga.pow(2).sum()
+                    if x_ga.grad is not None:
+                        x_ga.grad.zero_()
+                    loss.backward()
+                    with torch.no_grad():
+                        x_ga.data = (
+                            (x_ga.data - engram_lr * x_ga.grad)
+                            .clamp_(*engram_clip)
+                        )
+                sources[int(c)] = x_ga.detach().unsqueeze(0).to(device)
+            else:
+                sources[int(c)] = x_c[idx:idx + 1].to(device)
+
+        # Pass 2: compute deltas under no_grad for storage.
         with torch.no_grad():
-            x_all, y_all = train_view.all_examples()
-            # Compute blank-input baselines once
-            blank = torch.zeros(1, INPUT_DIM, device=net.layers[0].W.device)
-            a0_blank = net.layers[0](blank)         # (1, L0_width)
-            a1_blank = net.layers[1](a0_blank)      # (1, L1_width)
-            a_logit_blank = net.layers[-1](a1_blank)  # (1, n_classes)
-            for c in active_classes:
-                mask = (y_all == c)
-                x_c = x_all[mask]
-                if x_c.shape[0] == 0:
-                    continue
-                idx = int(torch.randperm(x_c.shape[0])[:1].item())
-                x_one = x_c[idx:idx + 1]  # (1, INPUT_DIM)
+            blank = torch.zeros(1, INPUT_DIM, device=device)
+            a0_blank = net.layers[0](blank)            # (1, L0_width)
+            a1_blank = net.layers[1](a0_blank)         # (1, L1_width)
+            a_logit_blank = net.layers[-1](a1_blank)   # (1, n_classes)
+            for c, x_one in sources.items():
                 a0 = net.layers[0](x_one)
                 a1 = net.layers[1](a0)
                 alogit = net.layers[-1](a1)
@@ -745,12 +837,15 @@ def _consolidate_engrams(
     active_classes: Sequence[int],
     engrams: EngramBuffer,
     *,
+    train_view: Optional[TaskDataView] = None,
     input_dim: int = INPUT_DIM,
     n_steps: int = ENGRAM_GA_STEPS,
     lr: float = ENGRAM_GA_LR,
     l2_weight: float = ENGRAM_GA_L2,
     init_noise_scale: float = ENGRAM_GA_INIT_NOISE_SCALE,
     clip_range: Tuple[float, float] = ENGRAM_GA_CLIP_RANGE,
+    seed_from_real: bool = ENGRAM_SEED_FROM_REAL,
+    seed_noise_sigma: float = ENGRAM_SEED_NOISE_SIGMA,
 ) -> None:
     """Find one engram per class in `active_classes` by gradient ascent
     on the input through the anchored network. Stores each x_c in the
@@ -760,8 +855,19 @@ def _consolidate_engrams(
     state — engram consolidation only reads from the anchored forward.
 
     Procedure (per class c):
-      1. Initialize x ~ uniform noise scaled by `init_noise_scale`,
-         clipped to `clip_range`.
+      1. Initialize x. Two modes:
+         - seed_from_real=True (default, 2026-05-05 repair): sample one
+           random real x_c from train_view, add Gaussian noise of std
+           seed_noise_sigma, clip to clip_range. Anchors the engram to
+           the data manifold so the GA result stays in the neighborhood
+           of real class-c examples instead of collapsing to an
+           adversarial off-manifold cluster.
+         - seed_from_real=False (legacy): x ~ uniform noise scaled by
+           init_noise_scale, clipped to clip_range. This is the original
+           construction; probe_engram_diversity 2026-05-04 found it
+           produces engrams 7.5x narrower than real samples and 9x off
+           the data manifold, which is why engram-only bench delivers
+           ~no-rehearsal-floor accuracy.
       2. Repeat n_steps times:
          - logits = net.forward_with_anchors(x.unsqueeze(0))
          - loss = -logits[0, c] + l2_weight * x.pow(2).sum()
@@ -777,14 +883,37 @@ def _consolidate_engrams(
     prototype — what the consolidated network thinks the most class-c-
     confident input pattern is.
     """
+    if seed_from_real and train_view is None:
+        raise ValueError(
+            "seed_from_real=True requires train_view (real-sample "
+            "initialization needs access to the task's class examples)"
+        )
+    if seed_from_real:
+        x_all, y_all = train_view.all_examples()
     net.eval()
     try:
         for c in active_classes:
-            x = torch.empty(input_dim).uniform_(
-                clip_range[0],
-                clip_range[0] + init_noise_scale
-                * (clip_range[1] - clip_range[0]),
-            )
+            if seed_from_real:
+                mask = (y_all == c)
+                x_c = x_all[mask]
+                if x_c.shape[0] == 0:
+                    # No real samples — fall back to uniform noise.
+                    x = torch.empty(input_dim).uniform_(
+                        clip_range[0],
+                        clip_range[0] + init_noise_scale
+                        * (clip_range[1] - clip_range[0]),
+                    )
+                else:
+                    idx = int(torch.randint(0, x_c.shape[0], (1,)).item())
+                    seed = x_c[idx].detach().clone().flatten()
+                    noise = torch.randn_like(seed) * seed_noise_sigma
+                    x = (seed + noise).clamp_(*clip_range)
+            else:
+                x = torch.empty(input_dim).uniform_(
+                    clip_range[0],
+                    clip_range[0] + init_noise_scale
+                    * (clip_range[1] - clip_range[0]),
+                )
             x.requires_grad_(True)
             for _ in range(n_steps):
                 logits = net.forward_with_anchors_grad(x.unsqueeze(0))
@@ -1204,23 +1333,50 @@ def train_one_task(
                 x_e, _y_e = engrams.sample(ENGRAM_BATCH)
                 if x_e is not None:
                     x_e = x_e.to(device=net.layers[0].W.device)
-                    z_live = net(x_e)
-                    with torch.no_grad():
-                        z_anchor = net.forward_with_anchors(x_e)
-                    T_eng = ENGRAM_TEMPERATURE
-                    e_old_idx = torch.as_tensor(
-                        list(engram_old_classes), dtype=torch.long,
-                        device=z_live.device,
-                    )
-                    e_in_range = e_old_idx[e_old_idx < z_live.shape[1]]
-                    if e_in_range.numel() > 1:
-                        z_a_old = z_anchor.index_select(1, e_in_range)
-                        z_l_old = z_live.index_select(1, e_in_range)
-                        p_a = F.softmax(z_a_old / T_eng, dim=1)
-                        log_p_l = F.log_softmax(z_l_old / T_eng, dim=1)
-                        l_engram_lwf = F.kl_div(
-                            log_p_l, p_a, reduction="batchmean",
-                        ) * (T_eng * T_eng)
+                    if ENGRAM_DISTILL_LEVEL == "l1":
+                        # L1-feature MSE distillation. Forward the engram
+                        # through L0 + L1 with live params (gradient-tracked)
+                        # and with anchored params (no grad), MSE the L1
+                        # outputs. W_anchor / b_anchor / routing_scale_anchor
+                        # extend with grow_node so dimensions match live.
+                        h_live = x_e
+                        for layer in net.layers[: GROWTH_TARGET_LAYER_IDX + 1]:
+                            h_live = layer(h_live)
+                        with torch.no_grad():
+                            h_anchor = x_e
+                            for layer in net.layers[: GROWTH_TARGET_LAYER_IDX + 1]:
+                                if h_anchor.dtype != layer.W_anchor.dtype:
+                                    h_anchor = h_anchor.to(layer.W_anchor.dtype)
+                                scale = layer.routing_scale_anchor.unsqueeze(1).to(
+                                    layer.W_anchor.dtype
+                                )
+                                W_eff = layer.W_anchor * scale
+                                z = F.linear(h_anchor, W_eff, layer.b_anchor)
+                                h_anchor = (
+                                    F.relu(z)
+                                    if layer.activation == "relu"
+                                    else z
+                                )
+                        l_engram_lwf = F.mse_loss(h_live, h_anchor)
+                    else:
+                        # Legacy: logit-KL on old-class slice.
+                        z_live = net(x_e)
+                        with torch.no_grad():
+                            z_anchor = net.forward_with_anchors(x_e)
+                        T_eng = ENGRAM_TEMPERATURE
+                        e_old_idx = torch.as_tensor(
+                            list(engram_old_classes), dtype=torch.long,
+                            device=z_live.device,
+                        )
+                        e_in_range = e_old_idx[e_old_idx < z_live.shape[1]]
+                        if e_in_range.numel() > 1:
+                            z_a_old = z_anchor.index_select(1, e_in_range)
+                            z_l_old = z_live.index_select(1, e_in_range)
+                            p_a = F.softmax(z_a_old / T_eng, dim=1)
+                            log_p_l = F.log_softmax(z_l_old / T_eng, dim=1)
+                            l_engram_lwf = F.kl_div(
+                                log_p_l, p_a, reduction="batchmean",
+                            ) * (T_eng * T_eng)
 
             # Differential Replay: bias-drift-invariant rehearsal.
             # Sample stored class-c differentials at L0/L1/head; force
@@ -1617,6 +1773,15 @@ def run_chained_curriculum(
                             )
                             cumulative_purges += rescue["n_purges"]
                             cumulative_latched += rescue["n_latched"]
+                            # Re-anchor routing_scale on every layer so
+                            # feature-distillation losses (engram L1-MSE,
+                            # diff δL1) compare live and anchor at
+                            # consistent routing instead of fighting the
+                            # purge mutation.
+                            if (REANCHOR_AFTER_PURGE
+                                    and (rescue["n_purges"] > 0
+                                         or rescue["n_latched"] > 0)):
+                                net.reanchor_routing_only()
                             opt = optim.Adam(trainable_param_iter(net), lr=LR)
                             ok2, reason2 = try_grow_one(
                                 net, GROWTH_TARGET_LAYER_IDX, cap_bytes,
@@ -1711,7 +1876,9 @@ def run_chained_curriculum(
             #     three legs of the trioron node. Done AFTER consolidate
             #     so anchors reflect the just-finished task. Pass-1 only.
             if engrams is not None and pass_idx == 0:
-                _consolidate_engrams(net, active, engrams)
+                _consolidate_engrams(
+                    net, active, engrams, train_view=train_view,
+                )
 
             # 4e. Hippocampal consolidation: sample K real examples per
             #     class, forward through (frozen) L0, store the
