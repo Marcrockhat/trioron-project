@@ -937,6 +937,41 @@ def chained_15_specs() -> List[ChainedTaskSpec]:
     return out
 
 
+def chained_extension_specs(
+    n_tasks: int = 8,
+    start_class_offset: int = 30,
+    start_local_class: int = 10,
+) -> List[ChainedTaskSpec]:
+    """EMNIST-letters K..Z continuation for the chained-15 → chained-N
+    extension experiment. Picks `n_tasks` binary pairs from local classes
+    starting at `start_local_class` (default 10 = K, since A..J = 0..9
+    are already used by chained_15_specs). Global classes start at
+    `start_class_offset` (default 30 = right after chained-15's 0..29).
+
+    n_tasks=8 covers EMNIST-letters local 10..25 (K..Z) → 16 new global
+    classes 30..45. n_tasks=5 covers K..T → 30..39.
+    """
+    if start_local_class + 2 * n_tasks > 26:
+        raise ValueError(
+            f"EMNIST-letters has 26 classes; "
+            f"start_local_class={start_local_class} + 2*{n_tasks}="
+            f"{2*n_tasks} exceeds 26."
+        )
+    out: List[ChainedTaskSpec] = []
+    for i in range(n_tasks):
+        loc = [start_local_class + 2 * i, start_local_class + 2 * i + 1]
+        glob = [start_class_offset + 2 * i, start_class_offset + 2 * i + 1]
+        out.append(
+            ChainedTaskSpec(
+                name=f"emnist_letters_{loc[0]}_{loc[1]}",
+                dataset_name="emnist_letters",
+                local_classes=loc,
+                global_classes=glob,
+            )
+        )
+    return out
+
+
 def build_task_views(
     bundle: DatasetBundle,
     specs: Sequence[ChainedTaskSpec],
@@ -962,5 +997,6 @@ __all__ = [
     "ChainedTaskSpec",
     "split_mnist_specs",
     "chained_15_specs",
+    "chained_extension_specs",
     "build_task_views",
 ]

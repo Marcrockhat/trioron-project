@@ -1243,6 +1243,7 @@ def _classification_replay(
     ewc_strength: float,
     rng: random.Random,
     update_utilities: bool = False,
+    mask_archived_grads: bool = False,
 ) -> Tuple[float, float, int, int]:
     """CE-shaped analog of dreaming.replay. Returns
     (avg_loss_before, avg_loss_after, n_tasks_sampled, total_steps).
@@ -1288,6 +1289,8 @@ def _classification_replay(
              if ewc_strength > 0 else l_task)
         opt.zero_grad()
         l.backward()
+        if mask_archived_grads:
+            net.mask_archived_grads_all()
         if update_utilities:
             update_layer_utilities(net)
         opt.step()
@@ -1419,6 +1422,61 @@ def classification_dreaming_block(
         "n_purges": len(purges),
         "n_latched": sum(1 for m in merges if m.victim_latched),
         "mode": mode,
+    }
+
+
+def consolidation_dream_pass(
+    net: TrioronNetwork,
+    past_views: Sequence[TaskDataView],
+    past_active_classes: Sequence[Sequence[int]],
+    *,
+    rng: random.Random,
+    replay_steps_per_task: int = DREAM_REPLAY_STEPS,
+) -> Dict[str, object]:
+    """Heavier "shipping consolidation" dream — full-coverage replay
+    over ALL past tasks (replay_fraction = 1.0) with archive-aware
+    gradient masking, then apoptosis_decay sweep, then one more
+    archive_block call to catch any rows that just settled.
+
+    Distinct from per-task replay_only (DREAM_REPLAY_FRACTION=0.25, no
+    archive mask). This is the dream that fires before the network is
+    "shipped" / extended onto a new curriculum: settled state, archived
+    rows truly locked, no further drift on what's been consolidated.
+    """
+    if DREAM_APOPTOSIS_ON:
+        apoptosis_decay(net, decay_rate=DREAM_APOPTOSIS_DECAY_RATE)
+
+    loss_before, loss_after, n_tasks, n_steps = _classification_replay(
+        net, past_views, past_active_classes,
+        fraction=1.0,
+        n_steps_per_task=replay_steps_per_task,
+        batch=DREAM_REPLAY_BATCH,
+        lr=LR,
+        ewc_strength=EWC_DREAM_STRENGTH,
+        rng=rng,
+        update_utilities=False,
+        mask_archived_grads=True,
+    )
+
+    archived_now: List[Tuple[int, int]] = []
+    if ARCHIVE_ENABLED:
+        archived_now = archive_block(
+            net,
+            streak_threshold=ARCHIVE_STREAK_THRESHOLD,
+            lam_top_percentile=ARCHIVE_LAM_TOP_PERCENTILE,
+            grad_mag_floor=ARCHIVE_GRAD_MAG_FLOOR,
+            pulse_max=ARCHIVE_PULSE_MAX,
+            skip_output_layer=ARCHIVE_SKIP_OUTPUT_LAYER,
+            max_archives_per_layer=ARCHIVE_MAX_PER_LAYER,
+        )
+
+    return {
+        "replay_loss_before": loss_before,
+        "replay_loss_after": loss_after,
+        "n_replay_tasks": n_tasks,
+        "n_replay_steps": n_steps,
+        "n_archived_now": len(archived_now),
+        "n_archived_per_layer": net.n_archived_per_layer(),
     }
 
 
@@ -2053,6 +2111,11 @@ def run_chained_curriculum(
     packnet_mode: Optional[str] = None,
     hat_mode: Optional[str] = None,
     online_ewc_gamma: Optional[float] = None,
+    extension_train_views: Optional[Sequence[TaskDataView]] = None,
+    extension_eval_views: Optional[Sequence[TaskDataView]] = None,
+    extension_task_class_lists: Optional[Sequence[Sequence[int]]] = None,
+    extension_cap_bytes: Optional[int] = None,
+    extension_permanent_int8: bool = False,
 ) -> Dict[str, object]:
     """Run the chained curriculum, optionally repeated for `n_passes`.
 
@@ -2062,8 +2125,36 @@ def run_chained_curriculum(
 
     Per-task training is `n_epochs_per_task` proper minibatch epochs
     (each sample seen exactly once per epoch).
+
+    Extension phase (chained-15 → chained-N): if `extension_train_views`
+    is provided, after the main `train_views` loop completes the bench
+    (a) fires `consolidation_dream_pass` over all past tasks (full-
+    coverage replay + archive-aware grad masking + final archive_block),
+    (b) optionally snaps archived rows permanently to int8 if
+    `extension_permanent_int8` is set, (c) lifts the cap to
+    `extension_cap_bytes`, and (d) iterates the extension tasks with the
+    same train/consolidate/archive/dream cycle, sharing all internal
+    state (manifold buffer, EWC anchors, archived rows, etc.). The
+    boundary fires only on pass 0 (revisit passes don't re-trigger).
     """
+    # Combine main + extension into a single sequence so the per-task
+    # loop is unchanged. The extension boundary fires inline at
+    # local_task_idx == K_main on pass 0.
+    K_main = len(train_views)
+    has_extension = extension_train_views is not None and len(extension_train_views) > 0
+    if has_extension:
+        train_views = list(train_views) + list(extension_train_views)
+        eval_views = list(eval_views) + list(extension_eval_views or [])
+        task_class_lists = (
+            list(task_class_lists) + list(extension_task_class_lists or [])
+        )
+        if extension_cap_bytes is None:
+            raise ValueError(
+                "extension_train_views requires extension_cap_bytes"
+            )
     K = len(train_views)
+    boundary_idx = K_main if has_extension else None
+    current_cap_bytes = cap_bytes
     n_total = K * n_passes
     initial_n_params = net.n_parameters()
     initial_trainable = trainable_params(net)
@@ -2171,6 +2262,40 @@ def run_chained_curriculum(
             active = list(task_class_lists[local_task_idx])
             global_step_idx = pass_idx * K + local_task_idx
 
+            # === Extension boundary: fires once on pass 0 right before
+            # the first extension task. Runs a heavier "shipping
+            # consolidation" dream over all main-curriculum tasks,
+            # optionally snaps archived rows permanently to int8, then
+            # lifts the cap to extension_cap_bytes for the rest of the
+            # curriculum.
+            if (boundary_idx is not None and pass_idx == 0
+                    and local_task_idx == boundary_idx):
+                print(f"\n[{label}] ============================================")
+                print(f"[{label}] EXTENSION BOUNDARY at task "
+                      f"{local_task_idx+1}/{K}: shipping consolidation")
+                print(f"[{label}] ============================================")
+                past_views = train_views[:local_task_idx]
+                past_actives = task_class_lists[:local_task_idx]
+                cd_rep = consolidation_dream_pass(
+                    net, past_views, past_actives, rng=rng,
+                )
+                print(f"[{label}] consolidation dream: replay "
+                      f"{cd_rep['replay_loss_before']:.4f}→"
+                      f"{cd_rep['replay_loss_after']:.4f} on "
+                      f"{cd_rep['n_replay_tasks']} tasks "
+                      f"({cd_rep['n_replay_steps']} steps)  "
+                      f"+{cd_rep['n_archived_now']} new archives  "
+                      f"per-layer-archived {cd_rep['n_archived_per_layer']}")
+                opt = _build_optimizer(net, hat_ctrl)
+                if extension_permanent_int8 and ARCHIVE_ENABLED:
+                    _quantize_archived_in_place(net, mode="int8")
+                    print(f"[{label}] permanent int8 snap on archived rows")
+                current_cap_bytes = extension_cap_bytes
+                print(f"[{label}] cap lifted: {cap_bytes:_} B → "
+                      f"{current_cap_bytes:_} B "
+                      f"({current_cap_bytes//4:_} trainable params)")
+                print(f"[{label}] ============================================\n")
+
             # Old classes (everything seen before THIS task in any pass)
             # — used for LwF distillation masking.
             old_classes_seen: List[int] = []
@@ -2218,7 +2343,7 @@ def run_chained_curriculum(
                   f"Task {local_task_idx+1}/{K}: {train_view.name} "
                   f"(active {active})  pre-arch={net.n_nodes_per_layer()} "
                   f"params={net.n_parameters()} "
-                  f"(trainable {trainable_params(net)}/{cap_bytes//4 if cap_bytes < M_MAX_BYTES_UNCAPPED else '∞'}) ===")
+                  f"(trainable {trainable_params(net)}/{current_cap_bytes//4 if current_cap_bytes < M_MAX_BYTES_UNCAPPED else '∞'}) ===")
 
             # 3a. Settle phase — train K_SETTLE epochs BEFORE any
             #     hidden-layer growth fires. Per Gemma's framing: the
@@ -2266,7 +2391,8 @@ def run_chained_curriculum(
                 for _ in range(grows_this_task):
                     attempted += 1
                     ok, reason = try_grow_one(
-                        net, GROWTH_TARGET_LAYER_IDX, cap_bytes, local_task_idx,
+                        net, GROWTH_TARGET_LAYER_IDX, current_cap_bytes,
+                        local_task_idx,
                     )
                     if ok:
                         allowed += 1
@@ -2293,8 +2419,8 @@ def run_chained_curriculum(
                                 net.reanchor_routing_only()
                             opt = _build_optimizer(net, hat_ctrl)
                             ok2, reason2 = try_grow_one(
-                                net, GROWTH_TARGET_LAYER_IDX, cap_bytes,
-                                local_task_idx,
+                                net, GROWTH_TARGET_LAYER_IDX,
+                                current_cap_bytes, local_task_idx,
                             )
                             if ok2:
                                 allowed += 1
@@ -2722,6 +2848,11 @@ def run_chained_curriculum(
         "do_growth": do_growth,
         "do_dream": do_dream,
         "cap_bytes": cap_bytes,
+        "extension_cap_bytes": (
+            extension_cap_bytes if has_extension else None
+        ),
+        "K_main": K_main,
+        "K_extension": K - K_main if has_extension else 0,
         "n_passes": n_passes,
         "initial_arch": initial_arch,
         "final_arch": tuple(net.n_nodes_per_layer()),
@@ -2859,6 +2990,11 @@ def run_arm(
     task_class_lists,
     infancy_view: Optional[TaskDataView] = None,
     n_passes: int = 1,
+    extension_train_views=None,
+    extension_eval_views=None,
+    extension_task_class_lists=None,
+    extension_cap_bytes: Optional[int] = None,
+    extension_permanent_int8: bool = False,
 ) -> Dict[str, object]:
     cfg = ARM_DEFINITIONS[arm]
     torch.manual_seed(seed)
@@ -2902,6 +3038,11 @@ def run_arm(
         packnet_mode=cfg.get("packnet_mode"),
         hat_mode=cfg.get("hat_mode"),
         online_ewc_gamma=cfg.get("online_ewc_gamma"),
+        extension_train_views=extension_train_views,
+        extension_eval_views=extension_eval_views,
+        extension_task_class_lists=extension_task_class_lists,
+        extension_cap_bytes=extension_cap_bytes,
+        extension_permanent_int8=extension_permanent_int8,
     )
 
 
