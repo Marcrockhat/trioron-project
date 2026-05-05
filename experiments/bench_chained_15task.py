@@ -91,6 +91,7 @@ from trioron.dreaming import (
     PurgeEvent,
     MergeEvent,
     apoptosis_decay,
+    archive_block,
     compress,
     purge,
 )
@@ -412,6 +413,43 @@ MANIFOLD_NOISE_SCALE = 1.0           # multiplier on σ when sampling;
                                       # diagonal Gaussian draw.
 MANIFOLD_MAX_SAMPLES_PER_CLASS = 1000  # cap when computing stats; matches
                                         # brainstem's pattern.
+
+# Dream-archive Phase 1 (per memory/dream_archive_stage.md). Marks
+# stable rows as developmentally closed: snaps W/b to anchor, drops
+# Fisher contribution, masks grads. Phase 2 quantization is gated by
+# QUANTIZE_ARCHIVED_AT_END below.
+#
+# Triggers (forwarded to trioron.dreaming.archive_block):
+#   streak_threshold     consecutive consolidations with high λ before
+#                        the row is eligible.
+#   lam_top_percentile   per-layer percentile boundary on λ (0.75 = top
+#                        quartile counts as "high λ this consolidation").
+#   grad_mag_floor       max sqrt-Fisher row-sum to call the row settled.
+#                        Default 0.1 was conservative for fan_in=128;
+#                        chained-15 typical row magnitudes need
+#                        per-layer calibration on the first dry run.
+#   pulse_max            apoptosis-pulse must be quiet (no recent death
+#                        next door) before locking.
+#   max_archives_per_layer  cap on archives per call.
+ARCHIVE_ENABLED = False
+ARCHIVE_STREAK_THRESHOLD = 3
+ARCHIVE_LAM_TOP_PERCENTILE = 0.75
+ARCHIVE_GRAD_MAG_FLOOR = 0.1
+ARCHIVE_PULSE_MAX = 0.1
+ARCHIVE_MAX_PER_LAYER = 8
+ARCHIVE_SKIP_OUTPUT_LAYER = True
+
+# Phase 2 — end-of-curriculum quantization simulation. After all passes
+# finish, snap archived rows from FP32 to ternary or int8 (per-row
+# symmetric scale), then re-evaluate to measure accuracy degradation
+# and report the deployment-KB breakdown.
+#
+# QUANTIZE_MODE in {"ternary", "int8"}.
+#   ternary  ~16× compression on archived weights (sign trit + per-row
+#            scale), accuracy hit possible.
+#   int8     ~4× compression on archived weights, lower accuracy hit.
+QUANTIZE_ARCHIVED_AT_END = False
+QUANTIZE_MODE = "ternary"
 
 # Differential Replay (per Rocky 2026-05-04, post-hippocampal).
 # The trioron network IS its memory; forward(x=0) reveals the
@@ -1714,6 +1752,13 @@ def train_one_task(
             # as PackNet's freeze_grads.
             if hat_ctrl is not None:
                 hat_ctrl.scale_grads()
+            # Dream-archive Phase 1: zero grads on archived rows so
+            # archived weights stay locked at consolidated values
+            # regardless of the optimizer. Same lifecycle slot as
+            # PackNet/HAT — between backward and step. No-op if no
+            # rows archived.
+            if ARCHIVE_ENABLED:
+                net.mask_archived_grads_all()
             # Note: NOT updating per-node utilities during normal
             # training — u is now driven exclusively by dream-rescue
             # replay (set in classification_dreaming_block when
@@ -1865,6 +1910,128 @@ def evaluate_all_tasks(
 
 
 # ---------------------------------------------------------------------
+# Quantization simulation (Phase 2 of dream-archive stage)
+# ---------------------------------------------------------------------
+
+
+def _snapshot_layer_weights(net: TrioronNetwork) -> List[Tuple[torch.Tensor, torch.Tensor]]:
+    """Clone every layer's W and b for later restoration."""
+    return [(layer.W.detach().clone(), layer.b.detach().clone())
+            for layer in net.layers]
+
+
+def _restore_layer_weights(
+    net: TrioronNetwork,
+    snap: List[Tuple[torch.Tensor, torch.Tensor]],
+) -> None:
+    with torch.no_grad():
+        for layer, (W, b) in zip(net.layers, snap):
+            layer.W.data.copy_(W)
+            layer.b.data.copy_(b)
+
+
+def _quantize_archived_in_place(
+    net: TrioronNetwork, *, mode: str = "ternary",
+) -> None:
+    """Snap archived rows' W (and b) to a quantized representation,
+    de-quantized back to FP32 for the forward pass. Per-row symmetric
+    scale. Non-archived rows are untouched.
+
+    mode='ternary': W_q ∈ {-s, 0, +s} per row, threshold |W| ≥ s/2.
+    mode='int8'   : W_q = round(W/s).clamp(-127, 127) * s, s = max|W|/127.
+    """
+    with torch.no_grad():
+        for layer in net.layers:
+            arch_mask = layer.archived
+            if not arch_mask.any():
+                continue
+            idxs = arch_mask.nonzero(as_tuple=False).flatten().tolist()
+            for i in idxs:
+                row = layer.W.data[i]
+                if mode == "ternary":
+                    s = float(row.abs().max().item())
+                    if s == 0.0:
+                        continue
+                    trit = torch.zeros_like(row)
+                    trit[row >= 0.5 * s] = s
+                    trit[row <= -0.5 * s] = -s
+                    layer.W.data[i] = trit
+                elif mode == "int8":
+                    s = float(row.abs().max().item()) / 127.0
+                    if s == 0.0:
+                        continue
+                    q = torch.clamp(torch.round(row / s), -127, 127)
+                    layer.W.data[i] = q * s
+                else:
+                    raise ValueError(f"unknown quantize mode {mode!r}")
+
+
+def _storage_breakdown(
+    net: TrioronNetwork,
+    *,
+    mode: str = "ternary",
+    baseline_dtype: str = "fp32",
+) -> Dict[str, float]:
+    """Per-layer byte accounting for the deployment image.
+
+    baseline_dtype  active (non-archived) weights + biases:
+        "fp32"      4 bytes/weight, 4 bytes/bias.
+        "bf16"      2 bytes/weight, 2 bytes/bias. Realistic device target
+                    (Orange Pi 5B / ESP32 deployment baseline).
+
+    mode (archived rows):
+        "ternary"   2 bits/weight + 4 B per-row scale.
+        "int8"      1 byte/weight + 4 B per-row scale.
+    """
+    base_w_bytes = {"fp32": 4, "bf16": 2}[baseline_dtype]
+    base_b_bytes = base_w_bytes
+    arch_w_bytes = {"ternary": 0.25, "int8": 1.0}[mode]
+    per_row_overhead = 4
+    breakdown: Dict[str, float] = {}
+    total = 0.0
+    for L, layer in enumerate(net.layers):
+        n_arch = int(layer.archived.sum().item())
+        n_active = layer.n_nodes - n_arch
+        fan_in = layer.fan_in
+        bytes_W = (
+            n_active * fan_in * base_w_bytes
+            + n_arch * (fan_in * arch_w_bytes + per_row_overhead)
+        )
+        bytes_b = layer.n_nodes * base_b_bytes
+        layer_bytes = bytes_W + bytes_b
+        if L == 0:
+            breakdown["L0_kb"] = layer_bytes / 1024.0
+        elif L == len(net.layers) - 1:
+            breakdown["head_kb"] = layer_bytes / 1024.0
+        else:
+            key = f"L{L}_kb" if L > 1 else "L1_kb"
+            breakdown[key] = layer_bytes / 1024.0
+        total += layer_bytes
+    breakdown["total_kb"] = total / 1024.0
+    breakdown.setdefault("L1_kb", 0.0)
+    return breakdown
+
+
+def _round_active_to_bf16_in_place(net: TrioronNetwork) -> None:
+    """Round non-archived rows of W and ALL biases to BF16 precision
+    then cast back to FP32 storage. Values lose BF16-mantissa bits but
+    tensors stay FP32, so F.linear / forward / EWC continue to work on
+    matched dtypes. Archived rows are untouched (already int8-snapped).
+
+    Use only inside a snapshot/restore frame — this mutates W.data and
+    b.data in place.
+    """
+    with torch.no_grad():
+        for layer in net.layers:
+            arch = layer.archived
+            if (~arch).any():
+                idx = (~arch).nonzero(as_tuple=False).flatten().tolist()
+                rows = layer.W.data[idx]
+                layer.W.data[idx] = rows.to(torch.bfloat16).to(torch.float32)
+            layer.b.data = layer.b.data.to(torch.bfloat16).to(torch.float32)
+
+
+# ---------------------------------------------------------------------
 # Whole-curriculum runner
 # ---------------------------------------------------------------------
 
@@ -1985,6 +2152,7 @@ def run_chained_curriculum(
     cumulative_grows_denied = 0
     cumulative_purges = 0
     cumulative_latched = 0
+    cumulative_archives = 0
     ewc_baseline = 0.0
     pass_summary: List[Dict[str, float]] = []  # one entry per pass
 
@@ -2201,6 +2369,33 @@ def run_chained_curriculum(
                 net, train_view, active,
                 online_ewc_gamma=online_ewc_gamma,
             )
+            # 4a. Archive (Phase 1). After consolidate (so λ + Fisher
+            #     are fresh) mark stable rows as developmentally closed.
+            #     Skipped on PackNet/HAT arms (their per-task masks
+            #     already partition substrate; double-locking conflicts).
+            archived_now: List[Tuple[int, int]] = []
+            if (ARCHIVE_ENABLED and packnet_ctrl is None
+                    and hat_ctrl is None):
+                archived_now = archive_block(
+                    net,
+                    streak_threshold=ARCHIVE_STREAK_THRESHOLD,
+                    lam_top_percentile=ARCHIVE_LAM_TOP_PERCENTILE,
+                    grad_mag_floor=ARCHIVE_GRAD_MAG_FLOOR,
+                    pulse_max=ARCHIVE_PULSE_MAX,
+                    skip_output_layer=ARCHIVE_SKIP_OUTPUT_LAYER,
+                    max_archives_per_layer=ARCHIVE_MAX_PER_LAYER,
+                )
+                cumulative_archives += len(archived_now)
+                if archived_now:
+                    by_layer: Dict[int, int] = {}
+                    for L, _idx in archived_now:
+                        by_layer[L] = by_layer.get(L, 0) + 1
+                    layer_summary = " ".join(
+                        f"L{L}:+{n}" for L, n in sorted(by_layer.items())
+                    )
+                    print(f"  [{label}] archive: {len(archived_now)} rows "
+                          f"({layer_summary})  per-layer-archived "
+                          f"{net.n_archived_per_layer()}")
             # PackNet / HAT replace EWC anchor-pull with their own
             # protection mechanisms. Disable ewc_baseline for the next
             # task so we don't double-supervise.
@@ -2422,6 +2617,106 @@ def run_chained_curriculum(
     rep = summarize(last_pass_matrix, [v.name for v in eval_views])
     rep_aware = summarize(last_pass_matrix_aware, [v.name for v in eval_views])
     rep_domain = summarize(last_pass_matrix_domain, [v.name for v in eval_views])
+
+    # Phase 2 — end-of-curriculum quantization simulation. Snap archived
+    # rows from FP32 to ternary or int8 (per-row symmetric scale),
+    # re-evaluate, then restore the originals.
+    quantization_report: Optional[Dict[str, object]] = None
+    if (QUANTIZE_ARCHIVED_AT_END and ARCHIVE_ENABLED
+            and packnet_ctrl is None and hat_ctrl is None
+            and any(net.n_archived_per_layer())):
+        full_pre = sum(v for v in last_pass_matrix[-1] if v == v) / sum(
+            1 for v in last_pass_matrix[-1] if v == v
+        )
+        domain_pre = sum(v for v in last_pass_matrix_domain[-1] if v == v) / sum(
+            1 for v in last_pass_matrix_domain[-1] if v == v
+        )
+        task_pre = sum(v for v in last_pass_matrix_aware[-1] if v == v) / sum(
+            1 for v in last_pass_matrix_aware[-1] if v == v
+        )
+        # Pass 1 — FP32 active + quantized archived (matches the
+        # current paper figure's training-time baseline).
+        snap = _snapshot_layer_weights(net)
+        try:
+            _quantize_archived_in_place(net, mode=QUANTIZE_MODE)
+            per_task_full, per_task_aware, per_task_domain = (
+                evaluate_all_tasks(
+                    net, eval_views, task_class_lists,
+                    packnet_ctrl=None, hat_ctrl=None,
+                )
+            )
+            full_post = sum(per_task_full) / len(per_task_full)
+            domain_post = sum(per_task_domain) / len(per_task_domain)
+            task_post = sum(per_task_aware) / len(per_task_aware)
+        finally:
+            _restore_layer_weights(net, snap)
+        storage_fp32 = _storage_breakdown(
+            net, mode=QUANTIZE_MODE, baseline_dtype="fp32",
+        )
+        storage_bf16 = _storage_breakdown(
+            net, mode=QUANTIZE_MODE, baseline_dtype="bf16",
+        )
+
+        # Pass 2 — BF16 active + quantized archived (realistic Orange
+        # Pi 5B / ESP32 deployment image). Snap-to-BF16-round-back so
+        # tensor dtype stays FP32 and F.linear keeps matched dtypes.
+        snap2 = _snapshot_layer_weights(net)
+        try:
+            _quantize_archived_in_place(net, mode=QUANTIZE_MODE)
+            _round_active_to_bf16_in_place(net)
+            per_task_full2, per_task_aware2, per_task_domain2 = (
+                evaluate_all_tasks(
+                    net, eval_views, task_class_lists,
+                    packnet_ctrl=None, hat_ctrl=None,
+                )
+            )
+            full_post_bf16 = sum(per_task_full2) / len(per_task_full2)
+            domain_post_bf16 = sum(per_task_domain2) / len(per_task_domain2)
+            task_post_bf16 = sum(per_task_aware2) / len(per_task_aware2)
+        finally:
+            _restore_layer_weights(net, snap2)
+
+        quantization_report = {
+            "mode": QUANTIZE_MODE,
+            "full_pre": full_pre, "full_post": full_post,
+            "full_delta": full_post - full_pre,
+            "domain_pre": domain_pre, "domain_post": domain_post,
+            "domain_delta": domain_post - domain_pre,
+            "task_pre": task_pre, "task_post": task_post,
+            "task_delta": task_post - task_pre,
+            "full_post_bf16_int8": full_post_bf16,
+            "domain_post_bf16_int8": domain_post_bf16,
+            "task_post_bf16_int8": task_post_bf16,
+            "full_delta_bf16_int8": full_post_bf16 - full_pre,
+            "domain_delta_bf16_int8": domain_post_bf16 - domain_pre,
+            "task_delta_bf16_int8": task_post_bf16 - task_pre,
+            "storage_breakdown": storage_fp32,
+            "storage_breakdown_bf16": storage_bf16,
+        }
+        print(f"\n[{label}] quantization ({QUANTIZE_MODE}, FP32 active): "
+              f"full {full_pre:.4f}→{full_post:.4f} "
+              f"(Δ {full_post-full_pre:+.4f})  "
+              f"domain {domain_pre:.4f}→{domain_post:.4f} "
+              f"(Δ {domain_post-domain_pre:+.4f})  "
+              f"task {task_pre:.4f}→{task_post:.4f} "
+              f"(Δ {task_post-task_pre:+.4f})")
+        print(f"[{label}] deployment ({QUANTIZE_MODE}, BF16 active): "
+              f"full {full_pre:.4f}→{full_post_bf16:.4f} "
+              f"(Δ {full_post_bf16-full_pre:+.4f})  "
+              f"domain {domain_pre:.4f}→{domain_post_bf16:.4f} "
+              f"(Δ {domain_post_bf16-domain_pre:+.4f})  "
+              f"task {task_pre:.4f}→{task_post_bf16:.4f} "
+              f"(Δ {task_post_bf16-task_pre:+.4f})")
+        print(f"[{label}] storage  FP32-baseline: total "
+              f"{storage_fp32['total_kb']:.1f} KB "
+              f"(L0 {storage_fp32['L0_kb']:.1f}, "
+              f"L1 {storage_fp32['L1_kb']:.1f}, "
+              f"head {storage_fp32['head_kb']:.1f})")
+        print(f"[{label}] storage  BF16-baseline: total "
+              f"{storage_bf16['total_kb']:.1f} KB "
+              f"(L0 {storage_bf16['L0_kb']:.1f}, "
+              f"L1 {storage_bf16['L1_kb']:.1f}, "
+              f"head {storage_bf16['head_kb']:.1f})")
     return {
         "label": label,
         "do_growth": do_growth,
@@ -2452,6 +2747,9 @@ def run_chained_curriculum(
         "cumulative_grows_denied": cumulative_grows_denied,
         "cumulative_purges": cumulative_purges,
         "cumulative_latched": cumulative_latched,
+        "cumulative_archives": cumulative_archives,
+        "n_archived_per_layer_final": net.n_archived_per_layer(),
+        "quantization_report": quantization_report,
         "per_task_log": per_task_log,
         "task_names": [v.name for v in eval_views],
         "wall_clock_seconds": elapsed,
@@ -2652,6 +2950,38 @@ def report(results: Sequence[Dict[str, object]]) -> None:
         print(f"  cum grows denied:   {r['cumulative_grows_denied']}")
         print(f"  cum dream purges:   {r['cumulative_purges']}")
         print(f"  cum dream latched:  {r['cumulative_latched']}")
+        if r.get("cumulative_archives", 0) > 0 or ARCHIVE_ENABLED:
+            print(f"  cum archives:       {r.get('cumulative_archives', 0)}  "
+                  f"(per-layer {r.get('n_archived_per_layer_final', [])})")
+            if r.get("quantization_report") is not None:
+                qr = r["quantization_report"]
+                print(f"  quantization ({qr['mode']}, FP32 active):")
+                print(f"     full pre→post:    {qr['full_pre']:.4f} → "
+                      f"{qr['full_post']:.4f}  (Δ {qr['full_delta']:+.4f})")
+                print(f"     domain pre→post:  {qr['domain_pre']:.4f} → "
+                      f"{qr['domain_post']:.4f}  (Δ {qr['domain_delta']:+.4f})")
+                print(f"     task pre→post:    {qr['task_pre']:.4f} → "
+                      f"{qr['task_post']:.4f}  (Δ {qr['task_delta']:+.4f})")
+                if "full_post_bf16_int8" in qr:
+                    print(f"  deployment ({qr['mode']}, BF16 active):")
+                    print(f"     full pre→post:    {qr['full_pre']:.4f} → "
+                          f"{qr['full_post_bf16_int8']:.4f}  "
+                          f"(Δ {qr['full_delta_bf16_int8']:+.4f})")
+                    print(f"     domain pre→post:  {qr['domain_pre']:.4f} → "
+                          f"{qr['domain_post_bf16_int8']:.4f}  "
+                          f"(Δ {qr['domain_delta_bf16_int8']:+.4f})")
+                    print(f"     task pre→post:    {qr['task_pre']:.4f} → "
+                          f"{qr['task_post_bf16_int8']:.4f}  "
+                          f"(Δ {qr['task_delta_bf16_int8']:+.4f})")
+                sb = qr["storage_breakdown"]
+                print(f"  storage FP32-baseline (KB): "
+                      f"L0 {sb['L0_kb']:.1f}  L1 {sb['L1_kb']:.1f}  "
+                      f"head {sb['head_kb']:.1f}  total {sb['total_kb']:.1f}")
+                if "storage_breakdown_bf16" in qr:
+                    sbb = qr["storage_breakdown_bf16"]
+                    print(f"  storage BF16-baseline (KB): "
+                          f"L0 {sbb['L0_kb']:.1f}  L1 {sbb['L1_kb']:.1f}  "
+                          f"head {sbb['head_kb']:.1f}  total {sbb['total_kb']:.1f}")
         print(f"  final acc full:     {r['final_accuracy']:.4f}  "
               f"(30-class full-softmax — headline)")
         print(f"  final acc domain:   {r.get('final_accuracy_domain', float('nan')):.4f}  "
