@@ -28,6 +28,7 @@ import torch
 from experiments import bench_chained_15task as bench
 from experiments.datasets import (
     DatasetBundle, build_task_views, chained_15_specs,
+    chained_extension_specs,
 )
 
 # Manifold replay must be ON so the donor accumulates its (μ,σ) archive.
@@ -41,11 +42,28 @@ bench.ENGRAM_ENABLED = False
 bench.DIFFERENTIAL_ENABLED = False
 
 
+def _emnist_kt_specs():
+    # EMNIST letters K..T — local 10..19, global 30..39 (5 binary tasks).
+    return chained_extension_specs(
+        n_tasks=5, start_class_offset=30, start_local_class=10,
+    )
+
+
+def _emnist_uz_specs():
+    # EMNIST letters U..Z (partial) — local 20..25, global 40..45 (3 binary tasks).
+    # Only 6 letters left after K..T; gives a 6-class third EMNIST donor.
+    return chained_extension_specs(
+        n_tasks=3, start_class_offset=40, start_local_class=20,
+    )
+
+
 SPLIT_BLOCKS = {
-    # label : (chained_15 slice, dataset_name for DatasetBundle)
-    "digits":  (slice(0, 5),   "mnist"),
-    "fashion": (slice(5, 10),  "fashion_mnist"),
-    "emnist":  (slice(10, 15), "emnist_letters"),
+    # label : (specs_fn, dataset_name for DatasetBundle)
+    "digits":    (lambda: chained_15_specs()[0:5],   "mnist"),
+    "fashion":   (lambda: chained_15_specs()[5:10],  "fashion_mnist"),
+    "emnist":    (lambda: chained_15_specs()[10:15], "emnist_letters"),
+    "emnist_kt": (_emnist_kt_specs,                  "emnist_letters"),
+    "emnist_uz": (_emnist_uz_specs,                  "emnist_letters"),
 }
 
 
@@ -70,9 +88,8 @@ def main(argv=None) -> int:
     )
     args = parser.parse_args(argv)
 
-    sli, ds_name = SPLIT_BLOCKS[args.label]
-    all_specs = chained_15_specs()
-    specs_subset = all_specs[sli]
+    specs_fn, ds_name = SPLIT_BLOCKS[args.label]
+    specs_subset = specs_fn()
     classes_covered = sorted({c for s in specs_subset for c in s.global_classes})
 
     print(f"train_donor: label={args.label}  seed={args.seed}  "

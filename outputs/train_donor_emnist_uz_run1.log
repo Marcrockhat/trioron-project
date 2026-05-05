@@ -1,0 +1,53 @@
+train_donor: label=emnist_uz  seed=42  arm=grown_uncapped_dream  epochs/task=8
+  tasks   = ['emnist_letters_20_21', 'emnist_letters_22_23', 'emnist_letters_24_25']
+  classes = [40, 41, 42, 43, 44, 45]  dataset=emnist_letters
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+[grown_uncapped_dream] start — arch (128, 32, 2)  params 104674 (trainable 4194)  growth=True dream=True  cap_bytes=2147483648  K=3  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_uncapped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_uncapped_dream] === Pass 1/1 Task 1/3: emnist_letters_20_21 (active [40, 41])  pre-arch=[128, 32, 42] params=105994 (trainable 5514/∞) ===
+  [grown_uncapped_dream] task 1/3 (emnist_letters_20_21) epoch 1/8 [settle]  avg_loss 0.4057  last_loss 0.3356  steps 150  arch [128, 32, 42]
+  [grown_uncapped_dream] task 1/3 (emnist_letters_20_21) epoch 2/8 [settle]  avg_loss 0.2066  last_loss 0.1891  steps 300  arch [128, 32, 42]
+  [grown_uncapped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 42] params=106678 (trainable 6198)
+  [grown_uncapped_dream] task 1/3 (emnist_letters_20_21) epoch 3/8 [post-grow]  avg_loss 0.1758  last_loss 0.0634  steps 150  arch [128, 36, 42]
+  [grown_uncapped_dream] task 1/3 (emnist_letters_20_21) epoch 4/8 [post-grow]  avg_loss 0.1596  last_loss 0.1328  steps 300  arch [128, 36, 42]
+  [grown_uncapped_dream] task 1/3 (emnist_letters_20_21) epoch 5/8 [post-grow]  avg_loss 0.1482  last_loss 0.2328  steps 450  arch [128, 36, 42]
+  [grown_uncapped_dream] task 1/3 (emnist_letters_20_21) epoch 6/8 [post-grow]  avg_loss 0.1383  last_loss 0.1007  steps 600  arch [128, 36, 42]
+  [grown_uncapped_dream] task 1/3 (emnist_letters_20_21) epoch 7/8 [post-grow]  avg_loss 0.1318  last_loss 0.1514  steps 750  arch [128, 36, 42]
+  [grown_uncapped_dream] task 1/3 (emnist_letters_20_21) epoch 8/8 [post-grow]  avg_loss 0.1265  last_loss 0.1670  steps 900  arch [128, 36, 42]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0612→0.1766 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 42] (106678→106678 params)
+[grown_uncapped_dream] After pass 1 task 1: own=0.6906 (domain 0.9481, task 0.9481)  avg=0.6906 (domain 0.9481, task 0.9481)  arch=[128, 36, 42] params=106678 (trainable 6198)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 2/3: emnist_letters_22_23 (active [42, 43])  pre-arch=[128, 36, 44] params=106752 (trainable 6272/∞) ===
+  [grown_uncapped_dream] task 2/3 (emnist_letters_22_23) epoch 1/8 [settle]  avg_loss 0.3109  last_loss 0.1103  steps 150  arch [128, 36, 44]
+  [grown_uncapped_dream] task 2/3 (emnist_letters_22_23) epoch 2/8 [settle]  avg_loss 0.1191  last_loss 0.0903  steps 300  arch [128, 36, 44]
+  [grown_uncapped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 40, 44] params=107444 (trainable 6964)
+  [grown_uncapped_dream] task 2/3 (emnist_letters_22_23) epoch 3/8 [post-grow]  avg_loss 0.0905  last_loss 0.0791  steps 150  arch [128, 40, 44]
+  [grown_uncapped_dream] task 2/3 (emnist_letters_22_23) epoch 4/8 [post-grow]  avg_loss 0.0760  last_loss 0.0740  steps 300  arch [128, 40, 44]
+  [grown_uncapped_dream] task 2/3 (emnist_letters_22_23) epoch 5/8 [post-grow]  avg_loss 0.0664  last_loss 0.0728  steps 450  arch [128, 40, 44]
+  [grown_uncapped_dream] task 2/3 (emnist_letters_22_23) epoch 6/8 [post-grow]  avg_loss 0.0583  last_loss 0.0374  steps 600  arch [128, 40, 44]
+  [grown_uncapped_dream] task 2/3 (emnist_letters_22_23) epoch 7/8 [post-grow]  avg_loss 0.0527  last_loss 0.0160  steps 750  arch [128, 40, 44]
+  [grown_uncapped_dream] task 2/3 (emnist_letters_22_23) epoch 8/8 [post-grow]  avg_loss 0.0494  last_loss 0.0466  steps 900  arch [128, 40, 44]
+  [grown_uncapped_dream] post-task DREAM: replay 0.1828→0.0588 on 1p; merges=0 purges=0 latched=0 → arch [128, 40, 44] (107444→107444 params)
+[grown_uncapped_dream] After pass 1 task 2: own=0.0000 (domain 0.0000, task 0.9819)  avg=0.4644 (domain 0.4644, task 0.9553)  arch=[128, 40, 44] params=107444 (trainable 6964)  cum_grows=8 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 3/3: emnist_letters_24_25 (active [44, 45])  pre-arch=[128, 40, 46] params=107526 (trainable 7046/∞) ===
+  [grown_uncapped_dream] task 3/3 (emnist_letters_24_25) epoch 1/8 [settle]  avg_loss 0.3568  last_loss 0.1752  steps 150  arch [128, 40, 46]
+  [grown_uncapped_dream] task 3/3 (emnist_letters_24_25) epoch 2/8 [settle]  avg_loss 0.1961  last_loss 0.1705  steps 300  arch [128, 40, 46]
+  [grown_uncapped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 44, 46] params=108226 (trainable 7746)
+  [grown_uncapped_dream] task 3/3 (emnist_letters_24_25) epoch 3/8 [post-grow]  avg_loss 0.1658  last_loss 0.1295  steps 150  arch [128, 44, 46]
+  [grown_uncapped_dream] task 3/3 (emnist_letters_24_25) epoch 4/8 [post-grow]  avg_loss 0.1437  last_loss 0.1613  steps 300  arch [128, 44, 46]
+  [grown_uncapped_dream] task 3/3 (emnist_letters_24_25) epoch 5/8 [post-grow]  avg_loss 0.1275  last_loss 0.1566  steps 450  arch [128, 44, 46]
+  [grown_uncapped_dream] task 3/3 (emnist_letters_24_25) epoch 6/8 [post-grow]  avg_loss 0.1157  last_loss 0.0918  steps 600  arch [128, 44, 46]
+  [grown_uncapped_dream] task 3/3 (emnist_letters_24_25) epoch 7/8 [post-grow]  avg_loss 0.1079  last_loss 0.1409  steps 750  arch [128, 44, 46]
+  [grown_uncapped_dream] task 3/3 (emnist_letters_24_25) epoch 8/8 [post-grow]  avg_loss 0.1011  last_loss 0.1707  steps 900  arch [128, 44, 46]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0632→0.0837 on 1p; merges=0 purges=0 latched=0 → arch [128, 44, 46] (108226→108226 params)
+[grown_uncapped_dream] After pass 1 task 3: own=0.0019 (domain 0.0019, task 0.9681)  avg=0.5717 (domain 0.5717, task 0.9583)  arch=[128, 44, 46] params=108226 (trainable 7746)  cum_grows=12 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] <<< PASS 1/1 done — full=0.5717  domain=0.5717  task=0.9583
+
+[SCORE] emnist_uz  task-aware 0.9583  full 0.5717  domain 0.5717
+[SAVE] /home/marcrockhat/trioron-project/outputs/poc_donor_emnist_uz.pt  (1299.5 KB)  head=46  arch=[128, 44, 46]  archive_classes=[40, 41, 42, 43, 44, 45]

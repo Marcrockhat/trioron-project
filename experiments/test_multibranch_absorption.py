@@ -29,6 +29,7 @@ import torch
 from experiments.datasets import (
     DatasetBundle, build_task_views, chained_15_specs, DEFAULT_DATA_ROOT,
 )
+from experiments.train_donor import SPLIT_BLOCKS
 from trioron.multibranch import Branch, MultiBranchOrganism
 
 
@@ -136,23 +137,29 @@ def gate_stats(org, eval_views, *, routing, temperature=1.0, batch=512):
     return rows
 
 
-def _spec_block_for_donor(donor_label, all_specs):
-    """Map a donor label to the chained_15 sub-block it was trained on
-    (used to pick test specs for that donor's classes)."""
-    if donor_label == "digits":
-        return all_specs[0:5]   # MNIST     (global 0..9)
-    if donor_label == "fashion":
-        return all_specs[5:10]  # Fashion   (global 10..19)
-    if donor_label == "emnist":
-        return all_specs[10:15] # EMNIST    (global 20..29)
-    raise ValueError(f"Unknown donor label: {donor_label}")
+def _spec_block_for_donor(donor_label, all_specs=None):
+    """Look up the train-side spec subset for a donor label via the
+    shared SPLIT_BLOCKS config (defined in experiments/train_donor.py).
+    `all_specs` is unused (kept for backwards compatibility)."""
+    if donor_label not in SPLIT_BLOCKS:
+        raise ValueError(
+            f"Unknown donor label: {donor_label}. "
+            f"Known: {sorted(SPLIT_BLOCKS)}"
+        )
+    specs_fn, _ = SPLIT_BLOCKS[donor_label]
+    return specs_fn()
 
 
 def _datasets_for_donors(donor_labels):
     """Map donor labels to the dataset names DatasetBundle should load."""
-    name_for = {"digits": "mnist", "fashion": "fashion_mnist",
-                "emnist": "emnist_letters"}
-    return [name_for[d] for d in donor_labels]
+    seen = []
+    for d in donor_labels:
+        if d not in SPLIT_BLOCKS:
+            raise ValueError(f"Unknown donor label: {d}")
+        _, ds_name = SPLIT_BLOCKS[d]
+        if ds_name not in seen:
+            seen.append(ds_name)
+    return seen
 
 
 def main(argv=None) -> int:
