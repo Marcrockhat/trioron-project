@@ -18,3 +18,12 @@ logs/
 .vscode/
 .DS_Store
 ~$*
+
+# LaTeX build artifacts (paper/)
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
