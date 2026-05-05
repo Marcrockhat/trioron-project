@@ -120,7 +120,7 @@ trioron-project/
 
 ## Citation / co-authorship
 
-This work is co-authored with two AI assistants in defined roles: Gemma (engineering, Gemini Pro) and Chloe (research direction, Claude Opus 4.7).
+This work is done with two AI assistants in defined roles: Gemma (engineering, Gemini Pro 3.1) and Chloe (research direction, Claude Opus 4.7).
 
 ## License
 
