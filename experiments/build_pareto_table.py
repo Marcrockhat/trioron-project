@@ -90,6 +90,14 @@ SOURCES: List[Tuple[str, str, float, Optional[str]]] = [
     ("bench_chained_15task_n3_HAT_multiseed.csv",
      "HAT standard (full net)",
      hat_mask_kb(56 + 56), "hat_standard"),
+    # Online EWC: stores ONE Fisher tensor + anchor (running average).
+    # Cumulative storage = trainable_params × 2 (Fisher + anchor) × 4 B.
+    ("bench_chained_15task_n3_ONLINE_EWC_multiseed.csv",
+     "Online EWC (γ=0.95, matched)", 8934 * 2 * 4 / 1024.0, "online_ewc"),
+    # LwF (with EWC on fixed_ewc_small base): no extra storage beyond
+    # what EWC already keeps (Fisher + anchor).
+    ("bench_chained_15task_n3_LWF_multiseed.csv",
+     "LwF + EWC (matched)", 8934 * 2 * 4 / 1024.0, "fixed_ewc_small"),
 ]
 
 

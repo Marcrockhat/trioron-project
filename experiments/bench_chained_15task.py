@@ -733,8 +733,30 @@ def consolidate_task(
     net: TrioronNetwork,
     train_view: TaskDataView,
     active_classes: Sequence[int],
+    online_ewc_gamma: Optional[float] = None,
 ) -> None:
-    estimate_fisher_for_task(net, train_view, active_classes)
+    """Compute Fisher, update lambda, anchor.
+
+    If online_ewc_gamma is set, accumulate Fisher across tasks per
+    Schwarz et al. 2018: F_t = γ·F_{t-1} + F_current_task. Otherwise
+    use per-task Fisher (resets each task).
+    """
+    if online_ewc_gamma is not None:
+        # Snapshot decayed prior-task Fisher.
+        prior_W = []
+        prior_b = []
+        with torch.no_grad():
+            for layer in net.layers:
+                prior_W.append(layer.fisher_W.clone() * online_ewc_gamma)
+                prior_b.append(layer.fisher_b.clone() * online_ewc_gamma)
+        estimate_fisher_for_task(net, train_view, active_classes)
+        # Add the decayed prior Fisher to the current-task Fisher.
+        with torch.no_grad():
+            for layer, pW, pb in zip(net.layers, prior_W, prior_b):
+                layer.fisher_W.add_(pW)
+                layer.fisher_b.add_(pb)
+    else:
+        estimate_fisher_for_task(net, train_view, active_classes)
     net.update_lambda_all()
     with torch.no_grad():
         for layer in net.layers:
@@ -1863,6 +1885,7 @@ def run_chained_curriculum(
     n_passes: int = 1,
     packnet_mode: Optional[str] = None,
     hat_mode: Optional[str] = None,
+    online_ewc_gamma: Optional[float] = None,
 ) -> Dict[str, object]:
     """Run the chained curriculum, optionally repeated for `n_passes`.
 
@@ -2172,8 +2195,12 @@ def run_chained_curriculum(
                     hat_ctrl=hat_ctrl,
                 )
 
-            # 4. Consolidate.
-            consolidate_task(net, train_view, active)
+            # 4. Consolidate. Online EWC accumulates Fisher across
+            #    tasks with decay γ; per-task EWC resets each call.
+            consolidate_task(
+                net, train_view, active,
+                online_ewc_gamma=online_ewc_gamma,
+            )
             # PackNet / HAT replace EWC anchor-pull with their own
             # protection mechanisms. Disable ewc_baseline for the next
             # task so we don't double-supervise.
@@ -2510,6 +2537,15 @@ ARM_DEFINITIONS = {
         "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": False,
         "hat_mode": "standard",
     },
+    # Online EWC (Schwarz et al. 2018) — accumulate Fisher across tasks
+    # with decay γ instead of per-task Fisher reset. Cheaper memory
+    # (one Fisher tensor instead of per-task), similar protection.
+    # Same shape as fixed_ewc_small (matched-trainable, frozen L0).
+    "online_ewc": {
+        "h_init": 56, "do_growth": False, "do_dream": False,
+        "cap_bytes": M_MAX_BYTES_UNCAPPED, "freeze_l0": True,
+        "online_ewc_gamma": 0.95,
+    },
 }
 
 DEFAULT_ARMS = list(ARM_DEFINITIONS.keys())
@@ -2567,6 +2603,7 @@ def run_arm(
         n_passes=n_passes,
         packnet_mode=cfg.get("packnet_mode"),
         hat_mode=cfg.get("hat_mode"),
+        online_ewc_gamma=cfg.get("online_ewc_gamma"),
     )
 
 

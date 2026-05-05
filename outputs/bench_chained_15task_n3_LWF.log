@@ -1,0 +1,669 @@
+LwF n=3 multi-seed (chained-15) — fixed_ewc_small + LWF distillation
+  LWF_LOSS_WEIGHT = 0.7
+  LWF_TEMPERATURE = 2.0
+==============================================================================
+Trioron — bench_chained_15task: MNIST → FashionMNIST → EMNIST-letters
+==============================================================================
+Epochs/task:        8
+K_settle epochs:    2  (Fix B — growth deferred until after settle)
+L0 width (frozen):  128
+H_init grown (L1):  32
+H fixed:            64
+N_grow_per_task:    4
+Cap (trainable):    32_000 B = 8_000 params
+EWC intertask:      30.0
+Curriculum passes:  1
+Warmup enabled:     False
+Arms:               ['fixed_ewc_small']
+Seeds (n=3):     [0, 1, 2]
+
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+##############################################################################
+#   SEED 0  (1/3)
+##############################################################################
+
+[fixed_ewc_small] start — arch (128, 56, 2)  params 107818 (trainable 7338)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=on  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[fixed_ewc_small] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[fixed_ewc_small] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 56, 2] params=107818 (trainable 7338/∞) ===
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.1202  last_loss 0.0137  steps 197  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0105  last_loss 0.0050  steps 394  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0062  last_loss 0.0011  steps 591  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0046  last_loss 0.0004  steps 788  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0037  last_loss 0.0001  steps 985  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0030  last_loss 0.0001  steps 1182  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0028  last_loss 0.0003  steps 1379  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0024  last_loss 0.0002  steps 1576  arch [128, 56, 2]
+[fixed_ewc_small] After pass 1 task 1: own=0.9986 (domain 0.9986, task 0.9986)  avg=0.9986 (domain 0.9986, task 0.9986)  arch=[128, 56, 2] params=107818 (trainable 7338)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 56, 4] params=107932 (trainable 7452/∞) ===
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.3449  last_loss 0.2738  steps 188  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.2184  last_loss 0.1665  steps 376  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.1944  last_loss 0.1976  steps 564  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.1805  last_loss 0.0651  steps 752  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.1725  last_loss 0.0632  steps 940  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.1669  last_loss 0.0366  steps 1128  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.1626  last_loss 0.1105  steps 1316  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.1574  last_loss 0.1414  steps 1504  arch [128, 56, 4]
+[fixed_ewc_small] After pass 1 task 2: own=0.6366 (domain 0.6366, task 0.9608)  avg=0.8160 (domain 0.8160, task 0.9797)  arch=[128, 56, 4] params=107932 (trainable 7452)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 56, 6] params=108046 (trainable 7566/∞) ===
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.4022  last_loss 0.2465  steps 175  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.2023  last_loss 0.2664  steps 350  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.1577  last_loss 0.1399  steps 525  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.1374  last_loss 0.1457  steps 700  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.1243  last_loss 0.0957  steps 875  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.1147  last_loss 0.0776  steps 1050  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.1087  last_loss 0.1533  steps 1225  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.1025  last_loss 0.0685  steps 1400  arch [128, 56, 6]
+[fixed_ewc_small] After pass 1 task 3: own=0.2561 (domain 0.2561, task 0.9835)  avg=0.6010 (domain 0.6010, task 0.9806)  arch=[128, 56, 6] params=108046 (trainable 7566)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 56, 8] params=108160 (trainable 7680/∞) ===
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.2491  last_loss 0.0940  steps 189  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0969  last_loss 0.0647  steps 378  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0759  last_loss 0.0345  steps 567  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0659  last_loss 0.0540  steps 756  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0590  last_loss 0.0262  steps 945  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0537  last_loss 0.0407  steps 1134  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0505  last_loss 0.0833  steps 1323  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0470  last_loss 0.0277  steps 1512  arch [128, 56, 8]
+[fixed_ewc_small] After pass 1 task 4: own=0.5468 (domain 0.5468, task 0.9869)  avg=0.5673 (domain 0.5673, task 0.9829)  arch=[128, 56, 8] params=108160 (trainable 7680)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 56, 10] params=108274 (trainable 7794/∞) ===
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.3666  last_loss 0.1948  steps 183  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1965  last_loss 0.1396  steps 366  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.1668  last_loss 0.1002  steps 549  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.1501  last_loss 0.1152  steps 732  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.1415  last_loss 0.1577  steps 915  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.1343  last_loss 0.1299  steps 1098  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.1287  last_loss 0.2360  steps 1281  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.1246  last_loss 0.1239  steps 1464  arch [128, 56, 10]
+[fixed_ewc_small] After pass 1 task 5: own=0.2854 (domain 0.2854, task 0.9586)  avg=0.4761 (domain 0.4761, task 0.9776)  arch=[128, 56, 10] params=108274 (trainable 7794)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 56, 12] params=108388 (trainable 7908/∞) ===
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.2537  last_loss 0.1596  steps 186  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.1319  last_loss 0.1328  steps 372  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.1108  last_loss 0.1037  steps 558  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.1004  last_loss 0.1170  steps 744  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0925  last_loss 0.1041  steps 930  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0873  last_loss 0.1437  steps 1116  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0840  last_loss 0.0504  steps 1302  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0814  last_loss 0.1248  steps 1488  arch [128, 56, 12]
+[fixed_ewc_small] After pass 1 task 6: own=0.3975 (domain 0.9735, task 0.9735)  avg=0.4660 (domain 0.5631, task 0.9760)  arch=[128, 56, 12] params=108388 (trainable 7908)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 56, 14] params=108502 (trainable 8022/∞) ===
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.2638  last_loss 0.1645  steps 186  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.1421  last_loss 0.0969  steps 372  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.1271  last_loss 0.0890  steps 558  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.1194  last_loss 0.0694  steps 744  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.1154  last_loss 0.1426  steps 930  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.1128  last_loss 0.0707  steps 1116  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.1105  last_loss 0.0638  steps 1302  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.1083  last_loss 0.1308  steps 1488  arch [128, 56, 14]
+[fixed_ewc_small] After pass 1 task 7: own=0.0975 (domain 0.8430, task 0.9475)  avg=0.4114 (domain 0.5842, task 0.9722)  arch=[128, 56, 14] params=108502 (trainable 8022)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 56, 16] params=108616 (trainable 8136/∞) ===
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.1724  last_loss 0.0647  steps 186  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0677  last_loss 0.0711  steps 372  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0519  last_loss 0.0498  steps 558  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0428  last_loss 0.0360  steps 744  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0369  last_loss 0.0534  steps 930  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0331  last_loss 0.0396  steps 1116  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0297  last_loss 0.0168  steps 1302  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0270  last_loss 0.0128  steps 1488  arch [128, 56, 16]
+[fixed_ewc_small] After pass 1 task 8: own=0.1900 (domain 0.7130, task 0.9975)  avg=0.3771 (domain 0.5438, task 0.9751)  arch=[128, 56, 16] params=108616 (trainable 8136)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 56, 18] params=108730 (trainable 8250/∞) ===
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.0913  last_loss 0.0612  steps 186  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0357  last_loss 0.0433  steps 372  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0269  last_loss 0.0118  steps 558  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0218  last_loss 0.0140  steps 744  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0185  last_loss 0.0141  steps 930  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0162  last_loss 0.0144  steps 1116  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0142  last_loss 0.0073  steps 1302  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0129  last_loss 0.0029  steps 1488  arch [128, 56, 18]
+[fixed_ewc_small] After pass 1 task 9: own=0.3305 (domain 0.6555, task 1.0000)  avg=0.3489 (domain 0.4430, task 0.9778)  arch=[128, 56, 18] params=108730 (trainable 8250)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 56, 20] params=108844 (trainable 8364/∞) ===
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.1977  last_loss 0.0911  steps 187  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0704  last_loss 0.0356  steps 374  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0550  last_loss 0.0125  steps 561  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0474  last_loss 0.0210  steps 748  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0419  last_loss 0.0296  steps 935  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0388  last_loss 0.0589  steps 1122  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0352  last_loss 0.0278  steps 1309  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0332  last_loss 0.0079  steps 1496  arch [128, 56, 20]
+[fixed_ewc_small] After pass 1 task 10: own=0.1590 (domain 0.3790, task 0.9950)  avg=0.3309 (domain 0.4364, task 0.9791)  arch=[128, 56, 20] params=108844 (trainable 8364)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 56, 22] params=108958 (trainable 8478/∞) ===
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.4271  last_loss 0.3716  steps 150  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2875  last_loss 0.2605  steps 300  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.2614  last_loss 0.1812  steps 450  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.2455  last_loss 0.2138  steps 600  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.2377  last_loss 0.2325  steps 750  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.2300  last_loss 0.1547  steps 900  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.2245  last_loss 0.1823  steps 1050  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.2196  last_loss 0.3031  steps 1200  arch [128, 56, 22]
+[fixed_ewc_small] After pass 1 task 11: own=0.2788 (domain 0.9237, task 0.9237)  avg=0.2858 (domain 0.4731, task 0.9741)  arch=[128, 56, 22] params=108958 (trainable 8478)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 56, 24] params=109072 (trainable 8592/∞) ===
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.3407  last_loss 0.2350  steps 150  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.2112  last_loss 0.2101  steps 300  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.1766  last_loss 0.1740  steps 450  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.1581  last_loss 0.1956  steps 600  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.1465  last_loss 0.1494  steps 750  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.1375  last_loss 0.1124  steps 900  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.1343  last_loss 0.2501  steps 1050  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.1262  last_loss 0.0804  steps 1200  arch [128, 56, 24]
+[fixed_ewc_small] After pass 1 task 12: own=0.3456 (domain 0.8369, task 0.9506)  avg=0.2332 (domain 0.4617, task 0.9723)  arch=[128, 56, 24] params=109072 (trainable 8592)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 56, 26] params=109186 (trainable 8706/∞) ===
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.3809  last_loss 0.1760  steps 150  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.2462  last_loss 0.1857  steps 300  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.2153  last_loss 0.1977  steps 450  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.1992  last_loss 0.1279  steps 600  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1863  last_loss 0.1514  steps 750  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1780  last_loss 0.2925  steps 900  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1699  last_loss 0.1676  steps 1050  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1648  last_loss 0.1541  steps 1200  arch [128, 56, 26]
+[fixed_ewc_small] After pass 1 task 13: own=0.1562 (domain 0.4737, task 0.9500)  avg=0.2240 (domain 0.4473, task 0.9708)  arch=[128, 56, 26] params=109186 (trainable 8706)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 56, 28] params=109300 (trainable 8820/∞) ===
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.3335  last_loss 0.2914  steps 150  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.2114  last_loss 0.2165  steps 300  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.1868  last_loss 0.1568  steps 450  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.1754  last_loss 0.2068  steps 600  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.1651  last_loss 0.2845  steps 750  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.1585  last_loss 0.1183  steps 900  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.1542  last_loss 0.2272  steps 1050  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.1476  last_loss 0.1653  steps 1200  arch [128, 56, 28]
+[fixed_ewc_small] After pass 1 task 14: own=0.1125 (domain 0.2456, task 0.9425)  avg=0.2126 (domain 0.4279, task 0.9689)  arch=[128, 56, 28] params=109300 (trainable 8820)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 56, 30] params=109414 (trainable 8934/∞) ===
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.4137  last_loss 0.2680  steps 150  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.2767  last_loss 0.3269  steps 300  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2535  last_loss 0.1849  steps 450  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2423  last_loss 0.2231  steps 600  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.2317  last_loss 0.1391  steps 750  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.2230  last_loss 0.2092  steps 900  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.2167  last_loss 0.4791  steps 1050  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.2104  last_loss 0.1060  steps 1200  arch [128, 56, 30]
+[fixed_ewc_small] After pass 1 task 15: own=0.0006 (domain 0.0012, task 0.9119)  avg=0.2013 (domain 0.4026, task 0.9653)  arch=[128, 56, 30] params=109414 (trainable 8934)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] <<< PASS 1/1 done — full=0.2013  domain=0.4026  task=0.9653
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[fixed_ewc_small]
+  arch:               (128, 56, 2) → (128, 56, 30)
+  params total:       107818 → 109414
+  params trainable:   7338 → 8934  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.2013  (30-class full-softmax — headline)
+  final acc domain:   0.4026  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9653  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.1266  domain 0.1950  task 0.0001
+  wall-clock:         94.0s
+  per-phase (full / domain / task):
+     phase1_mnist         0.3530  /  0.4796  /  0.9767
+     phase2_fashion       0.1044  /  0.3989  /  0.9817
+     phase3_emnist        0.1464  /  0.3292  /  0.9374
+
+Headline (full / domain / task across arms):
+  fixed_ewc_small               full 0.2013  domain 0.4026  task 0.9653  (full-forget +0.1266)
+
+
+##############################################################################
+#   SEED 1  (2/3)
+##############################################################################
+
+[fixed_ewc_small] start — arch (128, 56, 2)  params 107818 (trainable 7338)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=on  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[fixed_ewc_small] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[fixed_ewc_small] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 56, 2] params=107818 (trainable 7338/∞) ===
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.1104  last_loss 0.0101  steps 197  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0104  last_loss 0.0025  steps 394  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0063  last_loss 0.0007  steps 591  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0047  last_loss 0.0012  steps 788  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0037  last_loss 0.0004  steps 985  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0029  last_loss 0.0000  steps 1182  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0026  last_loss 0.0003  steps 1379  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0023  last_loss 0.0007  steps 1576  arch [128, 56, 2]
+[fixed_ewc_small] After pass 1 task 1: own=0.9995 (domain 0.9995, task 0.9995)  avg=0.9995 (domain 0.9995, task 0.9995)  arch=[128, 56, 2] params=107818 (trainable 7338)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 56, 4] params=107932 (trainable 7452/∞) ===
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.3121  last_loss 0.1406  steps 188  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.1939  last_loss 0.2883  steps 376  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.1763  last_loss 0.1681  steps 564  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.1664  last_loss 0.4807  steps 752  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.1591  last_loss 0.2063  steps 940  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.1549  last_loss 0.2599  steps 1128  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.1509  last_loss 0.1236  steps 1316  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.1461  last_loss 0.0715  steps 1504  arch [128, 56, 4]
+[fixed_ewc_small] After pass 1 task 2: own=0.3364 (domain 0.3364, task 0.9515)  avg=0.6677 (domain 0.6677, task 0.9755)  arch=[128, 56, 4] params=107932 (trainable 7452)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 56, 6] params=108046 (trainable 7566/∞) ===
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.3197  last_loss 0.1503  steps 175  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.1578  last_loss 0.1519  steps 350  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.1262  last_loss 0.1197  steps 525  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.1106  last_loss 0.0804  steps 700  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.1009  last_loss 0.1195  steps 875  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0932  last_loss 0.0504  steps 1050  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0878  last_loss 0.0707  steps 1225  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0837  last_loss 0.0822  steps 1400  arch [128, 56, 6]
+[fixed_ewc_small] After pass 1 task 3: own=0.2652 (domain 0.2652, task 0.9723)  avg=0.5239 (domain 0.5239, task 0.9748)  arch=[128, 56, 6] params=108046 (trainable 7566)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 56, 8] params=108160 (trainable 7680/∞) ===
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.2403  last_loss 0.1454  steps 189  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.1074  last_loss 0.1006  steps 378  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0848  last_loss 0.0445  steps 567  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0727  last_loss 0.0593  steps 756  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0637  last_loss 0.0474  steps 945  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0576  last_loss 0.0270  steps 1134  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0530  last_loss 0.0198  steps 1323  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0499  last_loss 0.0428  steps 1512  arch [128, 56, 8]
+[fixed_ewc_small] After pass 1 task 4: own=0.2442 (domain 0.2442, task 0.9849)  avg=0.4547 (domain 0.4547, task 0.9768)  arch=[128, 56, 8] params=108160 (trainable 7680)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 56, 10] params=108274 (trainable 7794/∞) ===
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.3067  last_loss 0.1867  steps 183  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1801  last_loss 0.1333  steps 366  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.1556  last_loss 0.1315  steps 549  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.1411  last_loss 0.1330  steps 732  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.1331  last_loss 0.0655  steps 915  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.1266  last_loss 0.1633  steps 1098  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.1214  last_loss 0.0483  steps 1281  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.1177  last_loss 0.1029  steps 1464  arch [128, 56, 10]
+[fixed_ewc_small] After pass 1 task 5: own=0.2592 (domain 0.2592, task 0.9602)  avg=0.3955 (domain 0.3955, task 0.9738)  arch=[128, 56, 10] params=108274 (trainable 7794)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 56, 12] params=108388 (trainable 7908/∞) ===
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.2398  last_loss 0.1347  steps 186  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.1163  last_loss 0.1218  steps 372  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.0980  last_loss 0.1083  steps 558  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0880  last_loss 0.0682  steps 744  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0819  last_loss 0.1418  steps 930  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0774  last_loss 0.0692  steps 1116  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0748  last_loss 0.0622  steps 1302  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0714  last_loss 0.0230  steps 1488  arch [128, 56, 12]
+[fixed_ewc_small] After pass 1 task 6: own=0.3885 (domain 0.9760, task 0.9760)  avg=0.3803 (domain 0.4941, task 0.9739)  arch=[128, 56, 12] params=108388 (trainable 7908)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 56, 14] params=108502 (trainable 8022/∞) ===
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.3063  last_loss 0.1716  steps 186  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.1518  last_loss 0.1367  steps 372  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.1345  last_loss 0.1037  steps 558  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.1254  last_loss 0.1449  steps 744  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.1203  last_loss 0.1727  steps 930  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.1164  last_loss 0.0764  steps 1116  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.1132  last_loss 0.0633  steps 1302  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.1107  last_loss 0.1070  steps 1488  arch [128, 56, 14]
+[fixed_ewc_small] After pass 1 task 7: own=0.2475 (domain 0.9090, task 0.9570)  avg=0.3376 (domain 0.4995, task 0.9719)  arch=[128, 56, 14] params=108502 (trainable 8022)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 56, 16] params=108616 (trainable 8136/∞) ===
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.2039  last_loss 0.1390  steps 186  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0742  last_loss 0.0378  steps 372  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0565  last_loss 0.0282  steps 558  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0477  last_loss 0.0742  steps 744  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0421  last_loss 0.0799  steps 930  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0376  last_loss 0.0356  steps 1116  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0347  last_loss 0.0337  steps 1302  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0315  last_loss 0.0140  steps 1488  arch [128, 56, 16]
+[fixed_ewc_small] After pass 1 task 8: own=0.3125 (domain 0.8590, task 0.9915)  avg=0.2802 (domain 0.4502, task 0.9748)  arch=[128, 56, 16] params=108616 (trainable 8136)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 56, 18] params=108730 (trainable 8250/∞) ===
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.1467  last_loss 0.0608  steps 186  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0535  last_loss 0.0345  steps 372  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0414  last_loss 0.0671  steps 558  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0345  last_loss 0.0361  steps 744  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0296  last_loss 0.0257  steps 930  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0261  last_loss 0.0273  steps 1116  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0236  last_loss 0.0115  steps 1302  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0214  last_loss 0.0074  steps 1488  arch [128, 56, 18]
+[fixed_ewc_small] After pass 1 task 9: own=0.1810 (domain 0.4940, task 0.9960)  avg=0.2474 (domain 0.3715, task 0.9770)  arch=[128, 56, 18] params=108730 (trainable 8250)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 56, 20] params=108844 (trainable 8364/∞) ===
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.1603  last_loss 0.0894  steps 187  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0714  last_loss 0.0173  steps 374  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0598  last_loss 0.0197  steps 561  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0523  last_loss 0.0834  steps 748  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0463  last_loss 0.0209  steps 935  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0428  last_loss 0.0018  steps 1122  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0396  last_loss 0.0076  steps 1309  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0367  last_loss 0.0014  steps 1496  arch [128, 56, 20]
+[fixed_ewc_small] After pass 1 task 10: own=0.0035 (domain 0.2270, task 0.9880)  avg=0.2229 (domain 0.3491, task 0.9784)  arch=[128, 56, 20] params=108844 (trainable 8364)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 56, 22] params=108958 (trainable 8478/∞) ===
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.3459  last_loss 0.2637  steps 150  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2389  last_loss 0.2669  steps 300  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.2161  last_loss 0.2055  steps 450  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.2031  last_loss 0.3131  steps 600  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.1946  last_loss 0.2139  steps 750  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.1875  last_loss 0.0996  steps 900  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.1856  last_loss 0.2220  steps 1050  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.1797  last_loss 0.1694  steps 1200  arch [128, 56, 22]
+[fixed_ewc_small] After pass 1 task 11: own=0.0019 (domain 0.9350, task 0.9350)  avg=0.1982 (domain 0.3980, task 0.9744)  arch=[128, 56, 22] params=108958 (trainable 8478)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 56, 24] params=109072 (trainable 8592/∞) ===
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.3160  last_loss 0.2357  steps 150  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.2123  last_loss 0.1807  steps 300  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.1847  last_loss 0.3530  steps 450  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.1680  last_loss 0.1753  steps 600  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.1575  last_loss 0.2834  steps 750  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.1493  last_loss 0.0868  steps 900  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.1448  last_loss 0.1322  steps 1050  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.1376  last_loss 0.0403  steps 1200  arch [128, 56, 24]
+[fixed_ewc_small] After pass 1 task 12: own=0.0181 (domain 0.9056, task 0.9538)  avg=0.1842 (domain 0.3835, task 0.9726)  arch=[128, 56, 24] params=109072 (trainable 8592)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 56, 26] params=109186 (trainable 8706/∞) ===
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.4053  last_loss 0.2645  steps 150  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.2401  last_loss 0.1755  steps 300  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.2045  last_loss 0.1198  steps 450  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.1832  last_loss 0.0842  steps 600  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1706  last_loss 0.1843  steps 750  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1610  last_loss 0.1315  steps 900  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1572  last_loss 0.2317  steps 1050  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1492  last_loss 0.0841  steps 1200  arch [128, 56, 26]
+[fixed_ewc_small] After pass 1 task 13: own=0.0350 (domain 0.5794, task 0.9463)  avg=0.1721 (domain 0.3711, task 0.9706)  arch=[128, 56, 26] params=109186 (trainable 8706)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 56, 28] params=109300 (trainable 8820/∞) ===
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.3619  last_loss 0.1727  steps 150  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.2325  last_loss 0.1552  steps 300  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.2015  last_loss 0.1824  steps 450  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.1866  last_loss 0.1910  steps 600  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.1753  last_loss 0.1090  steps 750  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.1673  last_loss 0.0546  steps 900  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.1623  last_loss 0.1302  steps 1050  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.1559  last_loss 0.1972  steps 1200  arch [128, 56, 28]
+[fixed_ewc_small] After pass 1 task 14: own=0.0025 (domain 0.1825, task 0.9419)  avg=0.1608 (domain 0.3536, task 0.9680)  arch=[128, 56, 28] params=109300 (trainable 8820)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 56, 30] params=109414 (trainable 8934/∞) ===
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.3033  last_loss 0.2496  steps 150  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.2658  last_loss 0.2691  steps 300  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2526  last_loss 0.2931  steps 450  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2450  last_loss 0.1445  steps 600  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.2402  last_loss 0.3447  steps 750  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.2337  last_loss 0.2243  steps 900  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.2324  last_loss 0.2792  steps 1050  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.2264  last_loss 0.1742  steps 1200  arch [128, 56, 30]
+[fixed_ewc_small] After pass 1 task 15: own=0.0019 (domain 0.0750, task 0.9194)  avg=0.1507 (domain 0.3209, task 0.9646)  arch=[128, 56, 30] params=109414 (trainable 8934)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] <<< PASS 1/1 done — full=0.1507  domain=0.3209  task=0.9646
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[fixed_ewc_small]
+  arch:               (128, 56, 2) → (128, 56, 30)
+  params total:       107818 → 109414
+  params trainable:   7338 → 8934  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.1507  (30-class full-softmax — headline)
+  final acc domain:   0.3209  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9646  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.0740  domain 0.2452  task 0.0003
+  wall-clock:         93.8s
+  per-phase (full / domain / task):
+     phase1_mnist         0.2957  /  0.3994  /  0.9730
+     phase2_fashion       0.1450  /  0.2880  /  0.9826
+     phase3_emnist        0.0115  /  0.2754  /  0.9383
+
+Headline (full / domain / task across arms):
+  fixed_ewc_small               full 0.1507  domain 0.3209  task 0.9646  (full-forget +0.0740)
+
+
+##############################################################################
+#   SEED 2  (3/3)
+##############################################################################
+
+[fixed_ewc_small] start — arch (128, 56, 2)  params 107818 (trainable 7338)  growth=False dream=False  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=on  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=off
+
+[fixed_ewc_small] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[fixed_ewc_small] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 56, 2] params=107818 (trainable 7338/∞) ===
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.1104  last_loss 0.0023  steps 197  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0090  last_loss 0.0006  steps 394  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0060  last_loss 0.0105  steps 591  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0044  last_loss 0.0001  steps 788  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0035  last_loss 0.0000  steps 985  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0030  last_loss 0.0001  steps 1182  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0024  last_loss 0.0003  steps 1379  arch [128, 56, 2]
+  [fixed_ewc_small] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0023  last_loss 0.0000  steps 1576  arch [128, 56, 2]
+[fixed_ewc_small] After pass 1 task 1: own=0.9991 (domain 0.9991, task 0.9991)  avg=0.9991 (domain 0.9991, task 0.9991)  arch=[128, 56, 2] params=107818 (trainable 7338)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 56, 4] params=107932 (trainable 7452/∞) ===
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.3982  last_loss 0.2108  steps 188  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.2068  last_loss 0.1137  steps 376  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.1803  last_loss 0.0528  steps 564  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.1658  last_loss 0.0432  steps 752  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.1574  last_loss 0.1195  steps 940  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.1496  last_loss 0.1433  steps 1128  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.1448  last_loss 0.0355  steps 1316  arch [128, 56, 4]
+  [fixed_ewc_small] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.1423  last_loss 0.2700  steps 1504  arch [128, 56, 4]
+[fixed_ewc_small] After pass 1 task 2: own=0.7478 (domain 0.7478, task 0.9574)  avg=0.8673 (domain 0.8673, task 0.9782)  arch=[128, 56, 4] params=107932 (trainable 7452)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 56, 6] params=108046 (trainable 7566/∞) ===
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.2854  last_loss 0.1518  steps 175  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.1510  last_loss 0.0691  steps 350  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.1270  last_loss 0.1578  steps 525  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.1140  last_loss 0.0920  steps 700  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.1061  last_loss 0.0984  steps 875  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.1005  last_loss 0.0597  steps 1050  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0956  last_loss 0.1915  steps 1225  arch [128, 56, 6]
+  [fixed_ewc_small] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0919  last_loss 0.0247  steps 1400  arch [128, 56, 6]
+[fixed_ewc_small] After pass 1 task 3: own=0.7519 (domain 0.7519, task 0.9797)  avg=0.6676 (domain 0.6676, task 0.9787)  arch=[128, 56, 6] params=108046 (trainable 7566)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 56, 8] params=108160 (trainable 7680/∞) ===
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.2499  last_loss 0.0937  steps 189  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0953  last_loss 0.0860  steps 378  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0729  last_loss 0.0716  steps 567  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0624  last_loss 0.0776  steps 756  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0548  last_loss 0.0410  steps 945  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0500  last_loss 0.0429  steps 1134  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0464  last_loss 0.0534  steps 1323  arch [128, 56, 8]
+  [fixed_ewc_small] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0435  last_loss 0.0777  steps 1512  arch [128, 56, 8]
+[fixed_ewc_small] After pass 1 task 4: own=0.7110 (domain 0.7110, task 0.9859)  avg=0.6309 (domain 0.6309, task 0.9803)  arch=[128, 56, 8] params=108160 (trainable 7680)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 56, 10] params=108274 (trainable 7794/∞) ===
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.3214  last_loss 0.1674  steps 183  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1788  last_loss 0.1828  steps 366  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.1563  last_loss 0.1512  steps 549  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.1447  last_loss 0.2000  steps 732  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.1367  last_loss 0.1780  steps 915  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.1307  last_loss 0.1111  steps 1098  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.1264  last_loss 0.0710  steps 1281  arch [128, 56, 10]
+  [fixed_ewc_small] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.1231  last_loss 0.0942  steps 1464  arch [128, 56, 10]
+[fixed_ewc_small] After pass 1 task 5: own=0.1452 (domain 0.1452, task 0.9602)  avg=0.5284 (domain 0.5284, task 0.9752)  arch=[128, 56, 10] params=108274 (trainable 7794)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 56, 12] params=108388 (trainable 7908/∞) ===
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.2322  last_loss 0.1916  steps 186  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.1289  last_loss 0.0852  steps 372  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.1104  last_loss 0.1189  steps 558  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.1006  last_loss 0.1135  steps 744  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0943  last_loss 0.0976  steps 930  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0885  last_loss 0.0814  steps 1116  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0855  last_loss 0.0525  steps 1302  arch [128, 56, 12]
+  [fixed_ewc_small] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0834  last_loss 0.1664  steps 1488  arch [128, 56, 12]
+[fixed_ewc_small] After pass 1 task 6: own=0.5460 (domain 0.9715, task 0.9715)  avg=0.5185 (domain 0.6007, task 0.9748)  arch=[128, 56, 12] params=108388 (trainable 7908)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 56, 14] params=108502 (trainable 8022/∞) ===
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.2633  last_loss 0.1805  steps 186  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.1422  last_loss 0.2108  steps 372  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.1280  last_loss 0.0855  steps 558  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.1210  last_loss 0.0591  steps 744  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.1164  last_loss 0.1080  steps 930  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.1113  last_loss 0.1196  steps 1116  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.1095  last_loss 0.0892  steps 1302  arch [128, 56, 14]
+  [fixed_ewc_small] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.1062  last_loss 0.1586  steps 1488  arch [128, 56, 14]
+[fixed_ewc_small] After pass 1 task 7: own=0.0845 (domain 0.3290, task 0.9585)  avg=0.4528 (domain 0.5531, task 0.9724)  arch=[128, 56, 14] params=108502 (trainable 8022)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 56, 16] params=108616 (trainable 8136/∞) ===
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.1961  last_loss 0.1046  steps 186  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0781  last_loss 0.0502  steps 372  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0596  last_loss 0.0860  steps 558  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0500  last_loss 0.0668  steps 744  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0439  last_loss 0.0238  steps 930  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0396  last_loss 0.0236  steps 1116  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0358  last_loss 0.0288  steps 1302  arch [128, 56, 16]
+  [fixed_ewc_small] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0334  last_loss 0.0232  steps 1488  arch [128, 56, 16]
+[fixed_ewc_small] After pass 1 task 8: own=0.7040 (domain 0.9330, task 0.9925)  avg=0.4549 (domain 0.5532, task 0.9745)  arch=[128, 56, 16] params=108616 (trainable 8136)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 56, 18] params=108730 (trainable 8250/∞) ===
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.1466  last_loss 0.0781  steps 186  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0507  last_loss 0.0420  steps 372  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0390  last_loss 0.0426  steps 558  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0327  last_loss 0.0322  steps 744  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0283  last_loss 0.0176  steps 930  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0254  last_loss 0.1517  steps 1116  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0227  last_loss 0.0270  steps 1302  arch [128, 56, 18]
+  [fixed_ewc_small] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0210  last_loss 0.0105  steps 1488  arch [128, 56, 18]
+[fixed_ewc_small] After pass 1 task 9: own=0.2890 (domain 0.3415, task 0.9970)  avg=0.4161 (domain 0.4816, task 0.9771)  arch=[128, 56, 18] params=108730 (trainable 8250)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 56, 20] params=108844 (trainable 8364/∞) ===
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.2172  last_loss 0.1835  steps 187  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0893  last_loss 0.0199  steps 374  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0697  last_loss 0.0635  steps 561  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0586  last_loss 0.0263  steps 748  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0541  last_loss 0.4459  steps 935  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0475  last_loss 0.0326  steps 1122  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0440  last_loss 0.0499  steps 1309  arch [128, 56, 20]
+  [fixed_ewc_small] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0413  last_loss 0.0102  steps 1496  arch [128, 56, 20]
+[fixed_ewc_small] After pass 1 task 10: own=0.5740 (domain 0.6695, task 0.9925)  avg=0.3495 (domain 0.4308, task 0.9789)  arch=[128, 56, 20] params=108844 (trainable 8364)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 56, 22] params=108958 (trainable 8478/∞) ===
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.3889  last_loss 0.2084  steps 150  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2649  last_loss 0.2584  steps 300  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.2418  last_loss 0.2214  steps 450  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.2293  last_loss 0.1739  steps 600  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.2207  last_loss 0.1554  steps 750  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.2128  last_loss 0.2214  steps 900  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.2082  last_loss 0.3423  steps 1050  arch [128, 56, 22]
+  [fixed_ewc_small] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.2031  last_loss 0.1207  steps 1200  arch [128, 56, 22]
+[fixed_ewc_small] After pass 1 task 11: own=0.0506 (domain 0.9281, task 0.9281)  avg=0.3217 (domain 0.4772, task 0.9741)  arch=[128, 56, 22] params=108958 (trainable 8478)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 56, 24] params=109072 (trainable 8592/∞) ===
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.4212  last_loss 0.2764  steps 150  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.2529  last_loss 0.1212  steps 300  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.2028  last_loss 0.1380  steps 450  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.1788  last_loss 0.2067  steps 600  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.1620  last_loss 0.1655  steps 750  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.1507  last_loss 0.1022  steps 900  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.1428  last_loss 0.2462  steps 1050  arch [128, 56, 24]
+  [fixed_ewc_small] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.1357  last_loss 0.1760  steps 1200  arch [128, 56, 24]
+[fixed_ewc_small] After pass 1 task 12: own=0.0237 (domain 0.5069, task 0.9519)  avg=0.3031 (domain 0.4729, task 0.9711)  arch=[128, 56, 24] params=109072 (trainable 8592)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 56, 26] params=109186 (trainable 8706/∞) ===
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.3458  last_loss 0.1351  steps 150  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.2035  last_loss 0.1327  steps 300  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.1810  last_loss 0.1176  steps 450  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.1655  last_loss 0.1192  steps 600  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1571  last_loss 0.1141  steps 750  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1497  last_loss 0.1113  steps 900  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1449  last_loss 0.1075  steps 1050  arch [128, 56, 26]
+  [fixed_ewc_small] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1418  last_loss 0.2669  steps 1200  arch [128, 56, 26]
+[fixed_ewc_small] After pass 1 task 13: own=0.0094 (domain 0.6069, task 0.9525)  avg=0.2836 (domain 0.4586, task 0.9695)  arch=[128, 56, 26] params=109186 (trainable 8706)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 56, 28] params=109300 (trainable 8820/∞) ===
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.4417  last_loss 0.2857  steps 150  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.2853  last_loss 0.2603  steps 300  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.2449  last_loss 0.1667  steps 450  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.2224  last_loss 0.2160  steps 600  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.2096  last_loss 0.2032  steps 750  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.1980  last_loss 0.1959  steps 900  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.1884  last_loss 0.3139  steps 1050  arch [128, 56, 28]
+  [fixed_ewc_small] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.1831  last_loss 0.2860  steps 1200  arch [128, 56, 28]
+[fixed_ewc_small] After pass 1 task 14: own=0.0269 (domain 0.5738, task 0.9388)  avg=0.2660 (domain 0.4497, task 0.9664)  arch=[128, 56, 28] params=109300 (trainable 8820)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 56, 30] params=109414 (trainable 8934/∞) ===
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.4156  last_loss 0.3018  steps 150  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.2834  last_loss 0.2381  steps 300  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2586  last_loss 0.2216  steps 450  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2460  last_loss 0.2513  steps 600  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.2340  last_loss 0.2930  steps 750  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.2283  last_loss 0.2113  steps 900  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.2239  last_loss 0.1642  steps 1050  arch [128, 56, 30]
+  [fixed_ewc_small] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.2190  last_loss 0.2606  steps 1200  arch [128, 56, 30]
+[fixed_ewc_small] After pass 1 task 15: own=0.0006 (domain 0.1112, task 0.9200)  avg=0.2442 (domain 0.4177, task 0.9634)  arch=[128, 56, 30] params=109414 (trainable 8934)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[fixed_ewc_small] <<< PASS 1/1 done — full=0.2442  domain=0.4177  task=0.9634
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[fixed_ewc_small]
+  arch:               (128, 56, 2) → (128, 56, 30)
+  params total:       107818 → 109414
+  params trainable:   7338 → 8934  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.2442  (30-class full-softmax — headline)
+  final acc domain:   0.4177  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9634  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full 0.1429  domain 0.2186  task 0.0024
+  wall-clock:         95.4s
+  per-phase (full / domain / task):
+     phase1_mnist         0.4058  /  0.5143  /  0.9724
+     phase2_fashion       0.3091  /  0.3559  /  0.9803
+     phase3_emnist        0.0176  /  0.3829  /  0.9376
+
+Headline (full / domain / task across arms):
+  fixed_ewc_small               full 0.2442  domain 0.4177  task 0.9634  (full-forget +0.1429)
+
+
+==============================================================================
+bench_chained_15task — Multi-seed Report (n=3 seeds)
+==============================================================================
+Seeds: [0, 1, 2]
+
+[fixed_ewc_small]  (3 seeds)
+  final acc full   : 0.1987 ± 0.0468  (n=3)
+  final acc domain : 0.3804 ± 0.0521  (n=3)
+  final acc task   : 0.9644 ± 0.0009  (n=3)
+  forgetting full   : +0.1145 ± 0.0360
+  forgetting domain : +0.2196 ± 0.0251
+  forgetting task   : +0.0009 ± 0.0013
+  per-phase full:
+     phase1_mnist           0.3515 ± 0.0551
+     phase2_fashion         0.1862 ± 0.1084
+     phase3_emnist          0.0585 ± 0.0762
+  per-phase domain:
+     phase1_mnist           0.4644 ± 0.0590
+     phase2_fashion         0.3476 ± 0.0559
+     phase3_emnist          0.3292 ± 0.0538
+  per-phase task:
+     phase1_mnist           0.9740 ± 0.0024
+     phase2_fashion         0.9815 ± 0.0012
+     phase3_emnist          0.9378 ± 0.0005
+  cum grows allowed : 0.00 ± 0.00
+  cum grows denied  : 0.00 ± 0.00
+  cum dream purges  : 0.00 ± 0.00
+  final trainable    : 8934 ± 0
+
+Headline (mean ± std across seeds):
+  arm                           full                domain              task              
+  fixed_ewc_small               0.1987±0.0468       0.3804±0.0521       0.9644±0.0009     
+
+Paired σ-differences (arm_a − arm_b across seeds):
+  comparison                                        metric        mean Δ      std Δ       σ    n
+
+  log: /home/marcrockhat/trioron-project/outputs/bench_chained_15task_n3_LWF_multiseed.csv
