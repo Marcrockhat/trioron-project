@@ -137,16 +137,27 @@ def main():
 
     elif arm == "arm2":
         # Pong first, then Breakout via api.extend on iter 0.
-        # Phase A: Pong from cold start.
-        pong_result = self_imitation_train(
-            game="Pong", out_dir=out_dir / "pong_phase",
-            n_iterations=args.train_iters,
-            n_episodes_per_iter=args.episodes_per_iter,
-            eps_schedule=eps_schedule,
-            epochs_per_task=args.epochs_per_task,
-            cap_bytes=args.cap_bytes,
-            seed=args.seed,
-        )
+        # Phase A: reuse arm3's Pong donor if present (same training
+        # recipe — fresh Pong from scratch — saves ~18 min). Falls
+        # through to fresh training otherwise.
+        arm3_donor = OUT_ROOT / "arm3" / "final.pt"
+        if arm3_donor.exists():
+            print(f"[run] arm2 phase A: reusing {arm3_donor} "
+                  f"(matches the 'fresh Pong from scratch' recipe)")
+            pong_iter_log = []
+            pong_donor_path = arm3_donor.resolve()
+        else:
+            pong_result = self_imitation_train(
+                game="Pong", out_dir=out_dir / "pong_phase",
+                n_iterations=args.train_iters,
+                n_episodes_per_iter=args.episodes_per_iter,
+                eps_schedule=eps_schedule,
+                epochs_per_task=args.epochs_per_task,
+                cap_bytes=args.cap_bytes,
+                seed=args.seed,
+            )
+            pong_iter_log = pong_result.iterations
+            pong_donor_path = pong_result.final_donor
         # Phase B: Breakout extension, starting from Pong donor.
         breakout_result = self_imitation_train(
             game="Breakout", out_dir=out_dir / "breakout_phase",
@@ -156,13 +167,11 @@ def main():
             epochs_per_task=args.epochs_per_task,
             cap_bytes=args.cap_bytes * 2,
             seed=args.seed + 1,
-            initial_donor=pong_result.final_donor,
+            initial_donor=pong_donor_path,
         )
         result = breakout_result
         train_game = "Pong→Breakout"
-        # Persist combined log fields by stuffing both phases' iters.
-        result.iterations = (pong_result.iterations
-                             + breakout_result.iterations)
+        result.iterations = pong_iter_log + breakout_result.iterations
 
     elif arm == "arm3":
         # Pong only — never sees Breakout in training.
