@@ -615,6 +615,262 @@ SPEAK_JS = """
 
 
 # ---------------------------------------------------------------------
+# Tab 2: Book Memory — trioron as a 2.5 MB compressed-book-memory layer
+# in front of a frozen 540 MB SmolLM2-135M-Instruct.
+#
+# Shows the same input answered two ways:
+#   - "LLM alone": baseline SmolLM2 with no book context.
+#   - "LLM + Trioron": the same LLM, with a 16-token soft prompt
+#     emitted by a trioron head trained on Around the World in 80 Days
+#     and Alice's Adventures in Wonderland (in that order, with EWC +
+#     dream-replay across the two books).
+# ---------------------------------------------------------------------
+
+import json as _json
+
+BOOK_LLM_NAME = "HuggingFaceTB/SmolLM2-135M-Instruct"
+BOOK_HEAD_PATH = Path(__file__).parent / "book_memory" / "head_bio_alice_v2.pt"
+BOOK_ARCHIVE_PATH = Path(__file__).parent / "book_memory" / "entity_archive.pt"
+BOOK_80DAYS_QA_PATH = Path(__file__).parent / "book_memory" / "questions.json"
+BOOK_ALICE_QA_PATH = Path(__file__).parent / "book_memory" / "alice_questions.json"
+
+_BOOK_LLM = None
+_BOOK_TOKENIZER = None
+_BOOK_HEAD = None
+_BOOK_ARCHIVE = None
+_BOOK_N_SOFT = 16
+
+
+def _load_book_stack():
+    """Lazy load LLM + tokenizer + trioron head + entity archive once."""
+    global _BOOK_LLM, _BOOK_TOKENIZER, _BOOK_HEAD, _BOOK_ARCHIVE
+    if _BOOK_LLM is not None:
+        return
+    print(f"[book-memory] loading {BOOK_LLM_NAME}...")
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    _BOOK_TOKENIZER = AutoTokenizer.from_pretrained(BOOK_LLM_NAME)
+    if _BOOK_TOKENIZER.pad_token is None:
+        _BOOK_TOKENIZER.pad_token = _BOOK_TOKENIZER.eos_token
+    _BOOK_LLM = AutoModelForCausalLM.from_pretrained(
+        BOOK_LLM_NAME, dtype=torch.float32,
+    )
+    _BOOK_LLM.eval()
+    for p in _BOOK_LLM.parameters():
+        p.requires_grad_(False)
+
+    print(f"[book-memory] loading head from {BOOK_HEAD_PATH}...")
+    from book_memory import build_head_from_ckpt, EntityArchive
+    ckpt = torch.load(BOOK_HEAD_PATH, map_location="cpu", weights_only=False)
+    _BOOK_HEAD = build_head_from_ckpt(ckpt, "cpu")
+    _BOOK_HEAD.eval()
+    n_params = _BOOK_HEAD.n_parameters()
+    n_grows = ckpt.get("stats", {}).get("n_grow_events", "?")
+    print(f"[book-memory] head: {n_params:,} params "
+          f"(~{n_params * 4 / 1024:.1f} KB fp32, {n_grows} grow events)")
+
+    if BOOK_ARCHIVE_PATH.exists():
+        _BOOK_ARCHIVE = EntityArchive.load(BOOK_ARCHIVE_PATH)
+        size_kb = BOOK_ARCHIVE_PATH.stat().st_size / 1024
+        print(f"[book-memory] entity archive: {len(_BOOK_ARCHIVE)} entities, "
+              f"τ={_BOOK_ARCHIVE.threshold:.2f}, ~{size_kb:.1f} KB")
+    else:
+        print(f"[book-memory] (no entity archive at {BOOK_ARCHIVE_PATH} — "
+              f"entity routing disabled)")
+
+
+@torch.no_grad()
+def _book_generate_baseline(question: str, max_new_tokens: int = 80) -> str:
+    """LLM-only path. Tokenize the prompt, generate greedily, decode."""
+    _load_book_stack()
+    prompt = f"Q: {question}\nA: "
+    enc = _BOOK_TOKENIZER(prompt, return_tensors="pt", add_special_tokens=False)
+    out = _BOOK_LLM.generate(
+        input_ids=enc["input_ids"],
+        attention_mask=enc["attention_mask"],
+        max_new_tokens=max_new_tokens,
+        do_sample=False,
+        pad_token_id=_BOOK_TOKENIZER.pad_token_id,
+        eos_token_id=_BOOK_TOKENIZER.eos_token_id,
+    )
+    new_ids = out[0, enc["input_ids"].shape[1]:]
+    return _BOOK_TOKENIZER.decode(new_ids, skip_special_tokens=True).strip()
+
+
+@torch.no_grad()
+def _entity_lookup(question: str) -> Optional[Tuple[str, float]]:
+    """Cosine retrieval over the entity archive. Returns (entity_text, score)
+    when a key scores above the archive's threshold; None otherwise.
+
+    The archive lives in pooled-LLM-embedding space, so the lookup vector
+    is the same `pooled` we feed to the head. No extra encoder needed."""
+    if _BOOK_ARCHIVE is None or len(_BOOK_ARCHIVE) == 0:
+        return None
+    from book_memory import pool_query_embeddings
+    prompt = f"Q: {question}\nA: "
+    enc = _BOOK_TOKENIZER(prompt, return_tensors="pt", add_special_tokens=False)
+    embed_layer = _BOOK_LLM.get_input_embeddings()
+    pooled = pool_query_embeddings(embed_layer(enc["input_ids"]),
+                                   enc["attention_mask"])
+    hit = _BOOK_ARCHIVE.lookup(pooled.squeeze(0))
+    if hit is None:
+        return None
+    ent_id, score = hit
+    return _BOOK_ARCHIVE.text_of(ent_id), score
+
+
+@torch.no_grad()
+def _book_generate_trioron(question: str, max_new_tokens: int = 80) -> str:
+    """LLM + Trioron path. Two-stage routing:
+
+    1. Cosine-lookup the entity archive. If a key scores above τ
+       (typically 0.95), the trioron has confidently decided this
+       question maps to a specific named entity in its archive — return
+       that entity text directly. No LLM call. The archive *is* the
+       trioron's voice for entity recall; routing through the LLM only
+       degrades it (the LLM ignores hints and rambles on greedy decode).
+    2. Otherwise: current path — pool query embeddings, run through head,
+       prepend 16-token soft prompt, generate. Stylistic conditioning
+       is the lift here; entity facts are not expected.
+
+    The archive route is what makes the demo's headline question
+    ('What is the name of Phileas Fogg's manservant?' → 'Passepartout')
+    actually work.
+    """
+    _load_book_stack()
+    hit = _entity_lookup(question)
+    if hit is not None:
+        entity_text, score = hit
+        return (f"{entity_text}.  _(entity archive · cos {score:.3f} · "
+                f"no LLM call)_")
+
+    # Fallback: soft-prompt path (current behavior, kept for descriptive
+    # questions where the head's stylistic conditioning is the main lift).
+    from book_memory import pool_query_embeddings
+    prompt = f"Q: {question}\nA: "
+    enc = _BOOK_TOKENIZER(prompt, return_tensors="pt", add_special_tokens=False)
+    ids = enc["input_ids"]
+    mask = enc["attention_mask"]
+
+    embed_layer = _BOOK_LLM.get_input_embeddings()
+    q_emb = embed_layer(ids)                            # (1, Lq, D)
+    pooled = pool_query_embeddings(q_emb, mask)         # (1, D)
+    soft = _BOOK_HEAD(pooled)                           # (1, n_soft, D)
+    inputs_embeds = torch.cat([soft, q_emb], dim=1)
+    soft_mask = torch.ones(1, _BOOK_N_SOFT, dtype=mask.dtype)
+    full_mask = torch.cat([soft_mask, mask], dim=1)
+
+    out = _BOOK_LLM.generate(
+        inputs_embeds=inputs_embeds,
+        attention_mask=full_mask,
+        max_new_tokens=max_new_tokens,
+        do_sample=False,
+        repetition_penalty=1.3,
+        no_repeat_ngram_size=4,
+        pad_token_id=_BOOK_TOKENIZER.pad_token_id,
+        eos_token_id=_BOOK_TOKENIZER.eos_token_id,
+    )
+    # When inputs_embeds is used, generate returns only the NEW tokens.
+    return _BOOK_TOKENIZER.decode(out[0], skip_special_tokens=True).strip()
+
+
+def _load_book_question_sets():
+    """Plain list of preset-question strings, prefixed with the book
+    they came from. The dropdown displays them verbatim; the handler
+    strips the prefix to recover the raw question."""
+    items: List[str] = []
+    for label, path in [
+        ("80 Days", BOOK_80DAYS_QA_PATH),
+        ("Alice", BOOK_ALICE_QA_PATH),
+    ]:
+        if path.exists():
+            try:
+                data = _json.loads(path.read_text())
+                for q in data.get("questions", []):
+                    items.append(f"[{label}] {q['question']}")
+            except Exception as e:
+                print(f"[book-memory] failed to parse {path}: {e}")
+    return items
+
+
+def _strip_book_prefix(s: str) -> str:
+    """[80 Days] foo → foo. Leaves un-prefixed strings alone."""
+    if s and s.startswith("[") and "] " in s:
+        return s.split("] ", 1)[1]
+    return s
+
+
+def book_qa_for_ui(preset_str: str, custom_question: str):
+    """Top-level Gradio handler. Picks the question (custom takes
+    priority over preset), generates both baseline and trioron answers,
+    returns markdown for both panes plus a one-line stats summary."""
+    custom = (custom_question or "").strip()
+    preset_q = _strip_book_prefix(preset_str or "").strip()
+    question = custom or preset_q
+    if not question:
+        return ("_(pick a preset or type a question)_",
+                "_(pick a preset or type a question)_",
+                "")
+
+    base = _book_generate_baseline(question)
+    trio = _book_generate_trioron(question)
+
+    base_md = f"**Q:** {question}\n\n**A:** {base or '_(empty)_'}"
+    trio_md = f"**Q:** {question}\n\n**A:** {trio or '_(empty)_'}"
+    n_params = _BOOK_HEAD.n_parameters() if _BOOK_HEAD else 0
+    summary = (
+        f"head: {n_params:,} params (~{n_params * 4 / 1024 / 1024:.2f} MB fp32) — "
+        f"trained on 80 Days + Alice via frustration-driven growth + "
+        f"EWC + cross-book dream replay."
+    )
+    return base_md, trio_md, summary
+
+
+BOOK_DESCRIPTION = """
+**Trioron as a small router over a frozen LLM.** The frozen LLM is
+[`HuggingFaceTB/SmolLM2-135M-Instruct`](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct)
+(~270 MB fp32). Two paths the trioron picks between:
+
+1. **Entity archive.** A ~290 KB sidecar of cosine keys, one per
+   stored question. When the user's query matches a stored question
+   closely enough (cos ≥ 0.95), the trioron returns the entity that
+   question pointed at — no LLM call. Structurally this is the same
+   shape as a 1990s retrieval-based chatbot, just with learned
+   embedding keys instead of hand-written regex patterns.
+
+2. **Stylistic conditioning.** When the archive doesn't fire, the
+   2.5 MB head emits a 16-token continuous soft prompt that biases
+   SmolLM2-135M toward Victorian-novel cadence. Period prose, not factual
+   recall.
+
+Why two paths: a soft prompt has limited authority over the LLM's
+BPE-piece prior. Names like "Passepartout" fragment into 4 rare BPE
+pieces (`P` `asse` `part` `out`); navigating that corridor under
+greedy decode from soft-prompt distillation alone is hard. The
+archive sidesteps it — when the trioron knows, it just answers;
+otherwise SmolLM2-135M rambles in period style.
+
+**Honest scope.** Compared to a typical RAG stack over the same
+books (chunked text + FAISS index + a separate ~80 MB sentence-
+encoder like MiniLM), the lookup table is comparable in size to the
+index — the saving is reusing the LLM's own embedding layer instead
+of shipping a second model. Where RAG retrieves raw passages, this
+archive only stores short entity labels — descriptive questions
+("describe the tea-party") still go through the soft-prompt fallback
+and confabulate plausibly, not factually. **The trioron contributes
+~3 MB of personalisation + entity-recall next to the 270 MB frozen
+LLM. It does not replace passage-level retrieval.**
+
+Paraphrase tolerance is bounded by what's in the archive. A query
+close to a stored question hits; a query in unfamiliar phrasing
+falls through to the soft-prompt path. We've hand-augmented the
+preset entities with a few paraphrases each so common rewordings
+work, but novel phrasings will miss.
+
+*Private demo — please do not share until the paper publishes.*
+"""
+
+
+# ---------------------------------------------------------------------
 # Gradio UI
 # ---------------------------------------------------------------------
 
@@ -657,69 +913,116 @@ Two buttons for direct A/B:
 *Private demo — please do not share until the paper publishes.*
 """
 
-with gr.Blocks(title="Trioron TTS Demo v2") as demo:
-    gr.Markdown("# Trioron TTS Demo v2 — segment-level intonation")
-    gr.Markdown(DESCRIPTION)
-    text_in = gr.Textbox(
-        label="Text to speak (plain or with <mode>...</mode> markup)",
-        placeholder="Type a paragraph and click Speak…",
-        lines=4,
-    )
-    backend_in = gr.Radio(
-        choices=["Web Speech (browser)", "Piper (server)"],
-        value="Web Speech (browser)",
-        label="Renderer",
-        info=(
-            "Web Speech uses your browser's built-in TTS — instant, "
-            "voice quality depends on OS. Piper renders server-side "
-            "(adds ~200ms/sentence + ~5s on first use to download "
-            "the voice); audio quality is consistent across platforms."
-        ),
-    )
-    with gr.Row():
-        speak_btn = gr.Button("Speak (with trioron)", variant="primary")
-        speak_raw_btn = gr.Button("Speak raw (no trioron)", variant="secondary")
-        clear_btn = gr.Button("Clear")
-    gr.Examples(examples=EXAMPLES, inputs=text_in)
-    summary_out = gr.Textbox(
-        label="Routing summary", interactive=False, lines=1,
-    )
-    table_out = gr.Dataframe(
-        headers=["segment", "mode", "speed", "volume", "log-lik", "source"],
-        datatype=["str", "str", "number", "number", "str", "str"],
-        interactive=False,
-        wrap=True,
-        label="Per-segment decisions",
-    )
-    audio_out = gr.Audio(
-        label="Server-rendered audio (Piper)",
-        autoplay=True,
-        interactive=False,
-    )
-    payload_out = gr.Textbox(visible=False)
+BOOK_PRESETS = _load_book_question_sets()
 
-    speak_btn.click(
-        fn=decide_for_ui, inputs=[text_in, backend_in],
-        outputs=[table_out, summary_out, payload_out, audio_out],
-    ).then(
-        fn=None,
-        inputs=[payload_out],
-        outputs=None,
-        js=SPEAK_JS,
+
+with gr.Blocks(title="Trioron Demos") as demo:
+    gr.Markdown("# Trioron Demos")
+    gr.Markdown(
+        "Two views of the same trioron substrate: as a tiny personalization "
+        "layer in front of a TTS engine, and as a compressed book-memory "
+        "layer in front of a small LLM."
     )
-    speak_raw_btn.click(
-        fn=decide_raw_for_ui, inputs=[text_in, backend_in],
-        outputs=[table_out, summary_out, payload_out, audio_out],
-    ).then(
-        fn=None,
-        inputs=[payload_out],
-        outputs=None,
-        js=SPEAK_JS,
-    )
-    clear_btn.click(
-        fn=lambda: ([], "—", "[]", None),
-        outputs=[table_out, summary_out, payload_out, audio_out],
-    )
+
+    with gr.Tab("Emotional TTS"):
+        gr.Markdown("## Trioron TTS — segment-level intonation")
+        gr.Markdown(DESCRIPTION)
+        text_in = gr.Textbox(
+            label="Text to speak (plain or with <mode>...</mode> markup)",
+            placeholder="Type a paragraph and click Speak…",
+            lines=4,
+        )
+        backend_in = gr.Radio(
+            choices=["Web Speech (browser)", "Piper (server)"],
+            value="Web Speech (browser)",
+            label="Renderer",
+            info=(
+                "Web Speech uses your browser's built-in TTS — instant, "
+                "voice quality depends on OS. Piper renders server-side "
+                "(adds ~200ms/sentence + ~5s on first use to download "
+                "the voice); audio quality is consistent across platforms."
+            ),
+        )
+        with gr.Row():
+            speak_btn = gr.Button("Speak (with trioron)", variant="primary")
+            speak_raw_btn = gr.Button("Speak raw (no trioron)", variant="secondary")
+            clear_btn = gr.Button("Clear")
+        gr.Examples(examples=EXAMPLES, inputs=text_in)
+        summary_out = gr.Textbox(
+            label="Routing summary", interactive=False, lines=1,
+        )
+        table_out = gr.Dataframe(
+            headers=["segment", "mode", "speed", "volume", "log-lik", "source"],
+            datatype=["str", "str", "number", "number", "str", "str"],
+            interactive=False,
+            wrap=True,
+            label="Per-segment decisions",
+        )
+        audio_out = gr.Audio(
+            label="Server-rendered audio (Piper)",
+            autoplay=True,
+            interactive=False,
+        )
+        payload_out = gr.Textbox(visible=False)
+
+        speak_btn.click(
+            fn=decide_for_ui, inputs=[text_in, backend_in],
+            outputs=[table_out, summary_out, payload_out, audio_out],
+        ).then(
+            fn=None,
+            inputs=[payload_out],
+            outputs=None,
+            js=SPEAK_JS,
+        )
+        speak_raw_btn.click(
+            fn=decide_raw_for_ui, inputs=[text_in, backend_in],
+            outputs=[table_out, summary_out, payload_out, audio_out],
+        ).then(
+            fn=None,
+            inputs=[payload_out],
+            outputs=None,
+            js=SPEAK_JS,
+        )
+        clear_btn.click(
+            fn=lambda: ([], "—", "[]", None),
+            outputs=[table_out, summary_out, payload_out, audio_out],
+        )
+
+    with gr.Tab("Book Memory"):
+        gr.Markdown("## Trioron as compressed book memory")
+        gr.Markdown(BOOK_DESCRIPTION)
+        with gr.Row():
+            book_preset = gr.Dropdown(
+                label="Preset question (optional — or type your own below)",
+                choices=BOOK_PRESETS,
+                value=None,
+            )
+        book_custom = gr.Textbox(
+            label="Or type your own question",
+            placeholder="e.g., Who is Phileas Fogg's manservant?",
+            lines=2,
+        )
+        with gr.Row():
+            book_ask_btn = gr.Button("Ask both", variant="primary")
+            book_clear_btn = gr.Button("Clear")
+        with gr.Row():
+            book_baseline_out = gr.Markdown(label="LLM alone")
+            book_trioron_out = gr.Markdown(label="LLM + Trioron")
+        book_summary_out = gr.Textbox(
+            label="Trioron head", interactive=False, lines=1,
+        )
+
+        book_ask_btn.click(
+            fn=book_qa_for_ui,
+            inputs=[book_preset, book_custom],
+            outputs=[book_baseline_out, book_trioron_out, book_summary_out],
+        )
+        book_clear_btn.click(
+            fn=lambda: ("", "", "", None, ""),
+            outputs=[book_baseline_out, book_trioron_out, book_summary_out,
+                     book_preset, book_custom],
+        )
+
 
 if __name__ == "__main__":
     demo.launch()

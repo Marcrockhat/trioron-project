@@ -1,0 +1,39 @@
+{
+  "_schema": {
+    "question": "the question text shown to the LLM",
+    "answer": "canonical short answer",
+    "type": "exact_match | embedding_sim",
+    "chapter": "1-12 — coverage tracking",
+    "demo_dropdown": "if true, eligible for the HF Space dropdown"
+  },
+  "questions": [
+    {
+      "question": "What is the name of Alice's cat?",
+      "answer": "Dinah",
+      "type": "exact_match",
+      "chapter": 1,
+      "demo_dropdown": true
+    },
+    {
+      "question": "What was the Caterpillar smoking on top of the mushroom?",
+      "answer": "a hookah",
+      "type": "exact_match",
+      "chapter": 4,
+      "demo_dropdown": true
+    },
+    {
+      "question": "What does the Cheshire Cat famously leave behind when it vanishes?",
+      "answer": "its grin",
+      "type": "exact_match",
+      "chapter": 6,
+      "demo_dropdown": true
+    },
+    {
+      "question": "Describe the Mad Tea-Party.",
+      "answer": "The March Hare and the Hatter are having tea at a table set out under a tree, with a sleeping Dormouse between them used as a cushion. The Hatter poses the riddle 'Why is a raven like a writing-desk?' and complains his watch is two days wrong because butter got into the works. It is always six o'clock — perpetual tea-time — because Time stopped working for the Hatter after the Queen of Hearts sentenced him for 'murdering the time' at her concert.",
+      "type": "embedding_sim",
+      "chapter": 7,
+      "demo_dropdown": true
+    }
+  ]
+}

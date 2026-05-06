@@ -1,5 +1,5 @@
 ---
-title: Trioron TTS Demo
+title: Trioron Demos
 emoji: 🗣️
 colorFrom: blue
 colorTo: purple
@@ -8,7 +8,7 @@ sdk_version: 5.49.0
 app_file: app.py
 pinned: false
 license: mit
-short_description: Trioron as device-side context memory for TTS
+short_description: Trioron as a small router — TTS prosody + book entity recall
 ---
 
 # Trioron TTS Demo
@@ -34,6 +34,7 @@ a multimodal "feel-the-scene" model.
 5. [The mode palette](#5-the-mode-palette)
 6. [Limitations and known issues](#6-limitations-and-known-issues)
 7. [Where this fits in the trioron paper](#7-where-this-fits-in-the-trioron-paper)
+8. [Book Memory tab](#8-book-memory-tab)
 
 ---
 
@@ -321,3 +322,64 @@ exercised in the project's regression tests and bench scripts.
 
 For the full picture see the paper draft and `MANUAL.md` in the
 project repo.
+
+---
+
+## 8. Book Memory tab
+
+A second tab demonstrating the same trioron substrate in a different
+role: a small router/memory layer in front of a frozen language
+model.
+
+**The frozen LLM is
+[`HuggingFaceTB/SmolLM2-135M-Instruct`](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct)**
+— ~270 MB at fp32. It is loaded once and never updated. All trioron
+weights sit in front of it.
+
+What the trioron contributes (~3 MB total):
+
+- **Entity archive** (~290 KB sidecar). Cosine retrieval over per-
+  question keys. When the user's question matches a stored question
+  closely enough (cos ≥ 0.95), the trioron returns the entity that
+  question pointed at, with no LLM call. Structurally a 1990s
+  retrieval-based chatbot table — every (question, entity) pair is a
+  searchable record. The keys are learned embeddings (mean-pooled
+  SmolLM2-135M input embeddings), which is what makes natural paraphrases
+  cluster.
+- **Stylistic conditioning head** (~2.5 MB). When the archive
+  doesn't fire, the head emits a 16-token continuous soft prompt
+  that biases SmolLM2-135M toward Victorian-novel cadence. The output is
+  fluent and period-flavored, but it is *not* factual recall.
+
+Why the two paths: a soft prompt has limited authority over
+SmolLM2-135M's BPE-piece prior. Names like "Passepartout" fragment into
+4 rare BPE pieces; navigating that corridor under greedy decode
+from soft-prompt distillation alone is hard. The archive sidesteps
+that — when the trioron knows, it just answers.
+
+**Honest comparison with RAG.** A typical RAG stack over the same
+books would consist of: chunked text (~1 MB), a FAISS / hnswlib
+index (~200 KB at int8), and a separate sentence-encoder model
+(~80 MB, e.g. MiniLM). The trioron's lookup table is roughly the
+same size as the RAG index — the saving is reusing the LLM's own
+embedding layer for the lookup vectors instead of shipping a second
+model. Where RAG can paste back a raw passage for "describe the tea-
+party," the archive only stores short entity labels, so descriptive
+questions go through the soft-prompt fallback and confabulate
+plausibly rather than factually. The trioron is not a replacement
+for passage-level RAG; it is a compact entity-recall + style layer.
+
+**Books.** The head + archive are trained on
+*Around the World in Eighty Days* (Verne) and *Alice's Adventures
+in Wonderland* (Carroll), both Project Gutenberg public-domain
+texts. ~1052 (Q, A) pairs across the two books, plus a small set of
+hand-written paraphrase variants for the entity-presets so the
+archive tolerates rewording.
+
+**Limits.** The archive is not robust to question phrasings that
+diverge from anything stored. A query like "What does Mr Fogg call
+his butler?" misses where "Who is Phileas Fogg's manservant?" hits,
+because the stored keys cluster around the latter shape. We treat
+this as a feature of an honestly small system rather than a flaw to
+hide — the trioron is competent inside the support of its training
+data and falls through cleanly outside it.

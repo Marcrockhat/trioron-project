@@ -1,0 +1,44 @@
+{
+  "_about": "Hand-written paraphrases for the entity-flagged preset questions. Each entry's questions are merged into the entity's centroid at archive build time, broadening paraphrase tolerance. Adding a new paraphrase here is the cheapest way to make the archive more robust to question rewording.",
+  "entries": [
+    {
+      "entity": "Passepartout",
+      "questions": [
+        "What is the name of Phileas Fogg's manservant?",
+        "Who is Phileas Fogg's manservant?",
+        "Who serves as Fogg's valet?",
+        "Name Fogg's manservant.",
+        "Who works for Phileas Fogg as his servant?",
+        "Phileas Fogg's manservant?",
+        "Who is Mr Fogg's personal servant?",
+        "Who serves Phileas Fogg?",
+        "What is Mr Fogg's manservant called?"
+      ]
+    },
+    {
+      "entity": "Detective Fix",
+      "questions": [
+        "Who is the detective that pursues Fogg, mistakenly believing him to be a bank robber?",
+        "Which detective is chasing Fogg?",
+        "Name the detective who follows Phileas Fogg around the world.",
+        "Who is the police detective trying to arrest Fogg?",
+        "Who pursues Fogg under suspicion of being a bank thief?",
+        "What detective shadows Fogg's journey?",
+        "Who is the detective in pursuit of Phileas Fogg?",
+        "Name the detective on Fogg's trail."
+      ]
+    },
+    {
+      "entity": "Dinah",
+      "questions": [
+        "What is the name of Alice's cat?",
+        "Who is Alice's cat?",
+        "Name Alice's cat.",
+        "Alice's cat?",
+        "What is Alice's cat called?",
+        "What's the name of the cat that belongs to Alice?",
+        "Who is Alice's pet cat?"
+      ]
+    }
+  ]
+}

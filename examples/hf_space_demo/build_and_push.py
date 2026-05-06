@@ -46,6 +46,19 @@ EXPERIMENTS_ALLOWLIST = [
     "bench_chained_15task.py",
 ]
 
+# book_memory/ — the trained dual-book head + supporting code for the
+# Book Memory tab. Skip the training data, raw text, and intermediate
+# checkpoints (huge); ship only what inference needs.
+BOOK_MEMORY_ALLOWLIST = [
+    "__init__.py",
+    "model.py",
+    "entity_archive.py",
+    "head_bio_alice_v2.pt",
+    "entity_archive.pt",
+    "questions.json",
+    "alice_questions.json",
+]
+
 
 def _assemble() -> Path:
     if BUILD_DIR.exists():
@@ -75,6 +88,16 @@ def _assemble() -> Path:
             raise FileNotFoundError(f"required runtime file missing: {src}")
         shutil.copy2(src, exp_dst / f)
         print(f"  + experiments/{f}")
+    book_dst = BUILD_DIR / "book_memory"
+    book_dst.mkdir()
+    book_src = HERE / "book_memory"
+    for f in BOOK_MEMORY_ALLOWLIST:
+        src = book_src / f
+        if not src.exists():
+            raise FileNotFoundError(f"required book_memory file missing: {src}")
+        shutil.copy2(src, book_dst / f)
+        size_kb = src.stat().st_size / 1024
+        print(f"  + book_memory/{f}  ({size_kb:.1f} KB)")
     # Drop a .gitignore for the Space repo itself.
     (BUILD_DIR / ".gitignore").write_text(
         "__pycache__/\n*.pyc\n*.egg-info/\n.pytest_cache/\n"

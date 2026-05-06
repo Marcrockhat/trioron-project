@@ -1,0 +1,41 @@
+{
+  "_schema": {
+    "question": "the question text shown to the LLM",
+    "answer": "canonical short answer; for exact_match, the LLM's output is normalized (lowercased, stripped of punctuation/articles) and compared",
+    "type": "either 'exact_match' (named entities, places, numbers, simple facts) or 'embedding_sim' (paraphrasable longer answers; scored via sentence-embedding cosine vs canonical)",
+    "chapter": "optional 1-37 — for coverage tracking only, not shown to the LLM",
+    "demo_dropdown": "optional bool — if true, this question appears in the HF Space UI dropdown (target ~20 of these for the hand-graded screenshot set)",
+    "notes": "optional free-text — context for graders"
+  },
+  "questions": [
+    {
+      "question": "What is the name of Phileas Fogg's manservant?",
+      "answer": "Passepartout",
+      "type": "exact_match",
+      "chapter": 1,
+      "demo_dropdown": true
+    },
+    {
+      "question": "How much does Phileas Fogg wager he can complete the journey around the world?",
+      "answer": "twenty thousand pounds",
+      "type": "exact_match",
+      "chapter": 3,
+      "demo_dropdown": true,
+      "notes": "Accept '£20,000' or '20000 pounds' via normalization."
+    },
+    {
+      "question": "Who is the detective that pursues Fogg, mistakenly believing him to be a bank robber?",
+      "answer": "Detective Fix",
+      "type": "exact_match",
+      "chapter": 6,
+      "demo_dropdown": true
+    },
+    {
+      "question": "Describe how Fogg rescues the Indian princess Aouda.",
+      "answer": "Fogg, Sir Francis Cromarty, and Passepartout intercept the funeral procession at Pillaji where Aouda is to be burned on her husband's pyre as a sati. Passepartout, having hidden among the corpses on the pyre, rises disguised as the dead rajah, terrifying the priests and bearers, allowing the group to escape with Aouda on the elephant Kiouni.",
+      "type": "embedding_sim",
+      "chapter": 13,
+      "demo_dropdown": true
+    }
+  ]
+}

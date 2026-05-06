@@ -5,6 +5,10 @@ huggingface_hub>=0.25,<2.0
 numpy<2.0
 audioop-lts; python_version >= "3.13"
 sentence-transformers>=2.2
+# transformers is pulled in transitively by sentence-transformers but
+# the Book Memory tab uses it directly for SmolLM2-135M-Instruct, so
+# pin it explicitly to keep dependency resolution honest.
+transformers>=4.40
 # Piper TTS (server-side renderer toggle). Pulls in onnxruntime +
 # piper-phonemize. Voice files are downloaded lazily from
 # rhasspy/piper-voices on the HF Hub on first Piper request, then
