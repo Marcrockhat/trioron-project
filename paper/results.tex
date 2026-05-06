@@ -11,6 +11,7 @@
 \usepackage{array}
 \usepackage{xcolor}
 \usepackage{pifont}
+\usepackage[round]{natbib}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linkcolor=black, urlcolor=blue}
 
@@ -421,7 +422,7 @@ is benign under principled composition.}
 \paragraph{Comparison vs Branch-Train-Merge family ($N = 3$).}
 We benchmark against two BTM variants on the same donors, replicating
 both the parameter-averaging and learned-router lines of the BTM /
-Branch-Train-Mix family (Li et al.\ 2022; Sukhbaatar et al.\ 2024).
+Branch-Train-Mix family \citep{li2022btm, sukhbaatar2024btx}.
 
 \begin{center}
 \begin{tabular}{lcccc}
@@ -499,5 +500,8 @@ hard prerequisite: organisms with mismatched L0 seeds require a
 distillation-through-paired-codes step that we have not measured here
 and which is no longer instantaneous. Saturation must exist at some
 $N$; we did not find it within the data variety chained-$15$ supports.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
 
 \end{document}

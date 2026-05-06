@@ -1,0 +1,23 @@
+\begin{thebibliography}{2}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Li et~al.(2022)Li, Gururangan, Dettmers, Lewis, Althoff, Smith, and
+  Zettlemoyer]{li2022btm}
+Margaret Li, Suchin Gururangan, Tim Dettmers, Mike Lewis, Tim Althoff, Noah~A.
+  Smith, and Luke Zettlemoyer.
+\newblock Branch-train-merge: Embarrassingly parallel training of expert
+  language models, 2022.
+
+\bibitem[Sukhbaatar et~al.(2024)Sukhbaatar, Golovneva, Sharma, Xu, Lin,
+  Rozi{\`e}re, Kahn, Li, Yih, Weston, and Li]{sukhbaatar2024btx}
+Sainbayar Sukhbaatar, Olga Golovneva, Vasu Sharma, Hu~Xu, Xi~Victoria Lin,
+  Baptiste Rozi{\`e}re, Jacob Kahn, Daniel Li, Wen-tau Yih, Jason Weston, and
+  Xian Li.
+\newblock Branch-train-{M}i{X}: Mixing expert {LLM}s into a mixture-of-experts
+  {LLM}, 2024.
+
+\end{thebibliography}

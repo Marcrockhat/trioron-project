@@ -8,6 +8,9 @@
 \usepackage{microtype}
 \usepackage{enumitem}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning, fit, arrows.meta, calc, backgrounds, shapes.geometric}
+\usepackage[round]{natbib}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linkcolor=black, urlcolor=blue}
 
@@ -91,7 +94,7 @@ independently.
 \subsection{Continual-Learning Substrate (EWC with Per-Node Plasticity)}
 \label{sec:ewc-substrate}
 
-Following Kirkpatrick et~al. (2017), we apply elastic weight consolidation
+Following \citet{kirkpatrick2017overcoming}, we apply elastic weight consolidation
 to protect prior-task knowledge. The penalty for a single trioron layer is
 \begin{equation}
   \Lewc = \sum_i \lambda_i \left[
@@ -108,25 +111,13 @@ recipe and avoids the EMA-drift artifacts of online updating during
 training.
 
 For longer curricula we optionally accumulate Fisher across tasks via the
-Online EWC variant (Schwarz et~al. 2018):
+Online EWC variant \citep{schwarz2018progress}:
 \begin{equation}
   F_t \leftarrow \gamma \cdot F_{t-1} + F_{\text{new}},
   \qquad \gamma \in [0, 1],
 \end{equation}
 with $\gamma = 1$ reducing to vanilla EWC. We use Online EWC
 $\gamma = 0.95$ as a competitor baseline in \S4.
-
-A key modification: when an apoptosis spike fires
-(\S\ref{sec:dreaming-phase}), each node's \emph{effective} stiffness is
-scaled by $\max(0, 1 - p_i)$, where $p_i$ is the node's apoptosis pulse:
-\begin{equation}
-  \lambda_i^{\text{eff}} = \lambda_i \cdot \max(0, 1 - p_i).
-\end{equation}
-This temporarily reduces a surviving cell's EWC pinning when a neighbor
-has just died, allowing it to absorb the dead neighbor's role.
-Mechanistically analogous to acute glial-derived neurotrophic factor
-release post-apoptosis, which transiently increases plasticity in adjacent
-cells.
 
 \subsection{Structural Plasticity}
 \label{sec:structural-plasticity}
@@ -191,50 +182,69 @@ Pruning corresponds to developmental and ongoing synaptic pruning, with
 cosine-nearest-peer redistribution as a soft analog of compensatory
 hypertrophy.
 
-\subsection{The Frustration Multiplier}
-\label{sec:frustration}
-
-We introduce a per-task plateau counter that scales the task loss when the
-optimizer gets stuck. For each task, accumulate the loss in windows of
-length $W_f$. At each window boundary, compare this window's mean loss to
-the prior window's. If improvement is below $\varepsilon_f$, increment a
-stuck counter $s$. The multiplier is
-\begin{equation}
-  m = \min\!\bigl(M_{\max},\; 1 + g \cdot \max(0, s - \tau + 1)\bigr)
-\end{equation}
-with hinge threshold $\tau$, gain $g$, and ceiling $M_{\max}$. The
-multiplier is applied \emph{only to the task loss}, not the EWC penalty:
-\begin{equation}
-  L = m \cdot \Ltask + \beta \cdot \Lewc.
-\end{equation}
-This is mechanically equivalent to focal-loss / hard-example-mining:
-amplify the gradient signal on examples the optimizer isn't progressing
-on, without amplifying the regularizer.
-
-\paragraph{Epigenetic analogue.}
-The biological correlate is the hypothalamic--pituitary--adrenal (HPA)
-axis stress response and its downstream effects on synaptic plasticity.
-Sustained behavioral stress (failure to make progress on a task) elevates
-glucocorticoids, which modulate gene expression at plasticity-related loci
-through epigenetic mechanisms --- DNA-methylation changes at NR3C1 and
-BDNF, miRNA-mediated post-transcriptional regulation of plasticity
-proteins. Most epigenetic modifications require a stress signal to engage;
-the frustration multiplier is the architecture's stress proxy.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  >={Latex[length=2.2mm]},
+  font=\small,
+  layer/.style={draw, rounded corners=3pt, minimum width=22mm,
+                minimum height=26mm, align=center, inner sep=3pt, fill=white},
+  frozen/.style={layer, fill=gray!15},
+  plastic/.style={layer, fill=blue!10},
+  ann/.style={font=\scriptsize, align=center},
+  arr/.style={->, thick, shorten >=1pt, shorten <=1pt}
+]
+\node[layer] (in) {\textbf{Input}\\[1pt]$\R^{784}$\\[1pt]
+                   \scriptsize MNIST / FMNIST /\\\scriptsize EMNIST pixel};
+\node[frozen, right=10mm of in] (l0) {\textbf{L0}\\[1pt]$\R^{128}$\\[1pt]
+                   \scriptsize \emph{frozen Gaussian}\\
+                   \scriptsize random projection};
+\node[plastic, right=10mm of l0] (l1) {\textbf{L1}\\[1pt]
+                   \scriptsize plastic\\$32 \to$ cap\\
+                   \scriptsize ($\le 8\text{K}$ params)};
+\node[plastic, right=10mm of l1] (hd) {\textbf{Head}\\[1pt]
+                   \scriptsize plastic\\$|C_t|$ classes\\
+                   \scriptsize +1 col / new class};
+\draw[arr] (in) -- (l0);
+\draw[arr] (l0) -- (l1);
+\draw[arr] (l1) -- (hd);
+\node[ann, above=7mm of l1] (gtrig) {plateau $\wedge$ rank-sat $\wedge$ stable-grad\\
+                                     $\Rightarrow$ \texttt{grow\_node}};
+\draw[->, dashed, thick, green!50!black] (gtrig.south) -- (l1.north);
+\node[ann, below=7mm of l1] (purge) {dream-time \texttt{purge\_node}\\
+                                     (sRNA-capped, $N_{\max}$ per cycle)};
+\draw[->, dotted, thick, red!60!black] (purge.north) -- (l1.south);
+\node[ann, below=7mm of hd] (ewc) {EWC: per-node $\lambda_i$,\\
+                                   anchor $\anchorW$};
+\draw[densely dotted] (ewc.north) -- (hd.south);
+\draw[densely dotted] (ewc.north west) to[bend right=8] (l1.south east);
+\end{tikzpicture}
+\caption{Base trioron architecture for chained-15. The frozen Gaussian
+L0 projection provides a stable code space for manifold replay
+(\S\ref{sec:manifold-replay}). The plastic L1 grows under the
+conjunction of loss-plateau, rank-saturation, and gradient-stability
+triggers up to a per-curriculum byte cap; the head grows one column per
+new class. Dream-time purge removes low-utility nodes, gated by the
+per-cycle sRNA cap (\S\ref{sec:srna-cap}). EWC anchors plus per-node
+plasticity $\lambda_i$ pin prior-task knowledge on plastic layers.}
+\label{fig:trioron-arch}
+\end{figure}
 
 \subsection{The Dreaming Phase}
 \label{sec:dreaming-phase}
 
-Between training tasks we run an offline \emph{dreaming block}.
-Frustration is disabled inside the dream block (no environmental stress
-during sleep); EWC remains active so that consolidation pulls weights
-toward their anchored state. The dream block runs four sequential stages:
+Between training tasks we run an offline \emph{dreaming block}: a short
+sleep-time pass that consolidates what was just learned without exposing
+the network to new data. EWC remains active inside the dream block so
+that consolidation pulls weights toward their anchored state. The dream
+block runs three sequential stages:
 \begin{equation*}
-  \text{replay} \;\to\; \text{compression (optional)} \;\to\;
-  \text{purge} \;\to\; \text{archive}.
+  \text{replay} \;\to\; \text{purge} \;\to\; \text{archive}.
 \end{equation*}
-Replay is the load-bearing mechanism in the working configuration; the
-compression-action design space is documented as ablation arms in
-\S\ref{sec:compression-actions}.
+Replay (\S\ref{sec:replay}) is the load-bearing accuracy mechanism; the
+dream archive (\S\ref{sec:archive}) is the load-bearing storage
+mechanism; purge is gated by a per-cycle event cap
+(\S\ref{sec:srna-cap}).
 
 \subsubsection{Replay}
 \label{sec:replay}
@@ -257,100 +267,39 @@ Replay rehearses past tasks under EWC. We support two replay sources:
 Conceptually analogous to sharp-wave ripples during slow-wave sleep, which
 replay recent and remote memories at compressed timescales.
 
-\subsubsection{Redundancy Detection (Activation Cosine)}
-\label{sec:redundancy}
-
-When dream-time compression is enabled, we score each pair of nodes
-$(i, j)$ within a layer for \emph{functional} redundancy via
-centered-activation cosine over a probe batch $a_i, a_j \in \R^{B}$:
-\begin{equation}
-  \rho_{ij} = \frac{\langle a_i - \bar a_i,\; a_j - \bar a_j \rangle}
-                   {\|a_i - \bar a_i\| \cdot \|a_j - \bar a_j\|}.
-\end{equation}
-Pairs with $\rho_{ij} \geq \tau_{\ac}$ are candidates for consolidation.
-We use the activation signal (not weight-cosine) because it captures
-functional similarity across the data distribution rather than identical
-input-direction tuning. An early diagnostic confirmed that hidden-layer
-weight-cosine ($0.6$--$0.8$) is high but not functional, while
-latent-space weight-cosine is near zero by construction of the growth rule
-(\S\ref{sec:structural-plasticity}) --- so the weight-cosine signal is
-misleading. Layer-1 activation cosine reaches $0.85$--$0.92$ in practice,
-well above the $0.59$--$0.81$ weight-cosine ceiling.
-
 \subsubsection{The sRNA Cap}
 \label{sec:srna-cap}
 
-Each compression pass is bounded by a per-layer event cap $N_{\max}$. We
-observe empirically (\S4) that $\sigma$-distance from baselines degrades
-monotonically with event count, motivating small caps; $N_{\max} = 1$
-allows replay to absorb each consolidation event before the next event
-drifts on top.
+Each dream block bounds the number of structural-pruning events per
+layer by a per-cycle cap $N_{\max}$. The cap holds even when many
+candidates pass the utility threshold of \S\ref{sec:purge}: empirically
+we observe across the dream-time mechanism design space we explored that
+$\sigma$-distance from baselines degrades monotonically with structural
+event count, motivating small caps. The default in the working
+configuration is $N_{\max} = 1$ --- at most one purge event per layer
+per dream cycle, allowing replay to absorb the structural change before
+the next event drifts on top.
 
 \paragraph{Epigenetic analogue.}
 The cap is a direct analog of resource-limited small-RNA pools that gate
 sleep-cycle synaptic homeostasis. miRNAs involved in synaptic remodeling
 are produced and consumed in stoichiometric amounts during a single sleep
-cycle; the cellular machinery cannot perform arbitrarily many
-consolidation events per cycle even when many candidates are present. The
-``fewer events $=$ better'' empirical pattern reproduces the biological
+cycle; the cellular machinery cannot perform arbitrarily many remodeling
+events per cycle even when many candidates are present. The ``fewer
+events $=$ better'' empirical pattern reproduces the biological
 observation that few consolidation events per cycle are protective.
-
-\subsubsection{Compression-Action Design Space (Ablation Arms)}
-\label{sec:compression-actions}
-
-Three substrate-respecting mechanisms for resolving a detected redundant
-pair $(i, j)$ were tested as dream-time compression actions. None of them
-$\sigma$-confidently beats the no-compression baseline at 6 seeds; we
-document them here as the ablation arms reported in \S4 and to motivate
-the substrate-preserving emphasis of \S\ref{sec:archive}.
-
-\begin{enumerate}[leftmargin=2em]
-  \item \emph{Synaptic downscale} (substrate-preserving). The peer (kept
-        side) absorbs the victim's outgoing column on the next layer; the
-        victim's outgoing is zeroed; the victim's row at layer $L$ is
-        \emph{not} touched. Architecture and parameter count are
-        unchanged. Fisher entries on the victim's outgoing edge are reset
-        so the dormant unit is available for re-recruitment in future
-        tasks.
-  \item \emph{Routing starvation} (asymmetric ramp). Each event multiplies
-        the victim's routing-scale entry by $\alpha < 1$; below floor
-        $\eta$ the scale latches to $0$ permanently. Bias is untouched, so
-        the victim continues producing a constant downstream signal until
-        downstream layers learn to absorb the constant via gradient
-        descent --- the unit ``dies slowly'' rather than instantly.
-        Reversible: each \texttt{compress()} pass also runs a regrow step
-        on non-victim, non-latched units, multiplying their scale by
-        $1/\alpha$ (capped at $1$). The kept side (``primary'') is
-        selected by older \texttt{task\_of\_origin}, with larger
-        outgoing-norm as tiebreaker.
-  \item \emph{Apoptosis spike} (full-latch handler). When a
-        routing-starvation event causes scale to cross $\eta$, two coupled
-        mechanisms fire: (a) \emph{redistribution} --- the dead cell's
-        outgoing column is transferred uniformly across all surviving
-        non-latched peers, then zeroed; (b) \emph{spike} --- the surviving
-        peers' apoptosis-pulse $p_k$ is raised to
-        $p_{\text{init}} \in (0, 1]$. The pulse decays multiplicatively by
-        $\delta$ per dream block. Through the $\lambda^{\text{eff}}$
-        modification of \S\ref{sec:ewc-substrate}, neighbors of a fresh
-        death train with reduced EWC stiffness for several dream cycles,
-        allowing them to absorb the dead cell's role.
-\end{enumerate}
-
-We report engagement statistics for these mechanisms in \S4 as evidence
-that the sRNA cap (\S\ref{sec:srna-cap}) is the load-bearing decision: at
-the activation-cosine threshold $\tau_{\ac} = 0.92$, half the seeds fire
-zero consolidation events --- a bimodal engagement pattern that
-across-seed averaging conceals.
 
 \subsubsection{Purge}
 \label{sec:purge}
 
-After compression, we drop nodes whose utility $u_i$ falls below a
-threshold $\tau_u$. Reuses the structural pruning machinery of
+The purge stage drops nodes whose utility $u_i$ falls below a threshold
+$\tau_u$, subject to the per-layer cap $N_{\max}$ of
+\S\ref{sec:srna-cap}. It reuses the structural pruning machinery of
 \S\ref{sec:structural-plasticity}, including cross-layer fan-in cleanup
 and cosine-nearest-peer redistribution. Distinct from the in-training
-pruner (\S\ref{sec:structural-plasticity}): this is a sleep-time
-structural sweep, not an event-clock check during waking training.
+pruner (\S\ref{sec:structural-plasticity}): purge is a sleep-time
+structural sweep with a strict event cap, not an event-clock check
+during waking training.
 
 \subsubsection{Pseudo-code of a Dream Block}
 \label{sec:dream-pseudocode}
@@ -360,16 +309,12 @@ for each task t in curriculum:
     train_one_task(t)                         # waking
     consolidate_task(t)                       # Fisher update + anchor
     if dreaming_enabled:
-        decay apoptosis pulses by delta
         replay(buffer = hippo or manifold,
                steps = K_r,
                ewc_active = True)
-        compress(signal = activation,
-                 threshold = tau_ac,
-                 action = ACTION,
-                 max_events_per_layer = N_max)
-        purge(threshold = tau_u)
-        archive_block(...)                    # 3.7
+        purge(threshold = tau_u,
+              max_events_per_layer = N_max)   # sRNA cap
+        archive_block(...)                    # see archive section
 \end{verbatim}
 
 \subsection{Manifold Replay (Storage-Free Pseudo-Rehearsal)}
@@ -563,7 +508,7 @@ single-branch trioron, \S\ref{sec:methods}) and $N$ parallel
 independent training run: a frozen L1 substrate, a frozen head slice
 over its own covered class subset, and the per-class manifold archive
 $\{(\mu_c, \Sigma_c)\}_{c \in C_b}$ that is already computed for
-manifold replay (\S\ref{sec:manifold}). The branches share the same
+manifold replay (\S\ref{sec:manifold-replay}). The branches share the same
 L0 random projection by being born at the same seed; this is the
 \emph{shared-seed invariant}, and is what makes donor weights
 semantically valid in recipient code-space without distillation. We
@@ -581,9 +526,12 @@ $C_b \cap C_{b'} = \emptyset$ for $b \neq b'$.
         $$\log p_b(z) = \log\!\left(\tfrac{1}{|C_b|} \sum_{c \in C_b} \mathcal{N}(z;\mu_c, \Sigma_c)\right).$$
   \item Compute branch gates by softmax over branches:
         $$g_b(z) = \frac{\exp(\log p_b(z) / T)}{\sum_{b'} \exp(\log p_{b'}(z) / T)},$$
-        where $T$ is a temperature ($T = 1$ default). Rocky's bet that
-        bleed adds new function rather than destroys it is licensed
-        here: multiple branches can co-fire.
+        where $T$ is a temperature ($T = 1$ default). Soft gates
+        (rather than argmax) are deliberate: when archive
+        log-likelihoods on a query are close, multiple branches
+        co-fire and their log-probability contributions are blended,
+        which is the regime in which absorption preserves union
+        accuracy past the headline class.
   \item Compose into combined logits over the union
         $C_{\cup} = \bigsqcup_b C_b$ via the principled mixture-of-experts
         log-probability:
@@ -591,6 +539,69 @@ $C_b \cap C_{b'} = \emptyset$ for $b \neq b'$.
         where $b(c)$ is the unique branch covering $c$. Slots not covered
         by any branch are not in $C_{\cup}$.
 \end{enumerate}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  >={Latex[length=2mm]},
+  font=\small,
+  L/.style={draw, rounded corners=3pt, align=center, inner sep=3pt, fill=white},
+  frozen/.style={L, fill=gray!15},
+  donor/.style={L, fill=blue!10, minimum width=30mm, align=center},
+  combine/.style={L, fill=green!15, minimum width=98mm, align=center, inner sep=5pt},
+  bias/.style={L, dashed, fill=violet!12, font=\scriptsize, align=center},
+  s/.style={font=\scriptsize, align=center},
+  arr/.style={->, thick, shorten >=1pt, shorten <=1pt}
+]
+\node[L] (in) {Input $x$};
+\node[frozen, below=3mm of in, minimum width=68mm] (l0)
+  {\textbf{Shared frozen L0}: $z = \sigma(W_{L_0} x + b_{L_0})$\\
+   \scriptsize matched random seed across donors\\[-1pt]
+   \scriptsize $\Rightarrow$ shared code space (shared-seed invariant)};
+\draw[arr] (in) -- (l0);
+
+\node[donor, below=14mm of l0, xshift=-38mm] (d1)
+  {\textbf{Donor 1}\\\scriptsize $L_1^{(1)}$, head$^{(1)}$, classes $C_1$\\
+   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_1}$};
+\node[donor, below=14mm of l0]              (d2)
+  {\textbf{Donor 2}\\\scriptsize $L_1^{(2)}$, head$^{(2)}$, classes $C_2$\\
+   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_2}$};
+\node[donor, below=14mm of l0, xshift=38mm] (d3)
+  {\textbf{Donor 3}\\\scriptsize $L_1^{(3)}$, head$^{(3)}$, classes $C_3$\\
+   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_3}$};
+
+\draw[arr] (l0.south) -- (d1.north);
+\draw[arr] (l0.south) -- (d2.north);
+\draw[arr] (l0.south) -- (d3.north);
+
+\node[combine, below=14mm of d2] (cmb) {%
+  \textbf{Archive gate $+$ log-prob combine}\\[2pt]
+  $g_b(z) = \mathrm{softmax}_b\bigl(\log p_b(z)/T\bigr)$,\;\;
+  $\text{combined}_c(z) = \log g_{b(c)}(z) + \log\mathrm{softmax}_c\bigl(\ell^{(b(c))}\bigr)$\\[2pt]
+  \scriptsize over union namespace $C_\cup = \bigsqcup_b C_b$ \;|\; no router training};
+
+\draw[arr] (d1.south) -- node[s, sloped, above]{$\ell^{(1)}, \log p_1$} (cmb.north -| d1);
+\draw[arr] (d2.south) -- node[s, right=1mm]{$\ell^{(2)}, \log p_2$} (cmb.north -| d2);
+\draw[arr] (d3.south) -- node[s, sloped, above]{$\ell^{(3)}, \log p_3$} (cmb.north -| d3);
+
+\node[bias, below=4mm of cmb, text width=86mm]
+  (bias) {Optional per-class bias offset (dream-cycle calibration; trained on synthetic codes from union archive --- no real data)};
+\draw[->, dashed, thick] (bias.north) -- (cmb.south);
+\end{tikzpicture}
+\caption{Multi-branch absorption (chimera) at $N=3$ donors. All
+donors share the same frozen Gaussian L0 by being born at matching
+random seeds, so donor weights are byte-valid in the recipient code
+space (\emph{shared-seed invariant}). Each donor contributes per-class
+logits $\ell^{(b)}$ and a manifold-archive log-likelihood
+$\log p_b(z)$; the same archive that serves manifold replay
+(\S\ref{sec:manifold-replay}) also serves as the analytic Expert-Gate
+router. The combine operation places per-branch log-softmax
+contributions into the union class namespace, weighted by the gate ---
+no router training and no fusion-layer learning. The dashed per-class
+bias offset is the optional dream-cycle calibration: it closes most of
+the BTM-MoE full-softmax gap at a small task-aware cost (\S4.6).}
+\label{fig:chimera}
+\end{figure}
 
 \paragraph{Why per-branch log-softmax.} Each donor's head was trained
 under its own active-class mask, so absolute logit \emph{magnitudes}
@@ -606,7 +617,7 @@ in the recipient because L0 is shared (matched random projection
 $\Rightarrow$ matched code distribution), and donor logits are placed
 into recipient class-namespace via per-class indexing. The gate is
 computed analytically from the archive --- a generative
-\emph{Expert-Gate}-style router (Aljundi et al.\ 2017) using the
+\emph{Expert-Gate}-style router \citep{aljundi2017expert} using the
 manifold buffer trioron already produces. No router training, no
 fusion-layer learning, no calibration pass; pure paste-and-go.
 
@@ -698,17 +709,17 @@ family:
 \begin{itemize}[leftmargin=1.5em]
   \item \emph{Hippocampal buffer (exemplar rehearsal).} $K$ samples per
         past class stored. $K \in \{1, 10, 20, 50\}$.
-  \item \emph{PackNet} (Mallya \& Lazebnik 2018). Iterative magnitude
+  \item \emph{PackNet} \citep{mallya2018packnet}. Iterative magnitude
         pruning with per-task masks. \emph{PackNet matched} matches our
         trainable-parameter budget; \emph{PackNet standard} uses the
         original recipe.
-  \item \emph{HAT} (Serra et~al. 2018). Hard binary attention masks per
+  \item \emph{HAT} \citep{serra2018hat}. Hard binary attention masks per
         task, gating each layer. \emph{Matched} and \emph{standard}
         variants as above.
-  \item \emph{Online EWC} (Schwarz et~al. 2018). Fisher EMA across tasks
+  \item \emph{Online EWC} \citep{schwarz2018progress}. Fisher EMA across tasks
         with $\gamma = 0.95$; learning-rate and $\beta$ tuned via grid
         search on the no-dream loss.
-  \item \emph{LwF + EWC} (Li \& Hoiem 2018; Kirkpatrick 2017).
+  \item \emph{LwF + EWC} \citep{li2018lwf, kirkpatrick2017overcoming}.
         Logit-distillation toward the anchored network on old-class
         columns, in addition to the EWC penalty.
 \end{itemize}
@@ -750,5 +761,8 @@ the seed value, modulo a known torch nondeterminism in archive-trigger
 timing (see \S4.4 for the v1/v2 reconciliation). Launcher scripts under
 \texttt{experiments/} accept explicit seed lists; bench logs and CSVs from
 every reported run are committed to the public repository.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
 
 \end{document}

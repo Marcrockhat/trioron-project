@@ -28,6 +28,7 @@ paper/*.toc
 paper/*.fls
 paper/*.fdb_latexmk
 paper/*.synctex.gz
+paper/*.blg
 
 # HF Space build artifact (assembled at push time, not source)
 hf_space_build/
