@@ -235,13 +235,17 @@ typical for the first chunk).
 
 ## 5. The mode palette
 
-| Mode    | speed | intensity | volume | Example                            |
-|---------|------:|----------:|-------:|------------------------------------|
-| calm    | 0.90  | 0.40      | 0.50   | "the lake is quiet today"          |
-| gentle  | 0.95  | 0.50      | 0.40   | "you are safe with me now"         |
-| firm    | 1.00  | 0.80      | 0.70   | "stop right there..."              |
-| urgent  | 1.20  | 1.00      | 0.90   | "warning slow down obstacle ahead" |
-| excited | 1.15  | 0.95      | 0.80   | (novelty fallback only)            |
+| Mode      | speed | intensity | volume | Example                            |
+|-----------|------:|----------:|-------:|------------------------------------|
+| calm      | 0.80  | 0.30      | 0.55   | "the lake is quiet today"          |
+| gentle    | 0.82  | 0.40      | 0.40   | "you are safe with me now"         |
+| firm      | 1.05  | 0.85      | 0.85   | "stop right there..."              |
+| urgent    | 1.50  | 1.10      | 1.00   | "warning slow down obstacle ahead" |
+| excited   | 1.40  | 1.15      | 0.95   | "whoa look at that view"           |
+| sad       | 0.70  | 0.20      | 0.40   | "i miss the days when we were together" |
+| curious   | 1.10  | 0.75      | 0.70   | "i wonder why the sky is red"      |
+| whispered | 0.95  | 0.25      | 0.18   | "the secret is in the attic"       |
+| neutral   | 1.00  | 0.60      | 0.70   | (novelty fallback only)            |
 
 `speed` and `volume` are passed through to `SpeechSynthesisUtterance.rate`
 and `.volume` directly. `intensity` is shown for completeness — Web

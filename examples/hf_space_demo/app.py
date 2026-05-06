@@ -124,13 +124,15 @@ def render_with_piper(segments: List[Dict]):
     from piper import SynthesisConfig
     voice = _get_piper_voice()
     sample_rate = voice.config.sample_rate
-    silence_gap = np.zeros(int(sample_rate * 0.20), dtype=np.int16)
+    silence_gap = np.zeros(int(sample_rate * 0.30), dtype=np.int16)
     pieces = []
     for i, r in enumerate(segments):
         # speed > 1 → faster speech → shorter length_scale
         length_scale = 1.0 / max(0.1, float(r["speed"]))
-        # intensity 0..1 → noise_scale 0.4..1.0 (Piper's default ~0.667)
-        noise_scale = 0.4 + 0.6 * float(r.get("intensity", 0.6))
+        # intensity 0..1.15 → noise_scale 0.30..1.28 (wider than the
+        # v3.1 mapping; pushes deadpan-sad and amped-urgent further
+        # apart in voice variability)
+        noise_scale = 0.30 + 0.85 * float(r.get("intensity", 0.6))
         cfg = SynthesisConfig(
             length_scale=length_scale,
             noise_scale=noise_scale,
@@ -149,15 +151,19 @@ def render_with_piper(segments: List[Dict]):
 # Mode palette + corpus
 # ---------------------------------------------------------------------
 
+# Dramatic preset spread. Web Speech rate is safe up to ~1.5 across
+# browsers; below 0.5 voice quality degrades. Piper handles a wider
+# range natively (length_scale = 1/speed) — these values give Piper
+# room to really stretch sad/whispered and accelerate urgent.
 MODE_PALETTE: Dict[int, Tuple[str, Dict[str, float]]] = {
-    0: ("calm",      {"speed": 0.88, "intensity": 0.40, "volume": 0.55}),
-    1: ("gentle",    {"speed": 0.93, "intensity": 0.50, "volume": 0.45}),
-    2: ("firm",      {"speed": 1.00, "intensity": 0.80, "volume": 0.75}),
-    3: ("urgent",    {"speed": 1.25, "intensity": 1.00, "volume": 0.95}),
-    4: ("excited",   {"speed": 1.18, "intensity": 0.95, "volume": 0.85}),
-    5: ("sad",       {"speed": 0.82, "intensity": 0.35, "volume": 0.45}),
-    6: ("curious",   {"speed": 1.05, "intensity": 0.70, "volume": 0.65}),
-    7: ("whispered", {"speed": 0.85, "intensity": 0.30, "volume": 0.25}),
+    0: ("calm",      {"speed": 0.80, "intensity": 0.30, "volume": 0.55}),
+    1: ("gentle",    {"speed": 0.82, "intensity": 0.40, "volume": 0.40}),
+    2: ("firm",      {"speed": 1.05, "intensity": 0.85, "volume": 0.85}),
+    3: ("urgent",    {"speed": 1.50, "intensity": 1.10, "volume": 1.00}),
+    4: ("excited",   {"speed": 1.40, "intensity": 1.15, "volume": 0.95}),
+    5: ("sad",       {"speed": 0.70, "intensity": 0.20, "volume": 0.40}),
+    6: ("curious",   {"speed": 1.10, "intensity": 0.75, "volume": 0.70}),
+    7: ("whispered", {"speed": 0.95, "intensity": 0.25, "volume": 0.18}),
 }
 NEUTRAL_MODE = ("neutral", {"speed": 1.00, "intensity": 0.60, "volume": 0.70})
 
