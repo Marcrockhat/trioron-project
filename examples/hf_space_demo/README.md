@@ -81,7 +81,11 @@ radio in the UI:
    microseconds; encoder dominates).
 2. **Type a sentence** in the text box. Or click one of the example
    chips below it.
-3. **Click "Speak."**
+3. Two buttons let you A/B-test the trioron's contribution:
+   - **Speak (with trioron)** — segment, route, per-segment preset.
+   - **Speak raw (no trioron)** — same text, one neutral preset, no
+     routing. Hit both with the same input and the difference IS
+     what the trioron is adding.
 4. The right-hand panel shows the trioron's decision:
    - **Predicted mode** — `calm` / `gentle` / `firm` / `urgent` /
      `excited` (the last one only via novelty fallback).

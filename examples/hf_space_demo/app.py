@@ -504,6 +504,33 @@ def _row_for_segment(
     }
 
 
+def decide_raw_for_ui(text: str, backend: str = "Web Speech (browser)"):
+    """No-trioron baseline: speak the whole input as ONE utterance with
+    the neutral preset. No segmentation, no manifold scoring, no mode
+    routing. The "before" the user A/Bs against the trioron-routed
+    output to hear what the trioron is actually contributing."""
+    text = (text or "").strip()
+    if not text:
+        return [], "(empty input)", "[]", None
+    speed = NEUTRAL_MODE[1]["speed"]
+    volume = NEUTRAL_MODE[1]["volume"]
+    intensity = NEUTRAL_MODE[1]["intensity"]
+    table = [[text, "neutral (raw)", speed, volume, "—", "no-trioron"]]
+    summary = "raw passthrough — one utterance, neutral preset, no trioron"
+    if backend == "Piper (server)":
+        rows = [{
+            "segment": text, "mode": "neutral",
+            "speed": speed, "intensity": intensity, "volume": volume,
+        }]
+        sr, audio = render_with_piper(rows)
+        return table, summary, "[]", (sr, audio)
+    import json
+    speech_payload = json.dumps([
+        {"text": text, "rate": speed, "volume": volume},
+    ])
+    return table, summary, speech_payload, None
+
+
 def decide_for_ui(text: str, backend: str = "Web Speech (browser)"):
     """Top-level Gradio handler. Always returns the per-segment table
     + summary + a Web-Speech JSON payload + an audio tuple for the
@@ -621,7 +648,11 @@ normally take a multimodal model.
 - Inputs that match no learned mode trip the **neutral** fallback —
   the trioron's way of saying "I haven't been taught this."
 
-Audio renders client-side via the browser's Web Speech API.
+Two buttons for direct A/B:
+- **Speak (with trioron)** — segment + route + per-segment preset.
+- **Speak raw (no trioron)** — same text, one neutral preset, no
+  routing. The "before" picture so you can hear what the trioron
+  is actually contributing.
 
 *Private demo — please do not share until the paper publishes.*
 """
@@ -646,7 +677,8 @@ with gr.Blocks(title="Trioron TTS Demo v2") as demo:
         ),
     )
     with gr.Row():
-        speak_btn = gr.Button("Speak", variant="primary")
+        speak_btn = gr.Button("Speak (with trioron)", variant="primary")
+        speak_raw_btn = gr.Button("Speak raw (no trioron)", variant="secondary")
         clear_btn = gr.Button("Clear")
     gr.Examples(examples=EXAMPLES, inputs=text_in)
     summary_out = gr.Textbox(
@@ -668,6 +700,15 @@ with gr.Blocks(title="Trioron TTS Demo v2") as demo:
 
     speak_btn.click(
         fn=decide_for_ui, inputs=[text_in, backend_in],
+        outputs=[table_out, summary_out, payload_out, audio_out],
+    ).then(
+        fn=None,
+        inputs=[payload_out],
+        outputs=None,
+        js=SPEAK_JS,
+    )
+    speak_raw_btn.click(
+        fn=decide_raw_for_ui, inputs=[text_in, backend_in],
         outputs=[table_out, summary_out, payload_out, audio_out],
     ).then(
         fn=None,
