@@ -943,9 +943,17 @@ def drawing_predict_for_ui(sketch_payload):
     return _format_drawing_topk(ranked), _drawing_status_md()
 
 
+# Sketchpad / ImageEditor in Gradio 5+ does not clear on
+# gr.update(value=None) — the editor's JS side keeps the previous
+# stroke layers around. Returning an explicit EditorValue dict with
+# all fields nulled (background, layers, composite) is the
+# documented reset path.
+_EMPTY_SKETCH = {"background": None, "layers": [], "composite": None}
+
+
 def drawing_teach_for_ui(sketch_payload, label):
-    # Clear-canvas-on-success uses gr.update(value=None); validation
-    # paths return gr.update() (no-op) so the user doesn't lose their
+    # Clear-canvas-on-success returns _EMPTY_SKETCH; validation paths
+    # return gr.update() (no-op) so the user doesn't lose their
     # in-progress sketch when they forgot to pick a label.
     if sketch_payload is None:
         return "_(draw a digit first)_", _drawing_status_md(), gr.update()
@@ -959,7 +967,7 @@ def drawing_teach_for_ui(sketch_payload, label):
         return f"_(input error: {e})_", _drawing_status_md(), gr.update()
     s = _get_drawing_session()
     msg, _did_extend = teach(s, x, int(label))
-    return msg, _drawing_status_md(), gr.update(value=None)
+    return msg, _drawing_status_md(), gr.update(value=_EMPTY_SKETCH)
 
 
 def drawing_reset_for_ui():
