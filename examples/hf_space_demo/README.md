@@ -7,7 +7,7 @@ sdk: gradio
 sdk_version: 5.49.0
 app_file: app.py
 pinned: false
-license: other
+license: mit
 short_description: Trioron as device-side context memory for TTS
 ---
 
