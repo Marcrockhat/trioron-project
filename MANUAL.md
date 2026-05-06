@@ -426,10 +426,17 @@ absorption claim measures; the raw variant exposes what happens
 without calibration.
 
 For built-in chained-15 donors the eval splits are loaded
-automatically. For donors built from `--from-py`, supply a Python
-loader returning the held-out test set in the same `TaskData` shape
-(planned for v0.3 — for now, use the Python `evaluate()` API which
-takes `eval_tasks` as a parameter):
+automatically by branch label. For organisms whose donors were built
+with `train --from-py`, point eval at a loader that returns the
+held-out test set in the same `TaskData` shape (only `X_test` /
+`y_test` are read):
+
+```bash
+trioron eval --organism organism.pt \
+             --from-py my_loader.py:make_eval_tasks
+```
+
+Or from Python (same loader works programmatically):
 
 ```python
 from trioron.api import evaluate
@@ -716,7 +723,8 @@ trioron train     train one donor (built-in split or --from-py)
 trioron tune      show distinctive knobs / inspect a saved donor
 trioron absorb    compose donors → organism
 trioron extend    ship-wake-extend loop on an existing donor
-trioron eval      evaluate organism on union test set
+trioron eval      evaluate organism on union test set (built-in
+                  splits or --from-py)
 trioron infer     single-image inference through an organism
 trioron serve     deploy as an agent (REPL + optional HTTP)
 ```

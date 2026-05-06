@@ -322,11 +322,15 @@ def _load_organism(path: str):
 
 
 def cmd_eval(args: argparse.Namespace) -> int:
-    """Evaluate an organism on the union test set of its donors' tasks."""
-    from experiments.datasets import (
-        DatasetBundle, build_task_views, DEFAULT_DATA_ROOT,
-    )
-    from experiments.train_donor import SPLIT_BLOCKS
+    """Evaluate an organism on the union test set of its donors' tasks.
+
+    Two data sources:
+      - default: built-in chained-15 splits inferred from each branch's
+        ``label`` (matches the QUICKSTART reproduction path).
+      - ``--from-py path:fn``: user loader returning a list of
+        ``trioron.api.TaskData`` whose ``X_test``/``y_test`` fields are
+        used as the held-out evaluation set.
+    """
     from experiments.test_multibranch_absorption import (
         evaluate as eval_views_,
     )
@@ -335,24 +339,57 @@ def cmd_eval(args: argparse.Namespace) -> int:
     print(f"  branches      = {[b.label for b in org.branches]}")
     print(f"  union_classes = {org.union_classes}")
 
-    bundle_dataset_names = []
-    union_specs = []
-    for b in org.branches:
-        if b.label not in SPLIT_BLOCKS:
-            print(f"error: branch label '{b.label}' is not in the trained "
-                  f"split registry; eval needs the matching test split.",
+    if args.from_py:
+        try:
+            loader = _resolve_py_entry(args.from_py)
+        except Exception as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 2
+        try:
+            tasks = loader()
+        except Exception as e:
+            print(f"error: loader {args.from_py} raised: {e}",
                   file=sys.stderr)
             return 2
-        specs_fn, ds_name = SPLIT_BLOCKS[b.label]
-        if ds_name not in bundle_dataset_names:
-            bundle_dataset_names.append(ds_name)
-        union_specs.extend(specs_fn())
-    bundle = DatasetBundle(
-        bundle_dataset_names,
-        root=args.data_root or DEFAULT_DATA_ROOT,
-        n_holdout_per_dataset=0,
-    )
-    eval_views = build_task_views(bundle, union_specs, split="test")
+        if not isinstance(tasks, (list, tuple)) or not tasks:
+            print("error: loader must return a non-empty list of "
+                  "trioron.api.TaskData objects", file=sys.stderr)
+            return 2
+        from experiments.datasets import TaskDataView
+        eval_views = []
+        for t in tasks:
+            eval_views.append(TaskDataView(
+                name=t.name,
+                images=t.X_test.float(),
+                labels_global=t.y_test.long(),
+                local_classes=list(t.classes),
+                global_classes=list(t.classes),
+            ))
+    else:
+        from experiments.datasets import (
+            DatasetBundle, build_task_views, DEFAULT_DATA_ROOT,
+        )
+        from experiments.train_donor import SPLIT_BLOCKS
+        bundle_dataset_names = []
+        union_specs = []
+        for b in org.branches:
+            if b.label not in SPLIT_BLOCKS:
+                print(f"error: branch label '{b.label}' is not in the trained "
+                      f"split registry; eval needs the matching test split. "
+                      f"For custom donors, pass --from-py path:fn returning a "
+                      f"list of trioron.api.TaskData.",
+                      file=sys.stderr)
+                return 2
+            specs_fn, ds_name = SPLIT_BLOCKS[b.label]
+            if ds_name not in bundle_dataset_names:
+                bundle_dataset_names.append(ds_name)
+            union_specs.extend(specs_fn())
+        bundle = DatasetBundle(
+            bundle_dataset_names,
+            root=args.data_root or DEFAULT_DATA_ROOT,
+            n_holdout_per_dataset=0,
+        )
+        eval_views = build_task_views(bundle, union_specs, split="test")
 
     rows_norm = eval_views_(
         org, eval_views, routing="soft",
@@ -777,9 +814,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p_eval.add_argument("--organism", required=True,
                         help="organism checkpoint path (or a single donor "
                              ".pt — wraps as a 1-branch organism)")
+    p_eval.add_argument("--from-py", default=None, dest="from_py",
+                        metavar="path:fn",
+                        help="custom test loader: 'my_loader.py:make_eval_tasks' "
+                             "returning a list of trioron.api.TaskData; "
+                             "X_test/y_test are used as the held-out set. "
+                             "Required for organisms whose branches were "
+                             "built with `train --from-py`.")
     p_eval.add_argument("--temperature", type=float, default=1.0,
                         help="soft-routing temperature (default 1.0)")
-    p_eval.add_argument("--data-root", default=None)
+    p_eval.add_argument("--data-root", default=None,
+                        help="dataset cache for built-in chained-15 splits "
+                             "(ignored when --from-py is set)")
     p_eval.set_defaults(func=cmd_eval)
 
     p_infer = sub.add_parser("infer",
