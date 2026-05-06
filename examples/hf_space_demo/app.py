@@ -944,18 +944,22 @@ def drawing_predict_for_ui(sketch_payload):
 
 
 def drawing_teach_for_ui(sketch_payload, label):
+    # Clear-canvas-on-success uses gr.update(value=None); validation
+    # paths return gr.update() (no-op) so the user doesn't lose their
+    # in-progress sketch when they forgot to pick a label.
     if sketch_payload is None:
-        return "_(draw a digit first)_", _drawing_status_md()
+        return "_(draw a digit first)_", _drawing_status_md(), gr.update()
     if label is None:
-        return "_(pick a label to teach)_", _drawing_status_md()
+        return ("_(pick a label to teach)_", _drawing_status_md(),
+                gr.update())
     from drawing import sketch_to_tensor, teach
     try:
         x = sketch_to_tensor(sketch_payload)
     except Exception as e:
-        return f"_(input error: {e})_", _drawing_status_md()
+        return f"_(input error: {e})_", _drawing_status_md(), gr.update()
     s = _get_drawing_session()
     msg, _did_extend = teach(s, x, int(label))
-    return msg, _drawing_status_md()
+    return msg, _drawing_status_md(), gr.update(value=None)
 
 
 def drawing_reset_for_ui():
@@ -1186,7 +1190,7 @@ with gr.Blocks(title="Trioron Demos") as demo:
         draw_teach_btn.click(
             fn=drawing_teach_for_ui,
             inputs=[draw_pad, draw_teach_label],
-            outputs=[draw_pred_out, draw_status_out],
+            outputs=[draw_pred_out, draw_status_out, draw_pad],
         )
         draw_reset_btn.click(
             fn=drawing_reset_for_ui,
