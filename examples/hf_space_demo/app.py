@@ -871,6 +871,125 @@ work, but novel phrasings will miss.
 
 
 # ---------------------------------------------------------------------
+# Tab 3: Drawing live-learn — pretrained 5-digit donor (0-4) that
+# extends to digits 5-9 at runtime when the user teaches it three
+# samples of the same target class.
+#
+# Single shared session across all Space visitors (the design choice
+# is "watch it learn over time"). Reset button is the safety valve
+# against adversarial teaching.
+# ---------------------------------------------------------------------
+
+DRAWING_DONOR_PATH = Path(__file__).parent / "drawing" / "donor_5digit.pt"
+# /tmp is the only consistently-writable location on HF Spaces for a
+# binary the size of the live donor (~1.3 MB). It's cleared on Space
+# restart, which means cold-start on each restart — consistent with the
+# "Reset" semantics.
+DRAWING_LIVE_PATH = Path("/tmp") / "trioron_drawing_live.pt"
+
+_DRAWING_SESSION = None
+
+
+def _get_drawing_session():
+    """Lazy global. Single shared session across all Space visitors;
+    `Reset` is the safety valve."""
+    global _DRAWING_SESSION
+    if _DRAWING_SESSION is None:
+        from drawing import DrawingSession
+        _DRAWING_SESSION = DrawingSession.from_donor(
+            donor_path=DRAWING_DONOR_PATH,
+            live_path=DRAWING_LIVE_PATH,
+        )
+    return _DRAWING_SESSION
+
+
+def _drawing_status_md() -> str:
+    from drawing import TEACH_THRESHOLD
+    s = _get_drawing_session()
+    known = sorted(s.known_classes())
+    buf_lines = [
+        f"- digit {k}: {len(v)}/{TEACH_THRESHOLD}"
+        for k, v in sorted(s.buffers.items()) if len(v) > 0
+    ]
+    buf_md = ("**Teach buffers:**\n" + "\n".join(buf_lines)
+              if buf_lines else "_(no teach buffers active)_")
+    return (
+        f"**Known classes:** {known}\n\n"
+        f"**Live extends this session:** {s.n_extends}\n\n"
+        f"{buf_md}"
+    )
+
+
+def _format_drawing_topk(ranked) -> str:
+    """ranked: List[(cls, log_lik)]. Returns markdown table."""
+    if not ranked:
+        return "_(no prediction)_"
+    lines = ["| rank | digit | log-lik |", "|---|---|---|"]
+    for i, (cls, ll) in enumerate(ranked, 1):
+        lines.append(f"| {i} | **{cls}** | {ll:.2f} |")
+    return "\n".join(lines)
+
+
+def drawing_predict_for_ui(sketch_payload):
+    if sketch_payload is None:
+        return "_(draw a digit first)_", _drawing_status_md()
+    from drawing import sketch_to_tensor, predict
+    try:
+        x = sketch_to_tensor(sketch_payload)
+    except Exception as e:
+        return f"_(input error: {e})_", _drawing_status_md()
+    s = _get_drawing_session()
+    ranked = predict(s, x, top_k=3)
+    return _format_drawing_topk(ranked), _drawing_status_md()
+
+
+def drawing_teach_for_ui(sketch_payload, label):
+    if sketch_payload is None:
+        return "_(draw a digit first)_", _drawing_status_md()
+    if label is None:
+        return "_(pick a label to teach)_", _drawing_status_md()
+    from drawing import sketch_to_tensor, teach
+    try:
+        x = sketch_to_tensor(sketch_payload)
+    except Exception as e:
+        return f"_(input error: {e})_", _drawing_status_md()
+    s = _get_drawing_session()
+    msg, _did_extend = teach(s, x, int(label))
+    return msg, _drawing_status_md()
+
+
+def drawing_reset_for_ui():
+    s = _get_drawing_session()
+    s.reset()
+    return ("_(back to cold-start: digits 0–4 only.)_",
+            _drawing_status_md())
+
+
+DRAWING_DESCRIPTION = """
+**Trioron as a live-learning sketch classifier.** Pretrained on
+MNIST digits 0–4. Digits 5–9 are out-of-distribution at cold
+start — try drawing a 7 and watch it predict 1 or 4.
+
+Then teach it: pick a label, click **Teach this digit**. After 3
+sketches of the same digit the trioron grows a new manifold for
+that class via `api.extend()` (5–20 s on Space CPU). The new
+digit lands in the archive — predictions update immediately.
+
+The classifier returns **top-3 with log-likelihoods**, not just
+argmax. Trioron's manifold archive is task-aware-strong,
+full-classification-weak; the runner-up scores carry signal,
+especially right after an extend when the new manifold is fresh.
+
+**Adversarial-teaching warning.** Session state is shared across
+all Space visitors. If someone teaches "this 8 is a 5" three times,
+the 5-manifold absorbs that. The **Reset** button restores the
+cold-start donor.
+
+*Private demo — please do not share until the paper publishes.*
+"""
+
+
+# ---------------------------------------------------------------------
 # Gradio UI
 # ---------------------------------------------------------------------
 
@@ -1021,6 +1140,57 @@ with gr.Blocks(title="Trioron Demos") as demo:
             fn=lambda: ("", "", "", None, ""),
             outputs=[book_baseline_out, book_trioron_out, book_summary_out,
                      book_preset, book_custom],
+        )
+
+    with gr.Tab("Drawing live-learn"):
+        gr.Markdown("## Trioron as a live-learning sketch classifier")
+        gr.Markdown(DRAWING_DESCRIPTION)
+        with gr.Row():
+            with gr.Column(scale=1):
+                draw_pad = gr.Sketchpad(
+                    label="Draw a digit (0–9)",
+                    height=320,
+                    type="numpy",
+                )
+                with gr.Row():
+                    draw_predict_btn = gr.Button(
+                        "Predict", variant="primary",
+                    )
+                    draw_reset_btn = gr.Button("Reset (cold start)")
+                with gr.Row():
+                    draw_teach_label = gr.Dropdown(
+                        choices=[5, 6, 7, 8, 9],
+                        value=5,
+                        label="Teach this digit (5–9)",
+                    )
+                    draw_teach_btn = gr.Button(
+                        "Teach this digit", variant="secondary",
+                    )
+            with gr.Column(scale=1):
+                draw_pred_out = gr.Markdown(
+                    value="_(draw a digit and click Predict)_",
+                    label="Top-3 prediction",
+                )
+                draw_status_out = gr.Markdown(
+                    value="_(loading session…)_",
+                    label="Session status",
+                )
+
+        demo.load(fn=_drawing_status_md, outputs=[draw_status_out])
+
+        draw_predict_btn.click(
+            fn=drawing_predict_for_ui,
+            inputs=[draw_pad],
+            outputs=[draw_pred_out, draw_status_out],
+        )
+        draw_teach_btn.click(
+            fn=drawing_teach_for_ui,
+            inputs=[draw_pad, draw_teach_label],
+            outputs=[draw_pred_out, draw_status_out],
+        )
+        draw_reset_btn.click(
+            fn=drawing_reset_for_ui,
+            outputs=[draw_pred_out, draw_status_out],
         )
 
 

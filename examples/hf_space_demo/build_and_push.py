@@ -11,7 +11,7 @@ Two-step usage (so authentication happens explicitly):
 
     # 2. Build + push.
     python3 examples/hf_space_demo/build_and_push.py \\
-        --space-id YOUR_HF_USERNAME/trioron-tts-demo
+        --space-id YOUR_HF_USERNAME/trioron-demo
 
 The script creates the Space with `private=True` if it does not yet
 exist; if it already exists, the visibility setting is left untouched
@@ -59,6 +59,16 @@ BOOK_MEMORY_ALLOWLIST = [
     "alice_questions.json",
 ]
 
+# drawing/ — pretrained 5-digit donor + runtime helpers for the
+# Drawing live-learn tab. Skip pretrain.py (build-time only).
+DRAWING_ALLOWLIST = [
+    "__init__.py",
+    "data.py",
+    "state.py",
+    "predict.py",
+    "donor_5digit.pt",
+]
+
 
 def _assemble() -> Path:
     if BUILD_DIR.exists():
@@ -98,6 +108,16 @@ def _assemble() -> Path:
         shutil.copy2(src, book_dst / f)
         size_kb = src.stat().st_size / 1024
         print(f"  + book_memory/{f}  ({size_kb:.1f} KB)")
+    drawing_dst = BUILD_DIR / "drawing"
+    drawing_dst.mkdir()
+    drawing_src = HERE / "drawing"
+    for f in DRAWING_ALLOWLIST:
+        src = drawing_src / f
+        if not src.exists():
+            raise FileNotFoundError(f"required drawing file missing: {src}")
+        shutil.copy2(src, drawing_dst / f)
+        size_kb = src.stat().st_size / 1024
+        print(f"  + drawing/{f}  ({size_kb:.1f} KB)")
     # Drop a .gitignore for the Space repo itself.
     (BUILD_DIR / ".gitignore").write_text(
         "__pycache__/\n*.pyc\n*.egg-info/\n.pytest_cache/\n"
@@ -152,7 +172,7 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "--space-id", required=True,
-        help="HF Space identifier, e.g. 'your-handle/trioron-tts-demo'",
+        help="HF Space identifier, e.g. 'your-handle/trioron-demo'",
     )
     p.add_argument(
         "--public", action="store_true",
