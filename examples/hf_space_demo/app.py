@@ -81,6 +81,71 @@ def encode_batch(texts: List[str]) -> torch.Tensor:
 
 
 # ---------------------------------------------------------------------
+# Piper TTS backend (optional server-side renderer)
+# ---------------------------------------------------------------------
+
+PIPER_VOICE_ID = "en_US-lessac-medium"
+_PIPER_VOICE = None
+
+
+def _get_piper_voice():
+    """Lazy singleton. Downloads the voice (~60 MB) on first use,
+    cached under HF's standard cache dir afterwards."""
+    global _PIPER_VOICE
+    if _PIPER_VOICE is None:
+        from huggingface_hub import hf_hub_download
+        from piper.voice import PiperVoice
+        print(f"[trioron-demo] downloading Piper voice {PIPER_VOICE_ID}...")
+        onnx_path = hf_hub_download(
+            repo_id="rhasspy/piper-voices",
+            filename=f"en/en_US/lessac/medium/{PIPER_VOICE_ID}.onnx",
+        )
+        # Force the .json sidecar to land next to the .onnx (PiperVoice
+        # expects them in the same dir; hf_hub_download symlinks both
+        # to the snapshot dir so this is automatic).
+        hf_hub_download(
+            repo_id="rhasspy/piper-voices",
+            filename=f"en/en_US/lessac/medium/{PIPER_VOICE_ID}.onnx.json",
+        )
+        print("[trioron-demo] loading Piper voice...")
+        _PIPER_VOICE = PiperVoice.load(onnx_path)
+        print(f"[trioron-demo] Piper voice ready "
+              f"(sample_rate={_PIPER_VOICE.config.sample_rate})")
+    return _PIPER_VOICE
+
+
+def render_with_piper(segments: List[Dict]):
+    """Synthesize each segment with its preset and concatenate into
+    one audio array. Returns (sample_rate, int16_array) suitable for
+    gr.Audio. Each segment's speed → length_scale (inverse), intensity
+    → noise_scale, volume passes through. ~150-300 ms per sentence on
+    CPU."""
+    import numpy as np
+    from piper import SynthesisConfig
+    voice = _get_piper_voice()
+    sample_rate = voice.config.sample_rate
+    silence_gap = np.zeros(int(sample_rate * 0.20), dtype=np.int16)
+    pieces = []
+    for i, r in enumerate(segments):
+        # speed > 1 → faster speech → shorter length_scale
+        length_scale = 1.0 / max(0.1, float(r["speed"]))
+        # intensity 0..1 → noise_scale 0.4..1.0 (Piper's default ~0.667)
+        noise_scale = 0.4 + 0.6 * float(r.get("intensity", 0.6))
+        cfg = SynthesisConfig(
+            length_scale=length_scale,
+            noise_scale=noise_scale,
+            volume=float(r["volume"]),
+        )
+        chunks = list(voice.synthesize(r["segment"], cfg))
+        for c in chunks:
+            pieces.append(np.frombuffer(c.audio_int16_bytes, dtype=np.int16))
+        if i < len(segments) - 1:
+            pieces.append(silence_gap)
+    audio = np.concatenate(pieces) if pieces else np.zeros(0, dtype=np.int16)
+    return sample_rate, audio
+
+
+# ---------------------------------------------------------------------
 # Mode palette + corpus
 # ---------------------------------------------------------------------
 
@@ -433,22 +498,40 @@ def _row_for_segment(
     }
 
 
-def decide_for_ui(text: str):
-    """Wrapper: returns the dataframe rows, summary, and a JSON-encoded
-    list of (text, rate, volume) triples for the JS to speak."""
+def decide_for_ui(text: str, backend: str = "Web Speech (browser)"):
+    """Top-level Gradio handler. Always returns the per-segment table
+    + summary + a Web-Speech JSON payload + an audio tuple for the
+    server-side renderer. Whichever output channel matches the
+    selected backend gets used; the other is empty/None."""
     rows, summary = decide_segments(text)
     if not rows:
-        return [], summary, "[]"
+        return [], summary, "[]", None
     table = [
         [r["segment"], r["mode"], r["speed"], r["volume"], r["score"], r["source"]]
         for r in rows
     ]
+    if backend == "Piper (server)":
+        # Server-side TTS render. Cold-start cost only on first call.
+        # Add intensity to each row for Piper's noise_scale mapping.
+        for r in rows:
+            label = r["mode"]
+            for cid, (lab, preset) in MODE_PALETTE.items():
+                if lab == label:
+                    r["intensity"] = preset["intensity"]
+                    break
+            else:
+                r["intensity"] = NEUTRAL_MODE[1]["intensity"]
+        sr, audio = render_with_piper(rows)
+        # Empty JS payload so the .then() branch is a no-op.
+        return table, summary, "[]", (sr, audio)
+    # Web Speech (browser) path: encode segments as JSON for the JS
+    # callback; no server-side audio.
     import json
     speech_payload = json.dumps([
         {"text": r["segment"], "rate": r["speed"], "volume": r["volume"]}
         for r in rows
     ])
-    return table, summary, speech_payload
+    return table, summary, speech_payload, None
 
 
 # ---------------------------------------------------------------------
@@ -545,6 +628,17 @@ with gr.Blocks(title="Trioron TTS Demo v2") as demo:
         placeholder="Type a paragraph and click Speak…",
         lines=4,
     )
+    backend_in = gr.Radio(
+        choices=["Web Speech (browser)", "Piper (server)"],
+        value="Web Speech (browser)",
+        label="Renderer",
+        info=(
+            "Web Speech uses your browser's built-in TTS — instant, "
+            "voice quality depends on OS. Piper renders server-side "
+            "(adds ~200ms/sentence + ~5s on first use to download "
+            "the voice); audio quality is consistent across platforms."
+        ),
+    )
     with gr.Row():
         speak_btn = gr.Button("Speak", variant="primary")
         clear_btn = gr.Button("Clear")
@@ -559,11 +653,16 @@ with gr.Blocks(title="Trioron TTS Demo v2") as demo:
         wrap=True,
         label="Per-segment decisions",
     )
+    audio_out = gr.Audio(
+        label="Server-rendered audio (Piper)",
+        autoplay=True,
+        interactive=False,
+    )
     payload_out = gr.Textbox(visible=False)
 
     speak_btn.click(
-        fn=decide_for_ui, inputs=text_in,
-        outputs=[table_out, summary_out, payload_out],
+        fn=decide_for_ui, inputs=[text_in, backend_in],
+        outputs=[table_out, summary_out, payload_out, audio_out],
     ).then(
         fn=None,
         inputs=[payload_out],
@@ -571,8 +670,8 @@ with gr.Blocks(title="Trioron TTS Demo v2") as demo:
         js=SPEAK_JS,
     )
     clear_btn.click(
-        fn=lambda: ([], "—", "[]"),
-        outputs=[table_out, summary_out, payload_out],
+        fn=lambda: ([], "—", "[]", None),
+        outputs=[table_out, summary_out, payload_out, audio_out],
     )
 
 if __name__ == "__main__":

@@ -4,7 +4,9 @@ gradio>=5.0
 huggingface_hub>=0.25,<2.0
 numpy<2.0
 audioop-lts; python_version >= "3.13"
-# Semantic encoder for the demo. Pulls in transformers + tokenizers.
-# all-MiniLM-L6-v2 is ~22M params, ~80MB on disk, downloaded
-# automatically on first use and cached under ~/.cache/huggingface/.
 sentence-transformers>=2.2
+# Piper TTS (server-side renderer toggle). Pulls in onnxruntime +
+# piper-phonemize. Voice files are downloaded lazily from
+# rhasspy/piper-voices on the HF Hub on first Piper request, then
+# cached under ~/.cache/huggingface/.
+piper-tts>=1.4

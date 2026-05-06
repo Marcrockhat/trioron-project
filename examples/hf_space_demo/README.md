@@ -57,9 +57,18 @@ learned mode, a **novelty gate** trips and the *excited* fallback
 fires — the trioron's way of saying "I haven't been taught this; I'm
 not going to pretend I have."
 
-Audio is rendered by your browser's built-in Web Speech API. No
-audio bytes cross the network — only the text and the
-trioron-decided parameters do.
+Audio is rendered one of two ways, selectable via the **Renderer**
+radio in the UI:
+
+- **Web Speech (browser)** — default. Your browser's built-in TTS,
+  zero server cost. Voice quality depends on your OS. No audio bytes
+  cross the network — only the text and the trioron-decided
+  parameters do.
+- **Piper (server)** — a local ONNX TTS model running on the Space.
+  Consistent voice across platforms, applies trioron's `intensity`
+  knob (mapped to Piper's `noise_scale`), ~200 ms render per
+  sentence. First Piper request triggers a one-time ~60 MB voice
+  download.
 
 ---
 
