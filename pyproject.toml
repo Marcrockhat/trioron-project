@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "trioron"
-version = "0.1.0"
+version = "0.2.0"
 description = "Continual-learning architecture with archive-routed multi-branch absorption"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -42,6 +42,14 @@ bridge-all   = [
   "open-clip-torch>=2.20",
   "Pillow>=10.0",
   "openai-whisper>=20231117",
+]
+
+# `trioron serve --http` deps. Pulled in only when you want the
+# FastAPI HTTP wrapper around a BridgedOrganism.
+serve = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "pydantic>=2.0",
 ]
 
 # Dev convenience.

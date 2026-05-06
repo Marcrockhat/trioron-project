@@ -162,11 +162,14 @@ above exposes only the curated production path.
 
 ## Going further
 
+- **Building your own trioron network**: [MANUAL.md](MANUAL.md) —
+  custom datasets, knob tuning, extending a deployed organism,
+  agentic deployment with REPL + HTTP.
 - Methods: `paper/methods.tex` (compile to `methods.pdf`).
 - Results: `paper/results.tex` (compile to `results.pdf`).
 - Architecture deep dive: `trioron_blueprint.md`.
-- Cross-modal bridge (encoders + tool dispatch): `trioron/bridge/`.
+- Cross-modal bridge (encoders + tool dispatch): [BRIDGE.md](BRIDGE.md).
 
 For deployment as an orchestrator over a frozen LLM, see
-`trioron/bridge/` (encoders for text/image/audio, tool dispatcher with
-JSON-schema and decorator interfaces).
+[MANUAL.md §10](MANUAL.md#10-deploying-as-an-agent-repl--http) and
+[BRIDGE.md](BRIDGE.md).
