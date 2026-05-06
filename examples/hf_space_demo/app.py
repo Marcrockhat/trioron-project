@@ -807,15 +807,19 @@ def book_qa_for_ui(preset_str: str, custom_question: str):
     preset_q = _strip_book_prefix(preset_str or "").strip()
     question = custom or preset_q
     if not question:
-        return ("_(pick a preset or type a question)_",
+        return ("### LLM alone (no trioron)\n\n"
+                "_(pick a preset or type a question)_",
+                "### LLM + Trioron\n\n"
                 "_(pick a preset or type a question)_",
                 "")
 
     base = _book_generate_baseline(question)
     trio = _book_generate_trioron(question)
 
-    base_md = f"**Q:** {question}\n\n**A:** {base or '_(empty)_'}"
-    trio_md = f"**Q:** {question}\n\n**A:** {trio or '_(empty)_'}"
+    base_md = (f"### LLM alone (no trioron)\n\n"
+               f"**Q:** {question}\n\n**A:** {base or '_(empty)_'}")
+    trio_md = (f"### LLM + Trioron\n\n"
+               f"**Q:** {question}\n\n**A:** {trio or '_(empty)_'}")
     n_params = _BOOK_HEAD.n_parameters() if _BOOK_HEAD else 0
     summary = (
         f"head: {n_params:,} params (~{n_params * 4 / 1024 / 1024:.2f} MB fp32) — "
@@ -1136,9 +1140,24 @@ with gr.Blocks(title="Trioron Demos") as demo:
         with gr.Row():
             book_ask_btn = gr.Button("Ask both", variant="primary")
             book_clear_btn = gr.Button("Clear")
+        _BOOK_BASELINE_PLACEHOLDER = (
+            "### LLM alone (no trioron)\n\n"
+            "_(ask a question to see the bare SmolLM2-135M response)_"
+        )
+        _BOOK_TRIORON_PLACEHOLDER = (
+            "### LLM + Trioron\n\n"
+            "_(ask a question to see the entity-archive / soft-prompt "
+            "response)_"
+        )
         with gr.Row():
-            book_baseline_out = gr.Markdown(label="LLM alone")
-            book_trioron_out = gr.Markdown(label="LLM + Trioron")
+            book_baseline_out = gr.Markdown(
+                value=_BOOK_BASELINE_PLACEHOLDER,
+                label="LLM alone",
+            )
+            book_trioron_out = gr.Markdown(
+                value=_BOOK_TRIORON_PLACEHOLDER,
+                label="LLM + Trioron",
+            )
         book_summary_out = gr.Textbox(
             label="Trioron head", interactive=False, lines=1,
         )
@@ -1149,7 +1168,9 @@ with gr.Blocks(title="Trioron Demos") as demo:
             outputs=[book_baseline_out, book_trioron_out, book_summary_out],
         )
         book_clear_btn.click(
-            fn=lambda: ("", "", "", None, ""),
+            fn=lambda: (_BOOK_BASELINE_PLACEHOLDER,
+                        _BOOK_TRIORON_PLACEHOLDER,
+                        "", None, ""),
             outputs=[book_baseline_out, book_trioron_out, book_summary_out,
                      book_preset, book_custom],
         )
