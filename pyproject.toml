@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trioron"
+version = "0.1.0"
+description = "Continual-learning architecture with archive-routed multi-branch absorption"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "Rocky" },
+]
+keywords = [
+  "continual-learning", "neural-networks", "modular-deep-learning",
+  "edge-ai", "trioron",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "torch>=2.0,<3.0",
+  "numpy>=1.24",
+  "torchvision>=0.15",
+]
+
+[project.optional-dependencies]
+# Cross-modal encoders for the bridge layer (Phase B).
+# Each is gated behind try/except in trioron.bridge.encoders, so the core
+# package stays lean and bridge consumers install only what they need.
+bridge-text  = ["sentence-transformers>=2.2"]
+bridge-image = ["open-clip-torch>=2.20", "Pillow>=10.0"]
+bridge-audio = ["openai-whisper>=20231117"]
+bridge-all   = [
+  "sentence-transformers>=2.2",
+  "open-clip-torch>=2.20",
+  "Pillow>=10.0",
+  "openai-whisper>=20231117",
+]
+
+# Dev convenience.
+dev = [
+  "pytest>=7.0",
+  "build>=1.0",
+  "twine>=4.0",
+]
+
+[project.scripts]
+trioron = "trioron.cli:main"
+
+[project.urls]
+Repository = "https://github.com/marcrockhat/trioron-project"
+
+[tool.setuptools]
+# `experiments` is included so the `trioron` CLI can train donors using
+# the existing bench loop without forcing users to clone the repo.
+# Outputs/ and paper/ are explicitly excluded as they are reproduction
+# artifacts and writeup, not library code.
+packages = [
+  "trioron",
+  "trioron.bridge",
+  "trioron.bridge.encoders",
+  "experiments",
+]
+
+[tool.setuptools.package-data]
+trioron = ["py.typed"]
