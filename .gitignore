@@ -28,3 +28,6 @@ paper/*.toc
 paper/*.fls
 paper/*.fdb_latexmk
 paper/*.synctex.gz
+
+# HF Space build artifact (assembled at push time, not source)
+hf_space_build/
