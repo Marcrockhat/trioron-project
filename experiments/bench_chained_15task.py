@@ -2117,12 +2117,29 @@ def run_chained_curriculum(
     extension_cap_bytes: Optional[int] = None,
     extension_permanent_int8: bool = False,
     return_state: bool = False,
+    start_task_idx: int = 0,
+    initial_manifold: Optional[ManifoldBuffer] = None,
 ) -> Dict[str, object]:
     """Run the chained curriculum, optionally repeated for `n_passes`.
 
     On pass > 0 (revisit), `n_grow_per_task` is forced to 0: no new
     neurogenesis on revisit, only consolidation through retraining +
     dreaming. EWC anchors carry forward across passes.
+
+    Resume-from-substrate (Phase C handoff item 1, 2026-05-06): pass
+    `start_task_idx > 0` together with a hydrated `net` and
+    `initial_manifold` to skip the first `start_task_idx` tasks of the
+    first pass. Used by `run_extension_only` so production `extend()`
+    can re-enter at the extension boundary without re-training the
+    base curriculum. Constraints:
+      - n_passes must be 1 (resume across multi-pass not supported)
+      - REHEARSAL/BRAINSTEM/ENGRAM/HIPPOCAMPAL/DIFFERENTIAL must be off
+        (those buffers cannot be hydrated from a donor checkpoint;
+        only manifold can)
+      - PackNet / HAT not supported (their per-task masks span the
+        full curriculum and would need separate serialization)
+      - EWC anchors are read from the hydrated net's state_dict, and
+        ewc_baseline is set to EWC_INTERTASK on entry.
 
     Per-task training is `n_epochs_per_task` proper minibatch epochs
     (each sample seen exactly once per epoch).
@@ -2157,6 +2174,39 @@ def run_chained_curriculum(
     boundary_idx = K_main if has_extension else None
     current_cap_bytes = cap_bytes
     n_total = K * n_passes
+
+    # Resume-from-substrate validation: callers using start_task_idx > 0
+    # must respect the constraints documented in the docstring.
+    if start_task_idx > 0:
+        if n_passes != 1:
+            raise ValueError(
+                "run_chained_curriculum: start_task_idx > 0 requires n_passes=1"
+            )
+        if start_task_idx >= K:
+            raise ValueError(
+                f"run_chained_curriculum: start_task_idx={start_task_idx} "
+                f"exceeds K={K} — nothing to do"
+            )
+        if (REHEARSAL_ENABLED or BRAINSTEM_ENABLED or ENGRAM_ENABLED
+                or HIPPOCAMPAL_ENABLED or DIFFERENTIAL_ENABLED or LWF_ENABLED):
+            raise ValueError(
+                "run_chained_curriculum: resume requires REHEARSAL / BRAINSTEM / "
+                "ENGRAM / HIPPOCAMPAL / DIFFERENTIAL / LWF all OFF (those "
+                "buffers cannot be hydrated from a donor checkpoint)"
+            )
+        if packnet_mode is not None or hat_mode is not None:
+            raise ValueError(
+                "run_chained_curriculum: resume does not support packnet/hat arms"
+            )
+        if not MANIFOLD_REPLAY_ENABLED:
+            raise ValueError(
+                "run_chained_curriculum: resume requires MANIFOLD_REPLAY_ENABLED"
+            )
+        if initial_manifold is None:
+            raise ValueError(
+                "run_chained_curriculum: resume requires initial_manifold "
+                "(the donor's hydrated ManifoldBuffer)"
+            )
     initial_n_params = net.n_parameters()
     initial_trainable = trainable_params(net)
     initial_arch = tuple(net.n_nodes_per_layer())
@@ -2192,7 +2242,7 @@ def run_chained_curriculum(
     # Same frozen-L0 precondition; trainable-L0 arms would have stale stats.
     manifold: Optional[ManifoldBuffer] = None
     if MANIFOLD_REPLAY_ENABLED and arm_l0_frozen:
-        manifold = ManifoldBuffer()
+        manifold = initial_manifold if initial_manifold is not None else ManifoldBuffer()
 
     # PackNet baseline — per-task disjoint subnets via magnitude pruning.
     # In 'matched' mode, L0 is treated as a shared frozen feature
@@ -2215,7 +2265,11 @@ def run_chained_curriculum(
         # Move HAT to the network's device so its embeddings live where
         # gradients flow.
         hat_ctrl = hat_ctrl.to(net.layers[0].W.device)
-    print(f"\n[{label}] start — arch {initial_arch}  "
+    resume_tag = (
+        f"  [resume from task {start_task_idx+1}/{K} — base substrate hydrated]"
+        if start_task_idx > 0 else ""
+    )
+    print(f"\n[{label}] start{resume_tag} — arch {initial_arch}  "
           f"params {initial_n_params} (trainable {initial_trainable})  "
           f"growth={do_growth} dream={do_dream}  "
           f"cap_bytes={cap_bytes}  K={K}  passes={n_passes}  "
@@ -2246,6 +2300,11 @@ def run_chained_curriculum(
     cumulative_latched = 0
     cumulative_archives = 0
     ewc_baseline = 0.0
+    if start_task_idx > 0:
+        # Resume: the hydrated net already has EWC anchors + Fisher from
+        # the base curriculum, so the next consolidate_task call should
+        # treat these as anchored (non-zero baseline).
+        ewc_baseline = EWC_INTERTASK
     pass_summary: List[Dict[str, float]] = []  # one entry per pass
 
     t0 = time.monotonic()
@@ -2259,7 +2318,14 @@ def run_chained_curriculum(
               else f"[{label}] >>> PASS {pass_idx+1}/{n_passes}  "
                    f"grows_per_task={pass_grows_allowed}  (consolidation)")
 
+        # Resume-from-substrate: skip already-trained tasks on the first
+        # pass. Their accuracy_matrix rows stay NaN (no diagnostics for
+        # tasks we didn't run); the boundary code below still fires
+        # naturally when local_task_idx == boundary_idx == start_task_idx.
+        loop_start = start_task_idx if pass_idx == 0 else 0
         for local_task_idx, train_view in enumerate(train_views):
+            if local_task_idx < loop_start:
+                continue
             active = list(task_class_lists[local_task_idx])
             global_step_idx = pass_idx * K + local_task_idx
 
@@ -3047,6 +3113,67 @@ def run_arm(
         extension_cap_bytes=extension_cap_bytes,
         extension_permanent_int8=extension_permanent_int8,
         return_state=return_state,
+    )
+
+
+def run_extension_only(
+    net: TrioronNetwork,
+    *,
+    arm: str,
+    seed: int,
+    n_epochs_per_task: int,
+    base_train_views: Sequence[TaskDataView],
+    base_eval_views: Sequence[TaskDataView],
+    base_task_class_lists: Sequence[Sequence[int]],
+    extension_train_views: Sequence[TaskDataView],
+    extension_eval_views: Sequence[TaskDataView],
+    extension_task_class_lists: Sequence[Sequence[int]],
+    extension_cap_bytes: int,
+    extension_permanent_int8: bool = True,
+    initial_manifold: Optional[ManifoldBuffer] = None,
+    return_state: bool = False,
+) -> Dict[str, object]:
+    """Resume an extension run from a hydrated substrate (Phase C
+    resume-from-substrate path, 2026-05-06 handoff item 1).
+
+    Pass an already-trained `net` (donor's state_dict loaded back into
+    a TrioronNetwork at its end-of-base shape) plus the donor's
+    `initial_manifold` (hydrated from `manifold_stats`). Skips the base
+    per-task loop entirely; runs only the boundary consolidation dream,
+    optional int8 quantization, cap lift, and the extension training
+    loop.
+
+    `base_train_views` / `base_task_class_lists` are required because
+    the boundary dream needs real-data replay over past tasks
+    (manifold can't replace it — manifold drives extension-loop
+    rehearsal, not the heavier shipping consolidation). `base_eval_views`
+    is used for final-eval coverage of base classes.
+
+    See `run_chained_curriculum` docstring for the resume constraints
+    (single-pass, manifold-only buffer config, no PackNet/HAT).
+    """
+    cfg = ARM_DEFINITIONS[arm]
+    # Combine base + extension into the full sequence the curriculum
+    # loop expects; start_task_idx skips the base tasks.
+    K_main = len(base_train_views)
+    return run_chained_curriculum(
+        net, label=arm,
+        do_growth=cfg["do_growth"], do_dream=cfg["do_dream"],
+        cap_bytes=cfg["cap_bytes"], n_grow_per_task=N_GROW_PER_TASK,
+        train_views=list(base_train_views),
+        eval_views=list(base_eval_views),
+        task_class_lists=list(base_task_class_lists),
+        n_epochs_per_task=n_epochs_per_task,
+        rng_seed=seed + 7919,
+        n_passes=1,
+        extension_train_views=extension_train_views,
+        extension_eval_views=extension_eval_views,
+        extension_task_class_lists=extension_task_class_lists,
+        extension_cap_bytes=int(extension_cap_bytes),
+        extension_permanent_int8=bool(extension_permanent_int8),
+        return_state=return_state,
+        start_task_idx=K_main,
+        initial_manifold=initial_manifold,
     )
 
 

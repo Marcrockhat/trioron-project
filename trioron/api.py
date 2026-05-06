@@ -231,6 +231,13 @@ def _apply_config_to_bench(cfg: TrioronConfig) -> None:
     bench.BRAINSTEM_ENABLED = False
     bench.ENGRAM_ENABLED = False
     bench.DIFFERENTIAL_ENABLED = False
+    # Archive + int8 quantization on by default so production matches
+    # bench_chained_extend's path. Without these, `permanent_int8=True`
+    # silently no-ops (the archive boundary check + Phase 2 quant
+    # simulation at end-of-extension both gate on these flags).
+    bench.ARCHIVE_ENABLED = True
+    bench.QUANTIZE_ARCHIVED_AT_END = True
+    bench.QUANTIZE_MODE = "int8"
     # Knobs from TrioronConfig
     bench.MANIFOLD_NOISE_SCALE = float(cfg.manifold_noise_scale)
     bench.DREAM_REPLAY_STEPS = int(cfg.dream_replay_steps)
@@ -258,6 +265,7 @@ def _snapshot_bench() -> Dict[str, Any]:
         "MANIFOLD_REPLAY_ENABLED", "HIPPOCAMPAL_ENABLED",
         "HIPPOCAMPAL_SYNTHETIC", "REHEARSAL_ENABLED", "LWF_ENABLED",
         "BRAINSTEM_ENABLED", "ENGRAM_ENABLED", "DIFFERENTIAL_ENABLED",
+        "ARCHIVE_ENABLED", "QUANTIZE_ARCHIVED_AT_END", "QUANTIZE_MODE",
         "MANIFOLD_NOISE_SCALE", "DREAM_REPLAY_STEPS",
         "EWC_INTERTASK", "EWC_DREAM_STRENGTH",
         "N_GROW_PER_TASK", "GROWTH_TARGET_LAYER_IDX",
@@ -395,7 +403,9 @@ def build_donor(
         )
     n_nodes = list(net.n_nodes_per_layer())
     payload = {
-        "version": 1,
+        # version 2 adds `task_class_lists` so `extend` can resume from
+        # the donor's substrate without re-running the base curriculum.
+        "version": 2,
         "kind": "trioron_donor",
         "label": label,
         "classes_covered": classes_covered,
@@ -403,6 +413,7 @@ def build_donor(
         "input_dim": int(input_dim),
         "l0_seed": int(seed),
         "arm": arm,
+        "task_class_lists": [list(t.classes) for t in tasks],
         "state_dict": {k: v.detach().cpu()
                        for k, v in net.state_dict().items()},
         "manifold_stats": {int(c): (mu.detach().cpu(), sg.detach().cpu())
@@ -454,12 +465,25 @@ def absorb(
     if not paths:
         raise ValueError("absorb: donor_paths is empty")
     branches = [Branch.from_checkpoint(p) for p in paths]
-    seeds = {b.l0_seed for b in branches}
-    if len(seeds) > 1:
-        raise ValueError(
-            f"absorb: donors have mismatched L0 seeds {seeds}. The "
-            "shared-seed invariant from paper §3.10 requires all "
-            "donors in a population to be built with the same seed."
+    seed_counts: Dict[Any, int] = {}
+    for b in branches:
+        seed_counts[b.l0_seed] = seed_counts.get(b.l0_seed, 0) + 1
+    if len(seed_counts) > 1:
+        # Fallback path: random-projection adapter (Phase C handoff
+        # item 2). Per-branch warnings fire inside `add_branch` as
+        # each non-canonical branch is plugged in; this is the
+        # absorb-level summary.
+        breakdown = ", ".join(
+            f"seed={s}: {n}" for s, n in sorted(
+                seed_counts.items(), key=lambda kv: -kv[1]
+            )
+        )
+        print(
+            f"[trioron absorb] WARNING: donors have mismatched L0 seeds "
+            f"({breakdown}). The shared-seed invariant (paper §3.10) is "
+            "the recommended path; mismatched donors will be wired through "
+            "deterministic random-projection adapters (UNTESTED — see "
+            "MANUAL §3)."
         )
     org = MultiBranchOrganism.from_branches(branches)
     out = Path(out_path)
@@ -467,7 +491,7 @@ def absorb(
     payload = {
         "version": 1,
         "kind": "multibranch_organism",
-        "l0_seed": next(iter(seeds)),
+        "l0_seed": org.l0_seed,
         "l0_W": org.l0_W.detach().cpu(),
         "l0_b": org.l0_b.detach().cpu(),
         "l0_activation": org.l0_activation,
@@ -526,32 +550,30 @@ def extend(
 ) -> Path:
     """Ship-wake-extend loop (paper §4.6 / extension experiment).
 
-    Re-runs the base curriculum, fires the shipping-consolidation
-    dream (full-coverage replay → archive-lock), optionally
+    Resumes from the donor's substrate state (skipping the base
+    curriculum's re-training), fires the shipping-consolidation dream
+    (full-coverage replay over `base_tasks` → archive-lock), optionally
     permanently quantizes archived rows to int8, lifts the cap to
     ``extension_cap_bytes``, then trains on the new tasks. Original
     tasks survive at task-aware ≥ 0.93 in the paper baseline.
 
-    NOTE on base re-training: the existing extension module
-    (``experiments/bench_chained_extend.py`` and the underlying
-    ``run_chained_curriculum`` in ``bench_chained_15task.py``) is
-    deliberately structured as one integrated base+extension call —
-    growth history, dream-archive locks and frustration counters all
-    flow through a single training loop because they are simpler to
-    thread continuously than to checkpoint and resume mid-curriculum.
-    Therefore this production wrapper inherits that shape: it
-    re-plays ``base_tasks`` from scratch and the donor checkpoint at
-    ``donor_path`` is consulted only for its L0 seed, arm and stored
-    config. A future revision may add a resume-from-substrate path,
-    but that requires non-trivial work in the bench to serialize the
-    archive-lock and growth-event state mid-run.
+    Resume path requires a donor checkpoint at version >= 2 (which
+    includes the ``task_class_lists`` field). Older donors fall back to
+    the legacy integrated path that re-trains the base curriculum from
+    scratch — emits a warning so users know to rebuild for the
+    speedup. Resumed accuracy matches integrated within seed-noise but
+    is not bit-exact: the boundary dream's RNG state is not serialized,
+    so it gets reseeded on resume.
 
     Args:
         donor_path: A donor produced by :func:`build_donor`. Used as
-            the source of L0 seed, arm choice and stored config (the
-            class layout is taken from base_tasks).
+            the source of L0 seed, arm, stored config, substrate state
+            (state_dict + manifold_stats) and base task class layout.
         base_tasks: The same TaskData list used to build the original
-            donor. Required for re-playing the base curriculum.
+            donor. Required even on the resume path because the
+            boundary consolidation dream needs real-data replay over
+            past tasks and the final eval covers both base and
+            extension classes.
         new_tasks: Tasks to learn on top. Their ``classes`` must be
             disjoint from base_tasks' classes (head extension is
             automatic).
@@ -582,6 +604,24 @@ def extend(
     base_arm = payload.get("arm") or "grown_capped_dream"
     base_seed = int(payload.get("l0_seed", 42))
     base_cap = (payload.get("trioron_config") or {}).get("cap_bytes", 32_000)
+    donor_version = int(payload.get("version", 1))
+    donor_task_class_lists = payload.get("task_class_lists")
+    can_resume = (
+        donor_version >= 2
+        and donor_task_class_lists is not None
+        and base_arm in bench.ARM_DEFINITIONS
+        and bench.ARM_DEFINITIONS[base_arm].get("packnet_mode") is None
+        and bench.ARM_DEFINITIONS[base_arm].get("hat_mode") is None
+    )
+    if not can_resume:
+        print(
+            "[trioron extend] WARNING: donor checkpoint lacks resume metadata "
+            f"(version={donor_version}, has task_class_lists="
+            f"{donor_task_class_lists is not None}, arm={base_arm!r}). "
+            "Falling back to legacy integrated path — base curriculum will be "
+            "re-trained from scratch. Rebuild the donor with the current "
+            "trioron version to get the resume-from-substrate speedup."
+        )
 
     train_views, eval_views, task_class_lists = _to_views(base_tasks)
     new_train, new_eval, new_class_lists = _to_views(new_tasks)
@@ -594,22 +634,41 @@ def extend(
             base_cap or bench.M_MAX_BYTES_CAPPED
         )
         bench.INPUT_DIM = int(payload["input_dim"])
-        r = bench.run_arm(
-            base_arm,
-            seed=base_seed,
-            n_epochs_per_task=epochs_per_task,
-            train_views=train_views,
-            eval_views=eval_views,
-            task_class_lists=task_class_lists,
-            infancy_view=None,
-            n_passes=1,
-            extension_train_views=new_train,
-            extension_eval_views=new_eval,
-            extension_task_class_lists=new_class_lists,
-            extension_cap_bytes=int(extension_cap_bytes),
-            extension_permanent_int8=bool(permanent_int8),
-            return_state=True,
-        )
+        if can_resume:
+            net, manifold_buf = _hydrate_donor(payload, base_arm)
+            r = bench.run_extension_only(
+                net,
+                arm=base_arm,
+                seed=base_seed,
+                n_epochs_per_task=epochs_per_task,
+                base_train_views=train_views,
+                base_eval_views=eval_views,
+                base_task_class_lists=task_class_lists,
+                extension_train_views=new_train,
+                extension_eval_views=new_eval,
+                extension_task_class_lists=new_class_lists,
+                extension_cap_bytes=int(extension_cap_bytes),
+                extension_permanent_int8=bool(permanent_int8),
+                initial_manifold=manifold_buf,
+                return_state=True,
+            )
+        else:
+            r = bench.run_arm(
+                base_arm,
+                seed=base_seed,
+                n_epochs_per_task=epochs_per_task,
+                train_views=train_views,
+                eval_views=eval_views,
+                task_class_lists=task_class_lists,
+                infancy_view=None,
+                n_passes=1,
+                extension_train_views=new_train,
+                extension_eval_views=new_eval,
+                extension_task_class_lists=new_class_lists,
+                extension_cap_bytes=int(extension_cap_bytes),
+                extension_permanent_int8=bool(permanent_int8),
+                return_state=True,
+            )
     finally:
         _restore_bench(snap)
 
@@ -631,6 +690,39 @@ def extend(
     })
     torch.save(new_payload, out)
     return out
+
+
+def _hydrate_donor(payload: Dict[str, Any], arm: str):
+    """Reconstruct (TrioronNetwork, ManifoldBuffer) from a donor payload
+    at its end-of-base-curriculum substrate state. Used by the extend
+    resume path so the bench can re-enter the curriculum at the
+    extension boundary without re-running the base loop.
+
+    Mirrors `Branch.from_checkpoint` for the network shape but does NOT
+    freeze L1 + head: the extension training pass must update them.
+    L0 freeze follows the arm's `freeze_l0` setting.
+    """
+    from experiments import bench_chained_15task as bench
+    from experiments.datasets import ManifoldBuffer
+    from trioron.network import TrioronNetwork
+
+    n_nodes = list(payload["n_nodes_per_layer"])
+    input_dim = int(payload["input_dim"])
+    layer_specs = []
+    prev = input_dim
+    for i, n in enumerate(n_nodes):
+        act = "linear" if i == len(n_nodes) - 1 else "relu"
+        layer_specs.append((prev, int(n), act))
+        prev = int(n)
+    net = TrioronNetwork(layer_specs)
+    net.load_state_dict(payload["state_dict"])
+    if bench.ARM_DEFINITIONS[arm].get("freeze_l0", False):
+        net.layers[0].W.requires_grad_(False)
+        net.layers[0].b.requires_grad_(False)
+    manifold_buf = ManifoldBuffer()
+    for c, (mu, sg) in payload["manifold_stats"].items():
+        manifold_buf._stats[int(c)] = (mu.clone(), sg.clone())
+    return net, manifold_buf
 
 
 def _config_from_payload(payload: Dict[str, Any]) -> TrioronConfig:

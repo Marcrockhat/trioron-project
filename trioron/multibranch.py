@@ -39,6 +39,51 @@ from .network import TrioronNetwork
 
 
 # ---------------------------------------------------------------------
+# Random-projection adapter (Phase C handoff item 2, 2026-05-06)
+# ---------------------------------------------------------------------
+
+
+def _pick_canonical_seed(branches: Sequence["Branch"]) -> Optional[int]:
+    """Most-common seed wins; tie-break by first appearance order.
+    Returns None only if every branch's l0_seed is None."""
+    counts: Dict[Optional[int], int] = {}
+    first_seen: Dict[Optional[int], int] = {}
+    for i, b in enumerate(branches):
+        s = b.l0_seed
+        counts[s] = counts.get(s, 0) + 1
+        if s not in first_seen:
+            first_seen[s] = i
+    # max by (count, -first_seen) so ties prefer earlier branches
+    return max(counts.keys(), key=lambda s: (counts[s], -first_seen[s]))
+
+
+def _build_random_projection(
+    *,
+    canon_seed: int,
+    donor_seed: int,
+    canon_dim: int,
+    donor_dim: int,
+    dtype: torch.dtype = torch.float32,
+) -> torch.Tensor:
+    """Deterministic Gaussian random projection canon→donor.
+
+    Std = sqrt(1/canon_dim) so E[||z @ A||^2] ≈ ||z||^2 (Johnson-
+    Lindenstrauss scaling). Seeded by mixing the two L0 seeds so the
+    same (canonical, donor) pair always produces the same matrix.
+
+    NOTE: this is the FALLBACK path. The donor's L1 was trained on its
+    own L0's outputs; a Gaussian random projection of canonical-z
+    won't reproduce that distribution, so accuracy degrades. See
+    MANUAL §3 for the recommended shared-L0 invariant.
+    """
+    mixed = (int(canon_seed) * 1_000_003) ^ int(donor_seed)
+    g = torch.Generator(device="cpu").manual_seed(mixed & 0x7FFF_FFFF)
+    std = (1.0 / canon_dim) ** 0.5
+    A = torch.randn(canon_dim, donor_dim, generator=g) * std
+    return A.to(dtype)
+
+
+# ---------------------------------------------------------------------
 # Branch — one absorbed skill pack
 # ---------------------------------------------------------------------
 
@@ -61,6 +106,14 @@ class Branch:
     manifold_stats: Dict[int, Tuple[torch.Tensor, torch.Tensor]]
     l0_seed: Optional[int] = None
     arm: Optional[str] = None
+    # Random-projection adapter for non-canonical-L0 branches (Phase C
+    # handoff item 2, 2026-05-06). Shape (canonical_dim, donor_dim).
+    # When set, the organism projects shared canonical z through this
+    # before passing to the branch's L1 and to its archive scoring.
+    # None for branches whose L0 matches the canonical (shared-seed
+    # path, no projection needed). UNTESTED accuracy hit; see
+    # MANUAL §3.
+    projection: Optional[torch.Tensor] = None
     # Cached stacked archive tensors for vectorized log-pdf. Built lazily.
     _archive_classes: Optional[List[int]] = field(default=None, repr=False)
     _archive_mu: Optional[torch.Tensor] = field(default=None, repr=False)
@@ -123,32 +176,77 @@ class Branch:
             self._archive_mu = mus
             self._archive_sigma = sgs
 
-    def archive_log_likelihood(
+    def _project_to_donor_space(self, z: torch.Tensor) -> torch.Tensor:
+        """Apply the random-projection adapter if this branch's L0 didn't
+        match the canonical L0 at absorb time. No-op for canonical
+        branches."""
+        if self.projection is None:
+            return z
+        proj = self.projection.to(device=z.device, dtype=z.dtype)
+        return z @ proj
+
+    @property
+    def archive_classes(self) -> List[int]:
+        """Sorted list of global class IDs covered by this branch's
+        manifold archive. The order matches the column order of
+        :meth:`per_class_log_likelihood`. Useful for callers that want
+        to index per-class scores back to class IDs (e.g. routing,
+        novelty detection, confidence inspection)."""
+        if self._archive_classes is None:
+            # Materialize without requiring a forward pass.
+            self._archive_classes = sorted(self.manifold_stats.keys())
+        return list(self._archive_classes)
+
+    def per_class_log_likelihood(
         self, z: torch.Tensor, eps: float = 1e-6,
     ) -> torch.Tensor:
-        """Per-row log p(z | branch) under a mixture-of-equally-weighted
-        per-class diagonal Gaussians (logsumexp over classes).
+        """Per-row, per-class log-pdf of z under the branch's manifold
+        archive. Each archived class c contributes an independent
+        diagonal-Gaussian log-pdf computed from its (μ_c, σ_c).
 
-        z shape: (B, l0_width). Returns (B,).
+        z shape: (B, canonical_dim). For non-canonical branches the
+        random-projection adapter rotates z into donor space first.
+        Returns: (B, C) where C = len(archive_classes).
+
+        The logsumexp aggregate (mixture-of-equally-weighted form) is
+        provided by :meth:`archive_log_likelihood`; use this method
+        directly when you need the per-class breakdown — for example
+        a routing argmax, a novelty gate based on top-vs-runner-up
+        gap, or an inspect panel showing per-class confidence.
         """
+        z = self._project_to_donor_space(z)
         self._ensure_archive_tensors(z.device)
         mu = self._archive_mu             # (C, d)
         sg = self._archive_sigma.clamp_min(eps)   # (C, d)
         d = z.shape[-1]
-        # (B, 1, d) - (1, C, d) → (B, C, d)
-        diff = z.unsqueeze(1) - mu.unsqueeze(0)
-        norm = ((diff / sg.unsqueeze(0)) ** 2).sum(-1)         # (B, C)
-        logdet = sg.log().sum(-1)                              # (C,)
-        log_pdfs = -0.5 * norm - logdet.unsqueeze(0) - 0.5 * d * math.log(2 * math.pi)
+        diff = z.unsqueeze(1) - mu.unsqueeze(0)                 # (B, C, d)
+        norm = ((diff / sg.unsqueeze(0)) ** 2).sum(-1)          # (B, C)
+        logdet = sg.log().sum(-1)                               # (C,)
+        return -0.5 * norm - logdet.unsqueeze(0) - 0.5 * d * math.log(2 * math.pi)
+
+    def archive_log_likelihood(
+        self, z: torch.Tensor, eps: float = 1e-6,
+    ) -> torch.Tensor:
+        """Per-row log p(z | branch) under a mixture-of-equally-weighted
+        per-class diagonal Gaussians (logsumexp aggregate). Shape:
+        (B, canonical_dim) → (B,).
+
+        Thin wrapper over :meth:`per_class_log_likelihood` for callers
+        that only want a single scalar confidence per row.
+        """
+        log_pdfs = self.per_class_log_likelihood(z, eps=eps)
         # uniform mixture: log( (1/C) Σ exp(log_pdf_c) ) = logsumexp - log C
         return torch.logsumexp(log_pdfs, dim=-1) - math.log(log_pdfs.shape[-1])
 
     # ----- forward over donor's own head namespace -----
 
     def forward_from_l0(self, z: torch.Tensor) -> torch.Tensor:
-        """z = shared L0 projection. Returns logits over the donor's full
-        head (shape (B, head_size)). Caller picks out trained slots via
+        """z = shared canonical L0 projection. For non-canonical
+        branches it gets random-projected into donor space first.
+        Returns logits over the donor's full head (shape
+        (B, head_size)). Caller picks out trained slots via
         `classes_covered`."""
+        z = self._project_to_donor_space(z)
         return self.net.forward_from_layer(z, start_layer=1)
 
 
@@ -203,36 +301,62 @@ class MultiBranchOrganism(nn.Module):
     ) -> "MultiBranchOrganism":
         if not branches:
             raise ValueError("Need at least one branch to build the organism.")
-        first = branches[0]
+        # Pick the canonical L0 by majority seed; tie-break by first
+        # appearance. Reorder so canonical-seed branches are added
+        # first (so the organism installs the right L0 before any
+        # mismatched branch builds its random-projection adapter).
+        canon_seed = _pick_canonical_seed(branches) if l0_seed is None else l0_seed
+        canon_first, others = [], []
+        for b in branches:
+            (canon_first if b.l0_seed == canon_seed else others).append(b)
+        ordered = canon_first + others
+        first = ordered[0]
         org = cls(
             l0_W=first.l0_W(),
             l0_b=first.l0_b(),
-            l0_seed=l0_seed if l0_seed is not None else first.l0_seed,
+            l0_seed=canon_seed,
             l0_activation=first.net.layers[0].activation,
         )
-        for b in branches:
+        for b in ordered:
             org.add_branch(b)
         return org
 
     def add_branch(self, branch: Branch) -> None:
-        """Append a branch. Validates the shared-L0 invariant (W and b
-        byte-identical) and forbids class overlap with existing branches.
+        """Append a branch. If the branch's L0 matches the canonical
+        L0 (shared-seed invariant), it is plugged in directly. If it
+        does NOT match, a deterministic random-projection adapter is
+        materialized (untested fallback path — see MANUAL §3).
         """
         if self.l0_W is None:
             self.register_buffer("l0_W", branch.l0_W().clone())
             self.register_buffer("l0_b", branch.l0_b().clone())
             self.l0_activation = branch.net.layers[0].activation
         else:
-            if not torch.equal(self.l0_W, branch.l0_W()):
-                raise ValueError(
-                    f"Branch '{branch.label}' L0 W mismatch — "
-                    "shared-seed invariant violated; absorption requires "
-                    "donor and recipient share the L0 random projection."
+            shapes_match = (
+                self.l0_W.shape == branch.l0_W().shape
+                and self.l0_b.shape == branch.l0_b().shape
+            )
+            weights_match = shapes_match and torch.equal(
+                self.l0_W, branch.l0_W()
+            ) and torch.equal(self.l0_b, branch.l0_b())
+            if not weights_match:
+                canon_dim = self.l0_W.shape[0]
+                donor_dim = branch.l0_W().shape[0]
+                branch.projection = _build_random_projection(
+                    canon_seed=int(self.l0_seed) if self.l0_seed is not None else 0,
+                    donor_seed=int(branch.l0_seed) if branch.l0_seed is not None else 0,
+                    canon_dim=canon_dim,
+                    donor_dim=donor_dim,
+                    dtype=self.l0_W.dtype,
                 )
-            if not torch.equal(self.l0_b, branch.l0_b()):
-                raise ValueError(
-                    f"Branch '{branch.label}' L0 b mismatch — "
-                    "shared-seed invariant violated."
+                print(
+                    f"[trioron absorb] WARNING: branch '{branch.label}' L0 "
+                    f"(seed={branch.l0_seed}, dim={donor_dim}) does not match "
+                    f"canonical L0 (seed={self.l0_seed}, dim={canon_dim}). "
+                    f"Built random-projection adapter A[{canon_dim}→{donor_dim}] "
+                    f"from seeds ({self.l0_seed}, {branch.l0_seed}). "
+                    "This path is UNTESTED; per-branch accuracy may degrade "
+                    "10-30% (see MANUAL §3). Use at your own risk."
                 )
         existing = set(self._class_to_union)
         overlap = sorted(set(branch.classes_covered) & existing)

@@ -89,22 +89,46 @@ slower.
 
 ## 3. The shared-L0 invariant
 
-Every donor in a population MUST be built with the same `seed`.
+**Strongly recommended:** every donor in a population should be built
+with the same `seed`.
 
 Trioron's L0 is a frozen random projection. Two donors trained with
 the same `seed` see the same L0 weights bit-for-bit, which is what
 makes paste-and-go absorption lossless: the organism keeps one shared
 L0 and stacks the per-donor L1 + head + manifold archive on top of
 it. If two donors used different seeds, their L1 spaces are
-incomparable — there is no rotation that aligns them — and the
-organism would have to relearn a fusion layer.
-
-The `absorb` step checks this and fails fast with a clear error if
-seeds disagree. There is no way around it; pick one seed for your
-deployment population and stick to it.
+incomparable — there is no rotation that aligns them — so the
+organism's L1 routing has to bridge them somehow.
 
 Default seed = 42. Override with `--seed` on `trioron train` or
 `seed=` on `trioron.api.build_donor`.
+
+### Mismatched seeds — random-projection fallback (untested)
+
+Since 2026-05-06 the `absorb` step **does not** hard-error on
+mismatched seeds. Instead it picks a canonical L0 (the most common
+seed across donors; ties → first appearance) and builds a
+deterministic Gaussian random projection adapter
+`A_i ∈ R^{canon_dim × donor_i_dim}` for each non-canonical branch.
+The seed pair `(canonical_seed, donor_seed)` deterministically seeds
+each adapter, so the same donor mix always reconstructs the same
+projection.
+
+A loud `[trioron absorb] WARNING` fires once per non-canonical branch
+and a summary fires at the absorb call. The path is **untested** —
+the donor's L1 was trained on its own L0 outputs, and a random
+projection of canonical-z does not reproduce that distribution. The
+behavior probe at `experiments/probe_random_projection_fusion.py`
+shows that on a 2-donor synthetic case (one canonical seed=42, one
+mismatched seed=7), the canonical donor stays at 1.00 task-aware
+while the mismatched donor drops to ~0.4 task-aware. The handoff
+estimate of "10-30% accuracy hit" is a floor, not a ceiling — real
+losses can be larger.
+
+**Use this path only if you genuinely cannot rebuild your donors at
+the same seed.** Different-input-dim cases (problem (c) in the
+design doc) are punted to the Bridge layer (see `BRIDGE.md`); only
+seed and L0-width mismatches are handled by the projection fallback.
 
 ---
 
@@ -363,23 +387,33 @@ trioron extend \
 
 ### Why `--base-py` is required
 
-The existing extension module
-(`experiments/bench_chained_extend.py` and the underlying
-`run_chained_curriculum` in `bench_chained_15task.py`) is
-deliberately structured as one integrated base+extension call. Growth
-history, dream-archive locks and frustration counters all flow
-through a single training loop because they are simpler to thread
-continuously than to checkpoint and resume mid-curriculum. Therefore
-this CLI replays `--base-py` from scratch and the donor checkpoint
-at `--donor` is consulted only for its L0 seed, arm, and stored
-config. A future revision may add a resume-from-substrate path; until
-then, supply the base loader.
+Donor checkpoints carry the substrate state (weights + EWC anchors +
+Fisher + archive locks + manifold), but they don't carry the base
+training data — that would balloon the file. The extension boundary
+fires a shipping-consolidation dream that replays real data over the
+base tasks, and the final eval covers both base and extension classes,
+so the same `TaskData` you used to build the donor must be re-supplied
+here.
+
+The base curriculum itself is **not** re-trained — `extend` resumes
+from the donor's substrate (skipping the base per-task loop entirely)
+when the checkpoint includes resume metadata (`version >= 2`,
+introduced 2026-05-06). Older donors fall back to the legacy
+integrated path with a printed warning; rebuild them with the current
+trioron version to get the speedup.
+
+Resumed accuracy matches integrated within seed-noise but is not
+bit-exact: the boundary dream's RNG state isn't serialized so it gets
+reseeded on resume.
 
 ### What happens during extension
 
-1. Replay base curriculum on the donor's L0 seed and arm.
-2. Fire shipping-consolidation dream (full-coverage replay,
-   archive-aware grad masking, archive-lock).
+1. **Resume path (default)**: hydrate the donor's net + manifold from
+   the checkpoint, skip the base training loop.
+   **Legacy path (v1 donors)**: replay the base curriculum on the
+   donor's L0 seed and arm.
+2. Fire shipping-consolidation dream (full-coverage replay over
+   `base_tasks`, archive-aware grad masking, archive-lock).
 3. Permanently snap archived rows to int8 (skip with
    `--no-permanent-int8`).
 4. Lift the cap from `cap_bytes` → `--extension-cap-bytes`.
