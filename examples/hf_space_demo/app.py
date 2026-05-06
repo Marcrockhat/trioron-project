@@ -870,6 +870,13 @@ falls through to the soft-prompt path. We've hand-augmented the
 preset entities with a few paraphrases each so common rewordings
 work, but novel phrasings will miss.
 
+**Capitalisation matters.** SmolLM2's BPE tokenises `What` and `what`
+to different pieces, which gives different pooled embeddings and
+different cosine scores against the archive keys. Re-typing a
+question with different casing can flip you between the entity-
+archive route and the soft-prompt fallback (or just shift the greedy
+decode). Expected behaviour for an embedding-based router, not a bug.
+
 *Private demo — please do not share until the paper publishes.*
 """
 
