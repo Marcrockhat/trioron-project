@@ -33,8 +33,9 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from collections import deque
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Deque, Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -207,17 +208,28 @@ def collect_frustrations(frame_log: List[dict], window: int = 30) -> List[int]:
 
 
 def collect_celebrations(frame_log: List[dict], window: int = 30) -> List[int]:
-    """Symmetric to collect_frustrations — frames before each AGENT
-    score (reward = +1). These are positive examples: agent's action
-    led to a winning rally, so reinforce them by training the
-    responsible skill donor on (state, agent_action_class)."""
+    """Frames belonging to WINNING rallies — every frame from the
+    previous reward event (any sign) up to each agent score (reward=+1).
+
+    Earlier K-window logic only captured the post-hit ball-travel phase
+    (always PREPOS-gated), missing the CATCH/SMASH frames upstream that
+    caused the score. Rally-based attribution distributes credit
+    across all skills active during the winning rally.
+
+    The `window` arg is kept for API compatibility but unused; the
+    rally start is determined by the previous reward event."""
+    del window  # noqa: F841
     flagged: List[int] = []
+    rally_start = 0
     for i, f in enumerate(frame_log):
-        if f["reward"] > 0:
-            lo = max(0, i - window)
-            for j in range(lo, i):
+        r = f["reward"]
+        if r > 0:
+            for j in range(rally_start, i):
                 if frame_log[j]["raw"] is not None:
                     flagged.append(j)
+            rally_start = i + 1
+        elif r < 0:
+            rally_start = i + 1
     return sorted(set(flagged))
 
 
@@ -339,9 +351,18 @@ def refresh_donor(skill_name: str, group_name: str,
 def run_dream_loop(*, seed: int, n_episodes: int, max_steps: int,
                    frustration_window: int, donor_dir: Path,
                    out_dir: Path, vary_seed: bool = False,
-                   min_dream_examples: int = 20) -> List[float]:
+                   min_dream_examples: int = 20,
+                   positive_buffer_size: int = 500) -> List[float]:
     out_dir.mkdir(parents=True, exist_ok=True)
     returns: List[float] = []
+    # FIX 4 — cross-episode positive buffer. Per-skill FIFO of (state,
+    # action_class) pairs harvested from celebration windows of EVERY
+    # episode (wins and losses). Merged into every retrain so prior
+    # successful play anchors against loss-driven drift.
+    positive_buffer: Dict[str, Deque[Tuple[torch.Tensor, int]]] = {
+        skill: deque(maxlen=positive_buffer_size)
+        for skill in ("CATCH", "SMASH", "PREPOS")
+    }
     for ep in range(n_episodes):
         donors = {
             s: load_organism(donor_dir / f"{name}.pt")
@@ -361,6 +382,18 @@ def run_dream_loop(*, seed: int, n_episodes: int, max_steps: int,
         print(f"\n[ep {ep+1}/{n_episodes} seed={episode_seed}] "
               f"return={ret:+.1f} length={n_steps} ({elapsed:.1f}s)")
         returns.append(ret)
+        # Always harvest celebration frames from this episode into the
+        # cross-episode buffer (even on wins — those are the highest-
+        # quality positive examples and we want them anchoring future
+        # retrains).
+        celebrated = collect_celebrations(frame_log, window=frustration_window)
+        reinforcements = build_celebration_tasks(frame_log, celebrated)
+        for skill in positive_buffer:
+            for sv, cls in reinforcements[skill]:
+                positive_buffer[skill].append((sv, cls))
+        buf_summary = ", ".join(
+            f"{s}={len(positive_buffer[s])}" for s in positive_buffer)
+        print(f"  positive buffer: {buf_summary}")
         # FIX 1 — skip-dream-on-wins. If the agent net-won, don't
         # retrain. Over-correcting after wins erased prior beneficial
         # drift in the previous run (ep 6 +20 → ep 7 -19 regression).
@@ -368,24 +401,29 @@ def run_dream_loop(*, seed: int, n_episodes: int, max_steps: int,
             print(f"  net win (return={ret:+.1f}) — skipping dream")
             continue
         flagged = collect_frustrations(frame_log, window=frustration_window)
-        celebrated = collect_celebrations(frame_log, window=frustration_window)
         if not flagged and not celebrated:
             print("  no frustrations or celebrations — skipping dream")
             continue
         corrections = build_correction_tasks(frame_log, flagged)
-        reinforcements = build_celebration_tasks(frame_log, celebrated)
         for skill, group_name in [("CATCH", "SKILL_CATCH"),
                                   ("SMASH", "SKILL_SMASH"),
                                   ("PREPOS", "SKILL_PREPOS")]:
             # FIX 2 — minimum disagreement threshold. Tiny corrections
             # get drowned by 4500 synthetic samples; the retrain ends
-            # up near a fresh fit, erasing prior drift.
+            # up near a fresh fit, erasing prior drift. Threshold is
+            # against THIS-episode signal only; the cross-episode
+            # buffer is anchoring data, not trigger data.
             n_corr = len(corrections[skill])
             n_reinf = len(reinforcements[skill])
             if n_corr + n_reinf < min_dream_examples:
                 continue
-            # FIX 3 — positive replay merged in alongside corrections.
-            combined = corrections[skill] + reinforcements[skill]
+            # FIX 3 — within-episode positive replay merged with
+            # corrections. FIX 4 — plus cross-episode positive buffer.
+            combined = (corrections[skill]
+                        + reinforcements[skill]
+                        + list(positive_buffer[skill]))
+            print(f"  retrain set [{skill}]: corr={n_corr} "
+                  f"reinf={n_reinf} buffer={len(positive_buffer[skill])}")
             refresh_donor(skill, group_name, combined, donor_dir)
     return returns
 
@@ -409,6 +447,9 @@ def main():
                     help="Skip per-skill dream when (corrections + "
                          "reinforcements) is below this. Avoids tiny-batch "
                          "retrains that erase prior beneficial drift.")
+    ap.add_argument("--positive-buffer-size", type=int, default=500,
+                    help="Per-skill FIFO cap for cross-episode positive "
+                         "replay. Anchors retrains against successful play.")
     args = ap.parse_args()
     returns = run_dream_loop(
         seed=args.seed, n_episodes=args.episodes,
@@ -418,6 +459,7 @@ def main():
         out_dir=Path(args.out_dir),
         vary_seed=args.vary_seed,
         min_dream_examples=args.min_dream_examples,
+        positive_buffer_size=args.positive_buffer_size,
     )
     print("\n=== Dream-loop trajectory ===")
     for i, r in enumerate(returns):
