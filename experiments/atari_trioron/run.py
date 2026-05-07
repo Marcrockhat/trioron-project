@@ -40,6 +40,9 @@ if str(PROJ) not in sys.path:
     sys.path.insert(0, str(PROJ))
 
 from experiments.atari_trioron.train import self_imitation_train  # noqa: E402
+from experiments.atari_trioron.popsearch import (                # noqa: E402
+    pop_search_train,
+)
 from experiments.atari_trioron.eval_render import (              # noqa: E402
     evaluate_and_record,
 )
@@ -88,6 +91,17 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--arm", required=True,
                    choices=["arm1", "arm2", "arm3", "arm4"])
+    p.add_argument("--algo", choices=["popsearch", "self_imitation"],
+                   default="popsearch",
+                   help="Training algorithm. popsearch (default) runs "
+                        "N-population × G-generation evolutionary search; "
+                        "self_imitation runs the older single-policy loop.")
+    # popsearch knobs (default algo)
+    p.add_argument("--n-population", type=int, default=8)
+    p.add_argument("--n-elites", type=int, default=2)
+    p.add_argument("--n-generations", type=int, default=6)
+    p.add_argument("--episodes-per-eval", type=int, default=4)
+    # self_imitation knobs (legacy)
     p.add_argument("--train-iters", type=int, default=8)
     p.add_argument("--episodes-per-iter", type=int, default=16)
     p.add_argument("--epochs-per-task", type=int, default=4)
@@ -124,15 +138,36 @@ def main():
 
     if arm == "arm1":
         # Breakout-only, cold start.
-        result = self_imitation_train(
-            game="Breakout", out_dir=out_dir,
-            n_iterations=args.train_iters,
-            n_episodes_per_iter=args.episodes_per_iter,
-            eps_schedule=eps_schedule,
-            epochs_per_task=args.epochs_per_task,
-            cap_bytes=args.cap_bytes,
-            seed=args.seed,
-        )
+        if args.algo == "popsearch":
+            pr = pop_search_train(
+                game="Breakout", out_dir=out_dir,
+                n_generations=args.n_generations,
+                n_population=args.n_population,
+                n_elites=args.n_elites,
+                n_episodes_per_eval=args.episodes_per_eval,
+                epochs_per_task=args.epochs_per_task,
+                cap_bytes=args.cap_bytes,
+                base_seed=args.seed,
+            )
+
+            from dataclasses import dataclass
+
+            @dataclass
+            class _R:
+                final_donor: Path
+                iterations: list
+            result = _R(final_donor=pr.final_donor,
+                        iterations=pr.generations)
+        else:
+            result = self_imitation_train(
+                game="Breakout", out_dir=out_dir,
+                n_iterations=args.train_iters,
+                n_episodes_per_iter=args.episodes_per_iter,
+                eps_schedule=eps_schedule,
+                epochs_per_task=args.epochs_per_task,
+                cap_bytes=args.cap_bytes,
+                seed=args.seed,
+            )
         train_game = "Breakout"
 
     elif arm == "arm2":
@@ -147,8 +182,91 @@ def main():
             pong_iter_log = []
             pong_donor_path = arm3_donor.resolve()
         else:
-            pong_result = self_imitation_train(
-                game="Pong", out_dir=out_dir / "pong_phase",
+            if args.algo == "popsearch":
+                pr = pop_search_train(
+                    game="Pong", out_dir=out_dir / "pong_phase",
+                    n_generations=args.n_generations,
+                    n_population=args.n_population,
+                    n_elites=args.n_elites,
+                    n_episodes_per_eval=args.episodes_per_eval,
+                    epochs_per_task=args.epochs_per_task,
+                    cap_bytes=args.cap_bytes,
+                    base_seed=args.seed,
+                )
+                pong_iter_log = pr.generations
+                pong_donor_path = pr.final_donor
+            else:
+                pong_result = self_imitation_train(
+                    game="Pong", out_dir=out_dir / "pong_phase",
+                    n_iterations=args.train_iters,
+                    n_episodes_per_iter=args.episodes_per_iter,
+                    eps_schedule=eps_schedule,
+                    epochs_per_task=args.epochs_per_task,
+                    cap_bytes=args.cap_bytes,
+                    seed=args.seed,
+                )
+                pong_iter_log = pong_result.iterations
+                pong_donor_path = pong_result.final_donor
+        # Phase B: Breakout extension, starting from Pong donor.
+        if args.algo == "popsearch":
+            br = pop_search_train(
+                game="Breakout", out_dir=out_dir / "breakout_phase",
+                n_generations=args.n_generations,
+                n_population=args.n_population,
+                n_elites=args.n_elites,
+                n_episodes_per_eval=args.episodes_per_eval,
+                epochs_per_task=args.epochs_per_task,
+                cap_bytes=args.cap_bytes * 2,
+                base_seed=args.seed + 1,
+                initial_donor=pong_donor_path,
+            )
+            from dataclasses import dataclass
+
+            @dataclass
+            class _R:
+                final_donor: Path
+                iterations: list
+            result = _R(final_donor=br.final_donor,
+                        iterations=pong_iter_log + br.generations)
+        else:
+            breakout_result = self_imitation_train(
+                game="Breakout", out_dir=out_dir / "breakout_phase",
+                n_iterations=args.train_iters,
+                n_episodes_per_iter=args.episodes_per_iter,
+                eps_schedule=eps_schedule,
+                epochs_per_task=args.epochs_per_task,
+                cap_bytes=args.cap_bytes * 2,
+                seed=args.seed + 1,
+                initial_donor=pong_donor_path,
+            )
+            result = breakout_result
+            result.iterations = pong_iter_log + breakout_result.iterations
+        train_game = "Pong→Breakout"
+
+    elif arm == "arm3":
+        # Pong only — never sees Breakout in training.
+        if args.algo == "popsearch":
+            pr = pop_search_train(
+                game="Pong", out_dir=out_dir,
+                n_generations=args.n_generations,
+                n_population=args.n_population,
+                n_elites=args.n_elites,
+                n_episodes_per_eval=args.episodes_per_eval,
+                epochs_per_task=args.epochs_per_task,
+                cap_bytes=args.cap_bytes,
+                base_seed=args.seed,
+            )
+            from dataclasses import dataclass
+
+            @dataclass
+            class _R:
+                final_donor: Path
+                iterations: list
+            result = _R(final_donor=pr.final_donor,
+                        iterations=pr.generations)
+        else:
+            result = self_imitation_train(
+                game="Pong", out_dir=out_dir,
                 n_iterations=args.train_iters,
                 n_episodes_per_iter=args.episodes_per_iter,
                 eps_schedule=eps_schedule,
@@ -156,34 +274,6 @@ def main():
                 cap_bytes=args.cap_bytes,
                 seed=args.seed,
             )
-            pong_iter_log = pong_result.iterations
-            pong_donor_path = pong_result.final_donor
-        # Phase B: Breakout extension, starting from Pong donor.
-        breakout_result = self_imitation_train(
-            game="Breakout", out_dir=out_dir / "breakout_phase",
-            n_iterations=args.train_iters,
-            n_episodes_per_iter=args.episodes_per_iter,
-            eps_schedule=eps_schedule,
-            epochs_per_task=args.epochs_per_task,
-            cap_bytes=args.cap_bytes * 2,
-            seed=args.seed + 1,
-            initial_donor=pong_donor_path,
-        )
-        result = breakout_result
-        train_game = "Pong→Breakout"
-        result.iterations = pong_iter_log + breakout_result.iterations
-
-    elif arm == "arm3":
-        # Pong only — never sees Breakout in training.
-        result = self_imitation_train(
-            game="Pong", out_dir=out_dir,
-            n_iterations=args.train_iters,
-            n_episodes_per_iter=args.episodes_per_iter,
-            eps_schedule=eps_schedule,
-            epochs_per_task=args.epochs_per_task,
-            cap_bytes=args.cap_bytes,
-            seed=args.seed,
-        )
         train_game = "Pong"
 
     elif arm == "arm4":

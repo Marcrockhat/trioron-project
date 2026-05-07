@@ -27,6 +27,7 @@ def filter_by_return(
     episodes: List[Episode],
     *,
     threshold: float | str = "median",
+    top_k: int | None = None,
     per_class_cap: int | None = None,
     verbose: bool = True,
 ) -> Tuple[torch.Tensor, torch.Tensor, dict]:
@@ -35,25 +36,38 @@ def filter_by_return(
     X: (N, OBS_DIM) float32, concatenated states from surviving episodes.
     y: (N,) int64, the action taken at each surviving step.
     stats: diagnostic dict — return distribution, retention, class balance.
+
+    Selection precedence: `top_k` (if set) wins over `threshold`. Top-k
+    is the sharper-signal filter — it keeps only the K best-returning
+    episodes regardless of the rest of the distribution. Useful when
+    returns concentrate near the random-policy floor and a quantile
+    cutoff degenerates to "keep almost everything".
     """
     rets = np.array([e.return_ for e in episodes], dtype=np.float32)
-    if isinstance(threshold, str):
-        if threshold == "median":
-            cutoff = float(np.median(rets))
-        elif threshold == "max":
-            cutoff = float(rets.max())
-        else:
-            raise ValueError(f"unknown threshold spec: {threshold!r}")
-    else:
-        cutoff = float(threshold)
 
-    keep = [e for e in episodes if e.return_ >= cutoff]
-    if not keep:
-        # Pathological case: every episode below cutoff. Fall back to
-        # the single best episode so the loop can still produce a
-        # gradient signal.
-        best = max(episodes, key=lambda e: e.return_)
-        keep = [best]
+    if top_k is not None and top_k > 0:
+        # Argsort descending, keep top_k. Tie-break is order-stable.
+        order = np.argsort(-rets, kind="stable")
+        keep_idx = order[:int(top_k)]
+        keep = [episodes[i] for i in keep_idx]
+        cutoff = float(rets[keep_idx[-1]]) if len(keep_idx) else 0.0
+    else:
+        if isinstance(threshold, str):
+            if threshold == "median":
+                cutoff = float(np.median(rets))
+            elif threshold == "max":
+                cutoff = float(rets.max())
+            else:
+                raise ValueError(f"unknown threshold spec: {threshold!r}")
+        else:
+            cutoff = float(threshold)
+
+        keep = [e for e in episodes if e.return_ >= cutoff]
+        if not keep:
+            # Pathological: every episode below cutoff. Fall back to
+            # the single best so the loop can still produce a signal.
+            best = max(episodes, key=lambda e: e.return_)
+            keep = [best]
 
     X = torch.cat([e.states for e in keep], dim=0)
     y = torch.cat([e.actions for e in keep], dim=0)

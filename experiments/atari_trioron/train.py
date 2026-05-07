@@ -86,7 +86,8 @@ def self_imitation_train(
     seed: int = 42,
     initial_donor: Optional[Path] = None,
     threshold: Union[float, str] = "median",
-    per_class_cap: Optional[int] = 600,
+    top_k: Optional[int] = 3,
+    per_class_cap: Optional[int] = None,
     verbose: bool = True,
 ) -> TrainResult:
     """Run a multi-iteration self-imitation loop.
@@ -145,6 +146,7 @@ def self_imitation_train(
         X, y, stats = filter_by_return(
             episodes,
             threshold=threshold,
+            top_k=top_k,
             per_class_cap=per_class_cap,
             verbose=verbose,
         )
