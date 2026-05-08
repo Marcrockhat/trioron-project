@@ -142,14 +142,44 @@ def play_breakout(organism, *, seed: int, max_steps: int = 8000,
     return {"return": ret, "length": n_steps, "video_path": str(video)}
 
 
+def _faststart_remux(mp4_path: str) -> str:
+    """Re-mux an MP4 so moov atom sits before mdat (+faststart).
+
+    moviepy writes moov at the END of the file. Browsers need moov at
+    the start to begin playback before the full file downloads, so the
+    gr.Video player sits at 0:00 until the entire file is buffered.
+    A one-pass `-c copy -movflags +faststart` re-mux costs ~50ms and
+    fixes playback. Uses the imageio_ffmpeg-bundled ffmpeg so the
+    Space doesn't need a system ffmpeg.
+    """
+    import subprocess, imageio_ffmpeg
+    src = Path(mp4_path)
+    dst = src.with_suffix(".faststart.mp4")
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    res = subprocess.run(
+        [ff, "-y", "-i", str(src), "-c", "copy",
+         "-movflags", "+faststart", str(dst)],
+        capture_output=True,
+    )
+    if res.returncode != 0 or not dst.exists():
+        # Re-mux failed; return original. Browser may still play after
+        # full download.
+        return str(src)
+    dst.replace(src)  # atomic swap, original path stays the same
+    return str(src)
+
+
 def play_match(organism, *, game: str, seed: int,
                record_dir: Path, record_name: str) -> dict:
     """Dispatch by game name. Returns dict with return/length/video_path."""
     record_dir.mkdir(parents=True, exist_ok=True)
     if game == "Pong":
-        return play_pong(organism, seed=seed,
-                         record_dir=record_dir, record_name=record_name)
-    if game == "Breakout":
-        return play_breakout(organism, seed=seed,
-                             record_dir=record_dir, record_name=record_name)
-    raise ValueError(f"unknown game {game!r}; use 'Pong' or 'Breakout'")
+        result = play_pong(organism, seed=seed,
+                           record_dir=record_dir, record_name=record_name)
+    elif game == "Breakout":
+        result = play_breakout(organism, seed=seed,
+                               record_dir=record_dir, record_name=record_name)
+    else:
+        raise ValueError(f"unknown game {game!r}; use 'Pong' or 'Breakout'")
+    result["video_path"] = _faststart_remux(result["video_path"])
+    return result
