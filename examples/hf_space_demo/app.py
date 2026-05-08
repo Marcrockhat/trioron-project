@@ -1067,6 +1067,13 @@ BOOK_PRESETS = _load_book_question_sets()
 
 ATARI_DONORS_DIR = Path(__file__).parent / "atari" / "donors"
 ATARI_VIDEO_DIR = Path("/tmp") / "trioron_atari_videos"
+ATARI_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+# Gradio 5 only serves files from the working directory unless paths are
+# explicitly whitelisted. Without this, the gr.Video component receives
+# the MP4 path but the browser fetches /file=<path> and gets 403, so the
+# player is rendered but never starts. set_static_paths must be called
+# at module-import time, before the gr.Blocks instance is built.
+gr.set_static_paths([str(ATARI_VIDEO_DIR)])
 
 # Which file backs which dropdown label. Order is the canonical
 # narrative arc (single-game → sequential extend → concurrent absorb).
