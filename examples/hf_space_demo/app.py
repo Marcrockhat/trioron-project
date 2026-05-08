@@ -1116,15 +1116,30 @@ def _atari_format_stats(stats: Dict) -> str:
     return "\n".join(lines)
 
 
-def atari_play_for_ui(label, game, seed, stats):
+def atari_play_for_ui(label, game, seed, stats,
+                      progress=gr.Progress(track_tqdm=False)):
+    """Generator: yields a 'running' state immediately so the user
+    sees feedback within milliseconds, then yields the final result
+    after the match + faststart re-mux complete.
+    """
     if not label or not game:
-        return None, "_(pick a model and a game first)_", stats, _atari_format_stats(stats)
+        yield (None, "_(pick a model and a game first)_",
+               stats, _atari_format_stats(stats))
+        return
+    # Immediate ack — gives the user a status before play_match starts
+    # (Pong takes ~30-60 s on cpu-basic; without this the UI looks
+    # frozen).
+    progress(0.0, desc=f"Running {game}…")
+    yield (None,
+           f"_(running **{label}** on **{game}**, seed={int(seed)} — "
+           f"~30–60 s on cpu-basic; the player will appear when the "
+           f"match finishes.)_",
+           stats, _atari_format_stats(stats))
     # Lazy heavy imports — gymnasium + ale_py + cv2 are big and we
     # don't want them paid up-front when other tabs are in use.
     from atari.inference import play_match
     import time
     org = _atari_load_organism(label)
-    ATARI_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
     safe_label = label.split(" ", 1)[0].replace("-", "_")
     # Microsecond suffix avoids filename collision under concurrent
     # plays from multiple Space visitors.
@@ -1136,7 +1151,11 @@ def atari_play_for_ui(label, game, seed, stats):
             record_dir=ATARI_VIDEO_DIR, record_name=record_name,
         )
     except Exception as e:
-        return None, f"_(match failed: {type(e).__name__}: {e})_", stats, _atari_format_stats(stats)
+        yield (None,
+               f"_(match failed: {type(e).__name__}: {e})_",
+               stats, _atari_format_stats(stats))
+        return
+    progress(1.0, desc="Done")
     ret = float(result["return"])
     win = ret >= ATARI_WIN_THRESHOLD[game]
     key = (label, game)
@@ -1151,7 +1170,8 @@ def atari_play_for_ui(label, game, seed, stats):
         f"- Steps: {result['length']}\n"
         f"- Win threshold: ret ≥ {ATARI_WIN_THRESHOLD[game]:+.0f}\n"
     )
-    return result["video_path"], summary, stats, _atari_format_stats(stats)
+    yield (result["video_path"], summary,
+           stats, _atari_format_stats(stats))
 
 
 def atari_reset_for_ui():
@@ -1399,6 +1419,8 @@ with gr.Blocks(title="Trioron Demos") as demo:
             inputs=[atari_model, atari_game, atari_seed, atari_stats_state],
             outputs=[atari_video_out, atari_summary_out,
                      atari_stats_state, atari_stats_md],
+            show_progress="full",
+            trigger_mode="once",
         )
         atari_reset_btn.click(
             fn=atari_reset_for_ui,
