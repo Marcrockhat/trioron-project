@@ -32,3 +32,12 @@ paper/*.blg
 
 # HF Space build artifact (assembled at push time, not source)
 hf_space_build/
+
+# Book Memory training intermediates — only head_bio_alice_v2.pt is
+# shipped (see examples/hf_space_demo/build_and_push.py BOOK_MEMORY_ALLOWLIST).
+# The rest are predecessors in the train.py → train_bio.py --resume chain;
+# regenerable, ~9 MB total, not part of the demo.
+examples/hf_space_demo/book_memory/head.pt
+examples/hf_space_demo/book_memory/head_bio.pt
+examples/hf_space_demo/book_memory/head_bio_alice.pt
+examples/hf_space_demo/book_memory/head_bio_v2.pt
