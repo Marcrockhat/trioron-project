@@ -440,31 +440,83 @@ def build_donor(
 # ---------------------------------------------------------------------
 
 
+def _branch_from_organism_dict(d: Dict[str, Any]):
+    """Reconstruct a `Branch` from an inline organism payload dict.
+
+    Each entry in `payload["branches"]` of a saved
+    multibranch_organism has the same fields a donor checkpoint
+    carries. This helper builds the Branch in-memory without going
+    through disk, so an organism file's branches can be re-absorbed
+    without first being un-bundled into per-branch donor files.
+    """
+    from trioron.multibranch import Branch, TrioronNetwork
+    n_nodes = d["n_nodes_per_layer"]
+    layer_specs: List[Tuple[int, int, str]] = []
+    prev = d["input_dim"]
+    for i, n in enumerate(n_nodes):
+        act = "linear" if i == len(n_nodes) - 1 else "relu"
+        layer_specs.append((prev, n, act))
+        prev = n
+    net = TrioronNetwork(layer_specs)
+    net.load_state_dict(d["state_dict"])
+    net.eval()
+    for p in net.parameters():
+        p.requires_grad_(False)
+    return Branch(
+        label=d.get("label", "donor"),
+        classes_covered=list(d["classes_covered"]),
+        net=net,
+        manifold_stats={
+            int(c): (mu, sg) for c, (mu, sg) in d["manifold_stats"].items()
+        },
+        l0_seed=d.get("l0_seed"),
+        arm=d.get("arm"),
+    )
+
+
+def _branches_from_path(path: str) -> List[Any]:
+    """Load branches from either a single donor checkpoint or a saved
+    multibranch organism. Organisms are expanded into their
+    constituent branches; donors return a 1-element list."""
+    from trioron.multibranch import Branch
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    kind = payload.get("kind")
+    if kind == "multibranch_organism":
+        return [_branch_from_organism_dict(d) for d in payload["branches"]]
+    # Default: donor checkpoint (kind None or "trioron_donor")
+    return [Branch.from_checkpoint(path)]
+
+
 def absorb(
     *,
     donor_paths: Sequence[Union[str, Path]],
     out_path: Union[str, Path],
 ) -> Path:
-    """Assemble a multi-branch organism from saved donors.
+    """Assemble a multi-branch organism from saved donors or organisms.
 
     Zero-shot, no calibration. The shared-L0 invariant is checked:
-    every donor must have been built with the same ``seed`` or this
+    every branch must have been built with the same ``seed`` or this
     raises a ValueError before doing any work.
 
     Args:
-        donor_paths: One or more donor .pt files from
-            :func:`build_donor`.
+        donor_paths: One or more checkpoint files. Each can be:
+            - a donor produced by :func:`build_donor` (single branch), OR
+            - an organism produced by a previous :func:`absorb` call
+              (multi-branch — its branches are expanded inline so the
+              caller doesn't have to un-bundle into individual donors).
         out_path: Where to save the organism .pt.
 
     Returns:
         Path to the saved organism, usable by :func:`load_organism`,
         :func:`evaluate`, and :func:`deploy_agent`.
     """
-    from trioron.multibranch import Branch, MultiBranchOrganism
+    from trioron.multibranch import MultiBranchOrganism
     paths = [str(p) for p in donor_paths]
     if not paths:
         raise ValueError("absorb: donor_paths is empty")
-    branches = [Branch.from_checkpoint(p) for p in paths]
+    branches: List[Any] = []
+    for p in paths:
+        branches.extend(_branches_from_path(p))
     seed_counts: Dict[Any, int] = {}
     for b in branches:
         seed_counts[b.l0_seed] = seed_counts.get(b.l0_seed, 0) + 1
@@ -594,11 +646,52 @@ def extend(
     from experiments import bench_chained_15task as bench
 
     payload = torch.load(str(donor_path), map_location="cpu", weights_only=False)
-    if payload.get("kind") not in (None, "trioron_donor"):
+    payload_kind = payload.get("kind")
+    if payload_kind == "multibranch_organism":
+        # Organism extension semantics: train a fresh single-task
+        # donor on `new_tasks` at the organism's canonical L0 seed
+        # (so the new branch's L0 matches the existing branches),
+        # then absorb the organism + new donor into a 1-larger
+        # organism. `base_tasks` is accepted but only used to
+        # validate consistency (not for boundary-dream replay — the
+        # new branch is independent of existing branches' substrates
+        # at the parameter level; sequential interaction within a
+        # multi-branch organism happens via shared L0, not via the
+        # resume-from-substrate path which assumes a single
+        # substrate). For substrate-level coupling use a single
+        # multi-task donor instead and call extend on that.
+        canonical_seed = int(payload.get("l0_seed", 42))
+        cfg_for_new = config or TrioronConfig(
+            cap_bytes=extension_cap_bytes,
+            advanced=AdvancedConfig(
+                h_init=32, n_grow_per_task=4,
+                l0_width=int(payload["l0_W"].shape[0]),
+                freeze_l0=True,
+            ),
+        )
+        # Train the new branch on the new_tasks.
+        out_path = Path(out_path)
+        new_branch_label = f"{Path(donor_path).stem}__ext"
+        scratch_dir = out_path.parent
+        scratch_dir.mkdir(parents=True, exist_ok=True)
+        new_donor_path = scratch_dir / f"{new_branch_label}.pt"
+        build_donor(
+            label=new_branch_label,
+            tasks=list(new_tasks),
+            seed=canonical_seed,
+            epochs_per_task=epochs_per_task,
+            config=cfg_for_new,
+            out_path=new_donor_path,
+        )
+        # Absorb organism + new donor.
+        return absorb(
+            donor_paths=[donor_path, new_donor_path],
+            out_path=out_path,
+        )
+    if payload_kind not in (None, "trioron_donor"):
         raise ValueError(
             f"extend: {donor_path} is not a donor checkpoint "
-            f"(kind={payload.get('kind')!r}). Absorbed organisms are "
-            "not extendable — extend a single donor before absorbing."
+            f"(kind={payload_kind!r})."
         )
 
     base_arm = payload.get("arm") or "grown_capped_dream"
