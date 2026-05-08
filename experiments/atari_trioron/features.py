@@ -74,11 +74,15 @@ def extract_breakout(ale) -> BreakoutState:
     blocks_left = 0  # not consistently single-byte; skip
     score = int(ram[77])
     lives = int(ram[57])
-    # ball_in_play: nonzero ball_y means ball has been launched.
-    # Right after a brick hit ball_y can briefly read 0; treat that
-    # as in-play for stability by also gating on a recent nonzero
-    # score field, but the simple heuristic is fine for skill rules.
-    ball_in_play = (ball_x != 0 or ball_y != 0)
+    # ball_in_play: nonzero ball_y means ball has been launched. The
+    # earlier `or ball_x != 0` permissiveness was meant to ride
+    # through a 1-frame brick-hit transient where ball_y briefly
+    # reads 0, but it bit us harder on life-loss frames: ball_y goes
+    # to 0 while ball_x persists at its last nonzero value, which
+    # falsely keeps the heuristic True for the rest of the episode
+    # and starves LAUNCH (no FIRE on next-life). Use ball_y alone —
+    # one frame of brick-hit misclassification is recoverable.
+    ball_in_play = (ball_y != 0)
     return BreakoutState(
         paddle_x=paddle_x, ball_x=ball_x, ball_y=ball_y,
         blocks_left=blocks_left, score=score, lives=lives,
