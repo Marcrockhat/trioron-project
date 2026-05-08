@@ -15,8 +15,11 @@ transformers>=4.40
 # cached under ~/.cache/huggingface/.
 piper-tts>=1.4
 # Atari Showcase tab — gymnasium needs ale-py for the ROMs (>=0.10
-# bundles them so AutoROM is no longer required) and moviepy for the
-# RecordVideo wrapper's MP4 encoding.
+# bundles them so AutoROM is no longer required), moviepy for the
+# RecordVideo wrapper's MP4 encoding, and opencv-python-headless for
+# AtariPreprocessing's 84×84 grayscale resize. The headless variant
+# avoids dragging in GUI deps the Space doesn't have.
 gymnasium>=1.0
 ale-py>=0.10
 moviepy>=1.0
+opencv-python-headless>=4.8
