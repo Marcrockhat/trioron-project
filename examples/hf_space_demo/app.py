@@ -1191,8 +1191,15 @@ canonical organisms covering the cross-game architectural matrix:
   Lossless transfer in both directions.
 
 Each click runs one ALE episode end-to-end on the Space CPU
-(~10–30 s per match). The video panel shows the recording; the
+(~30–60 s per match). The video panel shows the recording; the
 summary updates the running per-(organism, game) win/return tally.
+
+**Who's playing which side:**
+- **Pong** — trioron controls the **right (green) paddle**; the
+  built-in ALE AI controls the **left (orange) paddle**. The
+  scoreboard at top reads `[ALE-AI | trioron]`. A return of `+N`
+  means trioron scored N more points than the AI.
+- **Breakout** — trioron controls the bottom paddle (single player).
 
 A **win** is `ret > 0` for Pong (won the match outright) and
 `ret ≥ 20` for Breakout (≥ the hand-coded oracle baseline).
