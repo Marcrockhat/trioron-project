@@ -1058,6 +1058,122 @@ Two buttons for direct A/B:
 BOOK_PRESETS = _load_book_question_sets()
 
 
+# ---------------------------------------------------------------------
+# Tab 4: Atari Showcase — five trioron organisms × two ALE games. One
+# match per click, server-records to MP4, returns video + summary.
+# Running per-(organism, game) win/avg-return tally lives in shared
+# global state (single-tenant Space, same pattern as Drawing tab).
+# ---------------------------------------------------------------------
+
+ATARI_DONORS_DIR = Path(__file__).parent / "atari" / "donors"
+ATARI_VIDEO_DIR = Path("/tmp") / "trioron_atari_videos"
+
+# Which file backs which dropdown label. Order is the canonical
+# narrative arc (single-game → sequential extend → concurrent absorb).
+ATARI_ORGANISMS = {
+    "trioron-P (Pong-only)": "trioron_P.pt",
+    "trioron-B (Breakout-only)": "trioron_B.pt",
+    "trioron-PB (extend Pong→Breakout)": "trioron_PB.pt",
+    "trioron-BP (extend Breakout→Pong)": "trioron_BP.pt",
+    "trioron-PB-absorb (concurrent graft)": "trioron_PB_absorb.pt",
+}
+ATARI_GAMES = ["Pong", "Breakout"]
+# A "win" is game-specific.
+ATARI_WIN_THRESHOLD = {"Pong": 0.5, "Breakout": 20.0}
+
+_ATARI_ORGANISM_CACHE: Dict[str, object] = {}
+
+
+def _atari_load_organism(label: str):
+    if label in _ATARI_ORGANISM_CACHE:
+        return _ATARI_ORGANISM_CACHE[label]
+    fname = ATARI_ORGANISMS[label]
+    path = ATARI_DONORS_DIR / fname
+    org = load_organism(str(path))
+    _ATARI_ORGANISM_CACHE[label] = org
+    return org
+
+
+def _atari_format_stats(stats: Dict) -> str:
+    """stats: {(label, game): {"n": N, "wins": W, "ret_sum": S, "last": R}}"""
+    if not stats:
+        return "_(no matches yet — pick a model + game and click **Play match**.)_"
+    lines = ["| Organism | Game | Last | Wins | Mean return |",
+             "|---|---|---|---|---|"]
+    for (label, game), s in stats.items():
+        mean = s["ret_sum"] / s["n"] if s["n"] else 0.0
+        lines.append(
+            f"| {label} | {game} | {s['last']:+.0f} "
+            f"| {s['wins']}/{s['n']} | {mean:+.2f} |"
+        )
+    return "\n".join(lines)
+
+
+def atari_play_for_ui(label, game, seed, stats):
+    if not label or not game:
+        return None, "_(pick a model and a game first)_", stats, _atari_format_stats(stats)
+    # Lazy heavy imports — gymnasium + ale_py + cv2 are big and we
+    # don't want them paid up-front when other tabs are in use.
+    from atari.inference import play_match
+    import time
+    org = _atari_load_organism(label)
+    ATARI_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+    safe_label = label.split(" ", 1)[0].replace("-", "_")
+    # Microsecond suffix avoids filename collision under concurrent
+    # plays from multiple Space visitors.
+    stamp = int(time.time() * 1e6) % 10_000_000
+    record_name = f"{safe_label}_{game.lower()}_seed{int(seed)}_{stamp}"
+    try:
+        result = play_match(
+            org, game=game, seed=int(seed),
+            record_dir=ATARI_VIDEO_DIR, record_name=record_name,
+        )
+    except Exception as e:
+        return None, f"_(match failed: {type(e).__name__}: {e})_", stats, _atari_format_stats(stats)
+    ret = float(result["return"])
+    win = ret >= ATARI_WIN_THRESHOLD[game]
+    key = (label, game)
+    s = stats.setdefault(key, {"n": 0, "wins": 0, "ret_sum": 0.0, "last": 0.0})
+    s["n"] += 1
+    s["wins"] += int(win)
+    s["ret_sum"] += ret
+    s["last"] = ret
+    summary = (
+        f"**{label}** on **{game}**, seed={int(seed)}\n\n"
+        f"- Return: **{ret:+.0f}**  ({'WIN' if win else 'loss'})\n"
+        f"- Steps: {result['length']}\n"
+        f"- Win threshold: ret ≥ {ATARI_WIN_THRESHOLD[game]:+.0f}\n"
+    )
+    return result["video_path"], summary, stats, _atari_format_stats(stats)
+
+
+def atari_reset_for_ui():
+    return {}, _atari_format_stats({})
+
+
+ATARI_DESCRIPTION = """
+**Trioron playing Pong and Breakout from RAM-extracted state.** Five
+canonical organisms covering the cross-game architectural matrix:
+
+- **Single-game donors** (`trioron-P`, `trioron-B`) — one game each.
+- **Sequential extend** (`trioron-PB`, `trioron-BP`) — substrate is
+  trained on game A, then `api.extend`-ed onto game B. The newer game
+  partly displaces the older one (asymmetric forgetting).
+- **Concurrent absorb** (`trioron-PB-absorb`) — both games' substrates
+  share an L0 seed and are grafted side-by-side via `api.absorb`.
+  Lossless transfer in both directions.
+
+Each click runs one ALE episode end-to-end on the Space CPU
+(~10–30 s per match). The video panel shows the recording; the
+summary updates the running per-(organism, game) win/return tally.
+
+A **win** is `ret > 0` for Pong (won the match outright) and
+`ret ≥ 20` for Breakout (≥ the hand-coded oracle baseline).
+
+*Private demo — please do not share until the paper publishes.*
+"""
+
+
 with gr.Blocks(title="Trioron Demos") as demo:
     gr.Markdown("# Trioron Demos")
     gr.Markdown(
@@ -1231,6 +1347,55 @@ with gr.Blocks(title="Trioron Demos") as demo:
         draw_reset_btn.click(
             fn=drawing_reset_for_ui,
             outputs=[draw_pred_out, draw_status_out],
+        )
+
+    with gr.Tab("Atari Showcase"):
+        gr.Markdown("## Trioron playing Atari — five organisms × two games")
+        gr.Markdown(ATARI_DESCRIPTION)
+
+        atari_stats_state = gr.State({})
+
+        with gr.Row():
+            with gr.Column(scale=1):
+                atari_model = gr.Dropdown(
+                    choices=list(ATARI_ORGANISMS.keys()),
+                    value=list(ATARI_ORGANISMS.keys())[-1],
+                    label="Organism",
+                )
+                atari_game = gr.Dropdown(
+                    choices=ATARI_GAMES, value="Pong", label="Game",
+                )
+                atari_seed = gr.Number(
+                    value=1, precision=0, label="Seed", minimum=0, maximum=9999,
+                )
+                with gr.Row():
+                    atari_play_btn = gr.Button(
+                        "▶ Play match", variant="primary",
+                    )
+                    atari_reset_btn = gr.Button("Reset stats")
+                atari_summary_out = gr.Markdown(
+                    value="_(pick a model + game and click **Play match**.)_",
+                    label="Match summary",
+                )
+            with gr.Column(scale=1):
+                atari_video_out = gr.Video(
+                    label="Match video", autoplay=True, height=320,
+                )
+
+        atari_stats_md = gr.Markdown(
+            value="_(no matches yet — pick a model + game and click **Play match**.)_",
+            label="Running stats",
+        )
+
+        atari_play_btn.click(
+            fn=atari_play_for_ui,
+            inputs=[atari_model, atari_game, atari_seed, atari_stats_state],
+            outputs=[atari_video_out, atari_summary_out,
+                     atari_stats_state, atari_stats_md],
+        )
+        atari_reset_btn.click(
+            fn=atari_reset_for_ui,
+            outputs=[atari_stats_state, atari_stats_md],
         )
 
 

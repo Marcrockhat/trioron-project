@@ -69,6 +69,23 @@ DRAWING_ALLOWLIST = [
     "donor_5digit.pt",
 ]
 
+# atari/ — features.py + state.py + inference.py for the Atari
+# Showcase tab. The 5 canonical organism .pt files in donors/ are
+# shipped via a separate allowlist below.
+ATARI_ALLOWLIST = [
+    "__init__.py",
+    "features.py",
+    "state.py",
+    "inference.py",
+]
+ATARI_DONORS_ALLOWLIST = [
+    "trioron_P.pt",
+    "trioron_B.pt",
+    "trioron_PB.pt",
+    "trioron_BP.pt",
+    "trioron_PB_absorb.pt",
+]
+
 
 def _assemble() -> Path:
     if BUILD_DIR.exists():
@@ -118,6 +135,26 @@ def _assemble() -> Path:
         shutil.copy2(src, drawing_dst / f)
         size_kb = src.stat().st_size / 1024
         print(f"  + drawing/{f}  ({size_kb:.1f} KB)")
+    atari_dst = BUILD_DIR / "atari"
+    atari_dst.mkdir()
+    atari_src = HERE / "atari"
+    for f in ATARI_ALLOWLIST:
+        src = atari_src / f
+        if not src.exists():
+            raise FileNotFoundError(f"required atari file missing: {src}")
+        shutil.copy2(src, atari_dst / f)
+        size_kb = src.stat().st_size / 1024
+        print(f"  + atari/{f}  ({size_kb:.1f} KB)")
+    atari_donors_dst = atari_dst / "donors"
+    atari_donors_dst.mkdir()
+    atari_donors_src = atari_src / "donors"
+    for f in ATARI_DONORS_ALLOWLIST:
+        src = atari_donors_src / f
+        if not src.exists():
+            raise FileNotFoundError(f"required atari donor missing: {src}")
+        shutil.copy2(src, atari_donors_dst / f)
+        size_kb = src.stat().st_size / 1024
+        print(f"  + atari/donors/{f}  ({size_kb:.1f} KB)")
     # Drop a .gitignore for the Space repo itself.
     (BUILD_DIR / ".gitignore").write_text(
         "__pycache__/\n*.pyc\n*.egg-info/\n.pytest_cache/\n"

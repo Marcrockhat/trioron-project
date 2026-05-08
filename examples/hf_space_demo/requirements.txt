@@ -14,3 +14,9 @@ transformers>=4.40
 # rhasspy/piper-voices on the HF Hub on first Piper request, then
 # cached under ~/.cache/huggingface/.
 piper-tts>=1.4
+# Atari Showcase tab — gymnasium needs ale-py for the ROMs (>=0.10
+# bundles them so AutoROM is no longer required) and moviepy for the
+# RecordVideo wrapper's MP4 encoding.
+gymnasium>=1.0
+ale-py>=0.10
+moviepy>=1.0
