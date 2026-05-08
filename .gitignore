@@ -12,6 +12,8 @@ venv/
 outputs/*.csv
 outputs/*.pt
 outputs/data/
+outputs/cifar_donors/
+outputs/cifar_donors_full/
 logs/
 
 # Editor / OS
