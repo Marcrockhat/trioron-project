@@ -1,6 +1,9 @@
-% References used by methods.tex and results.tex.
-% Each entry has been verified against the publisher / arXiv record;
-% see commit message for the verification queries.
+% References for the integrated trioron paper.
+% Earlier entries were verified against publisher / arXiv records during
+% the methods.tex / results.tex commit; later entries cover the new
+% Related Work and Introduction sections.
+
+% --- continual learning: regularization & partition ---
 
 @article{kirkpatrick2017overcoming,
   author    = {Kirkpatrick, James and Pascanu, Razvan and Rabinowitz, Neil and
@@ -27,14 +30,6 @@
   volume    = {80},
   year      = {2018},
   publisher = {PMLR}
-}
-
-@inproceedings{aljundi2017expert,
-  author    = {Aljundi, Rahaf and Chakravarty, Punarjay and Tuytelaars, Tinne},
-  title     = {Expert Gate: Lifelong Learning with a Network of Experts},
-  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-  year      = {2017},
-  pages     = {7120--7129}
 }
 
 @inproceedings{mallya2018packnet,
@@ -68,6 +63,93 @@
   doi       = {10.1109/TPAMI.2017.2773081}
 }
 
+@inproceedings{zenke2017si,
+  author    = {Zenke, Friedemann and Poole, Ben and Ganguli, Surya},
+  title     = {Continual Learning Through Synaptic Intelligence},
+  booktitle = {Proceedings of the 34th International Conference on Machine Learning (ICML)},
+  year      = {2017}
+}
+
+@inproceedings{aljundi2018mas,
+  author    = {Aljundi, Rahaf and Babiloni, Francesca and Elhoseiny, Mohamed and
+               Rohrbach, Marcus and Tuytelaars, Tinne},
+  title     = {Memory Aware Synapses: Learning what (not) to forget},
+  booktitle = {Proceedings of the European Conference on Computer Vision (ECCV)},
+  year      = {2018}
+}
+
+@inproceedings{lopezpaz2017gem,
+  author    = {Lopez-Paz, David and Ranzato, Marc'Aurelio},
+  title     = {Gradient Episodic Memory for Continual Learning},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2017}
+}
+
+% --- constructive / capacity-expanding networks ---
+
+@inproceedings{fahlman1990cascade,
+  author    = {Fahlman, Scott E. and Lebiere, Christian},
+  title     = {The Cascade-Correlation Learning Architecture},
+  booktitle = {Advances in Neural Information Processing Systems (NIPS)},
+  volume    = {2},
+  year      = {1990}
+}
+
+@article{frean1990upstart,
+  author    = {Frean, Marcus},
+  title     = {The Upstart Algorithm: A Method for Constructing and Training Feedforward Neural Networks},
+  journal   = {Neural Computation},
+  year      = {1990},
+  volume    = {2},
+  number    = {2},
+  pages     = {198--209}
+}
+
+@article{kohonen1982som,
+  author    = {Kohonen, Teuvo},
+  title     = {Self-Organized Formation of Topologically Correct Feature Maps},
+  journal   = {Biological Cybernetics},
+  year      = {1982},
+  volume    = {43},
+  number    = {1},
+  pages     = {59--69}
+}
+
+@inproceedings{yoon2018den,
+  author    = {Yoon, Jaehong and Yang, Eunho and Lee, Jeongtae and Hwang, Sung Ju},
+  title     = {Lifelong Learning with Dynamically Expandable Networks},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018}
+}
+
+@misc{rusu2016progressive,
+  author        = {Rusu, Andrei A. and Rabinowitz, Neil C. and Desjardins, Guillaume and
+                   Soyer, Hubert and Kirkpatrick, James and Kavukcuoglu, Koray and
+                   Pascanu, Razvan and Hadsell, Raia},
+  title         = {Progressive Neural Networks},
+  year          = {2016},
+  eprint        = {1606.04671},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@inproceedings{chen2016net2net,
+  author    = {Chen, Tianqi and Goodfellow, Ian and Shlens, Jonathon},
+  title     = {Net2Net: Accelerating Learning via Knowledge Transfer},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2016}
+}
+
+% --- modular composition / mixture-of-experts ---
+
+@inproceedings{aljundi2017expert,
+  author    = {Aljundi, Rahaf and Chakravarty, Punarjay and Tuytelaars, Tinne},
+  title     = {Expert Gate: Lifelong Learning with a Network of Experts},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2017},
+  pages     = {7120--7129}
+}
+
 @misc{li2022btm,
   author        = {Li, Margaret and Gururangan, Suchin and Dettmers, Tim and
                    Lewis, Mike and Althoff, Tim and Smith, Noah A. and
@@ -89,4 +171,122 @@
   eprint        = {2403.07816},
   archivePrefix = {arXiv},
   primaryClass  = {cs.CL}
+}
+
+% --- pseudo-rehearsal / data-free distillation ---
+
+@inproceedings{yin2020deepinversion,
+  author    = {Yin, Hongxu and Molchanov, Pavlo and Alvarez, Jose M. and
+               Li, Zhizhong and Mallya, Arun and Hoiem, Derek and
+               Jha, Niraj K. and Kautz, Jan},
+  title     = {Dreaming to Distill: Data-free Knowledge Transfer via {DeepInversion}},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2020}
+}
+
+% --- biological inspiration ---
+
+@article{wolpert1969positional,
+  author    = {Wolpert, Lewis},
+  title     = {Positional information and the spatial pattern of cellular differentiation},
+  journal   = {Journal of Theoretical Biology},
+  year      = {1969},
+  volume    = {25},
+  number    = {1},
+  pages     = {1--47}
+}
+
+@article{smith2013dna,
+  author    = {Smith, Zachary D. and Meissner, Alexander},
+  title     = {{DNA} methylation: roles in mammalian development},
+  journal   = {Nature Reviews Genetics},
+  year      = {2013},
+  volume    = {14},
+  number    = {3},
+  pages     = {204--220}
+}
+
+@article{bannister2011histone,
+  author    = {Bannister, Andrew J. and Kouzarides, Tony},
+  title     = {Regulation of chromatin by histone modifications},
+  journal   = {Cell Research},
+  year      = {2011},
+  volume    = {21},
+  number    = {3},
+  pages     = {381--395}
+}
+
+@article{allis2016hallmarks,
+  author    = {Allis, C. David and Jenuwein, Thomas},
+  title     = {The molecular hallmarks of epigenetic control},
+  journal   = {Nature Reviews Genetics},
+  year      = {2016},
+  volume    = {17},
+  number    = {8},
+  pages     = {487--500}
+}
+
+@article{bartel2009micrornas,
+  author    = {Bartel, David P.},
+  title     = {{MicroRNAs}: Target Recognition and Regulatory Functions},
+  journal   = {Cell},
+  year      = {2009},
+  volume    = {136},
+  number    = {2},
+  pages     = {215--233}
+}
+
+@article{schratt2009micrornas,
+  author    = {Schratt, Gerhard},
+  title     = {{microRNAs} at the synapse},
+  journal   = {Nature Reviews Neuroscience},
+  year      = {2009},
+  volume    = {10},
+  number    = {12},
+  pages     = {842--849}
+}
+
+@article{tononi2014sleep,
+  author    = {Tononi, Giulio and Cirelli, Chiara},
+  title     = {Sleep and the Price of Plasticity},
+  journal   = {Neuron},
+  year      = {2014},
+  volume    = {81},
+  number    = {1},
+  pages     = {12--34}
+}
+
+@article{kagan2022dishbrain,
+  author    = {Kagan, Brett J. and Kitchen, Andy C. and Tran, Nhi T. and
+               Habibollahi, Forough and Khajehnejad, Moein and Parker, Bradyn J. and
+               Bhat, Anjali and Rollo, Ben and Razi, Adeel and Friston, Karl J.},
+  title     = {In vitro neurons learn and exhibit sentience when embodied in a simulated game-world},
+  journal   = {Neuron},
+  year      = {2022},
+  volume    = {110},
+  number    = {23},
+  pages     = {3952--3969.e8},
+  doi       = {10.1016/j.neuron.2022.09.001}
+}
+
+% --- AI-collaboration disclosure guidance ---
+
+@article{nature2023chatgpt,
+  author    = {{Nature Editorial}},
+  title     = {Tools such as {ChatGPT} threaten transparent science; here are our ground rules for their use},
+  journal   = {Nature},
+  year      = {2023},
+  volume    = {613},
+  pages     = {612},
+  doi       = {10.1038/d41586-023-00191-1}
+}
+
+@article{zielinski2023wame,
+  author    = {Zielinski, Chris and Winker, Margaret A. and Aggarwal, Rakesh and
+               Ferris, Lorraine E. and Heinemann, Markus and Lapena, Jose Florencio
+               and Pai, Sanjay A. and Ing, Edsel and Citrome, Leslie and Alam, Murad
+               and Voight, Maurice and Habibzadeh, Farrokh},
+  title     = {Chatbots, Generative {AI}, and Scholarly Manuscripts: {WAME} Recommendations},
+  journal   = {World Association of Medical Editors},
+  year      = {2023}
 }

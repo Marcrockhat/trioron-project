@@ -1,0 +1,205 @@
+\begin{thebibliography}{28}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Aljundi et~al.(2017)Aljundi, Chakravarty, and
+  Tuytelaars]{aljundi2017expert}
+Rahaf Aljundi, Punarjay Chakravarty, and Tinne Tuytelaars.
+\newblock Expert gate: Lifelong learning with a network of experts.
+\newblock In \emph{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, pages 7120--7129, 2017.
+
+\bibitem[Aljundi et~al.(2018)Aljundi, Babiloni, Elhoseiny, Rohrbach, and
+  Tuytelaars]{aljundi2018mas}
+Rahaf Aljundi, Francesca Babiloni, Mohamed Elhoseiny, Marcus Rohrbach, and
+  Tinne Tuytelaars.
+\newblock Memory aware synapses: Learning what (not) to forget.
+\newblock In \emph{Proceedings of the European Conference on Computer Vision
+  (ECCV)}, 2018.
+
+\bibitem[Allis and Jenuwein(2016)]{allis2016hallmarks}
+C.~David Allis and Thomas Jenuwein.
+\newblock The molecular hallmarks of epigenetic control.
+\newblock \emph{Nature Reviews Genetics}, 17\penalty0 (8):\penalty0 487--500,
+  2016.
+
+\bibitem[Bannister and Kouzarides(2011)]{bannister2011histone}
+Andrew~J. Bannister and Tony Kouzarides.
+\newblock Regulation of chromatin by histone modifications.
+\newblock \emph{Cell Research}, 21\penalty0 (3):\penalty0 381--395, 2011.
+
+\bibitem[Bartel(2009)]{bartel2009micrornas}
+David~P. Bartel.
+\newblock {MicroRNAs}: Target recognition and regulatory functions.
+\newblock \emph{Cell}, 136\penalty0 (2):\penalty0 215--233, 2009.
+
+\bibitem[Chen et~al.(2016)Chen, Goodfellow, and Shlens]{chen2016net2net}
+Tianqi Chen, Ian Goodfellow, and Jonathon Shlens.
+\newblock Net2net: Accelerating learning via knowledge transfer.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2016.
+
+\bibitem[Fahlman and Lebiere(1990)]{fahlman1990cascade}
+Scott~E. Fahlman and Christian Lebiere.
+\newblock The cascade-correlation learning architecture.
+\newblock In \emph{Advances in Neural Information Processing Systems (NIPS)},
+  volume~2, 1990.
+
+\bibitem[Frean(1990)]{frean1990upstart}
+Marcus Frean.
+\newblock The upstart algorithm: A method for constructing and training
+  feedforward neural networks.
+\newblock \emph{Neural Computation}, 2\penalty0 (2):\penalty0 198--209, 1990.
+
+\bibitem[Kagan et~al.(2022)Kagan, Kitchen, Tran, Habibollahi, Khajehnejad,
+  Parker, Bhat, Rollo, Razi, and Friston]{kagan2022dishbrain}
+Brett~J. Kagan, Andy~C. Kitchen, Nhi~T. Tran, Forough Habibollahi, Moein
+  Khajehnejad, Bradyn~J. Parker, Anjali Bhat, Ben Rollo, Adeel Razi, and
+  Karl~J. Friston.
+\newblock In vitro neurons learn and exhibit sentience when embodied in a
+  simulated game-world.
+\newblock \emph{Neuron}, 110\penalty0 (23):\penalty0 3952--3969.e8, 2022.
+\newblock \doi{10.1016/j.neuron.2022.09.001}.
+
+\bibitem[Kirkpatrick et~al.(2017)Kirkpatrick, Pascanu, Rabinowitz, Veness,
+  Desjardins, Rusu, Milan, Quan, Ramalho, Grabska-Barwinska, Hassabis, Clopath,
+  Kumaran, and Hadsell]{kirkpatrick2017overcoming}
+James Kirkpatrick, Razvan Pascanu, Neil Rabinowitz, Joel Veness, Guillaume
+  Desjardins, Andrei~A. Rusu, Kieran Milan, John Quan, Tiago Ramalho, Agnieszka
+  Grabska-Barwinska, Demis Hassabis, Claudia Clopath, Dharshan Kumaran, and
+  Raia Hadsell.
+\newblock Overcoming catastrophic forgetting in neural networks.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 114\penalty0
+  (13):\penalty0 3521--3526, 2017.
+\newblock \doi{10.1073/pnas.1611835114}.
+
+\bibitem[Kohonen(1982)]{kohonen1982som}
+Teuvo Kohonen.
+\newblock Self-organized formation of topologically correct feature maps.
+\newblock \emph{Biological Cybernetics}, 43\penalty0 (1):\penalty0 59--69,
+  1982.
+
+\bibitem[Li et~al.(2022)Li, Gururangan, Dettmers, Lewis, Althoff, Smith, and
+  Zettlemoyer]{li2022btm}
+Margaret Li, Suchin Gururangan, Tim Dettmers, Mike Lewis, Tim Althoff, Noah~A.
+  Smith, and Luke Zettlemoyer.
+\newblock Branch-train-merge: Embarrassingly parallel training of expert
+  language models, 2022.
+
+\bibitem[Li and Hoiem(2018)]{li2018lwf}
+Zhizhong Li and Derek Hoiem.
+\newblock Learning without forgetting.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}, 40\penalty0 (12):\penalty0 2935--2947, 2018.
+\newblock \doi{10.1109/TPAMI.2017.2773081}.
+
+\bibitem[Lopez-Paz and Ranzato(2017)]{lopezpaz2017gem}
+David Lopez-Paz and Marc'Aurelio Ranzato.
+\newblock Gradient episodic memory for continual learning.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2017.
+
+\bibitem[Mallya and Lazebnik(2018)]{mallya2018packnet}
+Arun Mallya and Svetlana Lazebnik.
+\newblock {PackNet}: Adding multiple tasks to a single network by iterative
+  pruning.
+\newblock In \emph{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, pages 7765--7773, 2018.
+
+\bibitem[{Nature Editorial}(2023)]{nature2023chatgpt}
+{Nature Editorial}.
+\newblock Tools such as {ChatGPT} threaten transparent science; here are our
+  ground rules for their use.
+\newblock \emph{Nature}, 613:\penalty0 612, 2023.
+\newblock \doi{10.1038/d41586-023-00191-1}.
+
+\bibitem[Rusu et~al.(2016)Rusu, Rabinowitz, Desjardins, Soyer, Kirkpatrick,
+  Kavukcuoglu, Pascanu, and Hadsell]{rusu2016progressive}
+Andrei~A. Rusu, Neil~C. Rabinowitz, Guillaume Desjardins, Hubert Soyer, James
+  Kirkpatrick, Koray Kavukcuoglu, Razvan Pascanu, and Raia Hadsell.
+\newblock Progressive neural networks, 2016.
+
+\bibitem[Schratt(2009)]{schratt2009micrornas}
+Gerhard Schratt.
+\newblock {microRNAs} at the synapse.
+\newblock \emph{Nature Reviews Neuroscience}, 10\penalty0 (12):\penalty0
+  842--849, 2009.
+
+\bibitem[Schwarz et~al.(2018)Schwarz, Luketina, Czarnecki, Grabska-Barwinska,
+  Teh, Pascanu, and Hadsell]{schwarz2018progress}
+Jonathan Schwarz, Jelena Luketina, Wojciech~M. Czarnecki, Agnieszka
+  Grabska-Barwinska, Yee~Whye Teh, Razvan Pascanu, and Raia Hadsell.
+\newblock Progress \& {C}ompress: A scalable framework for continual learning.
+\newblock In \emph{Proceedings of the 35th International Conference on Machine
+  Learning (ICML)}, volume~80 of \emph{Proceedings of Machine Learning
+  Research}. PMLR, 2018.
+
+\bibitem[Serr{\`a} et~al.(2018)Serr{\`a}, Sur{\'\i}s, Miron, and
+  Karatzoglou]{serra2018hat}
+Joan Serr{\`a}, D{\'\i}dac Sur{\'\i}s, Marius Miron, and Alexandros
+  Karatzoglou.
+\newblock Overcoming catastrophic forgetting with hard attention to the task.
+\newblock In \emph{Proceedings of the 35th International Conference on Machine
+  Learning (ICML)}, volume~80 of \emph{Proceedings of Machine Learning
+  Research}, pages 4548--4557. PMLR, 2018.
+
+\bibitem[Smith and Meissner(2013)]{smith2013dna}
+Zachary~D. Smith and Alexander Meissner.
+\newblock {DNA} methylation: roles in mammalian development.
+\newblock \emph{Nature Reviews Genetics}, 14\penalty0 (3):\penalty0 204--220,
+  2013.
+
+\bibitem[Sukhbaatar et~al.(2024)Sukhbaatar, Golovneva, Sharma, Xu, Lin,
+  Rozi{\`e}re, Kahn, Li, Yih, Weston, and Li]{sukhbaatar2024btx}
+Sainbayar Sukhbaatar, Olga Golovneva, Vasu Sharma, Hu~Xu, Xi~Victoria Lin,
+  Baptiste Rozi{\`e}re, Jacob Kahn, Daniel Li, Wen-tau Yih, Jason Weston, and
+  Xian Li.
+\newblock Branch-train-{M}i{X}: Mixing expert {LLM}s into a mixture-of-experts
+  {LLM}, 2024.
+
+\bibitem[Tononi and Cirelli(2014)]{tononi2014sleep}
+Giulio Tononi and Chiara Cirelli.
+\newblock Sleep and the price of plasticity.
+\newblock \emph{Neuron}, 81\penalty0 (1):\penalty0 12--34, 2014.
+
+\bibitem[Wolpert(1969)]{wolpert1969positional}
+Lewis Wolpert.
+\newblock Positional information and the spatial pattern of cellular
+  differentiation.
+\newblock \emph{Journal of Theoretical Biology}, 25\penalty0 (1):\penalty0
+  1--47, 1969.
+
+\bibitem[Yin et~al.(2020)Yin, Molchanov, Alvarez, Li, Mallya, Hoiem, Jha, and
+  Kautz]{yin2020deepinversion}
+Hongxu Yin, Pavlo Molchanov, Jose~M. Alvarez, Zhizhong Li, Arun Mallya, Derek
+  Hoiem, Niraj~K. Jha, and Jan Kautz.
+\newblock Dreaming to distill: Data-free knowledge transfer via
+  {DeepInversion}.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, 2020.
+
+\bibitem[Yoon et~al.(2018)Yoon, Yang, Lee, and Hwang]{yoon2018den}
+Jaehong Yoon, Eunho Yang, Jeongtae Lee, and Sung~Ju Hwang.
+\newblock Lifelong learning with dynamically expandable networks.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2018.
+
+\bibitem[Zenke et~al.(2017)Zenke, Poole, and Ganguli]{zenke2017si}
+Friedemann Zenke, Ben Poole, and Surya Ganguli.
+\newblock Continual learning through synaptic intelligence.
+\newblock In \emph{Proceedings of the 34th International Conference on Machine
+  Learning (ICML)}, 2017.
+
+\bibitem[Zielinski et~al.(2023)Zielinski, Winker, Aggarwal, Ferris, Heinemann,
+  Lapena, Pai, Ing, Citrome, Alam, Voight, and Habibzadeh]{zielinski2023wame}
+Chris Zielinski, Margaret~A. Winker, Rakesh Aggarwal, Lorraine~E. Ferris,
+  Markus Heinemann, Jose~Florencio Lapena, Sanjay~A. Pai, Edsel Ing, Leslie
+  Citrome, Murad Alam, Maurice Voight, and Farrokh Habibzadeh.
+\newblock Chatbots, generative {AI}, and scholarly manuscripts: {WAME}
+  recommendations.
+\newblock \emph{World Association of Medical Editors}, 2023.
+
+\end{thebibliography}
