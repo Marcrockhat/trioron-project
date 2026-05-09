@@ -331,6 +331,7 @@ def build_donor(
     config: Optional[TrioronConfig] = None,
     out_path: Union[str, Path],
     arm: str = "grown_capped_dream",
+    n_passes: int = 1,
 ) -> Path:
     """Train one trioron donor on a user-supplied curriculum.
 
@@ -350,6 +351,11 @@ def build_donor(
             the production configuration. Other choices: ``grown_uncapped_dream``
             (no cap_bytes ceiling), ``grown_capped_no_dream`` (ablate
             consolidation).
+        n_passes: Number of full sweeps through the curriculum.
+            Default 1 matches paper. Multi-pass (2-5) helps with
+            curriculum forgetting on long curricula — each pass
+            revisits early tasks, manifold archive accumulates more
+            replay points, growth budget compounds.
 
     Returns:
         Path to the saved donor checkpoint, suitable for
@@ -387,7 +393,7 @@ def build_donor(
             eval_views=eval_views,
             task_class_lists=task_class_lists,
             infancy_view=None,
-            n_passes=1,
+            n_passes=int(n_passes),
             return_state=True,
         )
     finally:
