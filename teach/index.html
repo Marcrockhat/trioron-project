@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trioron — a teaching petri dish</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>trioron <span class="muted">— a teaching petri dish</span></h1>
+  <p class="lead">Watch a single substrate cell grow into a population that learns to feel.
+    Each chapter has one knob — the same one you'd pass into the <code>trioron</code> API.</p>
+</header>
+
+<main>
+  <section class="stage">
+    <canvas id="dish" width="780" height="520"></canvas>
+    <canvas id="inset" width="160" height="160" title="decision boundary in valence–arousal space"></canvas>
+    <div id="population-readout" class="readout">population: <span id="pop-count">0</span> / <span id="pop-cap">200</span></div>
+  </section>
+
+  <section class="caption">
+    <div class="chapter-label"><span id="chapter-num">1</span> / <span id="chapter-total">3</span> — <span id="chapter-title">Genesis</span></div>
+    <p id="chapter-caption">this is the substrate. it knows nothing yet.</p>
+  </section>
+
+  <section class="controls">
+    <div class="knob-panel">
+      <label for="knob"><span id="knob-label">l0_dim</span></label>
+      <input type="range" id="knob" min="1" max="32" step="1" value="8">
+      <span id="knob-value" class="mono">8</span>
+    </div>
+
+    <div class="stepper">
+      <button id="prev" disabled>&larr; prev</button>
+      <button id="replay">replay scene</button>
+      <button id="next">next &rarr;</button>
+    </div>
+  </section>
+
+  <section class="speed-panel">
+    <label for="speed">simulation speed</label>
+    <input type="range" id="speed" min="0.1" max="2.0" step="0.05" value="1.0">
+    <span id="speed-value" class="mono">1.00×</span>
+    <span class="speed-hint muted">slow it down to watch the red frustration glow build before fission fires</span>
+  </section>
+
+  <section class="knob-info">
+    <div class="kif-row"><span class="kif-tag low">↓ low</span><span id="knob-low"></span></div>
+    <div class="kif-row"><span class="kif-tag high">↑ high</span><span id="knob-high"></span></div>
+    <div class="kif-row"><span class="kif-tag map">visual</span><span id="knob-maps"></span></div>
+  </section>
+
+  <section class="api-readout">
+    <p><span class="muted">trioron API equivalent:</span> <code id="api-call">trioron.Substrate(l0_dim=8)</code></p>
+  </section>
+
+  <section class="math-readout">
+    <details>
+      <summary>geometry &amp; mechanics — the math</summary>
+<pre class="math-block">
+valence(x) = 2·(x − cx) / W     ∈ [−1, +1]    (positive = right side of dish)
+arousal(y) = 2·(cy − y) / H     ∈ [−1, +1]    (positive = upper half)
+
+cell.specialty (hue 0..360°) = atan2(arousal(cell), valence(cell))
+classify(point): nearest cell wins; correct iff hueDist(specialty, label) &lt; 50°
+
+frustration += 0.06 per miss; decays ×0.992 per tick
+fission fires when frustration > frustration_threshold
+
+absorption fires when |donor − host| &lt; absorption_radius
+              AND donor.seedColor == host.seedColor   (or seed_match_required = 0)
+
+dream: each tick picks nearby cell pairs, flares a synaptic downscale between them,
+       capped at max_downscales_per_layer total flares per dream phase
+
+apoptosis: cells with firing-recency > 200 ticks fade out; floor at MIN_LIVE_POP = 5
+
+inner_ring_radius (L0) = 2 + l0_dim × 0.5
+body_radius        (L0 + L1) = inner_ring_radius + branch_width × 0.5
+</pre>
+    </details>
+  </section>
+
+  <section class="legend">
+    <h3>legend</h3>
+    <ul class="legend-grid">
+      <li><span class="lg-swatch" style="background:hsl(200,75%,55%)"></span>inner ring — L0 substrate (radius ∝ <code>l0_dim</code>, color = lineage seed)</li>
+      <li><span class="lg-swatch" style="background:hsl(50,32%,58%)"></span>outer body — L1 branch (added radius ∝ <code>branch_width</code>, color = specialty)</li>
+      <li><span class="lg-swatch" style="background:hsl(200,75%,55%); border-radius:50%; box-shadow:inset 0 0 0 1px hsla(200,75%,55%,1)"></span>genesis-only — outer body = inner ring (pure substrate, no branch yet)</li>
+      <li><span class="lg-swatch" style="background:radial-gradient(circle, rgba(230,80,80,0.6), transparent 70%)"></span>red glow — frustration accumulating</li>
+      <li><span class="lg-swatch lg-dashed" style="border-color:hsl(35,60%,70%)"></span>dashed circle — donor's absorption_radius reach</li>
+      <li><span class="lg-swatch" style="background:hsla(50,80%,65%,0.85)"></span>yellow dot — HAPPY (valence+, mid arousal)</li>
+      <li><span class="lg-swatch" style="background:hsla(230,80%,65%,0.85)"></span>blue dot — SAD (valence−, mid arousal)</li>
+      <li><span class="lg-swatch" style="background:hsla(0,80%,65%,0.85)"></span>red dot — ANGRY (arousal+, mid valence)</li>
+      <li><span class="lg-swatch" style="background:hsla(130,80%,65%,0.85)"></span>green dot — CALM (arousal−, mid valence)</li>
+      <li><span class="lg-swatch lg-ghost" style="background:hsla(50,80%,65%,0.4)"></span>faint dot — manifold replay (ghost) point</li>
+      <li><span class="lg-swatch" style="background:hsla(180,90%,75%,0.7)"></span>blue line — synaptic downscale flare during dream</li>
+      <li><span class="lg-swatch" style="background:rgba(246,201,113,0.7)"></span>yellow flash — fission event</li>
+      <li><span class="lg-swatch" style="background:rgba(150,220,180,0.7)"></span>green flash — successful absorption</li>
+      <li><span class="lg-swatch" style="background:rgba(230,140,80,0.7)"></span>orange flash — forced merge (corrupted)</li>
+      <li><span class="lg-swatch" style="background:rgba(230,80,80,0.7)"></span>red flash — bounce / frustration</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <p class="muted">A static teaching companion. No backend, no inference — just JS + Canvas. <a href="https://github.com/marcrockhat/trioron-project">source</a></p>
+</footer>
+
+<script src="engine.js"></script>
+<script src="scenes.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
