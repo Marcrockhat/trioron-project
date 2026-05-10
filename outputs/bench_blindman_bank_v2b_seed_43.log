@@ -1,0 +1,87 @@
+Blindman positional bank v2 — bank+aug + decisive trioron
+  grid=4  patches=16  patch_dim=192
+  l0_dim=128  h1=32  decisive_h=256
+  bank_epochs=30  decisive_epochs=30  batch=256  lr=0.001
+  device=cpu  seed=43  decisive_aug=True
+[data] loading CIFAR-100 ...
+  train: (50000, 3, 32, 32)  test: (10000, 3, 32, 32)
+  bank trainable params: 119376  (per branch: 7461)
+[Phase A] training bank with CIFAR augmentation ...
+  [bank] epoch   1/30  loss 4.8767  (11.6s)
+  [bank] epoch   2/30  loss 4.5230  (7.2s)
+  [bank] epoch   3/30  loss 4.4363  (8.9s)
+  [bank] epoch   4/30  loss 4.3926  (9.0s)
+  [bank] epoch   5/30  loss 4.3609  (8.6s)
+  [bank] epoch   6/30  loss 4.3361  (6.1s)
+  [bank] epoch   7/30  loss 4.3161  (8.5s)
+  [bank] epoch   8/30  loss 4.2997  (8.5s)
+  [bank] epoch   9/30  loss 4.2886  (6.2s)
+  [bank] epoch  10/30  loss 4.2750  (9.1s)
+  [bank] epoch  11/30  loss 4.2641  (8.5s)
+  [bank] epoch  12/30  loss 4.2529  (8.2s)
+  [bank] epoch  13/30  loss 4.2449  (6.0s)
+  [bank] epoch  14/30  loss 4.2375  (8.5s)
+  [bank] epoch  15/30  loss 4.2312  (8.5s)
+  [bank] epoch  16/30  loss 4.2245  (8.6s)
+  [bank] epoch  17/30  loss 4.2195  (5.8s)
+  [bank] epoch  18/30  loss 4.2139  (9.0s)
+  [bank] epoch  19/30  loss 4.2103  (8.7s)
+  [bank] epoch  20/30  loss 4.2057  (8.3s)
+  [bank] epoch  21/30  loss 4.1993  (6.1s)
+  [bank] epoch  22/30  loss 4.1950  (8.5s)
+  [bank] epoch  23/30  loss 4.1943  (8.5s)
+  [bank] epoch  24/30  loss 4.1903  (8.5s)
+  [bank] epoch  25/30  loss 4.1852  (6.0s)
+  [bank] epoch  26/30  loss 4.1820  (8.5s)
+  [bank] epoch  27/30  loss 4.1798  (8.5s)
+  [bank] epoch  28/30  loss 4.1789  (6.0s)
+  [bank] epoch  29/30  loss 4.1738  (8.5s)
+  [bank] epoch  30/30  loss 4.1707  (8.5s)
+
+[eval] bank uniform (post-aug training): 0.2110
+       v1 reference (no aug):            0.2402
+
+[Phase B] decisive trioron: in_dim=1616  h=256  params=439652
+  [decisive] epoch   1/30  loss 3.7359  (7.3s)
+  [decisive] epoch   2/30  loss 3.3425  (4.8s)
+  [decisive] epoch   3/30  loss 3.2240  (7.2s)
+  [decisive] epoch   4/30  loss 3.1538  (7.2s)
+  [decisive] epoch   5/30  loss 3.1019  (7.2s)
+  [decisive] epoch   6/30  loss 3.0668  (7.2s)
+  [decisive] epoch   7/30  loss 3.0255  (5.0s)
+  [decisive] epoch   8/30  loss 3.0079  (7.5s)
+  [decisive] epoch   9/30  loss 2.9901  (7.6s)
+  [decisive] epoch  10/30  loss 2.9713  (7.5s)
+  [decisive] epoch  11/30  loss 2.9561  (4.7s)
+  [decisive] epoch  12/30  loss 2.9429  (7.5s)
+  [decisive] epoch  13/30  loss 2.9314  (7.3s)
+  [decisive] epoch  14/30  loss 2.9285  (7.2s)
+  [decisive] epoch  15/30  loss 2.9129  (7.1s)
+  [decisive] epoch  16/30  loss 2.9043  (7.2s)
+  [decisive] epoch  17/30  loss 2.8997  (7.4s)
+  [decisive] epoch  18/30  loss 2.8909  (3.6s)
+  [decisive] epoch  19/30  loss 2.8898  (7.5s)
+  [decisive] epoch  20/30  loss 2.8759  (7.2s)
+  [decisive] epoch  21/30  loss 2.8680  (7.3s)
+  [decisive] epoch  22/30  loss 2.8589  (4.8s)
+  [decisive] epoch  23/30  loss 2.8661  (7.2s)
+  [decisive] epoch  24/30  loss 2.8578  (7.4s)
+  [decisive] epoch  25/30  loss 2.8525  (7.0s)
+  [decisive] epoch  26/30  loss 2.8483  (7.3s)
+  [decisive] epoch  27/30  loss 2.8428  (4.5s)
+  [decisive] epoch  28/30  loss 2.8413  (7.3s)
+  [decisive] epoch  29/30  loss 2.8387  (7.4s)
+  [decisive] epoch  30/30  loss 2.8357  (7.1s)
+
+==============================================================================
+V2 RESULT — CIFAR-100 test accuracy
+==============================================================================
+mode                                      accuracy
+------------------------------------------------------------------------------
+v1 baseline (no aug, uniform)             0.2402
+v2 bank uniform (with aug)                0.2110
+v2 decisive trioron on bank features      0.3124
+
+Total params: bank 119376 + decisive 439652 = 559028
+
+Done.

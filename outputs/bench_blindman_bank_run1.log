@@ -1,0 +1,58 @@
+Blindman positional bank — CIFAR-100 v1 smoke test
+  grid=4  patches=16  patch_dim=192
+  l0_dim=128  h1=32  epochs=30  batch=256  lr=0.001  α=1.0  saliency_weight=1.0
+  device=cpu
+[data] loading CIFAR-100 ...
+  train: (50000, 3, 32, 32)  test: (10000, 3, 32, 32)
+  patches: train (50000, 16, 192)  test (10000, 16, 192)
+  trainable params: 119376  (per branch: 7461)
+[train] joint bank training (CE + λ·MSE saliency) ...
+  epoch   1/30  loss 4.8180  (6.8s)
+  epoch   2/30  loss 4.4510  (7.9s)
+  epoch   3/30  loss 4.3517  (8.4s)
+  epoch   4/30  loss 4.2967  (5.9s)
+  epoch   5/30  loss 4.2585  (7.0s)
+  epoch   6/30  loss 4.2282  (6.0s)
+  epoch   7/30  loss 4.2062  (6.5s)
+  epoch   8/30  loss 4.1847  (5.4s)
+  epoch   9/30  loss 4.1682  (5.4s)
+  epoch  10/30  loss 4.1528  (5.3s)
+  epoch  11/30  loss 4.1396  (1.6s)
+  epoch  12/30  loss 4.1275  (4.9s)
+  epoch  13/30  loss 4.1166  (5.5s)
+  epoch  14/30  loss 4.1071  (5.0s)
+  epoch  15/30  loss 4.0978  (5.2s)
+  epoch  16/30  loss 4.0901  (5.4s)
+  epoch  17/30  loss 4.0824  (4.5s)
+  epoch  18/30  loss 4.0738  (5.7s)
+  epoch  19/30  loss 4.0685  (5.1s)
+  epoch  20/30  loss 4.0624  (5.2s)
+  epoch  21/30  loss 4.0563  (5.1s)
+  epoch  22/30  loss 4.0514  (5.3s)
+  epoch  23/30  loss 4.0459  (2.5s)
+  epoch  24/30  loss 4.0422  (5.5s)
+  epoch  25/30  loss 4.0370  (5.2s)
+  epoch  26/30  loss 4.0323  (5.3s)
+  epoch  27/30  loss 4.0290  (5.2s)
+  epoch  28/30  loss 4.0252  (5.0s)
+  epoch  29/30  loss 4.0213  (5.1s)
+  epoch  30/30  loss 4.0177  (2.6s)
+[archive] building per-(branch, class) diagonal-Gaussian archive ...
+
+==============================================================================
+EVAL — full-softmax accuracy on CIFAR-100 test set
+==============================================================================
+mode              α    accuracy
+------------------------------------------------------------------------------
+uniform        0.00      0.2402
+archive        0.00      0.0804
+saliency       0.00      0.2150
+combined       1.00      0.0800
+
+Per-branch mean gate (combined mode):
+   0.181  0.014  0.012  0.169 
+   0.016  0.070  0.062  0.019 
+   0.030  0.032  0.043  0.028 
+   0.129  0.027  0.025  0.142 
+
+Done.

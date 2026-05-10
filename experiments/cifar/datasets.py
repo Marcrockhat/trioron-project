@@ -32,6 +32,28 @@ def load_cifar100(
     return images, labels
 
 
+def cifar100_fine_to_coarse(root: str = DEFAULT_DATA_ROOT) -> torch.Tensor:
+    """Returns int64 tensor (100,) mapping fine class id → coarse (superclass) id.
+
+    Reads the pickle directly because torchvision.datasets.CIFAR100 doesn't
+    surface coarse labels. CIFAR-100 has 20 superclasses × 5 fine classes each.
+    """
+    import pickle
+    path = os.path.join(root, "cifar-100-python", "train")
+    with open(path, "rb") as f:
+        d = pickle.load(f, encoding="latin1")
+    fine = d["fine_labels"]
+    coarse = d["coarse_labels"]
+    mapping = torch.full((100,), -1, dtype=torch.long)
+    for f_lbl, c_lbl in zip(fine, coarse):
+        if mapping[f_lbl] >= 0 and mapping[f_lbl] != c_lbl:
+            raise RuntimeError(f"Inconsistent fine→coarse for fine={f_lbl}")
+        mapping[f_lbl] = c_lbl
+    if (mapping < 0).any():
+        raise RuntimeError("Some fine classes never appeared in train set")
+    return mapping
+
+
 def _filter_classes(
     images: torch.Tensor,
     labels: torch.Tensor,
