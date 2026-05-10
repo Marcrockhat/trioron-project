@@ -1,0 +1,193 @@
+Curriculum: 9 tasks
+  BALL_VERTICAL              classes=[100, 101, 102]  (['BALL_HIGH', 'BALL_MID', 'BALL_LOW'])
+  BALL_HORIZONTAL            classes=[103, 104, 105]  (['BALL_LEFT', 'BALL_CENTER', 'BALL_RIGHT'])
+  PADDLE_VERTICAL            classes=[110, 111, 112]  (['PADDLE_HIGH', 'PADDLE_MID', 'PADDLE_LOW'])
+  BALL_MOTION_VERTICAL       classes=[120, 121]  (['BALL_GOING_UP', 'BALL_GOING_DOWN'])
+  BALL_MOTION_HORIZONTAL     classes=[122, 123]  (['BALL_GOING_LEFT', 'BALL_GOING_RIGHT'])
+  BALL_SPEED                 classes=[130, 131]  (['BALL_FAST', 'BALL_SLOW'])
+  BALL_PADDLE_VERTICAL       classes=[140, 141, 142]  (['BALL_ABOVE_PADDLE', 'BALL_ALIGNED_WITH_PADDLE', 'BALL_BELOW_PADDLE'])
+  BALL_PADDLE_APPROACH       classes=[150, 151]  (['BALL_APPROACHING_PADDLE', 'BALL_RECEDING_FROM_PADDLE'])
+  PONG_ACTION                classes=[200, 201, 202]  (['PONG_ACTION_UP', 'PONG_ACTION_DOWN', 'PONG_ACTION_HOLD'])
+
+build_donor — cap_bytes=64000, epochs/task=8, seed=42
+
+[grown_capped_dream] start — arch (64, 32, 2)  params 2722 (trainable 2146)  growth=True dream=True  cap_bytes=64000  K=9  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/9: BALL_VERTICAL (active [100, 101, 102])  pre-arch=[64, 32, 103] params=6055 (trainable 5479/16000) ===
+  [grown_capped_dream] task 1/9 (BALL_VERTICAL) epoch 1/8 [settle]  avg_loss 0.7869  last_loss 0.4970  steps 71  arch [64, 32, 103]
+  [grown_capped_dream] task 1/9 (BALL_VERTICAL) epoch 2/8 [settle]  avg_loss 0.4026  last_loss 0.4347  steps 142  arch [64, 32, 103]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[64, 36, 103] params=6727 (trainable 6151)
+  [grown_capped_dream] task 1/9 (BALL_VERTICAL) epoch 3/8 [post-grow]  avg_loss 0.2753  last_loss 0.1626  steps 71  arch [64, 36, 103]
+  [grown_capped_dream] task 1/9 (BALL_VERTICAL) epoch 4/8 [post-grow]  avg_loss 0.2125  last_loss 0.1238  steps 142  arch [64, 36, 103]
+  [grown_capped_dream] task 1/9 (BALL_VERTICAL) epoch 5/8 [post-grow]  avg_loss 0.1808  last_loss 0.0746  steps 213  arch [64, 36, 103]
+  [grown_capped_dream] task 1/9 (BALL_VERTICAL) epoch 6/8 [post-grow]  avg_loss 0.1603  last_loss 0.2320  steps 284  arch [64, 36, 103]
+  [grown_capped_dream] task 1/9 (BALL_VERTICAL) epoch 7/8 [post-grow]  avg_loss 0.1473  last_loss 0.1502  steps 355  arch [64, 36, 103]
+  [grown_capped_dream] task 1/9 (BALL_VERTICAL) epoch 8/8 [post-grow]  avg_loss 0.1376  last_loss 0.1947  steps 426  arch [64, 36, 103]
+  [grown_capped_dream] post-task DREAM: replay 0.0831→0.1014 on 1p; merges=0 purges=0 latched=0 → arch [64, 36, 103] (6727→6727 params)
+[grown_capped_dream] After pass 1 task 1: own=0.3650 (domain 0.9433, task 0.9433)  avg=0.3650 (domain 0.9433, task 0.9433)  arch=[64, 36, 103] params=6727 (trainable 6151)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 2/9: BALL_HORIZONTAL (active [103, 104, 105])  pre-arch=[64, 36, 106] params=6838 (trainable 6262/16000) ===
+  [grown_capped_dream] task 2/9 (BALL_HORIZONTAL) epoch 1/8 [settle]  avg_loss 1.5984  last_loss 0.9036  steps 71  arch [64, 36, 106]
+  [grown_capped_dream] task 2/9 (BALL_HORIZONTAL) epoch 2/8 [settle]  avg_loss 0.6761  last_loss 0.4762  steps 142  arch [64, 36, 106]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[64, 40, 106] params=7522 (trainable 6946)
+  [grown_capped_dream] task 2/9 (BALL_HORIZONTAL) epoch 3/8 [post-grow]  avg_loss 0.5062  last_loss 0.4931  steps 71  arch [64, 40, 106]
+  [grown_capped_dream] task 2/9 (BALL_HORIZONTAL) epoch 4/8 [post-grow]  avg_loss 0.4084  last_loss 0.4651  steps 142  arch [64, 40, 106]
+  [grown_capped_dream] task 2/9 (BALL_HORIZONTAL) epoch 5/8 [post-grow]  avg_loss 0.3444  last_loss 0.3455  steps 213  arch [64, 40, 106]
+  [grown_capped_dream] task 2/9 (BALL_HORIZONTAL) epoch 6/8 [post-grow]  avg_loss 0.3053  last_loss 0.2760  steps 284  arch [64, 40, 106]
+  [grown_capped_dream] task 2/9 (BALL_HORIZONTAL) epoch 7/8 [post-grow]  avg_loss 0.2722  last_loss 0.3043  steps 355  arch [64, 40, 106]
+  [grown_capped_dream] task 2/9 (BALL_HORIZONTAL) epoch 8/8 [post-grow]  avg_loss 0.2478  last_loss 0.1795  steps 426  arch [64, 40, 106]
+  [grown_capped_dream] post-task DREAM: replay 0.2437→0.2747 on 1p; merges=0 purges=0 latched=0 → arch [64, 40, 106] (7522→7522 params)
+[grown_capped_dream] After pass 1 task 2: own=0.0317 (domain 0.0317, task 0.9150)  avg=0.4629 (domain 0.4629, task 0.9188)  arch=[64, 40, 106] params=7522 (trainable 6946)  cum_grows=8 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 3/9: PADDLE_VERTICAL (active [110, 111, 112])  pre-arch=[64, 40, 113] params=7809 (trainable 7233/16000) ===
+  [grown_capped_dream] task 3/9 (PADDLE_VERTICAL) epoch 1/8 [settle]  avg_loss 1.2370  last_loss 0.7755  steps 71  arch [64, 40, 113]
+  [grown_capped_dream] task 3/9 (PADDLE_VERTICAL) epoch 2/8 [settle]  avg_loss 0.6489  last_loss 0.6747  steps 142  arch [64, 40, 113]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[64, 44, 113] params=8521 (trainable 7945)
+  [grown_capped_dream] task 3/9 (PADDLE_VERTICAL) epoch 3/8 [post-grow]  avg_loss 0.5365  last_loss 0.6554  steps 71  arch [64, 44, 113]
+  [grown_capped_dream] task 3/9 (PADDLE_VERTICAL) epoch 4/8 [post-grow]  avg_loss 0.4545  last_loss 0.3874  steps 142  arch [64, 44, 113]
+  [grown_capped_dream] task 3/9 (PADDLE_VERTICAL) epoch 5/8 [post-grow]  avg_loss 0.3952  last_loss 0.3905  steps 213  arch [64, 44, 113]
+  [grown_capped_dream] task 3/9 (PADDLE_VERTICAL) epoch 6/8 [post-grow]  avg_loss 0.3529  last_loss 0.4321  steps 284  arch [64, 44, 113]
+  [grown_capped_dream] task 3/9 (PADDLE_VERTICAL) epoch 7/8 [post-grow]  avg_loss 0.3204  last_loss 0.3807  steps 355  arch [64, 44, 113]
+  [grown_capped_dream] task 3/9 (PADDLE_VERTICAL) epoch 8/8 [post-grow]  avg_loss 0.2968  last_loss 0.4370  steps 426  arch [64, 44, 113]
+  [grown_capped_dream] archive: 8 rows (L0:+8)  per-layer-archived [8, 0, 0]
+  [grown_capped_dream] post-task DREAM: replay 0.2039→0.1966 on 1p; merges=0 purges=0 latched=0 → arch [64, 44, 113] (8521→8521 params)
+[grown_capped_dream] After pass 1 task 3: own=0.0017 (domain 0.9117, task 0.9117)  avg=0.3103 (domain 0.6139, task 0.9069)  arch=[64, 44, 113] params=8521 (trainable 7945)  cum_grows=12 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 4/9: BALL_MOTION_VERTICAL (active [120, 121])  pre-arch=[64, 44, 122] params=8926 (trainable 8350/16000) ===
+  [grown_capped_dream] task 4/9 (BALL_MOTION_VERTICAL) epoch 1/8 [settle]  avg_loss 0.7986  last_loss 0.4137  steps 47  arch [64, 44, 122]
+  [grown_capped_dream] task 4/9 (BALL_MOTION_VERTICAL) epoch 2/8 [settle]  avg_loss 0.2775  last_loss 0.2461  steps 94  arch [64, 44, 122]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[64, 48, 122] params=9674 (trainable 9098)
+  [grown_capped_dream] task 4/9 (BALL_MOTION_VERTICAL) epoch 3/8 [post-grow]  avg_loss 0.1908  last_loss 0.1585  steps 47  arch [64, 48, 122]
+  [grown_capped_dream] task 4/9 (BALL_MOTION_VERTICAL) epoch 4/8 [post-grow]  avg_loss 0.1424  last_loss 0.1450  steps 94  arch [64, 48, 122]
+  [grown_capped_dream] task 4/9 (BALL_MOTION_VERTICAL) epoch 5/8 [post-grow]  avg_loss 0.1135  last_loss 0.0911  steps 141  arch [64, 48, 122]
+  [grown_capped_dream] task 4/9 (BALL_MOTION_VERTICAL) epoch 6/8 [post-grow]  avg_loss 0.0925  last_loss 0.0634  steps 188  arch [64, 48, 122]
+  [grown_capped_dream] task 4/9 (BALL_MOTION_VERTICAL) epoch 7/8 [post-grow]  avg_loss 0.0747  last_loss 0.0487  steps 235  arch [64, 48, 122]
+  [grown_capped_dream] task 4/9 (BALL_MOTION_VERTICAL) epoch 8/8 [post-grow]  avg_loss 0.0621  last_loss 0.0581  steps 282  arch [64, 48, 122]
+  [grown_capped_dream] archive: 8 rows (L0:+8)  per-layer-archived [16, 0, 0]
+  [grown_capped_dream] post-task DREAM: replay 0.2294→0.2430 on 1p; merges=0 purges=0 latched=0 → arch [64, 48, 122] (9674→9674 params)
+[grown_capped_dream] After pass 1 task 4: own=0.0000 (domain 0.9912, task 0.9912)  avg=0.2390 (domain 0.7030, task 0.9211)  arch=[64, 48, 122] params=9674 (trainable 9098)  cum_grows=16 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 5/9: BALL_MOTION_HORIZONTAL (active [122, 123])  pre-arch=[64, 48, 124] params=9772 (trainable 9196/16000) ===
+  [grown_capped_dream] task 5/9 (BALL_MOTION_HORIZONTAL) epoch 1/8 [settle]  avg_loss 0.7776  last_loss 0.4021  steps 47  arch [64, 48, 124]
+  [grown_capped_dream] task 5/9 (BALL_MOTION_HORIZONTAL) epoch 2/8 [settle]  avg_loss 0.2202  last_loss 0.1696  steps 94  arch [64, 48, 124]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[64, 52, 124] params=10528 (trainable 9952)
+  [grown_capped_dream] task 5/9 (BALL_MOTION_HORIZONTAL) epoch 3/8 [post-grow]  avg_loss 0.1384  last_loss 0.1344  steps 47  arch [64, 52, 124]
+  [grown_capped_dream] task 5/9 (BALL_MOTION_HORIZONTAL) epoch 4/8 [post-grow]  avg_loss 0.0987  last_loss 0.0911  steps 94  arch [64, 52, 124]
+  [grown_capped_dream] task 5/9 (BALL_MOTION_HORIZONTAL) epoch 5/8 [post-grow]  avg_loss 0.0806  last_loss 0.0561  steps 141  arch [64, 52, 124]
+  [grown_capped_dream] task 5/9 (BALL_MOTION_HORIZONTAL) epoch 6/8 [post-grow]  avg_loss 0.0705  last_loss 0.0591  steps 188  arch [64, 52, 124]
+  [grown_capped_dream] task 5/9 (BALL_MOTION_HORIZONTAL) epoch 7/8 [post-grow]  avg_loss 0.0607  last_loss 0.0755  steps 235  arch [64, 52, 124]
+  [grown_capped_dream] task 5/9 (BALL_MOTION_HORIZONTAL) epoch 8/8 [post-grow]  avg_loss 0.0516  last_loss 0.0742  steps 282  arch [64, 52, 124]
+  [grown_capped_dream] archive: 16 rows (L0:+8 L1:+8)  per-layer-archived [24, 8, 0]
+  [grown_capped_dream] post-task DREAM: replay 0.3100→0.1380 on 1p; merges=0 purges=0 latched=0 → arch [64, 52, 124] (10528→10528 params)
+[grown_capped_dream] After pass 1 task 5: own=0.0037 (domain 0.1013, task 0.9950)  avg=0.2003 (domain 0.5552, task 0.9137)  arch=[64, 52, 124] params=10528 (trainable 9952)  cum_grows=20 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 6/9: BALL_SPEED (active [130, 131])  pre-arch=[64, 52, 132] params=10952 (trainable 10376/16000) ===
+  [grown_capped_dream] task 6/9 (BALL_SPEED) epoch 1/8 [settle]  avg_loss 1.0361  last_loss 0.3315  steps 47  arch [64, 52, 132]
+  [grown_capped_dream] task 6/9 (BALL_SPEED) epoch 2/8 [settle]  avg_loss 0.2931  last_loss 0.2908  steps 94  arch [64, 52, 132]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[64, 56, 132] params=11740 (trainable 11164)
+  [grown_capped_dream] task 6/9 (BALL_SPEED) epoch 3/8 [post-grow]  avg_loss 0.2150  last_loss 0.1615  steps 47  arch [64, 56, 132]
+  [grown_capped_dream] task 6/9 (BALL_SPEED) epoch 4/8 [post-grow]  avg_loss 0.1767  last_loss 0.1566  steps 94  arch [64, 56, 132]
+  [grown_capped_dream] task 6/9 (BALL_SPEED) epoch 5/8 [post-grow]  avg_loss 0.1568  last_loss 0.1065  steps 141  arch [64, 56, 132]
+  [grown_capped_dream] task 6/9 (BALL_SPEED) epoch 6/8 [post-grow]  avg_loss 0.1401  last_loss 0.1389  steps 188  arch [64, 56, 132]
+  [grown_capped_dream] task 6/9 (BALL_SPEED) epoch 7/8 [post-grow]  avg_loss 0.1304  last_loss 0.1962  steps 235  arch [64, 56, 132]
+  [grown_capped_dream] task 6/9 (BALL_SPEED) epoch 8/8 [post-grow]  avg_loss 0.1223  last_loss 0.1332  steps 282  arch [64, 56, 132]
+  [grown_capped_dream] archive: 16 rows (L0:+8 L1:+8)  per-layer-archived [32, 16, 0]
+  [grown_capped_dream] post-task DREAM: replay 0.2313→0.1055 on 2p; merges=0 purges=0 latched=0 → arch [64, 56, 132] (11740→11740 params)
+[grown_capped_dream] After pass 1 task 6: own=0.0012 (domain 0.9675, task 0.9675)  avg=0.1759 (domain 0.6463, task 0.9276)  arch=[64, 56, 132] params=11740 (trainable 11164)  cum_grows=24 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 7/9: BALL_PADDLE_VERTICAL (active [140, 141, 142])  pre-arch=[64, 56, 143] params=12367 (trainable 11791/16000) ===
+  [grown_capped_dream] task 7/9 (BALL_PADDLE_VERTICAL) epoch 1/8 [settle]  avg_loss 1.3616  last_loss 0.8072  steps 71  arch [64, 56, 143]
+  [grown_capped_dream] task 7/9 (BALL_PADDLE_VERTICAL) epoch 2/8 [settle]  avg_loss 0.6542  last_loss 0.5220  steps 142  arch [64, 56, 143]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[64, 60, 143] params=13199 (trainable 12623)
+  [grown_capped_dream] task 7/9 (BALL_PADDLE_VERTICAL) epoch 3/8 [post-grow]  avg_loss 0.5306  last_loss 0.5646  steps 71  arch [64, 60, 143]
+  [grown_capped_dream] task 7/9 (BALL_PADDLE_VERTICAL) epoch 4/8 [post-grow]  avg_loss 0.4622  last_loss 0.5554  steps 142  arch [64, 60, 143]
+  [grown_capped_dream] task 7/9 (BALL_PADDLE_VERTICAL) epoch 5/8 [post-grow]  avg_loss 0.4236  last_loss 0.5707  steps 213  arch [64, 60, 143]
+  [grown_capped_dream] task 7/9 (BALL_PADDLE_VERTICAL) epoch 6/8 [post-grow]  avg_loss 0.3888  last_loss 0.4210  steps 284  arch [64, 60, 143]
+  [grown_capped_dream] task 7/9 (BALL_PADDLE_VERTICAL) epoch 7/8 [post-grow]  avg_loss 0.3658  last_loss 0.4145  steps 355  arch [64, 60, 143]
+  [grown_capped_dream] task 7/9 (BALL_PADDLE_VERTICAL) epoch 8/8 [post-grow]  avg_loss 0.3449  last_loss 0.3086  steps 426  arch [64, 60, 143]
+  [grown_capped_dream] archive: 8 rows (L0:+8)  per-layer-archived [40, 16, 0]
+  [grown_capped_dream] post-task DREAM: replay 0.4424→0.1193 on 2p; merges=0 purges=0 latched=0 → arch [64, 60, 143] (13199→13199 params)
+[grown_capped_dream] After pass 1 task 7: own=0.0000 (domain 0.8717, task 0.8717)  avg=0.1497 (domain 0.6760, task 0.9160)  arch=[64, 60, 143] params=13199 (trainable 12623)  cum_grows=28 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 8/9: BALL_PADDLE_APPROACH (active [150, 151])  pre-arch=[64, 60, 152] params=13748 (trainable 13172/16000) ===
+  [grown_capped_dream] task 8/9 (BALL_PADDLE_APPROACH) epoch 1/8 [settle]  avg_loss 0.3082  last_loss 0.1494  steps 47  arch [64, 60, 152]
+  [grown_capped_dream] task 8/9 (BALL_PADDLE_APPROACH) epoch 2/8 [settle]  avg_loss 0.1567  last_loss 0.1147  steps 94  arch [64, 60, 152]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[64, 64, 152] params=14616 (trainable 14040)
+  [grown_capped_dream] task 8/9 (BALL_PADDLE_APPROACH) epoch 3/8 [post-grow]  avg_loss 0.1084  last_loss 0.0887  steps 47  arch [64, 64, 152]
+  [grown_capped_dream] task 8/9 (BALL_PADDLE_APPROACH) epoch 4/8 [post-grow]  avg_loss 0.0760  last_loss 0.0516  steps 94  arch [64, 64, 152]
+  [grown_capped_dream] task 8/9 (BALL_PADDLE_APPROACH) epoch 5/8 [post-grow]  avg_loss 0.0589  last_loss 0.0427  steps 141  arch [64, 64, 152]
+  [grown_capped_dream] task 8/9 (BALL_PADDLE_APPROACH) epoch 6/8 [post-grow]  avg_loss 0.0467  last_loss 0.0268  steps 188  arch [64, 64, 152]
+  [grown_capped_dream] task 8/9 (BALL_PADDLE_APPROACH) epoch 7/8 [post-grow]  avg_loss 0.0395  last_loss 0.0588  steps 235  arch [64, 64, 152]
+  [grown_capped_dream] task 8/9 (BALL_PADDLE_APPROACH) epoch 8/8 [post-grow]  avg_loss 0.0333  last_loss 0.0215  steps 282  arch [64, 64, 152]
+  [grown_capped_dream] archive: 8 rows (L0:+8)  per-layer-archived [48, 16, 0]
+  [grown_capped_dream] post-task DREAM: replay 0.2498→0.2971 on 2p; merges=0 purges=0 latched=0 → arch [64, 64, 152] (14616→14616 params)
+[grown_capped_dream] After pass 1 task 8: own=0.0000 (domain 0.9950, task 0.9950)  avg=0.1270 (domain 0.7110, task 0.9196)  arch=[64, 64, 152] params=14616 (trainable 14040)  cum_grows=32 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] === Pass 1/1 Task 9/9: PONG_ACTION (active [200, 201, 202])  pre-arch=[64, 64, 203] params=17931 (trainable 17355/16000) ===
+  [grown_capped_dream] task 9/9 (PONG_ACTION) epoch 1/8 [settle]  avg_loss 1.4731  last_loss 0.6237  steps 71  arch [64, 64, 203]
+  [grown_capped_dream] task 9/9 (PONG_ACTION) epoch 2/8 [settle]  avg_loss 0.4672  last_loss 0.4985  steps 142  arch [64, 64, 203]
+  [grown_capped_dream] dream-rescue insufficient: purges=4; growth still denied (cap_exceeded(projected=66204B > cap=64000B))
+  [grown_capped_dream] task 9/9 (PONG_ACTION) epoch 3/8 [post-grow]  avg_loss 0.5415  last_loss 0.3999  steps 71  arch [64, 60, 203]
+  [grown_capped_dream] task 9/9 (PONG_ACTION) epoch 4/8 [post-grow]  avg_loss 0.3482  last_loss 0.2280  steps 142  arch [64, 60, 203]
+  [grown_capped_dream] task 9/9 (PONG_ACTION) epoch 5/8 [post-grow]  avg_loss 0.3108  last_loss 0.4064  steps 213  arch [64, 60, 203]
+  [grown_capped_dream] task 9/9 (PONG_ACTION) epoch 6/8 [post-grow]  avg_loss 0.2904  last_loss 0.5328  steps 284  arch [64, 60, 203]
+  [grown_capped_dream] task 9/9 (PONG_ACTION) epoch 7/8 [post-grow]  avg_loss 0.2755  last_loss 0.1872  steps 355  arch [64, 60, 203]
+  [grown_capped_dream] task 9/9 (PONG_ACTION) epoch 8/8 [post-grow]  avg_loss 0.2707  last_loss 0.4732  steps 426  arch [64, 60, 203]
+  [grown_capped_dream] archive: 11 rows (L0:+8 L1:+3)  per-layer-archived [56, 19, 0]
+  [grown_capped_dream] post-task DREAM: replay 0.4087→0.1829 on 2p; merges=0 purges=0 latched=0 → arch [64, 60, 203] (16859→16859 params)
+[grown_capped_dream] After pass 1 task 9: own=0.0000 (domain 0.9083, task 0.9083)  avg=0.1137 (domain 0.7391, task 0.9287)  arch=[64, 60, 203] params=16859 (trainable 16283)  cum_grows=32 cum_denied=1 cum_purges=4 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.1137  domain=0.7391  task=0.9287
+
+[grown_capped_dream] quantization (int8, FP32 active): full 0.1137→0.1138 (Δ +0.0000)  domain 0.7391→0.7388 (Δ -0.0003)  task 0.9287→0.9286 (Δ -0.0001)
+[grown_capped_dream] deployment (int8, BF16 active): full 0.1137→0.1137 (Δ +0.0000)  domain 0.7391→0.7386 (Δ -0.0005)  task 0.9287→0.9284 (Δ -0.0003)
+[grown_capped_dream] storage  FP32-baseline: total 61.3 KB (L0 1.2, L1 11.7, head 48.4)
+[grown_capped_dream] storage  BF16-baseline: total 31.6 KB (L0 0.9, L1 6.5, head 24.2)
+built in 0.6 min -> /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/pong_curriculum_donor.pt
+
+=== held-out eval on pong_curriculum_donor.pt ===
+  BALL_VERTICAL              task-aware 0.949
+                       BALL_HIGH: 0.980
+                        BALL_MID: 0.884
+                        BALL_LOW: 0.984
+  BALL_HORIZONTAL            task-aware 0.927
+                       BALL_LEFT: 0.944
+                     BALL_CENTER: 0.914
+                      BALL_RIGHT: 0.922
+  PADDLE_VERTICAL            task-aware 0.867
+                     PADDLE_HIGH: 0.798
+                      PADDLE_MID: 0.872
+                      PADDLE_LOW: 0.930
+  BALL_MOTION_VERTICAL       task-aware 0.950
+                   BALL_GOING_UP: 0.972
+                 BALL_GOING_DOWN: 0.928
+  BALL_MOTION_HORIZONTAL     task-aware 0.980
+                 BALL_GOING_LEFT: 0.980
+                BALL_GOING_RIGHT: 0.980
+  BALL_SPEED                 task-aware 0.937
+                       BALL_FAST: 0.880
+                       BALL_SLOW: 0.994
+  BALL_PADDLE_VERTICAL       task-aware 0.880
+               BALL_ABOVE_PADDLE: 0.906
+        BALL_ALIGNED_WITH_PADDLE: 0.876
+               BALL_BELOW_PADDLE: 0.858
+  BALL_PADDLE_APPROACH       task-aware 0.989
+         BALL_APPROACHING_PADDLE: 0.984
+       BALL_RECEDING_FROM_PADDLE: 0.994
+  PONG_ACTION                task-aware 0.909
+                  PONG_ACTION_UP: 0.946
+                PONG_ACTION_DOWN: 0.952
+                PONG_ACTION_HOLD: 0.830
+
+=== summary ===
+  BALL_VERTICAL              0.949  [YELLOW]
+  BALL_HORIZONTAL            0.927  [YELLOW]
+  PADDLE_VERTICAL            0.867  [YELLOW]
+  BALL_MOTION_VERTICAL       0.950  [OK]
+  BALL_MOTION_HORIZONTAL     0.980  [OK]
+  BALL_SPEED                 0.937  [YELLOW]
+  BALL_PADDLE_VERTICAL       0.880  [YELLOW]
+  BALL_PADDLE_APPROACH       0.989  [OK]
+  PONG_ACTION                0.909  [YELLOW]

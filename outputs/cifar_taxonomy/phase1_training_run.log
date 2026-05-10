@@ -1,0 +1,44 @@
+=== L1 imbalanced perceptual seed 43 ===
+    perc=3 (vertical-landscape    )  n=200  acc=0.7200
+
+[L1-4way] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l1_perceptual_4way_seed43.pt  (136.2 KB)  input_dim=33  head_size=4  arch=[128, 36, 4]
+=== L1 imbalanced perceptual seed 44 ===
+    perc=3 (vertical-landscape    )  n=200  acc=0.7200
+
+[L1-4way] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l1_perceptual_4way_seed44.pt  (136.2 KB)  input_dim=33  head_size=4  arch=[128, 36, 4]
+=== L2 central seed 43 ===
+    clock          → motorcycle        12 confusions
+
+[L2-central] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l2_central_object_9way_seed43.pt  (146.5 KB)  input_dim=33  head_size=9  arch=[128, 36, 9]
+=== L2 central seed 44 ===
+    clock          → motorcycle        13 confusions
+
+[L2-central] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l2_central_object_9way_seed44.pt  (146.5 KB)  input_dim=33  head_size=9  arch=[128, 36, 9]
+=== L2 compact seed 42 ===
+  chance:             0.3333
+  margin over chance: +0.2967
+  per-class:
+    chair           n=100  acc=0.6600
+    bottle          n=100  acc=0.5900
+    cup             n=100  acc=0.6400
+
+[L2-compact-object] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l2_compact_object_3way_seed42.pt  (133.9 KB)
+=== L2 horizontal seed 42 ===
+  acc:                0.8100
+  chance:             0.5000
+  margin over chance: +0.3100
+  per-class:
+    dolphin         n=100  acc=0.8500
+    mountain        n=100  acc=0.7700
+
+[L2-horizontal-landscape] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l2_horizontal_landscape_2way_seed42.pt  (132.5 KB)
+=== L2 vertical seed 42 ===
+  acc:                0.8400
+  chance:             0.5000
+  margin over chance: +0.3400
+  per-class:
+    oak_tree        n=100  acc=0.9000
+    castle          n=100  acc=0.7800
+
+[L2-vertical-landscape] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l2_vertical_landscape_2way_seed42.pt  (132.4 KB)
+=== ALL DONE ===

@@ -32,8 +32,8 @@ from experiments.cifar.conductor_eval import (
 )
 
 
-GREEDY_7 = ["eye", "color_smell", "frequency_print", "heat_diffusion",
-            "skeleton", "taste", "pulse"]
+GREEDY_7 = ["cortex", "color_smell", "frequency_print", "taste",
+            "random_walk"]
 
 
 def main(argv=None) -> int:

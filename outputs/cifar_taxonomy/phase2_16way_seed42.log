@@ -1,0 +1,39 @@
+[16-way] L1: outputs/cifar_taxonomy/donor_l1_perceptual_4way_seed42.pt  arch=[128, 36, 4]  l0_seed=42
+[16-way] L2[compact-object]: outputs/cifar_taxonomy/donor_l2_compact_object_3way_seed42.pt  K=3  fines=['chair', 'bottle', 'cup']
+[16-way] L2[central-object]: outputs/cifar_taxonomy/donor_l2_central_object_9way_seed42.pt  K=9  fines=['wolf', 'man', 'clock', 'motorcycle', 'pickup_truck', 'rose', 'spider', 'butterfly', 'mushroom']
+[16-way] L2[horizontal-landscape]: outputs/cifar_taxonomy/donor_l2_horizontal_landscape_2way_seed42.pt  K=2  fines=['dolphin', 'mountain']
+[16-way] L2[vertical-landscape]: outputs/cifar_taxonomy/donor_l2_vertical_landscape_2way_seed42.pt  K=2  fines=['oak_tree', 'castle']
+[16-way] test: 1600 imgs across 16 fine classes
+
+[16-way] === results ===
+  overall 16-way fine acc: 0.4350  (chance 1/16 = 0.0625)
+  margin over chance:      +0.3725
+
+[16-way] === per-cluster (true cluster ID known from ground truth) ===
+  compact-object          n=300  L1 recall=0.5400  fine acc=0.3433
+  central-object          n=900  L1 recall=0.9022  fine acc=0.4033
+  horizontal-landscape    n=200  L1 recall=0.7100  fine acc=0.5600
+  vertical-landscape      n=200  L1 recall=0.6850  fine acc=0.5900
+
+[16-way] === per-fine-class accuracy ===
+  wolf            (macro=central-object        )  n=100  acc=0.3500  L1 routes=0.9300
+  dolphin         (macro=horizontal-landscape  )  n=100  acc=0.6800  L1 routes=0.7800
+  butterfly       (macro=central-object        )  n=100  acc=0.3100  L1 routes=0.9400
+  spider          (macro=central-object        )  n=100  acc=0.4300  L1 routes=0.8000
+  man             (macro=central-object        )  n=100  acc=0.4600  L1 routes=0.8800
+  oak_tree        (macro=vertical-landscape    )  n=100  acc=0.5900  L1 routes=0.6700
+  rose            (macro=central-object        )  n=100  acc=0.6400  L1 routes=0.9400
+  mushroom        (macro=central-object        )  n=100  acc=0.4400  L1 routes=0.9800
+  motorcycle      (macro=central-object        )  n=100  acc=0.5500  L1 routes=0.9800
+  pickup_truck    (macro=central-object        )  n=100  acc=0.2900  L1 routes=0.8300
+  chair           (macro=compact-object        )  n=100  acc=0.5100  L1 routes=0.6300
+  bottle          (macro=compact-object        )  n=100  acc=0.3300  L1 routes=0.6000
+  castle          (macro=vertical-landscape    )  n=100  acc=0.5900  L1 routes=0.7000
+  clock           (macro=central-object        )  n=100  acc=0.1600  L1 routes=0.8400
+  mountain        (macro=horizontal-landscape  )  n=100  acc=0.4400  L1 routes=0.6400
+  cup             (macro=compact-object        )  n=100  acc=0.1900  L1 routes=0.3900
+
+[16-way] === error decomposition ===
+  correct (L1 routes + L2 fine):   696/1600  = 0.4350
+  L1 routing miss:                 347/1600  = 0.2169
+  L1 right but L2 fine miss:       557/1600  = 0.3481

@@ -1,0 +1,135 @@
+A.L.E: Arcade Learning Environment (version 0.11.2+ecc1138)
+[Powered by Stella]
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/dream_loop_multiseed/seed4 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+
+[ep 1/10 seed=4] return=-20.0 length=2301 (36.2s)
+  frustration: 630 flagged frames, 104 agent-vs-oracle disagreements
+    CATCH: 104 corrections
+    SMASH: 0 corrections
+    PREPOS: 0 corrections
+  celebration: 30 flagged frames, 30 positive-replay examples
+    CATCH: 0 reinforcements
+    SMASH: 0 reinforcements
+    PREPOS: 30 reinforcements
+  retraining CATCH with 104 corrections...
+
+[grown_capped_dream] start — arch (64, 32, 2)  params 2786 (trainable 2146)  growth=True dream=True  cap_bytes=4000  K=1  passes=1  epochs/task=6  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: SKILL_CATCH (active [210, 211, 212])  pre-arch=[64, 32, 213] params=9749 (trainable 9109/1000) ===
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 1/6 [settle]  avg_loss 1.0589  last_loss 0.8607  steps 72  arch [64, 32, 213]
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 2/6 [settle]  avg_loss 0.6742  last_loss 0.4975  steps 144  arch [64, 32, 213]
+  [grown_capped_dream] dream-rescue insufficient: purges=4; growth still denied (cap_exceeded(projected=33100B > cap=4000B))
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 3/6 [post-grow]  avg_loss 0.5034  last_loss 0.4540  steps 72  arch [64, 28, 213]
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 4/6 [post-grow]  avg_loss 0.4157  last_loss 0.3811  steps 144  arch [64, 28, 213]
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 5/6 [post-grow]  avg_loss 0.3663  last_loss 0.4334  steps 216  arch [64, 28, 213]
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 6/6 [post-grow]  avg_loss 0.3307  last_loss 0.2320  steps 288  arch [64, 28, 213]
+  [grown_capped_dream] post-task DREAM: replay 0.2935→0.3530 on 1p; merges=0 purges=0 latched=0 → arch [64, 28, 213] (8637→8637 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2517 (domain 0.8925, task 0.8925)  avg=0.2517 (domain 0.8925, task 0.8925)  arch=[64, 28, 213] params=8637 (trainable 7997)  cum_grows=0 cum_denied=1 cum_purges=4 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2517  domain=0.8925  task=0.8925
+  retraining PREPOS with 30 corrections...
+
+[grown_capped_dream] start — arch (64, 32, 2)  params 2786 (trainable 2146)  growth=True dream=True  cap_bytes=4000  K=1  passes=1  epochs/task=6  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: SKILL_PREPOS (active [230, 231, 232])  pre-arch=[64, 32, 233] params=10409 (trainable 9769/1000) ===
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 1/6 [settle]  avg_loss 0.9771  last_loss 0.7644  steps 71  arch [64, 32, 233]
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 2/6 [settle]  avg_loss 0.6260  last_loss 0.5237  steps 142  arch [64, 32, 233]
+  [grown_capped_dream] dream-rescue insufficient: purges=4; growth still denied (cap_exceeded(projected=35500B > cap=4000B))
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 3/6 [post-grow]  avg_loss 0.4656  last_loss 0.4520  steps 71  arch [64, 28, 233]
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 4/6 [post-grow]  avg_loss 0.3649  last_loss 0.2656  steps 142  arch [64, 28, 233]
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 5/6 [post-grow]  avg_loss 0.3077  last_loss 0.3208  steps 213  arch [64, 28, 233]
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 6/6 [post-grow]  avg_loss 0.2684  last_loss 0.2225  steps 284  arch [64, 28, 233]
+  [grown_capped_dream] post-task DREAM: replay 0.3109→0.2510 on 1p; merges=0 purges=0 latched=0 → arch [64, 28, 233] (9217→9217 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2933 (domain 0.9067, task 0.9067)  avg=0.2933 (domain 0.9067, task 0.9067)  arch=[64, 28, 233] params=9217 (trainable 8577)  cum_grows=0 cum_denied=1 cum_purges=4 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2933  domain=0.9067  task=0.9067
+
+[ep 2/10 seed=4] return=-19.0 length=2947 (7.3s)
+  frustration: 630 flagged frames, 88 agent-vs-oracle disagreements
+    CATCH: 87 corrections
+    SMASH: 1 corrections
+    PREPOS: 0 corrections
+  celebration: 60 flagged frames, 60 positive-replay examples
+    CATCH: 0 reinforcements
+    SMASH: 0 reinforcements
+    PREPOS: 60 reinforcements
+  retraining CATCH with 87 corrections...
+
+[grown_capped_dream] start — arch (64, 32, 2)  params 2786 (trainable 2146)  growth=True dream=True  cap_bytes=4000  K=1  passes=1  epochs/task=6  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: SKILL_CATCH (active [210, 211, 212])  pre-arch=[64, 32, 213] params=9749 (trainable 9109/1000) ===
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 1/6 [settle]  avg_loss 1.0535  last_loss 0.8236  steps 72  arch [64, 32, 213]
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 2/6 [settle]  avg_loss 0.6692  last_loss 0.5698  steps 144  arch [64, 32, 213]
+  [grown_capped_dream] dream-rescue insufficient: purges=4; growth still denied (cap_exceeded(projected=33100B > cap=4000B))
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 3/6 [post-grow]  avg_loss 0.5008  last_loss 0.4310  steps 72  arch [64, 28, 213]
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 4/6 [post-grow]  avg_loss 0.4143  last_loss 0.3633  steps 144  arch [64, 28, 213]
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 5/6 [post-grow]  avg_loss 0.3637  last_loss 0.3841  steps 216  arch [64, 28, 213]
+  [grown_capped_dream] task 1/1 (SKILL_CATCH) epoch 6/6 [post-grow]  avg_loss 0.3293  last_loss 0.2917  steps 288  arch [64, 28, 213]
+  [grown_capped_dream] post-task DREAM: replay 0.3003→0.2657 on 1p; merges=0 purges=0 latched=0 → arch [64, 28, 213] (8637→8637 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2592 (domain 0.9017, task 0.9017)  avg=0.2592 (domain 0.9017, task 0.9017)  arch=[64, 28, 213] params=8637 (trainable 7997)  cum_grows=0 cum_denied=1 cum_purges=4 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2592  domain=0.9017  task=0.9017
+  retraining PREPOS with 60 corrections...
+
+[grown_capped_dream] start — arch (64, 32, 2)  params 2786 (trainable 2146)  growth=True dream=True  cap_bytes=4000  K=1  passes=1  epochs/task=6  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: SKILL_PREPOS (active [230, 231, 232])  pre-arch=[64, 32, 233] params=10409 (trainable 9769/1000) ===
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 1/6 [settle]  avg_loss 0.9691  last_loss 0.6685  steps 72  arch [64, 32, 233]
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 2/6 [settle]  avg_loss 0.6162  last_loss 0.3776  steps 144  arch [64, 32, 233]
+  [grown_capped_dream] dream-rescue insufficient: purges=4; growth still denied (cap_exceeded(projected=35500B > cap=4000B))
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 3/6 [post-grow]  avg_loss 0.4662  last_loss 0.4439  steps 72  arch [64, 28, 233]
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 4/6 [post-grow]  avg_loss 0.3682  last_loss 0.4797  steps 144  arch [64, 28, 233]
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 5/6 [post-grow]  avg_loss 0.3084  last_loss 0.2206  steps 216  arch [64, 28, 233]
+  [grown_capped_dream] task 1/1 (SKILL_PREPOS) epoch 6/6 [post-grow]  avg_loss 0.2727  last_loss 0.2158  steps 288  arch [64, 28, 233]
+  [grown_capped_dream] post-task DREAM: replay 0.3556→0.2171 on 1p; merges=0 purges=0 latched=0 → arch [64, 28, 233] (9217→9217 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2433 (domain 0.9008, task 0.9008)  avg=0.2433 (domain 0.9008, task 0.9008)  arch=[64, 28, 233] params=9217 (trainable 8577)  cum_grows=0 cum_denied=1 cum_purges=4 cum_latched=0
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/dream_loop_multiseed/seed4 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2433  domain=0.9008  task=0.9008
+
+[ep 3/10 seed=4] return=+1.0 length=8000 (17.9s)
+  net win (return=+1.0) — skipping dream
+
+[ep 4/10 seed=4] return=+1.0 length=8000 (20.1s)
+  net win (return=+1.0) — skipping dream
+
+[ep 5/10 seed=4] return=+1.0 length=8000 (18.6s)
+  net win (return=+1.0) — skipping dream
+
+[ep 6/10 seed=4] return=+1.0 length=8000 (19.6s)
+  net win (return=+1.0) — skipping dream
+
+[ep 7/10 seed=4] return=+1.0 length=8000 (20.2s)
+  net win (return=+1.0) — skipping dream
+
+[ep 8/10 seed=4] return=+1.0 length=8000 (18.6s)
+  net win (return=+1.0) — skipping dream
+
+[ep 9/10 seed=4] return=+1.0 length=8000 (20.3s)
+  net win (return=+1.0) — skipping dream
+
+[ep 10/10 seed=4] return=+1.0 length=8000 (299.4s)
+  net win (return=+1.0) — skipping dream
+
+=== Dream-loop trajectory ===
+  ep 1: -20.0
+  ep 2: -19.0
+  ep 3: +1.0
+  ep 4: +1.0
+  ep 5: +1.0
+  ep 6: +1.0
+  ep 7: +1.0
+  ep 8: +1.0
+  ep 9: +1.0
+  ep 10: +1.0
+  delta (last - first): +21.0

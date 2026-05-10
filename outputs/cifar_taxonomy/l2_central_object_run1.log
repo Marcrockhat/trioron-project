@@ -1,0 +1,55 @@
+[L2-central] sense=classical  epochs=8  cap_bytes=64000
+[L2-central] train: 4500 imgs across 9 fine classes (['wolf', 'man', 'clock', 'motorcycle', 'pickup_truck', 'rose', 'spider', 'butterfly', 'mushroom'])
+[L2-central] test:  900 imgs
+[L2-central] chance (uniform 9-way): 0.1111
+[L2-central] sense+standardize (1.1s): (4500, 33) train
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 8546 (trainable 4194)  growth=True dream=True  cap_bytes=64000  K=1  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: L2_central_object_9way (active [0, 1, 2, 3, 4, 5, 6, 7, 8])  pre-arch=[128, 32, 9] params=8777 (trainable 4425/16000) ===
+  [grown_capped_dream] task 1/1 (L2_central_object_9way) epoch 1/8 [settle]  avg_loss 2.1305  last_loss 2.0878  steps 71  arch [128, 32, 9]
+  [grown_capped_dream] task 1/1 (L2_central_object_9way) epoch 2/8 [settle]  avg_loss 1.8114  last_loss 1.9355  steps 142  arch [128, 32, 9]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 9] params=9329 (trainable 4977)
+  [grown_capped_dream] task 1/1 (L2_central_object_9way) epoch 3/8 [post-grow]  avg_loss 1.6949  last_loss 2.0005  steps 71  arch [128, 36, 9]
+  [grown_capped_dream] task 1/1 (L2_central_object_9way) epoch 4/8 [post-grow]  avg_loss 1.6161  last_loss 1.4273  steps 142  arch [128, 36, 9]
+  [grown_capped_dream] task 1/1 (L2_central_object_9way) epoch 5/8 [post-grow]  avg_loss 1.5683  last_loss 1.5422  steps 213  arch [128, 36, 9]
+  [grown_capped_dream] task 1/1 (L2_central_object_9way) epoch 6/8 [post-grow]  avg_loss 1.5327  last_loss 1.7926  steps 284  arch [128, 36, 9]
+  [grown_capped_dream] task 1/1 (L2_central_object_9way) epoch 7/8 [post-grow]  avg_loss 1.5041  last_loss 1.7015  steps 355  arch [128, 36, 9]
+  [grown_capped_dream] task 1/1 (L2_central_object_9way) epoch 8/8 [post-grow]  avg_loss 1.4777  last_loss 1.5513  steps 426  arch [128, 36, 9]
+  [grown_capped_dream] post-task DREAM: replay 1.4435→1.5219 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 9] (9329→9329 params)
+[grown_capped_dream] After pass 1 task 1: own=0.4389 (domain 0.4389, task 0.4389)  avg=0.4389 (domain 0.4389, task 0.4389)  arch=[128, 36, 9] params=9329 (trainable 4977)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.4389  domain=0.4389  task=0.4389
+[L2-central] build_donor done (1.4s)
+
+[L2-central] === results ===
+  overall acc:        0.4389
+  chance:             0.1111
+  margin over chance: +0.3278
+
+  per-class accuracy:
+    wolf            n=100  acc=0.3600
+    man             n=100  acc=0.5000
+    clock           n=100  acc=0.2100
+    motorcycle      n=100  acc=0.5500
+    pickup_truck    n=100  acc=0.3900
+    rose            n=100  acc=0.6500
+    spider          n=100  acc=0.5400
+    butterfly       n=100  acc=0.3100
+    mushroom        n=100  acc=0.4400
+
+  top-10 most-confused (true → predicted):
+    clock          → man               23 confusions
+    butterfly      → mushroom          22 confusions
+    pickup_truck   → motorcycle        18 confusions
+    wolf           → pickup_truck      17 confusions
+    wolf           → mushroom          17 confusions
+    man            → pickup_truck      15 confusions
+    wolf           → man               14 confusions
+    spider         → mushroom          14 confusions
+    motorcycle     → pickup_truck      13 confusions
+    clock          → pickup_truck      13 confusions
+
+[L2-central] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l2_central_object_9way.pt  (145.4 KB)  input_dim=33  head_size=9  arch=[128, 36, 9]

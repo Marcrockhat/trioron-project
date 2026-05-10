@@ -1,0 +1,48 @@
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+Applying dream + int8-L1 to all 10 donors
+
+ seed   TA dream   TA int8-L1         Δ
+----------------------------------------
+   42     0.9493       0.9490   -0.0002
+   43     0.9466       0.9466   +0.0000
+   44     0.9450       0.9448   -0.0003
+   45     0.9474       0.9475   +0.0001
+   46     0.9440       0.9439   -0.0001
+   47     0.9450       0.9449   -0.0001
+   48     0.9394       0.9392   -0.0001
+   49     0.9450       0.9447   -0.0002
+   50     0.9390       0.9390   +0.0000
+   51     0.9433       0.9434   +0.0001
+----------------------------------------
+  mean Δ = -0.00009   σ Δ = 0.00014   max |Δ| = 0.00025
+
+================================================================================
+Committee on dream + int8-L1 donors
+================================================================================
+mean-logit      K=  1  task-aware 0.9490  full 0.6119  domain 0.6119
+mean-logit      K=  3  task-aware 0.9537  full 0.6226  domain 0.6226
+mean-logit      K=  5  task-aware 0.9535  full 0.6254  domain 0.6254
+mean-logit      K= 10  task-aware 0.9510  full 0.6215  domain 0.6215
+
+mean-softmax    K=  1  task-aware 0.9490  full 0.6119  domain 0.6119
+mean-softmax    K=  3  task-aware 0.9556  full 0.6206  domain 0.6206
+mean-softmax    K=  5  task-aware 0.9531  full 0.6243  domain 0.6243
+mean-softmax    K= 10  task-aware 0.9502  full 0.6200  domain 0.6200
+
+hard-vote       K=  1  task-aware 0.9490  full 0.6119  domain 0.6119
+hard-vote       K=  3  task-aware 0.9537  full 0.6197  domain 0.6197
+hard-vote       K=  5  task-aware 0.9521  full 0.6214  domain 0.6214
+hard-vote       K= 10  task-aware 0.9496  full 0.6162  domain 0.6162
+
+================================================================================
+TIGHT + INT8 L1 deployment
+================================================================================
+  per-donor (avg): L0_seed=4 B  L1=6968 B  head=1060 B  archive=5120 B
+  per-donor total = 13152 B  (12.84 KiB)
+
+    K    raw (KiB)   dream smart   tight (KiB)   +int8 L1 (KiB)    vs raw
+    1      1318.90        223.49         19.14            12.85    0.0097
+    3      3956.70        277.98         57.43            38.54    0.0097
+    5      6594.50        332.47         95.71            64.22    0.0097
+   10     13189.00        468.69        191.41           128.44    0.0097

@@ -1,0 +1,185 @@
+=== run_skill all arms start: Thu May  7 11:07:11 +07 2026 ===
+A.L.E: Arcade Learning Environment (version 0.11.2+ecc1138)
+[Powered by Stella]
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm3 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm1 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+
+=== build_skill_donor(Pong) ===
+[1/2] collecting 16 skill-driven rollouts
+  [skill-rollout] ep 1/16: return=-10.0
+  [skill-rollout] ep 2/16: return=-19.0
+  [skill-rollout] ep 3/16: return=-15.0
+  [skill-rollout] ep 4/16: return=-8.0
+  [skill-rollout] ep 5/16: return=-10.0
+  [skill-rollout] ep 6/16: return=-18.0
+  [skill-rollout] ep 7/16: return=-17.0
+  [skill-rollout] ep 8/16: return=-12.0
+  [skill-rollout] ep 9/16: return=-13.0
+  [skill-rollout] ep 10/16: return=-16.0
+  [skill-rollout] ep 11/16: return=-11.0
+  [skill-rollout] ep 12/16: return=-14.0
+  [skill-rollout] ep 13/16: return=-15.0
+  [skill-rollout] ep 14/16: return=-8.0
+  [skill-rollout] ep 15/16: return=-10.0
+  [skill-rollout] ep 16/16: return=-16.0
+  [skill-rollout] 16 episodes: return mean=-13.25 max=-8
+    UP                : 17103 (34.6%)
+    HOLD              : 16890 (34.2%)
+    DOWN              : 12963 (26.2%)
+    UP*explore        :   891 (1.8%)
+    HOLD*explore      :   886 (1.8%)
+    DOWN*explore      :   691 (1.4%)
+[2/2] training donor (input_dim=28224, classes=[10, 11, 12])
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=64000  K=1  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Pong_skills (active [10, 11, 12])  pre-arch=[128, 32, 13] params=3617357 (trainable 4557/16000) ===
+  [grown_capped_dream] task 1/1 (Pong_skills) epoch 1/8 [settle]  avg_loss 1.1028  last_loss 1.1154  steps 32  arch [128, 32, 13]
+  [grown_capped_dream] task 1/1 (Pong_skills) epoch 2/8 [settle]  avg_loss 1.1011  last_loss 1.1194  steps 64  arch [128, 32, 13]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 13] params=3617925 (trainable 5125)
+  [grown_capped_dream] task 1/1 (Pong_skills) epoch 3/8 [post-grow]  avg_loss 1.1016  last_loss 1.0940  steps 32  arch [128, 36, 13]
+  [grown_capped_dream] task 1/1 (Pong_skills) epoch 4/8 [post-grow]  avg_loss 1.1006  last_loss 1.1040  steps 64  arch [128, 36, 13]
+  [grown_capped_dream] task 1/1 (Pong_skills) epoch 5/8 [post-grow]  avg_loss 1.1002  last_loss 1.0995  steps 96  arch [128, 36, 13]
+  [grown_capped_dream] task 1/1 (Pong_skills) epoch 6/8 [post-grow]  avg_loss 1.1005  last_loss 1.0955  steps 128  arch [128, 36, 13]
+  [grown_capped_dream] task 1/1 (Pong_skills) epoch 7/8 [post-grow]  avg_loss 1.1003  last_loss 1.1012  steps 160  arch [128, 36, 13]
+  [grown_capped_dream] task 1/1 (Pong_skills) epoch 8/8 [post-grow]  avg_loss 1.0989  last_loss 1.0881  steps 192  arch [128, 36, 13]
+  [grown_capped_dream] post-task DREAM: replay 1.0978→1.0940 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 13] (3617925→3617925 params)
+[grown_capped_dream] After pass 1 task 1: own=0.0000 (domain 0.3556, task 0.3556)  avg=0.0000 (domain 0.3556, task 0.3556)  arch=[128, 36, 13] params=3617925 (trainable 5125)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.0000  domain=0.3556  task=0.3556
+[arm3] training done in 1.7 min
+
+=== arm3 eval on Breakout ===
+[skill-eval] Breakout return=+1.0 length=155 (1.9s) → /home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm3/eval-episode-0.mp4 OK
+
+=== build_skill_donor(Breakout) ===
+[1/2] collecting 16 skill-driven rollouts
+  [skill-rollout] ep 1/16: return=+1.0
+  [skill-rollout] ep 2/16: return=+11.0
+  [skill-rollout] ep 3/16: return=+1.0
+  [skill-rollout] ep 4/16: return=+7.0
+  [skill-rollout] ep 5/16: return=+1.0
+  [skill-rollout] ep 6/16: return=+2.0
+  [skill-rollout] ep 7/16: return=+2.0
+  [skill-rollout] ep 8/16: return=+1.0
+  [skill-rollout] ep 9/16: return=+3.0
+  [skill-rollout] ep 10/16: return=+3.0
+  [skill-rollout] ep 11/16: return=+2.0
+  [skill-rollout] ep 12/16: return=+1.0
+  [skill-rollout] ep 13/16: return=+2.0
+  [skill-rollout] ep 14/16: return=+1.0
+  [skill-rollout] ep 15/16: return=+4.0
+  [skill-rollout] ep 16/16: return=+4.0
+  [skill-rollout] 16 episodes: return mean=+2.88 max=+11
+    HOLD              :   626 (33.1%)
+    LEFT              :   604 (32.0%)
+    RIGHT             :   555 (29.4%)
+    RIGHT*explore     :    34 (1.8%)
+    LEFT*explore      :    31 (1.6%)
+    HOLD*explore      :    23 (1.2%)
+    SERVE             :    16 (0.8%)
+[2/2] training donor (input_dim=28224, classes=[20, 21, 22, 23])
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=64000  K=1  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_skills (active [20, 21, 22, 23])  pre-arch=[128, 32, 24] params=3617720 (trainable 4920/16000) ===
+  [grown_capped_dream] task 1/1 (Breakout_skills) epoch 1/8 [settle]  avg_loss 1.3294  last_loss 1.1674  steps 24  arch [128, 32, 24]
+  [grown_capped_dream] task 1/1 (Breakout_skills) epoch 2/8 [settle]  avg_loss 1.1855  last_loss 1.1673  steps 48  arch [128, 32, 24]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 24] params=3618332 (trainable 5532)
+  [grown_capped_dream] task 1/1 (Breakout_skills) epoch 3/8 [post-grow]  avg_loss 1.1489  last_loss 1.0903  steps 24  arch [128, 36, 24]
+  [grown_capped_dream] task 1/1 (Breakout_skills) epoch 4/8 [post-grow]  avg_loss 1.1409  last_loss 1.1173  steps 48  arch [128, 36, 24]
+  [grown_capped_dream] task 1/1 (Breakout_skills) epoch 5/8 [post-grow]  avg_loss 1.1392  last_loss 1.2098  steps 72  arch [128, 36, 24]
+  [grown_capped_dream] task 1/1 (Breakout_skills) epoch 6/8 [post-grow]  avg_loss 1.1402  last_loss 1.1163  steps 96  arch [128, 36, 24]
+  [grown_capped_dream] task 1/1 (Breakout_skills) epoch 7/8 [post-grow]  avg_loss 1.1374  last_loss 1.1021  steps 120  arch [128, 36, 24]
+  [grown_capped_dream] task 1/1 (Breakout_skills) epoch 8/8 [post-grow]  avg_loss 1.1391  last_loss 1.2200  steps 144  arch [128, 36, 24]
+  [grown_capped_dream] post-task DREAM: replay 1.1070→1.1149 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 24] (3618332→3618332 params)
+[grown_capped_dream] After pass 1 task 1: own=0.3063 (domain 0.3063, task 0.3063)  avg=0.3063 (domain 0.3063, task 0.3063)  arch=[128, 36, 24] params=3618332 (trainable 5532)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.3063  domain=0.3063  task=0.3063
+[arm1] training done in 0.1 min
+
+=== arm1 eval on Breakout ===
+[skill-eval] Breakout return=+0.0 length=10000 (427.3s) → /home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm1/eval-episode-0.mp4 OK
+
+=== extend_skill_donor(base=final.pt, new=Breakout) ===
+[1/3] base game inferred as Pong; collecting replay data for consolidation dream
+[2/3] collecting 16 new-game (Breakout) rollouts
+  [skill-rollout] ep 1/16: return=+1.0
+  [skill-rollout] ep 2/16: return=+11.0
+  [skill-rollout] ep 3/16: return=+1.0
+  [skill-rollout] ep 4/16: return=+7.0
+  [skill-rollout] ep 5/16: return=+1.0
+  [skill-rollout] ep 6/16: return=+2.0
+  [skill-rollout] ep 7/16: return=+2.0
+  [skill-rollout] ep 8/16: return=+1.0
+  [skill-rollout] ep 9/16: return=+3.0
+  [skill-rollout] ep 10/16: return=+3.0
+  [skill-rollout] ep 11/16: return=+2.0
+  [skill-rollout] ep 12/16: return=+1.0
+  [skill-rollout] ep 13/16: return=+2.0
+  [skill-rollout] ep 14/16: return=+1.0
+  [skill-rollout] ep 15/16: return=+4.0
+  [skill-rollout] ep 16/16: return=+4.0
+  [skill-rollout] 16 episodes: return mean=+2.88 max=+11
+    HOLD              :   626 (33.1%)
+    LEFT              :   604 (32.0%)
+    RIGHT             :   555 (29.4%)
+    RIGHT*explore     :    34 (1.8%)
+    LEFT*explore      :    31 (1.6%)
+    HOLD*explore      :    23 (1.2%)
+    SERVE             :    16 (0.8%)
+[3/3] api.extend (base classes=[10, 11, 12], new classes=[20, 21, 22, 23])
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm2 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm4 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+
+[grown_capped_dream] start  [resume from task 2/2 — base substrate hydrated] — arch (128, 36, 13)  params 3617925 (trainable 5125)  growth=True dream=True  cap_bytes=64000  K=2  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] ============================================
+[grown_capped_dream] EXTENSION BOUNDARY at task 2/2: shipping consolidation
+[grown_capped_dream] ============================================
+[grown_capped_dream] consolidation dream: replay 1.1005→1.1057 on 1 tasks (50 steps)  +0 new archives  per-layer-archived [0, 0, 0]
+[grown_capped_dream] cap lifted: 64_000 B → 128_000 B (32_000 trainable params)
+[grown_capped_dream] ============================================
+
+
+[grown_capped_dream] === Pass 1/1 Task 2/2: Breakout_skills (active [20, 21, 22, 23])  pre-arch=[128, 36, 24] params=3618332 (trainable 5532/32000) ===
+  [grown_capped_dream] task 2/2 (Breakout_skills) epoch 1/8 [settle]  avg_loss 1.3649  last_loss 1.2753  steps 24  arch [128, 36, 24]
+  [grown_capped_dream] task 2/2 (Breakout_skills) epoch 2/8 [settle]  avg_loss 1.2351  last_loss 1.1903  steps 48  arch [128, 36, 24]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 40, 24] params=3618944 (trainable 6144)
+  [grown_capped_dream] task 2/2 (Breakout_skills) epoch 3/8 [post-grow]  avg_loss 1.1834  last_loss 1.2179  steps 24  arch [128, 40, 24]
+  [grown_capped_dream] task 2/2 (Breakout_skills) epoch 4/8 [post-grow]  avg_loss 1.1572  last_loss 1.1330  steps 48  arch [128, 40, 24]
+  [grown_capped_dream] task 2/2 (Breakout_skills) epoch 5/8 [post-grow]  avg_loss 1.1486  last_loss 1.1396  steps 72  arch [128, 40, 24]
+  [grown_capped_dream] task 2/2 (Breakout_skills) epoch 6/8 [post-grow]  avg_loss 1.1443  last_loss 1.1050  steps 96  arch [128, 40, 24]
+  [grown_capped_dream] task 2/2 (Breakout_skills) epoch 7/8 [post-grow]  avg_loss 1.1433  last_loss 1.1648  steps 120  arch [128, 40, 24]
+  [grown_capped_dream] task 2/2 (Breakout_skills) epoch 8/8 [post-grow]  avg_loss 1.1423  last_loss 1.1110  steps 144  arch [128, 40, 24]
+  [grown_capped_dream] archive: 12 rows (L0:+8 L1:+4)  per-layer-archived [8, 4, 0]
+  [grown_capped_dream] post-task DREAM: replay 1.1133→1.1068 on 1p; merges=0 purges=0 latched=0 → arch [128, 40, 24] (3618944→3618944 params)
+[grown_capped_dream] After pass 1 task 2: own=0.0000 (domain 0.2915, task 0.2915)  avg=0.1778 (domain 0.3235, task 0.3235)  arch=[128, 40, 24] params=3618944 (trainable 6144)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.1778  domain=0.3235  task=0.3235
+
+[grown_capped_dream] quantization (int8, FP32 active): full 0.1778→0.1778 (Δ +0.0000)  domain 0.3235→0.3254 (Δ +0.0018)  task 0.3235→0.3254 (Δ +0.0018)
+[grown_capped_dream] deployment (int8, BF16 active): full 0.1778→0.1778 (Δ +0.0000)  domain 0.3235→0.3235 (Δ +0.0000)  task 0.3235→0.3235 (Δ +0.0000)
+[grown_capped_dream] storage  FP32-baseline: total 13473.5 KB (L0 13451.0, L1 18.7, head 3.8)
+[grown_capped_dream] storage  BF16-baseline: total 6847.3 KB (L0 6835.8, L1 9.6, head 1.9)
+[arm2] extension done in 0.5 min
+
+=== arm2 eval on Breakout ===
+[skill-eval] Breakout return=+0.0 length=10000 (407.1s) → /home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm2/eval-episode-0.mp4 OK
+
+=== absorb_skill_donors(final.pt ⊕ final.pt) ===
+[arm4] graft done in 0.6s
+
+=== arm4 eval on Breakout ===
+[skill-eval] Breakout return=+0.0 length=10000 (414.8s) → /home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm4/eval-episode-0.mp4 OK
+=== run_skill all arms done: Thu May  7 11:30:38 +07 2026 ===

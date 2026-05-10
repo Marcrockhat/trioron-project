@@ -1,0 +1,9 @@
+A.L.E: Arcade Learning Environment (version 0.11.2+ecc1138)
+[Powered by Stella]
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/pong_eval folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+[pong] return=-21.0  length=1905  (25.6s)
+  action counts: {0: 1239, 2: 330, 3: 336}
+  video: /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/pong_eval/pong_curriculum_eval-episode-0.mp4 OK
+
+final: return=-21.0 length=1905

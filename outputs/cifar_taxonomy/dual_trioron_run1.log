@@ -1,0 +1,31 @@
+[dual] L1: outputs/cifar_taxonomy/donor_l1_perceptual_4way.pt
+  arch=[128, 36, 4]  l0_seed=42
+[dual] L2: outputs/cifar_taxonomy/donor_l2_central_object_9way.pt
+  arch=[128, 36, 9]  l0_seed=42
+[dual] central-object test: 900 imgs, 9 fines
+
+[dual] === component-level ===
+  L1 macro recall on central-object: 0.9022  (L1 says 'central' for 811/900 central-object images)
+  L2 fine accuracy solo:             0.4389  (matches the fresh L2 baseline 0.4389 in memory)
+
+[dual] === hierarchical (L1-routed → L2) ===
+  end-to-end fine acc:  0.4033
+  decomposition: 0.9022 (L1 routes correctly) × 0.4389 (L2 correct given correct routing) ≈ 0.3960 (independence assumed)
+
+[dual] === per-class hierarchical accuracy ===
+  class            l2-solo      dual   l1-correct
+  wolf              0.3600    0.3500       0.9300
+  man               0.5000    0.4600       0.8800
+  clock             0.2100    0.1600       0.8400
+  motorcycle        0.5500    0.5500       0.9800
+  pickup_truck      0.3900    0.2900       0.8300
+  rose              0.6500    0.6400       0.9400
+  spider            0.5400    0.4300       0.8000
+  butterfly         0.3100    0.3100       0.9400
+  mushroom          0.4400    0.4400       0.9800
+
+[dual] === comparison vs single-trioron approaches ===
+  fresh L2, no L1 prior (upper bound):      0.4389
+  api.extend(L1, L2):                       0.3844
+  api.extend(consolidated L1, L2):          0.3811
+  dual-trioron hierarchical (this run):     0.4033

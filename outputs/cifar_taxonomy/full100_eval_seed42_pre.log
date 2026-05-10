@@ -1,0 +1,38 @@
+[full100-eval] L1: outputs/cifar_taxonomy/donor_full100_l1_k20_seed42.pt  arch=[128, 36, 20]
+[full100-eval]   k=20  expert_suffix=''
+[full100-eval] loaded 17 experts; 3 singletons (handled directly)
+[full100-eval] test: 10000 imgs across 100 fine classes
+[full100-eval] L1 macro acc: 0.3802
+
+[full100-eval] === results ===
+  100-way fine acc:   0.1428
+  chance (1/100):     0.0100
+  margin over chance: +0.1328  (14.3× chance)
+
+[full100-eval] === error decomposition ===
+  correct (L1 + L2 right):        1428/10000 = 0.1428
+  L1 routing miss:                6198/10000 = 0.6198
+  L1 right but L2 fine miss:      2374/10000 = 0.2374
+
+[full100-eval] === per-cluster fine accuracy ===
+   cid  size   L1 recall   fine acc  members[:3]
+  c00     3      0.5400     0.2700  ['dolphin', 'shark', 'whale']
+  c01     2      0.0650     0.0400  ['ray', 'turtle']
+  c02     5      0.5320     0.2700  ['cloud', 'mountain', 'rocket']…
+  c03     2      0.3600     0.3100  ['plain', 'road']
+  c04     1      0.2100     0.2100  ['castle']
+  c05     2      0.2500     0.2300  ['orange', 'pear']
+  c06     1      0.2700     0.2700  ['apple']
+  c07    15      0.5847     0.1587  ['baby', 'bed', 'bottle']…
+  c08     1      0.2500     0.2500  ['cockroach']
+  c09     3      0.3233     0.1733  ['orchid', 'rose', 'tulip']
+  c10     4      0.3825     0.2250  ['bee', 'poppy', 'sunflower']…
+  c11     5      0.4040     0.1940  ['maple_tree', 'oak_tree', 'palm_tree']…
+  c12     5      0.2280     0.1240  ['bus', 'keyboard', 'motorcycle']…
+  c13     2      0.1100     0.0800  ['telephone', 'television']
+  c14    13      0.2985     0.1146  ['aquarium_fish', 'bear', 'can']…
+  c15     5      0.1740     0.0700  ['bridge', 'house', 'seal']…
+  c16     2      0.1500     0.1300  ['leopard', 'tiger']
+  c17     6      0.0917     0.0467  ['bicycle', 'crab', 'lobster']…
+  c18     3      0.1000     0.0733  ['butterfly', 'caterpillar', 'forest']
+  c19    20      0.5555     0.1040  ['beaver', 'beetle', 'camel']…

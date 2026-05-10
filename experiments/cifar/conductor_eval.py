@@ -47,28 +47,51 @@ def _eval_logits(
     union_classes: List[int],
     class_groups: List[List[int]],
 ) -> Dict[str, float]:
-    """Return {'full': full-slice accuracy, 'task': task-aware accuracy}."""
+    """Return {'full': full-slice accuracy, 'domain': 10-class-block
+    accuracy, 'task': task-aware accuracy}.
+
+    Domain matches bench_chained_15task: the 10-class block containing
+    the current image's task. CIFAR-100 tasks are contiguous 5-class
+    blocks aligned to multiples of 5, so two consecutive tasks share
+    one domain — chance 1/10 when restricted to the 10-class superset.
+    """
     union = list(union_classes)
     cls_to_col = {c: i for i, c in enumerate(union)}
+    union_set = set(union)
     # Full-slice argmax over all union classes.
     pred_cols = logits.argmax(dim=1)
     pred_cls = torch.tensor([union[i] for i in pred_cols.tolist()],
                             dtype=labels.dtype)
     full = (pred_cls == labels).float().mean().item()
 
-    # Task-aware: per-image, restrict softmax to its task's classes.
-    correct = 0
+    correct_task = 0
+    correct_domain = 0
     for i in range(labels.shape[0]):
         c = int(labels[i].item())
         t = _task_for_class(c, class_groups)
+        # Task-aware: restrict to current task's 5 classes.
         active_cols = [cls_to_col[g] for g in class_groups[t]]
-        active_logits = logits[i, active_cols]
-        local_pred = active_logits.argmax().item()
-        pred_global = class_groups[t][local_pred]
-        if pred_global == c:
-            correct += 1
-    task = correct / labels.shape[0]
-    return {"full": full, "task": task}
+        local_pred_t = logits[i, active_cols].argmax().item()
+        if class_groups[t][local_pred_t] == c:
+            correct_task += 1
+        # Domain: 10-class block containing the smallest class of this task.
+        task0 = min(class_groups[t])
+        domain_idx = task0 // 10
+        domain_classes = [
+            cls for cls in range(domain_idx * 10, (domain_idx + 1) * 10)
+            if cls in union_set
+        ]
+        if domain_classes:
+            domain_cols = [cls_to_col[cls] for cls in domain_classes]
+            local_pred_d = logits[i, domain_cols].argmax().item()
+            if domain_classes[local_pred_d] == c:
+                correct_domain += 1
+    n = labels.shape[0]
+    return {
+        "full": full,
+        "domain": correct_domain / n,
+        "task": correct_task / n,
+    }
 
 
 def main(argv=None) -> int:
@@ -84,7 +107,7 @@ def main(argv=None) -> int:
     parser.add_argument("--data-root", default=DEFAULT_DATA_ROOT)
     parser.add_argument(
         "--senses", nargs="+",
-        default=["eye", "mass_moment", "color_smell"],
+        default=["cortex", "color_smell", "frequency_print"],
     )
     parser.add_argument(
         "--greedy-select", action="store_true",
@@ -124,7 +147,7 @@ def main(argv=None) -> int:
     # Per-donor solo evaluation (using the conductor with a single
     # donor — ensures the same standardizer pipeline as fused).
     print("\n=== per-donor solo accuracy ===")
-    print(f"{'sense':<14s} {'full':>8s} {'task':>8s}")
+    print(f"{'sense':<14s} {'full':>8s} {'domain':>8s} {'task':>8s}")
     solo: Dict[str, Dict[str, float]] = {}
     for d in donors:
         cnd = SensoryConductor([d], fusion="mean_logit").eval()
@@ -133,11 +156,12 @@ def main(argv=None) -> int:
         m = _eval_logits(logits, test_labs, cnd.union_classes,
                          class_groups)
         solo[d.sense_name] = m
-        print(f"{d.sense_name:<14s} {m['full']:>8.4f} {m['task']:>8.4f}")
+        print(f"{d.sense_name:<14s} {m['full']:>8.4f} {m['domain']:>8.4f} "
+              f"{m['task']:>8.4f}")
 
     # Fused conductor with all donors, each fusion rule.
     print("\n=== fused conductor (all donors) ===")
-    print(f"{'fusion':<22s} {'full':>8s} {'task':>8s}")
+    print(f"{'fusion':<22s} {'full':>8s} {'domain':>8s} {'task':>8s}")
     fusion_results: Dict[str, Dict[str, float]] = {}
     for fusion in ("mean_logit", "sum_logit", "log_prob_mean",
                    "confidence_weighted"):
@@ -147,18 +171,21 @@ def main(argv=None) -> int:
         m = _eval_logits(logits, test_labs, cnd.union_classes,
                          class_groups)
         fusion_results[fusion] = m
-        print(f"{fusion:<22s} {m['full']:>8.4f} {m['task']:>8.4f}")
+        print(f"{fusion:<22s} {m['full']:>8.4f} {m['domain']:>8.4f} "
+              f"{m['task']:>8.4f}")
 
     # Leave-one-out ablation under the strongest fusion rule. Each row
     # shows what fusion accuracy looks like without one specific donor
     # — negative numbers indicate the donor is contributing; positive
     # mean removing it helps.
     print("\n=== leave-one-out ablation (confidence_weighted) ===")
-    print(f"{'removed':<18s} {'full':>8s} {'task':>8s}  "
-          f"{'Δfull':>8s} {'Δtask':>8s}")
+    print(f"{'removed':<18s} {'full':>8s} {'domain':>8s} {'task':>8s}  "
+          f"{'Δfull':>8s} {'Δdomain':>8s} {'Δtask':>8s}")
     base_full = fusion_results["confidence_weighted"]["full"]
+    base_domain = fusion_results["confidence_weighted"]["domain"]
     base_task = fusion_results["confidence_weighted"]["task"]
-    print(f"{'(none, baseline)':<18s} {base_full:>8.4f} {base_task:>8.4f}")
+    print(f"{'(none, baseline)':<18s} {base_full:>8.4f} {base_domain:>8.4f} "
+          f"{base_task:>8.4f}")
     for i, d in enumerate(donors):
         kept = [donors[j] for j in range(len(donors)) if j != i]
         cnd = SensoryConductor(kept, fusion="confidence_weighted").eval()
@@ -167,10 +194,12 @@ def main(argv=None) -> int:
         m = _eval_logits(logits, test_labs, cnd.union_classes,
                          class_groups)
         d_full = m["full"] - base_full
+        d_domain = m["domain"] - base_domain
         d_task = m["task"] - base_task
         marker_full = " ↑" if d_full > 0 else ("  " if d_full == 0 else "")
-        print(f"{d.sense_name:<18s} {m['full']:>8.4f} {m['task']:>8.4f}  "
-              f"{d_full:>+8.4f} {d_task:>+8.4f}{marker_full}")
+        print(f"{d.sense_name:<18s} {m['full']:>8.4f} {m['domain']:>8.4f} "
+              f"{m['task']:>8.4f}  "
+              f"{d_full:>+8.4f} {d_domain:>+8.4f} {d_task:>+8.4f}{marker_full}")
 
     # Greedy forward selection: add donors one at a time, keep if
     # task-aware accuracy increases under mean_logit fusion.

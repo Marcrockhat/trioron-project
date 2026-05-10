@@ -1,0 +1,11 @@
+{
+  "arm": "arm2",
+  "eval_game": "Breakout",
+  "training_wallclock_s": 32.96319937705994,
+  "eval": {
+    "return": 0.0,
+    "length": 10000,
+    "video_path": "/home/marcrockhat/trioron-project/outputs/atari_trioron_skill/arm2/eval-episode-0.mp4",
+    "wallclock": 407.06065034866333
+  }
+}

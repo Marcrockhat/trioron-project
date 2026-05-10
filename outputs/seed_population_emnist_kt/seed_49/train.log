@@ -1,0 +1,80 @@
+train_donor: label=emnist_kt  seed=49  arm=grown_uncapped_dream  epochs/task=8
+  tasks   = ['emnist_letters_10_11', 'emnist_letters_12_13', 'emnist_letters_14_15', 'emnist_letters_16_17', 'emnist_letters_18_19']
+  classes = [30, 31, 32, 33, 34, 35, 36, 37, 38, 39]  dataset=emnist_letters
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+[grown_uncapped_dream] L0 factored as R_donor · S  (donor_seed=49, protocol_seed=0xFEEDFACE)
+
+[grown_uncapped_dream] start — arch (128, 32, 2)  params 104674 (trainable 4194)  growth=True dream=True  cap_bytes=2147483648  K=5  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_uncapped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_uncapped_dream] === Pass 1/1 Task 1/5: emnist_letters_10_11 (active [30, 31])  pre-arch=[128, 32, 32] params=105664 (trainable 5184/∞) ===
+  [grown_uncapped_dream] task 1/5 (emnist_letters_10_11) epoch 1/8 [settle]  avg_loss 0.3162  last_loss 0.1536  steps 150  arch [128, 32, 32]
+  [grown_uncapped_dream] task 1/5 (emnist_letters_10_11) epoch 2/8 [settle]  avg_loss 0.1490  last_loss 0.0741  steps 300  arch [128, 32, 32]
+  [grown_uncapped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 32] params=106308 (trainable 5828)
+  [grown_uncapped_dream] task 1/5 (emnist_letters_10_11) epoch 3/8 [post-grow]  avg_loss 0.1158  last_loss 0.0939  steps 150  arch [128, 36, 32]
+  [grown_uncapped_dream] task 1/5 (emnist_letters_10_11) epoch 4/8 [post-grow]  avg_loss 0.0958  last_loss 0.0775  steps 300  arch [128, 36, 32]
+  [grown_uncapped_dream] task 1/5 (emnist_letters_10_11) epoch 5/8 [post-grow]  avg_loss 0.0818  last_loss 0.0337  steps 450  arch [128, 36, 32]
+  [grown_uncapped_dream] task 1/5 (emnist_letters_10_11) epoch 6/8 [post-grow]  avg_loss 0.0720  last_loss 0.0883  steps 600  arch [128, 36, 32]
+  [grown_uncapped_dream] task 1/5 (emnist_letters_10_11) epoch 7/8 [post-grow]  avg_loss 0.0640  last_loss 0.0481  steps 750  arch [128, 36, 32]
+  [grown_uncapped_dream] task 1/5 (emnist_letters_10_11) epoch 8/8 [post-grow]  avg_loss 0.0586  last_loss 0.0720  steps 900  arch [128, 36, 32]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0159→0.0320 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 32] (106308→106308 params)
+[grown_uncapped_dream] After pass 1 task 1: own=0.7956 (domain 0.9812, task 0.9812)  avg=0.7956 (domain 0.9812, task 0.9812)  arch=[128, 36, 32] params=106308 (trainable 5828)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 2/5: emnist_letters_12_13 (active [32, 33])  pre-arch=[128, 36, 34] params=106382 (trainable 5902/∞) ===
+  [grown_uncapped_dream] task 2/5 (emnist_letters_12_13) epoch 1/8 [settle]  avg_loss 0.4434  last_loss 0.2985  steps 150  arch [128, 36, 34]
+  [grown_uncapped_dream] task 2/5 (emnist_letters_12_13) epoch 2/8 [settle]  avg_loss 0.3080  last_loss 0.2478  steps 300  arch [128, 36, 34]
+  [grown_uncapped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 40, 34] params=107034 (trainable 6554)
+  [grown_uncapped_dream] task 2/5 (emnist_letters_12_13) epoch 3/8 [post-grow]  avg_loss 0.2827  last_loss 0.2645  steps 150  arch [128, 40, 34]
+  [grown_uncapped_dream] task 2/5 (emnist_letters_12_13) epoch 4/8 [post-grow]  avg_loss 0.2619  last_loss 0.3511  steps 300  arch [128, 40, 34]
+  [grown_uncapped_dream] task 2/5 (emnist_letters_12_13) epoch 5/8 [post-grow]  avg_loss 0.2454  last_loss 0.2337  steps 450  arch [128, 40, 34]
+  [grown_uncapped_dream] task 2/5 (emnist_letters_12_13) epoch 6/8 [post-grow]  avg_loss 0.2339  last_loss 0.2272  steps 600  arch [128, 40, 34]
+  [grown_uncapped_dream] task 2/5 (emnist_letters_12_13) epoch 7/8 [post-grow]  avg_loss 0.2257  last_loss 0.2013  steps 750  arch [128, 40, 34]
+  [grown_uncapped_dream] task 2/5 (emnist_letters_12_13) epoch 8/8 [post-grow]  avg_loss 0.2168  last_loss 0.1927  steps 900  arch [128, 40, 34]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0283→0.0300 on 1p; merges=0 purges=0 latched=0 → arch [128, 40, 34] (107034→107034 params)
+[grown_uncapped_dream] After pass 1 task 2: own=0.0000 (domain 0.0000, task 0.9194)  avg=0.4884 (domain 0.4884, task 0.9481)  arch=[128, 40, 34] params=107034 (trainable 6554)  cum_grows=8 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 3/5: emnist_letters_14_15 (active [34, 35])  pre-arch=[128, 40, 36] params=107116 (trainable 6636/∞) ===
+  [grown_uncapped_dream] task 3/5 (emnist_letters_14_15) epoch 1/8 [settle]  avg_loss 0.4875  last_loss 0.2063  steps 150  arch [128, 40, 36]
+  [grown_uncapped_dream] task 3/5 (emnist_letters_14_15) epoch 2/8 [settle]  avg_loss 0.1872  last_loss 0.2009  steps 300  arch [128, 40, 36]
+  [grown_uncapped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 44, 36] params=107776 (trainable 7296)
+  [grown_uncapped_dream] task 3/5 (emnist_letters_14_15) epoch 3/8 [post-grow]  avg_loss 0.1346  last_loss 0.1271  steps 150  arch [128, 44, 36]
+  [grown_uncapped_dream] task 3/5 (emnist_letters_14_15) epoch 4/8 [post-grow]  avg_loss 0.0915  last_loss 0.0605  steps 300  arch [128, 44, 36]
+  [grown_uncapped_dream] task 3/5 (emnist_letters_14_15) epoch 5/8 [post-grow]  avg_loss 0.0685  last_loss 0.0776  steps 450  arch [128, 44, 36]
+  [grown_uncapped_dream] task 3/5 (emnist_letters_14_15) epoch 6/8 [post-grow]  avg_loss 0.0582  last_loss 0.0235  steps 600  arch [128, 44, 36]
+  [grown_uncapped_dream] task 3/5 (emnist_letters_14_15) epoch 7/8 [post-grow]  avg_loss 0.0513  last_loss 0.1350  steps 750  arch [128, 44, 36]
+  [grown_uncapped_dream] task 3/5 (emnist_letters_14_15) epoch 8/8 [post-grow]  avg_loss 0.0476  last_loss 0.0671  steps 900  arch [128, 44, 36]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0567→0.0182 on 1p; merges=0 purges=0 latched=0 → arch [128, 44, 36] (107776→107776 params)
+[grown_uncapped_dream] After pass 1 task 3: own=0.0000 (domain 0.0000, task 0.9875)  avg=0.5762 (domain 0.5762, task 0.9483)  arch=[128, 44, 36] params=107776 (trainable 7296)  cum_grows=12 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 4/5: emnist_letters_16_17 (active [36, 37])  pre-arch=[128, 44, 38] params=107866 (trainable 7386/∞) ===
+  [grown_uncapped_dream] task 4/5 (emnist_letters_16_17) epoch 1/8 [settle]  avg_loss 0.4685  last_loss 0.2687  steps 150  arch [128, 44, 38]
+  [grown_uncapped_dream] task 4/5 (emnist_letters_16_17) epoch 2/8 [settle]  avg_loss 0.2298  last_loss 0.1961  steps 300  arch [128, 44, 38]
+  [grown_uncapped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 48, 38] params=108534 (trainable 8054)
+  [grown_uncapped_dream] task 4/5 (emnist_letters_16_17) epoch 3/8 [post-grow]  avg_loss 0.1839  last_loss 0.1580  steps 150  arch [128, 48, 38]
+  [grown_uncapped_dream] task 4/5 (emnist_letters_16_17) epoch 4/8 [post-grow]  avg_loss 0.1579  last_loss 0.1310  steps 300  arch [128, 48, 38]
+  [grown_uncapped_dream] task 4/5 (emnist_letters_16_17) epoch 5/8 [post-grow]  avg_loss 0.1441  last_loss 0.0824  steps 450  arch [128, 48, 38]
+  [grown_uncapped_dream] task 4/5 (emnist_letters_16_17) epoch 6/8 [post-grow]  avg_loss 0.1335  last_loss 0.1098  steps 600  arch [128, 48, 38]
+  [grown_uncapped_dream] task 4/5 (emnist_letters_16_17) epoch 7/8 [post-grow]  avg_loss 0.1281  last_loss 0.0858  steps 750  arch [128, 48, 38]
+  [grown_uncapped_dream] task 4/5 (emnist_letters_16_17) epoch 8/8 [post-grow]  avg_loss 0.1231  last_loss 0.0807  steps 900  arch [128, 48, 38]
+  [grown_uncapped_dream] post-task DREAM: replay 0.2016→0.0562 on 1p; merges=0 purges=0 latched=0 → arch [128, 48, 38] (108534→108534 params)
+[grown_uncapped_dream] After pass 1 task 4: own=0.0006 (domain 0.0006, task 0.9556)  avg=0.6269 (domain 0.6269, task 0.9458)  arch=[128, 48, 38] params=108534 (trainable 8054)  cum_grows=16 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 5/5: emnist_letters_18_19 (active [38, 39])  pre-arch=[128, 48, 40] params=108632 (trainable 8152/∞) ===
+  [grown_uncapped_dream] task 5/5 (emnist_letters_18_19) epoch 1/8 [settle]  avg_loss 0.5273  last_loss 0.2429  steps 150  arch [128, 48, 40]
+  [grown_uncapped_dream] task 5/5 (emnist_letters_18_19) epoch 2/8 [settle]  avg_loss 0.2467  last_loss 0.1736  steps 300  arch [128, 48, 40]
+  [grown_uncapped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 52, 40] params=109308 (trainable 8828)
+  [grown_uncapped_dream] task 5/5 (emnist_letters_18_19) epoch 3/8 [post-grow]  avg_loss 0.1782  last_loss 0.1338  steps 150  arch [128, 52, 40]
+  [grown_uncapped_dream] task 5/5 (emnist_letters_18_19) epoch 4/8 [post-grow]  avg_loss 0.1358  last_loss 0.0809  steps 300  arch [128, 52, 40]
+  [grown_uncapped_dream] task 5/5 (emnist_letters_18_19) epoch 5/8 [post-grow]  avg_loss 0.1113  last_loss 0.1040  steps 450  arch [128, 52, 40]
+  [grown_uncapped_dream] task 5/5 (emnist_letters_18_19) epoch 6/8 [post-grow]  avg_loss 0.0978  last_loss 0.1275  steps 600  arch [128, 52, 40]
+  [grown_uncapped_dream] task 5/5 (emnist_letters_18_19) epoch 7/8 [post-grow]  avg_loss 0.0895  last_loss 0.1103  steps 750  arch [128, 52, 40]
+  [grown_uncapped_dream] task 5/5 (emnist_letters_18_19) epoch 8/8 [post-grow]  avg_loss 0.0850  last_loss 0.0554  steps 900  arch [128, 52, 40]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0281→0.0708 on 1p; merges=0 purges=0 latched=0 → arch [128, 52, 40] (109308→109308 params)
+[grown_uncapped_dream] After pass 1 task 5: own=0.0012 (domain 0.0012, task 0.9619)  avg=0.5844 (domain 0.5844, task 0.9449)  arch=[128, 52, 40] params=109308 (trainable 8828)  cum_grows=20 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] <<< PASS 1/1 done — full=0.5844  domain=0.5844  task=0.9449
+
+[SCORE] emnist_kt  task-aware 0.9449  full 0.5844  domain 0.5844
+[SAVE] outputs/seed_population_emnist_kt/seed_49/poc_donor_emnist_kt.pt  (1318.9 KB)  head=40  arch=[128, 52, 40]  archive_classes=[30, 31, 32, 33, 34, 35, 36, 37, 38, 39]

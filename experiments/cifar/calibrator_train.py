@@ -38,8 +38,8 @@ from experiments.cifar.datasets import (
 from experiments.cifar.conductor_eval import _eval_logits
 
 
-GREEDY_7 = ["eye", "color_smell", "frequency_print", "heat_diffusion",
-            "skeleton", "taste", "pulse"]
+GREEDY_7 = ["cortex", "color_smell", "frequency_print", "taste",
+            "random_walk"]
 
 
 def _build_cache(

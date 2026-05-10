@@ -1,0 +1,71 @@
+[L2-expand] L1 donor: outputs/cifar_taxonomy/donor_l1_perceptual_4way_consolidated.pt
+[L2-expand]   sense=classical  arch=[128, 36, 4]
+[L2-expand]   L1 classes (base): [0, 1, 2, 3]
+[L2-expand] base_tasks: 1 task with classes [0, 1, 2, 3], train 8000
+[L2-expand] new_tasks:  1 task with classes [4, 5, 6, 7, 8, 9, 10, 11, 12], train 4500
+[L2-expand]   L2 fine names: ['wolf', 'man', 'clock', 'motorcycle', 'pickup_truck', 'rose', 'spider', 'butterfly', 'mushroom']
+
+[grown_capped_dream] start  [resume from task 2/2 — base substrate hydrated] — arch (128, 36, 4)  params 9144 (trainable 4792)  growth=True dream=True  cap_bytes=64000  K=2  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] ============================================
+[grown_capped_dream] EXTENSION BOUNDARY at task 2/2: shipping consolidation
+[grown_capped_dream] ============================================
+[grown_capped_dream] consolidation dream: replay 0.4692→0.4326 on 1 tasks (50 steps)  +0 new archives  per-layer-archived [0, 0, 0]
+[grown_capped_dream] permanent int8 snap on archived rows
+[grown_capped_dream] cap lifted: 64_000 B → 128_000 B (32_000 trainable params)
+[grown_capped_dream] ============================================
+
+
+[grown_capped_dream] === Pass 1/1 Task 2/2: L2_central_object_refine (active [4, 5, 6, 7, 8, 9, 10, 11, 12])  pre-arch=[128, 36, 13] params=9477 (trainable 5125/32000) ===
+  [grown_capped_dream] task 2/2 (L2_central_object_refine) epoch 1/8 [settle]  avg_loss 2.3326  last_loss 2.1269  steps 71  arch [128, 36, 13]
+  [grown_capped_dream] task 2/2 (L2_central_object_refine) epoch 2/8 [settle]  avg_loss 1.9815  last_loss 1.9695  steps 142  arch [128, 36, 13]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 40, 13] params=10045 (trainable 5693)
+  [grown_capped_dream] task 2/2 (L2_central_object_refine) epoch 3/8 [post-grow]  avg_loss 1.8953  last_loss 1.8567  steps 71  arch [128, 40, 13]
+  [grown_capped_dream] task 2/2 (L2_central_object_refine) epoch 4/8 [post-grow]  avg_loss 1.8111  last_loss 1.5792  steps 142  arch [128, 40, 13]
+  [grown_capped_dream] task 2/2 (L2_central_object_refine) epoch 5/8 [post-grow]  avg_loss 1.7666  last_loss 2.1410  steps 213  arch [128, 40, 13]
+  [grown_capped_dream] task 2/2 (L2_central_object_refine) epoch 6/8 [post-grow]  avg_loss 1.7246  last_loss 1.5870  steps 284  arch [128, 40, 13]
+  [grown_capped_dream] task 2/2 (L2_central_object_refine) epoch 7/8 [post-grow]  avg_loss 1.6975  last_loss 1.6654  steps 355  arch [128, 40, 13]
+  [grown_capped_dream] task 2/2 (L2_central_object_refine) epoch 8/8 [post-grow]  avg_loss 1.6727  last_loss 1.2791  steps 426  arch [128, 40, 13]
+  [grown_capped_dream] archive: 8 rows (L0:+8)  per-layer-archived [8, 0, 0]
+  [grown_capped_dream] post-task DREAM: replay 1.4264→1.7278 on 1p; merges=0 purges=0 latched=0 → arch [128, 40, 13] (10045→10045 params)
+[grown_capped_dream] After pass 1 task 2: own=0.0000 (domain 0.0000, task 0.3811)  avg=0.3619 (domain 0.3619, task 0.5524)  arch=[128, 40, 13] params=10045 (trainable 5693)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.3619  domain=0.3619  task=0.5524
+
+[grown_capped_dream] quantization (int8, FP32 active): full 0.3619→0.3619 (Δ +0.0000)  domain 0.3619→0.3619 (Δ +0.0000)  task 0.5524→0.5524 (Δ +0.0000)
+[grown_capped_dream] deployment (int8, BF16 active): full 0.3619→0.3609 (Δ -0.0009)  domain 0.3619→0.3609 (Δ -0.0009)  task 0.5524→0.5509 (Δ -0.0015)
+[grown_capped_dream] storage  FP32-baseline: total 38.5 KB (L0 16.3, L1 20.2, head 2.1)
+[grown_capped_dream] storage  BF16-baseline: total 19.4 KB (L0 8.3, L1 10.1, head 1.0)
+[L2-expand] api.extend done (5.8s)
+
+[L2-expand] === results ===
+  L1 task-aware (4-way macro):  0.7237  (prior n=1 imbalanced donor: 0.7831; chance 0.25)
+  L2 task-aware (9-way fine):   0.3811  (fresh L2 baseline n=1: 0.4389; chance 0.111)
+  total head columns: 13  arch=[128, 40, 13]
+
+  L2 per-class accuracy:
+    wolf            n=100  acc=0.1100
+    man             n=100  acc=0.5500
+    clock           n=100  acc=0.0900
+    motorcycle      n=100  acc=0.6500
+    pickup_truck    n=100  acc=0.2700
+    rose            n=100  acc=0.5700
+    spider          n=100  acc=0.4700
+    butterfly       n=100  acc=0.3500
+    mushroom        n=100  acc=0.3700
+
+  L2 top-10 confusions (true → predicted):
+    wolf           → man               34
+    clock          → man               27
+    wolf           → mushroom          21
+    pickup_truck   → motorcycle        21
+    mushroom       → butterfly         20
+    clock          → motorcycle        19
+    mushroom       → man               17
+    butterfly      → mushroom          16
+    wolf           → motorcycle        15
+    spider         → butterfly         15
+
+[L2-expand] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l2_expanded_from_l1_consolidated.pt  (162.3 KB)

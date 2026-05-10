@@ -1,0 +1,51 @@
+[L2-c] donor: outputs/cifar_taxonomy/donor_l2_central_object_9way.pt
+[L2-c]   sense=classical  arch=[128, 36, 9]
+[L2-c] L0 stats: μ (9, 128)  σ (9, 128)
+[L2-c]   ‖μ‖ range: 5.721–7.885
+[L2-c]   σ range:  0.685–0.872
+[L2-c] top-12 confusable pairs:
+    clock          → man              23
+    butterfly      → mushroom         22
+    pickup_truck   → motorcycle       18
+    wolf           → mushroom         17
+    wolf           → pickup_truck     17
+    man            → pickup_truck     15
+    spider         → mushroom         14
+    wolf           → man              14
+    butterfly      → spider           13
+    motorcycle     → pickup_truck     13
+    clock          → pickup_truck     13
+    mushroom       → butterfly        12
+
+[L2-c] baseline test acc: 0.4389 (chance 1/9=0.111)
+[L2-c] starting CE+margin refinement: 2000 steps, batch_pairs=64, ce_batch=256, margin=1.0, lr=0.001, ce_w=1.0, margin_w=0.5, align_pairs=True
+  step     1/2000  ce=1.3741  margin=0.5004  acc=0.4389
+  step   200/2000  ce=1.3317  margin=0.3985  acc=0.4322
+  step   400/2000  ce=1.3581  margin=0.3166  acc=0.4456
+  step   600/2000  ce=1.3969  margin=0.3205  acc=0.4522
+  step   800/2000  ce=1.1964  margin=0.3036  acc=0.4611
+  step  1000/2000  ce=1.3009  margin=0.2977  acc=0.4533
+  step  1200/2000  ce=1.2929  margin=0.2708  acc=0.4689
+  step  1400/2000  ce=1.1467  margin=0.2046  acc=0.4678
+  step  1600/2000  ce=1.1470  margin=0.3444  acc=0.4667
+  step  1800/2000  ce=1.0525  margin=0.2929  acc=0.4711
+  step  2000/2000  ce=1.2165  margin=0.2566  acc=0.4589
+[L2-c] refinement done (18.7s)
+
+[L2-c] === results ===
+  baseline acc:       0.4389
+  contrastive acc:    0.4589
+  Δ:                  +0.0200
+
+  per-class accuracy (baseline → contrastive):
+    wolf            0.3600 → 0.3800  ↑
+    man             0.5000 → 0.5000
+    clock           0.2100 → 0.3100  ↑
+    motorcycle      0.5500 → 0.5500
+    pickup_truck    0.3900 → 0.3300  ↓
+    rose            0.6500 → 0.6500
+    spider          0.5400 → 0.5900  ↑
+    butterfly       0.3100 → 0.3800  ↑
+    mushroom        0.4400 → 0.4400
+
+[L2-c] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l2_contrastive_v2.pt

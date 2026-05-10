@@ -1,0 +1,49 @@
+A.L.E: Arcade Learning Environment (version 0.11.2+ecc1138)
+[Powered by Stella]
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/dream_loop_multiseed/seed0 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/dream_loop_multiseed/seed0 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+
+[ep 1/10 seed=0] return=+2.0 length=6605 (193.7s)
+  net win (return=+2.0) — skipping dream
+
+[ep 2/10 seed=0] return=+2.0 length=6605 (19.7s)
+  net win (return=+2.0) — skipping dream
+
+[ep 3/10 seed=0] return=+2.0 length=6605 (23.1s)
+  net win (return=+2.0) — skipping dream
+
+[ep 4/10 seed=0] return=+2.0 length=6605 (16.2s)
+  net win (return=+2.0) — skipping dream
+
+[ep 5/10 seed=0] return=+2.0 length=6605 (16.6s)
+  net win (return=+2.0) — skipping dream
+
+[ep 6/10 seed=0] return=+2.0 length=6605 (15.3s)
+  net win (return=+2.0) — skipping dream
+
+[ep 7/10 seed=0] return=+2.0 length=6605 (17.0s)
+  net win (return=+2.0) — skipping dream
+
+[ep 8/10 seed=0] return=+2.0 length=6605 (17.2s)
+  net win (return=+2.0) — skipping dream
+
+[ep 9/10 seed=0] return=+2.0 length=6605 (18.8s)
+  net win (return=+2.0) — skipping dream
+
+[ep 10/10 seed=0] return=+2.0 length=6605 (191.3s)
+  net win (return=+2.0) — skipping dream
+
+=== Dream-loop trajectory ===
+  ep 1: +2.0
+  ep 2: +2.0
+  ep 3: +2.0
+  ep 4: +2.0
+  ep 5: +2.0
+  ep 6: +2.0
+  ep 7: +2.0
+  ep 8: +2.0
+  ep 9: +2.0
+  ep 10: +2.0
+  delta (last - first): +0.0

@@ -1,0 +1,29 @@
+[L1] living classes:     ['wolf', 'dolphin', 'butterfly', 'spider', 'man', 'oak_tree', 'rose', 'mushroom']
+[L1]   ids:              [97, 30, 14, 79, 46, 52, 70, 51]
+[L1] non-living classes: ['motorcycle', 'pickup_truck', 'chair', 'bottle', 'castle', 'clock', 'mountain', 'cup']
+[L1]   ids:              [48, 58, 20, 9, 17, 22, 49, 28]
+[L1] sense=classical  input_dim=33  epochs=8  cap_bytes=64000
+[L1] train: 8000 imgs (4000 Living, 4000 Non-living)
+[L1] test:  1600 imgs (800 Living, 800 Non-living)
+[L1] sense+standardize: torch.Size([8000, 33]) train, torch.Size([1600, 33]) test  (1.4s)
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 8546 (trainable 4194)  growth=True dream=True  cap_bytes=64000  K=1  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: L1_living_vs_nonliving (active [0, 1])  pre-arch=[128, 32, 2] params=8546 (trainable 4194/16000) ===
+  [grown_capped_dream] task 1/1 (L1_living_vs_nonliving) epoch 1/8 [settle]  avg_loss 0.5852  last_loss 0.5693  steps 125  arch [128, 32, 2]
+  [grown_capped_dream] task 1/1 (L1_living_vs_nonliving) epoch 2/8 [settle]  avg_loss 0.5347  last_loss 0.5705  steps 250  arch [128, 32, 2]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 2] params=9070 (trainable 4718)
+  [grown_capped_dream] task 1/1 (L1_living_vs_nonliving) epoch 3/8 [post-grow]  avg_loss 0.5157  last_loss 0.4494  steps 125  arch [128, 36, 2]
+  [grown_capped_dream] task 1/1 (L1_living_vs_nonliving) epoch 4/8 [post-grow]  avg_loss 0.5008  last_loss 0.4931  steps 250  arch [128, 36, 2]
+  [grown_capped_dream] task 1/1 (L1_living_vs_nonliving) epoch 5/8 [post-grow]  avg_loss 0.4889  last_loss 0.4469  steps 375  arch [128, 36, 2]
+  [grown_capped_dream] task 1/1 (L1_living_vs_nonliving) epoch 6/8 [post-grow]  avg_loss 0.4796  last_loss 0.3981  steps 500  arch [128, 36, 2]
+  [grown_capped_dream] task 1/1 (L1_living_vs_nonliving) epoch 7/8 [post-grow]  avg_loss 0.4717  last_loss 0.3819  steps 625  arch [128, 36, 2]
+  [grown_capped_dream] task 1/1 (L1_living_vs_nonliving) epoch 8/8 [post-grow]  avg_loss 0.4605  last_loss 0.5198  steps 750  arch [128, 36, 2]
+  [grown_capped_dream] post-task DREAM: replay 0.4799→0.5018 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 2] (9070→9070 params)
+[grown_capped_dream] After pass 1 task 1: own=0.7462 (domain 0.7462, task 0.7462)  avg=0.7462 (domain 0.7462, task 0.7462)  arch=[128, 36, 2] params=9070 (trainable 4718)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.7462  domain=0.7462  task=0.7462
+[L1] build_donor done (3.1s)
+[L1] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l1_living_vs_nonliving.pt  (131.4 KB)  input_dim=33  head_size=2  arch=[128, 36, 2]

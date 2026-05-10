@@ -1,0 +1,31 @@
+[full100] using L0 from outputs/cifar_taxonomy/donor_l1_perceptual_4way_seed42.pt
+  arch=[128, 36, 4]  l0_seed=42
+[full100] 100 fine classes
+[full100] applying sense to 50000 train images...
+[full100] forwarding through L0...
+  L0 activations: (50000, 128)  mean=+0.5237  std=0.8214
+[full100] saved outputs/cifar_taxonomy/standardizer_full100_classical.pt
+
+[full100] === cluster sizes at various k ===
+  k=  4: clusters of sizes [61, 19, 13, 7]
+  k=  8: clusters of sizes [31, 25, 19, 7, 5, 5, 5, 3]
+  k= 10: clusters of sizes [31, 25, 15, 7, 5, 5, 5, 3, 3, 1]
+  k= 16: clusters of sizes [29, 15, 13, 5, 5, 5, 5, 5, 4, 3]...
+  k= 20: clusters of sizes [20, 15, 13, 6, 5, 5, 5, 5, 4, 3]...
+
+[full100] === k=10 clusters (members) ===
+  c10 (31 members): ['beaver', 'beetle', 'bicycle', 'butterfly', 'camel', 'caterpillar', 'cattle', 'crab', 'crocodile', 'dinosaur', 'elephant', 'forest', 'fox', 'kangaroo', 'leopard', 'lion', 'lizard', 'lobster', 'mouse', 'mushroom', 'porcupine', 'possum', 'rabbit', 'raccoon', 'shrew', 'snail', 'snake', 'spider', 'squirrel', 'tiger', 'tractor']
+  c 9 (25 members): ['aquarium_fish', 'bear', 'bridge', 'bus', 'can', 'chimpanzee', 'clock', 'flatfish', 'house', 'keyboard', 'lawn_mower', 'motorcycle', 'otter', 'pickup_truck', 'plate', 'seal', 'skunk', 'streetcar', 'tank', 'telephone', 'television', 'train', 'trout', 'wolf', 'worm']
+  c 5 (15 members): ['baby', 'bed', 'bottle', 'bowl', 'boy', 'chair', 'couch', 'cup', 'girl', 'hamster', 'lamp', 'man', 'table', 'wardrobe', 'woman']
+  c 7 ( 7 members): ['bee', 'orchid', 'poppy', 'rose', 'sunflower', 'sweet_pepper', 'tulip']
+  c 2 ( 5 members): ['cloud', 'mountain', 'rocket', 'sea', 'skyscraper']
+  c 1 ( 5 members): ['dolphin', 'ray', 'shark', 'turtle', 'whale']
+  c 8 ( 5 members): ['maple_tree', 'oak_tree', 'palm_tree', 'pine_tree', 'willow_tree']
+  c 4 ( 3 members): ['apple', 'orange', 'pear']
+  c 3 ( 3 members): ['castle', 'plain', 'road']
+  c 6 ( 1 members): ['cockroach']
+
+[full100] === alignment with CIFAR-100 stock 20 superclasses ===
+  (k=10) Rand index between trioron clusters and CIFAR superclasses:  0.8168
+    pair-agreement: same-in-both=110  diff-in-both=3933
+    disagreement:   tri-same/CIFAR-diff=817  tri-diff/CIFAR-same=90

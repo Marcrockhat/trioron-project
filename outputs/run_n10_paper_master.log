@@ -1,0 +1,26 @@
+=================================================================
+[run_n10_paper] starting bench_manifold_replay_n10  ->  outputs/bench_chained_15task_n10_MANIFOLD_REPLAY.log  at 2026-05-10T15:51:30+07:00
+=================================================================
+[run_n10_paper] finished bench_manifold_replay_n10 with rc=0 at 2026-05-10T17:35:43+07:00
+=================================================================
+[run_n10_paper] starting bench_hippo_k50_n10  ->  outputs/bench_chained_15task_n10_HIPPO_K50.log  at 2026-05-10T17:35:43+07:00
+=================================================================
+[run_n10_paper] finished bench_hippo_k50_n10 with rc=0 at 2026-05-10T19:01:13+07:00
+=================================================================
+[run_n10_paper] starting bench_online_ewc_chained_15_n10  ->  outputs/bench_chained_15task_n10_ONLINE_EWC.log  at 2026-05-10T19:01:13+07:00
+=================================================================
+[run_n10_paper] finished bench_online_ewc_chained_15_n10 with rc=0 at 2026-05-10T19:13:48+07:00
+=================================================================
+[run_n10_paper] starting bench_lwf_chained_15_n10  ->  outputs/bench_chained_15task_n10_LWF.log  at 2026-05-10T19:13:48+07:00
+=================================================================
+[run_n10_paper] finished bench_lwf_chained_15_n10 with rc=0 at 2026-05-10T19:29:51+07:00
+=================================================================
+[run_n10_paper] starting bench_packnet_chained_15_n10  ->  outputs/bench_chained_15task_n10_PACKNET.log  at 2026-05-10T19:29:51+07:00
+=================================================================
+[run_n10_paper] finished bench_packnet_chained_15_n10 with rc=0 at 2026-05-10T19:51:44+07:00
+=================================================================
+[run_n10_paper] starting bench_hat_chained_15_n10  ->  outputs/bench_chained_15task_n10_HAT.log  at 2026-05-10T19:51:44+07:00
+=================================================================
+[run_n10_paper] finished bench_hat_chained_15_n10 with rc=0 at 2026-05-10T20:21:25+07:00
+
+[run_n10_paper] all panels done at 2026-05-10T20:21:25+07:00

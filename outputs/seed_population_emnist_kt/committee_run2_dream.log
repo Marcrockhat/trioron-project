@@ -1,0 +1,64 @@
+[dream] applying Phase 1+2 (bf16 active + int8 archived) to 10 donors
+
+Loaded 10 donors. Train-time task-aware ranking:
+  rank   seed   task-aware
+     1     42       0.9495
+     2     45       0.9475
+     3     43       0.9469
+     4     47       0.9454
+     5     44       0.9449
+     6     49       0.9449
+     7     46       0.9440
+     8     51       0.9433
+     9     48       0.9396
+    10     50       0.9390
+
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+Eval set: 5 views, 8000 total examples (label=emnist_kt)
+
+rule              K                 seeds   task-aware      full    domain
+--------------------------------------------------------------------------------
+mean-logit        1                  [42]       0.9493    0.6121    0.6121
+mean-logit        3          [42, 45, 43]       0.9539    0.6224    0.6224
+mean-logit        5  [42, 45, 43, 47, 44]       0.9536    0.6254    0.6254
+mean-logit       10  [42, 45, 43, 47, 44, 49, 46, 51, 48, 50]       0.9510    0.6215    0.6215
+
+mean-softmax      1                  [42]       0.9493    0.6121    0.6121
+mean-softmax      3          [42, 45, 43]       0.9559    0.6210    0.6210
+mean-softmax      5  [42, 45, 43, 47, 44]       0.9531    0.6241    0.6241
+mean-softmax     10  [42, 45, 43, 47, 44, 49, 46, 51, 48, 50]       0.9506    0.6202    0.6202
+
+hard-vote         1                  [42]       0.9493    0.6121    0.6121
+hard-vote         3          [42, 45, 43]       0.9537    0.6194    0.6194
+hard-vote         5  [42, 45, 43, 47, 44]       0.9520    0.6209    0.6209
+hard-vote        10  [42, 45, 43, 47, 44, 49, 46, 51, 48, 50]       0.9495    0.6160    0.6160
+
+================================================================================
+HEADLINE — selection vs committee  (rule = mean-logit)
+================================================================================
+  Population (train-time):  mean = 0.9445  max = 0.9495
+  K=1   (top-1 selection)    eval task-aware = 0.9493
+  K=3   (top-3 committee)    eval task-aware = 0.9539  (Δ vs K=1 = +0.0046)
+  K=10  (full committee)     eval task-aware = 0.9510  (Δ vs K=1 = +0.0018)
+
+================================================================================
+DEPLOYMENT BYTES  (training scaffolding stripped, bf16 active + int8 archived)
+================================================================================
+  per-donor breakdown (avg over 10 donors):
+    L0      =  196.25 KiB  (protocol-shared under factored L0)
+    L1+head =   17.24 KiB
+    archive =   10.00 KiB
+    total   =  223.49 KiB
+
+  factored-L0 deployment (ship S once + per-donor R seed + L1+head+archive):
+    shared S         =   196.25 KiB    (one copy across all donors)
+    per-donor R seed =        4 B
+    per-donor pack   =    27.24 KiB    (L1+head+archive)
+
+    K     naive (KiB)     smart (KiB)    smart/naive
+    1          223.49          223.50           1.00
+    3          670.48          277.99           0.41
+    5         1117.46          332.48           0.30
+   10         2234.92          468.71           0.21
+

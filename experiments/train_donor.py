@@ -86,6 +86,24 @@ def main(argv=None) -> int:
         "--out-dir", default=None,
         help="Directory to save the donor checkpoint (default <repo>/outputs).",
     )
+    parser.add_argument(
+        "--factored-l0", action="store_true",
+        help=(
+            "Train with W_L0 = R_donor · S where S is the protocol-level "
+            "shared subspace selector and R_donor is the per-donor "
+            "orthogonal rotation. Cross-seed translator becomes a pure "
+            "rotation (no 656-dim bottleneck). See "
+            "trioron/composition/subspace.py."
+        ),
+    )
+    parser.add_argument(
+        "--protocol-seed", type=lambda s: int(s, 0), default=None,
+        help=(
+            "Override the protocol subspace seed for --factored-l0. "
+            "Default uses trioron.composition.PROTOCOL_SEED. Accepts "
+            "decimal or 0x-prefixed hex."
+        ),
+    )
     args = parser.parse_args(argv)
 
     specs_fn, ds_name = SPLIT_BLOCKS[args.label]
@@ -114,6 +132,8 @@ def main(argv=None) -> int:
         infancy_view=None,
         n_passes=1,
         return_state=True,
+        factored_l0_donor_seed=args.seed if args.factored_l0 else None,
+        factored_l0_protocol_seed=args.protocol_seed,
     )
     net = r["net"]
     mb = r["manifold"]
@@ -140,6 +160,12 @@ def main(argv=None) -> int:
         "label": args.label,
         "arm": "grown_uncapped_dream",
         "l0_seed": args.seed,
+        "factored_l0": bool(args.factored_l0),
+        "protocol_seed": (
+            args.protocol_seed
+            if (args.factored_l0 and args.protocol_seed is not None)
+            else (0xFEEDFACE if args.factored_l0 else None)
+        ),
         "input_dim": net.layers[0].fan_in,
         "l0_width": net.layers[0].n_nodes,
         "n_layers": len(net.layers),

@@ -1,0 +1,111 @@
+=== SEED 43 — L1 ===
+
+[full100-l1] === results ===
+  L1 macro acc:                 0.3782
+  always-predict-largest:       0.2000
+  margin over largest baseline: +0.1782
+  uniform chance (1/20):         0.0500
+
+[full100-l1] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_full100_l1_k20_seed43.pt  (169.5 KB)
+=== SEED 43 — L2 experts ===
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.6800  domain=0.6800  task=0.6800
+[full100-l2] c18 (3-way, members=['butterfly', 'caterpillar', 'forest']): acc=0.6800  chance=0.3333  (0.6s)
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 8546 (trainable 4194)  growth=True dream=True  cap_bytes=64000  K=1  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: full100_L2_c19_20way (active [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])  pre-arch=[128, 32, 20] params=9140 (trainable 4788/16000) ===
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 1/8 [settle]  avg_loss 3.0154  last_loss 2.9956  steps 157  arch [128, 32, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 2/8 [settle]  avg_loss 2.8580  last_loss 3.0573  steps 314  arch [128, 32, 20]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 20] params=9736 (trainable 5384)
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 3/8 [post-grow]  avg_loss 2.7720  last_loss 2.6643  steps 157  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 4/8 [post-grow]  avg_loss 2.7112  last_loss 2.9925  steps 314  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 5/8 [post-grow]  avg_loss 2.6629  last_loss 2.5384  steps 471  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 6/8 [post-grow]  avg_loss 2.6281  last_loss 2.8331  steps 628  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 7/8 [post-grow]  avg_loss 2.5968  last_loss 2.3410  steps 785  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 8/8 [post-grow]  avg_loss 2.5768  last_loss 2.8268  steps 942  arch [128, 36, 20]
+  [grown_capped_dream] post-task DREAM: replay 2.4424→2.5066 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 20] (9736→9736 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2040 (domain 0.1620, task 0.2040)  avg=0.2040 (domain 0.1620, task 0.2040)  arch=[128, 36, 20] params=9736 (trainable 5384)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2040  domain=0.1620  task=0.2040
+[full100-l2] c19 (20-way, members=['beaver', 'beetle', 'camel']…): acc=0.2040  chance=0.0500  (3.8s)
+
+[full100-l2] trained 17 experts; skipped 3 singletons ([(4, 'castle'), (6, 'apple'), (8, 'cockroach')])
+=== SEED 43 — pre-contrastive eval ===
+[full100-eval] L1 macro acc: 0.3782
+  100-way fine acc:   0.1398
+  chance (1/100):     0.0100
+  margin over chance: +0.1298  (14.0× chance)
+  correct (L1 + L2 right):        1398/10000 = 0.1398
+  L1 routing miss:                6218/10000 = 0.6218
+  L1 right but L2 fine miss:      2384/10000 = 0.2384
+=== SEED 43 — contrastive refine ===
+    Δ:                  +0.0085
+
+[full100-c-all] refined 17 experts; skipped 3
+=== SEED 43 — post-contrastive eval ===
+[full100-eval] L1 macro acc: 0.3782
+  100-way fine acc:   0.1468
+  chance (1/100):     0.0100
+  margin over chance: +0.1368  (14.7× chance)
+  correct (L1 + L2 right):        1468/10000 = 0.1468
+  L1 routing miss:                6218/10000 = 0.6218
+  L1 right but L2 fine miss:      2314/10000 = 0.2314
+=== SEED 44 — L1 ===
+
+[full100-l1] === results ===
+  L1 macro acc:                 0.3792
+  always-predict-largest:       0.2000
+  margin over largest baseline: +0.1792
+  uniform chance (1/20):         0.0500
+
+[full100-l1] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_full100_l1_k20_seed44.pt  (169.5 KB)
+=== SEED 44 — L2 experts ===
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.6533  domain=0.6533  task=0.6533
+[full100-l2] c18 (3-way, members=['butterfly', 'caterpillar', 'forest']): acc=0.6533  chance=0.3333  (0.7s)
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 8546 (trainable 4194)  growth=True dream=True  cap_bytes=64000  K=1  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: full100_L2_c19_20way (active [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])  pre-arch=[128, 32, 20] params=9140 (trainable 4788/16000) ===
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 1/8 [settle]  avg_loss 3.0276  last_loss 2.7974  steps 157  arch [128, 32, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 2/8 [settle]  avg_loss 2.8492  last_loss 2.6625  steps 314  arch [128, 32, 20]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 20] params=9736 (trainable 5384)
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 3/8 [post-grow]  avg_loss 2.7600  last_loss 2.3456  steps 157  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 4/8 [post-grow]  avg_loss 2.6954  last_loss 2.4847  steps 314  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 5/8 [post-grow]  avg_loss 2.6532  last_loss 2.5208  steps 471  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 6/8 [post-grow]  avg_loss 2.6233  last_loss 2.7013  steps 628  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 7/8 [post-grow]  avg_loss 2.5978  last_loss 2.6077  steps 785  arch [128, 36, 20]
+  [grown_capped_dream] task 1/1 (full100_L2_c19_20way) epoch 8/8 [post-grow]  avg_loss 2.5741  last_loss 2.0196  steps 942  arch [128, 36, 20]
+  [grown_capped_dream] post-task DREAM: replay 2.5805→2.6192 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 20] (9736→9736 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2045 (domain 0.1585, task 0.2045)  avg=0.2045 (domain 0.1585, task 0.2045)  arch=[128, 36, 20] params=9736 (trainable 5384)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2045  domain=0.1585  task=0.2045
+[full100-l2] c19 (20-way, members=['beaver', 'beetle', 'camel']…): acc=0.2045  chance=0.0500  (3.7s)
+
+[full100-l2] trained 17 experts; skipped 3 singletons ([(4, 'castle'), (6, 'apple'), (8, 'cockroach')])
+=== SEED 44 — pre-contrastive eval ===
+[full100-eval] L1 macro acc: 0.3792
+  100-way fine acc:   0.1345
+  chance (1/100):     0.0100
+  margin over chance: +0.1245  (13.4× chance)
+  correct (L1 + L2 right):        1345/10000 = 0.1345
+  L1 routing miss:                6208/10000 = 0.6208
+  L1 right but L2 fine miss:      2447/10000 = 0.2447
+=== SEED 44 — contrastive refine ===
+    Δ:                  +0.0095
+
+[full100-c-all] refined 17 experts; skipped 3
+=== SEED 44 — post-contrastive eval ===
+[full100-eval] L1 macro acc: 0.3792
+  100-way fine acc:   0.1401
+  chance (1/100):     0.0100
+  margin over chance: +0.1301  (14.0× chance)
+  correct (L1 + L2 right):        1401/10000 = 0.1401
+  L1 routing miss:                6208/10000 = 0.6208
+  L1 right but L2 fine miss:      2391/10000 = 0.2391
+=== ALL SEEDS DONE ===

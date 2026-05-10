@@ -1,0 +1,16 @@
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+Probe batch: 320 images (64 per task × 5 tasks)
+
+ seed  layer  n_nodes   max act-cos   pairs ≥0.85   pairs ≥0.92   pairs ≥0.95
+--------------------------------------------------------------------------------
+   42      1       52        0.9908             6             3             2
+   43      1       52        0.9779             8             3             2
+   44      1       52        0.9443             4             1             0
+   45      1       52        0.9463            11             6             0
+   46      1       52        0.9727             7             4             2
+   47      1       52        0.9904            10             4             2
+   48      1       52        0.9632             4             2             2
+   49      1       52        0.9238             9             1             0
+   50      1       52        0.9578             5             1             1
+   51      1       52        0.9220             3             1             0

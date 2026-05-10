@@ -3064,6 +3064,8 @@ def run_arm(
     extension_cap_bytes: Optional[int] = None,
     extension_permanent_int8: bool = False,
     return_state: bool = False,
+    factored_l0_donor_seed: Optional[int] = None,
+    factored_l0_protocol_seed: Optional[int] = None,
 ) -> Dict[str, object]:
     cfg = ARM_DEFINITIONS[arm]
     torch.manual_seed(seed)
@@ -3078,6 +3080,34 @@ def run_arm(
         INPUT_DIM, L0_WIDTH, cfg["h_init"], init_classes,
         freeze_l0=cfg["freeze_l0"],
     )
+    # Subspace-factored L0 (paper L0_HANDSHAKE_BRIEF.md trump card).
+    # When set, override L0 with W = R_donor · S where S is the shared
+    # protocol subspace and R_donor is the donor's per-seed orthogonal
+    # rotation. Cross-donor translator becomes a pure rotation, no
+    # bottleneck. Requires freeze_l0 (verified by factor_l0_in_place'd
+    # downstream behavior — L0 must not drift after override).
+    if factored_l0_donor_seed is not None:
+        if not cfg["freeze_l0"]:
+            raise ValueError(
+                "factored_l0 requires freeze_l0 arms; subspace factor is "
+                "only valid for frozen L0."
+            )
+        from trioron.composition import factor_l0_in_place, PROTOCOL_SEED
+        protocol_seed = (
+            factored_l0_protocol_seed
+            if factored_l0_protocol_seed is not None
+            else PROTOCOL_SEED
+        )
+        factor_l0_in_place(
+            net,
+            donor_seed=factored_l0_donor_seed,
+            protocol_seed=protocol_seed,
+        )
+        print(
+            f"[{arm}] L0 factored as R_donor · S  "
+            f"(donor_seed={factored_l0_donor_seed}, "
+            f"protocol_seed=0x{protocol_seed:08X})"
+        )
 
     # Frozen-L0 arms get a brief warmup before the curriculum begins.
     # The fixed_ewc baseline doesn't (its L0 is trainable; warming it

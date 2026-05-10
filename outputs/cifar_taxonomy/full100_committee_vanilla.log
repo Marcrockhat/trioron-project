@@ -1,0 +1,14 @@
+[committee] cluster file: outputs/cifar_taxonomy/cluster_assignment_full100_k20.pt  k=20  seeds=[42, 43, 44]  expert_suffix=''
+[committee] test: 10000 imgs
+
+[committee] === per-seed accuracy ===
+  seed 42: hard-routing acc = 0.1428  soft-routing acc = 0.1621
+  seed 43: hard-routing acc = 0.1398  soft-routing acc = 0.1535
+  seed 44: hard-routing acc = 0.1345  soft-routing acc = 0.1598
+
+[committee] === aggregation ===
+  single-seed hard mean (n=3):  0.1390
+  hard-vote committee:               0.1606  (Δ = +0.0216)
+  mean-softmax committee:            0.1706  (Δ = +0.0316)
+  mean-logit committee:              0.1709  (Δ = +0.0319)
+  chance (1/100):                    0.0100

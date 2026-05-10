@@ -1,0 +1,63 @@
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+================================================================================
+Lossless check: W_L0 vs reconstruction from (protocol_seed, donor_seed)
+================================================================================
+ seed      ||W_stored - W_recon||_inf   bit-equal
+------------------------------------------------------------
+   42                        0.00e+00         YES
+   43                        0.00e+00         YES
+   44                        0.00e+00         YES
+   45                        0.00e+00         YES
+   46                        0.00e+00         YES
+   47                        0.00e+00         YES
+   48                        0.00e+00         YES
+   49                        0.00e+00         YES
+   50                        0.00e+00         YES
+   51                        0.00e+00         YES
+
+Applying dream-compression (bf16 active + int8 archived) to all 10 donors
+
+ seed    l0        L1      head      arch     total (B)
+------------------------------------------------------------
+   42     4     13416      1060      5120     19600
+   43     4     13416      1060      5120     19600
+   44     4     13416      1060      5120     19600
+   45     4     13416      1060      5120     19600
+   46     4     13416      1060      5120     19600
+   47     4     13416      1060      5120     19600
+   48     4     13416      1060      5120     19600
+   49     4     13416      1060      5120     19600
+   50     4     13416      1060      5120     19600
+   51     4     13416      1060      5120     19600
+------------------------------------------------------------
+  avg     4     13416      1060      5120     19600
+
+================================================================================
+Committee on dreamed donors (eval-equivalent to run 2; tight = same model)
+================================================================================
+mean-logit      K=  1  task-aware 0.9493  full 0.6121  domain 0.6121
+mean-logit      K=  3  task-aware 0.9539  full 0.6224  domain 0.6224
+mean-logit      K=  5  task-aware 0.9536  full 0.6254  domain 0.6254
+mean-logit      K= 10  task-aware 0.9510  full 0.6215  domain 0.6215
+mean-softmax    K=  1  task-aware 0.9493  full 0.6121  domain 0.6121
+mean-softmax    K=  3  task-aware 0.9559  full 0.6210  domain 0.6210
+mean-softmax    K=  5  task-aware 0.9531  full 0.6241  domain 0.6241
+mean-softmax    K= 10  task-aware 0.9506  full 0.6202  domain 0.6202
+hard-vote       K=  1  task-aware 0.9493  full 0.6121  domain 0.6121
+hard-vote       K=  3  task-aware 0.9537  full 0.6194  domain 0.6194
+hard-vote       K=  5  task-aware 0.9520  full 0.6209  domain 0.6209
+hard-vote       K= 10  task-aware 0.9495  full 0.6160  domain 0.6160
+
+================================================================================
+TIGHT DEPLOYMENT — protocol_seed (4 B) shared + per-donor pack
+================================================================================
+  protocol_seed    = 4 B    (one copy across all donors — encodes S)
+  per-donor pack   = 19600 B    (19.14 KiB)
+    of which: L0 seed = 4 B, L1 = 13416 B, head = 1060 B, archive = 5120 B
+
+    K     raw naive   dream smart   tight (KiB)   tight/raw
+    1       1318.90        223.49         19.14      0.0145
+    3       3956.70        277.98         57.43      0.0145
+    5       6594.50        332.47         95.71      0.0145
+   10      13189.00        468.69        191.41      0.0145

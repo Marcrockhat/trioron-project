@@ -1,0 +1,40 @@
+[L1-4way] sense=classical  epochs=8  cap_bytes=64000
+[L1-4way] train: 4000 imgs (8 fine classes)
+  perc=0 (compact-object        )  fines=['chair', 'cup']  train=1000  test=200
+  perc=1 (central-object        )  fines=['wolf', 'motorcycle']  train=1000  test=200
+  perc=2 (horizontal-landscape  )  fines=['dolphin', 'mountain']  train=1000  test=200
+  perc=3 (vertical-landscape    )  fines=['oak_tree', 'castle']  train=1000  test=200
+[L1-4way] sense+standardize (1.4s): (4000, 33) train
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 8546 (trainable 4194)  growth=True dream=True  cap_bytes=64000  K=1  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: L1_perceptual_4way (active [0, 1, 2, 3])  pre-arch=[128, 32, 4] params=8612 (trainable 4260/16000) ===
+  [grown_capped_dream] task 1/1 (L1_perceptual_4way) epoch 1/8 [settle]  avg_loss 0.9935  last_loss 0.5452  steps 63  arch [128, 32, 4]
+  [grown_capped_dream] task 1/1 (L1_perceptual_4way) epoch 2/8 [settle]  avg_loss 0.6478  last_loss 0.6204  steps 126  arch [128, 32, 4]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 4] params=9144 (trainable 4792)
+  [grown_capped_dream] task 1/1 (L1_perceptual_4way) epoch 3/8 [post-grow]  avg_loss 0.5866  last_loss 0.5455  steps 63  arch [128, 36, 4]
+  [grown_capped_dream] task 1/1 (L1_perceptual_4way) epoch 4/8 [post-grow]  avg_loss 0.5538  last_loss 0.5398  steps 126  arch [128, 36, 4]
+  [grown_capped_dream] task 1/1 (L1_perceptual_4way) epoch 5/8 [post-grow]  avg_loss 0.5389  last_loss 0.6505  steps 189  arch [128, 36, 4]
+  [grown_capped_dream] task 1/1 (L1_perceptual_4way) epoch 6/8 [post-grow]  avg_loss 0.5230  last_loss 0.4140  steps 252  arch [128, 36, 4]
+  [grown_capped_dream] task 1/1 (L1_perceptual_4way) epoch 7/8 [post-grow]  avg_loss 0.5115  last_loss 0.5423  steps 315  arch [128, 36, 4]
+  [grown_capped_dream] task 1/1 (L1_perceptual_4way) epoch 8/8 [post-grow]  avg_loss 0.5008  last_loss 0.4989  steps 378  arch [128, 36, 4]
+  [grown_capped_dream] post-task DREAM: replay 0.5857→0.3907 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 4] (9144→9144 params)
+[grown_capped_dream] After pass 1 task 1: own=0.7812 (domain 0.7812, task 0.7812)  avg=0.7812 (domain 0.7812, task 0.7812)  arch=[128, 36, 4] params=9144 (trainable 4792)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.7812  domain=0.7812  task=0.7812
+[L1-4way] build_donor done (1.8s)
+
+[L1-4way] === results ===
+  overall accuracy:                 0.7812
+  always-predict-largest baseline:  0.2500
+  margin over largest-baseline:     +0.5312
+  comparison to L1 binary (0.7462 with chance 0.50): binary margin was +0.2462
+  per-class accuracy:
+    perc=0 (compact-object        )  n=200  acc=0.7600
+    perc=1 (central-object        )  n=200  acc=0.8400
+    perc=2 (horizontal-landscape  )  n=200  acc=0.6950
+    perc=3 (vertical-landscape    )  n=200  acc=0.8300
+
+[L1-4way] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l1_perceptual_4way_balanced.pt  (136.0 KB)  input_dim=33  head_size=4  arch=[128, 36, 4]

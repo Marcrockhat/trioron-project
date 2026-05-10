@@ -1,0 +1,52 @@
+[L1-tree] donor: outputs/cifar_taxonomy/donor_l1_living_vs_nonliving.pt
+[L1-tree]   sense=classical  arch=[128, 36, 2]
+[L1-tree]   16 fine-class centroids in 128-d L0 space
+[L1-tree] clustering: agglomerative, linkage=average, metric=cosine
+
+[L1-tree] === k=2 clusters ===
+  c1: ['wolf', 'butterfly', 'spider', 'man', 'rose', 'mushroom', 'motorcycle', 'pickup_truck', 'chair', 'bottle', 'clock', 'cup']  [MIXED: 6 Living + 6 Non-living]
+  c2: ['dolphin', 'oak_tree', 'castle', 'mountain']  [MIXED: 2 Living + 2 Non-living]
+
+[L1-tree] === k=3 clusters ===
+  c1: ['wolf', 'butterfly', 'spider', 'man', 'rose', 'mushroom', 'motorcycle', 'pickup_truck', 'chair', 'bottle', 'clock', 'cup']  [MIXED: 6 Living + 6 Non-living]
+  c2: ['dolphin', 'mountain']  [MIXED: 1 Living + 1 Non-living]
+  c3: ['oak_tree', 'castle']  [MIXED: 1 Living + 1 Non-living]
+
+[L1-tree] === k=4 clusters ===
+  c2: ['wolf', 'butterfly', 'spider', 'man', 'rose', 'mushroom', 'motorcycle', 'pickup_truck', 'clock']  [MIXED: 6 Living + 3 Non-living]
+  c1: ['chair', 'bottle', 'cup']  [pure Non-living]
+  c3: ['dolphin', 'mountain']  [MIXED: 1 Living + 1 Non-living]
+  c4: ['oak_tree', 'castle']  [MIXED: 1 Living + 1 Non-living]
+
+[L1-tree] === k=6 clusters ===
+  c2: ['wolf', 'man', 'motorcycle', 'pickup_truck', 'clock']  [MIXED: 2 Living + 3 Non-living]
+  c3: ['butterfly', 'spider', 'mushroom']  [pure Living]
+  c1: ['chair', 'bottle', 'cup']  [pure Non-living]
+  c5: ['dolphin', 'mountain']  [MIXED: 1 Living + 1 Non-living]
+  c6: ['oak_tree', 'castle']  [MIXED: 1 Living + 1 Non-living]
+  c4: ['rose']  [pure Living]
+
+[L1-tree] === k=8 clusters ===
+  c2: ['wolf', 'man', 'clock']  [MIXED: 2 Living + 1 Non-living]
+  c4: ['butterfly', 'spider', 'mushroom']  [pure Living]
+  c1: ['chair', 'bottle', 'cup']  [pure Non-living]
+  c6: ['dolphin', 'mountain']  [MIXED: 1 Living + 1 Non-living]
+  c3: ['motorcycle', 'pickup_truck']  [pure Non-living]
+  c7: ['oak_tree']  [pure Living]
+  c5: ['rose']  [pure Living]
+  c8: ['castle']  [pure Non-living]
+
+[L1-tree] === dendrogram leaf order ===
+  chair → bottle → cup → wolf → man → clock → motorcycle → pickup_truck → rose → spider → butterfly → mushroom → dolphin → mountain → oak_tree → castle
+
+[L1-tree] === Newick tree (cosine distance edge weights) ===
+  (((chair,(bottle,cup):0.033):0.051,(((wolf,(man,clock):0.039):0.048,(motorcycle,pickup_truck):0.062):0.122,(rose,(spider,(butterfly,mushroom):0.045):0.109):0.153):0.186):0.256,((dolphin,mountain):0.097,(oak_tree,castle):0.123):0.268):0.352;
+
+[L1-tree] interpretation:
+  Read top-down: the deepest split is the trioron's coarsest
+  perceptual division of these 16 classes. MIXED clusters at any
+  cut depth are the spots where the human Living/Non-living
+  taxonomy disagrees with the trioron's natural ontology.
+  These pairs are exactly where the doc's δ-replay margin loss
+  has most leverage — it can FORCE the boundary the senses don't
+  carve naturally.

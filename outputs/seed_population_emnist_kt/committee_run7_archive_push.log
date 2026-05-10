@@ -1,0 +1,64 @@
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+Applying dream + int8-L1 + int8-archive
+
+ seed   TA dream   TA + int8L1   TA + int8arc   Δ vs dream
+------------------------------------------------------------
+   42     0.9493        0.9490         0.9490      -0.0002
+   43     0.9466        0.9466         0.9466      +0.0000
+   44     0.9450        0.9448         0.9448      -0.0003
+   45     0.9474        0.9475         0.9475      +0.0001
+   46     0.9440        0.9439         0.9439      -0.0001
+   47     0.9450        0.9449         0.9449      -0.0001
+   48     0.9394        0.9392         0.9392      -0.0001
+   49     0.9450        0.9447         0.9447      -0.0002
+   50     0.9390        0.9390         0.9390      +0.0000
+   51     0.9433        0.9434         0.9434      +0.0001
+------------------------------------------------------------
+  cumulative Δ vs dream: mean=-0.00009  σ=0.00014  max|Δ|=0.00025
+
+================================================================================
+Committee on dream + int8-L1 + int8-archive donors
+================================================================================
+mean-logit      K=  1  task-aware 0.9490  full 0.6119  domain 0.6119
+mean-logit      K=  3  task-aware 0.9537  full 0.6226  domain 0.6226
+mean-logit      K=  5  task-aware 0.9535  full 0.6254  domain 0.6254
+mean-logit      K= 10  task-aware 0.9510  full 0.6215  domain 0.6215
+
+mean-softmax    K=  1  task-aware 0.9490  full 0.6119  domain 0.6119
+mean-softmax    K=  3  task-aware 0.9556  full 0.6206  domain 0.6206
+mean-softmax    K=  5  task-aware 0.9531  full 0.6243  domain 0.6243
+mean-softmax    K= 10  task-aware 0.9502  full 0.6200  domain 0.6200
+
+hard-vote       K=  1  task-aware 0.9490  full 0.6119  domain 0.6119
+hard-vote       K=  3  task-aware 0.9537  full 0.6197  domain 0.6197
+hard-vote       K=  5  task-aware 0.9521  full 0.6214  domain 0.6214
+hard-vote       K= 10  task-aware 0.9496  full 0.6162  domain 0.6162
+
+================================================================================
+STORAGE — three deployment profiles
+================================================================================
+
+  A. dream + int8-L1 + bf16-archive (general multi-branch)
+    per-donor: L0_seed=4 B  L1=6968 B  head=1060 B  archive=5120 B  → total 13152 B (12.84 KiB)
+      K   naive raw (KiB)    this profile (KiB)     ratio
+      1           1318.90                 12.85    0.0097
+      3           3956.70                 38.54    0.0097
+      5           6594.50                 64.22    0.0097
+     10          13189.00                128.44    0.0097
+
+  B. dream + int8-L1 + int8-archive (general multi-branch)
+    per-donor: L0_seed=4 B  L1=6968 B  head=1060 B  archive=2640 B  → total 10672 B (10.42 KiB)
+      K   naive raw (KiB)    this profile (KiB)     ratio
+      1           1318.90                 10.43    0.0079
+      3           3956.70                 31.27    0.0079
+      5           6594.50                 52.11    0.0079
+     10          13189.00                104.22    0.0079
+
+  C. dream + int8-L1 + NO archive  (committee-only)
+    per-donor: L0_seed=4 B  L1=6968 B  head=1060 B  archive=0 B  → total 8032 B (7.84 KiB)
+      K   naive raw (KiB)    this profile (KiB)     ratio
+      1           1318.90                  7.85    0.0060
+      3           3956.70                 23.54    0.0059
+      5           6594.50                 39.22    0.0059
+     10          13189.00                 78.44    0.0059

@@ -1,0 +1,99 @@
+A.L.E: Arcade Learning Environment (version 0.11.2+ecc1138)
+[Powered by Stella]
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/dream_loop_multiseed_v2/seed0 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+/home/marcrockhat/.local/lib/python3.10/site-packages/gymnasium/wrappers/rendering.py:292: UserWarning: [33mWARN: Overwriting existing videos at /home/marcrockhat/trioron-project/outputs/atari_primitive_donors/dream_loop_multiseed_v2/seed0 folder (try specifying a different `video_folder` for the `RecordVideo` wrapper if this is not desired)[0m
+  logger.warn(
+
+[ep 1/10 seed=0] return=+2.0 length=6605 (185.3s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=55, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 2/10 seed=0] return=+2.0 length=6605 (17.7s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=110, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 3/10 seed=0] return=+2.0 length=6605 (15.3s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=165, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 4/10 seed=0] return=+2.0 length=6605 (16.2s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=220, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 5/10 seed=0] return=+2.0 length=6605 (16.9s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=275, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 6/10 seed=0] return=+2.0 length=6605 (14.1s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=330, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 7/10 seed=0] return=+2.0 length=6605 (15.9s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=385, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 8/10 seed=0] return=+2.0 length=6605 (15.3s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=440, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 9/10 seed=0] return=+2.0 length=6605 (18.8s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=495, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+[ep 10/10 seed=0] return=+2.0 length=6605 (192.9s)
+  celebration: 2056 flagged frames, 2056 positive-replay examples
+    CATCH: 628 reinforcements
+    SMASH: 55 reinforcements
+    PREPOS: 1373 reinforcements
+  positive buffer: CATCH=500, SMASH=500, PREPOS=500
+  net win (return=+2.0) — skipping dream
+
+=== Dream-loop trajectory ===
+  ep 1: +2.0
+  ep 2: +2.0
+  ep 3: +2.0
+  ep 4: +2.0
+  ep 5: +2.0
+  ep 6: +2.0
+  ep 7: +2.0
+  ep 8: +2.0
+  ep 9: +2.0
+  ep 10: +2.0
+  delta (last - first): +0.0

@@ -50,10 +50,10 @@ def main(argv=None) -> int:
     parser.add_argument("--data-root", default=DEFAULT_DATA_ROOT)
     parser.add_argument(
         "--senses", nargs="+",
-        default=["eye", "color_smell", "frequency_print", "skeleton",
-                 "heat_diffusion", "taste", "pulse"],
-        help="Default = greedy-7 from 25-class first-slice. Override "
-             "to fit a calibrator over a different sense subset.",
+        default=["cortex", "color_smell", "frequency_print", "taste",
+                 "random_walk"],
+        help="Default = post-trim kept set (cortex + 4 classical). "
+             "Override to fit a calibrator over a different subset.",
     )
     parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--lr", type=float, default=0.01)

@@ -1,0 +1,29 @@
+[L1-consol] donor: outputs/cifar_taxonomy/donor_l1_perceptual_4way.pt
+[L1-consol]   sense=classical  arch=[128, 36, 4]
+[L1-consol]   classes_covered=[0, 1, 2, 3]
+[L1-consol] train torch.Size([8000, 33]), test torch.Size([1600, 33])
+[L1-consol] L1 acc BEFORE: 0.7831
+[L1-consol] consolidating: 16 epochs, batch=256, lr=0.0001
+  epoch  1/16  loss=0.5160  acc=0.7800
+  epoch  2/16  loss=0.5204  acc=0.7800
+  epoch  3/16  loss=0.5193  acc=0.7800
+  epoch  4/16  loss=0.5174  acc=0.7806
+  epoch  5/16  loss=0.5197  acc=0.7794
+  epoch  6/16  loss=0.5142  acc=0.7800
+  epoch  7/16  loss=0.5153  acc=0.7806
+  epoch  8/16  loss=0.5150  acc=0.7806
+  epoch  9/16  loss=0.5092  acc=0.7769
+  epoch 10/16  loss=0.5124  acc=0.7794
+  epoch 11/16  loss=0.5136  acc=0.7806
+  epoch 12/16  loss=0.5169  acc=0.7788
+  epoch 13/16  loss=0.5149  acc=0.7800
+  epoch 14/16  loss=0.5100  acc=0.7775
+  epoch 15/16  loss=0.5099  acc=0.7794
+  epoch 16/16  loss=0.5104  acc=0.7800
+[L1-consol] consolidation done (-1.0s)
+
+[L1-consol] === results ===
+  acc BEFORE consolidation: 0.7831
+  acc AFTER  consolidation: 0.7800
+  Δ:                        -0.0031
+[L1-consol] [SAVE] /home/marcrockhat/trioron-project/outputs/cifar_taxonomy/donor_l1_perceptual_4way_consolidated.pt  (137.0 KB)

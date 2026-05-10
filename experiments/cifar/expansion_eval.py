@@ -33,10 +33,7 @@ from experiments.cifar.conductor_eval import _eval_logits
 
 
 ALL_12 = sorted([
-    "eye", "color_smell", "frequency_print", "heat_diffusion",
-    "skeleton", "taste", "pulse",
-    "mass_moment", "proprioception", "sonification",
-    "random_walk", "echolocation",
+    "cortex", "color_smell", "frequency_print", "taste", "random_walk",
 ])
 
 

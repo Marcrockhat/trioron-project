@@ -28,12 +28,13 @@
 \newcommand{\arm}[1]{\texttt{#1}}
 \newcommand{\headline}{$\bigstar$}
 
-\title{Trioron: an epigenetic-inspired self-organizing architecture\\
+\title{Trioron: an epigenetic-inspired self-expanding architecture\\
        for resource-bounded continual learning}
 \author{Marcelinus R.\ Hatorangan%
-        \thanks{Correspondence: \texttt{adeussinca@gmail.com}.
-                Repository: \url{https://github.com/Marcrockhat/trioron-project}.}}
-\date{2026-05-08}
+        \thanks{Correspondence: \texttt{marcelinusrocky@aol.com}.
+                Repository: \url{https://github.com/Marcrockhat/trioron-project}.
+                Live demo: \href{https://huggingface.co/spaces/Marcrockhat/trioron-demo}{huggingface.co/spaces/Marcrockhat/trioron-demo}.}}
+\date{2026-05-10}
 
 \begin{document}
 \maketitle
@@ -56,9 +57,10 @@ data in the field, and re-shipped with prior tasks preserved at $\geq
 learning mechanism. Our contribution is a system-level integration of
 known mechanisms --- with a small biological framing that motivates the
 particular couplings --- and an evaluation under bounded-memory deployment
-constraints that the named baselines were not designed to address. All
-results are $n = 3$ multi-seed; we are explicit about where this scale
-limits the conclusions.
+constraints that the named baselines were not designed to address.
+Headline-panel results are $n = 10$ multi-seed; some single-seed
+ablations and the dream-archive table remain $n = 3$ pending reruns,
+and we flag those cases inline.
 \end{abstract}
 
 
@@ -74,15 +76,16 @@ more recent capacity-expanding architectures: Progressive Networks
 Dynamically Expandable Networks (DEN) \citep{yoon2018den}. The recurring
 intuition is that learning-as-growth, rather than
 learning-as-allocation-within-a-fixed-budget, better matches what
-biological systems do. With the rise of large language models, interest
+biological systems do. With the rise of large language models (LLMs), interest
 in adaptive systems has surged, but most LLMs are trained with massive
 central-resource budgets, which limits the practicality of tailoring such
 models to individual users on commodity devices.
 
 A second line of work tackles the same problem from the opposite side.
-Methods such as PackNet \citep{mallya2018packnet}, HAT
-\citep{serra2018hat}, EWC \citep{kirkpatrick2017overcoming}, and Online
-EWC \citep{schwarz2018progress} operate within a fixed parameter envelope
+Methods such as PackNet \citep{mallya2018packnet}, Hard Attention to
+the Task (HAT) \citep{serra2018hat}, elastic weight consolidation
+(EWC) \citep{kirkpatrick2017overcoming}, and Online EWC
+\citep{schwarz2018progress} operate within a fixed parameter envelope
 and partition that envelope across tasks --- by mask-based isolation, by
 hard attention, or by quadratic anchoring on the weights estimated as
 important for prior tasks. While each is effective at moderate task
@@ -120,9 +123,10 @@ expression in concentration-gradient-dependent ways
 synaptic-homeostasis cycle that consolidates new learning while pruning
 weak connections \citep{tononi2014sleep}. The architecture in
 \S\ref{sec:methods} borrows three of these mechanisms --- anchoring
-(methylation), stress-responsive plasticity modulation (HPA-axis-style
-modulation), and resource-limited consolidation pools (small-RNA-style
-throttling) --- as design metaphors that motivate specific implementation
+(methylation), stress-responsive plasticity modulation
+(hypothalamic--pituitary--adrenal (HPA) axis-style modulation), and
+resource-limited consolidation pools (small-RNA-style throttling)
+--- as design metaphors that motivate specific implementation
 choices. We do not claim mechanistic fidelity beyond the metaphor.
 
 Work on cultured-neuron substrates has shown that biological neurons can
@@ -139,7 +143,7 @@ architecture that aggregates such nodes into networks capable of
 autonomous expansion and continual learning under bounded resources. The
 architecture is targeted at the regime where computational and memory
 budgets are constrained but the requirement for continual adaptation is
-high: agentic AI applications, IoT and embedded systems, and personal
+high: agentic AI applications, Internet-of-Things (IoT) and embedded systems, and personal
 devices that must grow alongside their user rather than be replaced when
 the user's needs evolve. In such environments, the model specializes to
 its user's specific context rather than serving as a generic system.
@@ -161,10 +165,12 @@ class-incremental benchmark and report where it wins, where it ties, and
 where it loses.
 
 \paragraph{Honest limits.}
-All multi-seed results in this paper are $n = 3$. The benchmark is small:
-30 to 46 classes drawn from MNIST, Fashion-MNIST, and EMNIST-letters at
-an MLP-head joint-training ceiling of $\approx 0.93$ for the 46-class
-union. We do not attempt CIFAR-class-incremental or LLM-scale evaluation,
+Headline-panel results are $n = 10$ multi-seed; the dream-archive
+panel and the extension experiment remain $n = 3$ and $n = 1$
+respectively (we flag these inline). The benchmark is small: 30 to
+46 classes drawn from MNIST, Fashion-MNIST, and EMNIST-letters at a
+multi-layer-perceptron (MLP) head joint-training ceiling of
+$\approx 0.93$ for the 46-class union. We do not attempt CIFAR-class-incremental or LLM-scale evaluation,
 and we do not extrapolate beyond what we measured. The defensible pitch
 is not ``we beat all continual-learning methods'' --- it is ``we exhibit
 performance comparable with the continual-learning baselines on a class-
@@ -233,8 +239,9 @@ Memory Aware Synapses \citep{aljundi2018mas} estimates importance from
 output sensitivity. Partition-based methods isolate per-task subspaces:
 PackNet \citep{mallya2018packnet} prunes and reuses; HAT
 \citep{serra2018hat} learns hard binary attention masks. Distillation
-methods such as Learning without Forgetting \citep{li2018lwf} keep an
-older copy of the network as a soft target on old-class columns.
+methods such as Learning without Forgetting (LwF) \citep{li2018lwf}
+keep an older copy of the network as a soft target on old-class
+columns.
 
 We use EWC with per-node plasticity coefficients
 (\S\ref{sec:ewc-substrate}) as the regularization substrate, and we
@@ -249,8 +256,9 @@ regularized.
 \subsection{Rehearsal and pseudo-rehearsal}
 \label{sec:rel-rehearsal}
 
-Episodic-replay methods store past samples directly: GEM
-\citep{lopezpaz2017gem} maintains an episodic memory of past examples
+Episodic-replay methods store past samples directly: Gradient
+Episodic Memory (GEM) \citep{lopezpaz2017gem} maintains an episodic
+memory of past examples
 and projects gradients to remain consistent with it. We use a hippocampal
 buffer with $K \in \{1, 10, 20, 50\}$ samples per past class as the
 episodic-rehearsal baseline (\S\ref{sec:replay}). Generative-replay and
@@ -298,152 +306,32 @@ mechanisms to claim.
 \section{Methods}
 \label{sec:methods}
 
-\paragraph{Notation.}
-$n$ is the number of nodes in a layer; $d$ is the layer's incoming
-dimension; $B$ is batch size; $t$ indexes tasks in a curriculum.
+This section gives a high-level account of the architecture and the
+mechanisms layered on it. Full mathematical formulations, ablation
+arms, the L0-handshake derivation, the dream-archive specifics, and
+the experimental-design enumeration are deferred to
+Appendix~\ref{app:methods-detail}.
 
 \subsection{The Trioron Node}
-\label{sec:trioron-node}
+\label{sec:methods-trioron}
 
 A \emph{trioron} is a single computational unit characterized by three
-coupled state variables, generalizing the standard artificial neuron:
-
-\begin{itemize}[leftmargin=1.5em]
-  \item $w \in \R^{d}$ --- incoming weights (a row of the layer's weight
-        matrix).
-  \item $\lambda \in \R_{\geq 0}$ --- per-node \emph{plasticity coefficient}:
-        a per-unit scalar that scales the unit's contribution to the
-        elastic-weight consolidation (EWC) penalty. Larger
-        $\lambda \Rightarrow$ stiffer; smaller $\lambda \Rightarrow$ more
-        plastic.
-  \item $u \in \R$ --- per-node \emph{utility score}: a running estimate
-        of the unit's contribution to the network's outputs. Used as the
-        signal for pruning decisions (cells with persistently low $u$
-        are candidates for removal).
-\end{itemize}
-
-A \emph{trioron layer} aggregates $n$ trioron nodes that share an incoming
-dimension. We hold the per-node state in vectors $\lambda, u \in \R^{n}$
-and a weight matrix $W \in \R^{n \times d}$ where row $i$ is $w_i$. The
-forward pass for input batch $X \in \R^{B \times d}$ is
-\begin{equation}
-  H = \sigma\!\bigl(X\,(r \odot W)^{\top} + b\bigr),
-\end{equation}
-where $\sigma$ is the activation function, $b \in \R^{n}$ is the bias,
-and $r \in [0, 1]^{n}$ is the layer's \emph{routing scale} --- a per-node
-multiplicative gain on incoming weights, defaulting to all ones.
-
-Each layer additionally maintains EWC state: anchor weights $\anchorW$
-and $\anchorB$ snapshotted at task boundaries, and Fisher-information
-accumulators $F_W, F_b$ updated as a running EMA of squared gradients.
-Per-node $\lambda$ is derived from the row-mean of Fisher:
-$\lambda_i = \operatorname{mean}_j F_{W,i,j}$.
-
-\paragraph{Epigenetic analogue.}
-$w$ is the synaptic-strength channel; $\lambda$ is a per-cell modifier
-on plasticity, a stand-in for biological gating mechanisms such as
-DNA-methylation status of plasticity-related genes (e.g., BDNF) or
-perineuronal-net maturation, both of which gate how readily a cell's
-synapses can be modified; $u$ is the cell-importance signal, a stand-in
-for activity-dependent neurotrophin release. The triplet
-$(w, \lambda, u)$ is intended to capture \emph{which connections are
-present, how rigid they are, and how much the cell matters} --- three
-quantities that biological systems modulate independently.
-
-\subsection{Continual-Learning Substrate (EWC with Per-Node Plasticity)}
-\label{sec:ewc-substrate}
-
-Following \citet{kirkpatrick2017overcoming}, we apply elastic weight
-consolidation to protect prior-task knowledge. The penalty for a single
-trioron layer is
-\begin{equation}
-  \Lewc = \sum_i \lambda_i \left[
-    \sum_j (W_{ij} - W_{\text{anchor},ij})^{2}
-         + (b_i - b_{\text{anchor},i})^{2}
-  \right].
-\end{equation}
-The total loss is $L = \Ltask + \beta \cdot \Lewc$ for an EWC strength
-$\beta$ set per-curriculum. We refresh $\lambda_i$ from Fisher at the
-end of each task (after a batched re-estimation pass over recent task
-data), then snapshot $\anchorW \leftarrow W$ as the new anchor. This
-separation --- estimate Fisher at task end, then anchor --- follows the
-original EWC recipe and avoids the EMA-drift artifacts of online
-updating during training.
-
-For longer curricula we optionally accumulate Fisher across tasks via
-the Online EWC variant \citep{schwarz2018progress}:
-\begin{equation}
-  F_t \leftarrow \gamma \cdot F_{t-1} + F_{\text{new}},
-  \qquad \gamma \in [0, 1],
-\end{equation}
-with $\gamma = 1$ reducing to vanilla EWC. We use Online EWC
-$\gamma = 0.95$ as a competitor baseline (\S\ref{sec:competitor-sweep}).
-
-\subsection{Structural Plasticity}
-\label{sec:structural-plasticity}
-
-The architecture supports in-place growth and pruning of nodes during
-training, with cross-layer consistency.
-
-\paragraph{Cellular division (\texttt{grow\_node}).}
-Adds one row to a layer's weight matrix, extends the per-node state
-vectors $\lambda, u, r$ by one entry, and (if a downstream layer
-exists) extends that layer's incoming dimension by one column. The new
-node is initialized fully plastic ($\lambda_{\text{new}} = 0$,
-$u_{\text{new}} = 0$, $r_{\text{new}} = 1$) so it can adapt freely
-while existing nodes remain protected by EWC. The new row's incoming
-weights are initialized along the top principal direction of the
-residual signal $D = f(X_a) - f(X_b)$ at the layer below --- the
-direction of unmet representational variance, computed by SVD over a
-probe batch.
-
-\paragraph{Cellular pruning (\texttt{prune\_node}).}
-Removes a node's row, contracts the state vectors, and drops the
-corresponding input column on the next layer. By default the pruned
-node's outgoing column is \emph{redistributed} to its
-weight-cosine-nearest peer on the next layer before removal, preserving
-approximate input--output behavior of the layer.
-
-\paragraph{Growth trigger.}
-A node is grown only when three conditions are jointly satisfied over a
-window of $W$ steps:
-\begin{enumerate}[leftmargin=2em]
-  \item \emph{Loss plateau.} The loss has not improved by more than
-        $\varepsilon_{\text{loss}}$ relative to the prior window.
-  \item \emph{Rank saturation.} The effective rank
-        \begin{equation*}
-          \reff = \exp\!\left(-\sum_k p_k \log p_k\right),
-          \qquad p_k = \sigma_k \big/ \textstyle\sum_k \sigma_k,
-        \end{equation*}
-        computed from the normalized singular values of the latent
-        activation matrix, has approached the latent dimension
-        ($\text{latent\_dim} - \reff < \varepsilon_{\text{rank}}$).
-  \item \emph{Gradient stability.} The median gradient norm is bounded
-        $g_{\min} \leq |\tilde g| \leq g_{\max}$.
-\end{enumerate}
-The conjunction ensures that the network grows only when it has
-\emph{actually run out of capacity for the current task}, not merely
-when training is slow.
-
-\paragraph{Resource ceilings.}
-A pre-flight check rejects a proposed division if it would exceed a
-per-curriculum byte budget \textit{cap\_bytes}. The cap can be lifted
-between phases (we do this in the extension experiment of
-\S\ref{sec:ship-wake-extend} and \S\ref{sec:extension-results}). This
-implements \emph{resource awareness}: the network knows when not to
-grow even if growth would help. The biological analogue we have in mind
-is metabolic and spatial limits on adult neurogenesis.
-
-\paragraph{Apoptosis effective stiffness.}
-When a structural-pruning event fires (\S\ref{sec:dreaming-phase}), each
-node's effective EWC stiffness is scaled by $\max(0, 1 - p_i)$, where
-$p_i$ is a per-node \emph{apoptosis pulse}:
-\begin{equation}
-  \lambda_i^{\text{eff}} = \lambda_i \cdot \max(0,\, 1 - p_i).
-\end{equation}
-This temporarily reduces a surviving cell's EWC pinning when a neighbor
-has just died, allowing it to absorb the dead neighbor's role; pulses
-decay multiplicatively per dream cycle.
+coupled per-node state variables, generalizing the standard artificial
+neuron: an incoming weight vector $w$, a per-unit \emph{plasticity
+coefficient} $\lambda$ that scales the unit's contribution to the
+elastic-weight-consolidation (EWC) penalty, and a per-unit
+\emph{utility score} $u$ used as the pruning signal. A \emph{trioron
+layer} aggregates $n$ such units sharing an incoming dimension and
+additionally maintains EWC anchors $(\anchorW, \anchorB)$ and
+Fisher-information accumulators that are refreshed at task boundaries.
+The triplet $(w, \lambda, u)$ is intended to capture which connections
+are present, how rigid they are, and how much the unit matters ---
+three quantities that biological systems regulate independently. The
+layer additionally supports in-place growth and pruning of nodes
+during training, with cross-layer fan-in/fan-out consistency. See
+Appendix~\ref{app:trioron-node} and \ref{app:structural-plasticity}
+for the full forward pass, per-node EWC derivation, and growth/prune
+machinery.
 
 \begin{figure}[t]
 \centering
@@ -484,625 +372,107 @@ decay multiplicatively per dream cycle.
 \end{tikzpicture}
 \caption{Base trioron architecture for chained-15. The frozen Gaussian
 L0 projection provides a stable code space for manifold replay
-(\S\ref{sec:manifold-replay}). The plastic L1 grows under the
+(\S\ref{sec:methods-manifold}). The plastic L1 grows under the
 conjunction of loss-plateau, rank-saturation, and gradient-stability
 triggers up to a per-curriculum byte cap; the head grows one column
-per new class. Dream-time purge removes low-utility nodes, gated by
-the per-cycle event cap (\S\ref{sec:srna-cap}). EWC anchors plus
+per new class. Dream-time purge removes low-utility nodes, gated by a
+per-cycle event cap (\S\ref{sec:methods-dream}). EWC anchors plus
 per-node plasticity $\lambda_i$ pin prior-task knowledge on plastic
 layers.}
 \label{fig:trioron-arch}
 \end{figure}
 
-\subsection{The Frustration Multiplier}
-\label{sec:frustration}
+\subsection{Frustration}
+\label{sec:methods-frustration}
 
-We add a per-task plateau counter that scales the task loss when the
-optimizer gets stuck. For each task we accumulate the loss in windows
-of length $W_f$. At each window boundary we compare this window's mean
-loss to the prior window's; if improvement is below $\varepsilon_f$, we
-increment a stuck counter $s$. The multiplier is
-\begin{equation}
-  m = \min(M_{\max},\; 1 + g \cdot \max(0, s - \tau + 1)),
-\end{equation}
-with hinge threshold $\tau$, gain $g$, and ceiling $M_{\max}$. The
-multiplier is applied \emph{only to the task loss}, not the EWC
-penalty:
-\begin{equation}
-  L = m \cdot \Ltask + \beta \cdot \Lewc.
-\end{equation}
-This is mechanically equivalent to focal-loss / hard-example mining:
-amplify the gradient signal on examples the optimizer is not
-progressing on, without amplifying the regularizer. The biological
-analogue we have in mind is the HPA-axis stress response: sustained
-behavioral failure to make progress elevates glucocorticoids, which
-modulate plasticity-related gene expression through epigenetic
-mechanisms. The frustration multiplier is the architecture's
-stress-proxy switch; we do not claim it reproduces the biology.
+A per-task plateau detector scales the task loss --- but \emph{not}
+the EWC regularizer --- when the optimizer fails to make progress
+over a window. The detector accumulates a stuck counter $s$ each
+window in which the loss does not improve by more than a tolerance
+and amplifies the task loss by a multiplier
+$m = \min(M_{\max}, 1 + g \max(0, s - \tau + 1))$ once $s$ exceeds a
+hinge $\tau$. Mechanically the result is hard-example mining on the
+gradient signal without amplifying the regularizer; in deployment
+terms it is the architecture's stress-proxy switch that triggers
+structural growth when continued learning under the existing envelope
+is no longer paying off. The biological motivation is the
+hypothalamic--pituitary--adrenal stress-response loop. Full equations
+are in Appendix~\ref{app:frustration}.
 
-\subsection{The Dreaming Phase}
-\label{sec:dreaming-phase}
+\subsection{Dream}
+\label{sec:methods-dream}
 
-Between training tasks we run an offline \emph{dreaming block}: a short
-sleep-time pass that consolidates what was just learned without
-exposing the network to new data. Frustration is disabled inside the
-dream block (no environmental stress during sleep); EWC remains active
-so that consolidation pulls weights toward their anchored state. The
-dream block runs four sequential stages:
-\begin{equation*}
-  \text{replay} \;\to\; \text{compression (optional)} \;\to\;
-  \text{purge} \;\to\; \text{archive}.
-\end{equation*}
-Replay (\S\ref{sec:replay}) is the load-bearing accuracy mechanism;
-the dream archive (\S\ref{sec:archive}) is the load-bearing storage
-mechanism; compression is documented as an ablation arm
-(\S\ref{sec:compress-arms}); purge is gated by a per-cycle event cap
-(\S\ref{sec:srna-cap}).
+Between training tasks the architecture runs an offline \emph{dream
+block}: a sleep-time pass that consolidates what was just learned
+without exposing the network to new data. The dream block runs four
+sequential stages --- replay, optional compression, purge, and
+archive --- with frustration disabled (no environmental stress during
+sleep) and EWC active (so consolidation pulls weights toward their
+anchors). A strict per-cycle event cap on structural-pruning events
+(the \emph{small-RNA cap}, after the small-RNA pools that gate
+sleep-cycle synaptic homeostasis) prevents the dream block from
+accumulating remodeling drift. The archive stage promotes settled
+rows into a read-only state and feeds the deployment-time
+quantization path. See Appendix~\ref{app:dream} for stage-by-stage
+detail and Appendix~\ref{app:archive} for the dream archive.
 
-\subsubsection{Replay}
-\label{sec:replay}
+\subsection{Manifold Replay}
+\label{sec:methods-manifold}
 
-Replay rehearses past tasks under EWC. We support two replay sources:
-\begin{itemize}[leftmargin=1.5em]
-  \item \emph{Episodic exemplars (hippocampal buffer).} When real-data
-        storage is permitted we maintain a buffer of $K$ samples per
-        past task, sampled uniformly at task end. During replay the
-        buffer is shuffled with the current task's batch (1{:}1 by
-        default) and the cross-entropy loss is evaluated on both.
-        $K \in \{1, 10, 20, 50\}$ is the storage axis we sweep in
-        \S\ref{sec:pareto}. $K = 0$ routes replay through the
-        storage-free pseudo-rehearsal pathway of
-        \S\ref{sec:manifold-replay}.
-  \item \emph{Manifold pseudo-rehearsal (storage-free).} Per-class
-        statistics of L0 activations are stored at task end and used
-        to synthesize replay samples; see \S\ref{sec:manifold-replay}
-        for the full mechanism.
-\end{itemize}
-Conceptually analogous to sharp-wave ripples during slow-wave sleep,
-which replay recent and remote memories at compressed timescales
-\citep{tononi2014sleep}.
-
-\subsubsection{The sRNA Cap}
-\label{sec:srna-cap}
-
-Each dream block bounds the number of structural-pruning events per
-layer by a per-cycle cap $N_{\max}$. The cap holds even when many
-candidates pass the utility threshold of \S\ref{sec:purge}: across the
-dream-time mechanism design space we explored, $\sigma$-distance from
-baselines degrades monotonically with structural event count,
-motivating small caps. The default in the working configuration is
-$N_{\max} = 1$ --- at most one purge event per layer per dream cycle,
-allowing replay to absorb the structural change before the next event
-drifts on top.
-
-The cap is a stand-in for resource-limited small-RNA pools that gate
-sleep-cycle synaptic homeostasis: miRNAs involved in synaptic
-remodeling are produced and consumed in stoichiometric amounts during
-a single sleep cycle \citep{schratt2009micrornas, tononi2014sleep}, so
-the cellular machinery cannot perform arbitrarily many remodeling
-events per cycle. The ``fewer events $=$ better'' empirical pattern is
-broadly consistent with that biological observation, though we do not
-claim a tight quantitative match.
-
-\subsubsection{Compression-Action Design Space (Ablation Arms)}
-\label{sec:compress-arms}
-
-Three substrate-respecting mechanisms for resolving a detected
-redundant pair $(i, j)$ were tested as dream-time compression actions:
-\emph{synaptic downscale} (the kept side absorbs the victim's outgoing
-column, victim is zeroed, victim's row is not touched); \emph{routing
-starvation} (asymmetric multiplicative ramp on the victim's routing
-scale, with regrow on non-victims); and \emph{apoptosis spike} (when a
-routing-starved scale crosses the floor, the dead cell's outgoing is
-redistributed and surviving peers' apoptosis pulses $p_i$ are raised,
-which transiently reduces their EWC stiffness via \S\ref{sec:trioron-node}).
-None of these arms beats the no-compression baseline at $n = 6$ seeds
-in our experiments; we document them here as the ablation arms reported
-in \S\ref{sec:results}, and motivate the substrate-preserving emphasis
-that motivates \S\ref{sec:archive}. Engagement statistics are bimodal:
-at the activation-cosine threshold $\tau_{\ac} = 0.92$ (the redundancy
-detector), about half the seeds fire zero events --- a pattern that
-across-seed averaging conceals.
-
-\subsubsection{Purge}
-\label{sec:purge}
-
-The purge stage drops nodes whose utility $u_i$ falls below a threshold
-$\tau_u$, subject to the per-layer cap $N_{\max}$ of
-\S\ref{sec:srna-cap}. It reuses the structural pruning machinery of
-\S\ref{sec:structural-plasticity}, including cross-layer fan-in cleanup
-and cosine-nearest-peer redistribution. Distinct from the in-training
-pruner (\S\ref{sec:structural-plasticity}): purge is a sleep-time
-structural sweep with a strict event cap, not an event-clock check
-during waking training.
-
-\subsubsection{Pseudo-code of a Dream Block}
-\label{sec:dream-pseudocode}
-
-\begin{verbatim}
-for each task t in curriculum:
-    train_one_task(t)                         # waking
-    consolidate_task(t)                       # Fisher update + anchor
-    if dreaming_enabled:
-        decay apoptosis pulses by delta
-        replay(buffer = hippo or manifold,
-               steps = K_r,
-               ewc_active = True)
-        compress(signal = activation,
-                 threshold = tau_ac,
-                 action = ACTION,            # ablation arm; default off
-                 max_events_per_layer = N_max)
-        purge(threshold = tau_u)
-        archive_block(...)                    # see archive section
-\end{verbatim}
-
-\subsection{Manifold Replay (Storage-Free Pseudo-Rehearsal)}
-\label{sec:manifold-replay}
-
-The headline rehearsal mechanism is \emph{manifold replay}: a
-trioron-native pseudo-rehearsal scheme that summarizes each past class
-as a small set of statistics in the network's first-hidden-layer (L0)
-representation rather than storing exemplars.
-
-\paragraph{Storage.}
-When a task $t$ ends we collect L0 activations for each class $c$ that
-appeared in the task and store the per-class mean
-$\mu_c \in \R^{L_0}$ and per-dimension standard deviation
-$\sigma_c \in \R^{L_0}$ (a diagonal-Gaussian summary). Storage per
-class is $2 \cdot L_0 \cdot 4 = 1024$ bytes at $L_0 = 128$. A 30-class
-run costs $\approx\!30$~KB total --- independent of the dataset size
-and of the number of samples per task.
-
-\paragraph{Replay.}
-During the dream block we draw pseudo-samples for each past class $c$:
-\begin{equation}
-  \tilde z = \mu_c + \sigma_c \odot \varepsilon,
-  \qquad \varepsilon \sim \mathcal{N}(0, I),
-\end{equation}
-then forward them through the \emph{upper} layers via
-\texttt{forward\_from\_layer(z\_tilde, start = 1)} to obtain logits.
-Cross-entropy loss on $(\tilde z, c)$ is added to the total loss.
-Replay is performed at the same EWC strength as waking training.
-
-\paragraph{Why per-class statistics work where logit-inversion fails.}
-Three single-seed inversion variants ---
-DeepInversion-style code synthesis \citep{yin2020deepinversion}
-(one-shot, refresh-all, and diversity-regularized) --- all peaked at
-$0.27$ full-softmax accuracy on chained-15. Logit inversion locates
-class-$c$ attractor \emph{peaks}, not class-$c$ manifold
-\emph{samples}; the resulting points concentrate at adversarial extrema
-that do not reflect actual class structure. The $(\mu, \sigma)$ summary
-lives on the real L0 manifold by construction; inversion attractors do
-not. An ablation removing per-class $\sigma$ ($\mu$-only replay) loses
-$\approx\!0.07$ absolute on full-softmax at 30 classes (single seed),
-suggesting that per-class noise scale is load-bearing --- roughly
-$12\%$ of manifold replay's advantage.
-
-\paragraph{Why L0 is frozen.}
-Manifold replay assumes that L0's encoding is approximately stationary
-across the curriculum, so that statistics collected after task $t$
-remain valid at task $t + k$. We enforce this by freezing L0 at
-initialization to a fixed random Gaussian projection (weights drawn
-from $\mathcal{N}(0, 2/d)$ at init and never updated). A
-separation-probe diagnostic on the chained-15 curriculum gives a
-class-prototype discriminability ratio of $1.063$ in the frozen L0
-space --- modest but non-trivial, with Fashion-MNIST contributing the
-lowest separability ($1.04$) as expected from its irreducible
-within-domain confusions. The ratio rules out a single-prototype
-scheme (L0-space class means alone are not separable enough) and
-motivates the stored-$(\mu, \sigma)$ sketch as a manifold summary
-rather than a class-prototype classifier.
-
-\paragraph{Epigenetic analogue.}
-Per-class $(\mu, \sigma)$ is a compact ``engram fingerprint'': an
-offline sketch of the data manifold rather than a stored sample.
-Functionally closer to consolidated memory traces (gist-level recall)
-than to episodic exemplar storage (which the hippocampal-buffer
-baseline of \S\ref{sec:replay} implements explicitly).
-
-\subsection{The Dream Archive}
-\label{sec:archive}
-
-Long curricula accumulate parameters that should not keep moving ---
-rows whose Fisher has plateaued and whose contribution is stable across
-recent tasks. We expose these as a \emph{dream archive}: a two-phase
-mechanism for locking and quantizing such rows.
-
-\paragraph{Phase 1 --- mid-curriculum row archive.}
-After each \texttt{consolidate\_task}, every row of every layer is
-scored along three axes: (a) $\lambda$ percentile (top
-\textit{archive\_lam\_top\_percentile} of the layer), (b)
-gradient-magnitude ceiling (median $|g|$ over the recent window below
-\textit{archive\_grad\_mag\_floor}), and (c) apoptosis-pulse bound
-($p \leq$ \textit{archive\_pulse\_max} --- never archive a row recently
-pulsed by an apoptosis event). A row that satisfies all three for
-\textit{archive\_streak\_threshold} consecutive tasks is
-\emph{archived}: a per-row gradient mask is set so subsequent backward
-passes leave the row at its anchor value. The mask is enforced via
-\texttt{mask\_archived\_grads\_all()} between \texttt{loss.backward()}
-and \texttt{opt.step()} (sequenced after PackNet/HAT grad surgery on
-competitor arms). A per-layer cap \textit{archive\_max\_per\_layer}
-prevents any one layer from being fully archived in a single pass.
-
-\paragraph{Phase 2 --- end-of-curriculum int8 quantization.}
-At end of training we snap each archived row to int8 with a per-row
-symmetric scale ($8$~bits/weight plus one fp32 scale per row). Active
-(non-archived) weights are rounded to BF16 precision. The Phase 2 path
-is implemented as a snapshot--quantize--re-evaluate--restore sequence
-in the bench so we can report storage and accuracy numbers from the
-same trained checkpoint; the deployment path applies the snap
-permanently.
-
-\paragraph{Storage accounting.}
-With BF16 as the deployment baseline, archive $+$ int8 reduces network
-weight storage by $\approx\!40\%$ across all arms ($213.7 \to
-127.5$~KB on the headline \arm{grown\_capped\_dream} arm; full table
-in \S\ref{sec:archive-results}). We report deployment storage in the
-BF16 baseline because that is the honest device-side accounting; an
-FP32 baseline overstates the dream-archive win.
-
-\paragraph{Why ternary fails on a frozen-L0 substrate.}
-Ternary quantization ($2$~bits/weight) on the frozen-Gaussian L0
-projection costs $0.31$ absolute full-softmax accuracy on the smoke
-test: random-Gaussian weights have no concentration of magnitude near
-zero, so $2$-bit quantization throws away most of the routing
-structure that L1 and the head learned to depend on. Int8
-($\approx 1/127 \approx 0.8\%$ per-weight noise) preserves the routing
-intact. Unlocking ternary would require quantization-aware training
-during the dream phase, or restricting ternary to layers whose weights
-are concentrated at zero (a learned, pruned L1 + head) --- both
-deferred to future work.
-
-\paragraph{Epigenetic analogue.}
-Phase 1 is a stand-in for terminal cell differentiation --- a cell
-that has settled into its mature role no longer participates in
-plasticity. Phase 2 is a stand-in for compression of consolidated
-memory traces into low-bandwidth long-term storage, freeing
-high-bandwidth substrate for new learning.
-
-\subsection{Mixed-Precision Substrate}
-\label{sec:mixed-precision}
-
-For deployment on resource-constrained devices the architecture
-supports a mixed-precision mode in which weight Parameters $(W, b)$
-are stored in narrow precision (BF16) while all consolidation buffers
---- $\anchorW, \anchorB, F_W, F_b, \lambda, u, r, p$ --- remain in
-FP32. The forward pass auto-casts inputs to the weight dtype,
-preserving the callable interface; the EWC penalty and Fisher
-accumulation upcast cleanly across the boundary.
-
-This separation is necessary: pure-narrow-precision training degrades
-by $\approx\!40\%$ due to optimizer-state precision loss in Adam's
-running moments, but inference latency and memory cost are dominated
-by the weights, which can safely run in BF16. The intended deployment
-pattern is \emph{train in FP32 during sleep cycles, deploy in BF16 for
-always-on inference}.
-
-\subsection{The Ship-Wake-Extend Loop}
-\label{sec:ship-wake-extend}
-
-Deployment is not a one-shot training run that yields a fixed
-artifact; it is an iterative loop in which the model is shipped, woken
-on new data, allowed to grow plastic substrate, and re-shipped. We
-instantiate this loop with a \emph{consolidation-dream pass} that
-fires once at a chosen task boundary:
-\begin{enumerate}[leftmargin=2em]
-  \item \texttt{consolidation\_dream\_pass} --- full-coverage replay
-        over all past tasks with archive-aware gradient masking (locks
-        honored), plus one additional \texttt{archive\_block} call to
-        catch rows that just settled.
-  \item Optional permanent int8 snap of the archived rows (no restore
-        step, since this is the shipping checkpoint).
-  \item Cap lift:
-        $\textit{current\_cap\_bytes} \leftarrow
-         \textit{extension\_cap\_bytes}$.
-        The network is allowed to grow new plastic substrate against
-        the new task budget.
-  \item The training loop continues over the new tasks with shared
-        internal state --- manifold buffer, EWC anchors, archived
-        rows, frustration counters all persist across the boundary.
-\end{enumerate}
-
-The result is a smaller plastic envelope in deployment than in
-training, with new growth allocated only against the residual. A
-device-conscience deployment cannot revisit the original training
-data: it has only what it has stored (the manifold buffer, the
-archived weights) and what arrives in the new data stream. The
-consolidation-dream pass turns shipping into a controlled handoff:
-the network ``sleeps long'' before going to market, locking in the
-rows it will never need to move again, then wakes on new data in the
-field.
+The architecture's storage-efficient pseudo-rehearsal mechanism is
+\emph{manifold replay}: at the end of each task, per-class
+activations of the frozen first hidden layer (L0) are summarized as a
+diagonal-Gaussian sketch $(\mu_c, \sigma_c)$, and during the dream
+block pseudo-samples
+$\tilde z = \mu_c + \sigma_c \odot \varepsilon$,
+$\varepsilon \sim \mathcal{N}(0, I)$ are drawn from each past class
+and propagated through the upper layers under cross-entropy loss.
+Storage is a constant $1{,}024$ bytes per class --- $\approx 30$~KB
+for a 30-class curriculum, independent of dataset size --- and the
+sketch is the architecture's \emph{manifold engram}, an offline trace
+of the data manifold rather than a stored sample. The frozen L0 is
+what makes the sketch valid across the curriculum: statistics
+collected after task $t$ remain meaningful at task $t+k$ because the
+encoding does not drift. See Appendix~\ref{app:manifold} for the
+storage account, the L0-frozen rationale, and the ablation comparing
+$\mu$-only against $(\mu, \sigma)$.
 
 \subsection{Multi-Branch Absorption}
-\label{sec:absorption}
+\label{sec:methods-absorption}
 
-The ship-wake-extend loop (\S\ref{sec:ship-wake-extend}) lets a single
-organism continue learning across deployment cycles. A natural next
-question is whether two organisms trained \emph{independently} on
-disjoint task streams can be \emph{composed} into a single recipient
-without retraining either of them. We construct a multi-branch
-organism that does so, with a shared frozen L0 random projection as
-the only structural prerequisite.
+A second composition mode lets two organisms trained
+\emph{independently} on disjoint task streams be merged into one
+recipient with no retraining of either. Each donor contributes a
+frozen branch (its L1, its head slice, and its per-class manifold
+archive) attached to a shared frozen L0 random projection. At
+inference the manifold archives serve as analytic experts: per-branch
+generative log-likelihoods $\log p_b(z)$ form a soft routing gate, and
+per-branch logits are placed into the union class namespace via
+per-branch log-softmax to keep contributions on a common
+log-probability scale. No router training and no fusion-layer
+learning are required --- pure paste-and-go. The construction relies
+on a shared-L0 invariant; alternative protocols and the closed-form
+translator that handles donors trained at distinct random seeds are
+documented in Appendix~\ref{app:l0-handshake}.
 
-\paragraph{Architecture.}
-A multi-branch organism comprises a shared frozen L0 (the same
-Kaiming-initialized random projection used in single-branch trioron,
-\S\ref{sec:methods}) and $N$ parallel \emph{branches}. Each branch is
-a self-contained donor produced by an independent training run: a
-frozen L1 substrate, a frozen head slice over its own covered class
-subset, and the per-class manifold archive
-$\{(\mu_c, \Sigma_c)\}_{c \in C_b}$ that is already computed for
-manifold replay (\S\ref{sec:manifold-replay}). The branches share the
-same L0 random projection by being born at the same seed --- the
-\emph{shared-seed invariant} --- which is what makes donor weights
-semantically valid in recipient code-space without distillation. We
-enforce non-overlap of class coverage across branches:
-$C_b \cap C_{b'} = \emptyset$ for $b \neq b'$.
+\subsection{Expansion (Ship-Wake-Extend)}
+\label{sec:methods-expand}
 
-\paragraph{Forward pass.}
-For input $x$:
-\begin{enumerate}[leftmargin=2em]
-  \item Project to code space:
-        $z = \sigma(W_{L_0} x + b_{L_0})$ using the shared L0.
-  \item For each branch $b$, compute the per-branch head logits
-        $\ell^{(b)} = \text{branch}_b(z)$ over $C_b$.
-  \item Compute per-branch generative log-likelihoods from the archive
-        as a uniform mixture of per-class diagonal Gaussians:
-        $$\log p_b(z) = \log\!\left(
-          \tfrac{1}{|C_b|}
-          \sum_{c \in C_b} \mathcal{N}(z;\mu_c, \Sigma_c)
-        \right).$$
-  \item Compute branch gates by softmax over branches:
-        $$g_b(z) = \frac{\exp(\log p_b(z) / T)}
-                       {\sum_{b'} \exp(\log p_{b'}(z) / T)},$$
-        where $T$ is a temperature ($T = 1$ default). Soft gates
-        (rather than argmax) are deliberate: when archive
-        log-likelihoods on a query are close, multiple branches
-        co-fire and their log-probability contributions are blended.
-  \item Compose into combined logits over the union
-        $C_{\cup} = \bigsqcup_b C_b$ via the principled
-        mixture-of-experts log-probability:
-        $$\text{combined}_c(z) = \log g_{b(c)}(z) +
-          \log\text{softmax}_c(\ell^{(b(c))}),$$
-        where $b(c)$ is the unique branch covering $c$.
-\end{enumerate}
+Deployment is not a one-shot training run that yields a fixed
+artifact; it is an iterative loop in which the model is shipped,
+woken on new data, allowed to grow plastic substrate against a new
+resource budget, and re-shipped. The loop is anchored by a
+\emph{consolidation-dream pass} that runs once at the chosen task
+boundary, performing full-coverage replay over all past tasks with
+archive-aware gradient masking, optionally snapping archived rows to
+8-bit integer (int8), and lifting the per-curriculum byte cap so new
+growth allocates against the new task budget. Internal state ---
+manifold archive, EWC anchors, archived rows, frustration counters
+--- persists across the boundary; the network sleeps long before
+going to market, locking in what it will never need to move again,
+then wakes on new data in the field. See
+Appendix~\ref{app:ship-wake-extend} for the loop specification.
 
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[
-  >={Latex[length=2mm]},
-  font=\small,
-  L/.style={draw, rounded corners=3pt, align=center, inner sep=3pt, fill=white},
-  frozen/.style={L, fill=gray!15},
-  donor/.style={L, fill=blue!10, minimum width=30mm, align=center},
-  combine/.style={L, fill=green!15, minimum width=98mm, align=center, inner sep=5pt},
-  bias/.style={L, dashed, fill=violet!12, font=\scriptsize, align=center},
-  s/.style={font=\scriptsize, align=center},
-  arr/.style={->, thick, shorten >=1pt, shorten <=1pt}
-]
-\node[L] (in) {Input $x$};
-\node[frozen, below=3mm of in, minimum width=68mm] (l0)
-  {\textbf{Shared frozen L0}: $z = \sigma(W_{L_0} x + b_{L_0})$\\
-   \scriptsize matched random seed across donors\\[-1pt]
-   \scriptsize $\Rightarrow$ shared code space (shared-seed invariant)};
-\draw[arr] (in) -- (l0);
-
-\node[donor, below=14mm of l0, xshift=-38mm] (d1)
-  {\textbf{Donor 1}\\\scriptsize $L_1^{(1)}$, head$^{(1)}$, classes $C_1$\\
-   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_1}$};
-\node[donor, below=14mm of l0]              (d2)
-  {\textbf{Donor 2}\\\scriptsize $L_1^{(2)}$, head$^{(2)}$, classes $C_2$\\
-   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_2}$};
-\node[donor, below=14mm of l0, xshift=38mm] (d3)
-  {\textbf{Donor 3}\\\scriptsize $L_1^{(3)}$, head$^{(3)}$, classes $C_3$\\
-   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_3}$};
-
-\draw[arr] (l0.south) -- (d1.north);
-\draw[arr] (l0.south) -- (d2.north);
-\draw[arr] (l0.south) -- (d3.north);
-
-\node[combine, below=14mm of d2] (cmb) {%
-  \textbf{Archive gate $+$ log-prob combine}\\[2pt]
-  $g_b(z) = \mathrm{softmax}_b\bigl(\log p_b(z)/T\bigr)$,\;\;
-  $\text{combined}_c(z) = \log g_{b(c)}(z) +
-   \log\mathrm{softmax}_c\bigl(\ell^{(b(c))}\bigr)$\\[2pt]
-  \scriptsize over union namespace $C_\cup = \bigsqcup_b C_b$ \;|\; no router training};
-
-\draw[arr] (d1.south) -- node[s, sloped, above]{$\ell^{(1)}, \log p_1$} (cmb.north -| d1);
-\draw[arr] (d2.south) -- node[s, right=1mm]{$\ell^{(2)}, \log p_2$} (cmb.north -| d2);
-\draw[arr] (d3.south) -- node[s, sloped, above]{$\ell^{(3)}, \log p_3$} (cmb.north -| d3);
-
-\node[bias, below=4mm of cmb, text width=86mm]
-  (bias) {Optional per-class bias offset (dream-cycle calibration;
-          trained on synthetic codes from union archive --- no real data)};
-\draw[->, dashed, thick] (bias.north) -- (cmb.south);
-\end{tikzpicture}
-\caption{Multi-branch absorption (chimera) at $N=3$ donors. All
-donors share the same frozen Gaussian L0 by being born at matching
-random seeds, so donor weights are byte-valid in the recipient code
-space (\emph{shared-seed invariant}). Each donor contributes per-class
-logits $\ell^{(b)}$ and a manifold-archive log-likelihood
-$\log p_b(z)$; the same archive that serves manifold replay
-(\S\ref{sec:manifold-replay}) also serves as the analytic Expert-Gate
-\citep{aljundi2017expert} router. The combine operation places
-per-branch log-softmax contributions into the union class namespace,
-weighted by the gate --- no router training and no fusion-layer
-learning. The dashed per-class bias offset is the optional
-dream-cycle calibration.}
-\label{fig:chimera}
-\end{figure}
-
-\paragraph{Why per-branch log-softmax.}
-Each donor's head was trained under its own active-class mask, so
-absolute logit \emph{magnitudes} across donors are not comparable.
-Combining raw logits weighted by gates produces a biased argmax at
-full-softmax. Passing each branch's logits through a log-softmax
-restricted to its own coverage normalizes the contributions to a
-common log-probability scale, after which the mixture combine is
-well-posed. This is an inference-only fix; no parameters are added.
-
-\paragraph{Why the mechanism is zero-shot.}
-Donor weights are byte-valid in the recipient because L0 is shared
-(matched random projection $\Rightarrow$ matched code distribution),
-and donor logits are placed into recipient class-namespace via
-per-class indexing. The gate is computed analytically from the
-archive --- a generative Expert-Gate-style router
-\citep{aljundi2017expert} using the manifold buffer trioron already
-produces. No router training, no fusion-layer learning, no calibration
-pass; pure paste-and-go.
-
-\paragraph{Optional dream-cycle calibration.}
-For deployments where the full-softmax metric is load-bearing, a tiny
-additive bias offset can be trained to compensate for residual
-cross-donor magnitude mismatch. We sample synthetic codes
-$z \sim \mathcal{N}(\mu_c, \Sigma_c)$ from the union archive, forward
-through the assembled organism, and apply cross-entropy on the global
-label. We test two variants:
-\begin{itemize}[leftmargin=1.5em]
-  \item \emph{per-branch} ($N$ scalars): one bias broadcast uniformly
-        over each donor's covered slots. Mathematically task-aware-safe
-        (a uniform per-donor shift is monotonic on within-task argmax
-        because active classes within a chained-15 task always belong
-        to a single donor by disjoint coverage).
-  \item \emph{per-class} ($|C_{\cup}|$ scalars): one bias per union
-        class. Higher capacity, but \emph{can} perturb within-task
-        argmax; trades a small task-aware loss for a larger
-        full-softmax gain.
-\end{itemize}
-The dream cycle uses only the donors' own archives --- no real-data
-retraining is performed.
-
-\subsection{Experiment Design}
-\label{sec:experiment-design}
-
-\paragraph{Curriculum (chained-15).}
-A 30-class class-incremental benchmark drawn from three datasets in
-sequence:
-\begin{itemize}[leftmargin=1.5em]
-  \item 10 MNIST digit tasks (one new digit class per task);
-  \item 10 Fashion-MNIST tasks (one new garment class per task);
-  \item 10 EMNIST-letters tasks A..J (one new letter class per task).
-\end{itemize}
-Each task introduces exactly one new class. At evaluation time the
-network is asked to classify across all classes seen so far
-(full-softmax) or restricted to the same task or domain (task-aware,
-domain-aware). The class-incremental framing forces the network to
-commit to absolute class identities --- there is no task ID at
-inference --- and is the standard hard regime for continual-learning
-evaluation.
-
-\paragraph{Why class-incremental, not task-incremental.}
-Task-incremental benchmarks supply the task ID at inference, which
-collapses the problem to learning a per-task classifier.
-Class-incremental does not, and is therefore the regime where
-partition-style methods (PackNet, HAT) suffer their characteristic
-full-softmax collapse. Reporting class-incremental from the start
-avoids confusing the comparison.
-
-\paragraph{Extension curriculum (chained-23).}
-chained-15 above, plus 8 additional EMNIST-letters tasks K..R
-introduced at the extension boundary; total 23 class-incremental tasks
-across 38 classes. Used only in the extension experiment of
-\S\ref{sec:extension-results}.
-
-\paragraph{Network configuration.}
-\begin{itemize}[leftmargin=1.5em]
-  \item Three layers: input $\to$ L0 $\to$ L1 $\to$ head.
-  \item L0: $784 \to 128$, frozen-Gaussian random projection (weights
-        drawn from $\mathcal{N}(0, 2/784)$ at init and never updated).
-        See \S\ref{sec:manifold-replay} for why L0 is frozen.
-  \item L1: $128 \to 32$ initial, grown adaptively up to
-        $\textit{cap\_bytes} = 8\,\text{K}$ trainable parameters during
-        chained-15, lifted to 16~K at the extension boundary.
-  \item Head: $L_1\text{\_width} \to n_{\text{classes\_so\_far}}$,
-        grown adaptively as new classes appear.
-  \item Activations: ReLU on L1, identity on the head.
-  \item Optimizer: Adam, $\text{lr} = 3 \times 10^{-3}$.
-  \item Epochs: 4 per task. Loss: cross-entropy on the active label
-        set.
-  \item EWC strength: $\beta = 1000$ during waking and dream-replay
-        (matched).
-\end{itemize}
-
-\paragraph{Trioron arms.}
-\begin{itemize}[leftmargin=1.5em]
-  \item \arm{fixed\_ewc\_small} --- no growth; L1 fixed at the
-        chained-15 cap. Isolates the EWC $+$ manifold-replay
-        contribution at matched parameters.
-  \item \arm{grown\_capped\_no\_dream} --- growth under EWC, no
-        dream-time consolidation. Isolates the dream contribution.
-  \item \arm{grown\_capped\_dream} --- growth + dream within cap. The
-        default deployment arm.
-  \item \arm{grown\_uncapped\_dream} --- growth past cap with manifold
-        replay. The upper-bound headline arm.
-\end{itemize}
-
-\paragraph{Competitor families (5).}
-We benchmark against one method from each major continual-learning
-family:
-\begin{itemize}[leftmargin=1.5em]
-  \item \emph{Hippocampal buffer (exemplar rehearsal).} $K$ samples
-        per past class stored. $K \in \{1, 10, 20, 50\}$.
-  \item \emph{PackNet} \citep{mallya2018packnet}. Iterative magnitude
-        pruning with per-task masks. \emph{PackNet matched} matches
-        our trainable-parameter budget; \emph{PackNet standard} uses
-        the original recipe.
-  \item \emph{HAT} \citep{serra2018hat}. Hard binary attention masks
-        per task, gating each layer. \emph{Matched} and \emph{standard}
-        variants as above.
-  \item \emph{Online EWC} \citep{schwarz2018progress}. Fisher EMA
-        across tasks with $\gamma = 0.95$; learning-rate and $\beta$
-        tuned via grid search on the no-dream loss.
-  \item \emph{LwF + EWC} \citep{li2018lwf, kirkpatrick2017overcoming}.
-        Logit-distillation toward the anchored network on old-class
-        columns, in addition to the EWC penalty.
-\end{itemize}
-We are explicit that PackNet and HAT are not designed for
-class-incremental evaluation without the task-ID supplied at inference;
-their full-softmax collapse on this benchmark is expected, and the
-fairer comparison is the task-aware metric, on which they are
-competitive (\S\ref{sec:competitor-sweep}).
-
-\paragraph{Metrics.}
-\begin{itemize}[leftmargin=1.5em]
-  \item \emph{Full-softmax accuracy} (full): mean across all classes
-        seen so far of top-1 accuracy with the unrestricted softmax.
-        The hard class-incremental metric.
-  \item \emph{Domain-aware accuracy} (domain): top-1 accuracy
-        restricted to classes that share a dataset domain (digits,
-        fashion, letters) with the query.
-  \item \emph{Task-aware accuracy} (task): top-1 accuracy restricted
-        to the classes of the \emph{task} the query belongs to. The
-        right metric for trioron's deployment role of context-gated
-        personalization atop a frozen LLM.
-  \item \emph{Forgetting} (forget): mean across past tasks of
-        (final-task accuracy on that task) $-$ (accuracy at the time
-        the task was first introduced); positive values indicate
-        forgetting.
-  \item \emph{$\sigma$-vs-baseline}: paired-by-seed standardized
-        effect size across $N = 3$ random seeds, reported alongside
-        absolute $\Delta$. We are explicit that with $n = 3$ the
-        $\sigma$ values can be inflated by tight per-arm seed-to-seed
-        std rather than by a large absolute effect; we therefore
-        report absolute $\Delta$ as the primary number and $\sigma$ as
-        a secondary, with caveats.
-\end{itemize}
-
-\paragraph{Storage accounting.}
-We report deployment storage in two columns: BF16 baseline (the honest
-device-side number, since BF16 is the inference dtype) and FP32
-baseline (the training-time number). The manifold buffer is counted at
-FP32 (per-class $\mu$ and $\sigma$, $2 \cdot L_0 \cdot 4 = 1024$
-bytes/class). All headline storage numbers in
-\S\ref{sec:results} use the BF16 baseline.
-
-\paragraph{Reproducibility.}
-All benches run on commodity CPU. Each seed is fully deterministic
-given the seed value, modulo a known torch nondeterminism in
-archive-trigger timing (see \S\ref{sec:archive-results} for the v1/v2
-reconciliation). Launcher scripts under \texttt{experiments/} accept
-explicit seed lists; bench logs and CSVs from every reported run are
-committed to the public repository.
 
 
 \section{Results}
@@ -1116,9 +486,12 @@ continual-learning families and reads carefully across metrics.
 2 storage win. \S\ref{sec:extension-results} walks through the
 ship-wake-extend loop end-to-end at 23 tasks.
 \S\ref{sec:absorption-results} reports zero-shot multi-branch
-absorption out to $N = 5$ donors. All numbers are $n = 3$ multi-seed
-unless stated otherwise; absolute $\Delta$ is the primary effect-size
-report and $\sigma$ is secondary.
+absorption out to $N = 5$ donors. The headline panel and
+five-family competitor sweep are $n = 10$ multi-seed; the
+dream-archive table, the extension experiment, and the absorption
+panel remain at $n = 3$, $n = 1$, and $n = 1$ respectively, and we
+flag those captions inline. Absolute $\Delta$ is the primary
+effect-size report; $\sigma$ is secondary.
 
 \subsection{Manifold Replay Panel}
 \label{sec:headline}
@@ -1128,25 +501,25 @@ with manifold replay enabled.
 
 \begin{table}[h]
   \centering
-  \caption{chained-15, $n = 3$ trioron panel.
+  \caption{chained-15, $n = 10$ trioron panel.
            \headline\ marks the headline arm.}
   \label{tab:trioron-panel}
   \begin{tabular}{lccc}
     \toprule
     arm                              & full              & domain            & task              \\
     \midrule
-    \arm{fixed\_ewc\_small}          & $0.585 \pm 0.002$ & $0.655 \pm 0.006$ & $0.951 \pm 0.001$ \\
-    \arm{grown\_capped\_no\_dream}   & $0.577 \pm 0.011$ & $0.661 \pm 0.009$ & $0.951 \pm 0.000$ \\
-    \arm{grown\_capped\_dream}       & $0.587 \pm 0.008$ & $0.657 \pm 0.009$ & $0.956 \pm 0.003$ \\
-    \arm{grown\_uncapped\_dream}     & $0.604 \pm 0.003$ & $0.679 \pm 0.010$ & $0.960 \pm 0.001$\,\headline \\
+    \arm{fixed\_ewc\_small}          & $0.578 \pm 0.006$ & $0.653 \pm 0.006$ & $0.949 \pm 0.003$ \\
+    \arm{grown\_capped\_no\_dream}   & $0.584 \pm 0.006$ & $0.661 \pm 0.010$ & $0.952 \pm 0.002$ \\
+    \arm{grown\_capped\_dream}       & $0.584 \pm 0.011$ & $0.657 \pm 0.012$ & $0.958 \pm 0.004$ \\
+    \arm{grown\_uncapped\_dream}     & $0.601 \pm 0.008$ & $0.677 \pm 0.007$ & $0.961 \pm 0.001$\,\headline \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-The upper-bound arm \arm{grown\_uncapped\_dream} reaches $0.604$ full /
-$0.679$ domain / $0.960$ task on chained-15 at 30~KB of manifold-replay
-storage. Forgetting is negative across all three seeds
-($-0.566 \pm 0.009$ on \arm{grown\_uncapped\_dream}): past-class
+The upper-bound arm \arm{grown\_uncapped\_dream} reaches $0.601$ full /
+$0.677$ domain / $0.961$ task on chained-15 at 30~KB of manifold-replay
+storage. Forgetting is negative across all ten seeds
+($-0.562 \pm 0.010$ on \arm{grown\_uncapped\_dream}): past-class
 accuracy increases over time after a task ends, because the manifold
 replay block exposes the network to past classes throughout the
 curriculum. We do not claim this behavior is unique to manifold replay
@@ -1156,41 +529,50 @@ the right regime --- only that we measured it cleanly here.
 \begin{table}[h]
   \centering
   \caption{Paired comparisons against \arm{grown\_uncapped\_dream},
-           $n = 3$ paired by seed. Read $\sigma$ as a tightness
-           indicator on a small sample; absolute $\Delta$ is the
-           primary number.}
+           $n = 10$ paired by seed. Absolute $\Delta$ is the primary
+           number; $\sigma$ is reported as a secondary tightness
+           indicator.}
   \label{tab:trioron-paired}
   \begin{tabular}{llrr}
     \toprule
     comparison                                                                  & metric  & mean $\Delta$ & $\sigma$    \\
     \midrule
-    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & full    & $-0.018$      & $-6.36$     \\
-    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & task    & $-0.009$      & $-4.08$     \\
-    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & full    & $-0.027$      & $-3.44$     \\
-    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & domain  & $-0.018$      & $-18.14$    \\
+    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & full    & $-0.023$      & $-1.79$     \\
+    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & domain  & $-0.024$      & $-2.55$     \\
+    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & task    & $-0.012$      & $-4.63$     \\
+    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & full    & $-0.017$      & $-1.88$     \\
+    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & domain  & $-0.017$      & $-1.40$     \\
+    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & task    & $-0.010$      & $-4.73$     \\
+    \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & full    & $-0.017$      & $-1.05$     \\
+    \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & task    & $-0.004$      & $-0.87$     \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-The paired margin against \arm{fixed\_ewc\_small} is $-0.018$
-absolute on full-softmax, with the seed-paired std small enough to
-register as $-6\sigma$. Earlier benches in a regression arena under a
-hinge-contrastive loss showed growth-vs-fixed advantages of the same
-sign but only $+1.0$--$1.2\sigma$; manifold replay tightened the
-seed-to-seed variance more than it shifted the central tendency. The
-absolute effect on full-softmax is small. We report it as a
-defensible win at $n = 3$, not a strong one.
+The paired margin of \arm{fixed\_ewc\_small} versus
+\arm{grown\_uncapped\_dream} is $-0.023$ absolute on full-softmax at
+$n = 10$ ($-1.79\sigma$), $-0.024$ on domain-aware ($-2.55\sigma$),
+and $-0.012$ on task-aware ($-4.63\sigma$). The task-aware effect is
+the most reliable: per-arm seed-to-seed standard deviation on
+task-aware sits at $0.001$--$0.004$, so even the small absolute
+$\Delta$ registers as a tight $\sigma$. Earlier $n = 3$ headline
+numbers had read $-0.018$ full ($-6.36\sigma$) and $-0.009$ task
+($-4.08\sigma$); the additional seven seeds tightened the absolute
+$\Delta$ slightly while widening the cross-seed std on full-softmax,
+which is the honest summary --- some seeds underperformed the
+original three-seed mean. We report this as a defensible win on
+task-aware and a within-noise difference on full-softmax.
 
 \subsection{Five-Family Competitor Sweep}
 \label{sec:competitor-sweep}
 
 Table~\ref{tab:competitor-sweep} ports the same chained-15 protocol to
 five major continual-learning families, with the manifold-grown
-upper-bound arm included. All results are $n = 3$ multi-seed.
+upper-bound arm included. All results are $n = 10$ multi-seed.
 
 \begin{table}[h]
   \centering
-  \caption{chained-15 competitor sweep, $n = 3$.
+  \caption{chained-15 competitor sweep, $n = 10$.
            \headline\ marks family-best on a metric.}
   \label{tab:competitor-sweep}
   \small
@@ -1198,14 +580,14 @@ upper-bound arm included. All results are $n = 3$ multi-seed.
     \toprule
     family                  & method                       & full              & domain            & task              \\
     \midrule
-    rehearsal (ours)        & manifold-grown $(\mu,\sigma)$ & $0.604 \pm 0.003$ & $0.679 \pm 0.010$ & $0.960 \pm 0.001$ \\
-    rehearsal (exemplar)    & hippo $K = 50$               & $0.646 \pm 0.009$ & $0.699 \pm 0.012$ & $0.966 \pm 0.001$\,\headline \\
-    partition               & PackNet matched              & $0.074 \pm 0.016$ & $0.202 \pm 0.028$ & $0.945 \pm 0.005$ \\
-    partition               & PackNet standard             & $0.049 \pm 0.015$ & $0.140 \pm 0.037$ & $0.907 \pm 0.006$ \\
-    attention-mask          & HAT matched                  & $0.132 \pm 0.011$ & $0.232 \pm 0.033$ & $0.938 \pm 0.006$ \\
-    attention-mask          & HAT standard                 & $0.051 \pm 0.018$ & $0.147 \pm 0.015$ & $0.944 \pm 0.009$ \\
-    online-regularization   & Online EWC $\gamma = 0.95$   & $0.187 \pm 0.033$ & $0.347 \pm 0.027$ & $0.957 \pm 0.001$ \\
-    distillation            & LwF $+$ EWC                  & $0.199 \pm 0.047$ & $0.380 \pm 0.052$ & $0.964 \pm 0.001$ \\
+    rehearsal (ours)        & manifold-grown $(\mu,\sigma)$ & $0.601 \pm 0.008$ & $0.677 \pm 0.007$ & $0.961 \pm 0.001$ \\
+    rehearsal (exemplar)    & hippo $K = 50$               & $0.637 \pm 0.007$ & $0.690 \pm 0.006$ & $0.966 \pm 0.002$\,\headline \\
+    partition               & PackNet matched              & $0.080 \pm 0.024$ & $0.200 \pm 0.019$ & $0.931 \pm 0.017$ \\
+    partition               & PackNet standard             & $0.046 \pm 0.019$ & $0.143 \pm 0.016$ & $0.872 \pm 0.037$ \\
+    attention-mask          & HAT matched                  & $0.121 \pm 0.013$ & $0.216 \pm 0.026$ & $0.937 \pm 0.005$ \\
+    attention-mask          & HAT standard                 & $0.072 \pm 0.017$ & $0.163 \pm 0.032$ & $0.943 \pm 0.024$ \\
+    online-regularization   & Online EWC $\gamma = 0.95$   & $0.185 \pm 0.024$ & $0.355 \pm 0.014$ & $0.955 \pm 0.004$ \\
+    distillation            & LwF $+$ EWC                  & $0.191 \pm 0.037$ & $0.359 \pm 0.033$ & $0.964 \pm 0.002$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1228,10 +610,10 @@ carefully:
   \item LwF$+$EWC is competitive on task-aware (a metric that
         directly rewards within-old-class discrimination, which LwF's
         logit-distillation explicitly optimizes); manifold-grown ties
-        it within $0.005$ absolute. We do not claim a task-aware
+        it within $0.003$ absolute. We do not claim a task-aware
         win over LwF$+$EWC.
   \item The hippo $K = 50$ exemplar buffer beats manifold-grown by
-        $0.04$ on full-softmax at $25\times$ the storage cost. On a
+        $0.036$ on full-softmax at $25\times$ the storage cost. On a
         Pareto axis this is the right comparison
         (\S\ref{sec:pareto}).
 \end{itemize}
@@ -1239,33 +621,32 @@ carefully:
 \begin{table}[h]
   \centering
   \caption{Paired absolute $\Delta$ of manifold-grown vs each
-           competitor (positive $=$ ours wins). $\sigma$ in parentheses
-           is provided for completeness; treat with $n = 3$ caveats.}
+           competitor (positive $=$ ours wins), $n = 10$ paired by
+           seed. Absolute $\Delta$ is the primary number; $\sigma$ in
+           parentheses is the secondary tightness indicator.}
   \label{tab:paired-sigma}
   \begin{tabular}{lccc}
     \toprule
     comparison              & full $\Delta$ ($\sigma$) & domain $\Delta$ ($\sigma$) & task $\Delta$ ($\sigma$) \\
     \midrule
-    vs PackNet matched      & $+0.529$ ($+31\sigma$)   & $+0.477$ ($+24\sigma$)     & $+0.015$ ($+3.4\sigma$)  \\
-    vs PackNet standard     & $+0.555$ ($+47\sigma$)   & $+0.538$ ($+12\sigma$)     & $+0.052$ ($+9.8\sigma$)  \\
-    vs HAT matched          & $+0.471$ ($+34\sigma$)   & $+0.447$ ($+12\sigma$)     & $+0.022$ ($+3.6\sigma$)  \\
-    vs HAT standard         & $+0.553$ ($+27\sigma$)   & $+0.531$ ($+47\sigma$)     & $+0.016$ ($+1.7\sigma$)  \\
-    vs Online EWC           & $+0.417$ ($+13\sigma$)   & $+0.332$ ($+14\sigma$)     & $+0.002$ ($+1.6\sigma$)  \\
-    vs LwF $+$ EWC          & $+0.405$ ($+8\sigma$)    & $+0.298$ ($+6\sigma$)      & $-0.005$ ($-26\sigma$)   \\
+    vs PackNet matched      & $+0.522$ ($+20.3\sigma$) & $+0.477$ ($+24.5\sigma$)   & $+0.031$ ($+1.9\sigma$)  \\
+    vs PackNet standard     & $+0.555$ ($+24.5\sigma$) & $+0.535$ ($+30.5\sigma$)   & $+0.090$ ($+2.4\sigma$)  \\
+    vs HAT matched          & $+0.481$ ($+28.2\sigma$) & $+0.462$ ($+15.7\sigma$)   & $+0.025$ ($+5.1\sigma$)  \\
+    vs HAT standard         & $+0.530$ ($+25.6\sigma$) & $+0.515$ ($+17.4\sigma$)   & $+0.018$ ($+0.8\sigma$)  \\
+    vs Online EWC           & $+0.416$ ($+14.4\sigma$) & $+0.322$ ($+17.5\sigma$)   & $+0.006$ ($+1.5\sigma$)  \\
+    vs LwF $+$ EWC          & $+0.410$ ($+10.1\sigma$) & $+0.319$ ($+8.2\sigma$)    & $-0.003$ ($-1.3\sigma$)  \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-The large $\sigma$ values on the partition and attention-mask
-comparisons are a consequence of very tight seed-to-seed std (e.g.\
-PackNet standard's full std is $0.015$, ours is $0.003$, paired
-std is small), not of a $30\times$ effect size in any standard sense.
-The honest reading is: \emph{on full-softmax and domain-aware,
-manifold-grown is consistently above PackNet, HAT, Online EWC, and
-LwF in absolute terms, by margins between $0.30$ and $0.55$ on
-class-incremental chained-15.} On task-aware, the field collapses to
-a tight cluster near $0.95$, and the $\sigma$ values are too dependent
-on tiny per-arm std to take seriously at $n = 3$.
+The honest reading at $n = 10$ is: \emph{on full-softmax and
+domain-aware, manifold-grown is consistently above PackNet, HAT,
+Online EWC, and LwF in absolute terms, by margins between $0.32$ and
+$0.55$ on class-incremental chained-15.} On task-aware, the field
+collapses to a tight cluster near $0.95$, paired $\sigma$ values are
+modest, and the LwF tie ($-0.003$, $-1.3\sigma$) is now within
+seed noise rather than the $-26\sigma$ artifact the original $n = 3$
+table reported.
 
 \subsection{Storage-vs-Accuracy Pareto}
 \label{sec:pareto}
@@ -1278,33 +659,33 @@ report \arm{grown\_uncapped\_dream} as the trioron arm.
 
 \begin{table}[h]
   \centering
-  \caption{Storage-vs-accuracy Pareto ($n = 3$ means).}
+  \caption{Storage-vs-accuracy Pareto. Manifold and hippo $K = 50$
+           rows are $n = 10$ means; the combined $K = 10/K = 20$ rows
+           remain at $n = 3$ pending reruns.}
   \label{tab:pareto}
-  \begin{tabular}{lrrr}
+  \begin{tabular}{lrrrr}
     \toprule
-    variant                          & storage   & full    & gap to $K = 50$ \\
+    variant                          & storage   & full    & gap to $K = 50$ & $n$ \\
     \midrule
-    engram $+$ diff (no rehearsal)   & 24~KB     & $0.260$ & $-0.39$         \\
-    manifold $(\mu, \sigma)$         & 30~KB     & $0.604$ & $-0.04$\,\headline \\
-    combined $+$ hippo $K = 10$      & 174~KB    & $0.570$ & $-0.08$         \\
-    combined $+$ hippo $K = 20$      & 324~KB    & $0.601$ & $-0.05$         \\
-    hippo $K = 50$                   & 750~KB    & $0.646$ & ---             \\
+    manifold $(\mu, \sigma)$         & 30~KB     & $0.601$ & $-0.04$\,\headline & 10 \\
+    manifold $+$ hippo $K = 10$      & 174~KB    & $0.570$ & $-0.07$         & 3   \\
+    manifold $+$ hippo $K = 20$      & 324~KB    & $0.601$ & $-0.04$         & 3   \\
+    hippo $K = 50$                   & 750~KB    & $0.637$ & ---             & 10  \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Manifold Pareto-dominates hippo $K = 10$ on this benchmark
+Manifold replay Pareto-dominates hippo $K = 10$ on this benchmark
 (cheaper \emph{and} more accurate), matches hippo $K = 20$ at one-tenth
 the storage, and lands within $0.04$ absolute of $K = 50$ at
 one-twenty-fifth the storage. On task-aware the gap to $K = 50$ is
-$<\!1\%$.
+$\approx 0.005$ absolute (well under $1\%$).
 
 Logit-inversion variants \citep{yin2020deepinversion} (one-shot, refresh-all,
 diversity-regularized) all peaked at $0.27$ full-softmax in our
-single-seed runs --- consistent with the engram-attractor pathology
-that defeated earlier engram-replay variants. Per-class statistics
-live on the real L0 manifold by construction; inversion attractors do
-not. An ablation removing per-class $\sigma$ ($\mu$-only replay)
+single-seed runs. Per-class statistics live on the real L0 manifold by
+construction; inversion attractors locate class-$c$ argmax peaks rather
+than class-$c$ manifold samples and do not. An ablation removing per-class $\sigma$ ($\mu$-only replay)
 loses $\approx\!0.07$ absolute on full-softmax at 30 classes ---
 roughly $12\%$ of manifold replay's advantage --- suggesting that
 per-class noise scale is load-bearing. We label this as
@@ -1315,13 +696,14 @@ single-seed origin.
 \label{sec:archive-results}
 
 Phase~1 (mid-curriculum row archive) and Phase~2 (end-of-curriculum
-int8 quantization of archived rows $+$ BF16 active path) are
-evaluated as a deployment-side compression layer atop the
-manifold-grown architecture.
+int8 quantization of archived rows $+$ 16-bit brain-floating-point
+(BF16) active path) are evaluated as a deployment-side compression
+layer atop the manifold-grown architecture.
 
 \begin{table}[h]
   \centering
-  \caption{chained-15 with archive Phase~1 $+$ Phase~2, $n = 3$.}
+  \caption{chained-15 with archive Phase~1 $+$ Phase~2, $n = 3$
+           (dream-archive panel not yet rerun at $n = 10$).}
   \label{tab:archive-acc}
   \begin{tabular}{lccc}
     \toprule
@@ -1349,7 +731,8 @@ The substantive win is on storage.
 
 \begin{table}[h]
   \centering
-  \caption{Deployment storage, BF16 baseline, $n = 3$ means.}
+  \caption{Deployment storage, BF16 baseline, $n = 3$ means
+           (dream-archive panel not yet rerun at $n = 10$).}
   \label{tab:archive-storage}
   \begin{tabular}{lrrr}
     \toprule
@@ -1365,9 +748,10 @@ The substantive win is on storage.
 
 Adding the 30~KB manifold buffer, the headline
 \arm{grown\_capped\_dream} deployment image is $\approx 157$~KB total
-(vs $241$~KB BF16-baseline $+$ manifold, $-35\%$). At an FP32
-deployment baseline the same arm lands at $168$~KB FP32 $+$ int8
-($-63\%$ relative), but the FP32 framing is the wrong yardstick for a
+(vs $241$~KB BF16-baseline $+$ manifold, $-35\%$). At a 32-bit
+floating-point (FP32) deployment baseline the same arm lands at
+$168$~KB FP32 $+$ int8 ($-63\%$ relative), but the FP32 framing is
+the wrong yardstick for a
 device-conscience deployment; we report BF16 throughout this work
 because BF16 is the inference dtype.
 
@@ -1615,9 +999,9 @@ Three directions follow naturally from the limits we listed:
 \begin{enumerate}[leftmargin=2em]
   \item \emph{Larger benchmarks.} Move from chained-15 / chained-23
         to standard class-incremental benchmarks (Split-CIFAR-100,
-        Split-MiniImageNet) and increase $n$ to $\geq 5$ before
-        reporting paired $\sigma$ values. Multi-seed reruns of the
-        single-seed extension and ablation results in
+        Split-MiniImageNet) at the same $n = 10$ seed cohort the
+        headline panel now uses. Multi-seed reruns of the
+        single-seed extension result and the dream-archive panel in
         \S\ref{sec:results} are the immediate gap.
   \item \emph{Larger backbones.} Couple the trioron substrate to a
         frozen vision or language backbone in the place of the random
@@ -1631,12 +1015,14 @@ Three directions follow naturally from the limits we listed:
 \end{enumerate}
 
 \paragraph{Reproducibility and artifacts.}
-The full implementation, launcher scripts, bench logs, and CSVs are
-released under the project repository at
+The full implementation, launcher scripts, bench logs, and
+comma-separated-value (CSV) result files are released under the
+project repository at
 \url{https://github.com/Marcrockhat/trioron-project}. A live demo
 (text-to-speech routing through a multi-branch organism, plus
 on-device drawing-tablet teaching path) is hosted at the project's
-HuggingFace Space (\texttt{Marcrockhat/trioron-demo}). The repository
+Hugging Face Space:
+\href{https://huggingface.co/spaces/Marcrockhat/trioron-demo}{huggingface.co/spaces/Marcrockhat/trioron-demo}. The repository
 includes an end-to-end \texttt{api.extend(\dots)} entry point that
 wakes a shipped checkpoint on new data and re-ships it; one tutorial
 exercises this loop from a 5-digit MNIST starter through to live-learn
@@ -1644,6 +1030,933 @@ on a sketchpad. The intent is that other researchers can continue this
 work, reproduce the headline numbers, or play with the architecture on
 a small device with minimal setup.
 
+
+
+\appendix
+\section{Detailed Methods}
+\label{app:methods-detail}
+
+This appendix contains the full mechanism descriptions, ablation
+arms, derivations, and experimental-design enumeration that
+\S\ref{sec:methods} summarizes. Cross-references from the main text
+point at the specific subsections below.
+
+
+\paragraph{Notation.}
+$n$ is the number of nodes in a layer; $d$ is the layer's incoming
+dimension; $B$ is batch size; $t$ indexes tasks in a curriculum.
+
+\subsection{The Trioron Node}
+\label{sec:trioron-node}\label{app:trioron-node}
+
+A \emph{trioron} is a single computational unit characterized by three
+coupled state variables, generalizing the standard artificial neuron:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item $w \in \R^{d}$ --- incoming weights (a row of the layer's weight
+        matrix).
+  \item $\lambda \in \R_{\geq 0}$ --- per-node \emph{plasticity coefficient}:
+        a per-unit scalar that scales the unit's contribution to the
+        elastic-weight consolidation (EWC) penalty. Larger
+        $\lambda \Rightarrow$ stiffer; smaller $\lambda \Rightarrow$ more
+        plastic.
+  \item $u \in \R$ --- per-node \emph{utility score}: a running estimate
+        of the unit's contribution to the network's outputs. Used as the
+        signal for pruning decisions (cells with persistently low $u$
+        are candidates for removal).
+\end{itemize}
+
+A \emph{trioron layer} aggregates $n$ trioron nodes that share an incoming
+dimension. We hold the per-node state in vectors $\lambda, u \in \R^{n}$
+and a weight matrix $W \in \R^{n \times d}$ where row $i$ is $w_i$. The
+forward pass for input batch $X \in \R^{B \times d}$ is
+\begin{equation}
+  H = \sigma\!\bigl(X\,(r \odot W)^{\top} + b\bigr),
+\end{equation}
+where $\sigma$ is the activation function, $b \in \R^{n}$ is the bias,
+and $r \in [0, 1]^{n}$ is the layer's \emph{routing scale} --- a per-node
+multiplicative gain on incoming weights, defaulting to all ones.
+
+Each layer additionally maintains EWC state: anchor weights $\anchorW$
+and $\anchorB$ snapshotted at task boundaries, and Fisher-information
+accumulators $F_W, F_b$ updated as a running exponential moving
+average (EMA) of squared gradients.
+Per-node $\lambda$ is derived from the row-mean of Fisher:
+$\lambda_i = \operatorname{mean}_j F_{W,i,j}$.
+
+\paragraph{Epigenetic analogue.}
+$w$ is the synaptic-strength channel; $\lambda$ is a per-cell modifier
+on plasticity, a stand-in for biological gating mechanisms such as
+DNA-methylation status of plasticity-related genes
+(e.g., brain-derived neurotrophic factor, BDNF) or
+perineuronal-net maturation, both of which gate how readily a cell's
+synapses can be modified; $u$ is the cell-importance signal, a stand-in
+for activity-dependent neurotrophin release. The triplet
+$(w, \lambda, u)$ is intended to capture \emph{which connections are
+present, how rigid they are, and how much the cell matters} --- three
+quantities that biological systems modulate independently.
+
+\subsection{Continual-Learning Substrate (EWC with Per-Node Plasticity)}
+\label{sec:ewc-substrate}
+
+Following \citet{kirkpatrick2017overcoming}, we apply elastic weight
+consolidation to protect prior-task knowledge. The penalty for a single
+trioron layer is
+\begin{equation}
+  \Lewc = \sum_i \lambda_i \left[
+    \sum_j (W_{ij} - W_{\text{anchor},ij})^{2}
+         + (b_i - b_{\text{anchor},i})^{2}
+  \right].
+\end{equation}
+The total loss is $L = \Ltask + \beta \cdot \Lewc$ for an EWC strength
+$\beta$ set per-curriculum. We refresh $\lambda_i$ from Fisher at the
+end of each task (after a batched re-estimation pass over recent task
+data), then snapshot $\anchorW \leftarrow W$ as the new anchor. This
+separation --- estimate Fisher at task end, then anchor --- follows the
+original EWC recipe and avoids the EMA-drift artifacts of online
+updating during training.
+
+For longer curricula we optionally accumulate Fisher across tasks via
+the Online EWC variant \citep{schwarz2018progress}:
+\begin{equation}
+  F_t \leftarrow \gamma \cdot F_{t-1} + F_{\text{new}},
+  \qquad \gamma \in [0, 1],
+\end{equation}
+with $\gamma = 1$ reducing to vanilla EWC. We use Online EWC
+$\gamma = 0.95$ as a competitor baseline (\S\ref{sec:competitor-sweep}).
+
+\subsection{Structural Plasticity}
+\label{sec:structural-plasticity}\label{app:structural-plasticity}
+
+The architecture supports in-place growth and pruning of nodes during
+training, with cross-layer consistency.
+
+\paragraph{Cellular division (\texttt{grow\_node}).}
+Adds one row to a layer's weight matrix, extends the per-node state
+vectors $\lambda, u, r$ by one entry, and (if a downstream layer
+exists) extends that layer's incoming dimension by one column. The new
+node is initialized fully plastic ($\lambda_{\text{new}} = 0$,
+$u_{\text{new}} = 0$, $r_{\text{new}} = 1$) so it can adapt freely
+while existing nodes remain protected by EWC. The new row's incoming
+weights are initialized along the top principal direction of the
+residual signal $D = f(X_a) - f(X_b)$ at the layer below --- the
+direction of unmet representational variance, computed by singular
+value decomposition (SVD) over a probe batch.
+
+\paragraph{Cellular pruning (\texttt{prune\_node}).}
+Removes a node's row, contracts the state vectors, and drops the
+corresponding input column on the next layer. By default the pruned
+node's outgoing column is \emph{redistributed} to its
+weight-cosine-nearest peer on the next layer before removal, preserving
+approximate input--output behavior of the layer.
+
+\paragraph{Growth trigger.}
+A node is grown only when three conditions are jointly satisfied over a
+window of $W$ steps:
+\begin{enumerate}[leftmargin=2em]
+  \item \emph{Loss plateau.} The loss has not improved by more than
+        $\varepsilon_{\text{loss}}$ relative to the prior window.
+  \item \emph{Rank saturation.} The effective rank
+        \begin{equation*}
+          \reff = \exp\!\left(-\sum_k p_k \log p_k\right),
+          \qquad p_k = \sigma_k \big/ \textstyle\sum_k \sigma_k,
+        \end{equation*}
+        computed from the normalized singular values of the latent
+        activation matrix, has approached the latent dimension
+        ($\text{latent\_dim} - \reff < \varepsilon_{\text{rank}}$).
+  \item \emph{Gradient stability.} The median gradient norm is bounded
+        $g_{\min} \leq |\tilde g| \leq g_{\max}$.
+\end{enumerate}
+The conjunction ensures that the network grows only when it has
+\emph{actually run out of capacity for the current task}, not merely
+when training is slow.
+
+\paragraph{Resource ceilings.}
+A pre-flight check rejects a proposed division if it would exceed a
+per-curriculum byte budget \textit{cap\_bytes}. The cap can be lifted
+between phases (we do this in the extension experiment of
+\S\ref{sec:ship-wake-extend} and \S\ref{sec:extension-results}). This
+implements \emph{resource awareness}: the network knows when not to
+grow even if growth would help. The biological analogue we have in mind
+is metabolic and spatial limits on adult neurogenesis.
+
+\paragraph{Apoptosis effective stiffness.}
+When a structural-pruning event fires (\S\ref{sec:dreaming-phase}), each
+node's effective EWC stiffness is scaled by $\max(0, 1 - p_i)$, where
+$p_i$ is a per-node \emph{apoptosis pulse}:
+\begin{equation}
+  \lambda_i^{\text{eff}} = \lambda_i \cdot \max(0,\, 1 - p_i).
+\end{equation}
+This temporarily reduces a surviving cell's EWC pinning when a neighbor
+has just died, allowing it to absorb the dead neighbor's role; pulses
+decay multiplicatively per dream cycle. (See
+Figure~\ref{fig:trioron-arch} in \S\ref{sec:methods-trioron} for the
+architecture diagram.)
+
+\subsection{The Frustration Multiplier}
+\label{sec:frustration}\label{app:frustration}
+
+We add a per-task plateau counter that scales the task loss when the
+optimizer gets stuck. For each task we accumulate the loss in windows
+of length $W_f$. At each window boundary we compare this window's mean
+loss to the prior window's; if improvement is below $\varepsilon_f$, we
+increment a stuck counter $s$. The multiplier is
+\begin{equation}
+  m = \min(M_{\max},\; 1 + g \cdot \max(0, s - \tau + 1)),
+\end{equation}
+with hinge threshold $\tau$, gain $g$, and ceiling $M_{\max}$. The
+multiplier is applied \emph{only to the task loss}, not the EWC
+penalty:
+\begin{equation}
+  L = m \cdot \Ltask + \beta \cdot \Lewc.
+\end{equation}
+This is mechanically equivalent to focal-loss / hard-example mining:
+amplify the gradient signal on examples the optimizer is not
+progressing on, without amplifying the regularizer. The biological
+analogue we have in mind is the HPA-axis stress response: sustained
+behavioral failure to make progress elevates glucocorticoids, which
+modulate plasticity-related gene expression through epigenetic
+mechanisms. The frustration multiplier is the architecture's
+stress-proxy switch; we do not claim it reproduces the biology.
+
+\subsection{The Dreaming Phase}
+\label{sec:dreaming-phase}\label{app:dream}
+
+Between training tasks we run an offline \emph{dreaming block}: a short
+sleep-time pass that consolidates what was just learned without
+exposing the network to new data. Frustration is disabled inside the
+dream block (no environmental stress during sleep); EWC remains active
+so that consolidation pulls weights toward their anchored state. The
+dream block runs four sequential stages:
+\begin{equation*}
+  \text{replay} \;\to\; \text{compression (optional)} \;\to\;
+  \text{purge} \;\to\; \text{archive}.
+\end{equation*}
+Replay (\S\ref{sec:replay}) is the load-bearing accuracy mechanism;
+the dream archive (\S\ref{sec:archive}) is the load-bearing storage
+mechanism; compression is documented as an ablation arm
+(\S\ref{sec:compress-arms}); purge is gated by a per-cycle event cap
+(\S\ref{sec:srna-cap}).
+
+\subsubsection{Replay}
+\label{sec:replay}
+
+Replay rehearses past tasks under EWC. We support two replay sources:
+\begin{itemize}[leftmargin=1.5em]
+  \item \emph{Episodic exemplars (hippocampal buffer).} When real-data
+        storage is permitted we maintain a buffer of $K$ samples per
+        past task, sampled uniformly at task end. During replay the
+        buffer is shuffled with the current task's batch (1{:}1 by
+        default) and the cross-entropy loss is evaluated on both.
+        $K \in \{1, 10, 20, 50\}$ is the storage axis we sweep in
+        \S\ref{sec:pareto}. $K = 0$ routes replay through the
+        storage-free pseudo-rehearsal pathway of
+        \S\ref{sec:manifold-replay}.
+  \item \emph{Manifold pseudo-rehearsal (storage-free).} Per-class
+        statistics of L0 activations are stored at task end and used
+        to synthesize replay samples; see \S\ref{sec:manifold-replay}
+        for the full mechanism.
+\end{itemize}
+Conceptually analogous to sharp-wave ripples during slow-wave sleep,
+which replay recent and remote memories at compressed timescales
+\citep{tononi2014sleep}.
+
+\subsubsection{The sRNA Cap}
+\label{sec:srna-cap}
+
+Each dream block bounds the number of structural-pruning events per
+layer by a per-cycle cap $N_{\max}$. The cap holds even when many
+candidates pass the utility threshold of \S\ref{sec:purge}: across the
+dream-time mechanism design space we explored, $\sigma$-distance from
+baselines degrades monotonically with structural event count,
+motivating small caps. The default in the working configuration is
+$N_{\max} = 1$ --- at most one purge event per layer per dream cycle,
+allowing replay to absorb the structural change before the next event
+drifts on top.
+
+The cap is a stand-in for resource-limited small-RNA pools that gate
+sleep-cycle synaptic homeostasis: miRNAs involved in synaptic
+remodeling are produced and consumed in stoichiometric amounts during
+a single sleep cycle \citep{schratt2009micrornas, tononi2014sleep}, so
+the cellular machinery cannot perform arbitrarily many remodeling
+events per cycle. The ``fewer events $=$ better'' empirical pattern is
+broadly consistent with that biological observation, though we do not
+claim a tight quantitative match.
+
+\subsubsection{Compression-Action Design Space (Ablation Arms)}
+\label{sec:compress-arms}
+
+Three substrate-respecting mechanisms for resolving a detected
+redundant pair $(i, j)$ were tested as dream-time compression actions:
+\emph{synaptic downscale} (the kept side absorbs the victim's outgoing
+column, victim is zeroed, victim's row is not touched); \emph{routing
+starvation} (asymmetric multiplicative ramp on the victim's routing
+scale, with regrow on non-victims); and \emph{apoptosis spike} (when a
+routing-starved scale crosses the floor, the dead cell's outgoing is
+redistributed and surviving peers' apoptosis pulses $p_i$ are raised,
+which transiently reduces their EWC stiffness via \S\ref{sec:trioron-node}).
+None of these arms beats the no-compression baseline at $n = 6$ seeds
+in our experiments; we document them here as the ablation arms reported
+in \S\ref{sec:results}, and motivate the substrate-preserving emphasis
+that motivates \S\ref{sec:archive}. Engagement statistics are bimodal:
+at the activation-cosine threshold $\tau_{\ac} = 0.92$ (the redundancy
+detector), about half the seeds fire zero events --- a pattern that
+across-seed averaging conceals.
+
+\subsubsection{Purge}
+\label{sec:purge}
+
+The purge stage drops nodes whose utility $u_i$ falls below a threshold
+$\tau_u$, subject to the per-layer cap $N_{\max}$ of
+\S\ref{sec:srna-cap}. It reuses the structural pruning machinery of
+\S\ref{sec:structural-plasticity}, including cross-layer fan-in cleanup
+and cosine-nearest-peer redistribution. Distinct from the in-training
+pruner (\S\ref{sec:structural-plasticity}): purge is a sleep-time
+structural sweep with a strict event cap, not an event-clock check
+during waking training.
+
+\subsubsection{Pseudo-code of a Dream Block}
+\label{sec:dream-pseudocode}
+
+\begin{verbatim}
+for each task t in curriculum:
+    train_one_task(t)                         # waking
+    consolidate_task(t)                       # Fisher update + anchor
+    if dreaming_enabled:
+        decay apoptosis pulses by delta
+        replay(buffer = hippo or manifold,
+               steps = K_r,
+               ewc_active = True)
+        compress(signal = activation,
+                 threshold = tau_ac,
+                 action = ACTION,            # ablation arm; default off
+                 max_events_per_layer = N_max)
+        purge(threshold = tau_u)
+        archive_block(...)                    # see archive section
+\end{verbatim}
+
+\subsection{Manifold Replay (Storage-Free Pseudo-Rehearsal)}
+\label{sec:manifold-replay}\label{app:manifold}
+
+The headline rehearsal mechanism is \emph{manifold replay}: a
+trioron-native pseudo-rehearsal scheme that summarizes each past class
+as a small set of statistics in the network's first-hidden-layer (L0)
+representation rather than storing exemplars.
+
+\paragraph{Storage.}
+When a task $t$ ends we collect L0 activations for each class $c$ that
+appeared in the task and store the per-class mean
+$\mu_c \in \R^{L_0}$ and per-dimension standard deviation
+$\sigma_c \in \R^{L_0}$ (a diagonal-Gaussian summary). Storage per
+class is $2 \cdot L_0 \cdot 4 = 1024$ bytes at $L_0 = 128$. A 30-class
+run costs $\approx\!30$~KB total --- independent of the dataset size
+and of the number of samples per task.
+
+\paragraph{Replay.}
+During the dream block we draw pseudo-samples for each past class $c$:
+\begin{equation}
+  \tilde z = \mu_c + \sigma_c \odot \varepsilon,
+  \qquad \varepsilon \sim \mathcal{N}(0, I),
+\end{equation}
+then forward them through the \emph{upper} layers via
+\texttt{forward\_from\_layer(z\_tilde, start = 1)} to obtain logits.
+Cross-entropy loss on $(\tilde z, c)$ is added to the total loss.
+Replay is performed at the same EWC strength as waking training.
+
+\paragraph{Why per-class statistics work where logit-inversion fails.}
+Three single-seed inversion variants ---
+DeepInversion-style code synthesis \citep{yin2020deepinversion}
+(one-shot, refresh-all, and diversity-regularized) --- all peaked at
+$0.27$ full-softmax accuracy on chained-15. Logit inversion locates
+class-$c$ attractor \emph{peaks}, not class-$c$ manifold
+\emph{samples}; the resulting points concentrate at adversarial extrema
+that do not reflect actual class structure. The $(\mu, \sigma)$ summary
+lives on the real L0 manifold by construction; inversion attractors do
+not. An ablation removing per-class $\sigma$ ($\mu$-only replay) loses
+$\approx\!0.07$ absolute on full-softmax at 30 classes (single seed),
+suggesting that per-class noise scale is load-bearing --- roughly
+$12\%$ of manifold replay's advantage.
+
+\paragraph{Why L0 is frozen.}
+Manifold replay assumes that L0's encoding is approximately stationary
+across the curriculum, so that statistics collected after task $t$
+remain valid at task $t + k$. We enforce this by freezing L0 at
+initialization to a fixed random Gaussian projection (weights drawn
+from $\mathcal{N}(0, 2/d)$ at init and never updated). A
+separation-probe diagnostic on the chained-15 curriculum gives a
+class-prototype discriminability ratio of $1.063$ in the frozen L0
+space --- modest but non-trivial, with Fashion-MNIST contributing the
+lowest separability ($1.04$) as expected from its irreducible
+within-domain confusions. The ratio rules out a single-prototype
+scheme (L0-space class means alone are not separable enough) and
+motivates the stored-$(\mu, \sigma)$ sketch as a manifold summary
+rather than a class-prototype classifier.
+
+\paragraph{Epigenetic analogue.}
+Per-class $(\mu, \sigma)$ is a compact \emph{manifold engram}: an
+offline sketch of the data manifold rather than a stored sample.
+Functionally closer to consolidated memory traces (gist-level recall)
+than to episodic exemplar storage (which the hippocampal-buffer
+baseline of \S\ref{sec:replay} implements explicitly).
+
+\subsection{The Dream Archive}
+\label{sec:archive}\label{app:archive}
+
+Long curricula accumulate parameters that should not keep moving ---
+rows whose Fisher has plateaued and whose contribution is stable across
+recent tasks. We expose these as a \emph{dream archive}: a two-phase
+mechanism for locking and quantizing such rows.
+
+\paragraph{Phase 1 --- mid-curriculum row archive.}
+After each \texttt{consolidate\_task}, every row of every layer is
+scored along three axes: (a) $\lambda$ percentile (top
+\textit{archive\_lam\_top\_percentile} of the layer), (b)
+gradient-magnitude ceiling (median $|g|$ over the recent window below
+\textit{archive\_grad\_mag\_floor}), and (c) apoptosis-pulse bound
+($p \leq$ \textit{archive\_pulse\_max} --- never archive a row recently
+pulsed by an apoptosis event). A row that satisfies all three for
+\textit{archive\_streak\_threshold} consecutive tasks is
+\emph{archived}: a per-row gradient mask is set so subsequent backward
+passes leave the row at its anchor value. The mask is enforced via
+\texttt{mask\_archived\_grads\_all()} between \texttt{loss.backward()}
+and \texttt{opt.step()} (sequenced after PackNet/HAT grad surgery on
+competitor arms). A per-layer cap \textit{archive\_max\_per\_layer}
+prevents any one layer from being fully archived in a single pass.
+
+\paragraph{Phase 2 --- end-of-curriculum int8 quantization.}
+At end of training we snap each archived row to int8 with a per-row
+symmetric scale ($8$~bits/weight plus one FP32 scale per row). Active
+(non-archived) weights are rounded to BF16 precision. The Phase 2 path
+is implemented as a snapshot--quantize--re-evaluate--restore sequence
+in the bench so we can report storage and accuracy numbers from the
+same trained checkpoint; the deployment path applies the snap
+permanently.
+
+\paragraph{Storage accounting.}
+With BF16 as the deployment baseline, archive $+$ int8 reduces network
+weight storage by $\approx\!40\%$ across all arms ($213.7 \to
+127.5$~KB on the headline \arm{grown\_capped\_dream} arm; full table
+in \S\ref{sec:archive-results}). We report deployment storage in the
+BF16 baseline because that is the honest device-side accounting; an
+FP32 baseline overstates the dream-archive win.
+
+\paragraph{Why ternary fails on a frozen-L0 substrate.}
+Ternary quantization ($2$~bits/weight) on the frozen-Gaussian L0
+projection costs $0.31$ absolute full-softmax accuracy on the smoke
+test: random-Gaussian weights have no concentration of magnitude near
+zero, so $2$-bit quantization throws away most of the routing
+structure that L1 and the head learned to depend on. Int8
+($\approx 1/127 \approx 0.8\%$ per-weight noise) preserves the routing
+intact. Unlocking ternary would require quantization-aware training
+during the dream phase, or restricting ternary to layers whose weights
+are concentrated at zero (a learned, pruned L1 + head) --- both
+deferred to future work.
+
+\paragraph{Epigenetic analogue.}
+Phase 1 is a stand-in for terminal cell differentiation --- a cell
+that has settled into its mature role no longer participates in
+plasticity. Phase 2 is a stand-in for compression of consolidated
+memory traces into low-bandwidth long-term storage, freeing
+high-bandwidth substrate for new learning.
+
+\subsection{Mixed-Precision Substrate}
+\label{sec:mixed-precision}
+
+For deployment on resource-constrained devices the architecture
+supports a mixed-precision mode in which weight Parameters $(W, b)$
+are stored in narrow precision (BF16) while all consolidation buffers
+--- $\anchorW, \anchorB, F_W, F_b, \lambda, u, r, p$ --- remain in
+FP32. The forward pass auto-casts inputs to the weight dtype,
+preserving the callable interface; the EWC penalty and Fisher
+accumulation upcast cleanly across the boundary.
+
+This separation is necessary: pure-narrow-precision training degrades
+by $\approx\!40\%$ due to optimizer-state precision loss in Adam's
+running moments, but inference latency and memory cost are dominated
+by the weights, which can safely run in BF16. The intended deployment
+pattern is \emph{train in FP32 during sleep cycles, deploy in BF16 for
+always-on inference}.
+
+\subsection{The Ship-Wake-Extend Loop}
+\label{sec:ship-wake-extend}\label{app:ship-wake-extend}
+
+Deployment is not a one-shot training run that yields a fixed
+artifact; it is an iterative loop in which the model is shipped, woken
+on new data, allowed to grow plastic substrate, and re-shipped. We
+instantiate this loop with a \emph{consolidation-dream pass} that
+fires once at a chosen task boundary:
+\begin{enumerate}[leftmargin=2em]
+  \item \texttt{consolidation\_dream\_pass} --- full-coverage replay
+        over all past tasks with archive-aware gradient masking (locks
+        honored), plus one additional \texttt{archive\_block} call to
+        catch rows that just settled.
+  \item Optional permanent int8 snap of the archived rows (no restore
+        step, since this is the shipping checkpoint).
+  \item Cap lift:
+        $\textit{current\_cap\_bytes} \leftarrow
+         \textit{extension\_cap\_bytes}$.
+        The network is allowed to grow new plastic substrate against
+        the new task budget.
+  \item The training loop continues over the new tasks with shared
+        internal state --- manifold buffer, EWC anchors, archived
+        rows, frustration counters all persist across the boundary.
+\end{enumerate}
+
+The result is a smaller plastic envelope in deployment than in
+training, with new growth allocated only against the residual. A
+device-conscience deployment cannot revisit the original training
+data: it has only what it has stored (the manifold buffer, the
+archived weights) and what arrives in the new data stream. The
+consolidation-dream pass turns shipping into a controlled handoff:
+the network ``sleeps long'' before going to market, locking in the
+rows it will never need to move again, then wakes on new data in the
+field.
+
+\subsection{Multi-Branch Absorption}
+\label{sec:absorption}\label{app:absorption}
+
+The ship-wake-extend loop (\S\ref{sec:ship-wake-extend}) lets a single
+organism continue learning across deployment cycles. A natural next
+question is whether two organisms trained \emph{independently} on
+disjoint task streams can be \emph{composed} into a single recipient
+without retraining either of them. We construct a multi-branch
+organism that does so, with a shared frozen L0 random projection as
+the only structural prerequisite.
+
+\paragraph{Architecture.}
+A multi-branch organism comprises a shared frozen L0 (the same
+Kaiming-initialized random projection used in single-branch trioron,
+\S\ref{sec:methods}) and $N$ parallel \emph{branches}. Each branch is
+a self-contained donor produced by an independent training run: a
+frozen L1 substrate, a frozen head slice over its own covered class
+subset, and the per-class manifold archive
+$\{(\mu_c, \Sigma_c)\}_{c \in C_b}$ that is already computed for
+manifold replay (\S\ref{sec:manifold-replay}). Branches must agree on
+the L0 code space they consume; \S\ref{sec:l0-handshake} discusses the
+two protocols we use --- a \emph{shared-seed invariant} where all
+donors are born at one seed, and a \emph{factored handshake} where
+donors share only the surviving subspace and differ in basis. We
+enforce non-overlap of class coverage across branches:
+$C_b \cap C_{b'} = \emptyset$ for $b \neq b'$.
+
+\paragraph{Forward pass.}
+For input $x$:
+\begin{enumerate}[leftmargin=2em]
+  \item Project to code space:
+        $z = \sigma(W_{L_0} x + b_{L_0})$ using the shared L0.
+  \item For each branch $b$, compute the per-branch head logits
+        $\ell^{(b)} = \text{branch}_b(z)$ over $C_b$.
+  \item Compute per-branch generative log-likelihoods from the archive
+        as a uniform mixture of per-class diagonal Gaussians:
+        $$\log p_b(z) = \log\!\left(
+          \tfrac{1}{|C_b|}
+          \sum_{c \in C_b} \mathcal{N}(z;\mu_c, \Sigma_c)
+        \right).$$
+  \item Compute branch gates by softmax over branches:
+        $$g_b(z) = \frac{\exp(\log p_b(z) / T)}
+                       {\sum_{b'} \exp(\log p_{b'}(z) / T)},$$
+        where $T$ is a temperature ($T = 1$ default). Soft gates
+        (rather than argmax) are deliberate: when archive
+        log-likelihoods on a query are close, multiple branches
+        co-fire and their log-probability contributions are blended.
+  \item Compose into combined logits over the union
+        $C_{\cup} = \bigsqcup_b C_b$ via the principled
+        mixture-of-experts log-probability:
+        $$\text{combined}_c(z) = \log g_{b(c)}(z) +
+          \log\text{softmax}_c(\ell^{(b(c))}),$$
+        where $b(c)$ is the unique branch covering $c$.
+\end{enumerate}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  >={Latex[length=2mm]},
+  font=\small,
+  L/.style={draw, rounded corners=3pt, align=center, inner sep=3pt, fill=white},
+  frozen/.style={L, fill=gray!15},
+  donor/.style={L, fill=blue!10, minimum width=30mm, align=center},
+  combine/.style={L, fill=green!15, minimum width=98mm, align=center, inner sep=5pt},
+  bias/.style={L, dashed, fill=violet!12, font=\scriptsize, align=center},
+  s/.style={font=\scriptsize, align=center},
+  arr/.style={->, thick, shorten >=1pt, shorten <=1pt}
+]
+\node[L] (in) {Input $x$};
+\node[frozen, below=3mm of in, minimum width=68mm] (l0)
+  {\textbf{Shared frozen L0}: $z = \sigma(W_{L_0} x + b_{L_0})$\\
+   \scriptsize matched random seed across donors\\[-1pt]
+   \scriptsize $\Rightarrow$ shared code space (shared-seed invariant)};
+\draw[arr] (in) -- (l0);
+
+\node[donor, below=14mm of l0, xshift=-38mm] (d1)
+  {\textbf{Donor 1}\\\scriptsize $L_1^{(1)}$, head$^{(1)}$, classes $C_1$\\
+   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_1}$};
+\node[donor, below=14mm of l0]              (d2)
+  {\textbf{Donor 2}\\\scriptsize $L_1^{(2)}$, head$^{(2)}$, classes $C_2$\\
+   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_2}$};
+\node[donor, below=14mm of l0, xshift=38mm] (d3)
+  {\textbf{Donor 3}\\\scriptsize $L_1^{(3)}$, head$^{(3)}$, classes $C_3$\\
+   \scriptsize Archive $\{(\mu_c, \Sigma_c)\}_{c\in C_3}$};
+
+\draw[arr] (l0.south) -- (d1.north);
+\draw[arr] (l0.south) -- (d2.north);
+\draw[arr] (l0.south) -- (d3.north);
+
+\node[combine, below=14mm of d2] (cmb) {%
+  \textbf{Archive gate $+$ log-prob combine}\\[2pt]
+  $g_b(z) = \mathrm{softmax}_b\bigl(\log p_b(z)/T\bigr)$,\;\;
+  $\text{combined}_c(z) = \log g_{b(c)}(z) +
+   \log\mathrm{softmax}_c\bigl(\ell^{(b(c))}\bigr)$\\[2pt]
+  \scriptsize over union namespace $C_\cup = \bigsqcup_b C_b$ \;|\; no router training};
+
+\draw[arr] (d1.south) -- node[s, sloped, above]{$\ell^{(1)}, \log p_1$} (cmb.north -| d1);
+\draw[arr] (d2.south) -- node[s, right=1mm]{$\ell^{(2)}, \log p_2$} (cmb.north -| d2);
+\draw[arr] (d3.south) -- node[s, sloped, above]{$\ell^{(3)}, \log p_3$} (cmb.north -| d3);
+
+\node[bias, below=4mm of cmb, text width=86mm]
+  (bias) {Optional per-class bias offset (dream-cycle calibration;
+          trained on synthetic codes from union archive --- no real data)};
+\draw[->, dashed, thick] (bias.north) -- (cmb.south);
+\end{tikzpicture}
+\caption{Multi-branch absorption (chimera) at $N=3$ donors. All
+donors share the same frozen Gaussian L0 by being born at matching
+random seeds, so donor weights are byte-valid in the recipient code
+space (\emph{shared-seed invariant}). Each donor contributes per-class
+logits $\ell^{(b)}$ and a manifold-archive log-likelihood
+$\log p_b(z)$; the same archive that serves manifold replay
+(\S\ref{sec:manifold-replay}) also serves as the analytic Expert-Gate
+\citep{aljundi2017expert} router. The combine operation places
+per-branch log-softmax contributions into the union class namespace,
+weighted by the gate --- no router training and no fusion-layer
+learning. The dashed per-class bias offset is the optional
+dream-cycle calibration.}
+\label{fig:chimera}
+\end{figure}
+
+\paragraph{Why per-branch log-softmax.}
+Each donor's head was trained under its own active-class mask, so
+absolute logit \emph{magnitudes} across donors are not comparable.
+Combining raw logits weighted by gates produces a biased argmax at
+full-softmax. Passing each branch's logits through a log-softmax
+restricted to its own coverage normalizes the contributions to a
+common log-probability scale, after which the mixture combine is
+well-posed. This is an inference-only fix; no parameters are added.
+
+\paragraph{Why the mechanism is zero-shot.}
+Donor weights are byte-valid in the recipient because L0 is shared
+(matched random projection $\Rightarrow$ matched code distribution),
+and donor logits are placed into recipient class-namespace via
+per-class indexing. The gate is computed analytically from the
+archive --- a generative Expert-Gate-style router
+\citep{aljundi2017expert} using the manifold buffer trioron already
+produces. No router training, no fusion-layer learning, no calibration
+pass; pure paste-and-go.
+
+\paragraph{Optional dream-cycle calibration.}
+For deployments where the full-softmax metric is load-bearing, a tiny
+additive bias offset can be trained to compensate for residual
+cross-donor magnitude mismatch. We sample synthetic codes
+$z \sim \mathcal{N}(\mu_c, \Sigma_c)$ from the union archive, forward
+through the assembled organism, and apply cross-entropy on the global
+label. We test two variants:
+\begin{itemize}[leftmargin=1.5em]
+  \item \emph{per-branch} ($N$ scalars): one bias broadcast uniformly
+        over each donor's covered slots. Mathematically task-aware-safe
+        (a uniform per-donor shift is monotonic on within-task argmax
+        because active classes within a chained-15 task always belong
+        to a single donor by disjoint coverage).
+  \item \emph{per-class} ($|C_{\cup}|$ scalars): one bias per union
+        class. Higher capacity, but \emph{can} perturb within-task
+        argmax; trades a small task-aware loss for a larger
+        full-softmax gain.
+\end{itemize}
+The dream cycle uses only the donors' own archives --- no real-data
+retraining is performed.
+
+\subsection{The L0 Handshake}
+\label{sec:l0-handshake}\label{app:l0-handshake}
+
+The multi-branch architecture in \S\ref{sec:absorption} requires that
+every branch consume the same L0 code space; otherwise donor weights
+trained against one random projection have no semantic meaning under a
+different one. We discuss two handshake protocols. The first is the
+shared-seed invariant assumed above: all donors are born at the same
+random seed, so $W_{L_0}^{(b)}$ is byte-identical across donors. This
+is operationally simple but requires coordinated initialization across
+training runs, which is brittle in any deployment setting where donors
+are produced independently or by different parties.
+
+The natural alternative is to permit donors to be born at distinct
+seeds and reconcile their codes at absorb time. The closed-form
+translator $M = W_B \cdot W_A^{+}$ that maps donor $A$'s pre-activation
+codes into donor $B$'s basis is a small linear operator that the
+recipient can compute from the public projection matrices alone. In
+practice, however, two independently-drawn $128 \times 784$ Gaussian
+projections produce row-spaces $U_A, U_B \subset \mathbb{R}^{784}$
+whose intersection is generically zero-dimensional ($128 + 128 \le
+784$): donor $A$'s L0 captures a different 128-d slice of the input
+than donor $B$'s. The translator is exact only on $U_A$, and the
+residual on a full-rank input is $W_B \cdot (I - P_A) \cdot x$, the
+component of $x$ that donor $A$'s L0 discarded by construction. We
+empirically observe that closed-form translation alone recovers
+$84.8\%$ of the same-seed control task-aware accuracy on a 2-donor
+chained-15 split (digits $+$ fashion, Table~\ref{tab:l0-handshake});
+even with a probe-data oracle archive that fixes the routing-side
+mismatch, the translator caps near $89.5\%$ because donor $B$'s L1 was
+trained on full-rank $W_B \cdot x$ and cannot fully recover from the
+projection bottleneck.
+
+\paragraph{Subspace--basis decomposition.}
+The bottleneck is not an artifact of the translator; it is intrinsic
+to having two donors disagree on \emph{which} 128-d subspace of input
+space their L0s preserve. The information loss from $784 \to 128$ is
+deliberate --- it is the privacy contract of the substrate, an
+irreversible compression that ensures L0 codes leaked from a device do
+not reveal the original input beyond a 128-d projection. The natural
+question is whether donors can disagree on something that does not
+also throw away the privacy guarantee.
+
+The decomposition that achieves this is structural. Factor the L0
+weight as
+\begin{equation}
+W_{L_0}^{(b)} \;=\; R_b \cdot S,
+\label{eq:rs-factor}
+\end{equation}
+where $S \in \mathbb{R}^{128 \times 784}$ is a fixed
+\emph{protocol-level} subspace selector --- a public Gaussian matrix
+derived once from a hardcoded protocol seed --- and $R_b \in
+\mathbb{R}^{128 \times 128}$ is a per-donor orthogonal rotation
+seeded by the donor's $\ell_b$. All donors of the same protocol
+version project onto the \emph{same} surviving 128-d subspace
+$\text{row}(S) \subset \mathbb{R}^{784}$; the per-donor randomness
+lives in the basis chosen within that subspace. Substituting
+Eq.~\ref{eq:rs-factor} into the translator construction gives
+\begin{equation}
+M \;=\; W_B \cdot W_A^{+}
+    \;=\; (R_B S) \cdot (R_A S)^{+}
+    \;=\; R_B \cdot S \cdot S^{+} \cdot R_A^{-1}
+    \;=\; R_B \cdot R_A^{-1},
+\label{eq:rotation-translator}
+\end{equation}
+a pure $128 \times 128$ rotation. Because $S$ has full row rank,
+$S \cdot S^{+} = I_{128}$ and the bottleneck residual cancels
+identically: for any $x \in \mathbb{R}^{784}$, $M \cdot W_A x = R_B
+\cdot R_A^{-1} \cdot R_A \cdot S \cdot x = W_B x$ exactly. Donor $B$'s
+L1 receives its native training distribution after translation, bit
+for bit. The closed-form pseudoinverse construction is unchanged from
+the unfactored case --- the rotation is recovered automatically by the
+existing translator code.
+
+The privacy property is preserved: $S$ is the lossy stage and is
+public by design; the seed of $R_b$ is the only per-donor handshake
+state, and recipients can regenerate $R_b$ deterministically from a
+$4$-byte integer. Per-donor handshake bandwidth collapses from $\sim
+200$\,KB ($W_{L_0}^{(b)}$ in FP16) to four bytes; the $S$ matrix is
+loaded once per recipient and amortized across all donors.
+
+\paragraph{Empirical validation.}
+We retrain a 2-donor split (digits at $\ell = 42$, fashion at
+$\ell = 43$) under the factored scheme and run the same 5-path bench
+as the unfactored case (\S\ref{sec:absorption-results}). Closed-form
+translation matches the same-seed control to within seed noise and is
+bit-identical to the publish-$W_{L_0}$ path
+(Table~\ref{tab:l0-handshake}). Routing under the factored translator
+fires on the correct branch with $95$--$99\%$ weight on every task
+($\Delta \approx +25$\,pp from the $60$--$70\%$ routing-confidence we
+observed under the unfactored translator), confirming that both the
+archive-scoring and the L1-forward sides of the absorption pipeline
+become lossless under Eq.~\ref{eq:rs-factor}.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Path (cross-seed digits + fashion) & Unfactored $W$ & Factored
+$W = R \cdot S$ \\
+\midrule
+A. Same-seed control (upper bound)        & 0.9821 & 0.9796 \\
+B. Cross-seed naive (no compensation)     & 0.7408 & 0.7387 \\
+C. Cross-seed random-projection adapter   & 0.7418 & 0.7383 \\
+D. Cross-seed closed-form translator      & 0.8325 & \textbf{0.9800} \\
+E. Cross-seed publish-$W_{L_0}$ (lossless) & 0.9819 & 0.9800 \\
+\midrule
+$\Delta$ (D vs.\ same-seed control)       & $-14.96$\,pp & $\boldsymbol{-0.04}$\,\textbf{pp} \\
+\bottomrule
+\end{tabular}
+\caption{Mean task-aware accuracy across the 10 binary tasks of the
+digits $+$ fashion split, $n = 1$ seed. The same translator code
+yields a $-15$\,pp gap in the unfactored case and a within-noise gap
+under the $R \cdot S$ factorization. Path~E (the recipient computes
+each donor's L0 directly from $x$) is the publish-$W_{L_0}$
+reference; its parity with Path~D under the factored scheme reflects
+that the closed-form translator becomes a pure basis rotation
+(Eq.~\ref{eq:rotation-translator}).}
+\label{tab:l0-handshake}
+\end{table}
+
+\paragraph{Cost.}
+Closed-form translation under Eq.~\ref{eq:rs-factor} costs one
+$128 \times 784$ canonical L0 matmul plus one $128 \times 128$
+translator matmul per non-canonical donor; at $N = 3$ donors this is
+$\approx 50\%$ of the compute of $N$ parallel L0 forwards (the
+publish-$W_{L_0}$ path). Per-donor handshake state is the four-byte
+$\ell_b$ seed; the protocol constant $S$ is amortized over all donors
+of the same protocol version. We treat the protocol seed as a
+versioned wire-protocol field; bumping it intentionally breaks
+absorption with previous-version donors (a feature, not a coordination
+failure).
+
+\paragraph{Limitations.}
+The factored handshake requires donors to be trained under the
+factored scheme from initialization onward; existing unfactored
+donors cannot be retro-translated losslessly because their L1 saw
+codes drawn from a different surviving subspace. The factorization
+also changes the L0 weight \emph{distribution} relative to a free
+Gaussian draw: $R_b \cdot S$ is a random orthogonal rotation of a
+fixed Gaussian, which is itself Gaussian-distributed with the same
+covariance, but the cross-donor correlation structure differs from
+the independent-Gaussian case. Standalone donor accuracy was within
+seed noise of unfactored donors in our runs (digits $0.977$ vs.\
+$0.981$, fashion $0.985$ vs.\ $0.984$), but a larger evaluation
+$n$ would be needed to rule out a small training-distribution
+penalty. The closed-form translator additionally inherits the
+numerical-floor sensitivity of \texttt{torch.linalg.pinv}: we observe
+$\sim 10^{-12}$ mean-squared error (MSE) in FP32 and $\sim 10^{-7}$
+in 16-bit floating-point (FP16), which is adequate for inference but
+worth measuring on any new deployment-target dtype.
+
+\subsection{Experiment Design}
+\label{sec:experiment-design}\label{app:experiment-design}
+
+\paragraph{Curriculum (chained-15).}
+A 30-class class-incremental benchmark drawn from three datasets in
+sequence:
+\begin{itemize}[leftmargin=1.5em]
+  \item 10 MNIST digit tasks (one new digit class per task);
+  \item 10 Fashion-MNIST tasks (one new garment class per task);
+  \item 10 EMNIST-letters tasks A..J (one new letter class per task).
+\end{itemize}
+Each task introduces exactly one new class. At evaluation time the
+network is asked to classify across all classes seen so far
+(full-softmax) or restricted to the same task or domain (task-aware,
+domain-aware). The class-incremental framing forces the network to
+commit to absolute class identities --- there is no task ID at
+inference --- and is the standard hard regime for continual-learning
+evaluation.
+
+\paragraph{Why class-incremental, not task-incremental.}
+Task-incremental benchmarks supply the task ID at inference, which
+collapses the problem to learning a per-task classifier.
+Class-incremental does not, and is therefore the regime where
+partition-style methods (PackNet, HAT) suffer their characteristic
+full-softmax collapse. Reporting class-incremental from the start
+avoids confusing the comparison.
+
+\paragraph{Extension curriculum (chained-23).}
+chained-15 above, plus 8 additional EMNIST-letters tasks K..R
+introduced at the extension boundary; total 23 class-incremental tasks
+across 38 classes. Used only in the extension experiment of
+\S\ref{sec:extension-results}.
+
+\paragraph{Network configuration.}
+\begin{itemize}[leftmargin=1.5em]
+  \item Three layers: input $\to$ L0 $\to$ L1 $\to$ head.
+  \item L0: $784 \to 128$, frozen-Gaussian random projection (weights
+        drawn from $\mathcal{N}(0, 2/784)$ at init and never updated).
+        See \S\ref{sec:manifold-replay} for why L0 is frozen.
+  \item L1: $128 \to 32$ initial, grown adaptively up to
+        $\textit{cap\_bytes} = 8\,\text{K}$ trainable parameters during
+        chained-15, lifted to 16~K at the extension boundary.
+  \item Head: $L_1\text{\_width} \to n_{\text{classes\_so\_far}}$,
+        grown adaptively as new classes appear.
+  \item Activations: ReLU on L1, identity on the head.
+  \item Optimizer: Adam, $\text{lr} = 3 \times 10^{-3}$.
+  \item Epochs: 4 per task. Loss: cross-entropy on the active label
+        set.
+  \item EWC strength: $\beta = 1000$ during waking and dream-replay
+        (matched).
+\end{itemize}
+
+\paragraph{Trioron arms.}
+\begin{itemize}[leftmargin=1.5em]
+  \item \arm{fixed\_ewc\_small} --- no growth; L1 fixed at the
+        chained-15 cap. Isolates the EWC $+$ manifold-replay
+        contribution at matched parameters.
+  \item \arm{grown\_capped\_no\_dream} --- growth under EWC, no
+        dream-time consolidation. Isolates the dream contribution.
+  \item \arm{grown\_capped\_dream} --- growth + dream within cap. The
+        default deployment arm.
+  \item \arm{grown\_uncapped\_dream} --- growth past cap with manifold
+        replay. The upper-bound headline arm.
+\end{itemize}
+
+\paragraph{Competitor families (5).}
+We benchmark against one method from each major continual-learning
+family:
+\begin{itemize}[leftmargin=1.5em]
+  \item \emph{Hippocampal buffer (exemplar rehearsal).} $K$ samples
+        per past class stored. $K \in \{1, 10, 20, 50\}$.
+  \item \emph{PackNet} \citep{mallya2018packnet}. Iterative magnitude
+        pruning with per-task masks. \emph{PackNet matched} matches
+        our trainable-parameter budget; \emph{PackNet standard} uses
+        the original recipe.
+  \item \emph{HAT} \citep{serra2018hat}. Hard binary attention masks
+        per task, gating each layer. \emph{Matched} and \emph{standard}
+        variants as above.
+  \item \emph{Online EWC} \citep{schwarz2018progress}. Fisher EMA
+        across tasks with $\gamma = 0.95$; learning-rate and $\beta$
+        tuned via grid search on the no-dream loss.
+  \item \emph{LwF + EWC} \citep{li2018lwf, kirkpatrick2017overcoming}.
+        Logit-distillation toward the anchored network on old-class
+        columns, in addition to the EWC penalty.
+\end{itemize}
+We are explicit that PackNet and HAT are not designed for
+class-incremental evaluation without the task-ID supplied at inference;
+their full-softmax collapse on this benchmark is expected, and the
+fairer comparison is the task-aware metric, on which they are
+competitive (\S\ref{sec:competitor-sweep}).
+
+\paragraph{Metrics.}
+\begin{itemize}[leftmargin=1.5em]
+  \item \emph{Full-softmax accuracy} (full): mean across all classes
+        seen so far of top-1 accuracy with the unrestricted softmax.
+        The hard class-incremental metric.
+  \item \emph{Domain-aware accuracy} (domain): top-1 accuracy
+        restricted to classes that share a dataset domain (digits,
+        fashion, letters) with the query.
+  \item \emph{Task-aware accuracy} (task): top-1 accuracy restricted
+        to the classes of the \emph{task} the query belongs to. The
+        right metric for trioron's deployment role of context-gated
+        personalization atop a frozen LLM.
+  \item \emph{Forgetting} (forget): mean across past tasks of
+        (final-task accuracy on that task) $-$ (accuracy at the time
+        the task was first introduced); positive values indicate
+        forgetting.
+  \item \emph{$\sigma$-vs-baseline}: paired-by-seed standardized
+        effect size across the random-seed cohort (10 seeds for
+        headline panels; 3 seeds for the dream-archive panel),
+        reported alongside absolute $\Delta$. We are explicit that
+        $\sigma$ values can be inflated by tight per-arm seed-to-seed
+        std rather than by a large absolute effect; we therefore
+        report absolute $\Delta$ as the primary number and $\sigma$ as
+        a secondary.
+\end{itemize}
+
+\paragraph{Storage accounting.}
+We report deployment storage in two columns: BF16 baseline (the honest
+device-side number, since BF16 is the inference dtype) and FP32
+baseline (the training-time number). The manifold buffer is counted at
+FP32 (per-class $\mu$ and $\sigma$, $2 \cdot L_0 \cdot 4 = 1024$
+bytes/class). All headline storage numbers in
+\S\ref{sec:results} use the BF16 baseline.
+
+\paragraph{Reproducibility.}
+All benches run on commodity CPU. Each seed is fully deterministic
+given the seed value, modulo a known torch nondeterminism in
+archive-trigger timing (see \S\ref{sec:archive-results} for the v1/v2
+reconciliation). Launcher scripts under \texttt{experiments/} accept
+explicit seed lists; bench logs and CSVs from every reported run are
+committed to the public repository.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}

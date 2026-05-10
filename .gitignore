@@ -11,6 +11,8 @@ venv/
 # Logs / runtime artifacts (blueprint §10)
 outputs/*.csv
 outputs/*.pt
+outputs/**/*.pt
+outputs/**/*.csv
 outputs/data/
 outputs/cifar_donors/
 outputs/cifar_donors_full/

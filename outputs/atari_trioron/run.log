@@ -1,0 +1,246 @@
+=== arm3 (Pong popsearch) start: Thu May  7 10:36:51 +07 2026 ===
+A.L.E: Arcade Learning Environment (version 0.11.2+ecc1138)
+[Powered by Stella]
+
+=== Pong pop-search generation 0 (random × 8) ===
+  gen 0: returns top=-19.12 bot=-20.38 spread=+1.25
+
+=== Pong pop-search generation 1/6: train 8 from 2-elite trajectories ===
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Pong_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 1/4 [settle]  avg_loss 1.8083  last_loss 1.7981  steps 30  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 2/4 [settle]  avg_loss 1.7933  last_loss 1.7788  steps 60  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 3/4 [post-grow]  avg_loss 1.7973  last_loss 1.8420  steps 30  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 4/4 [post-grow]  avg_loss 1.7936  last_loss 1.8323  steps 60  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.7940→1.7900 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.1624 (domain 0.1624, task 0.1624)  avg=0.1624 (domain 0.1624, task 0.1624)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.1624  domain=0.1624  task=0.1624
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Pong_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 1/4 [settle]  avg_loss 1.8187  last_loss 1.7915  steps 30  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 2/4 [settle]  avg_loss 1.7946  last_loss 1.8421  steps 60  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 3/4 [post-grow]  avg_loss 1.7920  last_loss 1.7541  steps 30  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 4/4 [post-grow]  avg_loss 1.7923  last_loss 1.7883  steps 60  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.7971→1.8082 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.1838 (domain 0.1838, task 0.1838)  avg=0.1838 (domain 0.1838, task 0.1838)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.1838  domain=0.1838  task=0.1838
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Pong_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 1/4 [settle]  avg_loss 1.8036  last_loss 1.7727  steps 30  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 2/4 [settle]  avg_loss 1.7959  last_loss 1.8015  steps 60  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 3/4 [post-grow]  avg_loss 1.7966  last_loss 1.7979  steps 30  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 4/4 [post-grow]  avg_loss 1.7939  last_loss 1.8072  steps 60  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.7907→1.7910 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.1538 (domain 0.1538, task 0.1538)  avg=0.1538 (domain 0.1538, task 0.1538)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.1538  domain=0.1538  task=0.1538
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Pong_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 1/4 [settle]  avg_loss 1.8056  last_loss 1.7957  steps 30  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 2/4 [settle]  avg_loss 1.7921  last_loss 1.7812  steps 60  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 3/4 [post-grow]  avg_loss 1.7937  last_loss 1.8100  steps 30  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 4/4 [post-grow]  avg_loss 1.7911  last_loss 1.7691  steps 60  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.7815→1.7956 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.1902 (domain 0.1902, task 0.1902)  avg=0.1902 (domain 0.1902, task 0.1902)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.1902  domain=0.1902  task=0.1902
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Pong_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 1/4 [settle]  avg_loss 1.8126  last_loss 1.7915  steps 30  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 2/4 [settle]  avg_loss 1.7934  last_loss 1.8106  steps 60  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 3/4 [post-grow]  avg_loss 1.7950  last_loss 1.8005  steps 30  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Pong_gen1) epoch 4/4 [post-grow]  avg_loss 1.7936  last_loss 1.8199  steps 60  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.7808→1.7810 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.1645 (domain 0.1645, task 0.1645)  avg=0.1645 (domain 0.1645, task 0.1645)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.1645  domain=0.1645  task=0.1645
+/bin/bash: line 31: 133181 Killed                  python3 experiments/atari_trioron/run.py --arm arm3 --algo popsearch --n-population 8 --n-elites 2 --n-generations 6 --episodes-per-eval 8 --seed 42 2>&1
+=== arm3 done: Thu May  7 10:41:06 +07 2026 ===
+=== arm1 (Breakout popsearch) start: Thu May  7 10:41:06 +07 2026 ===
+A.L.E: Arcade Learning Environment (version 0.11.2+ecc1138)
+[Powered by Stella]
+
+=== Breakout pop-search generation 0 (random × 8) ===
+  gen 0: returns top=+0.50 bot=+0.00 spread=+0.50
+
+=== Breakout pop-search generation 1/6: train 8 from 2-elite trajectories ===
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 1/4 [settle]  avg_loss 1.7557  last_loss 1.7065  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 2/4 [settle]  avg_loss 1.7139  last_loss 1.7059  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 3/4 [post-grow]  avg_loss 1.6568  last_loss 1.6129  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 4/4 [post-grow]  avg_loss 1.6639  last_loss 1.7710  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.6205→1.4850 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2432 (domain 0.2432, task 0.2432)  avg=0.2432 (domain 0.2432, task 0.2432)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2432  domain=0.2432  task=0.2432
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 1/4 [settle]  avg_loss 1.7872  last_loss 1.7697  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 2/4 [settle]  avg_loss 1.7531  last_loss 1.7540  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 3/4 [post-grow]  avg_loss 1.7102  last_loss 1.6868  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 4/4 [post-grow]  avg_loss 1.6920  last_loss 1.7172  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.6731→1.5641 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2432 (domain 0.2432, task 0.2432)  avg=0.2432 (domain 0.2432, task 0.2432)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2432  domain=0.2432  task=0.2432
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 1/4 [settle]  avg_loss 1.7838  last_loss 1.6948  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 2/4 [settle]  avg_loss 1.7591  last_loss 1.7344  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 3/4 [post-grow]  avg_loss 1.7332  last_loss 1.7471  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 4/4 [post-grow]  avg_loss 1.6700  last_loss 1.5944  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.7159→1.5081 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2432 (domain 0.2432, task 0.2432)  avg=0.2432 (domain 0.2432, task 0.2432)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2432  domain=0.2432  task=0.2432
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 1/4 [settle]  avg_loss 1.9292  last_loss 2.0451  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 2/4 [settle]  avg_loss 1.7859  last_loss 1.8225  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 3/4 [post-grow]  avg_loss 1.6796  last_loss 1.6723  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 4/4 [post-grow]  avg_loss 1.5975  last_loss 1.5619  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.5537→1.4294 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2432 (domain 0.2432, task 0.2432)  avg=0.2432 (domain 0.2432, task 0.2432)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2432  domain=0.2432  task=0.2432
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 1/4 [settle]  avg_loss 1.7628  last_loss 1.7402  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 2/4 [settle]  avg_loss 1.7029  last_loss 1.6840  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 3/4 [post-grow]  avg_loss 1.6453  last_loss 1.6152  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 4/4 [post-grow]  avg_loss 1.6208  last_loss 1.6507  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.5776→1.4670 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2432 (domain 0.2432, task 0.2432)  avg=0.2432 (domain 0.2432, task 0.2432)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2432  domain=0.2432  task=0.2432
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 1/4 [settle]  avg_loss 1.6013  last_loss 1.5225  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 2/4 [settle]  avg_loss 1.5869  last_loss 1.5678  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 3/4 [post-grow]  avg_loss 1.5462  last_loss 1.4827  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 4/4 [post-grow]  avg_loss 1.5117  last_loss 1.4188  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.5265→1.4990 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2432 (domain 0.2432, task 0.2432)  avg=0.2432 (domain 0.2432, task 0.2432)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2432  domain=0.2432  task=0.2432
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 1/4 [settle]  avg_loss 1.7092  last_loss 1.7557  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 2/4 [settle]  avg_loss 1.6554  last_loss 1.6646  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 3/4 [post-grow]  avg_loss 1.6001  last_loss 1.5427  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 4/4 [post-grow]  avg_loss 1.5826  last_loss 1.5731  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.5483→1.4386 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2432 (domain 0.2432, task 0.2432)  avg=0.2432 (domain 0.2432, task 0.2432)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2432  domain=0.2432  task=0.2432
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen1 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 1/4 [settle]  avg_loss 1.7268  last_loss 1.7840  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 2/4 [settle]  avg_loss 1.6670  last_loss 1.6364  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 3/4 [post-grow]  avg_loss 1.6424  last_loss 1.6263  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen1) epoch 4/4 [post-grow]  avg_loss 1.6090  last_loss 1.5796  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.5988→1.5059 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2432 (domain 0.2432, task 0.2432)  avg=0.2432 (domain 0.2432, task 0.2432)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2432  domain=0.2432  task=0.2432
+  gen 1: returns top=+0.25 med=+0.12 bot=+0.00 spread=+0.25
+
+=== Breakout pop-search generation 2/6: train 8 from 2-elite trajectories ===
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen2 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen2) epoch 1/4 [settle]  avg_loss 1.7872  last_loss 1.7909  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen2) epoch 2/4 [settle]  avg_loss 1.7313  last_loss 1.7415  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen2) epoch 3/4 [post-grow]  avg_loss 1.6782  last_loss 1.6755  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen2) epoch 4/4 [post-grow]  avg_loss 1.6319  last_loss 1.6313  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.5695→1.4664 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2857 (domain 0.2857, task 0.2857)  avg=0.2857 (domain 0.2857, task 0.2857)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2857  domain=0.2857  task=0.2857
+
+[grown_capped_dream] start — arch (128, 32, 2)  params 3616994 (trainable 4194)  growth=True dream=True  cap_bytes=32000  K=1  passes=1  epochs/task=4  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_capped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_capped_dream] === Pass 1/1 Task 1/1: Breakout_gen2 (active [0, 1, 2, 3, 4, 5])  pre-arch=[128, 32, 6] params=3617126 (trainable 4326/8000) ===
+  [grown_capped_dream] task 1/1 (Breakout_gen2) epoch 1/4 [settle]  avg_loss 1.6288  last_loss 1.6149  steps 3  arch [128, 32, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen2) epoch 2/4 [settle]  avg_loss 1.5886  last_loss 1.5803  steps 6  arch [128, 32, 6]
+  [grown_capped_dream] GROWTH after settle: 4/4 allowed, 0 denied  new arch=[128, 36, 6] params=3617666 (trainable 4866)
+  [grown_capped_dream] task 1/1 (Breakout_gen2) epoch 3/4 [post-grow]  avg_loss 1.5588  last_loss 1.5689  steps 3  arch [128, 36, 6]
+  [grown_capped_dream] task 1/1 (Breakout_gen2) epoch 4/4 [post-grow]  avg_loss 1.5294  last_loss 1.5329  steps 6  arch [128, 36, 6]
+  [grown_capped_dream] post-task DREAM: replay 1.4822→1.4718 on 1p; merges=0 purges=0 latched=0 → arch [128, 36, 6] (3617666→3617666 params)
+[grown_capped_dream] After pass 1 task 1: own=0.2857 (domain 0.2857, task 0.2857)  avg=0.2857 (domain 0.2857, task 0.2857)  arch=[128, 36, 6] params=3617666 (trainable 4866)  cum_grows=4 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_capped_dream] <<< PASS 1/1 done — full=0.2857  domain=0.2857  task=0.2857
