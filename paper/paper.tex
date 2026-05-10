@@ -328,10 +328,13 @@ The triplet $(w, \lambda, u)$ is intended to capture which connections
 are present, how rigid they are, and how much the unit matters ---
 three quantities that biological systems regulate independently. The
 layer additionally supports in-place growth and pruning of nodes
-during training, with cross-layer fan-in/fan-out consistency. See
-Appendix~\ref{app:trioron-node} and \ref{app:structural-plasticity}
-for the full forward pass, per-node EWC derivation, and growth/prune
-machinery.
+during training, with cross-layer fan-in/fan-out consistency.
+Figure~\ref{fig:trioron-arch} sketches the resulting three-layer
+architecture used throughout this work --- a frozen Gaussian L0, a
+plastic L1 grown under the conjunction trigger, and a head that gains
+one column per new class. See Appendix~\ref{app:trioron-node} and
+\ref{app:structural-plasticity} for the full forward pass, per-node
+EWC derivation, and growth/prune machinery.
 
 \begin{figure}[t]
 \centering
@@ -451,9 +454,11 @@ per-branch logits are placed into the union class namespace via
 per-branch log-softmax to keep contributions on a common
 log-probability scale. No router training and no fusion-layer
 learning are required --- pure paste-and-go. The construction relies
-on a shared-L0 invariant; alternative protocols and the closed-form
-translator that handles donors trained at distinct random seeds are
-documented in Appendix~\ref{app:l0-handshake}.
+on a shared-L0 invariant; Figure~\ref{fig:chimera} in
+Appendix~\ref{app:absorption} diagrams the assembled multi-branch
+recipient, and alternative protocols plus the closed-form translator
+that handles donors trained at distinct random seeds are documented
+in Appendix~\ref{app:l0-handshake}.
 
 \subsection{Expansion (Ship-Wake-Extend)}
 \label{sec:methods-expand}
@@ -526,42 +531,23 @@ curriculum. We do not claim this behavior is unique to manifold replay
 --- replay-based methods in general can produce negative-forgetting in
 the right regime --- only that we measured it cleanly here.
 
-\begin{table}[h]
-  \centering
-  \caption{Paired comparisons against \arm{grown\_uncapped\_dream},
-           $n = 10$ paired by seed. Absolute $\Delta$ is the primary
-           number; $\sigma$ is reported as a secondary tightness
-           indicator.}
-  \label{tab:trioron-paired}
-  \begin{tabular}{llrr}
-    \toprule
-    comparison                                                                  & metric  & mean $\Delta$ & $\sigma$    \\
-    \midrule
-    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & full    & $-0.023$      & $-1.79$     \\
-    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & domain  & $-0.024$      & $-2.55$     \\
-    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & task    & $-0.012$      & $-4.63$     \\
-    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & full    & $-0.017$      & $-1.88$     \\
-    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & domain  & $-0.017$      & $-1.40$     \\
-    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & task    & $-0.010$      & $-4.73$     \\
-    \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & full    & $-0.017$      & $-1.05$     \\
-    \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & task    & $-0.004$      & $-0.87$     \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The paired margin of \arm{fixed\_ewc\_small} versus
-\arm{grown\_uncapped\_dream} is $-0.023$ absolute on full-softmax at
-$n = 10$ ($-1.79\sigma$), $-0.024$ on domain-aware ($-2.55\sigma$),
-and $-0.012$ on task-aware ($-4.63\sigma$). The task-aware effect is
-the most reliable: per-arm seed-to-seed standard deviation on
-task-aware sits at $0.001$--$0.004$, so even the small absolute
-$\Delta$ registers as a tight $\sigma$. Earlier $n = 3$ headline
-numbers had read $-0.018$ full ($-6.36\sigma$) and $-0.009$ task
-($-4.08\sigma$); the additional seven seeds tightened the absolute
-$\Delta$ slightly while widening the cross-seed std on full-softmax,
-which is the honest summary --- some seeds underperformed the
-original three-seed mean. We report this as a defensible win on
-task-aware and a within-noise difference on full-softmax.
+Per-seed paired comparisons against \arm{grown\_uncapped\_dream}
+sharpen the ranking: every other trioron arm trails the headline arm
+on every metric at $n = 10$, with the largest paired effects on
+task-aware ($-4.63\sigma$ for \arm{fixed\_ewc\_small} and $-4.73\sigma$
+for \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}).
+Per-arm seed-to-seed standard deviation on task-aware sits at
+$0.001$--$0.004$, so even small absolute deltas register as tight
+$\sigma$ values. The full paired table is
+Table~\ref{tab:supp-trioron-paired}, reported in
+Appendix~\ref{app:supp-trioron-paired} (Supporting Data). The data
+matter because they are the internal-ablation evidence that growth and
+dreaming both contribute and they are the basis for the choice of
+\arm{grown\_uncapped\_dream} as the headline arm. They also confirm
+that the $-0.018$ full / $-6.36\sigma$ headline at $n = 3$ inflated
+tightness somewhat: seven additional seeds widen the cross-seed std on
+full-softmax to a more honest $-1.79\sigma$ (defensible task-aware
+win, within-noise difference on full-softmax).
 
 \subsection{Five-Family Competitor Sweep}
 \label{sec:competitor-sweep}
@@ -618,35 +604,21 @@ carefully:
         (\S\ref{sec:pareto}).
 \end{itemize}
 
-\begin{table}[h]
-  \centering
-  \caption{Paired absolute $\Delta$ of manifold-grown vs each
-           competitor (positive $=$ ours wins), $n = 10$ paired by
-           seed. Absolute $\Delta$ is the primary number; $\sigma$ in
-           parentheses is the secondary tightness indicator.}
-  \label{tab:paired-sigma}
-  \begin{tabular}{lccc}
-    \toprule
-    comparison              & full $\Delta$ ($\sigma$) & domain $\Delta$ ($\sigma$) & task $\Delta$ ($\sigma$) \\
-    \midrule
-    vs PackNet matched      & $+0.522$ ($+20.3\sigma$) & $+0.477$ ($+24.5\sigma$)   & $+0.031$ ($+1.9\sigma$)  \\
-    vs PackNet standard     & $+0.555$ ($+24.5\sigma$) & $+0.535$ ($+30.5\sigma$)   & $+0.090$ ($+2.4\sigma$)  \\
-    vs HAT matched          & $+0.481$ ($+28.2\sigma$) & $+0.462$ ($+15.7\sigma$)   & $+0.025$ ($+5.1\sigma$)  \\
-    vs HAT standard         & $+0.530$ ($+25.6\sigma$) & $+0.515$ ($+17.4\sigma$)   & $+0.018$ ($+0.8\sigma$)  \\
-    vs Online EWC           & $+0.416$ ($+14.4\sigma$) & $+0.322$ ($+17.5\sigma$)   & $+0.006$ ($+1.5\sigma$)  \\
-    vs LwF $+$ EWC          & $+0.410$ ($+10.1\sigma$) & $+0.319$ ($+8.2\sigma$)    & $-0.003$ ($-1.3\sigma$)  \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The honest reading at $n = 10$ is: \emph{on full-softmax and
-domain-aware, manifold-grown is consistently above PackNet, HAT,
-Online EWC, and LwF in absolute terms, by margins between $0.32$ and
-$0.55$ on class-incremental chained-15.} On task-aware, the field
-collapses to a tight cluster near $0.95$, paired $\sigma$ values are
-modest, and the LwF tie ($-0.003$, $-1.3\sigma$) is now within
-seed noise rather than the $-26\sigma$ artifact the original $n = 3$
-table reported.
+Per-seed paired comparisons against each competitor are the right
+view of the sweep above: unpaired family means
+(Table~\ref{tab:competitor-sweep}) can hide cross-seed correlations,
+while a paired view collapses those out and exposes which gaps
+survive. The full per-competitor paired table is
+Table~\ref{tab:supp-paired-sigma}, reported in
+Appendix~\ref{app:supp-paired-sigma} (Supporting Data). The data
+matter for two reasons. First, they provide the honest reading at
+$n = 10$: \emph{on full-softmax and domain-aware, manifold-grown is
+consistently above PackNet, HAT, Online EWC, and LwF in absolute
+terms, by margins between $0.32$ and $0.55$ on class-incremental
+chained-15.} Second, they correct a now-known $n = 3$ artifact ---
+the LwF$+$EWC task-aware tie reads $-0.003$ ($-1.3\sigma$) at
+$n = 10$, within seed noise, rather than the $-26\sigma$ that tiny
+per-arm std had produced at $n = 3$.
 
 \subsection{Storage-vs-Accuracy Pareto}
 \label{sec:pareto}
@@ -700,23 +672,6 @@ int8 quantization of archived rows $+$ 16-bit brain-floating-point
 (BF16) active path) are evaluated as a deployment-side compression
 layer atop the manifold-grown architecture.
 
-\begin{table}[h]
-  \centering
-  \caption{chained-15 with archive Phase~1 $+$ Phase~2, $n = 3$
-           (dream-archive panel not yet rerun at $n = 10$).}
-  \label{tab:archive-acc}
-  \begin{tabular}{lccc}
-    \toprule
-    arm                              & full v2           & full $\Delta$ vs no-archive & task $\Delta$ \\
-    \midrule
-    \arm{fixed\_ewc\_small}          & $0.572 \pm 0.004$ & $-0.013$                    & $+0.001$      \\
-    \arm{grown\_capped\_no\_dream}   & $0.559 \pm 0.004$ & $-0.019$                    & $-0.003$      \\
-    \arm{grown\_capped\_dream}       & $0.572 \pm 0.009$ & $-0.015$                    & $+0.006$      \\
-    \arm{grown\_uncapped\_dream}     & $0.617 \pm 0.004$ & $+0.013$                    & $+0.006$      \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
 Phase~1's training-time effect lies inside seed-to-seed variance: the
 same code on the same seeds produced \arm{grown\_uncapped\_dream}
 $\Delta = +0.013$ in run~v2 versus $-0.004$ in run~v1, attributable
@@ -727,24 +682,18 @@ $+$ BF16 active path) is \textbf{lossless within $\Delta \leq 0.0008$}
 across every arm and every seed. The BF16 $+$ int8 mixed precision
 matches FP32 $+$ int8 within $\Delta \leq 0.0008$ as well.
 
-The substantive win is on storage.
-
-\begin{table}[h]
-  \centering
-  \caption{Deployment storage, BF16 baseline, $n = 3$ means
-           (dream-archive panel not yet rerun at $n = 10$).}
-  \label{tab:archive-storage}
-  \begin{tabular}{lrrr}
-    \toprule
-    arm                              & BF16 baseline & BF16 $+$ int8 archived & $\Delta$        \\
-    \midrule
-    \arm{fixed\_ewc\_small}          & $213.7$~KB    & $130.4$~KB             & $-39\%$         \\
-    \arm{grown\_capped\_no\_dream}   & $213.7$~KB    & $128.9$~KB             & $-40\%$         \\
-    \arm{grown\_capped\_dream}       & $211.2$~KB    & $127.5$~KB             & $-40\%$\,\headline \\
-    \arm{grown\_uncapped\_dream}     & $224.9$~KB    & $137.2$~KB             & $-39\%$         \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+The substantive win is on storage. Per-arm archive accuracy
+(Table~\ref{tab:supp-archive-acc}) and deployment-storage
+(Table~\ref{tab:supp-archive-storage}) are reported in
+Appendix~\ref{app:supp-archive} (Supporting Data, $n = 3$ pending the
+$n = 10$ rerun); they matter as the direct evidence for two
+deployment claims this paper makes. First, Phase~2's mixed-precision
+collapse (int8-on-archive $+$ BF16-active) is lossless within
+$\Delta \leq 0.0008$ on every arm and every seed, so the storage win
+costs no measurable accuracy. Second, the BF16 baseline net of
+$211$--$225$~KB collapses to $128$--$137$~KB after Phase~2 ($-39\%$
+to $-40\%$ across arms; the headline \arm{grown\_capped\_dream}
+lands at $211.2 \to 127.5$~KB).
 
 Adding the 30~KB manifold buffer, the headline
 \arm{grown\_capped\_dream} deployment image is $\approx 157$~KB total
@@ -773,27 +722,17 @@ consolidation-dream $\to$ $+8$ EMNIST K..R curriculum (1 seed, 4
 epochs/task, \arm{grown\_capped\_dream}). One-seed evidence is
 documented as such.
 
-\begin{table}[h]
-  \centering
-  \caption{Architecture progression across the ship-wake-extend loop
-           (1 seed).}
-  \label{tab:extension}
-  \begin{tabular}{lcrcr}
-    \toprule
-    phase                & layers          & trainable    & archived             & plastic       \\
-    \midrule
-    start                & $(128, 32, 2)$  & $4\,194$     & $[0,\,0,\,0]$        & $4\,194$      \\
-    chained-15 done      & $(128, 48, 30)$ & $7\,662$     & $[104,\,32,\,0]$     & $3\,534$      \\
-    chained-23 done      & $(128, 80, 46)$ & $14\,046$    & $[128,\,40,\,0]$     & $8\,886$      \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The plastic envelope more than doubles during extension
-($3\,534 \to 8\,886$ trainable parameters), allocated against the new
-task budget --- but the archived rows from chained-15 are honored
-throughout. The total stored network grows by $\approx 2.5\times$
-while task coverage grows from $30$ to $46$ classes.
+The architecture progression across the loop (start $\to$ chained-15
+done $\to$ chained-23 done) is reported as
+Table~\ref{tab:supp-extension} in
+Appendix~\ref{app:supp-extension} (Supporting Data, 1 seed). It
+matters because it is the only direct evidence in this paper for the
+ship-wake-extend loop's structural promise: the plastic envelope
+more than doubles during extension ($3{,}534 \to 8{,}886$ trainable
+parameters), allocated against the new task budget, while the
+archived rows from chained-15 are honored throughout. Total stored
+network grows by $\approx 2.5\times$ while task coverage grows from
+$30$ to $46$ classes inside the loop.
 
 \paragraph{Accuracy at 23 tasks.}
 Full $= 0.521$, domain $= 0.693$, task $= 0.948$. Per-phase task-aware
@@ -1957,6 +1896,139 @@ archive-trigger timing (see \S\ref{sec:archive-results} for the v1/v2
 reconciliation). Launcher scripts under \texttt{experiments/} accept
 explicit seed lists; bench logs and CSVs from every reported run are
 committed to the public repository.
+
+\section{Supporting Data}
+\label{app:supporting-data}
+
+This appendix collects the per-arm and per-competitor data tables
+that the main-text narrative summarizes and points at. They are
+reported here rather than inline so the Results section reads as a
+narrative argument rather than a table-by-table commentary.
+
+\subsection{Per-seed paired comparisons within trioron arms}
+\label{app:supp-trioron-paired}
+
+Forward-pointer from \S\ref{sec:headline}: this is the
+internal-ablation evidence that motivates
+\arm{grown\_uncapped\_dream} as the headline arm.
+
+\begin{table}[h]
+  \centering
+  \caption{Paired comparisons against \arm{grown\_uncapped\_dream},
+           $n = 10$ paired by seed. Absolute $\Delta$ is the primary
+           number; $\sigma$ is reported as a secondary tightness
+           indicator.}
+  \label{tab:supp-trioron-paired}
+  \begin{tabular}{llrr}
+    \toprule
+    comparison                                                                  & metric  & mean $\Delta$ & $\sigma$    \\
+    \midrule
+    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & full    & $-0.023$      & $-1.79$     \\
+    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & domain  & $-0.024$      & $-2.55$     \\
+    \arm{fixed\_ewc\_small} vs \arm{grown\_uncapped\_dream}                     & task    & $-0.012$      & $-4.63$     \\
+    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & full    & $-0.017$      & $-1.88$     \\
+    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & domain  & $-0.017$      & $-1.40$     \\
+    \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & task    & $-0.010$      & $-4.73$     \\
+    \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & full    & $-0.017$      & $-1.05$     \\
+    \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & task    & $-0.004$      & $-0.87$     \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Per-competitor paired absolute $\Delta$ vs manifold-grown}
+\label{app:supp-paired-sigma}
+
+Forward-pointer from \S\ref{sec:competitor-sweep}: per-seed paired
+view of the five-family competitor sweep. Replaces the unpaired
+family means with cross-seed-corrected effect sizes.
+
+\begin{table}[h]
+  \centering
+  \caption{Paired absolute $\Delta$ of manifold-grown vs each
+           competitor (positive $=$ ours wins), $n = 10$ paired by
+           seed. Absolute $\Delta$ is the primary number; $\sigma$ in
+           parentheses is the secondary tightness indicator.}
+  \label{tab:supp-paired-sigma}
+  \begin{tabular}{lccc}
+    \toprule
+    comparison              & full $\Delta$ ($\sigma$) & domain $\Delta$ ($\sigma$) & task $\Delta$ ($\sigma$) \\
+    \midrule
+    vs PackNet matched      & $+0.522$ ($+20.3\sigma$) & $+0.477$ ($+24.5\sigma$)   & $+0.031$ ($+1.9\sigma$)  \\
+    vs PackNet standard     & $+0.555$ ($+24.5\sigma$) & $+0.535$ ($+30.5\sigma$)   & $+0.090$ ($+2.4\sigma$)  \\
+    vs HAT matched          & $+0.481$ ($+28.2\sigma$) & $+0.462$ ($+15.7\sigma$)   & $+0.025$ ($+5.1\sigma$)  \\
+    vs HAT standard         & $+0.530$ ($+25.6\sigma$) & $+0.515$ ($+17.4\sigma$)   & $+0.018$ ($+0.8\sigma$)  \\
+    vs Online EWC           & $+0.416$ ($+14.4\sigma$) & $+0.322$ ($+17.5\sigma$)   & $+0.006$ ($+1.5\sigma$)  \\
+    vs LwF $+$ EWC          & $+0.410$ ($+10.1\sigma$) & $+0.319$ ($+8.2\sigma$)    & $-0.003$ ($-1.3\sigma$)  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Dream archive accuracy and deployment storage}
+\label{app:supp-archive}
+
+Forward-pointer from \S\ref{sec:archive-results}: per-arm evidence
+that Phase~2 mixed-precision is lossless within
+$\Delta \leq 0.0008$, and that the BF16 net collapses to
+$\sim\!130$~KB after archive $+$ int8.
+
+\begin{table}[h]
+  \centering
+  \caption{chained-15 with archive Phase~1 $+$ Phase~2, $n = 3$
+           (dream-archive panel not yet rerun at $n = 10$).}
+  \label{tab:supp-archive-acc}
+  \begin{tabular}{lccc}
+    \toprule
+    arm                              & full v2           & full $\Delta$ vs no-archive & task $\Delta$ \\
+    \midrule
+    \arm{fixed\_ewc\_small}          & $0.572 \pm 0.004$ & $-0.013$                    & $+0.001$      \\
+    \arm{grown\_capped\_no\_dream}   & $0.559 \pm 0.004$ & $-0.019$                    & $-0.003$      \\
+    \arm{grown\_capped\_dream}       & $0.572 \pm 0.009$ & $-0.015$                    & $+0.006$      \\
+    \arm{grown\_uncapped\_dream}     & $0.617 \pm 0.004$ & $+0.013$                    & $+0.006$      \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \caption{Deployment storage, BF16 baseline, $n = 3$ means
+           (dream-archive panel not yet rerun at $n = 10$).}
+  \label{tab:supp-archive-storage}
+  \begin{tabular}{lrrr}
+    \toprule
+    arm                              & BF16 baseline & BF16 $+$ int8 archived & $\Delta$        \\
+    \midrule
+    \arm{fixed\_ewc\_small}          & $213.7$~KB    & $130.4$~KB             & $-39\%$         \\
+    \arm{grown\_capped\_no\_dream}   & $213.7$~KB    & $128.9$~KB             & $-40\%$         \\
+    \arm{grown\_capped\_dream}       & $211.2$~KB    & $127.5$~KB             & $-40\%$\,\headline \\
+    \arm{grown\_uncapped\_dream}     & $224.9$~KB    & $137.2$~KB             & $-39\%$         \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Architecture progression across the ship-wake-extend loop}
+\label{app:supp-extension}
+
+Forward-pointer from \S\ref{sec:extension-results}: structural
+evidence that the loop preserves archived rows from the previous
+deployment cycle while allowing the plastic envelope to expand
+against the new task budget.
+
+\begin{table}[h]
+  \centering
+  \caption{Architecture progression across the ship-wake-extend loop
+           (1 seed).}
+  \label{tab:supp-extension}
+  \begin{tabular}{lcrcr}
+    \toprule
+    phase                & layers          & trainable    & archived             & plastic       \\
+    \midrule
+    start                & $(128, 32, 2)$  & $4\,194$     & $[0,\,0,\,0]$        & $4\,194$      \\
+    chained-15 done      & $(128, 48, 30)$ & $7\,662$     & $[104,\,32,\,0]$     & $3\,534$      \\
+    chained-23 done      & $(128, 80, 46)$ & $14\,046$    & $[128,\,40,\,0]$     & $8\,886$      \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
