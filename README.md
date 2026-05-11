@@ -125,10 +125,18 @@ trioron-project/
 - [~] §3 Methods + §4 Results paper draft (in `paper/`); §1 Intro and §5 Conclusion pending
 - [ ] Deployment script + ready-to-use checkpoint for Orange Pi 5B
 
-## Citation / co-authorship
+## Disclosure
 
-This work is done with two AI assistants in defined roles: Gemma (engineering, Gemini Pro 3.1) and Chloe (research direction, Claude Opus 4.7).
+This work was carried out in collaboration with two personified AI assistants
+in defined supporting roles: **Gemma** (Gemini Pro 3.1, academic-advisory) and
+**Chloe** (Claude Opus 4.7 1M-context, engineering). Human-led problem framing
+and final decision-making; AI-supported implementation, analysis, and writing.
+The human author holds sole responsibility for all claims, methodological
+choices, and interpretations. Per recent editorial guidance
+([Nature 2023](https://www.nature.com/articles/d41586-023-00191-1),
+[WAME 2023](https://wame.org/page3.php?id=106)), AI systems are not listed
+as authors of record.
 
 ## License
 
-(Pending — public repo will accompany paper release.)
+[MIT](LICENSE). Copyright © 2026 Marcelinus R Hatorangan.
