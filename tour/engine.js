@@ -435,15 +435,18 @@ class World {
 
   // Run physics + classification + division off-screen until target population is reached.
   // Used to ensure scenes that depend on a healthy population have one at entry.
-  warmupTo(targetPop, taskFn, maxTicks = 600) {
+  // divideThr: optional override for the division threshold during warmup. Lower
+  // → more aggressive seeding; useful when the scene needs a denser starting
+  // population than the natural equilibrium under the live frustration threshold.
+  warmupTo(targetPop, taskFn, maxTicks = 600, divideThr = null) {
     let n = 0;
     const livePop = () => this.triorons.filter(t => t.alive && !t.fading && !t.isDonor).length;
+    const thr = divideThr ?? this.params.frustration_threshold;
     while (livePop() < targetPop && n < maxTicks) {
       taskFn(this);
       for (const t of this.triorons) t.tick(this);
       for (const p of this.dataPoints) p.tick();
       this.dataPoints = this.dataPoints.filter(p => p.alive);
-      const thr = this.params.frustration_threshold;
       const toDivide = this.triorons.filter(t => t.canDivide(thr));
       for (const parent of toDivide) this.divide(parent);
       this.triorons = this.triorons.filter(t => t.alive);

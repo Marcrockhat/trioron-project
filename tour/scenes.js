@@ -240,13 +240,15 @@ const SCENES = [
   {
     title: "Cap Reached — Internal Turnover",
     caption:
-      "both streams running hot. once population hits the cap, every new division " +
-      "requires an apoptosis: the quietest cell fades to make room. the deployment regime. " +
-      "the simulation runs accelerated on this chapter so the cap is reached in viewing time; " +
-      "drag the speed slider down if you want to watch a single turnover step.",
+      "the dish enters this scene pre-seeded at the cap. both task streams run hot and " +
+      "alternate, so the quadrant currently being neglected accumulates frustration → " +
+      "new divisions fire → the quietest cell fades to make room (apoptosis). drag the " +
+      "cap down for heavier turnover, up to let the population grow past the budget. " +
+      "the simulation runs accelerated on this chapter; pull the speed slider down if " +
+      "you want to watch one turnover step at a time.",
     knob: {
       name: "population_cap", label: "population_cap",
-      min: 30, max: 200, step: 5, default: 200,
+      min: 5, max: 80, step: 1, default: 8,
       apiCall: v => `Organism(population_cap=${v})`,
       lowLabel: "tight budget — heavy turnover, crowded apoptosis",
       highLabel: "loose budget — population grows freely without cannibalization",
@@ -254,9 +256,11 @@ const SCENES = [
     },
     enter(world) {
       if (world.triorons.length === 0) world.spawnGenesis();
-      if (world.triorons.filter(t => !t.isDonor).length < 10) {
-        world.warmupTo(15, w => runStream(w, 0.9, false, 0));
-      }
+      world.params.population_cap = 8;
+      // Aggressive seed (low divideThr) so we land at the cap regardless of the
+      // natural frustration equilibrium; otherwise the population settles at
+      // 4–8 cells and the cap never bites.
+      world.warmupTo(8, w => runStream(w, 0.9, false, 0), 1200, 0.05);
       world.speed = 8;
     },
     tick(world) {
@@ -281,8 +285,13 @@ const SCENES = [
     },
     enter(world) {
       if (world.triorons.length === 0) world.spawnGenesis();
-      if (world.triorons.filter(t => !t.isDonor).length < 12) {
-        world.warmupTo(18, w => runStream(w, 0.9, false, 0));
+      // Cap may carry over from scene 8's tight setting — reset to free growth
+      // so this scene's "population that emerged" reveal isn't pinched.
+      world.params.population_cap = 200;
+      const liveCount =
+        world.triorons.filter(t => t.alive && !t.fading && !t.isDonor).length;
+      if (liveCount < 12) {
+        world.warmupTo(18, w => runStream(w, 0.9, false, 0), 1200, 0.05);
       }
       world.onClick = (x, y) => playEmotionAt(world, x, y);
     },
@@ -313,8 +322,11 @@ const SCENES = [
     },
     enter(world) {
       if (world.triorons.length === 0) world.spawnGenesis();
-      if (world.triorons.filter(t => !t.isDonor).length < 12) {
-        world.warmupTo(20, w => runStream(w, 0.9, false, 0));
+      world.params.population_cap = 200;
+      const liveCount =
+        world.triorons.filter(t => t.alive && !t.fading && !t.isDonor).length;
+      if (liveCount < 12) {
+        world.warmupTo(20, w => runStream(w, 0.9, false, 0), 1200, 0.05);
       }
       world.onClick = (x, y) => playEmotionAt(world, x, y);
     },
