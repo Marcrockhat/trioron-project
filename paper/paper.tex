@@ -180,7 +180,7 @@ that those baselines were not designed for.''
 
 \paragraph{Disclosure.}
 This work was carried out in collaboration with two personified AI
-assistants: \emph{Gemma} (a Gemini-Pro instance acting in an
+assistants: \emph{Gemma} (a Gemini Pro 3.1 instance acting in an
 academic-advisory role) and \emph{Chloe} (a Claude Opus 4.7 1M-context
 instance acting in an engineering role). The collaboration was structured
 as iterative design dialogue --- human-led problem framing and final
@@ -524,13 +524,20 @@ with manifold replay enabled.
 
 The upper-bound arm \arm{grown\_uncapped\_dream} reaches $0.601$ full /
 $0.677$ domain / $0.961$ task on chained-15 at 30~KB of manifold-replay
-storage. Forgetting is negative across all ten seeds
-($-0.562 \pm 0.010$ on \arm{grown\_uncapped\_dream}): past-class
-accuracy increases over time after a task ends, because the manifold
-replay block exposes the network to past classes throughout the
-curriculum. We do not claim this behavior is unique to manifold replay
---- replay-based methods in general can produce negative-forgetting in
-the right regime --- only that we measured it cleanly here.
+storage. Task-aware forgetting is small and positive across all ten
+seeds ($+0.012 \pm 0.001$ on \arm{grown\_uncapped\_dream}): past-task
+accuracy degrades by about one percentage point on the binary
+denominator the model was trained against. The full-softmax forgetting
+number on the same runs is large and negative ($-0.562 \pm 0.010$),
+but that magnitude is dominated by a head-extension transient: the
+output head grows lazily as new classes appear, and under EWC the
+freshly-added logits start much smaller than the anchored older
+logits, which crushes the diagonal full-softmax accuracy on a task
+right after that task is first trained. End-of-curriculum full-softmax
+recovers as all classes accumulate similar training time. We therefore
+report the task-aware number as the architecturally meaningful
+forgetting signal and treat the full-softmax forgetting as a
+measurement artifact of the lazily-grown head, not a replay benefit.
 
 Per-seed paired comparisons against \arm{grown\_uncapped\_dream}
 sharpen the ranking: every other trioron arm trails the headline arm
@@ -648,10 +655,14 @@ report \arm{grown\_uncapped\_dream} as the trioron arm.
   \end{tabular}
 \end{table}
 
-Manifold replay Pareto-dominates hippo $K = 10$ on this benchmark
-(cheaper \emph{and} more accurate), matches hippo $K = 20$ at one-tenth
-the storage, and lands within $0.04$ absolute of $K = 50$ at
-one-twenty-fifth the storage. On task-aware the gap to $K = 50$ is
+Manifold replay alone Pareto-dominates the manifold-plus-hippo
+$K = 10$ row (cheaper \emph{and} more accurate), matches the
+manifold-plus-hippo $K = 20$ row at one-tenth the storage, and lands
+within $0.04$ absolute of pure hippo $K = 50$ at one-twenty-fifth the
+storage. Pure hippo $K = 10$ and $K = 20$ at storage parity with the
+combined rows were not run; the dominance claim is therefore made
+against the combined rows in the table, not against pure-buffer
+ablations at those $K$ values. On task-aware the gap to $K = 50$ is
 $\approx 0.005$ absolute (well under $1\%$).
 
 Logit-inversion variants \citep{yin2020deepinversion} (one-shot, refresh-all,
@@ -702,7 +713,7 @@ Adding the 30~KB manifold buffer, the headline
 floating-point (FP32) deployment baseline the same arm lands at
 $168$~KB FP32 $+$ int8 ($-63\%$ relative), but the FP32 framing is
 the wrong yardstick for a
-device-conscience deployment; we report BF16 throughout this work
+device-conscious deployment; we report BF16 throughout this work
 because BF16 is the inference dtype.
 
 The $-0.015$ full-softmax cost on \arm{grown\_capped\_dream} comes
@@ -1042,7 +1053,7 @@ synapses can be modified; $u$ is the cell-importance signal, a stand-in
 for activity-dependent neurotrophin release. The triplet
 $(w, \lambda, u)$ is intended to capture \emph{which connections are
 present, how rigid they are, and how much the cell matters} --- three
-quantities that biological systems modulate independently.
+quantities that biological systems regulate independently.
 
 \subsection{Continual-Learning Substrate (EWC with Per-Node Plasticity)}
 \label{sec:ewc-substrate}
@@ -1224,10 +1235,11 @@ drifts on top.
 
 The cap is a stand-in for resource-limited small-RNA pools that gate
 sleep-cycle synaptic homeostasis: miRNAs involved in synaptic
-remodeling are produced and consumed in stoichiometric amounts during
-a single sleep cycle \citep{schratt2009micrornas, tononi2014sleep}, so
-the cellular machinery cannot perform arbitrarily many remodeling
-events per cycle. The ``fewer events $=$ better'' empirical pattern is
+remodeling are produced in limited quantities, consistent with
+resource-bounded sleep-cycle remodeling
+\citep{schratt2009micrornas, tononi2014sleep}, so the cellular
+machinery cannot perform arbitrarily many remodeling events per
+cycle. The ``fewer events $=$ better'' empirical pattern is
 broadly consistent with that biological observation, though we do not
 claim a tight quantitative match.
 
@@ -1452,7 +1464,7 @@ fires once at a chosen task boundary:
 
 The result is a smaller plastic envelope in deployment than in
 training, with new growth allocated only against the residual. A
-device-conscience deployment cannot revisit the original training
+device-conscious deployment cannot revisit the original training
 data: it has only what it has stored (the manifold buffer, the
 archived weights) and what arrives in the new data stream. The
 consolidation-dream pass turns shipping into a controlled handoff:
@@ -1657,11 +1669,10 @@ projection bottleneck.
 The bottleneck is not an artifact of the translator; it is intrinsic
 to having two donors disagree on \emph{which} 128-d subspace of input
 space their L0s preserve. The information loss from $784 \to 128$ is
-deliberate --- it is the privacy contract of the substrate, an
-irreversible compression that ensures L0 codes leaked from a device do
-not reveal the original input beyond a 128-d projection. The natural
-question is whether donors can disagree on something that does not
-also throw away the privacy guarantee.
+deliberate: it is the information-theoretic floor of the substrate, an
+irreversible compression that fixes the rank of every L0 representation
+at $128$. The natural question is whether donors can disagree on
+something that does not also lift that compression bottleneck.
 
 The decomposition that achieves this is structural. Factor the L0
 weight as
@@ -1694,7 +1705,7 @@ for bit. The closed-form pseudoinverse construction is unchanged from
 the unfactored case --- the rotation is recovered automatically by the
 existing translator code.
 
-The privacy property is preserved: $S$ is the lossy stage and is
+The compression floor is preserved: $S$ is the lossy stage and is
 public by design; the seed of $R_b$ is the only per-donor handshake
 state, and recipients can regenerate $R_b$ deterministically from a
 $4$-byte integer. Per-donor handshake bandwidth collapses from $\sim
@@ -1812,9 +1823,10 @@ across 38 classes. Used only in the extension experiment of
   \item L0: $784 \to 128$, frozen-Gaussian random projection (weights
         drawn from $\mathcal{N}(0, 2/784)$ at init and never updated).
         See \S\ref{sec:manifold-replay} for why L0 is frozen.
-  \item L1: $128 \to 32$ initial, grown adaptively up to
-        $\textit{cap\_bytes} = 8\,\text{K}$ trainable parameters during
-        chained-15, lifted to 16~K at the extension boundary.
+  \item L1: $128 \to 32$ initial, grown adaptively up to a
+        trainable-parameter cap of $\approx 8\,\text{K}$ during
+        chained-15 ($\textit{cap\_bytes} = 32{,}000$ at 4~B/param),
+        lifted to $\approx 16\,\text{K}$ at the extension boundary.
   \item Head: $L_1\text{\_width} \to n_{\text{classes\_so\_far}}$,
         grown adaptively as new classes appear.
   \item Activations: ReLU on L1, identity on the head.
@@ -1877,17 +1889,20 @@ competitive (\S\ref{sec:competitor-sweep}).
         right metric for trioron's deployment role of context-gated
         personalization atop a frozen LLM.
   \item \emph{Forgetting} (forget): mean across past tasks of
-        (final-task accuracy on that task) $-$ (accuracy at the time
-        the task was first introduced); positive values indicate
-        forgetting.
-  \item \emph{$\sigma$-vs-baseline}: paired-by-seed standardized
-        effect size across the random-seed cohort (10 seeds for
-        headline panels; 3 seeds for the dream-archive panel),
-        reported alongside absolute $\Delta$. We are explicit that
-        $\sigma$ values can be inflated by tight per-arm seed-to-seed
-        std rather than by a large absolute effect; we therefore
-        report absolute $\Delta$ as the primary number and $\sigma$ as
-        a secondary.
+        (accuracy at the time the task was first introduced) $-$
+        (final-task accuracy on that task); positive values indicate
+        forgetting, negative values indicate that past-class accuracy
+        improved over the remainder of the curriculum.
+  \item \emph{$\sigma$-vs-baseline}: paired Cohen's
+        $d_z = \operatorname{mean}(\Delta_{\text{seed}}) /
+        \operatorname{std}(\Delta_{\text{seed}})$ across the
+        random-seed cohort (10 seeds for headline panels; 3 seeds for
+        the dream-archive panel), reported alongside absolute
+        $\Delta$. We are explicit that $\sigma$ values can be inflated
+        by tight per-arm seed-to-seed std rather than by a large
+        absolute effect; we therefore report absolute $\Delta$ as the
+        primary number and $\sigma$ as a secondary tightness
+        indicator.
 \end{itemize}
 
 \paragraph{Storage accounting.}
@@ -1939,6 +1954,7 @@ internal-ablation evidence that motivates
     \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & domain  & $-0.017$      & $-1.40$     \\
     \arm{grown\_capped\_no\_dream} vs \arm{grown\_uncapped\_dream}              & task    & $-0.010$      & $-4.73$     \\
     \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & full    & $-0.017$      & $-1.05$     \\
+    \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & domain  & $-0.020$      & $-1.25$     \\
     \arm{grown\_capped\_dream} vs \arm{grown\_uncapped\_dream}                  & task    & $-0.004$      & $-0.87$     \\
     \bottomrule
   \end{tabular}
