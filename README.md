@@ -1,4 +1,4 @@
-# Trioron — an epigenetic-inspired self-organizing network
+# Trioron — an epigenetic-inspired self-expanding architecture
 
 A continual-learning architecture built around the **trioron**: a node with three coupled state variables (weight, plasticity coefficient, utility) that grows, prunes, and consolidates under a per-curriculum byte budget. Designed for resource-conscious deployment on agentic-AI / IoT / embedded hardware.
 
@@ -24,7 +24,48 @@ On a 30-class class-incremental curriculum (chained-15: MNIST → Fashion-MNIST 
 
 Method and result details: `paper/paper.pdf` (built from `paper/paper.tex`).
 
+## Quick install (use as a library)
+
+Until the PyPI release lands, install straight from GitHub:
+
+```bash
+pip install git+https://github.com/marcrockhat/trioron-project.git
+```
+
+Build your first donor:
+
+```python
+from trioron.api import TaskData, TrioronConfig, build_donor
+
+tasks = [
+    TaskData(
+        name="cats_vs_dogs",
+        X_train=Xtr, y_train=ytr,   # (N, 784) float32, (N,) int64
+        X_test=Xte,  y_test=yte,
+        classes=[0, 1],
+    ),
+    TaskData(
+        name="birds_vs_fish",
+        X_train=..., y_train=...,
+        X_test=...,  y_test=...,
+        classes=[2, 3],
+    ),
+]
+
+donor = build_donor(
+    label="my_donor",
+    tasks=tasks,
+    seed=42,                            # shared L0 seed (paper §3.10)
+    config=TrioronConfig(cap_bytes=32_000),
+    out_path="my_donor.pt",
+)
+```
+
+Compose donors with `trioron.api.absorb` and deploy with `trioron.api.deploy_agent`; see [MANUAL.md](MANUAL.md) for the full surface and the docstring in `trioron/api.py` for the three supported flows.
+
 ## Setup (WSL2)
+
+The section below is for *reproducing the paper*, not library use. If you only need the API, the quick install above is enough.
 
 ```bash
 # Move into WSL filesystem (NOT /mnt/c — that's slow)
@@ -143,6 +184,7 @@ trioron-project/
 - [x] Tour: 13-scene Canvas demo at <https://marcrockhat.github.io/trioron-project/tour/>
 - [x] Full integrated paper draft (`paper/paper.tex`, 29 pages)
 - [ ] ArXiv submission (pending endorsement)
+- [ ] PyPI release (currently install via `pip install git+https://github.com/marcrockhat/trioron-project.git`)
 - [ ] Deployment script + ready-to-use checkpoint for Orange Pi 5B
 
 ## Disclosure
