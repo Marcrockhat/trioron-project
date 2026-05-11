@@ -9,7 +9,7 @@ The full design is in `trioron_blueprint.md`. The paper draft is in `paper/`.
 - **Just the cross-modal bridge / encoders?** → [BRIDGE.md](BRIDGE.md)
 - **Want a visual walk-through of the mechanisms?** → [tour/](tour/) — a static
   Canvas petri-dish demo, thirteen chapters with one knob each. Live at
-  <https://marcrockhat.github.io/trioron-project/>.
+  <https://marcrockhat.github.io/trioron-project/tour/>.
 
 ## Headline
 
@@ -139,7 +139,7 @@ trioron-project/
 - [x] Ship-wake-extend loop (chained-15 → chained-23)
 - [x] Five-family competitor sweep (PackNet / HAT / Online EWC / LwF / hippo) at n = 10
 - [x] Multi-branch absorption + L0 handshake translator (R · S factorization)
-- [x] Tour: 13-scene Canvas demo at <https://marcrockhat.github.io/trioron-project/>
+- [x] Tour: 13-scene Canvas demo at <https://marcrockhat.github.io/trioron-project/tour/>
 - [x] Full integrated paper draft (`paper/paper.tex`, 29 pages)
 - [ ] ArXiv submission (pending endorsement)
 - [ ] Deployment script + ready-to-use checkpoint for Orange Pi 5B
