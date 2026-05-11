@@ -483,12 +483,15 @@ class World {
     const correct = hd < 50;
 
     if (correct) {
-      // firingRecency = "ticks since this cell was a *useful* classifier".
-      // Only correct firings reset it, so a cell that's the nearest neighbour
-      // but keeps misclassifying stays quiet — and becomes a legitimate
-      // apoptosis target when the population is at the cap (scene 8) or
-      // during dream-phase pruning (scene 5).
-      nearest.firingRecency = 0;
+      // firingRecency = "ticks since this cell was a *useful* classifier
+      // on real data". Replay ghosts are phantom echoes from stored (μ,σ);
+      // they exercise the cell's position (drift pull is still applied
+      // below) but they don't prove the cell is still earning its slot
+      // in the live stream. So only non-ghost correct classifications
+      // reset the recency. This matters in scene 8: with replay_lambda>0,
+      // T1 specialists kept getting reset by T1 ghosts even during T2
+      // phases, which blocked the cap-bound apoptosis path forever.
+      if (!point.ghost) nearest.firingRecency = 0;
       point.fadeColor = `hsla(${point.label}, 70%, 60%, ALPHA)`;
       // gentle drift toward labeled point (tiny "online learning")
       const pull = point.ghost ? 0.02 : 0.05;
@@ -510,7 +513,12 @@ class World {
       const quiet = this.triorons
         .filter(t => t.alive && !t.fading && !t.isDonor && t !== parent)
         .sort((a, b) => b.firingRecency - a.firingRecency)[0];
-      if (quiet && quiet.firingRecency > 60) {
+      // Quiet threshold lowered from > 60 to > 20: scene 8 alternates T1/T2
+      // phases every 40 ticks, and we want apoptosis to be reachable inside
+      // a single phase, not require two-phase carry-over. 20 ticks of "no
+      // correct real firing" is enough grace to avoid killing a cell that
+      // just classified something, while keeping cap-bound turnover lively.
+      if (quiet && quiet.firingRecency > 20) {
         quiet.fading = true;
       } else {
         return;
