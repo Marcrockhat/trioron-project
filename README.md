@@ -26,7 +26,11 @@ Method and result details: `paper/paper.pdf` (built from `paper/paper.tex`).
 
 ## Quick install (use as a library)
 
-Until the PyPI release lands, install straight from GitHub:
+```bash
+pip install trioron
+```
+
+Or straight from GitHub for the latest unreleased changes:
 
 ```bash
 pip install git+https://github.com/marcrockhat/trioron-project.git
@@ -184,7 +188,7 @@ trioron-project/
 - [x] Tour: 13-scene Canvas demo at <https://marcrockhat.github.io/trioron-project/tour/>
 - [x] Full integrated paper draft (`paper/paper.tex`, 29 pages)
 - [ ] ArXiv submission (pending endorsement)
-- [ ] PyPI release (currently install via `pip install git+https://github.com/marcrockhat/trioron-project.git`)
+- [x] PyPI release (`pip install trioron`)
 - [ ] Deployment script + ready-to-use checkpoint for Orange Pi 5B
 
 ## Disclosure
