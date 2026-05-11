@@ -762,9 +762,12 @@ class World {
     ctx.save();
     ctx.fillStyle = `hsl(${hue}, 75%, 65%)`;
     ctx.font = "12px ui-monospace, monospace";
+    // y=42 places the baseline just below the absolutely-positioned
+    // #population-readout HTML div (top:10 + ~22px box). y=18 used to
+    // overlap with the "population: N / cap · divisions: D" line.
     ctx.fillText(
       `frustration: avg ${avg.toFixed(2)}  Σ ${sum.toFixed(1)}  (n=${live.length})`,
-      12, 18,
+      12, 42,
     );
     ctx.restore();
   }
