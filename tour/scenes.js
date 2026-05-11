@@ -241,10 +241,12 @@ const SCENES = [
     title: "Cap Reached — Internal Turnover",
     caption:
       "both streams running hot. once population hits the cap, every new division " +
-      "requires an apoptosis: the quietest cell fades to make room. the deployment regime.",
+      "requires an apoptosis: the quietest cell fades to make room. the deployment regime. " +
+      "the simulation runs accelerated on this chapter so the cap is reached in viewing time; " +
+      "drag the speed slider down if you want to watch a single turnover step.",
     knob: {
       name: "population_cap", label: "population_cap",
-      min: 30, max: 300, step: 10, default: 200,
+      min: 30, max: 200, step: 10, default: 200,
       apiCall: v => `Organism(population_cap=${v})`,
       lowLabel: "tight budget — heavy turnover, crowded apoptosis",
       highLabel: "loose budget — population grows freely without cannibalization",
@@ -255,12 +257,13 @@ const SCENES = [
       if (world.triorons.filter(t => !t.isDonor).length < 10) {
         world.warmupTo(15, w => runStream(w, 0.9, false, 0));
       }
+      world.speed = 8;
     },
     tick(world) {
       const phase = Math.floor(world.tickN / 40) % 2;
       runStream(world, 1.0, phase === 1, 0.2);
     },
-    exit() {},
+    exit(world) { world.speed = 1; },
   },
 
   {

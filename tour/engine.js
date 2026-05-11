@@ -911,7 +911,7 @@ class World {
   loop() {
     // run as many simulation ticks per render frame as world.speed dictates
     this._tickAccum += this.speed;
-    let safety = 8;            // cap so a huge speed bump can't lock the page
+    let safety = 12;           // cap so a huge speed bump can't lock the page
     while (this._tickAccum >= 1 && safety-- > 0) {
       this.tick();
       this._tickAccum -= 1;

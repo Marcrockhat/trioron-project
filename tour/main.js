@@ -122,6 +122,12 @@ function loadScene(idx, { replay = false } = {}) {
   els.chapterCaption.textContent = scene.caption;
   syncSliderFromWorld(scene);
 
+  if (els.speed) {
+    const sliderMax = +els.speed.max;
+    els.speed.value = Math.min(world.speed, sliderMax);
+    if (els.speedVal) els.speedVal.textContent = world.speed.toFixed(2) + "×";
+  }
+
   els.prev.disabled = sceneIdx === 0;
   els.next.disabled = sceneIdx === SCENES.length - 1;
 }
