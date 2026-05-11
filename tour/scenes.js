@@ -246,7 +246,7 @@ const SCENES = [
       "drag the speed slider down if you want to watch a single turnover step.",
     knob: {
       name: "population_cap", label: "population_cap",
-      min: 30, max: 200, step: 10, default: 200,
+      min: 30, max: 200, step: 5, default: 200,
       apiCall: v => `Organism(population_cap=${v})`,
       lowLabel: "tight budget — heavy turnover, crowded apoptosis",
       highLabel: "loose budget — population grows freely without cannibalization",
