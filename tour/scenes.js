@@ -261,13 +261,48 @@ const SCENES = [
       // natural frustration equilibrium; otherwise the population settles at
       // 4–8 cells and the cap never bites.
       world.warmupTo(8, w => runStream(w, 0.9, false, 0), 1200, 0.05);
+      // Pin every non-donor cell to the T1 (valence) axis. Without this the
+      // random-angle children sprinkled across all four quadrants during
+      // warmup, and once cells covered all four quadrants the T2 phase
+      // generated zero misses → frustration never built → divisions never
+      // fired → the cap never bit. Forcing y back to the valence line
+      // guarantees that the T2 (arousal) phase produces real misclassifications.
+      const cy = world.height / 2;
+      for (const t of world.triorons) {
+        if (!t.isDonor && !t.fading) {
+          t.y = cy + (Math.random() - 0.5) * 30;
+          t.vy = 0;
+        }
+      }
+      // Tighter frustration threshold + a healthy starting frustration on
+      // every cell so the first T2 phase pushes them across immediately.
+      world.params.frustration_threshold = 0.2;
+      for (const t of world.triorons) {
+        if (!t.isDonor && !t.fading) t.frustration = 0.1;
+      }
       world.speed = 8;
     },
     tick(world) {
       const phase = Math.floor(world.tickN / 40) % 2;
       runStream(world, 1.0, phase === 1, 0.2);
+      // Insurance: if the population has converged to perfect 4-quadrant
+      // coverage (frustration collapsed below threshold), nudge a random
+      // cell so the cap keeps biting. This makes the demo robust against
+      // the RNG paths where children happen to land in T2 corners despite
+      // the y-pin (e.g., over many ticks of repulsion-driven drift).
+      if (world.tickN % 90 === 0) {
+        const live = world.triorons.filter(t => t.alive && !t.fading && !t.isDonor);
+        const maxF = live.reduce((m, t) => Math.max(m, t.frustration), 0);
+        if (maxF < world.params.frustration_threshold && live.length >= 2) {
+          const target = live[Math.floor(Math.random() * live.length)];
+          target.frustration = Math.min(1.0, target.frustration + 0.4);
+        }
+      }
     },
-    exit(world) { world.speed = 1; },
+    exit(world) {
+      world.speed = 1;
+      world.params.frustration_threshold = 0.4;   // restore default for downstream scenes
+    },
   },
 
   {
