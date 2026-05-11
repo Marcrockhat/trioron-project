@@ -1,11 +1,12 @@
-# trioron — teaching petri dish
+# trioron — a guided tour
 
 A static, single-page Canvas demo that walks readers through trioron's
 core mechanisms (genesis, frustration, division, dream, absorption, manifold
 replay) using a small population of cells living in valence/arousal space.
 
 Each chapter exposes one knob — the same one you'd pass to the `trioron`
-Python API. Audio at the closing beat is RAVDESS (drop into `audio/` later).
+Python API. Thirteen chapters total. Audio at the closing beat is RAVDESS
+(drop into `audio/` later).
 
 ## Status
 
@@ -58,16 +59,16 @@ flavored by emotion. Drop RAVDESS clips named `happy.mp3`, `sad.mp3`,
 
 It's plain static files, so any server works:
 
-    cd teach
+    cd tour
     python3 -m http.server 8080
 
 Then open <http://localhost:8080>.
 
 ## Hosting on GitHub Pages
 
-1. Commit `teach/` to `main`.
+1. Commit `tour/` to `main`.
 2. Repo → Settings → Pages.
-3. Source: "Deploy from a branch", Branch: `main`, Folder: `/teach`.
+3. Source: "Deploy from a branch", Branch: `main`, Folder: `/tour`.
 4. Save. After ~1 minute the page is live at
    `https://marcrockhat.github.io/trioron-project/`.
 

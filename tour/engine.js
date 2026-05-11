@@ -1,4 +1,4 @@
-// trioron teaching petri dish — Canvas engine
+// trioron guided tour — Canvas engine
 // Each Trioron is a visible cell living in (valence, arousal) space.
 // Canvas x = valence, y = arousal (canvas y is flipped, +arousal up).
 
