@@ -165,15 +165,19 @@ class PruningController:
         T_prune: int = 2000,
         prune_clock: int = 500,
         protect_layers: Optional[List[int]] = None,
+        min_nodes_per_layer: int = 1,
     ):
         if T_prune < 1:
             raise ValueError("T_prune must be >= 1")
         if prune_clock < 1:
             raise ValueError("prune_clock must be >= 1")
+        if min_nodes_per_layer < 1:
+            raise ValueError("min_nodes_per_layer must be >= 1")
         self.u_threshold = u_threshold
         self.T_prune = T_prune
         self.prune_clock = prune_clock
         self.protect_layers = set(protect_layers or [])
+        self.min_nodes_per_layer = min_nodes_per_layer
         self._streak: dict[Tuple[int, int], int] = {}
 
     # ----- per-step bookkeeping -----
@@ -220,7 +224,7 @@ class PruningController:
         pruned: List[Tuple[int, int]] = []
         for L_idx, n_idx in candidates:
             layer = net.layers[L_idx]
-            if layer.n_nodes <= 1:
+            if layer.n_nodes <= self.min_nodes_per_layer:
                 continue
             net.prune_layer_node(L_idx, n_idx, redistribute=True)
             pruned.append((L_idx, n_idx))
@@ -239,5 +243,6 @@ class PruningController:
         return (
             f"PruningController(u_threshold={self.u_threshold}, "
             f"T_prune={self.T_prune}, prune_clock={self.prune_clock}, "
-            f"protect_layers={sorted(self.protect_layers)})"
+            f"protect_layers={sorted(self.protect_layers)}, "
+            f"min_nodes_per_layer={self.min_nodes_per_layer})"
         )

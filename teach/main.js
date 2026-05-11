@@ -26,6 +26,7 @@ const els = {
   prev: document.getElementById("prev"),
   next: document.getElementById("next"),
   replay: document.getElementById("replay"),
+  restart: document.getElementById("restart"),
   apiCall: document.getElementById("api-call"),
   popCap: document.getElementById("pop-cap"),
   speed: document.getElementById("speed"),
@@ -75,6 +76,9 @@ function loadScene(idx, { replay = false } = {}) {
     } else if (sceneIdx === 0) {
       world.reset();
     }
+    // Replay = "redo this scene from the beginning" — zero the session-cumulative
+    // division counter so the audience sees the count THIS replay produces.
+    world.divisionCount = 0;
   }
   // Forward / back navigation: world state continues unchanged across the cut.
   // The audience is moving through chapters of one ongoing story, not loading
@@ -83,6 +87,25 @@ function loadScene(idx, { replay = false } = {}) {
   // First-ever entry: snapshot the initial state so replay can restore it later.
   if (!initialSnap[sceneIdx]) {
     initialSnap[sceneIdx] = world.snapshot();
+  }
+
+  // Directed scenes (scenes 11–13) are controlled experiments that reset the
+  // dish. Save the state when entering the directed range; restore it when
+  // leaving so the continuous world of scenes 1–10 isn't lost.
+  const isDirected = scene.directed === true;
+  const wasDirected = world._sandboxActive === true;
+  if (isDirected && !wasDirected) {
+    world._sandboxBackup = world.snapshot();
+    world._sandboxActive = true;
+  } else if (!isDirected && wasDirected) {
+    if (world._sandboxBackup) {
+      const carryParams = { ...world.params };
+      world.restore(world._sandboxBackup);
+      // Keep the user's tweaked knob values from the rest of the session.
+      world.params = carryParams;
+      world._sandboxBackup = null;
+    }
+    world._sandboxActive = false;
   }
 
   world.scene = scene;
@@ -115,6 +138,18 @@ els.knob.addEventListener("input", onSliderInput);
 els.next.addEventListener("click", () => loadScene(sceneIdx + 1));
 els.prev.addEventListener("click", () => loadScene(sceneIdx - 1));
 els.replay.addEventListener("click", () => loadScene(sceneIdx, { replay: true }));
+if (els.restart) {
+  els.restart.addEventListener("click", () => {
+    // Hard reset: wipe world, all per-scene snapshots, all remembered slider
+    // values, and any sandbox state — then load scene 1 from scratch.
+    world.reset();
+    world._sandboxBackup = null;
+    world._sandboxActive = false;
+    for (const k of Object.keys(initialSnap)) delete initialSnap[k];
+    for (const k of Object.keys(sceneKnobValues)) delete sceneKnobValues[k];
+    loadScene(0);
+  });
+}
 
 els.popCap.textContent = world.params.population_cap;
 

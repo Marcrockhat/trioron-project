@@ -157,6 +157,17 @@ header h1 {
   cursor: not-allowed;
 }
 
+.stepper .stepper-restart {
+  margin-left: auto;
+  color: var(--muted);
+  border-color: rgba(255,255,255,0.08);
+}
+
+.stepper .stepper-restart:hover:not(:disabled) {
+  color: hsl(0, 70%, 70%);
+  border-color: hsl(0, 70%, 50%);
+}
+
 .api-readout {
   margin-top: 10px;
   font-size: 13px;
@@ -335,3 +346,76 @@ footer {
 }
 
 footer a { color: var(--muted); }
+
+.metaphor-map {
+  margin-top: 14px;
+  font-size: 13px;
+}
+
+.metaphor-map details {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.metaphor-map summary {
+  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+.metaphor-map .small {
+  font-size: 12px;
+  margin: 8px 0 10px 0;
+  line-height: 1.45;
+}
+
+.mm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.mm-table thead th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--accent);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  padding: 6px 8px;
+  vertical-align: bottom;
+}
+
+.mm-table td {
+  vertical-align: top;
+  padding: 8px;
+  border-bottom: 1px dashed rgba(255,255,255,0.08);
+  color: var(--ink);
+}
+
+.mm-table tr:last-child td {
+  border-bottom: none;
+}
+
+.mm-table td:first-child {
+  color: rgba(216, 216, 216, 0.85);
+  width: 28%;
+}
+
+.mm-table td:nth-child(2) {
+  width: 28%;
+  color: var(--accent);
+}
+
+.mm-table code {
+  background: rgba(0,0,0,0.35);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+}

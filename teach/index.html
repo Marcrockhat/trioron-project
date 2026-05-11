@@ -11,14 +11,16 @@
 <header>
   <h1>trioron <span class="muted">— a teaching petri dish</span></h1>
   <p class="lead">Watch a single substrate cell grow into a population that learns to feel.
-    Each chapter has one knob — the same one you'd pass into the <code>trioron</code> API.</p>
+    Each chapter has one knob — the same one you'd pass into the <code>trioron</code> API.
+    The simulation is stochastic, so replay any scene to see a different path through the
+    same mechanism; the <em>trend</em> is reliable, the exact path is not.</p>
 </header>
 
 <main>
   <section class="stage">
     <canvas id="dish" width="780" height="520"></canvas>
     <canvas id="inset" width="160" height="160" title="decision boundary in valence–arousal space"></canvas>
-    <div id="population-readout" class="readout">population: <span id="pop-count">0</span> / <span id="pop-cap">200</span></div>
+    <div id="population-readout" class="readout">population: <span id="pop-count">0</span> / <span id="pop-cap">200</span> &nbsp;·&nbsp; divisions: <span id="division-count">0</span></div>
   </section>
 
   <section class="caption">
@@ -37,6 +39,7 @@
       <button id="prev" disabled>&larr; prev</button>
       <button id="replay">replay scene</button>
       <button id="next">next &rarr;</button>
+      <button id="restart" class="stepper-restart" title="wipe everything and jump to scene 1">&#x21BA; restart</button>
     </div>
   </section>
 
@@ -44,7 +47,7 @@
     <label for="speed">simulation speed</label>
     <input type="range" id="speed" min="0.1" max="2.0" step="0.05" value="1.0">
     <span id="speed-value" class="mono">1.00×</span>
-    <span class="speed-hint muted">slow it down to watch the red frustration glow build before fission fires</span>
+    <span class="speed-hint muted">slow it down to watch the red frustration glow build before division fires</span>
   </section>
 
   <section class="knob-info">
@@ -68,19 +71,84 @@ cell.specialty (hue 0..360°) = atan2(arousal(cell), valence(cell))
 classify(point): nearest cell wins; correct iff hueDist(specialty, label) &lt; 50°
 
 frustration += 0.06 per miss; decays ×0.992 per tick
-fission fires when frustration > frustration_threshold
+division fires when frustration > frustration_threshold
 
 absorption fires when |donor − host| &lt; absorption_radius
-              AND donor.seedColor == host.seedColor   (or seed_match_required = 0)
+              AND donor.poolTag == host.poolTag        (or pool_match_required = 0)
+              note: seed mismatch alone is lossless via W = R·S handshake;
+                    pool mismatch (different shared factor S) is the deep blocker
 
 dream: each tick picks nearby cell pairs, flares a synaptic downscale between them,
        capped at max_downscales_per_layer total flares per dream phase
 
 apoptosis: cells with firing-recency > 200 ticks fade out; floor at MIN_LIVE_POP = 5
+           phase A — L1 branch (body) fades over ~40 ticks
+           phase B — L0 ring lingers as a ghost ~80 ticks → substrate is conserved
+
+decision boundaries (Russell circumplex):
+  valence_thickness ∝ mean over cells of |x − cx| / (W/2)   (HAPPY ↔ SAD axis)
+  arousal_thickness ∝ mean over cells of |y − cy| / (H/2)   (ANGRY ↔ CALM axis)
+  each axis thins when the task that built it loses replay
 
 inner_ring_radius (L0) = 2 + l0_dim × 0.5
 body_radius        (L0 + L1) = inner_ring_radius + branch_width × 0.5
 </pre>
+    </details>
+  </section>
+
+  <section class="metaphor-map">
+    <details>
+      <summary>where the metaphor diverges — read this if you're going to build with the real API</summary>
+      <p class="muted small">The petri dish is a teaching aid. Some of its visual mechanics
+      are architecturally accurate; others are simplifications or proxies. The
+      table below lists every conflation worth flagging.</p>
+      <table class="mm-table">
+        <thead>
+          <tr><th>visual in the dish</th><th>what it really is</th><th>note</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>branch_width</code> → outer body size; wider = faster spatial spread → faster convergence</td>
+            <td>L1 hidden width per branch — per-specialist capacity</td>
+            <td>Capacity does <em>not</em> speed convergence in real trioron. Demo's spread-effect is purely a side-effect of repulsion physics + division spawn-distance scaling with body radius.</td>
+          </tr>
+          <tr>
+            <td>inner-ring color (different lineage = "wrong seed")</td>
+            <td>pool tag = shared factor <em>S</em> in <code>W = R·S</code></td>
+            <td>Seed mismatch alone is solved by the 4-byte handshake (bit-exact). Different shared <em>S</em> = different training pool, which is the real semantic blocker scene 7 is about.</td>
+          </tr>
+          <tr>
+            <td>apoptosis: cell fades to nothing</td>
+            <td>L1 branch is pruned; L0 substrate is conserved</td>
+            <td>Why phase B leaves an L0 ghost ring. The shared substrate isn't destroyed — only the specialist branch's parameters are.</td>
+          </tr>
+          <tr>
+            <td>division: child appears at <code>1.6 × outerRadius</code> from parent</td>
+            <td>no spatial analog — growth = adding hidden nodes (<code>n_grow_per_task</code>)</td>
+            <td>Trioron has no 2D space. Demo uses spatial separation as a stand-in for "new specialist for unmet data."</td>
+          </tr>
+          <tr>
+            <td>frustration as a red glow around a single cell</td>
+            <td>per-step loss accumulation against a per-task running threshold</td>
+            <td>Glow location in the dish is meaningful (which specialist is failing) — the actual trigger math (<code>eps-loss</code>, see triggers.py) is per-task, not per-cell-position.</td>
+          </tr>
+          <tr>
+            <td>manifold replay = ghost data points re-firing</td>
+            <td>sampling from stored per-class <em>(μ, σ)</em> on L0 latent code-space</td>
+            <td>Architecturally accurate at the conceptual level. The ghost data points <em>are</em> the replay; the demo just shows them at the same coordinates as the original task instead of in latent space.</td>
+          </tr>
+          <tr>
+            <td>donor "drifts in" then "docks"</td>
+            <td>a pretrained branch is added to a <code>MultiBranchOrganism</code> via <code>api.absorb()</code></td>
+            <td>The spatial approach is theater; in reality absorption is instantaneous given compatibility (paste-and-go).</td>
+          </tr>
+          <tr>
+            <td>population_cap = ceiling on visible cells</td>
+            <td><code>cap_bytes</code> ceiling on trainable parameter bytes (ceilings.py)</td>
+            <td>Cap is parameter-byte budget in real trioron, not headcount. The demo proxies it as headcount because cells in the dish all happen to have the same parameter footprint.</td>
+          </tr>
+        </tbody>
+      </table>
     </details>
   </section>
 
@@ -92,13 +160,16 @@ body_radius        (L0 + L1) = inner_ring_radius + branch_width × 0.5
       <li><span class="lg-swatch" style="background:hsl(200,75%,55%); border-radius:50%; box-shadow:inset 0 0 0 1px hsla(200,75%,55%,1)"></span>genesis-only — outer body = inner ring (pure substrate, no branch yet)</li>
       <li><span class="lg-swatch" style="background:radial-gradient(circle, rgba(230,80,80,0.6), transparent 70%)"></span>red glow — frustration accumulating</li>
       <li><span class="lg-swatch lg-dashed" style="border-color:hsl(35,60%,70%)"></span>dashed circle — donor's absorption_radius reach</li>
+      <li><span class="lg-swatch lg-dashed" style="border-color:hsl(210,60%,80%)"></span>dashed vertical line — valence boundary (HAPPY ↔ SAD); thickens with HAPPY/SAD specialists</li>
+      <li><span class="lg-swatch lg-dashed" style="border-color:hsl(30,80%,80%)"></span>dashed horizontal line — arousal boundary (ANGRY ↔ CALM); thickens with ANGRY/CALM specialists</li>
+      <li><span class="lg-swatch" style="background:hsla(200,55%,55%,0.4); box-shadow:inset 0 0 0 1px hsla(200,55%,75%,0.7)"></span>faint inner ring alone — L0 ghost after apoptosis (substrate persists, branch pruned)</li>
       <li><span class="lg-swatch" style="background:hsla(50,80%,65%,0.85)"></span>yellow dot — HAPPY (valence+, mid arousal)</li>
       <li><span class="lg-swatch" style="background:hsla(230,80%,65%,0.85)"></span>blue dot — SAD (valence−, mid arousal)</li>
       <li><span class="lg-swatch" style="background:hsla(0,80%,65%,0.85)"></span>red dot — ANGRY (arousal+, mid valence)</li>
       <li><span class="lg-swatch" style="background:hsla(130,80%,65%,0.85)"></span>green dot — CALM (arousal−, mid valence)</li>
       <li><span class="lg-swatch lg-ghost" style="background:hsla(50,80%,65%,0.4)"></span>faint dot — manifold replay (ghost) point</li>
       <li><span class="lg-swatch" style="background:hsla(180,90%,75%,0.7)"></span>blue line — synaptic downscale flare during dream</li>
-      <li><span class="lg-swatch" style="background:rgba(246,201,113,0.7)"></span>yellow flash — fission event</li>
+      <li><span class="lg-swatch" style="background:rgba(246,201,113,0.7)"></span>yellow flash — division event</li>
       <li><span class="lg-swatch" style="background:rgba(150,220,180,0.7)"></span>green flash — successful absorption</li>
       <li><span class="lg-swatch" style="background:rgba(230,140,80,0.7)"></span>orange flash — forced merge (corrupted)</li>
       <li><span class="lg-swatch" style="background:rgba(230,80,80,0.7)"></span>red flash — bounce / frustration</li>
@@ -110,8 +181,8 @@ body_radius        (L0 + L1) = inner_ring_radius + branch_width × 0.5
   <p class="muted">A static teaching companion. No backend, no inference — just JS + Canvas. <a href="https://github.com/marcrockhat/trioron-project">source</a></p>
 </footer>
 
-<script src="engine.js"></script>
-<script src="scenes.js"></script>
-<script src="main.js"></script>
+<script src="engine.js?v=13"></script>
+<script src="scenes.js?v=13"></script>
+<script src="main.js?v=13"></script>
 </body>
 </html>

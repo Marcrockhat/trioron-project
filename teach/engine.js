@@ -3,8 +3,8 @@
 // Canvas x = valence, y = arousal (canvas y is flipped, +arousal up).
 
 const POPULATION_CAP_DEFAULT = 200;
-const FISSION_COOLDOWN_TICKS = 90;
-const MIN_LIVE_POP = 5;            // dream / cap-turnover never reduce alive non-donor cells below this
+const DIVISION_COOLDOWN_TICKS = 90;
+const MIN_LIVE_POP_DEFAULT = 5;    // dream / cap-turnover refuses to reduce alive non-donor cells below world.params.min_live_pop
 
 const T1_LABELS = {
   HAPPY: { hue: 50, vx: 0.7, vy: 0.0 },
@@ -13,6 +13,11 @@ const T1_LABELS = {
 const T2_LABELS = {
   ANGRY: { hue: 0,   vx: 0.0, vy: 0.7 },
   CALM:  { hue: 130, vx: 0.0, vy: -0.7 },
+};
+// Scene 10 expansion: two new labels living in the previously-empty upper corners
+const T3_LABELS = {
+  DISGUST: { hue: 290, vx: -0.7, vy: 0.7 },   // upper-left  (high arousal, − valence)
+  PRIDE:   { hue: 20,  vx: 0.7,  vy: 0.7 },   // upper-right (high arousal, + valence)
 };
 
 const LINEAGE_HOME = 200;       // genesis lineage hue (cool blue inner ring)
@@ -35,7 +40,7 @@ class Trioron {
     this.firingRecency = 0;
     this.age = 0;
     this.alive = true;
-    this.fissionCooldown = 0;
+    this.divisionCooldown = 0;
     this.spawnAnim = 1.0;
     this.isDonor = isDonor;
     this.donorTarget = donorTarget;
@@ -65,10 +70,20 @@ class Trioron {
   }
 
   draw(ctx, world) {
-    let alpha = 1.0;
-    if (this.fading) alpha = Math.max(0, 1 - this.fadeProgress);
-    if (this.spawnAnim > 0) alpha = Math.min(alpha, 1 - 0.5 * this.spawnAnim);
-    if (this.docked) alpha = Math.max(0, 1 - this.dockProgress);
+    // Apoptosis is two-phase: L1 body fades (phase A, fadeProgress 0→1), then L0
+    // inner ring lingers as a ghost and dissolves (phase B, 1→2). Architectural
+    // truth made visible — the shared substrate is conserved, only the branch dies.
+    let bodyAlpha, ringAlpha;
+    if (this.fading) {
+      bodyAlpha = Math.max(0, 1 - Math.min(1, this.fadeProgress));
+      ringAlpha = Math.max(0, Math.min(1, 2 - this.fadeProgress));
+    } else {
+      let a = 1.0;
+      if (this.spawnAnim > 0) a = Math.min(a, 1 - 0.5 * this.spawnAnim);
+      if (this.docked) a = Math.max(0, 1 - this.dockProgress);
+      bodyAlpha = a;
+      ringAlpha = a;
+    }
 
     const scale = Math.max(0.1, 1.0 - 0.5 * this.spawnAnim - 0.5 * this.dockProgress);
     const ir = this.innerRingRadius() * scale;
@@ -80,7 +95,7 @@ class Trioron {
     if (this.frustration > 0.05 && !this.fading) {
       const glowR = r + 4 + this.frustration * 14;
       const grad = ctx.createRadialGradient(this.x, this.y, r, this.x, this.y, glowR);
-      grad.addColorStop(0, `rgba(230, 80, 80, ${(0.35 * this.frustration * alpha).toFixed(3)})`);
+      grad.addColorStop(0, `rgba(230, 80, 80, ${(0.35 * this.frustration * bodyAlpha).toFixed(3)})`);
       grad.addColorStop(1, "rgba(230, 80, 80, 0)");
       ctx.fillStyle = grad;
       ctx.beginPath();
@@ -88,25 +103,50 @@ class Trioron {
       ctx.fill();
     }
 
-    ctx.globalAlpha = alpha;
+    // body (L1 branch)
+    if (bodyAlpha > 0.01) {
+      ctx.globalAlpha = bodyAlpha;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsl(${hue}, ${sat}%, 58%)`;
+      ctx.fill();
+      ctx.strokeStyle = `hsla(${hue}, 50%, 28%, 0.9)`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
 
-    // body
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = `hsl(${hue}, ${sat}%, 58%)`;
-    ctx.fill();
-    ctx.strokeStyle = `hsla(${hue}, 50%, 28%, 0.9)`;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // inner ring (lineage)
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, ir, 0, Math.PI * 2);
-    ctx.fillStyle = `hsl(${this.seedColor}, 75%, 55%)`;
-    ctx.fill();
+    // inner ring (L0 lineage) — outlives the body during apoptosis
+    if (ringAlpha > 0.01) {
+      const ghosting = this.fading && this.fadeProgress > 1;
+      const ringR = ghosting ? ir * 1.25 : ir;       // a touch larger so it reads as a halo
+      if (ghosting) {
+        // soft outer glow so the L0 ghost is unmistakable on top of the dream tint
+        const glowR = ringR + 5;
+        const grad = ctx.createRadialGradient(this.x, this.y, ringR * 0.6, this.x, this.y, glowR);
+        grad.addColorStop(0, `hsla(${this.seedColor}, 80%, 70%, ${(ringAlpha * 0.55).toFixed(2)})`);
+        grad.addColorStop(1, `hsla(${this.seedColor}, 80%, 70%, 0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, glowR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = ringAlpha;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, ringR, 0, Math.PI * 2);
+      ctx.fillStyle = ghosting
+        ? `hsl(${this.seedColor}, 80%, 68%)`         // brighter during phase B
+        : `hsl(${this.seedColor}, 75%, 55%)`;
+      ctx.fill();
+      if (ghosting) {
+        ctx.strokeStyle = `hsla(${this.seedColor}, 70%, 85%, ${(ringAlpha * 0.95).toFixed(2)})`;
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+      }
+    }
 
     // donor: small halo + a larger dashed absorption_radius circle that the slider controls
     if (this.isDonor && !this.docked && !this.fading) {
+      ctx.globalAlpha = bodyAlpha;
       ctx.beginPath();
       ctx.arc(this.x, this.y, r + 4, 0, Math.PI * 2);
       ctx.strokeStyle = `hsla(${this.seedColor}, 60%, 70%, 0.7)`;
@@ -128,8 +168,15 @@ class Trioron {
 
   tick(world) {
     if (this.fading) {
-      this.fadeProgress = Math.min(1, this.fadeProgress + 0.025);
-      if (this.fadeProgress >= 1) this.alive = false;
+      // Phase A: L1 branch fades (faster, ~40 ticks). Phase B: L0 ring dissolves
+      // (slower, ~80 ticks) so the ghost is legible as "substrate lingering after pruning."
+      if (this.fadeProgress < 1) {
+        this.fadeProgress = Math.min(1, this.fadeProgress + 0.025);
+      } else {
+        // phase B deliberately slow (~3.3s) so the L0 ghost is unmistakable
+        this.fadeProgress = Math.min(2, this.fadeProgress + 0.005);
+        if (this.fadeProgress >= 2) this.alive = false;
+      }
       return;
     }
     if (this.docked) {
@@ -181,15 +228,15 @@ class Trioron {
     if (this.y > world.height - m) { this.y = world.height - m; this.vy *= -0.4; }
 
     this.frustration *= 0.992;
-    if (this.fissionCooldown > 0) this.fissionCooldown--;
+    if (this.divisionCooldown > 0) this.divisionCooldown--;
     if (this.spawnAnim > 0) this.spawnAnim = Math.max(0, this.spawnAnim - 0.04);
     this.firingRecency++;
     this.age++;
   }
 
-  canFission(threshold) {
+  canDivide(threshold) {
     if (this.isDonor || this.fading || this.docked) return false;
-    return this.frustration > threshold && this.fissionCooldown <= 0;
+    return this.frustration > threshold && this.divisionCooldown <= 0;
   }
 }
 
@@ -270,6 +317,11 @@ function spawnT2Point(world, ghost = false) {
   spawnDataPoint(world, T2_LABELS[k], ghost);
 }
 
+function spawnT3Point(world, ghost = false) {
+  const k = Math.random() < 0.5 ? "DISGUST" : "PRIDE";
+  spawnDataPoint(world, T3_LABELS[k], ghost);
+}
+
 function runStream(world, ratePerTick, t2 = false, replayLambda = 0) {
   if (Math.random() < ratePerTick) {
     if (t2) spawnT2Point(world, false);
@@ -300,6 +352,7 @@ class World {
     this.dataPoints = [];
     this.flashes = [];
     this.dockLines = [];        // visual links during docking / dream
+    this.divisionCount = 0;
 
     this.params = {
       l0_dim: 8,
@@ -308,9 +361,11 @@ class World {
       replay_lambda: 0.4,
       max_downscales_per_layer: 8,
       absorption_radius: 60,
-      seed_match_required: 1,         // 0 = false, 1 = true
+      pool_match_required: 1,         // 0 = false, 1 = true (shared-factor S compatibility)
       population_cap: POPULATION_CAP_DEFAULT,
       manifold_noise_scale: 1.0,
+      extend_replay_lambda: 0.5,
+      min_live_pop: MIN_LIVE_POP_DEFAULT,
     };
 
     this.scene = null;
@@ -341,6 +396,7 @@ class World {
     this.dreaming = false;
     this.dreamTicks = 0;
     this.dreamFlares = 0;
+    this.divisionCount = 0;
     this.onClick = null;
   }
 
@@ -377,7 +433,7 @@ class World {
     this.onClick = null;
   }
 
-  // Run physics + classification + fission off-screen until target population is reached.
+  // Run physics + classification + division off-screen until target population is reached.
   // Used to ensure scenes that depend on a healthy population have one at entry.
   warmupTo(targetPop, taskFn, maxTicks = 600) {
     let n = 0;
@@ -388,8 +444,8 @@ class World {
       for (const p of this.dataPoints) p.tick();
       this.dataPoints = this.dataPoints.filter(p => p.alive);
       const thr = this.params.frustration_threshold;
-      const toFission = this.triorons.filter(t => t.canFission(thr));
-      for (const parent of toFission) this.fission(parent);
+      const toDivide = this.triorons.filter(t => t.canDivide(thr));
+      for (const parent of toDivide) this.divide(parent);
       this.triorons = this.triorons.filter(t => t.alive);
       n++;
     }
@@ -437,12 +493,12 @@ class World {
     }
   }
 
-  fission(parent) {
+  divide(parent) {
     const liveCount = this.triorons.filter(t => t.alive && !t.fading && !t.isDonor).length;
     if (liveCount >= this.params.population_cap) {
       // apoptosis-driven turnover: kill the quietest cell first.
       // Floor at MIN_LIVE so we never pinch the population to nothing.
-      if (liveCount <= MIN_LIVE_POP) return;
+      if (liveCount <= this.params.min_live_pop) return;
       const quiet = this.triorons
         .filter(t => t.alive && !t.fading && !t.isDonor && t !== parent)
         .sort((a, b) => b.firingRecency - a.firingRecency)[0];
@@ -464,7 +520,7 @@ class World {
       branchWidth: this.params.branch_width,
     });
     if (parent.branchWidth === 0) {
-      // first fission of genesis — genesis itself becomes a branched unit
+      // first division of genesis — genesis itself becomes a branched unit
       parent.branchWidth = this.params.branch_width;
     }
     child.vx = Math.cos(angle) * 1.2;
@@ -472,9 +528,17 @@ class World {
     parent.vx -= Math.cos(angle) * 0.6;
     parent.vy -= Math.sin(angle) * 0.6;
     parent.frustration = 0;
-    parent.fissionCooldown = FISSION_COOLDOWN_TICKS;
+    parent.divisionCooldown = DIVISION_COOLDOWN_TICKS;
     this.triorons.push(child);
+    this.divisionCount++;
     this.flashes.push({ x: parent.x, y: parent.y, age: 0, max: 24, color: "246, 201, 113" });
+  }
+
+  // Drop any leftover donors from prior scenes so a fresh donor scenario has
+  // a clean stage and the spawn-rate cap (< 2 live donors) doesn't silently
+  // suppress the next spawn.
+  clearDonors() {
+    this.triorons = this.triorons.filter(t => !t.isDonor);
   }
 
   spawnDonor({ seedColor, specialty }) {
@@ -508,7 +572,7 @@ class World {
   }
 
   tickDonors() {
-    const seedMatch = this.params.seed_match_required >= 0.5;
+    const poolMatch = this.params.pool_match_required >= 0.5;
     for (const d of this.triorons) {
       if (!d.isDonor || d.docked || d.fading || !d.alive) continue;
       // find nearest non-donor host
@@ -525,7 +589,7 @@ class World {
       if (dist < radius) {
         const compatible = d.seedColor === host.seedColor;
         if (compatible) this.absorbCompatible(host, d);
-        else if (seedMatch) this.bounceForeign(host, d);
+        else if (poolMatch) this.bounceForeign(host, d);
         else this.absorbForcedCorrupt(host, d);
       }
     }
@@ -590,10 +654,10 @@ class World {
       }
     }
     // apoptosis: cells that haven't fired in a while fade out — but only
-    // if we have headroom above MIN_LIVE_POP so dream doesn't depopulate small worlds.
+    // if we have headroom above min_live_pop so dream doesn't depopulate small worlds.
     if (this.dreamTicks === 60) {
       const live = this.triorons.filter(t => t.alive && !t.fading && !t.isDonor);
-      const headroom = Math.max(0, live.length - MIN_LIVE_POP);
+      const headroom = Math.max(0, live.length - this.params.min_live_pop);
       if (headroom > 0) {
         const stale = live
           .filter(t => t.firingRecency > 200)
@@ -667,6 +731,88 @@ class World {
     this.ctx.fillText("dreaming…  flares: " + this.dreamFlares + "/" + this.params.max_downscales_per_layer, 12, this.height - 12);
   }
 
+  // Convergence-metric readout for the directed scenes (11/12/13). Shows the
+  // average frustration across live cells, color-coded green-→-red. Convergence
+  // = sum drops toward 0; failure = sum stays high; forgetting = sum drops then
+  // spikes on expansion.
+  drawConvergenceMetric() {
+    const live = this.triorons.filter(t => t.alive && !t.fading && !t.isDonor);
+    if (live.length === 0) return;
+    let sum = 0;
+    for (const t of live) sum += t.frustration;
+    const avg = sum / live.length;
+    const hue = Math.max(0, Math.min(130, 130 - avg * 260));   // 130 green → 0 red
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.fillStyle = `hsl(${hue}, 75%, 65%)`;
+    ctx.font = "12px ui-monospace, monospace";
+    ctx.fillText(
+      `frustration: avg ${avg.toFixed(2)}  Σ ${sum.toFixed(1)}  (n=${live.length})`,
+      12, 18,
+    );
+    ctx.restore();
+  }
+
+  // Russell-circumplex decision boundaries: a CROSS, not a single line. Vertical
+  // dashed line = valence axis (HAPPY vs SAD); horizontal dashed line = arousal
+  // axis (ANGRY vs CALM). Each line's thickness/opacity scales with how far
+  // its respective axis of specialists has spread from the centre. T1-only
+  // training → vertical thickens, horizontal stays thin. T2 joins → horizontal
+  // also thickens. Catastrophic forgetting on extend → the axis whose replay
+  // dropped to 0 visibly thins.
+  drawDecisionBoundaries() {
+    const live = this.triorons.filter(t => t.alive && !t.fading && !t.docked && !t.isDonor);
+    if (live.length === 0) return;
+    const cx = this.width / 2, cy = this.height / 2;
+    const halfW = this.width / 2, halfH = this.height / 2;
+
+    let valCov = 0, arousalCov = 0;
+    for (const t of live) {
+      valCov += Math.min(1, Math.abs(t.x - cx) / halfW);
+      arousalCov += Math.min(1, Math.abs(t.y - cy) / halfH);
+    }
+    valCov /= live.length;
+    arousalCov /= live.length;
+
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.setLineDash([8, 6]);
+
+    // Valence axis (vertical, blue-ish) — HAPPY/SAD
+    ctx.strokeStyle = `rgba(190, 220, 255, ${(0.25 + 0.55 * valCov).toFixed(2)})`;
+    ctx.lineWidth = 1 + valCov * 4;
+    ctx.beginPath();
+    ctx.moveTo(cx, 18);
+    ctx.lineTo(cx, this.height - 18);
+    ctx.stroke();
+
+    // Arousal axis (horizontal, warm-ish) — ANGRY/CALM
+    ctx.strokeStyle = `rgba(255, 215, 175, ${(0.25 + 0.55 * arousalCov).toFixed(2)})`;
+    ctx.lineWidth = 1 + arousalCov * 4;
+    ctx.beginPath();
+    ctx.moveTo(18, cy);
+    ctx.lineTo(this.width - 18, cy);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    ctx.font = "11px ui-monospace, monospace";
+    ctx.fillStyle = `rgba(190, 220, 255, ${(0.65 + 0.3 * valCov).toFixed(2)})`;
+    ctx.fillText(
+      `valence: ${(valCov * 100).toFixed(0)}%`,
+      12, this.height - 28,
+    );
+    ctx.fillStyle = `rgba(255, 215, 175, ${(0.65 + 0.3 * arousalCov).toFixed(2)})`;
+    ctx.fillText(
+      `arousal: ${(arousalCov * 100).toFixed(0)}%`,
+      12, this.height - 12,
+    );
+    ctx.restore();
+  }
+
+  // Back-compat alias — scenes call this name and we don't want a churn edit.
+  drawValenceBoundary() { this.drawDecisionBoundaries(); }
+
   drawInset() {
     const cx = this.iw / 2, cy = this.ih / 2;
     const ctx = this.insetCtx;
@@ -720,9 +866,20 @@ class World {
     this.drawAxes();
     for (const p of this.dataPoints) p.draw(ctx);
     this.drawDockLines();
-    for (const t of this.triorons) if (t.alive) t.draw(ctx, this);
+    // Main pass: non-fading cells only. Every fading cell (phase A body-fade
+    // and phase B L0-ghost) is rendered after the dream overlay so the blue
+    // tint doesn't wash out either of them.
+    for (const t of this.triorons) {
+      if (t.alive && !t.fading) t.draw(ctx, this);
+    }
+    if (this.scene && this.scene.drawOverlay) this.scene.drawOverlay(this);
     this.drawFlashes();
     this.drawDreamOverlay();
+    // Apoptosis pass — drawn above the dream overlay so the L1 fade-out and
+    // the surviving L0 ghost are unmistakable.
+    for (const t of this.triorons) {
+      if (t.alive && t.fading) t.draw(ctx, this);
+    }
     this.drawInset();
   }
 
@@ -737,8 +894,8 @@ class World {
 
     if (!this.dreaming) {
       const thr = this.params.frustration_threshold;
-      const toFission = this.triorons.filter(t => t.canFission(thr));
-      for (const parent of toFission) this.fission(parent);
+      const toDivide = this.triorons.filter(t => t.canDivide(thr));
+      for (const parent of toDivide) this.divide(parent);
     }
 
     this.triorons = this.triorons.filter(t => t.alive);
@@ -747,6 +904,8 @@ class World {
     if (popEl) popEl.textContent = this.triorons.filter(t => !t.isDonor).length;
     const capEl = document.getElementById("pop-cap");
     if (capEl) capEl.textContent = this.params.population_cap;
+    const divisionEl = document.getElementById("division-count");
+    if (divisionEl) divisionEl.textContent = this.divisionCount;
   }
 
   loop() {

@@ -180,6 +180,21 @@ def test_controller_refuses_to_prune_last_node():
     assert net.layers[0].n_nodes == 1, "must not prune the only node"
 
 
+def test_controller_min_nodes_per_layer_floor():
+    # Layer starts with 6 nodes, all low-utility, with min_nodes_per_layer=3.
+    # Pruner should drive the layer down to 3 and stop there.
+    net = TrioronNetwork([(4, 6, "relu"), (6, 2, "linear")])
+    pc = PruningController(
+        u_threshold=0.01, T_prune=2, prune_clock=2, min_nodes_per_layer=3,
+    )
+    for s in range(1, 40):
+        _force_low_utility(net.layers[0], list(range(net.layers[0].n_nodes)))
+        pc.step(net, s)
+    assert net.layers[0].n_nodes == 3, (
+        f"floor at 3 violated: layer has {net.layers[0].n_nodes} nodes"
+    )
+
+
 def test_controller_clears_streaks_after_prune():
     net = TrioronNetwork([(4, 4, "relu"), (4, 2, "linear")])
     pc = PruningController(u_threshold=0.01, T_prune=3, prune_clock=3)
@@ -204,6 +219,12 @@ def test_controller_invalid_params_raise():
         pass
     else:
         raise AssertionError("expected ValueError on prune_clock=0")
+    try:
+        PruningController(min_nodes_per_layer=0)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError on min_nodes_per_layer=0")
 
 
 # --------------------------------------------------------------------------- #
@@ -224,6 +245,7 @@ def main():
         ("controller_keeps_high_utility",    test_controller_keeps_high_utility_nodes),
         ("controller_protect_layers_skips",  test_controller_protect_layers_skips_layer),
         ("controller_refuses_last_node",     test_controller_refuses_to_prune_last_node),
+        ("controller_min_nodes_floor",       test_controller_min_nodes_per_layer_floor),
         ("controller_clears_streaks",        test_controller_clears_streaks_after_prune),
         ("controller_invalid_params_raise",  test_controller_invalid_params_raise),
     ]

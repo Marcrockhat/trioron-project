@@ -7,6 +7,9 @@ The full design is in `trioron_blueprint.md`. The paper draft is in `paper/`.
 - **Want a 5-min reproduction of the paper headline?** → [QUICKSTART.md](QUICKSTART.md)
 - **Want to build your own trioron network and deploy it as an agent?** → [MANUAL.md](MANUAL.md)
 - **Just the cross-modal bridge / encoders?** → [BRIDGE.md](BRIDGE.md)
+- **Want a visual walk-through of the mechanisms?** → [teach/](teach/) — a static
+  Canvas petri-dish demo (13 scenes, each tied to one real API knob). Live at
+  <https://marcrockhat.github.io/trioron-project/>.
 
 ## Headline
 
