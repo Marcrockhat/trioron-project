@@ -10,6 +10,7 @@ The full design is in `trioron_blueprint.md`. The paper draft is in `paper/`.
 - **Want a visual walk-through of the mechanisms?** → [tour/](tour/) — a static
   Canvas petri-dish demo, thirteen chapters with one knob each. Live at
   <https://marcrockhat.github.io/trioron-project/tour/>.
+- **Want an example of what it can do?** → Check out <https://huggingface.co/spaces/Marcrockhat/trioron-demo>.
 
 ## Headline
 
