@@ -1026,8 +1026,11 @@ Each layer additionally maintains EWC state: anchor weights $\anchorW$
 and $\anchorB$ snapshotted at task boundaries, and Fisher-information
 accumulators $F_W, F_b$ updated as a running exponential moving
 average (EMA) of squared gradients.
-Per-node $\lambda$ is derived from the row-mean of Fisher:
-$\lambda_i = \operatorname{mean}_j F_{W,i,j}$.
+Per-node $\lambda$ is derived from the row-sum of Fisher:
+$\lambda_i = \sum_j F_{W,i,j}$. (The blueprint draft used the row-mean;
+at fan-in $128$ this divides typical Fisher magnitudes below any usable
+floor, so the implementation uses the sum, which preserves the
+selectivity signal end-to-end.)
 
 \paragraph{Epigenetic analogue.}
 $w$ is the synaptic-strength channel; $\lambda$ is a per-cell modifier
