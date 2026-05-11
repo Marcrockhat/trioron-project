@@ -478,12 +478,17 @@ class World {
     }
     if (!nearest) return;
 
-    nearest.firingRecency = 0;
     const spec = nearest.effectiveSpecialty(this);
     const hd = hueDist(spec, point.label);
     const correct = hd < 50;
 
     if (correct) {
+      // firingRecency = "ticks since this cell was a *useful* classifier".
+      // Only correct firings reset it, so a cell that's the nearest neighbour
+      // but keeps misclassifying stays quiet — and becomes a legitimate
+      // apoptosis target when the population is at the cap (scene 8) or
+      // during dream-phase pruning (scene 5).
+      nearest.firingRecency = 0;
       point.fadeColor = `hsla(${point.label}, 70%, 60%, ALPHA)`;
       // gentle drift toward labeled point (tiny "online learning")
       const pull = point.ghost ? 0.02 : 0.05;
