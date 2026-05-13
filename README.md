@@ -1,6 +1,6 @@
 # Trioron — an epigenetic-inspired self-expanding architecture
 
-A continual-learning architecture built around the **trioron**: a node with three coupled state variables (weight, plasticity coefficient, utility) that grows, prunes, and consolidates under a per-curriculum byte budget. Designed for resource-conscious deployment on agentic-AI / IoT / embedded hardware.
+A continual-learning architecture built around the **trioron**: a node with three coupled state variables (weight, plasticity coefficient, utility) that grows, prunes, and consolidates under a per-curriculum byte budget. Designed for device-conscious deployment on agentic-AI / IoT / embedded hardware.
 
 The full design is in `trioron_blueprint.md`. The paper draft is in `paper/`.
 
