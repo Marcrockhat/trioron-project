@@ -730,9 +730,9 @@ and relying on L0 quantization alone.
 \label{sec:extension-results}
 
 We validate the full deployment loop end-to-end on a chained-15 $\to$
-consolidation-dream $\to$ $+8$ EMNIST K..R curriculum (1 seed, 4
-epochs/task, \arm{grown\_capped\_dream}). One-seed evidence is
-documented as such.
+consolidation-dream $\to$ $+8$ EMNIST K..Z curriculum (8 binary tasks
+over letters K..Z, 1 seed, 4 epochs/task,
+\arm{grown\_capped\_dream}). One-seed evidence is documented as such.
 
 The architecture progression across the loop (start $\to$ chained-15
 done $\to$ chained-23 done) is reported as
@@ -800,10 +800,13 @@ assemble a recipient organism by loading branches in increasing-$N$
 prefixes, evaluating on the union test set under \emph{soft +
 per-branch log-softmax} routing.
 
-\paragraph{Lossless task-aware out to $N = 5$.}
+\paragraph{Tracks the per-donor upper bound out to $N = 5$.}
 Donor-standalone task-aware accuracy (averaged over the donors in the
 prefix) is the upper bound; the assembled organism matches it within
-$\Delta \leq 0.0002$ at every $N$ tested.
+$\Delta \leq 0.0002$ at every $N$ tested. ``Lossless'' here means
+\emph{lossless relative to the per-donor upper bound}, not constant
+accuracy across $N$: the upper bound itself drifts from $0.9809$ to
+$0.9616$ as we add weaker specialists to the prefix.
 
 \begin{center}
 \begin{tabular}{rcccc}
@@ -1394,7 +1397,7 @@ permanently.
 
 \paragraph{Storage accounting.}
 With BF16 as the deployment baseline, archive $+$ int8 reduces network
-weight storage by $\approx\!40\%$ across all arms ($213.7 \to
+weight storage by $\approx\!40\%$ across all arms ($211.2 \to
 127.5$~KB on the headline \arm{grown\_capped\_dream} arm; full table
 in \S\ref{sec:archive-results}). We report deployment storage in the
 BF16 baseline because that is the honest device-side accounting; an
@@ -1812,9 +1815,10 @@ full-softmax collapse. Reporting class-incremental from the start
 avoids confusing the comparison.
 
 \paragraph{Extension curriculum (chained-23).}
-chained-15 above, plus 8 additional EMNIST-letters tasks K..R
-introduced at the extension boundary; total 23 class-incremental tasks
-across 38 classes. Used only in the extension experiment of
+chained-15 above, plus 8 additional binary EMNIST-letters tasks
+paired over K..Z (K--L, M--N, \ldots, Y--Z) introduced at the
+extension boundary; total 23 class-incremental tasks across 46
+classes. Used only in the extension experiment of
 \S\ref{sec:extension-results}.
 
 \paragraph{Network configuration.}
