@@ -19,8 +19,8 @@ On a 30-class class-incremental curriculum (chained-15: MNIST → Fashion-MNIST 
 - **0.601 ± 0.008 full-softmax / 0.677 ± 0.007 domain-aware / 0.961 ± 0.001 task-aware** at 30 KB of replay storage (n = 10 seeds, paired).
 - σ-confident wins over PackNet, HAT, Online EWC, and LwF + EWC on full-softmax and domain-aware (+10σ to +28σ paired). Matches a K = 50 hippocampal exemplar buffer within 0.04 absolute full-softmax at 1/25th the storage.
 - BF16 + int8 dream-archive: **157 KB total deployment** (network + manifold buffer), Δ ≤ 0.0008 lossless.
-- Ship-wake-extend loop validated end-to-end at 23 tasks / 38 classes, **168 KB total**, original tasks preserved at task-aware ≥ 0.93.
-- Multi-branch absorption: zero-shot composition of independently-trained donors via a 4-byte L0 handshake (R · S factorization), lossless on task-aware out to N = 5 donors.
+- Ship-wake-extend loop validated end-to-end at 23 tasks / 46 classes, **168 KB total**, original tasks preserved at task-aware ≥ 0.93.
+- Multi-branch absorption: zero-shot composition of independently-trained donors via a 4-byte L0 handshake (R · S factorization); SOFT routing tracks the per-donor upper bound (Δ ≤ 0.0002 task-aware) out to N = 5 donors.
 
 Method and result details: `paper/paper.pdf` (built from `paper/paper.tex`).
 
@@ -126,7 +126,7 @@ python3 experiments/bench_lwf_chained_15_n10.py
 # Dream-archive Phase 1 + Phase 2 (storage win, n = 3 pending rerun)
 python3 experiments/bench_archive_n3.py
 
-# Ship-wake-extend loop (chained-15 → +8 EMNIST K..R)
+# Ship-wake-extend loop (chained-15 → +8 EMNIST K..Z)
 python3 experiments/bench_chained_extend.py
 ```
 
