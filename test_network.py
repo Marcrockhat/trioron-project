@@ -225,6 +225,44 @@ def test_populate_lambda_rescale_mean_normalizes():
             assert abs(m - 1.0) < 1e-5, f"layer {i} lam.mean()={m}, expected 1.0"
 
 
+def test_set_lambda_all_writes_each_layer():
+    """set_lambda_all writes the per-layer signal into each layer's λ.
+    Models the 'environment sense' channel — sensors / reward / attention
+    feeding λ instead of (or alongside) Fisher.
+    """
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    signals = [
+        torch.tensor([0.1, 0.2, 0.3, 0.4, 0.5]),
+        torch.tensor([2.0, 2.0, 2.0]),
+    ]
+    net.set_lambda_all(signals)
+    assert torch.allclose(net.layers[0].lam, signals[0])
+    assert torch.allclose(net.layers[1].lam, signals[1])
+
+
+def test_set_lambda_all_additive_mode_layers_on_fisher():
+    """Additive mode lets callers stack an external signal on top of a
+    Fisher-derived λ — e.g. boost λ on cells flagged by a sensor without
+    losing the cognitive-importance baseline."""
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    for layer in net.layers:
+        layer.lam.fill_(1.0)
+    signals = [torch.full((5,), 0.5), torch.full((3,), 2.0)]
+    net.set_lambda_all(signals, mode="additive")
+    assert torch.allclose(net.layers[0].lam, torch.full((5,), 1.5))
+    assert torch.allclose(net.layers[1].lam, torch.full((3,), 3.0))
+
+
+def test_set_lambda_all_wrong_length_raises():
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    try:
+        net.set_lambda_all([torch.zeros(5)])  # only 1 signal for 2 layers
+    except ValueError as e:
+        assert "length 1" in str(e) and "n_layers 2" in str(e)
+    else:
+        raise AssertionError("expected ValueError for length mismatch")
+
+
 def test_populate_lambda_no_rescale_preserves_magnitude():
     """rescale_mean=False must leave raw Fisher magnitudes intact (mean
     almost certainly != 1.0)."""
@@ -644,6 +682,9 @@ def main():
         ("estimate_fisher_resets_and_populates", test_estimate_fisher_resets_and_populates),
         ("populate_lambda_traditional_loop",     test_populate_lambda_traditional_loop),
         ("populate_lambda_rescale_mean",         test_populate_lambda_rescale_mean_normalizes),
+        ("set_lambda_all_writes_each_layer",     test_set_lambda_all_writes_each_layer),
+        ("set_lambda_all_additive_mode",         test_set_lambda_all_additive_mode_layers_on_fisher),
+        ("set_lambda_all_wrong_length",          test_set_lambda_all_wrong_length_raises),
         ("populate_lambda_no_rescale",           test_populate_lambda_no_rescale_preserves_magnitude),
         ("state_dict_roundtrip",              test_state_dict_roundtrip),
         ("n_nodes_per_layer",                 test_n_nodes_per_layer),

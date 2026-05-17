@@ -195,6 +195,34 @@ class TrioronNetwork(nn.Module):
         for layer in self.layers:
             layer.update_lambda()
 
+    def set_lambda_all(
+        self,
+        signals: Sequence[torch.Tensor],
+        mode: str = "absolute",
+    ) -> None:
+        """Per-layer counterpart to TrioronLayer.set_lambda.
+
+        Writes the per-node plasticity gate λ on every layer from an
+        externally-supplied signal. Use for any non-Fisher source:
+        environmental sensors on a device deployment, reward magnitudes,
+        attention masks, manually-injected freeze/wake priors, etc.
+
+        signals: sequence of per-layer 1-D tensors, one per layer, each
+            of shape (layer.n_nodes,). Must match len(self.layers).
+        mode: forwarded to TrioronLayer.set_lambda — "absolute"
+            (replace), "additive" (mix on top of existing λ), or
+            "multiplicative" (scale, e.g. a global sleep-cycle factor).
+
+        The result is clamped to ≥0 per-layer for the same reason as
+        TrioronLayer.set_lambda.
+        """
+        if len(signals) != len(self.layers):
+            raise ValueError(
+                f"signals length {len(signals)} != n_layers {len(self.layers)}"
+            )
+        for layer, sig in zip(self.layers, signals):
+            layer.set_lambda(sig, mode=mode)
+
     def reset_fisher_all(self) -> None:
         with torch.no_grad():
             for layer in self.layers:

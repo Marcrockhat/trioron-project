@@ -278,6 +278,63 @@ def test_ewc_penalty_warns_on_all_zero_lambda() -> None:
     )
 
 
+def test_set_lambda_absolute_replaces() -> None:
+    """set_lambda(mode='absolute') replaces λ wholesale."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    layer.lam.fill_(0.5)
+    layer.set_lambda(torch.tensor([1.0, 2.0, 3.0]))
+    assert torch.allclose(layer.lam, torch.tensor([1.0, 2.0, 3.0]))
+
+
+def test_set_lambda_additive_mixes() -> None:
+    """set_lambda(mode='additive') sums signal onto existing λ."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    layer.lam.copy_(torch.tensor([0.1, 0.2, 0.3]))
+    layer.set_lambda(torch.tensor([1.0, 1.0, 1.0]), mode="additive")
+    assert torch.allclose(layer.lam, torch.tensor([1.1, 1.2, 1.3]))
+
+
+def test_set_lambda_multiplicative_scales() -> None:
+    """set_lambda(mode='multiplicative') scales existing λ. Useful for
+    global modulators (sleep cycle in [0, 1], stress dial, etc.)."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    layer.lam.copy_(torch.tensor([1.0, 2.0, 4.0]))
+    layer.set_lambda(torch.tensor([0.5, 0.5, 0.5]), mode="multiplicative")
+    assert torch.allclose(layer.lam, torch.tensor([0.5, 1.0, 2.0]))
+
+
+def test_set_lambda_clamps_negative_to_zero() -> None:
+    """λ must remain non-negative — negative inputs (or negative result
+    of additive/multiplicative) clamp at 0."""
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    layer.set_lambda(torch.tensor([-1.0, 0.0, 1.0]))
+    assert torch.allclose(layer.lam, torch.tensor([0.0, 0.0, 1.0]))
+
+    layer.lam.copy_(torch.tensor([1.0, 1.0, 1.0]))
+    layer.set_lambda(torch.tensor([-2.0, -1.0, 0.5]), mode="additive")
+    assert torch.allclose(layer.lam, torch.tensor([0.0, 0.0, 1.5]))
+
+
+def test_set_lambda_wrong_shape_raises() -> None:
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    try:
+        layer.set_lambda(torch.zeros(5))
+    except ValueError as e:
+        assert "n_nodes=3" in str(e)
+    else:
+        raise AssertionError("expected ValueError for wrong shape")
+
+
+def test_set_lambda_invalid_mode_raises() -> None:
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    try:
+        layer.set_lambda(torch.zeros(3), mode="bogus")
+    except ValueError as e:
+        assert "bogus" in str(e)
+    else:
+        raise AssertionError("expected ValueError for invalid mode")
+
+
 def test_ewc_penalty_no_warn_when_lambda_populated() -> None:
     """ewc_penalty() must NOT warn once λ has been populated (the normal
     post-consolidation case).
@@ -613,6 +670,12 @@ def main() -> int:
         ("anchor_resets_penalty",            test_anchor_resets_penalty),
         ("ewc_penalty_has_grad",             test_ewc_penalty_has_grad),
         ("ewc_warns_on_all_zero_lambda",     test_ewc_penalty_warns_on_all_zero_lambda),
+        ("set_lambda_absolute",              test_set_lambda_absolute_replaces),
+        ("set_lambda_additive",              test_set_lambda_additive_mixes),
+        ("set_lambda_multiplicative",        test_set_lambda_multiplicative_scales),
+        ("set_lambda_clamps_negative",       test_set_lambda_clamps_negative_to_zero),
+        ("set_lambda_wrong_shape_raises",    test_set_lambda_wrong_shape_raises),
+        ("set_lambda_invalid_mode_raises",   test_set_lambda_invalid_mode_raises),
         ("ewc_no_warn_with_lambda",          test_ewc_penalty_no_warn_when_lambda_populated),
         ("grow_node_shapes",                 test_grow_node_shapes),
         ("grow_node_with_init_vec",          test_grow_node_with_init_vec),

@@ -4,7 +4,17 @@ Implements the Trioron node specification from blueprint §3.
 
 A "node" in this architecture is characterized by three coupled state variables:
     w  — the row of incoming weights (a vector of length fan_in)
-    λ  — per-node plasticity coefficient (scalar). Higher = stiffer.
+    λ  — per-node plasticity gate (scalar, ≥0). Higher = stiffer. The paper
+         formulation treats λ as a stand-in for biological gating mechanisms
+         (BDNF methylation, perineuronal-net maturation) — environmentally
+         regulated, NOT exclusively cognitive. Any upstream signal can write
+         it: Fisher information (the canonical EWC channel via
+         update_fisher → update_lambda), but equally environmental sensors
+         (temperature, light, stress proxies), reward magnitudes, attention
+         masks, hand-injected priors for cells you want frozen, or anything
+         else the deployment context provides. Use `set_lambda()` to write
+         from arbitrary signals. The substrate doesn't care where λ came
+         from — only that it gates how rigid each cell is.
     u  — per-node utility score (scalar). Tracks contribution to good outputs.
 
 For efficiency, many nodes are stored together inside a TrioronLayer, where
@@ -14,7 +24,8 @@ and λ / u are vectors with one entry per node.
 The layer supports:
     - Forward pass with a configurable activation
     - Per-node Fisher-information estimation (running EMA of squared gradients)
-    - Lambda derived from Fisher info (per-node mean across incoming weights)
+    - λ derived from Fisher info (one signal source among many)
+    - λ written from arbitrary external signals via set_lambda()
     - Utility update from an externally-supplied contribution signal
     - EWC quadratic penalty term against an anchor snapshot
     - Growth (add a new node) and pruning (remove a node)
@@ -26,19 +37,27 @@ Notes for callers:
     - update_fisher() must be called after .backward() but before optimizer.step()
       so that .grad is still populated.
     - The trioron node has three coupled state variables (w, λ, u). λ and u
-      are initialized to zero; they are populated only by the consolidation
+      are initialized to zero. Most users populate λ via the EWC consolidation
       cycle:
           update_fisher()       per batch (after .backward(), before .step())
           update_lambda()       at task end
           anchor_weights()      at task end
-      A training loop that skips this cycle leaves λ at zero — ewc_penalty()
-      is then mathematically zero regardless of the caller's β / ewc_strength,
-      growth triggers have no Fisher signal, and dream consolidation has
-      nothing to consolidate. The network keeps training and looks healthy,
-      but the substrate has silently degraded into a regular MLP wearing a
-      Trioron shell. After training, sanity-check `layer.lam.max() > 0`;
-      ewc_penalty() also emits a one-shot RuntimeWarning when called against
-      an all-zero λ.
+      A training loop that skips this cycle AND doesn't write λ from another
+      source leaves λ at zero — ewc_penalty() is then mathematically zero
+      regardless of the caller's β / ewc_strength, growth triggers have no
+      Fisher signal, and dream consolidation has nothing to consolidate.
+      The network keeps training and looks healthy, but the substrate has
+      silently degraded into a regular MLP wearing a Trioron shell. After
+      training, sanity-check `layer.lam.max() > 0`; ewc_penalty() also emits
+      a one-shot RuntimeWarning when called against an all-zero λ.
+
+      Fisher is NOT the only valid signal for λ. The (w, λ, u) formulation
+      models λ as a per-cell plasticity gate, equivalent to environmentally
+      regulated biological mechanisms — environmental sensors, reward
+      magnitudes, attention masks, or any externally-derived per-cell
+      importance signal are all legitimate sources. Use set_lambda() to
+      write λ from any such signal; the substrate behaves identically
+      regardless of where the values came from.
 """
 
 from __future__ import annotations
@@ -253,9 +272,63 @@ class TrioronLayer(nn.Module):
         recovers the magnitude so real Fisher can express selectivity
         rather than being drowned by an external λ_floor clamp.
         Higher λ ⇒ this node's weights matter a lot for current loss ⇒ stiffer.
+
+        Fisher is the canonical EWC source for λ but not the only one;
+        see set_lambda() for writing λ from arbitrary external signals.
         """
         with torch.no_grad():
             self.lam.copy_(self.fisher_W.sum(dim=1))
+
+    def set_lambda(
+        self,
+        signal: torch.Tensor,
+        mode: str = "absolute",
+    ) -> None:
+        """Write the per-node plasticity gate λ from an arbitrary signal.
+
+        λ is the per-cell plasticity coefficient — high λ stiffens the
+        cell against EWC drift, low λ leaves it plastic. The (w, λ, u)
+        formulation treats λ as a stand-in for environmentally regulated
+        biological gating (BDNF methylation, perineuronal-net
+        maturation); Fisher information is one signal that can drive it,
+        but any upstream source is legitimate:
+
+          - environmental sensors (temperature, light, stress proxies on
+            an edge device) — λ becomes a literal "environment sense"
+          - reward magnitudes — high-reward cells get protected
+          - attention masks — task-salient cells stiffen
+          - hand-injected priors — freeze specific cells (set to large λ)
+            or wake them (set to 0)
+
+        signal: shape (n_nodes,). Cast to layer dtype/device.
+        mode:
+          "absolute"       λ ← signal             (replace)
+          "additive"       λ ← λ + signal         (layer on top of Fisher)
+          "multiplicative" λ ← λ * signal         (scale, e.g. a sleep
+                                                  cycle in [0, 1])
+
+        The result is clamped to ≥0 — ewc_penalty() interprets λ as a
+        non-negative stiffness, and negative values would invert the
+        penalty into a push AWAY from the anchor.
+        """
+        if signal.shape != (self.n_nodes,):
+            raise ValueError(
+                f"signal shape {tuple(signal.shape)} "
+                f"!= (n_nodes={self.n_nodes},)"
+            )
+        if mode not in ("absolute", "additive", "multiplicative"):
+            raise ValueError(
+                f"mode '{mode}' not in 'absolute' / 'additive' / 'multiplicative'"
+            )
+        sig = signal.detach().to(device=self.lam.device, dtype=self.lam.dtype)
+        with torch.no_grad():
+            if mode == "absolute":
+                self.lam.copy_(sig)
+            elif mode == "additive":
+                self.lam.add_(sig)
+            else:  # multiplicative
+                self.lam.mul_(sig)
+            self.lam.clamp_(min=0.0)
 
     def update_utility(self, contributions: torch.Tensor) -> None:
         """EMA update of per-node utility scores.

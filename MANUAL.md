@@ -790,6 +790,58 @@ convergence is tiny (gradients vanish at the optimum), so without
 rescaling callers need `ewc_strength` in the 1e5–1e7 range. Pass
 `rescale_mean=False` to preserve raw Fisher magnitudes.
 
+### Does λ have to come from Fisher?
+
+No. In the trioron `(w, λ, u)` formulation, `λ` is the per-cell
+plasticity gate — a stand-in for biological gating mechanisms like
+BDNF methylation and perineuronal-net maturation, both of which are
+environmentally regulated. Fisher information is one signal you can
+write into λ (the canonical EWC channel), but any upstream source
+is legitimate. The substrate doesn't care where the values came
+from — only that they gate how rigid each cell is.
+
+Use `set_lambda_all` to write λ from arbitrary signals:
+
+```python
+# Per-layer signals, one tensor per layer, shape (n_nodes,).
+signals = [
+    sensor_to_layer_signal(temp, light, motion, n=net.layers[0].n_nodes),
+    reward_to_layer_signal(recent_reward,        n=net.layers[1].n_nodes),
+    ...
+]
+
+net.set_lambda_all(signals, mode="absolute")
+# modes:
+#   "absolute"       λ ← signal               (replace)
+#   "additive"       λ ← λ + signal           (layer on top of Fisher)
+#   "multiplicative" λ ← λ * signal           (scale, e.g. a global
+#                                              sleep cycle in [0, 1])
+```
+
+Concrete use cases:
+
+* **Environment sensors** (the namesake "environment sense") — on an
+  edge deployment with temperature/light/IMU/microphone, derive a
+  per-cell salience signal from sensor state and write it as λ.
+  Cells whose past activations correlated with the current
+  environment stiffen; the rest stay plastic.
+* **Reward signals** — high-reward episodes raise λ on the cells
+  that produced them, protecting useful policies from being
+  overwritten by later low-reward exploration.
+* **Attention / saliency masks** — task-salient cells stiffen for the
+  duration of a task, then relax.
+* **Hand-injected priors** — large λ on cells you want frozen for
+  reasons outside the loss (regulatory, interpretability, safety),
+  or λ = 0 on cells you want to wake up for forced relearning.
+* **Sleep / arousal modulation** — `mode="multiplicative"` with a
+  scalar in [0, 1] applied uniformly globally damps the entire
+  network's λ during a "high-plasticity" window (e.g., a dream
+  rehearsal phase) and restores it after.
+
+Fisher and external signals compose: run `populate_lambda` for the
+cognitive-importance baseline, then `set_lambda_all(sensors,
+mode="additive")` to layer the environmental signal on top.
+
 ---
 
 ## 14. Reference: CLI commands
