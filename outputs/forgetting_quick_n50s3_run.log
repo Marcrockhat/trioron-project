@@ -1,0 +1,33 @@
+# forgetting_quick run — N=50, seeds=3, --grow --extrapolate 1000
+# Command: python3 experiments/bench_forgetting_quick.py \
+#              --n_tasks 50 --seeds 3 --grow --extrapolate 1000
+# Settings: train_per_task=20000 (default), replay_per_task=200 (default),
+#           ewc_strength=1.0 (default), grow_per_task=2.
+# Per-task progression captured only for the tail of seed 3 (the agent
+# runtime truncated the upstream log); the headline summary + fit +
+# extrapolation are full. Rerun the command above to regenerate.
+
+  task  39/50  current=0.451  mean-retained=0.535  n_nodes=142  replay_pool=7800
+  task  40/50  current=0.502  mean-retained=0.539  n_nodes=144  replay_pool=8000
+  task  41/50  current=0.502  mean-retained=0.544  n_nodes=146  replay_pool=8200
+  task  42/50  current=0.434  mean-retained=0.535  n_nodes=148  replay_pool=8400
+  task  43/50  current=0.445  mean-retained=0.531  n_nodes=150  replay_pool=8600
+  task  44/50  current=0.521  mean-retained=0.535  n_nodes=152  replay_pool=8800
+  task  45/50  current=0.426  mean-retained=0.524  n_nodes=154  replay_pool=9000
+  task  46/50  current=0.536  mean-retained=0.529  n_nodes=156  replay_pool=9200
+  task  47/50  current=0.446  mean-retained=0.532  n_nodes=158  replay_pool=9400
+  task  48/50  current=0.431  mean-retained=0.532  n_nodes=160  replay_pool=9600
+  task  49/50  current=0.470  mean-retained=0.528  n_nodes=162  replay_pool=9800
+  task  50/50  current=0.392  mean-retained=0.525  n_nodes=164  replay_pool=10000
+
+elapsed: 298.0s (5.96s/task)
+final mean retention across all tasks seen: 0.523
+task-0 accuracy after 50 tasks:         0.784
+wrote /home/marcrockhat/trioron-project/outputs/forgetting_quick.csv
+
+fit: r(t) = 0.500 + 0.500 * exp(-(t/3.2)^0.40)  (rss=0.0201)
+  extrapolated retention at t=   50: 0.524
+  extrapolated retention at t=  100: 0.509
+  extrapolated retention at t=  250: 0.501
+  extrapolated retention at t=  500: 0.500
+  extrapolated retention at t= 1000: 0.500
