@@ -25,9 +25,24 @@ Notes for callers:
       replaced.
     - update_fisher() must be called after .backward() but before optimizer.step()
       so that .grad is still populated.
+    - The trioron node has three coupled state variables (w, λ, u). λ and u
+      are initialized to zero; they are populated only by the consolidation
+      cycle:
+          update_fisher()       per batch (after .backward(), before .step())
+          update_lambda()       at task end
+          anchor_weights()      at task end
+      A training loop that skips this cycle leaves λ at zero — ewc_penalty()
+      is then mathematically zero regardless of the caller's β / ewc_strength,
+      growth triggers have no Fisher signal, and dream consolidation has
+      nothing to consolidate. The network keeps training and looks healthy,
+      but the substrate has silently degraded into a regular MLP wearing a
+      Trioron shell. After training, sanity-check `layer.lam.max() > 0`;
+      ewc_penalty() also emits a one-shot RuntimeWarning when called against
+      an all-zero λ.
 """
 
 from __future__ import annotations
+import warnings
 from typing import Optional
 
 import torch
@@ -40,6 +55,17 @@ _ACTIVATIONS = {
     "tanh": torch.tanh,
     "linear": lambda x: x,
 }
+
+
+# One-shot warning state for ewc_penalty's silent-zero check. Process-wide
+# so a single training run doesn't get spammed once per layer per call.
+# Test hook: _EwcZeroWarning.reset() re-arms the warning between cases.
+class _EwcZeroWarning:
+    _warned: bool = False
+
+    @classmethod
+    def reset(cls) -> None:
+        cls._warned = False
 
 
 class TrioronLayer(nn.Module):
@@ -343,7 +369,24 @@ class TrioronLayer(nn.Module):
         plasticity boost that fades as the pulse decays.
 
         Returns a scalar tensor (autograd-attached when W requires grad).
+
+        Silent-zero guard: if λ is all zero we emit a one-shot
+        RuntimeWarning. λ stays at zero when the consolidation cycle
+        (update_fisher → update_lambda → anchor_weights) is skipped
+        during training; in that case the penalty is mathematically
+        zero regardless of the caller's ewc_strength and the substrate
+        is silently a plain MLP. The warning fires once per process.
         """
+        if not _EwcZeroWarning._warned and bool((self.lam == 0).all().item()):
+            _EwcZeroWarning._warned = True
+            warnings.warn(
+                "TrioronLayer.ewc_penalty(): layer.lam is all zero — the "
+                "EWC penalty is silently zero. The consolidation cycle "
+                "(update_fisher → update_lambda → anchor_weights) was "
+                "likely skipped during training; without it the node is "
+                "just a regular MLP. See the trioron.node module docstring.",
+                RuntimeWarning, stacklevel=2,
+            )
         # Per-node effective stiffness = λ · (1 - apoptosis_pulse). When
         # all pulses are 0 (no recent deaths), this equals plain λ.
         # Archived rows contribute zero — they're locked at consolidated

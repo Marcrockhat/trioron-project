@@ -1077,6 +1077,12 @@ data), then snapshot $\anchorW \leftarrow W$ as the new anchor. This
 separation --- estimate Fisher at task end, then anchor --- follows the
 original EWC recipe and avoids the EMA-drift artifacts of online
 updating during training.
+Implementation note: $\lambda$ is initialized to zero; a training loop
+that omits the end-of-task \texttt{update\_lambda} / \texttt{anchor\_weights}
+pair leaves $\Lewc$ at zero regardless of the coefficient $\beta$,
+silently degrading the substrate to a plain MLP. The reference
+implementation emits a one-shot runtime warning on the first
+\texttt{ewc\_penalty()} call against an all-zero $\lambda$.
 
 For longer curricula we optionally accumulate Fisher across tasks via
 the Online EWC variant \citep{schwarz2018progress}:

@@ -11,7 +11,7 @@ import sys
 import traceback
 import torch
 
-from trioron.node import TrioronLayer
+from trioron.node import TrioronLayer, _EwcZeroWarning
 
 
 # --------------------------------------------------------------------------- #
@@ -237,6 +237,67 @@ def test_ewc_penalty_has_grad() -> None:
     p.backward()
     assert layer.W.grad is not None
     assert (layer.W.grad.abs() > 0).any()
+
+
+def test_ewc_penalty_warns_on_all_zero_lambda() -> None:
+    """ewc_penalty() must emit a one-shot RuntimeWarning when λ is all zero
+    (the silent-MLP failure mode: consolidation cycle skipped, β is moot).
+    Second call within the same process must NOT re-warn.
+    """
+    import warnings as _w
+    _EwcZeroWarning.reset()
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    # Default lambda_init=0.0, so this layer starts with all-zero λ.
+    assert (layer.lam == 0).all(), "precondition: fresh layer has λ == 0"
+
+    with _w.catch_warnings(record=True) as caught:
+        _w.simplefilter("always")
+        p1 = layer.ewc_penalty()
+    assert p1.item() == 0.0, f"penalty must be exactly zero, got {p1.item()}"
+    silent_zero_warns = [
+        rec for rec in caught
+        if issubclass(rec.category, RuntimeWarning)
+        and "silently zero" in str(rec.message)
+    ]
+    assert len(silent_zero_warns) == 1, (
+        f"expected exactly one silent-zero RuntimeWarning, got "
+        f"{len(silent_zero_warns)}: {[str(r.message) for r in caught]}"
+    )
+
+    # One-shot: a second call must not re-emit.
+    with _w.catch_warnings(record=True) as caught2:
+        _w.simplefilter("always")
+        layer.ewc_penalty()
+    repeat_warns = [
+        rec for rec in caught2
+        if issubclass(rec.category, RuntimeWarning)
+        and "silently zero" in str(rec.message)
+    ]
+    assert len(repeat_warns) == 0, (
+        f"warning must be one-shot; got {len(repeat_warns)} on second call"
+    )
+
+
+def test_ewc_penalty_no_warn_when_lambda_populated() -> None:
+    """ewc_penalty() must NOT warn once λ has been populated (the normal
+    post-consolidation case).
+    """
+    import warnings as _w
+    _EwcZeroWarning.reset()
+    layer = TrioronLayer(fan_in=4, n_nodes=3)
+    layer.lam.fill_(1.0)
+    with _w.catch_warnings(record=True) as caught:
+        _w.simplefilter("always")
+        layer.ewc_penalty()
+    silent_zero_warns = [
+        rec for rec in caught
+        if issubclass(rec.category, RuntimeWarning)
+        and "silently zero" in str(rec.message)
+    ]
+    assert len(silent_zero_warns) == 0, (
+        f"no warning expected with populated λ; got "
+        f"{[str(r.message) for r in silent_zero_warns]}"
+    )
 
 
 def test_grow_node_shapes() -> None:
@@ -551,6 +612,8 @@ def main() -> int:
         ("ewc_positive_after_drift",         test_ewc_penalty_positive_after_drift),
         ("anchor_resets_penalty",            test_anchor_resets_penalty),
         ("ewc_penalty_has_grad",             test_ewc_penalty_has_grad),
+        ("ewc_warns_on_all_zero_lambda",     test_ewc_penalty_warns_on_all_zero_lambda),
+        ("ewc_no_warn_with_lambda",          test_ewc_penalty_no_warn_when_lambda_populated),
         ("grow_node_shapes",                 test_grow_node_shapes),
         ("grow_node_with_init_vec",          test_grow_node_with_init_vec),
         ("grow_node_fully_plastic",          test_grow_node_fully_plastic),
