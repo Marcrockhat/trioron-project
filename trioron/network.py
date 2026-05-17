@@ -248,6 +248,55 @@ class TrioronNetwork(nn.Module):
             for layer, d in zip(self.layers, saved):
                 layer.fisher_decay = d
 
+    def populate_lambda(
+        self,
+        batches: Iterable[Tuple[torch.Tensor, torch.Tensor]],
+        loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        n_batches: int = 20,
+        rescale_mean: bool = True,
+    ) -> None:
+        """One-shot consolidation for traditional training loops.
+
+        Use this when the network was trained without the standard
+        per-task cycle (joint training, plain SGD/Adam loops, no task
+        boundaries) and you now want EWC protection for downstream
+        fine-tuning. Wraps estimate_fisher → update_lambda_all →
+        (optional rescale) → anchor_all into a single call. Equivalent
+        to:
+
+            net.estimate_fisher(batches, loss_fn, n_batches=n_batches)
+            net.update_lambda_all()
+            if rescale_mean:
+                for layer in net.layers:
+                    m = layer.lam.mean()
+                    if m > 0:
+                        layer.lam.div_(m)
+            net.anchor_all()
+
+        rescale_mean (default True): per-layer normalize λ to mean 1.0
+        so β becomes a stiffness knob independent of the optimizer's
+        gradient-magnitude regime. Adam at convergence gives near-zero
+        raw Fisher (gradients vanish at the optimum), so without
+        rescaling callers need β in the 1e5–1e7 range to get a useful
+        penalty. Rescaling loses absolute-importance information across
+        layers but keeps relative per-node selectivity within each layer.
+        Set to False to preserve raw Fisher magnitudes.
+
+        Clears stale gradients on return so the network is safe to hand
+        back to a downstream optimizer immediately.
+        """
+        self.estimate_fisher(batches, loss_fn, n_batches=n_batches)
+        self.update_lambda_all()
+        if rescale_mean:
+            with torch.no_grad():
+                for layer in self.layers:
+                    m = layer.lam.mean()
+                    if m > 0:
+                        layer.lam.div_(m)
+        self.anchor_all()
+        for p in self.parameters():
+            p.grad = None
+
     # ----- structural plasticity (§8 step 5: cellular division) -----
 
     def grow_layer(

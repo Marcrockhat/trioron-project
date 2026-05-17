@@ -136,6 +136,126 @@ def test_estimate_fisher_resets_and_populates():
     assert has_signal, "fisher accumulated nothing"
 
 
+def test_populate_lambda_traditional_loop():
+    """populate_lambda must lift λ off zero, set anchors, clear grads,
+    and silence the silent-zero RuntimeWarning emitted by ewc_penalty.
+    Models the Aidos "joint-training donor never called the consolidation
+    cycle" path.
+    """
+    import warnings as _w
+    from trioron.node import _EwcZeroWarning
+
+    torch.manual_seed(0)
+    net = TrioronNetwork([(4, 8, "relu"), (8, 3, "linear")])
+
+    # Train naively — no update_fisher, no update_lambda, no anchor.
+    opt = torch.optim.Adam(net.parameters(), lr=1e-2)
+    X = torch.randn(128, 4)
+    Y = torch.randint(0, 3, (128,))
+    for _ in range(20):
+        idx = torch.randperm(128)[:32]
+        opt.zero_grad()
+        loss = torch.nn.functional.cross_entropy(net(X[idx]), Y[idx])
+        loss.backward()
+        opt.step()
+
+    # Precondition: λ is still all zero everywhere.
+    for i, layer in enumerate(net.layers):
+        assert (layer.lam == 0).all(), f"layer {i} lam should be all zero pre-populate"
+
+    def make_batches():
+        for _ in range(20):
+            idx = torch.randperm(128)[:32]
+            yield X[idx], Y[idx]
+
+    net.populate_lambda(
+        make_batches(),
+        loss_fn=lambda p, y: torch.nn.functional.cross_entropy(p, y),
+        n_batches=20,
+        rescale_mean=True,
+    )
+
+    # Postcondition: λ populated, anchors moved to current W, grads cleared.
+    for i, layer in enumerate(net.layers):
+        assert (layer.lam > 0).any(), f"layer {i} lam still all zero post-populate"
+        assert torch.allclose(layer.W_anchor, layer.W.detach()), (
+            f"layer {i} W_anchor not snapped to current W"
+        )
+    for p in net.parameters():
+        assert p.grad is None, "populate_lambda must clear stale gradients"
+
+    # ewc_penalty must no longer trip the silent-zero warning.
+    _EwcZeroWarning.reset()
+    with _w.catch_warnings(record=True) as caught:
+        _w.simplefilter("always")
+        pen = net.ewc_penalty()
+    silent_zero_warns = [
+        rec for rec in caught
+        if issubclass(rec.category, RuntimeWarning)
+        and "silently zero" in str(rec.message)
+    ]
+    assert len(silent_zero_warns) == 0, (
+        "ewc_penalty must not warn after populate_lambda has run"
+    )
+    assert pen.item() >= 0.0  # Identity at the anchor, but autograd-attached.
+
+
+def test_populate_lambda_rescale_mean_normalizes():
+    """rescale_mean=True must drive each layer's lam.mean() to 1.0 (or
+    leave it at zero if Fisher accumulated no signal in that layer)."""
+    torch.manual_seed(1)
+    net = TrioronNetwork([(4, 8, "relu"), (8, 3, "linear")])
+    X = torch.randn(64, 4)
+    Y = torch.randint(0, 3, (64,))
+
+    def make_batches():
+        for _ in range(10):
+            idx = torch.randperm(64)[:16]
+            yield X[idx], Y[idx]
+
+    net.populate_lambda(
+        make_batches(),
+        loss_fn=lambda p, y: torch.nn.functional.cross_entropy(p, y),
+        n_batches=10,
+        rescale_mean=True,
+    )
+    for i, layer in enumerate(net.layers):
+        if (layer.lam > 0).any():
+            m = layer.lam.mean().item()
+            assert abs(m - 1.0) < 1e-5, f"layer {i} lam.mean()={m}, expected 1.0"
+
+
+def test_populate_lambda_no_rescale_preserves_magnitude():
+    """rescale_mean=False must leave raw Fisher magnitudes intact (mean
+    almost certainly != 1.0)."""
+    torch.manual_seed(2)
+    net = TrioronNetwork([(4, 8, "relu"), (8, 3, "linear")])
+    X = torch.randn(64, 4)
+    Y = torch.randint(0, 3, (64,))
+
+    def make_batches():
+        for _ in range(10):
+            idx = torch.randperm(64)[:16]
+            yield X[idx], Y[idx]
+
+    net.populate_lambda(
+        make_batches(),
+        loss_fn=lambda p, y: torch.nn.functional.cross_entropy(p, y),
+        n_batches=10,
+        rescale_mean=False,
+    )
+    # With raw Fisher (cross-entropy, untrained net) the per-layer mean
+    # will be small but nonzero — definitely not 1.0.
+    any_layer_not_unit = any(
+        (layer.lam > 0).any() and abs(layer.lam.mean().item() - 1.0) > 1e-3
+        for layer in net.layers
+    )
+    assert any_layer_not_unit, (
+        "with rescale_mean=False at least one layer's lam.mean() should "
+        "differ from 1.0 (raw Fisher magnitudes are not pre-normalized)"
+    )
+
+
 def test_state_dict_roundtrip():
     net = TrioronNetwork([(4, 8, "relu"), (8, 3, "linear")])
     for layer in net.layers:
@@ -522,6 +642,9 @@ def main():
         ("ewc_penalty_sums_layers",           test_ewc_penalty_sums_layers),
         ("anchor_all_resets_penalty",         test_anchor_all_resets_penalty),
         ("estimate_fisher_resets_and_populates", test_estimate_fisher_resets_and_populates),
+        ("populate_lambda_traditional_loop",     test_populate_lambda_traditional_loop),
+        ("populate_lambda_rescale_mean",         test_populate_lambda_rescale_mean_normalizes),
+        ("populate_lambda_no_rescale",           test_populate_lambda_no_rescale_preserves_magnitude),
         ("state_dict_roundtrip",              test_state_dict_roundtrip),
         ("n_nodes_per_layer",                 test_n_nodes_per_layer),
         ("gradient_flows_through_full_stack", test_gradient_flows_through_full_stack),

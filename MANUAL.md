@@ -748,6 +748,48 @@ No. The shared-substrate invariant covers L0 width, L0 freeze
 status, and the L0 random projection seed. Mixing them requires a
 fusion layer that trioron deliberately does not have.
 
+### EWC has no effect / model keeps forgetting despite high `ewc_strength`
+
+Only relevant if you bypass `build_donor` / `extend` and drive a raw
+`TrioronNetwork` from your own training loop (joint mode, plain
+SGD/Adam, no task boundaries). The trioron node has three coupled
+state variables `(w, λ, u)`; `λ` is populated only by the
+consolidation cycle:
+
+```python
+layer.update_fisher()        # after .backward(), before optimizer.step()
+layer.update_lambda()        # at task end
+layer.anchor_weights()       # at task end
+```
+
+If your loop skips this cycle, `λ` stays at zero and `ewc_penalty()`
+is mathematically zero regardless of `ewc_strength`. The network
+keeps training and looks healthy but the substrate has silently
+degraded to a regular MLP. As of 0.2.2, `ewc_penalty()` emits a
+one-shot `RuntimeWarning` the first time it sees an all-zero `λ`.
+Sanity-check at the end of training: `layer.lam.max() > 0`.
+
+If your training format doesn't have task boundaries (joint mode,
+classification fine-tuning), call once after training converges,
+before any downstream EWC-protected fine-tuning:
+
+```python
+net.populate_lambda(
+    batches=loader,                       # iterable of (x, y)
+    loss_fn=torch.nn.functional.cross_entropy,
+    n_batches=200,
+    rescale_mean=True,                    # default — see below
+)
+```
+
+This wraps `estimate_fisher → update_lambda_all → anchor_all` and
+clears stale gradients. `rescale_mean=True` (default) normalizes
+each layer's λ to mean 1.0 so `ewc_strength` becomes an
+optimizer-independent stiffness knob — raw Fisher under Adam at
+convergence is tiny (gradients vanish at the optimum), so without
+rescaling callers need `ewc_strength` in the 1e5–1e7 range. Pass
+`rescale_mean=False` to preserve raw Fisher magnitudes.
+
 ---
 
 ## 14. Reference: CLI commands
