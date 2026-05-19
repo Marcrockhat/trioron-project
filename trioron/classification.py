@@ -28,6 +28,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .network import TrioronNetwork
+from .growth_direction import (
+    features_at_growth_point,
+    from_per_class_centroid,
+)
 
 
 @dataclass
@@ -69,12 +73,31 @@ def split_cifar100_tasks(n_tasks: int = 10, classes_per_task: int = 10) -> List[
     return out
 
 
-def extend_output_head(net: TrioronNetwork, n_new_classes: int) -> List[int]:
+def extend_output_head(
+    net: TrioronNetwork,
+    n_new_classes: int,
+    *,
+    init_data: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+    new_class_ids: Optional[Sequence[int]] = None,
+) -> List[int]:
     """Append `n_new_classes` output nodes to the network's last layer.
 
-    Each new node is initialized with the layer's standard kaiming-style
-    init (no init_vec is supplied — classification heads are not
-    PCA-of-residuals seeded; gradient descent finds the new weights).
+    Two init modes:
+
+    1. **Kaiming (default).** When `init_data` is None, each new node
+       gets the layer's standard kaiming-style init — `grow_node`
+       falls back to its default random initializer. Backwards
+       compatible with all 1.0 callsites.
+
+    2. **Per-class centroid (Trioron 2.0 opt-in).** When `init_data`
+       is provided as `(x, y)` and `new_class_ids` lists the class IDs
+       to grow, the head's new rows are initialized to the per-class
+       centroid direction in the head's input space (computed via
+       `growth_direction.from_per_class_centroid`). This gives each
+       new class node a meaningful starting weight pattern — a
+       feature-space direction that distinguishes class-c examples
+       from the population average — instead of random noise.
+
     `task_idx` is left at 0 for these head extensions; the dreaming
     routing-starvation machinery doesn't act on the output layer in any
     bench that runs classification.
@@ -90,9 +113,32 @@ def extend_output_head(net: TrioronNetwork, n_new_classes: int) -> List[int]:
         raise ValueError("net has no layers")
     last_idx = len(net.layers) - 1
     head = net.layers[last_idx]
+
+    init_vecs: Optional[torch.Tensor] = None
+    if init_data is not None:
+        if new_class_ids is None:
+            raise ValueError(
+                "init_data requires new_class_ids "
+                "(the class IDs for the new head rows)"
+            )
+        if len(new_class_ids) != n_new_classes:
+            raise ValueError(
+                f"new_class_ids length {len(new_class_ids)} != "
+                f"n_new_classes {n_new_classes}"
+            )
+        x, y = init_data
+        features = features_at_growth_point(net, x, dest_layer_idx=last_idx)
+        init_vecs = from_per_class_centroid(features, y, new_class_ids)
+    elif new_class_ids is not None:
+        raise ValueError(
+            "new_class_ids passed without init_data — "
+            "centroid init needs both"
+        )
+
     new_indices: List[int] = []
-    for _ in range(n_new_classes):
-        idx = head.grow_node(init_vec=None, task_idx=0)
+    for i in range(n_new_classes):
+        vec = init_vecs[i] if init_vecs is not None else None
+        idx = head.grow_node(init_vec=vec, task_idx=0)
         new_indices.append(idx)
     return new_indices
 

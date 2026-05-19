@@ -14,18 +14,25 @@ to non-contrastive settings, addressing trioron_2_0.md §4 (growth
 signal reuse) and unblocking insert_layer's growth_direction init
 mode.
 
-Three primitives:
+Four primitives:
 
   from_contrastive_pair(net, a, b, dest_layer_idx, k=1)
       The trioron 1.0 mechanism: features f_a and f_b at the input of
       the destination layer, top-K right singular vectors of (f_a - f_b).
 
   from_per_class_scatter(features, labels, k=1)
-      The label-aware non-contrastive generalization. Top-K
-      eigenvectors of the between-class scatter matrix S_B = Σ_c n_c
-      (μ_c - μ)(μ_c - μ)^T. Equals the contrastive primitive's top-1
-      direction (up to sign) when there are exactly two classes with
-      equal counts.
+      The label-aware non-contrastive generalization for INSERT_LAYER
+      and intermediate growth. Top-K eigenvectors of the between-class
+      scatter matrix S_B = Σ_c n_c (μ_c - μ)(μ_c - μ)^T. Equals the
+      contrastive primitive's top-1 direction (up to sign) when there
+      are exactly two classes with equal counts.
+
+  from_per_class_centroid(features, labels, classes)
+      Per-class centroid direction for HEAD growth. For each class c,
+      returns (μ_c - μ_global) / ‖μ_c - μ_global‖ — a one-vs-rest
+      direction telling the new head node what feature pattern marks
+      "this class is present." This is the right signal for
+      extend_output_head: each new class node gets its own direction.
 
   features_at_growth_point(net, x, dest_layer_idx)
       Shared helper: run the forward pass up to (but not including)
@@ -33,12 +40,12 @@ Three primitives:
       features are the inputs that a new node / edge / inserted layer
       at `dest_layer_idx` would read from.
 
-All three return unit-norm vectors (or row-unit matrices for k > 1).
-Caller decides scale (typically via the new node's gain / EWC pull).
+All three direction primitives return unit-norm row vectors. Caller
+decides scale (typically via the new node's gain / EWC pull).
 """
 
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, Sequence
 
 import torch
 
@@ -188,3 +195,62 @@ def from_per_class_scatter(
     top_k = torch.flip(top_k, dims=[0])
     norms = top_k.norm(dim=1, keepdim=True).clamp_min(1e-12)
     return top_k / norms
+
+
+def from_per_class_centroid(
+    features: torch.Tensor,
+    labels: torch.Tensor,
+    classes: Sequence[int],
+) -> torch.Tensor:
+    """One-vs-rest centroid direction per class, for HEAD growth.
+
+    For each class c in `classes`, computes the unit direction
+    (μ_c - μ_global) / ‖μ_c - μ_global‖. This is the direction in
+    feature space that distinguishes class-c examples from the
+    population average — exactly the signal a new head row needs as
+    its initial weight vector: a logit w_c · features is high for
+    feature vectors that look like class c (relative to average).
+
+    Different from `from_per_class_scatter`: that function returns the
+    top-K most discriminative axes overall (LDA-style); this function
+    returns ONE direction per specified class. Use this for head
+    growth where each new output node is a specific new class. Use
+    `from_per_class_scatter` for intermediate-layer growth where new
+    nodes are unlabeled features.
+
+    features: (batch, feat_dim). Features at the new node's input
+        (= head's input). Caller is responsible for computing these
+        via features_at_growth_point().
+    labels: (batch,) integer class IDs.
+    classes: sequence of class IDs to compute directions for. Each
+        must have at least one example in `labels`.
+
+    Returns shape (len(classes), feat_dim), unit-norm rows.
+    """
+    if features.ndim != 2:
+        raise ValueError(
+            f"features must be 2D (batch, feat_dim); got {tuple(features.shape)}"
+        )
+    if labels.ndim != 1 or labels.shape[0] != features.shape[0]:
+        raise ValueError(
+            f"labels shape {tuple(labels.shape)} incompatible with features "
+            f"shape {tuple(features.shape)}"
+        )
+    if len(classes) == 0:
+        raise ValueError("classes must be non-empty")
+
+    f = features.detach().to(torch.float32)
+    mu_global = f.mean(dim=0)
+    rows = []
+    for c in classes:
+        mask = labels == int(c)
+        if not bool(mask.any()):
+            raise ValueError(
+                f"no examples in `labels` for class {c} — "
+                f"can't compute centroid direction"
+            )
+        mu_c = f[mask].mean(dim=0)
+        d = mu_c - mu_global
+        n = d.norm().clamp_min(1e-12)
+        rows.append(d / n)
+    return torch.stack(rows, dim=0)

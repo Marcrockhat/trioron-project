@@ -754,3 +754,122 @@ def test_factor_l0_in_place_state_dict_round_trip():
     dst.load_state_dict(src.state_dict())
     assert torch.allclose(dst.layers[0].W, src.layers[0].W)
     assert (dst.layers[0].input_sources == -1).all()
+
+
+# ---------- Backfill: from_per_class_centroid + extend_output_head ----------
+
+from trioron.growth_direction import from_per_class_centroid
+from trioron.classification import extend_output_head
+
+
+def test_from_per_class_centroid_returns_unit_norm_rows():
+    torch.manual_seed(0)
+    features = torch.randn(60, 8)
+    labels = torch.randint(0, 3, (60,))
+    vecs = from_per_class_centroid(features, labels, classes=[0, 1, 2])
+    assert vecs.shape == (3, 8)
+    norms = vecs.norm(dim=1)
+    assert torch.allclose(norms, torch.ones(3), atol=1e-5)
+
+
+def test_from_per_class_centroid_aligns_with_class_features():
+    """A class whose features cluster around a known direction should
+    yield a centroid direction aligned with that direction."""
+    torch.manual_seed(1)
+    # Class 0 features cluster around e_0; class 1 around e_1.
+    n = 50
+    feats_0 = torch.tensor([1.0, 0.0, 0.0]) + 0.05 * torch.randn(n, 3)
+    feats_1 = torch.tensor([0.0, 1.0, 0.0]) + 0.05 * torch.randn(n, 3)
+    features = torch.cat([feats_0, feats_1], dim=0)
+    labels = torch.cat([torch.zeros(n, dtype=torch.long),
+                        torch.ones(n, dtype=torch.long)])
+    vecs = from_per_class_centroid(features, labels, classes=[0, 1])
+    # Class 0 direction = (μ_0 - μ_global) ≈ (0.5, -0.5, 0). Unit: (0.707, -0.707, 0).
+    # Class 1 direction = (μ_1 - μ_global) ≈ (-0.5, 0.5, 0). Unit: (-0.707, 0.707, 0).
+    # These should be antiparallel.
+    cos = torch.dot(vecs[0], vecs[1])
+    assert cos.item() < -0.99
+
+
+def test_from_per_class_centroid_rejects_missing_class():
+    import pytest
+    features = torch.randn(20, 4)
+    labels = torch.zeros(20, dtype=torch.long)
+    with pytest.raises(ValueError, match="no examples"):
+        from_per_class_centroid(features, labels, classes=[0, 7])
+
+
+def test_from_per_class_centroid_rejects_empty_classes():
+    import pytest
+    features = torch.randn(20, 4)
+    labels = torch.zeros(20, dtype=torch.long)
+    with pytest.raises(ValueError, match="non-empty"):
+        from_per_class_centroid(features, labels, classes=[])
+
+
+def test_extend_output_head_default_kaiming_unchanged():
+    """The default `init_data=None` path must reproduce the 1.0
+    behavior: head extended by n new rows, each with Kaiming init,
+    optimizer rebuild required by caller."""
+    torch.manual_seed(2)
+    net = TrioronNetwork([(8, 4, "relu"), (4, 3, "linear")])
+    pre_n = net.layers[-1].n_nodes
+    new_ids = extend_output_head(net, n_new_classes=2)
+    assert net.layers[-1].n_nodes == pre_n + 2
+    assert new_ids == [pre_n, pre_n + 1]
+
+
+def test_extend_output_head_with_init_data_uses_centroids():
+    """Opt-in path: providing (x, y) + new_class_ids computes per-class
+    centroid directions and seeds the head rows with them."""
+    torch.manual_seed(3)
+    net = TrioronNetwork([(6, 4, "relu"), (4, 3, "linear")])
+    n = 30
+    x = torch.randn(2 * n, 6)
+    # Make the labels' centroid directions easy to verify.
+    y_list = [10] * n + [11] * n
+    y = torch.tensor(y_list, dtype=torch.long)
+
+    pre_n = net.layers[-1].n_nodes
+    new_ids = extend_output_head(
+        net, n_new_classes=2,
+        init_data=(x, y),
+        new_class_ids=[10, 11],
+    )
+    assert new_ids == [pre_n, pre_n + 1]
+
+    # The new rows should equal the per-class centroid directions
+    # (computed at the head's input).
+    features = features_at_growth_point(net, x, dest_layer_idx=1)
+    expected = from_per_class_centroid(features, y, [10, 11])
+    new_rows = net.layers[-1].W.data[pre_n:pre_n + 2]
+    assert torch.allclose(new_rows, expected, atol=1e-6)
+
+
+def test_extend_output_head_init_data_requires_new_class_ids():
+    import pytest
+    net = TrioronNetwork([(6, 4, "relu"), (4, 3, "linear")])
+    x = torch.randn(10, 6)
+    y = torch.zeros(10, dtype=torch.long)
+    with pytest.raises(ValueError, match="requires new_class_ids"):
+        extend_output_head(net, n_new_classes=1, init_data=(x, y))
+
+
+def test_extend_output_head_new_class_ids_requires_init_data():
+    import pytest
+    net = TrioronNetwork([(6, 4, "relu"), (4, 3, "linear")])
+    with pytest.raises(ValueError, match="without init_data"):
+        extend_output_head(net, n_new_classes=1, new_class_ids=[0])
+
+
+def test_extend_output_head_new_class_ids_length_must_match():
+    import pytest
+    net = TrioronNetwork([(6, 4, "relu"), (4, 3, "linear")])
+    x = torch.randn(20, 6)
+    y = torch.tensor([0] * 10 + [1] * 10, dtype=torch.long)
+    with pytest.raises(ValueError, match="!= n_new_classes"):
+        extend_output_head(
+            net, n_new_classes=2,
+            init_data=(x, y),
+            new_class_ids=[0],
+        )
