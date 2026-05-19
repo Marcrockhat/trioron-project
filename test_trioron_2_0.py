@@ -422,10 +422,10 @@ def test_insert_layer_rejects_n_nodes_mismatch_in_v1():
         net.insert_layer(between=(0, 1), n_nodes=8)
 
 
-def test_insert_layer_rejects_growth_direction_init_in_v1():
+def test_insert_layer_growth_direction_requires_init_vecs():
     net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
     import pytest
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError, match="requires init_vecs"):
         net.insert_layer(between=(0, 1), init_mode="growth_direction")
 
 
@@ -435,3 +435,191 @@ def test_insert_layer_default_kept_in_fast_path():
     net = TrioronNetwork([(3, 4, "relu"), (4, 4, "relu"), (4, 2, "linear")])
     net.insert_layer(between=(1, 2), activation="linear")
     assert net._is_sequential_and_unmodulated()
+
+
+# ---------- Phase 3: growth_direction primitives ----------
+
+from trioron.growth_direction import (
+    features_at_growth_point,
+    from_contrastive_pair,
+    from_per_class_scatter,
+)
+
+
+def test_features_at_growth_point_idx_zero_returns_input():
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    x = torch.randn(5, 3)
+    f = features_at_growth_point(net, x, dest_layer_idx=0)
+    assert torch.allclose(f, x)
+
+
+def test_features_at_growth_point_matches_partial_forward():
+    torch.manual_seed(0)
+    net = TrioronNetwork([(3, 4, "relu"), (4, 5, "relu"), (5, 2, "linear")])
+    x = torch.randn(6, 3)
+    f = features_at_growth_point(net, x, dest_layer_idx=2)
+    with torch.no_grad():
+        ref = net.layers[1](net.layers[0](x))
+    assert torch.allclose(f, ref)
+
+
+def test_from_contrastive_pair_returns_unit_norm_rows():
+    torch.manual_seed(1)
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    a = torch.randn(8, 3)
+    b = torch.randn(8, 3)
+    vecs = from_contrastive_pair(net, a, b, dest_layer_idx=1, k=3)
+    assert vecs.shape == (3, 4)
+    norms = vecs.norm(dim=1)
+    assert torch.allclose(norms, torch.ones(3), atol=1e-5)
+
+
+def test_from_contrastive_pair_k1_matches_legacy_recipe():
+    """Verify the canonical version matches the residual-SVD formula
+    `top right singular vector of (f_a - f_b)` that lived inline in
+    bench_packnet / bench_step8 / bench_harder / bench_50task."""
+    torch.manual_seed(2)
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    a = torch.randn(6, 3)
+    b = torch.randn(6, 3)
+    v_canonical = from_contrastive_pair(net, a, b, dest_layer_idx=1, k=1)[0]
+    # Legacy recipe:
+    with torch.no_grad():
+        f_a = net.layers[0](a)
+        f_b = net.layers[0](b)
+        D = (f_a - f_b).to(torch.float32)
+    _, _, Vh = torch.linalg.svd(D, full_matrices=False)
+    v_legacy = Vh[0]
+    # SVD top vector is unique up to sign — compare absolute cosine.
+    cos = torch.dot(v_canonical, v_legacy).abs()
+    assert cos.item() > 1 - 1e-5
+
+
+def test_from_per_class_scatter_separates_synthetic_clusters():
+    """Build three obvious class clusters along orthogonal axes; the
+    top-3 LDA directions should align with the cluster-separating axes."""
+    torch.manual_seed(3)
+    # 3 classes, 6-dim features. Class c has its mean at e_c (one-hot).
+    n_per_class = 50
+    feats: list[torch.Tensor] = []
+    labs: list[torch.Tensor] = []
+    for c in range(3):
+        mu = torch.zeros(6)
+        mu[c] = 4.0
+        x = mu + 0.1 * torch.randn(n_per_class, 6)
+        feats.append(x)
+        labs.append(torch.full((n_per_class,), c, dtype=torch.long))
+    features = torch.cat(feats, dim=0)
+    labels = torch.cat(labs, dim=0)
+    vecs = from_per_class_scatter(features, labels, k=2)
+    assert vecs.shape == (2, 6)
+    # Top-2 directions should live in the span of {e_0, e_1, e_2}.
+    span_mass = vecs[:, :3].pow(2).sum(dim=1)
+    assert (span_mass > 0.95).all(), f"{span_mass.tolist()}"
+
+
+def test_from_per_class_scatter_two_class_equal_count_matches_contrastive_top1():
+    """The equivalence theorem: with exactly two classes of equal count,
+    the top-1 between-class direction matches (up to sign) the
+    contrastive `μ_a - μ_b` direction."""
+    torch.manual_seed(4)
+    n = 40
+    feat_dim = 5
+    mu_a = torch.randn(feat_dim)
+    mu_b = torch.randn(feat_dim)
+    a = mu_a + 0.05 * torch.randn(n, feat_dim)
+    b = mu_b + 0.05 * torch.randn(n, feat_dim)
+    features = torch.cat([a, b], dim=0)
+    labels = torch.cat([
+        torch.zeros(n, dtype=torch.long),
+        torch.ones(n, dtype=torch.long),
+    ])
+    v_lda = from_per_class_scatter(features, labels, k=1)[0]
+    v_contrast = mu_a - mu_b
+    v_contrast = v_contrast / v_contrast.norm()
+    cos = torch.dot(v_lda, v_contrast).abs()
+    assert cos.item() > 0.99
+
+
+def test_from_per_class_scatter_requires_two_classes():
+    import pytest
+    features = torch.randn(10, 4)
+    labels = torch.zeros(10, dtype=torch.long)
+    with pytest.raises(ValueError, match="needs >= 2 classes"):
+        from_per_class_scatter(features, labels, k=1)
+
+
+def test_from_per_class_scatter_rejects_k_too_large():
+    import pytest
+    features = torch.randn(10, 4)
+    labels = torch.tensor([0] * 5 + [1] * 5)
+    with pytest.raises(ValueError, match="k=5"):
+        from_per_class_scatter(features, labels, k=5)
+
+
+# ---------- Phase 3: insert_layer with growth_direction init ----------
+
+def test_insert_layer_growth_direction_uses_init_vecs():
+    torch.manual_seed(5)
+    net = TrioronNetwork([(3, 4, "relu"), (4, 4, "linear")])
+    init_vecs = torch.randn(4, 4)
+    init_vecs = init_vecs / init_vecs.norm(dim=1, keepdim=True)
+    new_idx = net.insert_layer(
+        between=(0, 1),
+        activation="linear",
+        init_mode="growth_direction",
+        init_vecs=init_vecs,
+    )
+    new_layer = net.layers[new_idx]
+    assert torch.allclose(new_layer.W.data, init_vecs)
+    assert torch.allclose(new_layer.W_anchor, init_vecs)
+    assert torch.allclose(new_layer.b.data, torch.zeros(4))
+
+
+def test_insert_layer_identity_rejects_init_vecs():
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    import pytest
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        net.insert_layer(
+            between=(0, 1),
+            init_mode="identity",
+            init_vecs=torch.eye(4),
+        )
+
+
+def test_insert_layer_init_vecs_shape_validated():
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    import pytest
+    with pytest.raises(ValueError, match="shape"):
+        net.insert_layer(
+            between=(0, 1),
+            init_mode="growth_direction",
+            init_vecs=torch.eye(3),  # wrong shape: should be (4, 4)
+        )
+
+
+def test_insert_layer_growth_direction_end_to_end_with_per_class_scatter():
+    """Compose: features_at_growth_point -> from_per_class_scatter ->
+    insert_layer. Verifies the whole stack composes correctly."""
+    torch.manual_seed(6)
+    net = TrioronNetwork([(3, 4, "relu"), (4, 4, "relu"), (4, 2, "linear")])
+    n = 30
+    x = torch.randn(2 * n, 3)
+    y = torch.cat([torch.zeros(n, dtype=torch.long),
+                   torch.ones(n, dtype=torch.long)])
+
+    features = features_at_growth_point(net, x, dest_layer_idx=1)
+    init_vecs = from_per_class_scatter(features, y, k=4)
+    assert init_vecs.shape == (4, 4)
+
+    new_idx = net.insert_layer(
+        between=(0, 1),
+        activation="relu",
+        init_mode="growth_direction",
+        init_vecs=init_vecs,
+    )
+    # The new layer's W matches what we passed in (cast to W dtype).
+    assert torch.allclose(net.layers[new_idx].W.data, init_vecs, atol=1e-6)
+    # Forward still works.
+    out = net(x)
+    assert out.shape == (2 * n, 2)

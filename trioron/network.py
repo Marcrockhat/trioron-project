@@ -479,6 +479,7 @@ class TrioronNetwork(nn.Module):
         n_nodes: Optional[int] = None,
         activation: str = "linear",
         init_mode: str = "identity",
+        init_vecs: Optional[torch.Tensor] = None,
     ) -> int:
         """Insert a new TrioronLayer between layers i and j (Trioron 2.0
         axis 3: depth growth).
@@ -503,13 +504,20 @@ class TrioronNetwork(nn.Module):
           "identity"          W = I, b = 0. Net2Net-style identity
                               preservation. With activation="linear"
                               the network's function is unchanged at
-                              insertion.
-          "growth_direction"  Initialize from the localized growth
-                              direction (top-K right singular vectors
-                              of the residual at the insertion point).
-                              Phase 3; raises NotImplementedError in
-                              v1 (the non-contrastive growth signal
-                              isn't wired yet).
+                              insertion. `init_vecs` must be None.
+          "growth_direction"  W is set row-by-row from `init_vecs`,
+                              the top-K right singular vectors of the
+                              residual at the insertion point.
+                              Compute via
+                              trioron.growth_direction.from_per_class_scatter
+                              or .from_contrastive_pair and pass the
+                              result as init_vecs (shape (n_nodes,
+                              fan_in)). b stays zero.
+
+        init_vecs: shape (n_nodes, prev_layer.n_nodes). Required when
+            init_mode="growth_direction". Each row becomes one new
+            node's incoming weight vector. Rows are typically unit-norm
+            (caller is responsible).
 
         Returns the new layer's index (== j).
 
@@ -537,16 +545,30 @@ class TrioronNetwork(nn.Module):
                 f"({prev_layer.n_nodes}); got {target_n}. Different widths "
                 f"need downstream fan_in resize, deferred to a later phase."
             )
-        if init_mode == "growth_direction":
-            raise NotImplementedError(
-                "init_mode='growth_direction' depends on the non-contrastive "
-                "growth signal landing in Phase 3. Use 'identity' for now."
-            )
-        if init_mode != "identity":
+        if init_mode not in ("identity", "growth_direction"):
             raise ValueError(
-                f"init_mode '{init_mode}' not recognized. Phase 2 v1 supports "
-                f"'identity' only; 'growth_direction' lands in Phase 3."
+                f"init_mode '{init_mode}' not recognized. Supported: "
+                f"'identity', 'growth_direction'."
             )
+        if init_mode == "identity" and init_vecs is not None:
+            raise ValueError(
+                "init_mode='identity' is mutually exclusive with init_vecs; "
+                "pass init_mode='growth_direction' to use provided vectors."
+            )
+        if init_mode == "growth_direction" and init_vecs is None:
+            raise ValueError(
+                "init_mode='growth_direction' requires init_vecs (shape "
+                "(n_nodes, prev_layer.n_nodes)); use "
+                "trioron.growth_direction.from_per_class_scatter or "
+                ".from_contrastive_pair to compute them."
+            )
+        if init_vecs is not None:
+            expected = (target_n, prev_layer.n_nodes)
+            if tuple(init_vecs.shape) != expected:
+                raise ValueError(
+                    f"init_vecs shape {tuple(init_vecs.shape)} != "
+                    f"expected {expected}"
+                )
 
         device = prev_layer.W.device
         new_layer = TrioronLayer(
@@ -555,16 +577,21 @@ class TrioronNetwork(nn.Module):
             activation=activation,
         ).to(device)
 
-        # Identity init: W = I, b = 0. Anchors snapshot the init so EWC
+        # Initialize W per init_mode. Anchors snapshot the init so EWC
         # has a clean baseline to drag back toward. fisher_W stays zero.
         with torch.no_grad():
-            eye = torch.eye(
-                target_n, prev_layer.n_nodes,
-                dtype=prev_layer.W.dtype, device=device,
-            )
-            new_layer.W.data.copy_(eye)
+            if init_mode == "identity":
+                W_init = torch.eye(
+                    target_n, prev_layer.n_nodes,
+                    dtype=prev_layer.W.dtype, device=device,
+                )
+            else:  # growth_direction
+                W_init = init_vecs.detach().to(
+                    dtype=prev_layer.W.dtype, device=device,
+                )
+            new_layer.W.data.copy_(W_init)
             new_layer.b.data.zero_()
-            new_layer.W_anchor.copy_(eye.to(new_layer.W_anchor.dtype))
+            new_layer.W_anchor.copy_(W_init.to(new_layer.W_anchor.dtype))
             new_layer.b_anchor.zero_()
 
         self.layers.insert(j, new_layer)
