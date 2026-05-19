@@ -473,6 +473,103 @@ class TrioronNetwork(nn.Module):
 
         return new_idx
 
+    def insert_layer(
+        self,
+        between: Tuple[int, int],
+        n_nodes: Optional[int] = None,
+        activation: str = "linear",
+        init_mode: str = "identity",
+    ) -> int:
+        """Insert a new TrioronLayer between layers i and j (Trioron 2.0
+        axis 3: depth growth).
+
+        between: (i, j) pair where j == i + 1 in the current topology.
+            The new layer is placed at position j; the old layer j
+            shifts to j+1, and so on.
+
+        n_nodes: width of the new layer. For Phase 2 v1, must equal
+            `layers[i].n_nodes` so that the downstream layer's sentinel
+            input columns continue to match by position. Defaults to
+            `layers[i].n_nodes`. Different widths are out of scope for
+            v1 (would require resizing the downstream layer's fan_in).
+
+        activation: activation of the new layer. Default "linear" — when
+            combined with init_mode="identity", the post-insertion
+            forward is byte-identical to pre-insertion. Caller can pick
+            "relu" / "tanh" to materialize a genuine new nonlinear
+            stage (the pseudo-block claim).
+
+        init_mode:
+          "identity"          W = I, b = 0. Net2Net-style identity
+                              preservation. With activation="linear"
+                              the network's function is unchanged at
+                              insertion.
+          "growth_direction"  Initialize from the localized growth
+                              direction (top-K right singular vectors
+                              of the residual at the insertion point).
+                              Phase 3; raises NotImplementedError in
+                              v1 (the non-contrastive growth signal
+                              isn't wired yet).
+
+        Returns the new layer's index (== j).
+
+        Caveat: any optimizer holding references to this network's
+        parameters MUST be rebuilt. Indices of layers > j shift by 1;
+        callers that hold layer indices (e.g., `target_idx =
+        len(net.layers) - 1` for the head) should re-resolve.
+        """
+        i, j = between
+        if j != i + 1:
+            raise ValueError(
+                f"insert_layer expects between=(i, i+1); got ({i}, {j})"
+            )
+        if not (0 <= i < len(self.layers) - 1):
+            raise IndexError(
+                f"insert_layer i={i} out of range "
+                f"[0, {len(self.layers) - 1})"
+            )
+
+        prev_layer = self.layers[i]
+        target_n = prev_layer.n_nodes if n_nodes is None else int(n_nodes)
+        if target_n != prev_layer.n_nodes:
+            raise NotImplementedError(
+                f"insert_layer v1 requires n_nodes == layers[i].n_nodes "
+                f"({prev_layer.n_nodes}); got {target_n}. Different widths "
+                f"need downstream fan_in resize, deferred to a later phase."
+            )
+        if init_mode == "growth_direction":
+            raise NotImplementedError(
+                "init_mode='growth_direction' depends on the non-contrastive "
+                "growth signal landing in Phase 3. Use 'identity' for now."
+            )
+        if init_mode != "identity":
+            raise ValueError(
+                f"init_mode '{init_mode}' not recognized. Phase 2 v1 supports "
+                f"'identity' only; 'growth_direction' lands in Phase 3."
+            )
+
+        device = prev_layer.W.device
+        new_layer = TrioronLayer(
+            fan_in=prev_layer.n_nodes,
+            n_nodes=target_n,
+            activation=activation,
+        ).to(device)
+
+        # Identity init: W = I, b = 0. Anchors snapshot the init so EWC
+        # has a clean baseline to drag back toward. fisher_W stays zero.
+        with torch.no_grad():
+            eye = torch.eye(
+                target_n, prev_layer.n_nodes,
+                dtype=prev_layer.W.dtype, device=device,
+            )
+            new_layer.W.data.copy_(eye)
+            new_layer.b.data.zero_()
+            new_layer.W_anchor.copy_(eye.to(new_layer.W_anchor.dtype))
+            new_layer.b_anchor.zero_()
+
+        self.layers.insert(j, new_layer)
+        return j
+
     def prune_layer_node(
         self,
         layer_idx: int,

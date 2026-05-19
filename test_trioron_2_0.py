@@ -299,3 +299,139 @@ def test_archive_input_masks_long_range_gradient():
 
     # The archived column's gradient must be exactly zero.
     assert net.layers[2].W.grad[:, -1].abs().sum().item() == 0.0
+
+
+# ---------- Phase 2: insert_layer (depth growth) ----------
+
+def test_insert_layer_returns_new_index():
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "relu"), (3, 2, "linear")])
+    new_idx = net.insert_layer(between=(0, 1))
+    assert new_idx == 1
+
+
+def test_insert_layer_grows_module_list():
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "relu"), (3, 2, "linear")])
+    assert len(net.layers) == 3
+    net.insert_layer(between=(1, 2))
+    assert len(net.layers) == 4
+
+
+def test_insert_layer_W_is_identity_and_b_is_zero():
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "relu"), (3, 2, "linear")])
+    new_idx = net.insert_layer(between=(0, 1))
+    new_layer = net.layers[new_idx]
+    assert torch.allclose(new_layer.W.data, torch.eye(5, 5))
+    assert torch.allclose(new_layer.b.data, torch.zeros(5))
+    # Anchors snapshot the init too.
+    assert torch.allclose(new_layer.W_anchor, torch.eye(5, 5))
+    assert torch.allclose(new_layer.b_anchor, torch.zeros(5))
+
+
+def test_insert_layer_identity_linear_forward_byte_identical():
+    """The headline acceptance test: identity init + linear activation
+    leaves net.forward(x) byte-identical to pre-insertion."""
+    torch.manual_seed(0)
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "relu"), (3, 2, "linear")])
+    x = torch.randn(8, 4)
+    y_pre = net(x)
+    net.insert_layer(between=(0, 1), activation="linear", init_mode="identity")
+    y_post = net(x)
+    assert torch.allclose(y_pre, y_post, atol=1e-6)
+
+
+def test_insert_layer_at_each_valid_slot_preserves_forward():
+    torch.manual_seed(1)
+    base = TrioronNetwork([(3, 4, "relu"), (4, 4, "relu"), (4, 2, "linear")])
+    x = torch.randn(5, 3)
+    y_pre = base(x)
+    # Insert at each valid (i, i+1).
+    for slot in (0, 1):
+        net = TrioronNetwork([(3, 4, "relu"), (4, 4, "relu"), (4, 2, "linear")])
+        with torch.no_grad():
+            for k in range(3):
+                net.layers[k].W.copy_(base.layers[k].W)
+                net.layers[k].b.copy_(base.layers[k].b)
+        net.insert_layer(between=(slot, slot + 1), activation="linear")
+        y_post = net(x)
+        assert torch.allclose(y_pre, y_post, atol=1e-6), f"slot {slot}"
+
+
+def test_insert_layer_relu_activation_changes_forward():
+    """With activation='relu' on the inserted identity layer, the
+    forward changes (relu clips negative pre-activations) — so the
+    inserted layer is functionally distinct, not just a pass-through."""
+    torch.manual_seed(2)
+    net = TrioronNetwork([(3, 4, "linear"), (4, 2, "linear")])
+    # Force layer 0 to emit some negatives.
+    with torch.no_grad():
+        net.layers[0].W.copy_(torch.randn(4, 3) * 2.0)
+        net.layers[0].b.copy_(torch.randn(4) * 0.5)
+    x = torch.randn(6, 3)
+    y_pre = net(x)
+    net.insert_layer(between=(0, 1), activation="relu", init_mode="identity")
+    y_post = net(x)
+    # Identity W + relu activation clips any layer-0 output column that
+    # ever went negative on this batch. Outputs must therefore differ.
+    assert not torch.allclose(y_pre, y_post)
+
+
+def test_insert_layer_gradient_flows_through_new_layer():
+    """Backward through an inserted layer must populate its W.grad."""
+    torch.manual_seed(3)
+    net = TrioronNetwork([(3, 4, "relu"), (4, 4, "relu"), (4, 2, "linear")])
+    new_idx = net.insert_layer(between=(0, 1), activation="relu")
+    x = torch.randn(5, 3)
+    target = torch.randn(5, 2)
+    F.mse_loss(net(x), target).backward()
+    assert net.layers[new_idx].W.grad is not None
+    assert net.layers[new_idx].W.grad.abs().sum().item() > 0.0
+
+
+def test_insert_layer_then_grow_node_extends_inserted_layer():
+    """After insertion, the new layer supports grow_node like any other.
+    Growing a node also requires extending the downstream layer's fan_in."""
+    net = TrioronNetwork([(3, 4, "relu"), (4, 4, "relu"), (4, 2, "linear")])
+    new_idx = net.insert_layer(between=(0, 1), activation="relu")
+    pre_n = net.layers[new_idx].n_nodes
+    pre_fan = net.layers[new_idx + 1].fan_in
+    net.grow_layer(new_idx)
+    assert net.layers[new_idx].n_nodes == pre_n + 1
+    assert net.layers[new_idx + 1].fan_in == pre_fan + 1
+
+
+def test_insert_layer_rejects_non_adjacent_between():
+    net = TrioronNetwork([(3, 4, "relu"), (4, 4, "relu"), (4, 2, "linear")])
+    import pytest
+    with pytest.raises(ValueError):
+        net.insert_layer(between=(0, 2))
+
+
+def test_insert_layer_rejects_out_of_range_i():
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    import pytest
+    # i must be in [0, len-1). Inserting at the very end (between=(1, 2))
+    # would push past the network's tail — not supported in v1.
+    with pytest.raises(IndexError):
+        net.insert_layer(between=(1, 2))
+
+
+def test_insert_layer_rejects_n_nodes_mismatch_in_v1():
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    import pytest
+    with pytest.raises(NotImplementedError):
+        net.insert_layer(between=(0, 1), n_nodes=8)
+
+
+def test_insert_layer_rejects_growth_direction_init_in_v1():
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    import pytest
+    with pytest.raises(NotImplementedError):
+        net.insert_layer(between=(0, 1), init_mode="growth_direction")
+
+
+def test_insert_layer_default_kept_in_fast_path():
+    """An inserted layer with all-sentinel input_sources and default
+    axonal_gain stays on the network's fast path."""
+    net = TrioronNetwork([(3, 4, "relu"), (4, 4, "relu"), (4, 2, "linear")])
+    net.insert_layer(between=(1, 2), activation="linear")
+    assert net._is_sequential_and_unmodulated()
