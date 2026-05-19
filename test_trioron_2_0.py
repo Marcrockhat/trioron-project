@@ -623,3 +623,89 @@ def test_insert_layer_growth_direction_end_to_end_with_per_class_scatter():
     # Forward still works.
     out = net(x)
     assert out.shape == (2 * n, 2)
+
+
+# ---------- Phase 4: state-dict back-compat ----------
+
+_TRIORON_2_0_KEYS = (
+    "input_sources",
+    "input_archived",
+    "axonal_gain",
+    "axonal_gain_anchor",
+)
+
+
+def _legacy_state_dict(sd: dict, prefix: str = "") -> dict:
+    """Return a copy of sd with all Trioron 2.0 buffer keys stripped —
+    simulates a pre-Phase-1 donor checkpoint."""
+    out = {}
+    for k, v in sd.items():
+        if any(k.endswith(prefix + b) for b in _TRIORON_2_0_KEYS):
+            continue
+        out[k] = v
+    return out
+
+
+def test_legacy_layer_state_dict_loads_with_defaults():
+    """A TrioronLayer state_dict stripped of Phase 1 keys (simulating a
+    pre-2.0 donor) must load via strict=True without raising, with the
+    new buffers defaulted to their construction values."""
+    src = TrioronLayer(fan_in=5, n_nodes=4, activation="relu")
+    legacy = _legacy_state_dict(src.state_dict())
+    # Verify the legacy dict really is missing the new keys.
+    for k in _TRIORON_2_0_KEYS:
+        assert k not in legacy
+
+    dst = TrioronLayer(fan_in=5, n_nodes=4, activation="relu")
+    dst.load_state_dict(legacy)  # strict=True by default
+    # New buffers defaulted.
+    assert (dst.input_sources == -1).all()
+    assert not dst.input_archived.any()
+    assert torch.allclose(dst.axonal_gain, torch.ones(4))
+    assert torch.allclose(dst.axonal_gain_anchor, torch.ones(4))
+
+
+def test_legacy_layer_forward_matches_after_load():
+    """Forward of a layer loaded from a legacy state_dict (new buffers
+    defaulted) must match the source layer's forward at the same x."""
+    torch.manual_seed(0)
+    src = TrioronLayer(fan_in=5, n_nodes=4, activation="relu")
+    legacy = _legacy_state_dict(src.state_dict())
+    dst = TrioronLayer(fan_in=5, n_nodes=4, activation="relu")
+    dst.load_state_dict(legacy)
+    x = torch.randn(3, 5)
+    assert torch.allclose(src(x), dst(x), atol=1e-6)
+
+
+def test_legacy_network_state_dict_loads_with_defaults():
+    """A TrioronNetwork state_dict stripped of Phase 1 keys must load
+    cleanly and the network must run on the fast path (= sequential
+    default behavior)."""
+    src = TrioronNetwork([(4, 5, "relu"), (5, 3, "relu"), (3, 2, "linear")])
+    legacy = _legacy_state_dict(src.state_dict())
+    dst = TrioronNetwork([(4, 5, "relu"), (5, 3, "relu"), (3, 2, "linear")])
+    dst.load_state_dict(legacy)
+    assert dst._is_sequential_and_unmodulated()
+    x = torch.randn(7, 4)
+    assert torch.allclose(src(x), dst(x), atol=1e-6)
+
+
+def test_modern_layer_state_dict_round_trip_preserves_2_0_state():
+    """A non-default 2.0 state (long-range edge, archived column,
+    modulated gain) must round-trip cleanly through state_dict."""
+    src = TrioronLayer(fan_in=4, n_nodes=3, activation="relu")
+    src.grow_input(init_col=torch.randn(3), source=(0, 1))
+    src.archive_input(2)
+    src.set_axonal_gain(torch.tensor([0.5, 1.0, 2.0]))
+    src.anchor_weights()  # axonal_gain_anchor now != 1.0 for nodes 0, 2
+
+    sd = src.state_dict()
+    dst = TrioronLayer(fan_in=4, n_nodes=3, activation="relu")
+    # grow_input on dst to match the source's fan_in == 5 after the grow.
+    dst.grow_input(init_col=torch.zeros(3), source=(0, 1))
+    dst.load_state_dict(sd)
+
+    assert torch.equal(dst.input_sources, src.input_sources)
+    assert torch.equal(dst.input_archived, src.input_archived)
+    assert torch.allclose(dst.axonal_gain, src.axonal_gain)
+    assert torch.allclose(dst.axonal_gain_anchor, src.axonal_gain_anchor)

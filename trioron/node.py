@@ -884,6 +884,49 @@ class TrioronLayer(nn.Module):
             del self._buffers[name]
         self.register_buffer(name, new_tensor)
 
+    # ----- state-dict back-compat (Trioron 2.0 Phase 4) -----
+
+    # New buffers introduced in Trioron 2.0 Phase 1. Pre-2.0 donor
+    # checkpoints don't have these keys; in strict-mode load_state_dict
+    # the missing keys would raise. We override _load_from_state_dict
+    # to inject the layer's current default value for any 2.0 key not
+    # present in the incoming state_dict — preserving back-compat with
+    # the entire pre-2.0 shipped-donor zoo.
+    _TRIORON_2_0_BUFFERS = (
+        "input_sources",
+        "input_archived",
+        "axonal_gain",
+        "axonal_gain_anchor",
+    )
+
+    def _load_from_state_dict(
+        self,
+        state_dict,
+        prefix,
+        local_metadata,
+        strict,
+        missing_keys,
+        unexpected_keys,
+        error_msgs,
+    ):
+        # Inject defaults for any 2.0 buffer the incoming state_dict
+        # doesn't carry. The layer was constructed with current 2.0
+        # defaults; we just push them into the dict so PyTorch's
+        # strict-mode load doesn't trip on missing keys.
+        for buf_name in self._TRIORON_2_0_BUFFERS:
+            full_key = prefix + buf_name
+            if full_key not in state_dict:
+                state_dict[full_key] = getattr(self, buf_name).clone()
+        return super()._load_from_state_dict(
+            state_dict,
+            prefix,
+            local_metadata,
+            strict,
+            missing_keys,
+            unexpected_keys,
+            error_msgs,
+        )
+
     def __repr__(self) -> str:
         return (
             f"TrioronLayer(fan_in={self.fan_in}, n_nodes={self.n_nodes}, "
