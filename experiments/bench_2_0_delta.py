@@ -168,6 +168,29 @@ def apply_intervention(net, arm: str, x_b: torch.Tensor, y_b: torch.Tensor):
             between=(0, 1), activation="relu", init_mode="identity",
         )
         return
+    if arm == "insert_layer_n2_identity":
+        # 2.0 axis 3 with n_nodes=2 (narrower than prev_layer's 4)
+        # and identity init. The relaxed insert_layer shrinks
+        # next_layer.fan_in to 2 by pruning the two lowest-Fisher
+        # columns. Total network params ≈ 55 (vs 58 grow_node),
+        # closest param-match to the 1.0 control. Identity init
+        # only partially preserves Task A — the dropped L1 columns
+        # are gone.
+        net.insert_layer(
+            between=(0, 1), n_nodes=2, activation="relu",
+            init_mode="identity",
+        )
+        return
+    if arm == "insert_layer_n1_identity":
+        # 2.0 axis 3 with n_nodes=1 (severe bottleneck). next_layer
+        # shrinks to fan_in=1, dropping 3 of 4 trained Task-A columns.
+        # Total network params ≈ 47 (less than baseline). Expected
+        # to collapse Task A retention.
+        net.insert_layer(
+            between=(0, 1), n_nodes=1, activation="relu",
+            init_mode="identity",
+        )
+        return
     raise ValueError(f"unknown arm {arm}")
 
 
@@ -208,7 +231,8 @@ def main():
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     arms = ("baseline", "grow_node", "long_range",
-            "insert_layer_growth", "insert_layer_identity")
+            "insert_layer_growth", "insert_layer_identity",
+            "insert_layer_n2_identity", "insert_layer_n1_identity")
     rows: list[dict] = []
 
     t0 = time.time()
@@ -254,7 +278,8 @@ def main():
     print("\n--- 2.0 vs grow_node (Δ mean) ---")
     grow_node_means = {k: statistics.mean(r[k] for r in rows if r["arm"] == "grow_node")
                        for k in ("acc_b", "forgetting", "avg_final")}
-    for arm in ("long_range", "insert_layer_growth", "insert_layer_identity"):
+    for arm in ("long_range", "insert_layer_growth", "insert_layer_identity",
+                "insert_layer_n2_identity", "insert_layer_n1_identity"):
         arm_means = {k: statistics.mean(r[k] for r in rows if r["arm"] == arm)
                      for k in ("acc_b", "forgetting", "avg_final")}
         print(

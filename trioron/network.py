@@ -488,11 +488,16 @@ class TrioronNetwork(nn.Module):
             The new layer is placed at position j; the old layer j
             shifts to j+1, and so on.
 
-        n_nodes: width of the new layer. For Phase 2 v1, must equal
-            `layers[i].n_nodes` so that the downstream layer's sentinel
-            input columns continue to match by position. Defaults to
-            `layers[i].n_nodes`. Different widths are out of scope for
-            v1 (would require resizing the downstream layer's fan_in).
+        n_nodes: width of the new layer. Defaults to
+            `layers[i].n_nodes`. Different widths are supported: the
+            downstream layer's fan_in is automatically resized.
+            Shrinking: prunes the lowest-Fisher columns of layers[j]
+            (least load-bearing weights for the consolidated task,
+            minimizing prior-task retention damage). Growing: appends
+            zero-init sentinel columns. Note that shrinking is
+            destructive — it drops columns of layers[j] that may
+            carry trained signal; identity-init preservation only
+            holds when n_nodes == layers[i].n_nodes.
 
         activation: activation of the new layer. Default "linear" — when
             combined with init_mode="identity", the post-insertion
@@ -538,13 +543,39 @@ class TrioronNetwork(nn.Module):
             )
 
         prev_layer = self.layers[i]
+        next_layer = self.layers[j]
         target_n = prev_layer.n_nodes if n_nodes is None else int(n_nodes)
-        if target_n != prev_layer.n_nodes:
-            raise NotImplementedError(
-                f"insert_layer v1 requires n_nodes == layers[i].n_nodes "
-                f"({prev_layer.n_nodes}); got {target_n}. Different widths "
-                f"need downstream fan_in resize, deferred to a later phase."
-            )
+        if target_n < 1:
+            raise ValueError(f"n_nodes must be >= 1, got {target_n}")
+        # Downstream fan_in must equal the new layer's n_nodes so
+        # next_layer's sentinel columns still match by position. When
+        # they differ, resize next_layer: shrink by pruning the
+        # lowest-Fisher columns (smallest impact on prior-task
+        # retention); grow by appending zero-init sentinel columns.
+        delta = target_n - next_layer.fan_in
+        if delta < 0:
+            # Shrink: drop |delta| columns. Pick the lowest-Fisher
+            # columns (sum across rows) — Fisher measures per-weight
+            # importance for the consolidated task, so the columns
+            # with the least Fisher mass were the least load-bearing.
+            n_to_drop = -delta
+            if n_to_drop >= next_layer.fan_in:
+                raise ValueError(
+                    f"insert_layer cannot shrink next_layer.fan_in to "
+                    f"{target_n} (drops {n_to_drop} of "
+                    f"{next_layer.fan_in} columns; minimum 1 must remain)"
+                )
+            with torch.no_grad():
+                col_fisher = next_layer.fisher_W.sum(dim=0)  # (fan_in,)
+                # Argsort ascending: lowest Fisher first.
+                drop_order = torch.argsort(col_fisher).tolist()
+                drop_cols = sorted(drop_order[:n_to_drop], reverse=True)
+            for col_idx in drop_cols:
+                next_layer.prune_input(col_idx)
+        elif delta > 0:
+            # Grow: append zero-init sentinel columns.
+            for _ in range(delta):
+                next_layer.grow_input(init_col=None)
         if init_mode not in ("identity", "growth_direction"):
             raise ValueError(
                 f"init_mode '{init_mode}' not recognized. Supported: "

@@ -415,11 +415,61 @@ def test_insert_layer_rejects_out_of_range_i():
         net.insert_layer(between=(1, 2))
 
 
-def test_insert_layer_rejects_n_nodes_mismatch_in_v1():
+def test_insert_layer_shrinks_next_layer_fan_in():
+    """n_nodes < prev_layer.n_nodes: next_layer's fan_in is shrunk
+    to match by pruning the lowest-Fisher columns."""
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    # Populate Fisher on next_layer so the pruner has signal to use.
+    # Column 0 will get the highest Fisher; column 3 the lowest.
+    with torch.no_grad():
+        net.layers[1].fisher_W.copy_(
+            torch.tensor([[4.0, 3.0, 2.0, 1.0],
+                          [4.0, 3.0, 2.0, 1.0]])
+        )
+    # Save the original W of next_layer to verify the right columns survive.
+    W_pre = net.layers[1].W.data.clone()
+    new_idx = net.insert_layer(between=(0, 1), n_nodes=2)
+    # New layer at index 1, next_layer at index 2 with fan_in shrunk to 2.
+    assert net.layers[new_idx].n_nodes == 2
+    assert net.layers[2].fan_in == 2
+    # The two columns with highest Fisher (0 and 1) should be preserved.
+    assert torch.allclose(net.layers[2].W.data, W_pre[:, [0, 1]])
+
+
+def test_insert_layer_grows_next_layer_fan_in():
+    """n_nodes > prev_layer.n_nodes: next_layer's fan_in is grown
+    by appending zero-init sentinel columns."""
+    net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
+    W_pre = net.layers[1].W.data.clone()
+    new_idx = net.insert_layer(between=(0, 1), n_nodes=6)
+    assert net.layers[new_idx].n_nodes == 6
+    assert net.layers[2].fan_in == 6
+    # Original 4 columns preserved at the front; appended 2 columns are zero.
+    assert torch.allclose(net.layers[2].W.data[:, :4], W_pre)
+    assert torch.allclose(net.layers[2].W.data[:, 4:], torch.zeros(2, 2))
+
+
+def test_insert_layer_n_nodes_min_one():
     net = TrioronNetwork([(3, 4, "relu"), (4, 2, "linear")])
     import pytest
-    with pytest.raises(NotImplementedError):
-        net.insert_layer(between=(0, 1), n_nodes=8)
+    with pytest.raises(ValueError, match="n_nodes must be >= 1"):
+        net.insert_layer(between=(0, 1), n_nodes=0)
+
+
+def test_insert_layer_cannot_shrink_below_one_column():
+    """Pruning to fan_in=0 would zero next_layer's input entirely; refuse."""
+    # next_layer has fan_in=1 here; trying to insert n_nodes=... would
+    # try to drop the only column. We need a setup where the shrink
+    # would leave 0 columns.
+    net = TrioronNetwork([(3, 1, "relu"), (1, 2, "linear")])
+    # prev_layer.n_nodes = 1, next_layer.fan_in = 1. To shrink to fan_in=0
+    # we'd need n_nodes=0, which the >=1 check already blocks. The
+    # multi-column case: prev_layer wider than 1, ask for n_nodes that
+    # leaves next at 0 columns — same as above, blocked at n_nodes < 1.
+    # Verify the >=1 check is the gate:
+    import pytest
+    with pytest.raises(ValueError, match="n_nodes must be >= 1"):
+        net.insert_layer(between=(0, 1), n_nodes=0)
 
 
 def test_insert_layer_growth_direction_requires_init_vecs():
