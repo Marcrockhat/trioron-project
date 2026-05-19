@@ -141,16 +141,15 @@ def consolidate_task(net, train_cur, pair_name):
 
 
 def compute_growth_direction(net, train_cur, pair_name, batch=128):
-    with torch.no_grad():
-        a, b = train_cur.sample_pair(pair_name, batch=batch)
-        f_a, f_b = a, b
-        for layer in net.layers[:-1]:
-            f_a = layer(f_a)
-            f_b = layer(f_b)
-        D = f_a - f_b
-    _, _, Vh = torch.linalg.svd(D, full_matrices=False)
-    v = Vh[0]
-    return v / (v.norm() + 1e-12)
+    """Thin wrapper around `trioron.growth_direction.from_contrastive_pair`
+    consolidating what used to be an inline residual-SVD body in this
+    file (and bench_step8 / bench_harder / bench_50task / division_demo).
+    Behavior preserved: top right singular vector of (f_a - f_b) at the
+    last layer's input, unit-norm."""
+    from trioron.growth_direction import from_contrastive_pair
+    a, b = train_cur.sample_pair(pair_name, batch=batch)
+    dest_idx = len(net.layers) - 1
+    return from_contrastive_pair(net, a, b, dest_layer_idx=dest_idx, k=1)[0]
 
 
 def train_one_task_ewc(

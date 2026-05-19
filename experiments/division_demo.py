@@ -108,23 +108,22 @@ def compute_growth_direction(net, curriculum, batch=128) -> torch.Tensor:
     contrastive pairs. Returns a unit vector of shape (HIDDEN,) suitable
     as the new latent node's incoming weight initialization.
 
-    F is the input to the layer being grown — for the last (latent) layer
-    that's the second hidden layer's output.
+    Equivalent to concatenating per-pair (a, b) samples and applying the
+    single-pair residual SVD from trioron.growth_direction.from_contrastive_pair.
     """
-    diffs = []
-    with torch.no_grad():
-        for name in PAIR_NAMES:
-            a, b = curriculum.sample_pair(name, batch=batch)
-            f_a, f_b = a, b
-            for layer in net.layers[:-1]:
-                f_a = layer(f_a)
-                f_b = layer(f_b)
-            diffs.append(f_a - f_b)
-        D = torch.cat(diffs, dim=0)  # (n_pairs * batch, fan_in)
-    # Principal right-singular-vector of D = first row of Vh.
-    _, _, Vh = torch.linalg.svd(D, full_matrices=False)
-    v = Vh[0]
-    return v / (v.norm() + 1e-12)
+    from trioron.growth_direction import from_contrastive_pair
+    a_parts: list = []
+    b_parts: list = []
+    for name in PAIR_NAMES:
+        a, b = curriculum.sample_pair(name, batch=batch)
+        a_parts.append(a)
+        b_parts.append(b)
+    a_concat = torch.cat(a_parts, dim=0)
+    b_concat = torch.cat(b_parts, dim=0)
+    dest_idx = len(net.layers) - 1
+    return from_contrastive_pair(
+        net, a_concat, b_concat, dest_layer_idx=dest_idx, k=1,
+    )[0]
 
 
 def main() -> int:

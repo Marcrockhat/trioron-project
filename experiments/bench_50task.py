@@ -277,20 +277,17 @@ def consolidate_task(net, train_cur, pair_name):
 
 
 def compute_growth_direction(net, train_cur, pair_name, batch=128):
-    with torch.no_grad():
-        a, b = train_cur.sample_pair(pair_name, batch=batch)
-        f_a, f_b = a, b
-        for layer in net.layers[:-1]:
-            f_a = layer(f_a)
-            f_b = layer(f_b)
-        D = f_a - f_b
-    # CPU SVD doesn't support BF16/FP16 — promote D to FP32 for the
-    # decomposition, then return the direction in D's original dtype so
-    # downstream init_vec lands in the right precision.
-    D_for_svd = D if D.dtype in (torch.float32, torch.float64) else D.float()
-    _, _, Vh = torch.linalg.svd(D_for_svd, full_matrices=False)
-    v = Vh[0].to(D.dtype)
-    return v / (v.norm() + 1e-12)
+    """Thin wrapper around `trioron.growth_direction.from_contrastive_pair`.
+    The canonical primitive does FP32 SVD internally (CPU SVD doesn't
+    support BF16/FP16); this wrapper casts the result back to the
+    destination layer's W dtype so the returned init_vec lands in the
+    right precision for mixed-precision networks."""
+    from trioron.growth_direction import from_contrastive_pair
+    a, b = train_cur.sample_pair(pair_name, batch=batch)
+    dest_idx = len(net.layers) - 1
+    target_dtype = net.layers[dest_idx].W.dtype
+    v = from_contrastive_pair(net, a, b, dest_layer_idx=dest_idx, k=1)[0]
+    return v.to(target_dtype)
 
 
 # ---------------------------------------------------------------------

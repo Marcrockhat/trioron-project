@@ -185,16 +185,11 @@ def compute_growth_direction(
     pair_name: str,
     batch: int = 128,
 ) -> torch.Tensor:
-    with torch.no_grad():
-        a, b = train_cur.sample_pair(pair_name, batch=batch)
-        f_a, f_b = a, b
-        for layer in net.layers[:-1]:
-            f_a = layer(f_a)
-            f_b = layer(f_b)
-        D = f_a - f_b
-    _, _, Vh = torch.linalg.svd(D, full_matrices=False)
-    v = Vh[0]
-    return v / (v.norm() + 1e-12)
+    """Thin wrapper around `trioron.growth_direction.from_contrastive_pair`."""
+    from trioron.growth_direction import from_contrastive_pair
+    a, b = train_cur.sample_pair(pair_name, batch=batch)
+    dest_idx = len(net.layers) - 1
+    return from_contrastive_pair(net, a, b, dest_layer_idx=dest_idx, k=1)[0]
 
 
 # ---------------------------------------------------------------------
