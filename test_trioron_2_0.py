@@ -709,3 +709,48 @@ def test_modern_layer_state_dict_round_trip_preserves_2_0_state():
     assert torch.equal(dst.input_archived, src.input_archived)
     assert torch.allclose(dst.axonal_gain, src.axonal_gain)
     assert torch.allclose(dst.axonal_gain_anchor, src.axonal_gain_anchor)
+
+
+# ---------- Phase 5: R·S handshake compatibility ----------
+
+from trioron.composition.subspace import factor_l0_in_place
+
+
+def test_factor_l0_in_place_works_on_phase1_network():
+    """The R·S handshake operates on a structurally protected layer 0
+    (no in-network predecessor → cannot grow long-range inputs). After
+    factoring, the layer's input_sources stays all-sentinel and the
+    new 2.0 buffers retain their defaults."""
+    net = TrioronNetwork([(8, 4, "relu"), (4, 2, "linear")])
+    factor_l0_in_place(net, donor_seed=42)
+    l0 = net.layers[0]
+    # Factorization sets W but leaves input_sources at sentinel.
+    assert (l0.input_sources == -1).all()
+    assert not l0.input_archived.any()
+    assert torch.allclose(l0.axonal_gain, torch.ones(4))
+    # Network stays on fast path.
+    assert net._is_sequential_and_unmodulated()
+
+
+def test_factor_l0_in_place_rejects_long_range_layer():
+    """Defensive: if the layer being factored has long-range columns
+    (which structurally shouldn't happen for L0 but isn't formally
+    forbidden by grow_input itself), factorization must refuse."""
+    net = TrioronNetwork([(8, 4, "relu"), (4, 2, "linear")])
+    # Inject a long-range column on layer 0 to simulate misuse.
+    net.layers[0].grow_input(init_col=torch.zeros(4), source=(99, 0))
+    import pytest
+    with pytest.raises(ValueError, match="long-range"):
+        factor_l0_in_place(net, donor_seed=42)
+
+
+def test_factor_l0_in_place_state_dict_round_trip():
+    """After factoring + a state_dict round-trip, the 2.0 buffers
+    arrive at defaults and the factored W is preserved."""
+    src = TrioronNetwork([(8, 4, "relu"), (4, 2, "linear")])
+    factor_l0_in_place(src, donor_seed=123)
+
+    dst = TrioronNetwork([(8, 4, "relu"), (4, 2, "linear")])
+    dst.load_state_dict(src.state_dict())
+    assert torch.allclose(dst.layers[0].W, src.layers[0].W)
+    assert (dst.layers[0].input_sources == -1).all()

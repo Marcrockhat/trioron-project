@@ -125,8 +125,32 @@ def factor_l0_in_place(
     classifier and before any training begins. The L0 is expected to be
     frozen for the duration of training (matches the existing
     chained-15 protocol), so the override is permanent.
+
+    Trioron 2.0 interaction: L0 (layer 0) is structurally protected
+    from long-range inputs because `src_layer < dst_layer` is required
+    for any long-range edge and L0 has no earlier in-network layer to
+    source from. `insert_layer` also cannot place a layer before L0
+    (its constraint is `i >= 0`). The factorization is therefore
+    well-defined on the full ``W`` — every column is a sequential
+    input from x. The defensive check below confirms this invariant
+    holds at the moment of factoring.
     """
     layer = net.layers[layer_idx]
+    # Defensive: confirm the factored layer has the structural shape the
+    # R·S handshake assumes. Non-sentinel columns would be branch-private
+    # long-range extensions that should not participate in the
+    # cross-donor factorization; if any are present here, the caller
+    # used the factorization on a layer that isn't structurally L0.
+    if hasattr(layer, "input_sources"):
+        if (layer.input_sources >= 0).any():
+            raise ValueError(
+                f"factor_l0_in_place: layer {layer_idx} has long-range "
+                f"input columns (input_sources contains non-sentinel "
+                f"entries). The R·S handshake assumes the factored "
+                f"layer has only sequential (input-side) columns — "
+                f"long-range columns must be excluded from cross-donor "
+                f"absorption."
+            )
     n_out, n_in = layer.W.shape
     W_new = build_factored_l0_weight(
         n_in, n_out,
