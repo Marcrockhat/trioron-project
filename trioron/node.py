@@ -187,6 +187,48 @@ class TrioronLayer(nn.Module):
             "lam_high_streak", torch.zeros(n_nodes, dtype=torch.long),
         )
 
+        # Per-column input provenance (Trioron 2.0 axis 1: long-range
+        # reach). Shape (fan_in, 2) long. Entry [j] = (src_layer_idx,
+        # src_node_idx) declares which earlier node feeds column j of
+        # W. The sentinel value (-1, -1) means "use the immediate
+        # sequential predecessor's row j" — at construction every
+        # column is sentinel, preserving 1.0 byte-identical forward
+        # behavior. TrioronNetwork.forward interprets the buffer; the
+        # layer itself just stores it and keeps it aligned with
+        # grow_input / prune_input. See trioron_2_0.md §3.1.
+        self.register_buffer(
+            "input_sources",
+            torch.full((fan_in, 2), -1, dtype=torch.long),
+        )
+
+        # Per-column archive flag (Trioron 2.0 axis 2: plastic fanout
+        # sparsity). Column-side mirror of the row-level `archived`
+        # buffer. A column flagged here is "developmentally closed":
+        # W column is locked at the anchored state, gradient is
+        # masked via mask_archived_input_grads, Fisher is zeroed.
+        # Source-side apoptosis (severing an archived source's
+        # outgoing fanout) is implemented at the network level by
+        # calling archive_input on every column whose input_sources
+        # points at the archived source. See trioron_2_0.md §3.2.
+        self.register_buffer(
+            "input_archived", torch.zeros(fan_in, dtype=torch.bool),
+        )
+
+        # Per-source axonal gain (Trioron 2.0 axis 4). Source-side
+        # mirror of `routing_scale` — scales each NODE's outgoing
+        # contribution into every downstream destination it reaches.
+        # Default 1.0 preserves byte-identical 1.0 forward behavior.
+        # The network's gather step multiplies y[src_layer][src_node]
+        # by axonal_gain[src_node] before feeding it as input to any
+        # destination column tagged with that source. Slow time-scale,
+        # plastic; write via set_axonal_gain from any external signal
+        # (reward magnitude, attention mask, emotional-tag broadcast,
+        # manual prior). axonal_gain_anchor preserves the triparametric
+        # anchored-state contract analogous to routing_scale_anchor.
+        # See trioron_2_0.md §3.4.
+        self.register_buffer("axonal_gain", torch.ones(n_nodes))
+        self.register_buffer("axonal_gain_anchor", torch.ones(n_nodes))
+
         # Saliency caches for |a · g| utility (Mozer & Smolensky 1989,
         # OBD/blueprint §3.2). _last_y is stashed on each grad-enabled
         # forward; _last_upstream is captured by a backward hook on y
@@ -330,6 +372,57 @@ class TrioronLayer(nn.Module):
                 self.lam.mul_(sig)
             self.lam.clamp_(min=0.0)
 
+    def set_axonal_gain(
+        self,
+        signal: torch.Tensor,
+        mode: str = "absolute",
+    ) -> None:
+        """Write the per-source axonal gain from an arbitrary signal.
+
+        Trioron 2.0 axis 4: axonal_gain is the source-side
+        multiplicative gain on each node's downstream broadcast. It is
+        the substrate-level analog of attention / emotional /
+        neuromodulatory state — a small set of "broadcaster" nodes can
+        scale their entire outgoing influence without touching any edge
+        weight. Slow time-scale; written from any external signal:
+
+          - reward magnitudes — high-reward nodes get amplified outgoing
+          - attention masks — task-salient nodes broadcast louder
+          - emotional-tag node outputs (when output_sinks land in a
+            future tweak) — emotion modulates other regions' inputs
+          - hand-injected priors — silence a node by setting gain to 0
+
+        signal: shape (n_nodes,). Cast to layer dtype/device.
+        mode:
+          "absolute"       axonal_gain ← signal     (replace)
+          "additive"       axonal_gain ← axonal_gain + signal
+          "multiplicative" axonal_gain ← axonal_gain * signal
+
+        Clamped to ≥0 — negative gain would flip the source's outgoing
+        contribution sign, which is not the modulatory semantics this
+        buffer models. (Inhibitory edges are a separate future tweak.)
+        """
+        if signal.shape != (self.n_nodes,):
+            raise ValueError(
+                f"signal shape {tuple(signal.shape)} "
+                f"!= (n_nodes={self.n_nodes},)"
+            )
+        if mode not in ("absolute", "additive", "multiplicative"):
+            raise ValueError(
+                f"mode '{mode}' not in 'absolute' / 'additive' / 'multiplicative'"
+            )
+        sig = signal.detach().to(
+            device=self.axonal_gain.device, dtype=self.axonal_gain.dtype,
+        )
+        with torch.no_grad():
+            if mode == "absolute":
+                self.axonal_gain.copy_(sig)
+            elif mode == "additive":
+                self.axonal_gain.add_(sig)
+            else:
+                self.axonal_gain.mul_(sig)
+            self.axonal_gain.clamp_(min=0.0)
+
     def update_utility(self, contributions: torch.Tensor) -> None:
         """EMA update of per-node utility scores.
 
@@ -378,13 +471,16 @@ class TrioronLayer(nn.Module):
 
         Call after a successful learning plateau to lock current state in.
         Subsequent EWC penalty drags W back toward this snapshot.
-        Also snapshots routing_scale so forward_with_anchors can
-        reconstruct the consolidated triparametric (w, b, routing) state.
+        Also snapshots routing_scale and axonal_gain so
+        forward_with_anchors can reconstruct the consolidated state
+        across all per-node multiplicative gains (destination-side
+        `routing_scale` and source-side `axonal_gain`).
         """
         with torch.no_grad():
             self.W_anchor.copy_(self.W.detach())
             self.b_anchor.copy_(self.b.detach())
             self.routing_scale_anchor.copy_(self.routing_scale.detach())
+            self.axonal_gain_anchor.copy_(self.axonal_gain.detach())
 
     def archive_row(self, idx: int) -> None:
         """Mark row `idx` as archived: snap W and b to their anchored
@@ -429,6 +525,46 @@ class TrioronLayer(nn.Module):
                 self.W.grad[self.archived] = 0.0
             if self.b.grad is not None:
                 self.b.grad[self.archived] = 0.0
+
+    def archive_input(self, col_idx: int) -> None:
+        """Mark input column `col_idx` as archived (Trioron 2.0 axis 2).
+        Column-side mirror of `archive_row`. The column is locked at
+        the anchored state: W[:, col_idx] snaps to W_anchor[:, col_idx],
+        fisher_W[:, col_idx] is zeroed, input_archived[col_idx] flips
+        True. Gradient flow into the column is masked by
+        mask_archived_input_grads (call after .backward(), before
+        optimizer.step()).
+
+        b is per-row, so this method does not touch it. Likewise λ
+        and u are per-row (per-destination-node); they aggregate
+        Fisher across fan_in but the zeroed fisher column drops out
+        of the sum automatically on the next update_lambda.
+
+        Idempotent: archiving an already-archived column is a no-op.
+        """
+        if not (0 <= col_idx < self.fan_in):
+            raise IndexError(
+                f"archive_input col_idx {col_idx} out of range "
+                f"[0, {self.fan_in})"
+            )
+        if bool(self.input_archived[col_idx]):
+            return
+        with torch.no_grad():
+            self.W.data[:, col_idx].copy_(self.W_anchor[:, col_idx])
+            self.fisher_W[:, col_idx].zero_()
+            self.input_archived[col_idx] = True
+
+    def mask_archived_input_grads(self) -> None:
+        """Zero W.grad at archived input columns. Call AFTER .backward()
+        and BEFORE optimizer.step() (and before update_fisher). No-op
+        if no columns archived. Column-side mirror of
+        mask_archived_grads.
+        """
+        if not self.input_archived.any():
+            return
+        with torch.no_grad():
+            if self.W.grad is not None:
+                self.W.grad[:, self.input_archived] = 0.0
 
     def ewc_penalty(self) -> torch.Tensor:
         """Quadratic penalty pulling weights toward the anchor.
@@ -559,6 +695,12 @@ class TrioronLayer(nn.Module):
                 [self.lam_high_streak,
                  torch.zeros(1, dtype=torch.long, device=device)]
             )
+            new_axonal_gain = torch.cat(
+                [self.axonal_gain, torch.ones(1, device=device)]
+            )
+            new_axonal_gain_anchor = torch.cat(
+                [self.axonal_gain_anchor, torch.ones(1, device=device)]
+            )
 
         # Re-register parameters and buffers with new shapes.
         self._replace_parameter("W", new_W)
@@ -576,10 +718,16 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("apoptosis_pulse", new_apoptosis_pulse)
         self._replace_buffer("archived", new_archived)
         self._replace_buffer("lam_high_streak", new_lam_high_streak)
+        self._replace_buffer("axonal_gain", new_axonal_gain)
+        self._replace_buffer("axonal_gain_anchor", new_axonal_gain_anchor)
 
         return self.n_nodes - 1
 
-    def grow_input(self, init_col: Optional[torch.Tensor] = None) -> None:
+    def grow_input(
+        self,
+        init_col: Optional[torch.Tensor] = None,
+        source: Optional[tuple] = None,
+    ) -> None:
         """Extend fan_in by 1, adding a new column to W. Used for cross-layer
         growth: when the previous layer adds a node, this layer must accept
         the extra input.
@@ -587,6 +735,12 @@ class TrioronLayer(nn.Module):
         init_col: optional length-n_nodes tensor for the new column. If None,
             zeros — the new input contributes nothing initially, and the
             network learns to use it via gradient descent.
+
+        source: optional (src_layer_idx, src_node_idx) tuple recording the
+            new column's provenance for Trioron 2.0 long-range reach. If
+            None (default), the sentinel (-1, -1) is recorded, meaning
+            "this column reads from the immediate sequential predecessor."
+            Sequential-default behavior is preserved byte-identically.
 
         Per blueprint §4.1.4 ("Connecting it to all nodes whose `u` is currently
         elevated"), callers can pass a utility-weighted column to bias toward
@@ -616,11 +770,29 @@ class TrioronLayer(nn.Module):
                              dtype=self.fisher_W.dtype, device=device)],
                 dim=1,
             )
+            if source is None:
+                src_row = torch.tensor(
+                    [[-1, -1]], dtype=torch.long, device=device,
+                )
+            else:
+                src_row = torch.tensor(
+                    [[int(source[0]), int(source[1])]],
+                    dtype=torch.long, device=device,
+                )
+            new_input_sources = torch.cat(
+                [self.input_sources, src_row], dim=0,
+            )
+            new_input_archived = torch.cat(
+                [self.input_archived,
+                 torch.zeros(1, dtype=torch.bool, device=device)],
+            )
 
         self.fan_in += 1
         self._replace_parameter("W", new_W)
         self._replace_buffer("W_anchor", new_W_anchor)
         self._replace_buffer("fisher_W", new_fisher_W)
+        self._replace_buffer("input_sources", new_input_sources)
+        self._replace_buffer("input_archived", new_input_archived)
 
     def prune_input(self, col_idx: int) -> None:
         """Remove the input column at `col_idx`. Inverse of grow_input.
@@ -643,11 +815,15 @@ class TrioronLayer(nn.Module):
             new_W = self.W.data.index_select(1, keep_t)
             new_W_anchor = self.W_anchor.index_select(1, keep_t)
             new_fisher_W = self.fisher_W.index_select(1, keep_t)
+            new_input_sources = self.input_sources.index_select(0, keep_t)
+            new_input_archived = self.input_archived.index_select(0, keep_t)
 
         self.fan_in -= 1
         self._replace_parameter("W", new_W)
         self._replace_buffer("W_anchor", new_W_anchor)
         self._replace_buffer("fisher_W", new_fisher_W)
+        self._replace_buffer("input_sources", new_input_sources)
+        self._replace_buffer("input_archived", new_input_archived)
 
     def prune_node(self, idx: int) -> None:
         """Remove the node at index `idx`. Same optimizer rebuild caveat as grow_node."""
@@ -675,6 +851,8 @@ class TrioronLayer(nn.Module):
             new_apoptosis_pulse = self.apoptosis_pulse.index_select(0, keep_t)
             new_archived = self.archived.index_select(0, keep_t)
             new_lam_high_streak = self.lam_high_streak.index_select(0, keep_t)
+            new_axonal_gain = self.axonal_gain.index_select(0, keep_t)
+            new_axonal_gain_anchor = self.axonal_gain_anchor.index_select(0, keep_t)
 
         self._replace_parameter("W", new_W)
         self._replace_parameter("b", new_b)
@@ -691,6 +869,8 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("apoptosis_pulse", new_apoptosis_pulse)
         self._replace_buffer("archived", new_archived)
         self._replace_buffer("lam_high_streak", new_lam_high_streak)
+        self._replace_buffer("axonal_gain", new_axonal_gain)
+        self._replace_buffer("axonal_gain_anchor", new_axonal_gain_anchor)
 
     # ----- low-level helpers -----
 

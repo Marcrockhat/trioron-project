@@ -49,10 +49,82 @@ class TrioronNetwork(nn.Module):
 
     # ----- forward -----
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def _is_sequential_and_unmodulated(self) -> bool:
+        """Trioron 2.0 fast-path predicate. True iff every layer's
+        input_sources is all-sentinel AND every layer's axonal_gain is
+        all-1.0 — i.e., the network behaves identically to a 1.0
+        sequential stack. When True, forward() uses the original
+        `for layer in self.layers: x = layer(x)` path with no gather
+        overhead and byte-identical numerics.
+        """
         for layer in self.layers:
-            x = layer(x)
-        return x
+            if (layer.input_sources >= 0).any():
+                return False
+            if (layer.axonal_gain != 1.0).any():
+                return False
+        return True
+
+    def _gather_layer_input(
+        self,
+        layer: TrioronLayer,
+        prev_output: torch.Tensor,
+        prev_layer_gain: Optional[torch.Tensor],
+        registry: List[torch.Tensor],
+        gain_registry: List[torch.Tensor],
+    ) -> torch.Tensor:
+        """Build a layer's input by gathering each column from the
+        appropriate source. Sentinel columns (-1, -1) read from
+        `prev_output` at the same column index (the 1.0 sequential
+        contract) and scale by the predecessor's per-source
+        `axonal_gain`. Non-sentinel columns read y[src_node] from
+        `registry[src_layer]` and scale by
+        `gain_registry[src_layer][src_node]`. For layer 0 there is no
+        in-network predecessor; `prev_layer_gain` is None and sentinel
+        columns pass `prev_output` through unscaled.
+
+        Pure Python column loop, used only on the slow path. The fast
+        path skips this entirely.
+        """
+        src = layer.input_sources
+        cols: List[torch.Tensor] = []
+        for j in range(layer.fan_in):
+            sl, sn = int(src[j, 0].item()), int(src[j, 1].item())
+            if sl < 0:
+                col = prev_output[:, j]
+                if prev_layer_gain is not None:
+                    col = col * prev_layer_gain[j]
+            else:
+                src_y = registry[sl][:, sn]
+                gain = gain_registry[sl][sn]
+                col = src_y * gain
+            cols.append(col)
+        return torch.stack(cols, dim=1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # Fast path: no long-range edges, no axonal modulation —
+        # behave byte-for-byte like the 1.0 sequential stack.
+        if self._is_sequential_and_unmodulated():
+            for layer in self.layers:
+                x = layer(x)
+            return x
+
+        # Slow path: walk layers in order, keep a registry of each
+        # layer's output, gather per-column input for any layer with
+        # at least one long-range edge or any source-side gain != 1.0.
+        registry: List[torch.Tensor] = []
+        gain_registry: List[torch.Tensor] = []
+        prev = x
+        prev_gain: Optional[torch.Tensor] = None
+        for layer in self.layers:
+            layer_input = self._gather_layer_input(
+                layer, prev, prev_gain, registry, gain_registry,
+            )
+            h = layer(layer_input)
+            registry.append(h)
+            gain_registry.append(layer.axonal_gain)
+            prev = h
+            prev_gain = layer.axonal_gain
+        return prev
 
     def forward_with_anchors(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass using each layer's anchored triparametric state
@@ -89,15 +161,43 @@ class TrioronNetwork(nn.Module):
         return self._forward_with_anchors_inner(x)
 
     def _forward_with_anchors_inner(self, x: torch.Tensor) -> torch.Tensor:
-        h = x
+        # Fast path: byte-identical to 1.0 when no long-range edges and
+        # no source-side axonal modulation are configured.
+        if self._is_sequential_and_unmodulated():
+            h = x
+            for layer in self.layers:
+                if h.dtype != layer.W_anchor.dtype:
+                    h = h.to(layer.W_anchor.dtype)
+                scale = layer.routing_scale_anchor.unsqueeze(1).to(
+                    layer.W_anchor.dtype,
+                )
+                W_eff = layer.W_anchor * scale
+                z = F.linear(h, W_eff, layer.b_anchor)
+                h = _ACTIVATIONS[layer.activation](z)
+            return h
+
+        # Slow path: gather per-column with anchored axonal_gain.
+        registry: List[torch.Tensor] = []
+        gain_registry: List[torch.Tensor] = []
+        prev = x
+        prev_gain: Optional[torch.Tensor] = None
         for layer in self.layers:
-            if h.dtype != layer.W_anchor.dtype:
-                h = h.to(layer.W_anchor.dtype)
-            scale = layer.routing_scale_anchor.unsqueeze(1).to(layer.W_anchor.dtype)
+            layer_input = self._gather_layer_input(
+                layer, prev, prev_gain, registry, gain_registry,
+            )
+            if layer_input.dtype != layer.W_anchor.dtype:
+                layer_input = layer_input.to(layer.W_anchor.dtype)
+            scale = layer.routing_scale_anchor.unsqueeze(1).to(
+                layer.W_anchor.dtype,
+            )
             W_eff = layer.W_anchor * scale
-            z = F.linear(h, W_eff, layer.b_anchor)
+            z = F.linear(layer_input, W_eff, layer.b_anchor)
             h = _ACTIVATIONS[layer.activation](z)
-        return h
+            registry.append(h)
+            gain_registry.append(layer.axonal_gain_anchor)
+            prev = h
+            prev_gain = layer.axonal_gain_anchor
+        return prev
 
     def forward_from_layer(
         self, h: torch.Tensor, start_layer: int,
