@@ -88,11 +88,12 @@ def test_delta_last_layer_no_cross_layer_term():
     delta = division_param_delta(net, last_idx, optimizer_state_per_param=2)
     assert not delta.has_next_layer
     assert delta.next_layer_n_nodes == 0
-    # Only the new node row+bias on this layer:
+    # Only the new node row+bias+branch_weight on this layer:
     fan_in = net.layers[last_idx].fan_in
-    assert delta.params_floats == fan_in + 1
+    B_max = net.layers[last_idx].B_max
+    assert delta.params_floats == fan_in + 1 + B_max
     assert delta.buffers_floats == 4 + 2 * fan_in
-    assert delta.optimizer_floats == 2 * (fan_in + 1)
+    assert delta.optimizer_floats == 2 * (fan_in + 1 + B_max)
 
 
 def test_delta_first_layer_includes_next():
@@ -101,8 +102,9 @@ def test_delta_first_layer_includes_next():
     assert delta.has_next_layer
     assert delta.next_layer_n_nodes == net.layers[1].n_nodes
     fan_in = net.layers[0].fan_in
+    B_max = net.layers[0].B_max
     next_n = net.layers[1].n_nodes
-    assert delta.params_floats == (fan_in + 1) + next_n
+    assert delta.params_floats == (fan_in + 1 + B_max) + next_n
     assert delta.buffers_floats == (4 + 2 * fan_in) + 2 * next_n
 
 

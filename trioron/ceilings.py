@@ -40,6 +40,7 @@ checkpoint arrest state across reboots — Orange Pi will reboot.
 from __future__ import annotations
 
 import os
+import sys
 import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
@@ -132,8 +133,11 @@ def division_param_delta(
     (see trioron/node.py).
 
     grow_node(layer i) adds:
-        params:   W += 1 row of fan_in_i floats   →   fan_in_i
-                  b += 1                          →   1
+        params:   W += 1 row of fan_in_i floats           →   fan_in_i
+                  b += 1                                  →   1
+                  branch_weight += 1 row of B_max floats  →   B_max_i
+                  (Trioron 2.0 Axis 5: per-cell, per-branch
+                  soma pool weight; full B_max reserve at K=1.)
         buffers:  lam (+1), u (+1), b_anchor (+1), fisher_b (+1),
                   W_anchor (+row), fisher_W (+row)
                   → 4 + 2*fan_in_i
@@ -155,10 +159,11 @@ def division_param_delta(
 
     target = net.layers[layer_idx]
     fan_in = int(target.fan_in)
+    B_max = int(target.B_max)
     has_next = layer_idx + 1 < len(net.layers)
     next_n_nodes = int(net.layers[layer_idx + 1].n_nodes) if has_next else 0
 
-    params = (fan_in + 1) + (next_n_nodes if has_next else 0)
+    params = (fan_in + 1 + B_max) + (next_n_nodes if has_next else 0)
     buffers = (4 + 2 * fan_in) + (2 * next_n_nodes if has_next else 0)
     opt_state = optimizer_state_per_param * params
 
@@ -247,13 +252,33 @@ class CeilingsController:
 
     def __init__(
         self,
-        M_max_bytes: int,
-        T_div_max_seconds: float,
+        M_max_bytes: Optional[int] = None,
+        T_div_max_seconds: Optional[float] = None,
         optimizer_state_per_param: int = 2,
         dtype_bytes: int = 4,
         memory_provider: Optional[Callable[[], int]] = None,
         time_provider: Optional[Callable[[], float]] = None,
     ):
+        # Profile fallback: when caps are None, consult the active
+        # TrioronProfile. When the profile also has None, fall back to
+        # sys.maxsize / float('inf') for effectively-uncapped operation.
+        # Explicit kwargs always win. Lazy import avoids a circular
+        # dependency on the profile module at package init.
+        if M_max_bytes is None or T_div_max_seconds is None:
+            from trioron.profile import TrioronProfile
+            active = TrioronProfile.active()
+            if M_max_bytes is None:
+                M_max_bytes = (
+                    active.memory_cap_bytes
+                    if active.memory_cap_bytes is not None
+                    else sys.maxsize
+                )
+            if T_div_max_seconds is None:
+                T_div_max_seconds = (
+                    active.time_cap_seconds
+                    if active.time_cap_seconds is not None
+                    else float("inf")
+                )
         if M_max_bytes < 1:
             raise ValueError("M_max_bytes must be >= 1")
         if T_div_max_seconds <= 0:

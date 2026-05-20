@@ -62,9 +62,12 @@ def test_empty_specs_raises():
 
 def test_n_parameters_correct():
     net = TrioronNetwork([(4, 8, "relu"), (8, 3, "linear")])
-    # layer 1: W (8x4) + b (8) = 32 + 8 = 40
-    # layer 2: W (3x8) + b (3) = 24 + 3 = 27
-    expected = 40 + 27
+    # layer 1: W (8x4) + b (8) + branch_weight (8 x B_max=8) = 32 + 8 + 64 = 104
+    # layer 2: W (3x8) + b (3) + branch_weight (3 x B_max=8) = 24 + 3 + 24 = 51
+    # (Trioron 2.0 Axis 5: branch_weight is a per-(cell, branch) plastic
+    # Parameter. At K=1 only branch_weight[:, 0] is gradient-routed; the
+    # rest are zero-init reserved capacity for grow_branch in Phase 2.5.)
+    expected = (32 + 8 + 64) + (24 + 3 + 24)
     got = net.n_parameters()
     assert got == expected, f"got {got}, expected {expected}"
 

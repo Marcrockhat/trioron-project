@@ -126,9 +126,15 @@ def test_extend_output_head_optimizer_rebuild_works():
     loss = masked_cross_entropy(logits, y, active_classes=[0, 1, 2, 3])
     opt.zero_grad()
     loss.backward()
-    # Every parameter has a gradient — including the new head rows.
-    for p in net.parameters():
-        assert p.grad is not None
+    # Every gradient-routed parameter has a gradient — including the new
+    # head rows. branch_weight (Trioron 2.0 Axis 5) is intentionally off
+    # the K=1 forward path (F.linear fast path bypasses σ_branch and the
+    # soma-side pool), so it's exempt at K=1. Phase 2.5's grow_branch
+    # will start routing gradient into branch_weight columns ≥1.
+    for name, p in net.named_parameters():
+        if "branch_weight" in name:
+            continue
+        assert p.grad is not None, f"{name} has no gradient"
     opt.step()  # must not raise
 
 

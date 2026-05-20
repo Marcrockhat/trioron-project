@@ -47,6 +47,30 @@ class TrioronNetwork(nn.Module):
             ]
         )
 
+        # Trioron 2.0 Phase 2 — insert_layer slot tracking.
+        #
+        # The K_insert cap is per "original-pair slot": a slot k is the
+        # gap between original layer k and original layer k+1, and the
+        # cap limits how many inserted layers may accumulate there over
+        # the network's lifetime. Persistent slot identity survives
+        # subsequent insertions that shift current indices around.
+        #
+        # Each layer carries `_slot_idx`, interpreted as "the slot
+        # ABOVE this layer (between this layer and the next)":
+        #   - Original layer k (k < n-1): _slot_idx = k.
+        #   - Last original layer:       _slot_idx = -1 (no slot above).
+        #   - Inserted layer:            _slot_idx = the slot it was
+        #                                inserted into.
+        # An insertion between (i, i+1) lands in slot `layers[i]._slot_idx`,
+        # which propagates correctly through stacked insertions.
+        n_orig = len(self.layers)
+        for k, layer in enumerate(self.layers):
+            layer._slot_idx = k if k < n_orig - 1 else -1
+        self._n_original_layers: int = n_orig
+        self._insertions_per_slot: List[int] = (
+            [0] * (n_orig - 1) if n_orig > 1 else []
+        )
+
     # ----- forward -----
 
     def _is_sequential_and_unmodulated(self) -> bool:
@@ -480,6 +504,8 @@ class TrioronNetwork(nn.Module):
         activation: str = "linear",
         init_mode: str = "identity",
         init_vecs: Optional[torch.Tensor] = None,
+        K_insert: int = 3,
+        noise_scale: float = 0.0,
     ) -> int:
         """Insert a new TrioronLayer between layers i and j (Trioron 2.0
         axis 3: depth growth).
@@ -510,19 +536,51 @@ class TrioronNetwork(nn.Module):
                               preservation. With activation="linear"
                               the network's function is unchanged at
                               insertion. `init_vecs` must be None.
+
+                              CAVEAT (empirically verified on pneuma
+                              TinyStories distillation, 2026-05-20):
+                              identity-init lands at near-identity and
+                              tends to *stay* there under continual
+                              training with a cosine-decaying LR and
+                              fresh Adam state — no asymmetry to push
+                              against. The result is a high-param-count
+                              layer that does no useful work (ablation
+                              swap to pure I lowers the loss). When
+                              your insert event lands mid-training in
+                              that regime, either:
+                                - set noise_scale > 0 (recommended:
+                                  1e-2) to seed asymmetry while
+                                  preserving function approximately,
+                                  OR
+                                - use init_mode="growth_direction"
+                                  with init_vecs from a recent batch
+                                  (trioron.growth_direction.from_
+                                  activation_residuals is label-free
+                                  for LM / unsupervised use cases).
           "growth_direction"  W is set row-by-row from `init_vecs`,
                               the top-K right singular vectors of the
                               residual at the insertion point.
                               Compute via
                               trioron.growth_direction.from_per_class_scatter
-                              or .from_contrastive_pair and pass the
-                              result as init_vecs (shape (n_nodes,
-                              fan_in)). b stays zero.
+                              or .from_contrastive_pair (labeled) or
+                              .from_activation_residuals (label-free)
+                              and pass the result as init_vecs (shape
+                              (n_nodes, fan_in)). b stays zero.
 
         init_vecs: shape (n_nodes, prev_layer.n_nodes). Required when
             init_mode="growth_direction". Each row becomes one new
             node's incoming weight vector. Rows are typically unit-norm
             (caller is responsible).
+
+        noise_scale: when > 0 and init_mode="identity", adds
+            noise_scale * randn_like(W) after the identity init. A
+            small ε (~1e-2) seeds gradient-descent asymmetry while
+            keeping the layer's initial function approximately
+            unchanged. Default 0.0 preserves the byte-exact identity
+            contract for callers who explicitly want it (e.g.,
+            curriculum-style staged depth where post-insert behavior
+            must match pre-insert exactly). Ignored when
+            init_mode="growth_direction".
 
         Returns the new layer's index (== j).
 
@@ -540,6 +598,41 @@ class TrioronNetwork(nn.Module):
             raise IndexError(
                 f"insert_layer i={i} out of range "
                 f"[0, {len(self.layers) - 1})"
+            )
+
+        # Phase 2 profile gate. Unlike grow_branch (caller-driven, kept
+        # open for explicit use under any profile), insert_layer is a
+        # network-topology mutator and the regime-level choice gates
+        # the call directly. Switch profile (e.g.,
+        # `with TrioronProfile.use(REASONING)`) to unblock.
+        from trioron.profile import TrioronProfile
+        if not TrioronProfile.active().allow_insert_layer:
+            raise ValueError(
+                f"insert_layer blocked by active TrioronProfile "
+                f"'{TrioronProfile.active().name}' (allow_insert_layer=False). "
+                f"Switch to a profile that permits depth growth."
+            )
+
+        # Phase 2 per-slot K_insert cap. Slot identity propagates
+        # through stacked insertions via the _slot_idx attribute set on
+        # each layer; an insertion between (i, i+1) lands in the slot
+        # above layer i.
+        if K_insert < 1:
+            raise ValueError(f"K_insert must be >= 1, got {K_insert}")
+        slot_idx = self.layers[i]._slot_idx
+        if slot_idx < 0:
+            raise ValueError(
+                f"insert_layer cannot insert above the last original "
+                f"layer (i={i} has no slot above it). This shouldn't "
+                f"normally happen — `between=(i, i+1)` validation should "
+                f"have caught it earlier."
+            )
+        used = self._insertions_per_slot[slot_idx]
+        if used >= K_insert:
+            raise ValueError(
+                f"insert_layer slot {slot_idx} at K_insert cap "
+                f"(K_insert={K_insert}, already used {used}). Increase "
+                f"K_insert or insert into a different slot."
             )
 
         prev_layer = self.layers[i]
@@ -610,12 +703,23 @@ class TrioronNetwork(nn.Module):
 
         # Initialize W per init_mode. Anchors snapshot the init so EWC
         # has a clean baseline to drag back toward. fisher_W stays zero.
+        if noise_scale < 0:
+            raise ValueError(
+                f"noise_scale must be >= 0, got {noise_scale}"
+            )
         with torch.no_grad():
             if init_mode == "identity":
                 W_init = torch.eye(
                     target_n, prev_layer.n_nodes,
                     dtype=prev_layer.W.dtype, device=device,
                 )
+                if noise_scale > 0:
+                    # Seed gradient-descent asymmetry post-identity so
+                    # the layer escapes its initialization under
+                    # decaying-LR continual training. Empirically
+                    # documented on pneuma's TinyStories run; see the
+                    # CAVEAT block in this method's docstring.
+                    W_init = W_init + noise_scale * torch.randn_like(W_init)
             else:  # growth_direction
                 W_init = init_vecs.detach().to(
                     dtype=prev_layer.W.dtype, device=device,
@@ -625,6 +729,12 @@ class TrioronNetwork(nn.Module):
             new_layer.W_anchor.copy_(W_init.to(new_layer.W_anchor.dtype))
             new_layer.b_anchor.zero_()
 
+        # Phase 2 slot bookkeeping: the new layer inherits the slot
+        # it was inserted into, and the per-slot counter increments.
+        # Done after all validations + construction so a failed insert
+        # never bumps the counter or corrupts slot tags.
+        new_layer._slot_idx = slot_idx
+        self._insertions_per_slot[slot_idx] += 1
         self.layers.insert(j, new_layer)
         return j
 

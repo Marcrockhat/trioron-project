@@ -1,0 +1,34 @@
+trioron 2.0 risks §8.6 — lifetime dendritic-budget sizing
+model: 3 init layers, L1 width growth, optional Axis 3/5 enabled
+  base per-cell: fan_in + 1 (W row + bias)
+  dendrite per-cell: 3 × B_max (branch_weight + anchor + fisher_branch_weight)
+  inserted layers: n_slots × K_insert × (n_nodes² + n_nodes + dend)
+  upper bound — no pruning; fp32 (4 B/param)
+
+scenario                                                   L1 cells   growth params      fp32 bytes
+----------------------------------------------------------------------------------------------------
+1.0 baseline (no Axes 3/5) @ 1yr                                432          99,028       386.83 KB
+Axis 3 only (insert_layer K=3) @ 1yr                            432         105,364       411.58 KB
+Axis 5 only (dendrites B_max=8) @ 1yr                           432         109,396       427.33 KB
+Both axes (REASONING profile) @ 1yr                             432         120,340       470.08 KB
+1.0 baseline (no Axes 3/5) @ 10yr                             4,032         923,428         3.52 MB
+Axis 3 only (insert_layer K=3) @ 10yr                         4,032         929,764         3.55 MB
+Axis 5 only (dendrites B_max=8) @ 10yr                        4,032       1,020,196         3.89 MB
+Both axes (REASONING profile) @ 10yr                          4,032       1,031,140         3.93 MB
+1.0 baseline (no Axes 3/5) @ 80yr                            32,032       7,335,428        27.98 MB
+Axis 3 only (insert_layer K=3) @ 80yr                        32,032       7,341,764        28.01 MB
+Axis 5 only (dendrites B_max=8) @ 80yr                       32,032       8,104,196        30.92 MB
+Both axes (REASONING profile) @ 80yr                         32,032       8,115,140        30.96 MB
+EDGE profile @ 80yr (constrained growth)                      1,632         373,828         1.43 MB
+
+findings:
+  Axis 5 only adds 1.105× params vs 1.0 baseline at 80yr (3·B_max per cell is small vs head)
+  Axis 3 only adds 1.001× params (insertions are bounded by n_slots × K_insert × n_nodes²)
+  Both axes together: 1.106× — multiplicative envelope is not catastrophic
+
+cap recommendations:
+  REASONING @ 80yr 30.96 MB: feasible on a workstation / Orange Pi 5B with 8 GB RAM; no profile-level memory cap needed for the substrate alone
+  EDGE @ 80yr 1.43 MB: well under the 256 MB cap currently set on the EDGE preset; the existing cap is the right floor
+  The dominant cost is the HEAD (n_l1_cells × n_classes); dendrites are a rounding error against head growth. Cap policy should target n_l1_cells (or equivalently tasks_per_year × n_grow_per_task × years), not B_max.
+
+verdict: Axis 5's lifetime contribution is small relative to L1 width growth. B_max=8 is safe to ship live by default; lifetime sizing is gated on n_grow_per_task and head width, not on dendritic structure.

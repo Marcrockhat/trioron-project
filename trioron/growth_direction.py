@@ -14,7 +14,7 @@ to non-contrastive settings, addressing trioron_2_0.md §4 (growth
 signal reuse) and unblocking insert_layer's growth_direction init
 mode.
 
-Four primitives:
+Five primitives:
 
   from_contrastive_pair(net, a, b, dest_layer_idx, k=1)
       The trioron 1.0 mechanism: features f_a and f_b at the input of
@@ -34,13 +34,23 @@ Four primitives:
       "this class is present." This is the right signal for
       extend_output_head: each new class node gets its own direction.
 
+  from_activation_residuals(activations, k=1)
+      Fully label-free residual SVD. Centers activations (subtract
+      batch mean), then returns top-K right singular vectors. Use
+      when no per-class labels are available — LM distillation,
+      unsupervised representation learning, etc. Common pattern:
+      cache the prev-layer output for a recent batch at the insert
+      point, then pass to insert_layer as init_vecs. Empirically
+      derived from pneuma's TinyStories field report (2026-05-20)
+      where identity-init got stuck at identity under decaying LR.
+
   features_at_growth_point(net, x, dest_layer_idx)
       Shared helper: run the forward pass up to (but not including)
       layer `dest_layer_idx` and return the features there. The
       features are the inputs that a new node / edge / inserted layer
       at `dest_layer_idx` would read from.
 
-All three direction primitives return unit-norm row vectors. Caller
+All four direction primitives return unit-norm row vectors. Caller
 decides scale (typically via the new node's gain / EWC pull).
 """
 
@@ -254,3 +264,67 @@ def from_per_class_centroid(
         n = d.norm().clamp_min(1e-12)
         rows.append(d / n)
     return torch.stack(rows, dim=0)
+
+
+def from_activation_residuals(
+    activations: torch.Tensor,
+    k: int = 1,
+) -> torch.Tensor:
+    """Label-free growth direction via residual SVD.
+
+    Centers the activation tensor (subtract batch mean) then returns
+    the top-K right singular vectors of the centered matrix. The
+    centered matrix is the residual relative to the batch's mean
+    activation, so its top singular directions point along the axes
+    of greatest within-batch variance — the directions a new
+    inserted layer (or new node) is best positioned to discriminate
+    along.
+
+    Use when per-class labels aren't available — language-model
+    distillation, unsupervised representation learning, contrastive
+    pre-training, etc. Typical pattern (caller-side):
+
+        # cache the prev-layer output for one recent batch:
+        with torch.no_grad():
+            prev_features = net.forward_up_to(layer_i)(x_recent)
+        vecs = from_activation_residuals(prev_features, k=target_n)
+        net.insert_layer(
+            between=(i, i+1),
+            n_nodes=target_n,
+            init_mode="growth_direction",
+            init_vecs=vecs,
+        )
+
+    activations: (batch, feat_dim). Caller is responsible for
+        gathering these (typically via features_at_growth_point()).
+    k: number of directions. Must satisfy k <= min(batch, feat_dim).
+
+    Returns shape (k, feat_dim) — top-K unit right singular vectors,
+    descending by singular value. Suitable as `init_vecs` for
+    insert_layer (n_nodes=k).
+
+    Empirically derived from pneuma's 2026-05-20 TinyStories field
+    report: identity-init landed at identity and stayed there under
+    cosine-decaying LR + fresh Adam state; a label-free residual-SVD
+    init is the cleanest unblock for LM use cases.
+    """
+    if activations.ndim != 2:
+        raise ValueError(
+            f"activations must be 2D (batch, feat_dim); "
+            f"got {tuple(activations.shape)}"
+        )
+    if k < 1:
+        raise ValueError(f"k must be >= 1, got {k}")
+    a = activations.detach().to(torch.float32)
+    centered = a - a.mean(dim=0, keepdim=True)
+    # full_matrices=False keeps Vh at shape (min(batch, feat_dim), feat_dim).
+    _, _, Vh = torch.linalg.svd(centered, full_matrices=False)
+    if k > Vh.shape[0]:
+        raise ValueError(
+            f"requested k={k} but residual SVD yields only "
+            f"{Vh.shape[0]} singular vectors at this growth point "
+            f"(min of batch={a.shape[0]} and feat_dim={a.shape[1]})"
+        )
+    vecs = Vh[:k]
+    norms = vecs.norm(dim=1, keepdim=True).clamp_min(1e-12)
+    return vecs / norms

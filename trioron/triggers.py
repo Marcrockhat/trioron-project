@@ -70,7 +70,14 @@ def total_gradient_norm(parameters) -> float:
 
 @dataclass
 class TriggerState:
-    """Snapshot of trigger state at one step. Suitable for CSV logging."""
+    """Snapshot of trigger state at one step. Suitable for CSV logging.
+
+    `fire` is gated on the active TrioronProfile's `allow_grow_node`
+    flag: if conditions are met but growth is disabled by profile
+    (e.g., under EDGE), fire stays False and `conditions_met` reports
+    True so logs can disambiguate "didn't fire because conditions" vs
+    "didn't fire because policy". See trioron.profile.
+    """
     step: int
     loss: float
     effective_rank: float
@@ -83,6 +90,7 @@ class TriggerState:
     rank_recent_mean: float
     grad_recent_median: float
     warmup: bool                  # True while histories aren't full
+    conditions_met: bool = False  # all three conditions hit, pre-profile-gate
 
 
 class GrowthTrigger:
@@ -156,7 +164,17 @@ class GrowthTrigger:
         )
         grad_stable = (not warmup) and (self.g_min <= grad_med <= self.g_max)
 
-        fire = loss_plateau and rank_saturated and grad_stable
+        conditions_met = loss_plateau and rank_saturated and grad_stable
+
+        # Profile gate: even when conditions are met, suppress fire if
+        # the active profile forbids cell-level growth. Lazy import to
+        # avoid a circular dependency at module init time.
+        if conditions_met:
+            from trioron.profile import TrioronProfile
+            profile_allows = TrioronProfile.active().allow_grow_node
+        else:
+            profile_allows = True  # moot — fire stays False anyway
+        fire = conditions_met and profile_allows
 
         return TriggerState(
             step=self._t - 1,
@@ -171,6 +189,7 @@ class GrowthTrigger:
             rank_recent_mean=rank_mean,
             grad_recent_median=grad_med,
             warmup=warmup,
+            conditions_met=conditions_met,
         )
 
     # ----- introspection used by tests + orchestrator -----

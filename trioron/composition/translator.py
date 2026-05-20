@@ -56,6 +56,7 @@ class L0Translator:
         b_a: torch.Tensor,
         W_b: torch.Tensor,
         b_b: torch.Tensor,
+        column_filter: Optional[torch.Tensor] = None,
     ):
         if W_a.shape != W_b.shape:
             raise ValueError(
@@ -77,7 +78,33 @@ class L0Translator:
         b_a32 = b_a.detach().to(torch.float32)
         b_b32 = b_b.detach().to(torch.float32)
 
-        W_a_pinv = torch.linalg.pinv(W_a32)              # (fan_in, n_out)
+        # Trioron 2.0 Phase 5 — R·S handshake restricted to standardized
+        # columns. When the caller supplies a column_filter bool tensor
+        # (typically the AND of both donors' standardized_column_mask()
+        # outputs), the pseudoinverse is computed over only those
+        # columns; long-range columns are excluded from the handshake
+        # and treated as branch-private extension. Default None = use
+        # all columns (backward-compat; 1.0 donors are all-standardized
+        # and the result is byte-identical to the unfiltered path).
+        if column_filter is not None:
+            cf = column_filter.detach().to(device=W_a32.device).bool()
+            if cf.ndim != 1 or cf.shape[0] != W_a32.shape[1]:
+                raise ValueError(
+                    f"column_filter shape {tuple(cf.shape)} != "
+                    f"(fan_in={W_a32.shape[1]},)"
+                )
+            if not cf.any():
+                raise ValueError(
+                    "column_filter selects zero columns; need at least "
+                    "one standardized column for the handshake."
+                )
+            W_a32 = W_a32[:, cf]
+            W_b32 = W_b32[:, cf]
+            self._column_filter: Optional[torch.Tensor] = cf
+        else:
+            self._column_filter = None
+
+        W_a_pinv = torch.linalg.pinv(W_a32)              # (fan_in*, n_out)
         M = W_b32 @ W_a_pinv                              # (n_out, n_out)
         c = b_b32 - M @ b_a32                             # (n_out,)
 

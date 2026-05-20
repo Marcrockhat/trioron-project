@@ -923,3 +923,127 @@ def test_extend_output_head_new_class_ids_length_must_match():
             init_data=(x, y),
             new_class_ids=[0],
         )
+
+
+# ---------- Phase 2: slot tracking + K_insert cap + profile gate ----------
+
+def test_original_layers_carry_slot_idx():
+    """Original layers k get _slot_idx = k for k < n-1, last gets -1.
+    Slot idx is 'the slot above this layer'."""
+    net = TrioronNetwork([
+        (4, 5, "relu"),
+        (5, 6, "relu"),
+        (6, 3, "linear"),
+    ])
+    assert net.layers[0]._slot_idx == 0
+    assert net.layers[1]._slot_idx == 1
+    assert net.layers[2]._slot_idx == -1
+
+
+def test_initial_insertions_per_slot_is_zero():
+    net = TrioronNetwork([
+        (4, 5, "relu"),
+        (5, 6, "relu"),
+        (6, 3, "linear"),
+    ])
+    assert net._insertions_per_slot == [0, 0]
+    assert net._n_original_layers == 3
+
+
+def test_insert_layer_tags_new_layer_with_slot():
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    new_idx = net.insert_layer(between=(0, 1))
+    assert net.layers[new_idx]._slot_idx == 0
+
+
+def test_insert_layer_increments_per_slot_counter():
+    net = TrioronNetwork([
+        (4, 5, "relu"),
+        (5, 6, "relu"),
+        (6, 3, "linear"),
+    ])
+    net.insert_layer(between=(0, 1))
+    assert net._insertions_per_slot == [1, 0]
+    net.insert_layer(between=(2, 3))   # original slot 1 (between orig 1 and orig 2)
+    assert net._insertions_per_slot == [1, 1]
+
+
+def test_inserted_layer_inherits_slot_from_below():
+    """Inserting between (i, j) lands in slot self.layers[i]._slot_idx.
+    Stacked insertions propagate the same slot identity."""
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    a = net.insert_layer(between=(0, 1))   # slot 0
+    # Now: [orig_0(slot=0), inserted_a(slot=0), orig_1(slot=-1)]
+    # Insert between (0, 1) again — between orig_0 and inserted_a, still slot 0.
+    net.insert_layer(between=(0, 1))
+    # And between (a+1, a+2) — between inserted_a and orig_1, still slot 0.
+    net.insert_layer(between=(2, 3))
+    assert net._insertions_per_slot == [3]
+
+
+def test_insert_layer_refuses_at_K_insert_cap():
+    import pytest
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    net.insert_layer(between=(0, 1), K_insert=2)
+    net.insert_layer(between=(0, 1), K_insert=2)
+    with pytest.raises(ValueError, match="K_insert cap"):
+        net.insert_layer(between=(0, 1), K_insert=2)
+
+
+def test_K_insert_cap_applies_per_slot_independently():
+    """A full slot doesn't block a different slot."""
+    import pytest
+    net = TrioronNetwork([
+        (4, 5, "relu"),
+        (5, 6, "relu"),
+        (6, 3, "linear"),
+    ])
+    # Fill slot 0 to its K_insert=1 cap.
+    net.insert_layer(between=(0, 1), K_insert=1)
+    with pytest.raises(ValueError, match="K_insert cap"):
+        net.insert_layer(between=(0, 1), K_insert=1)
+    # Slot 1 is independent — still open.
+    new_idx = net.insert_layer(between=(2, 3), K_insert=1)
+    assert new_idx == 3
+
+
+def test_failed_insert_does_not_bump_counter():
+    """If insert_layer raises (e.g., from a bad init_mode), the per-slot
+    counter must not increment."""
+    import pytest
+    from trioron.profile import TrioronProfile, REASONING
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    with pytest.raises(ValueError):
+        net.insert_layer(
+            between=(0, 1),
+            init_mode="growth_direction",   # requires init_vecs, omitted
+        )
+    assert net._insertions_per_slot == [0]
+
+
+def test_insert_layer_blocked_by_profile_gate():
+    """Active profile with allow_insert_layer=False must refuse the call."""
+    import pytest
+    from trioron.profile import TrioronProfile, EDGE
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    with TrioronProfile.use(EDGE):
+        with pytest.raises(ValueError, match="blocked by active TrioronProfile"):
+            net.insert_layer(between=(0, 1))
+    # Counter never bumped.
+    assert net._insertions_per_slot == [0]
+
+
+def test_insert_layer_permitted_under_reasoning_profile():
+    from trioron.profile import TrioronProfile, REASONING
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    with TrioronProfile.use(REASONING):
+        new_idx = net.insert_layer(between=(0, 1))
+    assert new_idx == 1
+    assert net._insertions_per_slot == [1]
+
+
+def test_K_insert_invalid_arg_raises():
+    import pytest
+    net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
+    with pytest.raises(ValueError, match="K_insert must be >= 1"):
+        net.insert_layer(between=(0, 1), K_insert=0)

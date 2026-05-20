@@ -76,6 +76,19 @@ _ACTIVATIONS = {
 }
 
 
+# Per-branch local nonlinearity (σ_branch, Trioron 2.0 Axis 5).
+# Applied to each branch's pre-pool sum in cells with K>1 only — the K=1
+# fast path bypasses σ_branch entirely. "quad" is the live default for
+# newly-constructed layers (NMDA-style supralinear, Poirazi & Mel 2003);
+# "identity" is the v1-donor default (point-neuron-equivalent even at K>1).
+_BRANCH_ACTIVATIONS = {
+    "quad": lambda z: z * z,
+    "sigmoid": torch.sigmoid,
+    "tanh": torch.tanh,
+    "identity": lambda z: z,
+}
+
+
 # One-shot warning state for ewc_penalty's silent-zero check. Process-wide
 # so a single training run doesn't get spammed once per layer per call.
 # Test hook: _EwcZeroWarning.reset() re-arms the warning between cases.
@@ -99,16 +112,45 @@ class TrioronLayer(nn.Module):
         u_init: float = 0.0,
         u_decay: float = 0.9,
         fisher_decay: float = 0.99,
+        branch_activation: Optional[str] = None,
+        B_max: Optional[int] = None,
     ):
         super().__init__()
+        # Axis 5 defaults consult the currently-active TrioronProfile
+        # when the caller leaves them None. Explicit kwargs always
+        # override. The default active profile is OPEN, which
+        # reproduces 1.0-era construction defaults byte-for-byte
+        # (branch_activation="quad", B_max=8). Imported lazily to
+        # avoid a circular dependency at module init.
+        if branch_activation is None or B_max is None:
+            from trioron.profile import TrioronProfile
+            active = TrioronProfile.active()
+            if branch_activation is None:
+                branch_activation = active.branch_activation
+            if B_max is None:
+                B_max = active.B_max
         if activation not in _ACTIVATIONS:
             raise ValueError(
                 f"Unknown activation '{activation}'. "
                 f"Supported: {list(_ACTIVATIONS.keys())}"
             )
+        if branch_activation not in _BRANCH_ACTIVATIONS:
+            raise ValueError(
+                f"Unknown branch_activation '{branch_activation}'. "
+                f"Supported: {list(_BRANCH_ACTIVATIONS.keys())}"
+            )
+        if B_max < 1:
+            raise ValueError(f"B_max must be >= 1, got {B_max}")
 
         self.fan_in = int(fan_in)
         self.activation = activation
+        # Trioron 2.0 Axis 5 (dendritic compartmentalization). σ_branch is
+        # the per-branch local nonlinearity applied inside cells with K>1.
+        # "quad" is the live default for fresh substrates; v1-loaded donors
+        # are auto-flipped to "identity" by _load_from_state_dict so they
+        # remain point-neuron-equivalent even if later grown to K>1.
+        self.branch_activation = branch_activation
+        self.B_max = int(B_max)
         self.u_decay = float(u_decay)
         self.fisher_decay = float(fisher_decay)
 
@@ -229,6 +271,66 @@ class TrioronLayer(nn.Module):
         self.register_buffer("axonal_gain", torch.ones(n_nodes))
         self.register_buffer("axonal_gain_anchor", torch.ones(n_nodes))
 
+        # Dendritic compartmentalization (Trioron 2.0 Axis 5). Each cell
+        # gains an internal flat partition of its fan_in columns into
+        # branches, each branch pooled with its own soma-side weight.
+        # At K=1 (every cell starts here), the forward bypasses σ_branch
+        # entirely and reduces to F.linear — byte-identical to 1.0. The
+        # K>1 path is exercised once grow_branch lands (Phase 2.5).
+        #
+        #   branch_id[i, j]  — column j of cell i belongs to branch_id[i, j]
+        #                       ∈ [0, B_per_node[i]). Init all-zero ⇒ every
+        #                       column on branch 0 ⇒ single-branch point neuron.
+        #   branch_weight    — soma pooling weight per (cell, branch). Plastic
+        #                       via gradient. Init [1, 0, ..., 0] per cell so
+        #                       the K=1 pool is exactly the branch-0 sum.
+        #   branch_weight_anchor / fisher_branch_weight — anchored-state
+        #                       mirror + per-branch Fisher; participate in
+        #                       ewc_penalty alongside W and b.
+        #   B_per_node[i]    — current branch count for cell i. Increments
+        #                       on grow_branch, decrements on prune_branch.
+        #   internal_stress[i] — EMA of |∂L/∂y_i| · engaged(y_i). Per-cell
+        #                       within-niche frustration signal. Phase 2.5
+        #                       uses it to trigger grow_branch.
+        #   branch_utility[i, b] — EMA of |branch_weight[i,b] · y_{i,b}|.
+        #                       Mozer/Smolensky saliency at branch granularity.
+        #                       Phase 2.5 uses it to trigger prune_branch.
+        # See trioron_2_0.md §3.5.
+        self.register_buffer(
+            "branch_id",
+            torch.zeros(n_nodes, fan_in, dtype=torch.long),
+        )
+        self.branch_weight = nn.Parameter(
+            torch.zeros(n_nodes, self.B_max)
+        )
+        with torch.no_grad():
+            self.branch_weight.data[:, 0] = 1.0
+        self.register_buffer(
+            "branch_weight_anchor", self.branch_weight.detach().clone(),
+        )
+        self.register_buffer(
+            "fisher_branch_weight", torch.zeros(n_nodes, self.B_max),
+        )
+        self.register_buffer(
+            "B_per_node", torch.ones(n_nodes, dtype=torch.long),
+        )
+        self.register_buffer("internal_stress", torch.zeros(n_nodes))
+        self.register_buffer(
+            "branch_utility", torch.zeros(n_nodes, self.B_max),
+        )
+        # Per-(cell, column) orphan mask (Trioron 2.0 Axis 5 — Phase 2.5).
+        # Flipped True when prune_branch removes a branch: the columns
+        # that belonged to the pruned branch are "orphaned" for THIS
+        # cell — its forward zeros them out — but other cells reading
+        # the same upstream source remain unaffected (the cell-level
+        # mask is finer-grained than `input_archived`, which is
+        # column-wide). Default all-False = no orphaned columns =
+        # byte-identical fast path.
+        self.register_buffer(
+            "dendrite_orphan",
+            torch.zeros(n_nodes, fan_in, dtype=torch.bool),
+        )
+
         # Saliency caches for |a · g| utility (Mozer & Smolensky 1989,
         # OBD/blueprint §3.2). _last_y is stashed on each grad-enabled
         # forward; _last_upstream is captured by a backward hook on y
@@ -237,6 +339,13 @@ class TrioronLayer(nn.Module):
         # buffers so they don't pollute state_dict / serialization.
         self._last_y: Optional[torch.Tensor] = None
         self._last_upstream: Optional[torch.Tensor] = None
+        # Per-branch caches from the K>1 dendritic forward (Trioron 2.0
+        # Phase 2.5). _last_y_branches is (batch, n_nodes, B_max), used
+        # by update_branch_utility for per-(cell, branch) saliency EMA.
+        # Only populated when the dendritic path runs (any cell K>1);
+        # the K=1 fast path leaves both at None. Transient, no buffer.
+        self._last_y_branches: Optional[torch.Tensor] = None
+        self._last_z_branches: Optional[torch.Tensor] = None
 
     # ----- properties -----
     @property
@@ -258,7 +367,18 @@ class TrioronLayer(nn.Module):
             x = x.to(self.W.dtype)
         scale = self.routing_scale.unsqueeze(1).to(self.W.dtype)
         W_eff = self.W * scale
-        z = F.linear(x, W_eff, self.b)
+
+        # Axis 5 two-stage forward. All-K=1 is the entire installed base
+        # (every 1.0 donor + every freshly-constructed substrate before
+        # grow_branch fires) and takes the F.linear fast path —
+        # byte-identical to 1.0. The .all().item() is a single-scalar
+        # CPU sync per forward; acceptable until Phase 2.5 introduces
+        # branch mutation, at which point we'll cache the flag.
+        if bool((self.B_per_node == 1).all().item()):
+            z = F.linear(x, W_eff, self.b)
+        else:
+            z = self._forward_dendritic(x, W_eff)
+
         y = _ACTIVATIONS[self.activation](z)
         # Stash post-activation y + register a backward hook for
         # upstream gradient ∂L/∂y. Together these enable
@@ -270,6 +390,64 @@ class TrioronLayer(nn.Module):
             self._last_y = y.detach()
             y.register_hook(self._capture_upstream)
         return y
+
+    def _forward_dendritic(
+        self, x: torch.Tensor, W_eff: torch.Tensor,
+    ) -> torch.Tensor:
+        """K>1 dendritic forward (Trioron 2.0 Axis 5).
+
+        Returns the soma pre-activation (n_nodes, batch) → batch-first
+        (batch, n_nodes), which the caller then runs through σ_soma.
+
+        Per-cell K=1 shortcut: cells with B_per_node[i] == 1 still take
+        σ_branch=identity inside this path (matching the fast-path
+        semantics), so a K=1 cell embedded in a mixed-K population stays
+        point-neuron-equivalent. Only K>1 cells see σ_branch.
+        """
+        batch_size = x.shape[0]
+        n_nodes = self.n_nodes
+        B_max = self.branch_weight.shape[1]
+
+        # contrib[batch, i, j] = x[batch, j] · W_eff[i, j].
+        # (batch, 1, fan_in) × (1, n_nodes, fan_in) → (batch, n_nodes, fan_in).
+        # This materializes a (batch, n_nodes, fan_in) tensor — fine at
+        # typical layer sizes, and only hit when at least one cell has
+        # grown to K>1 (Phase 2.5).
+        contrib = x.unsqueeze(1) * W_eff.unsqueeze(0)
+
+        # Phase 2.5: zero out orphaned (cell, column) pairs before the
+        # scatter. dendrite_orphan[i, j] = True means cell i's pruned
+        # branch carried column j and the cell now skips it. Other cells
+        # reading the same upstream source are unaffected.
+        if self.dendrite_orphan.any():
+            keep = (~self.dendrite_orphan).unsqueeze(0).to(contrib.dtype)
+            contrib = contrib * keep
+
+        # scatter_add per-branch sum: z_branches[batch, i, b] =
+        #   Σ_{j : branch_id[i, j] == b} contrib[batch, i, j].
+        z_branches = contrib.new_zeros(batch_size, n_nodes, B_max)
+        idx = self.branch_id.unsqueeze(0).expand(batch_size, -1, -1)
+        z_branches = z_branches.scatter_add(2, idx, contrib)
+
+        # σ_branch on all cells uniformly, then per-cell shortcut
+        # restores identity for K=1 cells. is_k1 is a (1, n_nodes, 1)
+        # float mask broadcast across (batch, n_nodes, B_max).
+        y_branches_raw = _BRANCH_ACTIVATIONS[self.branch_activation](z_branches)
+        is_k1 = (
+            (self.B_per_node == 1).view(1, n_nodes, 1).to(z_branches.dtype)
+        )
+        y_branches = is_k1 * z_branches + (1.0 - is_k1) * y_branches_raw
+
+        # Cache per-branch tensors for update_branch_utility / debugging.
+        # Detach so the EMA path doesn't pull gradient back through here.
+        # Only populated when this dendritic path actually runs.
+        self._last_z_branches = z_branches.detach()
+        self._last_y_branches = y_branches.detach()
+
+        # Soma pool: Σ_b branch_weight[i, b] · y_branches[batch, i, b].
+        bw = self.branch_weight.to(self.W.dtype).unsqueeze(0)
+        soma_input = (bw * y_branches).sum(dim=2)
+        return soma_input + self.b
 
     def _capture_upstream(self, grad: torch.Tensor) -> None:
         """Backward hook: record ∂L/∂y for saliency_utility()."""
@@ -283,6 +461,12 @@ class TrioronLayer(nn.Module):
         Call AFTER loss.backward() and BEFORE optimizer.step(). Archived
         rows are skipped — they're locked at consolidated state and have
         no gradient signal worth tracking.
+
+        Trioron 2.0 Axis 5: fisher_branch_weight tracks per-(cell,
+        branch) squared gradient on the dendritic pool weights, mirroring
+        fisher_W's treatment of W. Enters ewc_penalty at per-branch
+        granularity (unlike fisher_W, which is pre-collapsed into per-cell
+        λ via update_lambda).
         """
         if self.W.grad is None:
             return
@@ -301,6 +485,14 @@ class TrioronLayer(nn.Module):
                     grad_b_sq[self.archived] = 0.0
                 self.fisher_b.mul_(self.fisher_decay).add_(
                     grad_b_sq, alpha=1.0 - self.fisher_decay,
+                )
+            if self.branch_weight.grad is not None:
+                grad_bw_sq = self.branch_weight.grad.detach().pow(2)
+                if self.archived.any():
+                    grad_bw_sq = grad_bw_sq.clone()
+                    grad_bw_sq[self.archived] = 0.0
+                self.fisher_branch_weight.mul_(self.fisher_decay).add_(
+                    grad_bw_sq, alpha=1.0 - self.fisher_decay,
                 )
 
     def update_lambda(self) -> None:
@@ -471,16 +663,16 @@ class TrioronLayer(nn.Module):
 
         Call after a successful learning plateau to lock current state in.
         Subsequent EWC penalty drags W back toward this snapshot.
-        Also snapshots routing_scale and axonal_gain so
-        forward_with_anchors can reconstruct the consolidated state
-        across all per-node multiplicative gains (destination-side
-        `routing_scale` and source-side `axonal_gain`).
+        Also snapshots routing_scale, axonal_gain, and branch_weight
+        (Trioron 2.0 Axis 5) so forward_with_anchors can reconstruct
+        the consolidated state across all per-node and per-branch gains.
         """
         with torch.no_grad():
             self.W_anchor.copy_(self.W.detach())
             self.b_anchor.copy_(self.b.detach())
             self.routing_scale_anchor.copy_(self.routing_scale.detach())
             self.axonal_gain_anchor.copy_(self.axonal_gain.detach())
+            self.branch_weight_anchor.copy_(self.branch_weight.detach())
 
     def archive_row(self, idx: int) -> None:
         """Mark row `idx` as archived: snap W and b to their anchored
@@ -608,7 +800,17 @@ class TrioronLayer(nn.Module):
         stiffness = eff_lam.unsqueeze(1)  # (n_nodes, 1)
         pen_W = (stiffness * (self.W - self.W_anchor).pow(2)).sum()
         pen_b = (eff_lam * (self.b - self.b_anchor).pow(2)).sum()
-        return pen_W + pen_b
+        # Trioron 2.0 Axis 5: branch_weight enters EWC at per-branch
+        # granularity, scaled by both fisher_branch_weight (per-branch)
+        # and per-cell eff_lam. Unlike W (whose Fisher is pre-collapsed
+        # into λ), branch_weight uses fisher_branch_weight directly so
+        # individual branches that drift can be selectively protected
+        # without stiffening every branch in the cell uniformly.
+        pen_bw = (
+            stiffness * self.fisher_branch_weight
+            * (self.branch_weight - self.branch_weight_anchor).pow(2)
+        ).sum()
+        return pen_W + pen_b + pen_bw
 
     # ----- structural plasticity -----
 
@@ -616,6 +818,7 @@ class TrioronLayer(nn.Module):
         self,
         init_vec: Optional[torch.Tensor] = None,
         task_idx: int = 0,
+        parent_idx: Optional[int] = None,
     ) -> int:
         """Add one new node to the layer. Returns the index of the new node.
 
@@ -624,6 +827,11 @@ class TrioronLayer(nn.Module):
         task_idx: current task index (used by dreaming-phase routing
             starvation to pick the YOUNGER of two redundant nodes as
             victim). Defaults to 0 so legacy callers / tests are unaffected.
+        parent_idx: optional Trioron 2.0 Axis 5 sister-specialist seed.
+            When provided, the new cell inherits the parent's dendritic
+            structure (branch_id row, branch_weight row, B_per_node) via
+            inherit_dendrite, with a 5% ε column-reassignment perturbation.
+            Default None preserves 1.0 behavior: blank-slate K=1 child.
 
         After calling this, REBUILD any optimizer that referenced this layer's
         parameters — the W and b Parameter objects are replaced.
@@ -701,10 +909,57 @@ class TrioronLayer(nn.Module):
             new_axonal_gain_anchor = torch.cat(
                 [self.axonal_gain_anchor, torch.ones(1, device=device)]
             )
+            # Trioron 2.0 Axis 5: dendritic state for the new cell. Born
+            # at K=1 (every column on branch 0, branch_weight = [1, 0..]),
+            # no internal stress / utility / Fisher yet. Phase 2.5's
+            # inherit_dendrite will overwrite branch_id and branch_weight
+            # with a parent's pattern + ε perturbation when parent_idx
+            # is supplied; for now the new cell is a blank-slate point
+            # neuron.
+            new_branch_id = torch.cat(
+                [self.branch_id,
+                 torch.zeros(1, self.fan_in, dtype=torch.long, device=device)],
+                dim=0,
+            )
+            new_bw_row = torch.zeros(
+                1, self.B_max, dtype=self.branch_weight.dtype, device=device,
+            )
+            new_bw_row[0, 0] = 1.0
+            new_branch_weight = torch.cat([self.branch_weight.data, new_bw_row], dim=0)
+            new_branch_weight_anchor = torch.cat(
+                [self.branch_weight_anchor, new_bw_row.clone().to(self.branch_weight_anchor.dtype)],
+                dim=0,
+            )
+            new_fisher_branch_weight = torch.cat(
+                [self.fisher_branch_weight,
+                 torch.zeros(1, self.B_max,
+                             dtype=self.fisher_branch_weight.dtype, device=device)],
+                dim=0,
+            )
+            new_B_per_node = torch.cat(
+                [self.B_per_node,
+                 torch.ones(1, dtype=torch.long, device=device)],
+            )
+            new_internal_stress = torch.cat(
+                [self.internal_stress, torch.zeros(1, device=device)]
+            )
+            new_branch_utility = torch.cat(
+                [self.branch_utility,
+                 torch.zeros(1, self.B_max,
+                             dtype=self.branch_utility.dtype, device=device)],
+                dim=0,
+            )
+            new_dendrite_orphan = torch.cat(
+                [self.dendrite_orphan,
+                 torch.zeros(1, self.fan_in,
+                             dtype=torch.bool, device=device)],
+                dim=0,
+            )
 
         # Re-register parameters and buffers with new shapes.
         self._replace_parameter("W", new_W)
         self._replace_parameter("b", new_b)
+        self._replace_parameter("branch_weight", new_branch_weight)
         self._replace_buffer("lam", new_lam)
         self._replace_buffer("u", new_u)
         self._replace_buffer("W_anchor", new_W_anchor)
@@ -720,6 +975,19 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("lam_high_streak", new_lam_high_streak)
         self._replace_buffer("axonal_gain", new_axonal_gain)
         self._replace_buffer("axonal_gain_anchor", new_axonal_gain_anchor)
+        self._replace_buffer("branch_id", new_branch_id)
+        self._replace_buffer("branch_weight_anchor", new_branch_weight_anchor)
+        self._replace_buffer("fisher_branch_weight", new_fisher_branch_weight)
+        self._replace_buffer("B_per_node", new_B_per_node)
+        self._replace_buffer("internal_stress", new_internal_stress)
+        self._replace_buffer("branch_utility", new_branch_utility)
+        self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
+
+        # Axis 5 sister-specialist inheritance. inherit_dendrite
+        # validates parent_idx against the post-grow n_nodes and refuses
+        # parent_idx == child_idx, so the validation happens there.
+        if parent_idx is not None:
+            self.inherit_dendrite(parent_idx, self.n_nodes - 1)
 
         return self.n_nodes - 1
 
@@ -786,6 +1054,19 @@ class TrioronLayer(nn.Module):
                 [self.input_archived,
                  torch.zeros(1, dtype=torch.bool, device=device)],
             )
+            # Trioron 2.0 Axis 5: new column lands on branch 0 (default
+            # niche). Phase 2.5's grow_branch may later reassign it. New
+            # column starts un-orphaned for every existing cell.
+            new_branch_id = torch.cat(
+                [self.branch_id,
+                 torch.zeros(self.n_nodes, 1, dtype=torch.long, device=device)],
+                dim=1,
+            )
+            new_dendrite_orphan = torch.cat(
+                [self.dendrite_orphan,
+                 torch.zeros(self.n_nodes, 1, dtype=torch.bool, device=device)],
+                dim=1,
+            )
 
         self.fan_in += 1
         self._replace_parameter("W", new_W)
@@ -793,6 +1074,8 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("fisher_W", new_fisher_W)
         self._replace_buffer("input_sources", new_input_sources)
         self._replace_buffer("input_archived", new_input_archived)
+        self._replace_buffer("branch_id", new_branch_id)
+        self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
 
     def prune_input(self, col_idx: int) -> None:
         """Remove the input column at `col_idx`. Inverse of grow_input.
@@ -817,6 +1100,10 @@ class TrioronLayer(nn.Module):
             new_fisher_W = self.fisher_W.index_select(1, keep_t)
             new_input_sources = self.input_sources.index_select(0, keep_t)
             new_input_archived = self.input_archived.index_select(0, keep_t)
+            # Trioron 2.0 Axis 5: drop the matching branch_id /
+            # dendrite_orphan columns.
+            new_branch_id = self.branch_id.index_select(1, keep_t)
+            new_dendrite_orphan = self.dendrite_orphan.index_select(1, keep_t)
 
         self.fan_in -= 1
         self._replace_parameter("W", new_W)
@@ -824,6 +1111,8 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("fisher_W", new_fisher_W)
         self._replace_buffer("input_sources", new_input_sources)
         self._replace_buffer("input_archived", new_input_archived)
+        self._replace_buffer("branch_id", new_branch_id)
+        self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
 
     def prune_node(self, idx: int) -> None:
         """Remove the node at index `idx`. Same optimizer rebuild caveat as grow_node."""
@@ -853,9 +1142,18 @@ class TrioronLayer(nn.Module):
             new_lam_high_streak = self.lam_high_streak.index_select(0, keep_t)
             new_axonal_gain = self.axonal_gain.index_select(0, keep_t)
             new_axonal_gain_anchor = self.axonal_gain_anchor.index_select(0, keep_t)
+            new_branch_id = self.branch_id.index_select(0, keep_t)
+            new_branch_weight = self.branch_weight.data.index_select(0, keep_t)
+            new_branch_weight_anchor = self.branch_weight_anchor.index_select(0, keep_t)
+            new_fisher_branch_weight = self.fisher_branch_weight.index_select(0, keep_t)
+            new_B_per_node = self.B_per_node.index_select(0, keep_t)
+            new_internal_stress = self.internal_stress.index_select(0, keep_t)
+            new_branch_utility = self.branch_utility.index_select(0, keep_t)
+            new_dendrite_orphan_row = self.dendrite_orphan.index_select(0, keep_t)
 
         self._replace_parameter("W", new_W)
         self._replace_parameter("b", new_b)
+        self._replace_parameter("branch_weight", new_branch_weight)
         self._replace_buffer("lam", new_lam)
         self._replace_buffer("u", new_u)
         self._replace_buffer("W_anchor", new_W_anchor)
@@ -871,6 +1169,377 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("lam_high_streak", new_lam_high_streak)
         self._replace_buffer("axonal_gain", new_axonal_gain)
         self._replace_buffer("axonal_gain_anchor", new_axonal_gain_anchor)
+        self._replace_buffer("branch_id", new_branch_id)
+        self._replace_buffer("branch_weight_anchor", new_branch_weight_anchor)
+        self._replace_buffer("fisher_branch_weight", new_fisher_branch_weight)
+        self._replace_buffer("B_per_node", new_B_per_node)
+        self._replace_buffer("internal_stress", new_internal_stress)
+        self._replace_buffer("branch_utility", new_branch_utility)
+        self._replace_buffer("dendrite_orphan", new_dendrite_orphan_row)
+
+    # ----- dendritic plasticity (Trioron 2.0 Axis 5, Phase 2.5) -----
+
+    def grow_branch(
+        self,
+        node_idx: int,
+        source_cols,
+    ) -> int:
+        """Split a cell's flat fan-in into a new dendritic branch.
+
+        Reassigns the columns in `source_cols` from their current
+        branches on cell `node_idx` to a freshly-allocated branch. The
+        new branch's soma-side weight is initialized to
+        0.1 · mean(branch_weight[node_idx, :B_per_node[node_idx]]) —
+        small enough not to perturb the cell's forward output, large
+        enough that gradient routes through it immediately. Increments
+        B_per_node[node_idx] and returns the new branch index.
+
+        Refuses if B_per_node[node_idx] == B_max (lifetime budget) or
+        if source_cols is empty / out-of-range / duplicated. No
+        optimizer rebuild required: branch_weight retains its Parameter
+        identity (the new branch slot was already allocated at
+        construction). Adam moments for the new slot are stale at
+        initialization (zero), which aligns with the convention that
+        unused slots carry zero moment anyway.
+        """
+        if not (0 <= node_idx < self.n_nodes):
+            raise IndexError(
+                f"grow_branch node_idx {node_idx} out of range "
+                f"[0, {self.n_nodes})"
+            )
+        cols = torch.as_tensor(
+            source_cols, dtype=torch.long, device=self.W.device,
+        ).reshape(-1)
+        if cols.numel() == 0:
+            raise ValueError("grow_branch source_cols must be non-empty")
+        if (cols < 0).any() or (cols >= self.fan_in).any():
+            raise IndexError(
+                f"grow_branch source_cols out of range [0, {self.fan_in})"
+            )
+        if cols.unique().numel() != cols.numel():
+            raise ValueError("grow_branch source_cols must be unique")
+
+        K = int(self.B_per_node[node_idx].item())
+        if K >= self.B_max:
+            raise ValueError(
+                f"grow_branch on node {node_idx}: B_per_node already at "
+                f"B_max={self.B_max}"
+            )
+
+        new_idx = K
+        with torch.no_grad():
+            self.branch_id[node_idx, cols] = new_idx
+            # Orphan flag clears for any reassigned column — joining a
+            # live branch un-prunes that cell's connection to the source.
+            self.dendrite_orphan[node_idx, cols] = False
+            mean_w = self.branch_weight.data[node_idx, :K].mean()
+            self.branch_weight.data[node_idx, new_idx] = 0.1 * mean_w
+            self.branch_weight_anchor[node_idx, new_idx] = (
+                self.branch_weight.data[node_idx, new_idx]
+            )
+            self.fisher_branch_weight[node_idx, new_idx] = 0.0
+            self.branch_utility[node_idx, new_idx] = 0.0
+            self.B_per_node[node_idx] = K + 1
+        return new_idx
+
+    def prune_branch(self, node_idx: int, branch_idx: int) -> None:
+        """Retract a dendritic branch from a cell.
+
+        Removes branch `branch_idx` from cell `node_idx`:
+          - columns assigned to it become orphaned for this cell
+            (dendrite_orphan[node_idx, cols] = True). The cell's
+            forward zeros their contribution; other cells reading the
+            same upstream source remain unaffected.
+          - higher-numbered branches are compacted down by one
+            (branch_id renumbered, branch_weight / anchor / fisher /
+            utility columns shifted left at branch_idx).
+          - B_per_node[node_idx] decrements.
+
+        Refuses if B_per_node[node_idx] == 1 (cell apoptosis handles
+        the last-branch case) or if branch_idx is out of range. After
+        a prune, Adam moments for the compacted slots are stale
+        (they're still indexed by the old branch number); callers that
+        care should reset the optimizer for the affected cell.
+        """
+        if not (0 <= node_idx < self.n_nodes):
+            raise IndexError(
+                f"prune_branch node_idx {node_idx} out of range "
+                f"[0, {self.n_nodes})"
+            )
+        K = int(self.B_per_node[node_idx].item())
+        if K == 1:
+            raise ValueError(
+                f"prune_branch on node {node_idx}: cannot prune at K=1 — "
+                f"use cell-level apoptosis instead"
+            )
+        if not (0 <= branch_idx < K):
+            raise IndexError(
+                f"prune_branch branch_idx {branch_idx} out of range "
+                f"[0, {K})"
+            )
+
+        with torch.no_grad():
+            row_branch_id = self.branch_id[node_idx]
+            # 1. Orphan the columns this branch held.
+            orphan_cols = (row_branch_id == branch_idx)
+            self.dendrite_orphan[node_idx, orphan_cols] = True
+            # 2. Renumber higher branches down by 1.
+            higher = row_branch_id > branch_idx
+            self.branch_id[node_idx, higher] = (
+                row_branch_id[higher] - 1
+            )
+            # Orphaned columns' branch_id resets to 0 (their contrib is
+            # masked out via dendrite_orphan; the canonical value
+            # doesn't matter functionally but 0 keeps the buffer tidy).
+            self.branch_id[node_idx, orphan_cols] = 0
+            # 3. Shift branch_weight / anchor / fisher / utility columns
+            #    branch_idx+1..K-1 → branch_idx..K-2; zero the tail.
+            if branch_idx < K - 1:
+                shift = slice(branch_idx, K - 1)
+                source = slice(branch_idx + 1, K)
+                self.branch_weight.data[node_idx, shift] = (
+                    self.branch_weight.data[node_idx, source]
+                )
+                self.branch_weight_anchor[node_idx, shift] = (
+                    self.branch_weight_anchor[node_idx, source]
+                )
+                self.fisher_branch_weight[node_idx, shift] = (
+                    self.fisher_branch_weight[node_idx, source]
+                )
+                self.branch_utility[node_idx, shift] = (
+                    self.branch_utility[node_idx, source]
+                )
+            # Vacated tail slot resets to defaults.
+            self.branch_weight.data[node_idx, K - 1] = 0.0
+            self.branch_weight_anchor[node_idx, K - 1] = 0.0
+            self.fisher_branch_weight[node_idx, K - 1] = 0.0
+            self.branch_utility[node_idx, K - 1] = 0.0
+            # 4. Decrement branch count.
+            self.B_per_node[node_idx] = K - 1
+
+    def inherit_dendrite(
+        self,
+        parent_idx: int,
+        child_idx: int,
+        perturb_frac: float = 0.05,
+    ) -> None:
+        """Seed a child cell's dendritic structure from a parent.
+
+        Called automatically by grow_node when a parent_idx is supplied.
+        Copies the parent's branch_id row, branch_weight row, and
+        B_per_node entry, then randomly reassigns `perturb_frac` of the
+        child's columns to OTHER existing branches (the ε structural
+        perturbation that gives the child a sister-specialist identity
+        rather than a literal clone).
+
+        If the parent is K=1, perturbation is a no-op (only one branch
+        to choose from) — the child is born a faithful K=1 clone and
+        will diverge through subsequent grow_branch events.
+
+        Resets the child's fisher_branch_weight, branch_utility, and
+        dendrite_orphan to defaults — the child inherits structure but
+        not gradient history.
+        """
+        if not (0 <= parent_idx < self.n_nodes):
+            raise IndexError(
+                f"inherit_dendrite parent_idx {parent_idx} out of range "
+                f"[0, {self.n_nodes})"
+            )
+        if not (0 <= child_idx < self.n_nodes):
+            raise IndexError(
+                f"inherit_dendrite child_idx {child_idx} out of range "
+                f"[0, {self.n_nodes})"
+            )
+        if parent_idx == child_idx:
+            raise ValueError("inherit_dendrite: parent_idx == child_idx")
+        if not (0.0 <= perturb_frac <= 1.0):
+            raise ValueError(
+                f"inherit_dendrite perturb_frac {perturb_frac} not in [0, 1]"
+            )
+
+        K_parent = int(self.B_per_node[parent_idx].item())
+        with torch.no_grad():
+            self.branch_id[child_idx].copy_(self.branch_id[parent_idx])
+            self.branch_weight.data[child_idx].copy_(
+                self.branch_weight.data[parent_idx]
+            )
+            self.branch_weight_anchor[child_idx].copy_(
+                self.branch_weight.data[parent_idx]
+            )
+            self.fisher_branch_weight[child_idx].zero_()
+            self.branch_utility[child_idx].zero_()
+            self.dendrite_orphan[child_idx].zero_()
+            self.B_per_node[child_idx] = K_parent
+
+            if K_parent > 1 and perturb_frac > 0:
+                n_perturb = max(1, int(round(perturb_frac * self.fan_in)))
+                n_perturb = min(n_perturb, self.fan_in)
+                perm = torch.randperm(
+                    self.fan_in, device=self.W.device,
+                )[:n_perturb]
+                for j in perm.tolist():
+                    current = int(self.branch_id[child_idx, j].item())
+                    others = [b for b in range(K_parent) if b != current]
+                    pick = torch.randint(
+                        0, len(others), (1,), device=self.W.device,
+                    ).item()
+                    self.branch_id[child_idx, j] = others[pick]
+
+    def select_parent(self) -> int:
+        """Pick the existing cell with the highest mean activation
+        across the most recent grad-enabled forward as the parent for
+        a grow_node call.
+
+        Ties are broken by lowest index (torch.argmax convention).
+        Raises if no forward has run yet (no _last_y cached).
+        """
+        if self._last_y is None:
+            raise RuntimeError(
+                "select_parent: no cached forward yet — run a "
+                "grad-enabled forward first"
+            )
+        return int(self._last_y.mean(dim=0).argmax().item())
+
+    def update_internal_stress(self) -> None:
+        """EMA update of per-cell internal stress (within-niche signal).
+
+            internal_stress[i] = EMA( |∂L/∂y_i| · engaged(y_i) )
+
+        engaged(y) = 1(y > 0) for ReLU; 1(|y| > 0.05) for tanh / linear.
+
+        Call AFTER loss.backward() (so _last_upstream is populated).
+        No-op if no grad-enabled forward + backward has run yet.
+        """
+        if self._last_y is None or self._last_upstream is None:
+            return
+        with torch.no_grad():
+            if self.activation == "relu":
+                engaged = (self._last_y > 0).to(self._last_y.dtype)
+            else:
+                engaged = (self._last_y.abs() > 0.05).to(self._last_y.dtype)
+            stress = (self._last_upstream.abs() * engaged).mean(dim=0)
+            stress = stress.to(
+                device=self.internal_stress.device,
+                dtype=self.internal_stress.dtype,
+            )
+            self.internal_stress.mul_(self.fisher_decay).add_(
+                stress, alpha=1.0 - self.fisher_decay,
+            )
+
+    def update_branch_utility(self) -> None:
+        """EMA update of per-(cell, branch) saliency.
+
+            branch_utility[i, b] = EMA( |branch_weight[i, b] · y_{i, b}| )
+
+        Mozer & Smolensky utility at branch granularity. Only does work
+        when the K>1 dendritic forward ran (so y_branches is cached);
+        otherwise returns silently — the K=1 fast path doesn't compute
+        per-branch outputs and there's no branch structure to track.
+        """
+        if self._last_y_branches is None:
+            return
+        with torch.no_grad():
+            bw = (
+                self.branch_weight.data.unsqueeze(0)
+                .to(self._last_y_branches.dtype)
+            )
+            contrib = (bw * self._last_y_branches).abs().mean(dim=0)
+            contrib = contrib.to(
+                device=self.branch_utility.device,
+                dtype=self.branch_utility.dtype,
+            )
+            self.branch_utility.mul_(self.fisher_decay).add_(
+                contrib, alpha=1.0 - self.fisher_decay,
+            )
+
+    def reset_dendritic_state(self) -> None:
+        """Reset all Axis 5 dendritic state to K=1 / point-neuron form.
+
+        Used by donor absorption (spec §5.2): R·S factorizes W's column
+        space and does not depend on branch_id, so a donor's
+        post-training dendritic structure (which branch carries which
+        column, branch_weight per branch, etc.) is not portable. After
+        absorption, the absorbed substrate joins the host's dendritic
+        regime at K=1 and re-grows branches under the host's
+        internal-stress signals.
+
+        Idempotent: calling on an already-K=1 layer is a no-op modulo
+        clearing utility / stress EMAs.
+
+        Buffers reset:
+          branch_id            → all 0 (every column on branch 0)
+          branch_weight        → [1.0, 0.0, ..., 0.0] per cell
+          branch_weight_anchor → mirror of branch_weight
+          fisher_branch_weight → all 0
+          B_per_node           → all 1
+          internal_stress      → all 0
+          branch_utility       → all 0
+          dendrite_orphan      → all False
+        """
+        with torch.no_grad():
+            self.branch_id.zero_()
+            self.branch_weight.data.zero_()
+            self.branch_weight.data[:, 0] = 1.0
+            self.branch_weight_anchor.copy_(self.branch_weight.data)
+            self.fisher_branch_weight.zero_()
+            self.B_per_node.fill_(1)
+            self.internal_stress.zero_()
+            self.branch_utility.zero_()
+            self.dendrite_orphan.zero_()
+
+    def standardized_column_mask(self) -> torch.Tensor:
+        """Return bool[fan_in] True for columns at sequential-default
+        provenance (input_sources[j] == (-1, -1)).
+
+        Used by the R·S handshake (composition.translator) per spec
+        §5.2: cross-donor factorization operates only on the
+        standardized subset of columns; long-range columns are
+        per-donor private and excluded from the handshake. 1.0 donors
+        trivially have all-standardized columns.
+        """
+        return (self.input_sources < 0).all(dim=1)
+
+    def internal_frustration_candidates(
+        self,
+        threshold: float = 0.05,
+        overall_saliency_ceiling: float = 0.1,
+    ) -> list[int]:
+        """Cells eligible for grow_branch (specialist trying but
+        failing to discriminate within its niche).
+
+        Returns cell indices sorted by internal_stress descending,
+        keeping only those where:
+          - internal_stress[i] > threshold  (within-niche failure)
+          - saliency_utility[i] < overall_saliency_ceiling  (NOT a
+            cell with strong overall contribution — those are handled
+            by population-level frustration, not within-niche growth)
+
+        For Phase 2.5 the saliency-utility proxy for 'overall stress'
+        is intentional: if a cell is loudly contributing to good
+        outputs, its high internal_stress is noise — keep its current
+        flat structure. Phase 3+ may refine this.
+
+        Returns an empty list when the active TrioronProfile has
+        `allow_grow_branch=False` (e.g., under CLASSIFICATION or EDGE
+        regimes). grow_branch itself remains callable for explicit
+        manual use; this is the policy-layer gate.
+        """
+        from trioron.profile import TrioronProfile
+        if not TrioronProfile.active().allow_grow_branch:
+            return []
+        with torch.no_grad():
+            high_internal = (
+                self.internal_stress > threshold
+            ).nonzero(as_tuple=True)[0]
+            if high_internal.numel() == 0:
+                return []
+            overall = self.saliency_utility()
+            mask = overall[high_internal] < overall_saliency_ceiling
+            keep = high_internal[mask]
+            if keep.numel() == 0:
+                return []
+            order = self.internal_stress[keep].argsort(descending=True)
+            return keep[order].tolist()
 
     # ----- low-level helpers -----
 
@@ -886,17 +1555,31 @@ class TrioronLayer(nn.Module):
 
     # ----- state-dict back-compat (Trioron 2.0 Phase 4) -----
 
-    # New buffers introduced in Trioron 2.0 Phase 1. Pre-2.0 donor
+    # New buffers / parameters introduced in Trioron 2.0. Pre-2.0 donor
     # checkpoints don't have these keys; in strict-mode load_state_dict
     # the missing keys would raise. We override _load_from_state_dict
     # to inject the layer's current default value for any 2.0 key not
     # present in the incoming state_dict — preserving back-compat with
-    # the entire pre-2.0 shipped-donor zoo.
-    _TRIORON_2_0_BUFFERS = (
+    # the entire pre-2.0 shipped-donor zoo. branch_weight is included
+    # here because it's a 2.0-introduced Parameter; PyTorch's strict
+    # load treats parameters and buffers uniformly in the missing-keys
+    # check, so the same default-injection trick works for both.
+    _TRIORON_2_0_KEYS = (
+        # Phase 1 (Axes 1, 2, 4):
         "input_sources",
         "input_archived",
         "axonal_gain",
         "axonal_gain_anchor",
+        # Phase 1.5 (Axis 5 — dendritic compartmentalization):
+        "branch_id",
+        "branch_weight",
+        "branch_weight_anchor",
+        "fisher_branch_weight",
+        "B_per_node",
+        "internal_stress",
+        "branch_utility",
+        # Phase 2.5 (orphan mask for prune_branch):
+        "dendrite_orphan",
     )
 
     def _load_from_state_dict(
@@ -909,14 +1592,35 @@ class TrioronLayer(nn.Module):
         unexpected_keys,
         error_msgs,
     ):
-        # Inject defaults for any 2.0 buffer the incoming state_dict
-        # doesn't carry. The layer was constructed with current 2.0
-        # defaults; we just push them into the dict so PyTorch's
-        # strict-mode load doesn't trip on missing keys.
-        for buf_name in self._TRIORON_2_0_BUFFERS:
-            full_key = prefix + buf_name
+        # v1 donor detection: state-dicts written before Axis 5 don't
+        # carry `branch_id`. When that key is absent we treat the load
+        # as a v1 donor and flip branch_activation to "identity" so the
+        # absorbed substrate remains point-neuron-equivalent even if it
+        # later grows branches under the host's machinery (Phase 2.5+).
+        # See trioron_2_0.md §5.1.
+        #
+        # Profile override (re_apply_after_donor_load): when the active
+        # TrioronProfile sets re_apply_after_donor_load=True (default),
+        # the v1 flip is undone after load — the profile's chosen
+        # branch_activation wins. Set False on the profile to honor the
+        # v1 silent-override and freeze the loaded layer as
+        # point-neuron-equivalent regardless of regime.
+        if (prefix + "branch_id") not in state_dict:
+            from trioron.profile import TrioronProfile
+            active = TrioronProfile.active()
+            if active.re_apply_after_donor_load:
+                self.branch_activation = active.branch_activation
+            else:
+                self.branch_activation = "identity"
+
+        # Inject defaults for any 2.0 buffer / parameter the incoming
+        # state_dict doesn't carry. The layer was constructed with the
+        # current 2.0 defaults; we just push them into the dict so
+        # PyTorch's strict-mode load doesn't trip on missing keys.
+        for key_name in self._TRIORON_2_0_KEYS:
+            full_key = prefix + key_name
             if full_key not in state_dict:
-                state_dict[full_key] = getattr(self, buf_name).clone()
+                state_dict[full_key] = getattr(self, key_name).detach().clone()
         return super()._load_from_state_dict(
             state_dict,
             prefix,
