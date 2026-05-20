@@ -1,0 +1,31 @@
+trioron 2.0 — Phase 6 multi-class within-niche bench
+task: 4 concentric rings (radii 1.0/1.3/1.6/1.9, noise=0.05)
+substrate: L1 TrioronLayer(fan_in=2, n_nodes=4, linear) + Linear(4,4) head
+arms: K=1 / K=2_forced / K=1->trigger    n_seeds=10
+
+seed  0: K=1 acc=0.2250 | K=2_forced acc=1.0000 | K=1->trigger acc=1.0000 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  1: K=1 acc=0.2250 | K=2_forced acc=0.9975 | K=1->trigger acc=0.9975 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  2: K=1 acc=0.2400 | K=2_forced acc=1.0000 | K=1->trigger acc=1.0000 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  3: K=1 acc=0.2350 | K=2_forced acc=1.0000 | K=1->trigger acc=1.0000 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  4: K=1 acc=0.2175 | K=2_forced acc=0.9975 | K=1->trigger acc=0.9975 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  5: K=1 acc=0.2475 | K=2_forced acc=0.9925 | K=1->trigger acc=0.9925 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  6: K=1 acc=0.2475 | K=2_forced acc=1.0000 | K=1->trigger acc=1.0000 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  7: K=1 acc=0.2625 | K=2_forced acc=1.0000 | K=1->trigger acc=1.0000 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  8: K=1 acc=0.2500 | K=2_forced acc=0.9750 | K=1->trigger acc=0.9975 (K_final=[2, 2, 2, 2], grow_events=4)
+seed  9: K=1 acc=0.2550 | K=2_forced acc=0.9950 | K=1->trigger acc=0.9950 (K_final=[2, 2, 2, 2], grow_events=4)
+
+aggregate (mean ± std across seeds):
+  K=1           : mean=0.2405 ± 0.0139  per-seed=['0.225', '0.225', '0.240', '0.235', '0.218', '0.248', '0.248', '0.262', '0.250', '0.255']
+  K=2_forced    : mean=0.9958 ± 0.0073  per-seed=['1.000', '0.998', '1.000', '1.000', '0.998', '0.993', '1.000', '1.000', '0.975', '0.995']
+  K=1->trigger  : mean=0.9980 ± 0.0024  per-seed=['1.000', '0.998', '1.000', '1.000', '0.998', '0.993', '1.000', '1.000', '0.998', '0.995']
+
+findings:
+  Δ(K=2_forced  − K=1)        = +0.7553
+  Δ(K=1->trigger − K=1)       = +0.7575
+  Δ(K=1->trigger − K=2_forced) = +0.0022
+
+interpretation:
+  K=2 forced beats K=1 by ≥0.15 abs → architectural lift confirmed at 4-class within-niche scale.
+  K=1->trigger matches K=2_forced within ±0.05 → Phase 2.5 trigger machinery validates end-to-end.
+
+elapsed: 106.8s

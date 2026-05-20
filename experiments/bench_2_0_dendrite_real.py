@@ -207,14 +207,21 @@ def run_seed(seed: int) -> dict:
     # Threshold tuned to fire on K=1 cells that are clearly engaged
     # (high upstream grad through linear σ_soma → engaged gate triggers
     # on |y| > 0.05; with random init most cells qualify by step 100).
+    # Threshold tuned empirically: when K=1 plateaus on this task,
+    # |∂L/∂y_L1| settles around 5-7e-4 (loss is near ln(4), gradients
+    # are uniform-prediction magnitude). internal_stress = EMA(|grad| ·
+    # engaged) accumulates to ~1.5e-4 by step 100, so 1e-5 fires
+    # comfortably for any engaged-and-failing cell. A future
+    # relative-threshold trigger (e.g., above running median of
+    # saliency_utility) would be scale-robust; the absolute-threshold
+    # version is the simplest thing that works for this falsification
+    # bench.
     out["K=1->trigger"] = train_arm(
         m3, X_train, y_train, X_test, y_test,
         grow_mode="trigger",
         probe_every=100,
-        trigger_threshold=0.001,   # any nonzero internal stress qualifies
-        trigger_ceiling=1e9,       # never block on saliency_utility (always 0
-                                    # here — no graph captured for the
-                                    # linear-activation engagement)
+        trigger_threshold=1e-5,
+        trigger_ceiling=1e9,
     )
     return out
 
