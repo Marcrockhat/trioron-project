@@ -131,6 +131,26 @@ SENSE_DIMS_RAW = 784        # 28*28
 SENSE_DIMS_DOWN = 196       # 14*14
 SENSE_DIMS_SOBEL = 784      # 28*28
 
+# Locally Connected Network (2026-05-22 — pure-trioron LCN). When
+# TRIORON_LCN=1, L0 cells are laid out as a 16×8 retinotopic grid on
+# [0, 1]² and each cell's W row is masked by a Gaussian centered on its
+# grid position over pixel coordinates. Gives spatial inductive bias
+# without weight sharing (no convolution), no input change, frozen
+# L0 shape preserved (so R·S handshake is intact). Mutually exclusive
+# with TRIORON_SENSES — both mask L0.W differently.
+LCN_ENABLED = os.environ.get("TRIORON_LCN", "0") == "1"
+LCN_GRID_X = 16             # cells along image width axis
+LCN_GRID_Y = 8              # cells along image height axis (16 × 8 = 128)
+LCN_SIGMA = float(os.environ.get("TRIORON_LCN_SIGMA", "0.10"))
+# σ = 0.10 in normalized coords ≈ 1× the larger cell spacing (1/8); gives
+# each pixel a Gaussian falloff from ~3-4 cells, ~50% effective overlap.
+
+if SENSES_ENABLED and LCN_ENABLED:
+    raise RuntimeError(
+        "TRIORON_SENSES and TRIORON_LCN are mutually exclusive — "
+        "both install a mask on L0.W. Pick one."
+    )
+
 INPUT_DIM = (
     SENSE_DIMS_RAW + SENSE_DIMS_DOWN + SENSE_DIMS_SOBEL
     if SENSES_ENABLED else 784
@@ -835,6 +855,86 @@ def reapply_sense_mask(net: TrioronNetwork, l0_layer_idx: int = 0) -> None:
 
 
 # ---------------------------------------------------------------------
+# Locally Connected Network (LCN) mask
+# ---------------------------------------------------------------------
+
+
+def _lcn_cell_centers() -> torch.Tensor:
+    """(L0_WIDTH, 2) grid-bin centers on [0, 1]²."""
+    cx = (torch.arange(LCN_GRID_X).float() + 0.5) / LCN_GRID_X
+    cy = (torch.arange(LCN_GRID_Y).float() + 0.5) / LCN_GRID_Y
+    grid_x, grid_y = torch.meshgrid(cx, cy, indexing="ij")
+    return torch.stack([grid_x, grid_y], dim=-1).reshape(-1, 2)
+
+
+def _mnist_pixel_positions() -> torch.Tensor:
+    """(784, 2) pixel-center positions on [0, 1]² for a 28×28 image,
+    matching the row-major flatten order: dim i → (col=i%28, row=i//28)."""
+    px = (torch.arange(28).float() + 0.5) / 28.0
+    py = (torch.arange(28).float() + 0.5) / 28.0
+    rows, cols = torch.meshgrid(py, px, indexing="ij")  # rows[i,j]=py[i]
+    # Flatten row-major: index = row*28 + col → (col, row) pair per pixel.
+    pos = torch.stack([cols, rows], dim=-1).reshape(-1, 2)
+    return pos
+
+
+def build_lcn_mask(
+    input_dim: int = 784,
+    l0_width: int = L0_WIDTH,
+    sigma: float = LCN_SIGMA,
+) -> torch.Tensor:
+    """Gaussian-falloff mask for L0.W of shape (l0_width, input_dim).
+
+    Each L0 cell at grid position (cx, cy) gets a mask row that's high
+    near pixels at the same image position and decays as exp(-d² /
+    2σ²) where d is the 2D distance in normalized coordinates.
+
+    The mask is soft (real-valued in [0, 1]), not binary — so cells
+    aren't strictly limited to a window but instead have a smooth
+    locality prior. After warmup, W.data has been multiplied by the
+    mask repeatedly so the off-window entries are effectively zero
+    (proportional to mask value).
+    """
+    if input_dim != 28 * 28:
+        raise ValueError(f"LCN expects input_dim=784, got {input_dim}")
+    if l0_width != LCN_GRID_X * LCN_GRID_Y:
+        raise ValueError(
+            f"LCN expects l0_width={LCN_GRID_X * LCN_GRID_Y}, "
+            f"got {l0_width}"
+        )
+    cell_pos = _lcn_cell_centers()              # (128, 2)
+    pixel_pos = _mnist_pixel_positions()        # (784, 2)
+    d2 = ((cell_pos.unsqueeze(1) - pixel_pos.unsqueeze(0)) ** 2).sum(-1)
+    return torch.exp(-d2 / (2.0 * sigma ** 2))
+
+
+def install_lcn_mask(net: TrioronNetwork, l0_layer_idx: int = 0) -> None:
+    """Register `W_lcn_mask` as a non-trainable buffer on L0 and apply
+    it once to L0.W (and W_anchor). Idempotent."""
+    layer = net.layers[l0_layer_idx]
+    mask = build_lcn_mask(layer.fan_in, layer.n_nodes).to(
+        device=layer.W.device, dtype=layer.W.dtype,
+    )
+    if hasattr(layer, "W_lcn_mask"):
+        layer.W_lcn_mask.copy_(mask)
+    else:
+        layer.register_buffer("W_lcn_mask", mask)
+    with torch.no_grad():
+        layer.W.data.mul_(mask)
+        layer.W_anchor.data.mul_(mask.to(layer.W_anchor.dtype))
+
+
+def reapply_lcn_mask(net: TrioronNetwork, l0_layer_idx: int = 0) -> None:
+    """Multiply L0.W by W_lcn_mask in-place. Call after every
+    optimizer step that touches L0 (during warmup)."""
+    layer = net.layers[l0_layer_idx]
+    if not hasattr(layer, "W_lcn_mask"):
+        return
+    with torch.no_grad():
+        layer.W.data.mul_(layer.W_lcn_mask)
+
+
+# ---------------------------------------------------------------------
 # Network construction + forward helpers
 # ---------------------------------------------------------------------
 
@@ -877,6 +977,8 @@ def make_classifier(
         # buffer persists in state_dict for resume.
         if SENSES_ENABLED:
             install_sense_mask(net, l0_layer_idx=0)
+        elif LCN_ENABLED:
+            install_lcn_mask(net, l0_layer_idx=0)
         l0.W.requires_grad_(False)
         l0.b.requires_grad_(False)
         return net
@@ -888,12 +990,13 @@ def make_classifier(
             (hidden, init_classes, "linear"),
         ]
     )
-    # fixed_ewc baseline doesn't have a separate L0 to gate, so senses
-    # mode is incompatible with it — explicit guard rather than silent
-    # mismatch.
-    if SENSES_ENABLED:
+    # fixed_ewc baseline doesn't have a separate L0 to gate, so the L0
+    # mask modes are incompatible with it — explicit guard rather than
+    # silent mismatch.
+    if SENSES_ENABLED or LCN_ENABLED:
+        flag = "TRIORON_SENSES" if SENSES_ENABLED else "TRIORON_LCN"
         raise RuntimeError(
-            "TRIORON_SENSES=1 requires freeze_l0=True (grown_* arms). "
+            f"{flag}=1 requires freeze_l0=True (grown_* arms). "
             "The fixed_ewc baseline has no separate L0 to gate."
         )
     return net
@@ -971,6 +1074,8 @@ def warmup_l0(
     # every opt step below.
     if SENSES_ENABLED:
         install_sense_mask(temp_net, l0_layer_idx=0)
+    elif LCN_ENABLED:
+        install_lcn_mask(temp_net, l0_layer_idx=0)
 
     # All warmup classes are active: standard CE over the full 30-output
     # head, no masking.
@@ -986,6 +1091,8 @@ def warmup_l0(
         opt.step()
         if SENSES_ENABLED:
             reapply_sense_mask(temp_net, l0_layer_idx=0)
+        elif LCN_ENABLED:
+            reapply_lcn_mask(temp_net, l0_layer_idx=0)
         last_loss = float(loss.item())
         if step == 0 or (step + 1) % 100 == 0 or step == n_steps - 1:
             print(f"  [warmup] step {step:4d}  loss {last_loss:.4f}")
@@ -1003,6 +1110,11 @@ def warmup_l0(
             real_l0.W.data.mul_(real_l0.W_sense_mask)
             real_l0.W_anchor.data.mul_(
                 real_l0.W_sense_mask.to(real_l0.W_anchor.dtype)
+            )
+        elif LCN_ENABLED:
+            real_l0.W.data.mul_(real_l0.W_lcn_mask)
+            real_l0.W_anchor.data.mul_(
+                real_l0.W_lcn_mask.to(real_l0.W_anchor.dtype)
             )
 
     return {"warmup_final_loss": last_loss, "n_warmup_steps": n_steps}
@@ -1118,6 +1230,17 @@ def init_l0_grid_positions(
         down_pos = _grid_positions_in_slab(SENSE_CELLS_DOWN, 0.50, 0.75)
         sobel_pos = _grid_positions_in_slab(SENSE_CELLS_SOBEL, 0.75, 1.00)
         grid_pos = torch.cat([raw_pos, down_pos, sobel_pos], dim=0)
+    elif LCN_ENABLED:
+        if n != LCN_GRID_X * LCN_GRID_Y:
+            raise ValueError(
+                f"LCN on but L0 width {n} != {LCN_GRID_X}×{LCN_GRID_Y}"
+            )
+        # Retinotopic: 2D bin centers on [0, 1]² matching the mask's
+        # cell positions; z held at 0.5 (centered, free for downstream
+        # layers to differentiate via develop_positions).
+        centers_2d = _lcn_cell_centers()
+        zs = torch.full((n, 1), 0.5)
+        grid_pos = torch.cat([centers_2d, zs], dim=1)
     else:
         grid_pos = _grid_positions_in_slab(n, 0.0, 1.0)
     with torch.no_grad():
@@ -4863,6 +4986,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         eval_views = [apply_senses_to_view(v) for v in eval_views]
         if infancy_view is not None:
             infancy_view = apply_senses_to_view(infancy_view)
+    if LCN_ENABLED:
+        print(f"[lcn] enabled — {LCN_GRID_X}×{LCN_GRID_Y} retinotopic "
+              f"L0 grid on [0,1]², Gaussian σ={LCN_SIGMA:.3f} (input "
+              f"unchanged at {INPUT_DIM}-d raw)")
 
     all_results: List[Dict[str, object]] = []
     for seed_idx, seed in enumerate(seeds):
