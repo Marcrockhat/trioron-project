@@ -208,6 +208,56 @@ DEVELOPMENTAL_PCA_BLEND = float(
 LOCUS_DEVELOPMENTAL_ENABLED = (
     os.environ.get("TRIORON_LOCUS_DEVELOPMENTAL", "0") == "1"
 )
+# Phase E — position-aware grow_node. When enabled (and LOCUS
+# developmental is also enabled), each new cell born via grow_node
+# is (a) placed at the current stress hotspot in position-space,
+# (b) initialized with W biased toward L0 sources NEAR its
+# position (Gaussian falloff with sigma). The first policy that
+# actually CONSUMES cell_position — creates V1-style topographic
+# organization via policy, not hardcoded.
+LOCUS_POSITION_AWARE_GROW = (
+    os.environ.get("TRIORON_LOCUS_POSITION_AWARE_GROW", "0") == "1"
+)
+LOCUS_POSITION_AWARE_SIGMA = float(
+    os.environ.get("TRIORON_LOCUS_POSITION_AWARE_SIGMA", "0.3")
+)
+LOCUS_HOTSPOT_FALLBACK_TO_RANDOM = (
+    os.environ.get("TRIORON_LOCUS_HOTSPOT_FALLBACK_RANDOM", "1") == "1"
+)
+# Age-protected apoptosis (Rocky's follow-up, 2026-05-21). When the
+# bench's cap-binding dream-rescue fires purge() to free room, victims
+# are selected by lowest u (utility). Newborn cells haven't had time
+# to accumulate utility, so they get killed before they consolidate —
+# this is the phase-3 EMNIST regression mechanism. Age-protected
+# apoptosis adds a u-boost to cells whose task_of_origin is within
+# LOCUS_AGE_PROTECT_TASKS of the current task, so they survive the
+# next purge round. Maps to biological "synaptic consolidation
+# window" — recently-born synapses get a grace period.
+LOCUS_AGE_PROTECT_ENABLED = (
+    os.environ.get("TRIORON_LOCUS_AGE_PROTECT", "0") == "1"
+)
+LOCUS_AGE_PROTECT_TASKS = int(
+    os.environ.get("TRIORON_LOCUS_AGE_PROTECT_TASKS", "1")
+)
+LOCUS_AGE_PROTECT_BOOST = float(
+    os.environ.get("TRIORON_LOCUS_AGE_PROTECT_BOOST", "1e-2")
+)
+# Soft apoptosis (Rocky 2026-05-21): replace destructive purge() with
+# reversible soft-latching. Three coupled behaviors when enabled:
+#   1. Dream-reclaim latches (routing_scale=0, routing_latched=True)
+#      instead of deleting cells. W/b persist.
+#   2. Cap accounting excludes latched cells — they take RAM but not
+#      training-param budget, so growth can continue.
+#   3. try_grow_one first tries to RECOVER a latched cell (un-latch +
+#      re-init W) before allocating a fresh cell. New cells become
+#      a recycling operation.
+SOFT_APOPTOSIS_ENABLED = (
+    os.environ.get("TRIORON_SOFT_APOPTOSIS", "0") == "1"
+)
+RECOVER_W_POLICY = os.environ.get(
+    "TRIORON_RECOVER_W_POLICY", "reinit"
+)  # "reinit" | "preserve" | "blend"
+RECOVER_BLEND = float(os.environ.get("TRIORON_RECOVER_BLEND", "0.5"))
 # Trioron 2.0 Axis 3 — mid-curriculum depth growth. When the dendrite
 # flag is on, fire one insert_layer event at the end of this task
 # (post-consolidation). 0-indexed; default = 7 = halfway through the
@@ -713,6 +763,52 @@ def trainable_params(net: TrioronNetwork) -> int:
     return sum(p.numel() for p in net.parameters() if p.requires_grad)
 
 
+def latched_param_count(net: TrioronNetwork) -> int:
+    """Count parameters belonging to soft-latched cells (routing_scale=0,
+    routing_latched=True). These cells persist in the substrate but
+    contribute neither to forward output nor to gradient flow — their
+    params should NOT count toward the cap budget under soft-apoptosis
+    semantics (cells are "freed in spirit" while staying in memory).
+
+    For each latched cell at layer L, the freed params are:
+      L's W row  (fan_in entries)
+    + L's b      (1 entry)
+    + L+1's W column at the corresponding source-index (n_nodes_{L+1}
+      entries) — because the downstream column reading from this cell
+      receives a constant input (σ(b)) and gradient to it is dampened
+      to near-zero, so it's effectively non-trainable under latch.
+    """
+    total = 0
+    for L_idx, layer in enumerate(net.layers):
+        if not layer.W.requires_grad:
+            continue
+        n_latched = int(layer.routing_latched.sum().item())
+        if n_latched == 0:
+            continue
+        total += n_latched * (layer.fan_in + 1)
+        if L_idx + 1 < len(net.layers):
+            nxt = net.layers[L_idx + 1]
+            if nxt.W.requires_grad:
+                total += n_latched * nxt.n_nodes
+    return total
+
+
+def effective_trainable_params(net: TrioronNetwork) -> int:
+    """trainable_params minus the cost of soft-latched cells.
+
+    Under soft-apoptosis (TRIORON_SOFT_APOPTOSIS=1), latched cells
+    consume substrate slots but should not count against the cap —
+    they can be recovered (un-latched) or replaced by fresh growth.
+    Returns the actual training-budget consumption for cap accounting.
+
+    When soft-apoptosis is disabled this returns the same number as
+    trainable_params (no cells are ever latched in pure-purge mode).
+    """
+    if SOFT_APOPTOSIS_ENABLED:
+        return trainable_params(net) - latched_param_count(net)
+    return trainable_params(net)
+
+
 def trainable_param_iter(net: TrioronNetwork):
     return (p for p in net.parameters() if p.requires_grad)
 
@@ -817,6 +913,11 @@ def projected_trainable_after_grow(
     layer) are trainable iff the affected layers are trainable. In the
     frozen-L0 design, target_layer_idx=1 (trainable) and the next layer
     is the head (trainable), so all delta params count.
+
+    Under TRIORON_SOFT_APOPTOSIS, latched cells contribute zero to the
+    effective trainable count (they take RAM but no training budget),
+    so growth can continue even when nominal trainable_params is at
+    cap. Recovery of a latched cell is cheaper than fresh growth.
     """
     target = net.layers[target_layer_idx]
     delta = 0
@@ -827,7 +928,7 @@ def projected_trainable_after_grow(
         nxt = net.layers[target_layer_idx + 1]
         if nxt.W.requires_grad:
             delta += nxt.n_nodes      # +1 W col on next
-    return trainable_params(net) + delta
+    return effective_trainable_params(net) + delta
 
 
 def init_l0_grid_positions(
@@ -966,6 +1067,113 @@ def develop_positions(
                            .norm().item())
         info.append((L, (layer.n_nodes, layer.fan_in, 0)))
     return info
+
+
+def stress_hotspot_position(
+    layer: TrioronLayer,
+    top_k: int = 4,
+    fallback_random: bool = True,
+) -> torch.Tensor:
+    """Trioron 2.0 — Phase E (i): compute where in position-space
+    new cells should be born.
+
+    Returns a 3-vector: the internal_stress-weighted mean of the
+    top-k highest-stress cells' positions. "Where the substrate is
+    currently failing — that's where we need more capacity."
+
+    When the layer has no stress signal yet (e.g., before any
+    grad-enabled forward, or when stress is identically zero), the
+    fallback is a uniformly random position in [0, 1]³. This
+    matches the "infancy: position via random + diffusion" framing
+    until a real signal arises. Set fallback_random=False to instead
+    return the current position centroid (deterministic but boring).
+    """
+    with torch.no_grad():
+        stress = layer.internal_stress
+        if stress.sum().item() <= 0:
+            if fallback_random:
+                return torch.rand(layer.position_dim,
+                                  device=layer.cell_position.device)
+            return layer.cell_position.mean(dim=0)
+        k = min(top_k, layer.n_nodes)
+        topk = torch.topk(stress, k=k)
+        idxs = topk.indices
+        weights = topk.values
+        weights_norm = weights / (weights.sum().clamp_min(1e-12))
+        # Weighted mean of top-k cells' positions.
+        return (weights_norm.unsqueeze(1) * layer.cell_position[idxs]).sum(dim=0)
+
+
+def position_aware_init_vec(
+    layer: TrioronLayer,
+    new_position: torch.Tensor,
+    source_layer: TrioronLayer,
+    sigma: float = 0.3,
+) -> torch.Tensor:
+    """Trioron 2.0 — Phase E (ii): compute a Kaiming-style W init
+    vector for a new cell, biased toward L0 (source) cells whose
+    positions are near `new_position` in the locus coordinate system.
+
+    Returns a length-fan_in tensor matching `layer`'s W dtype. The
+    base init is Kaiming (matching layer.activation); each column j
+    is then scaled by exp(-dist(new_position, src_pos[j])² / 2σ²).
+    Sources far from the new cell get exponentially smaller W —
+    the new cell becomes a local detector for its position region.
+
+    Falls back to plain Kaiming if `source_layer.cell_position` is
+    uninitialized (all zeros), so this is safe to call before the
+    coordinate system is installed.
+    """
+    fan_in = layer.fan_in
+    device = layer.W.device
+    # Base Kaiming.
+    gain = 2.0 if layer.activation == "relu" else 1.0
+    std = (gain / fan_in) ** 0.5
+    base = torch.randn(fan_in, device=device) * std
+
+    # If source positions aren't installed yet, return plain Kaiming.
+    src_pos = source_layer.cell_position
+    if src_pos.abs().sum().item() == 0.0:
+        return base
+
+    # Resolve per-column source positions (per input_sources). We
+    # only handle the all-sentinel case cleanly; non-sentinel
+    # columns get position from their declared source.
+    new_pos = new_position.to(device).to(src_pos.dtype)
+    # Build the per-column source-position tensor (fan_in, position_dim).
+    src_for_col = torch.zeros(
+        fan_in, src_pos.shape[1], device=device, dtype=src_pos.dtype,
+    )
+    is_sentinel = (layer.input_sources < 0).all(dim=1)
+    if is_sentinel.all():
+        # All sentinel — per-column position is source_layer at col j.
+        # If source_layer.n_nodes < fan_in this would mismatch; the
+        # sequential contract guarantees source_layer.n_nodes == fan_in
+        # at construction. Defensive truncation.
+        n_share = min(fan_in, src_pos.shape[0])
+        src_for_col[:n_share] = src_pos[:n_share]
+    else:
+        for j in range(fan_in):
+            sl = int(layer.input_sources[j, 0].item())
+            sn = int(layer.input_sources[j, 1].item())
+            if sl < 0:
+                if j < src_pos.shape[0]:
+                    src_for_col[j] = src_pos[j]
+            else:
+                # Caller should pass the right source_layer for
+                # mixed-source cases; we approximate here.
+                if 0 <= sn < src_pos.shape[0]:
+                    src_for_col[j] = src_pos[sn]
+
+    # Gaussian distance weights per source column.
+    dists = (src_for_col - new_pos.unsqueeze(0)).norm(dim=1)
+    weights = torch.exp(-(dists ** 2) / (2.0 * (sigma ** 2) + 1e-12))
+    # Normalize so mean=1 → preserves Kaiming-style total magnitude
+    # while reshaping the per-column profile.
+    mean_w = weights.mean().clamp_min(1e-12)
+    weights = weights / mean_w
+
+    return (base * weights).to(layer.W.dtype)
 
 
 def fire_insert_layer_event(
@@ -1186,13 +1394,96 @@ def try_grow_one(
     grown_* arms) are excluded so the budget reflects what dreaming can
     actually reclaim. Bypasses CeilingsController whose arrest flag
     prevents resumed growth after dreaming-driven reclaim.
+
+    Trioron 2.0 Phase E (locus position-aware grow_node):
+    When LOCUS_POSITION_AWARE_GROW is set (and LOCUS_DEVELOPMENTAL
+    installed the coordinate system), the new cell is born at the
+    current stress hotspot of `target_layer_idx` and its W row is
+    initialized with Gaussian-weighted local connectivity to L0
+    sources. The new cell's cell_position is then assigned to that
+    hotspot. This makes the substrate adapt structurally to WHERE
+    the problem is failing, not just HOW MUCH capacity it has —
+    co-adaptation to resource AND problem.
     """
     projected_bytes = projected_trainable_after_grow(
         net, target_layer_idx,
     ) * bytes_per_param
     if projected_bytes > cap_bytes:
         return False, f"cap_exceeded(projected={projected_bytes}B > cap={cap_bytes}B)"
-    net.grow_layer(target_layer_idx, init_vec=None, task_idx=task_idx)
+
+    init_vec = None
+    new_pos = None
+    target_layer = net.layers[target_layer_idx]
+    source_layer = (
+        net.layers[target_layer_idx - 1]
+        if target_layer_idx > 0 else target_layer
+    )
+    if LOCUS_POSITION_AWARE_GROW and LOCUS_DEVELOPMENTAL_ENABLED:
+        # Phase E (i): where in position-space should this cell land?
+        new_pos = stress_hotspot_position(
+            target_layer,
+            top_k=4,
+            fallback_random=LOCUS_HOTSPOT_FALLBACK_TO_RANDOM,
+        )
+        # Phase E (ii): W row biased toward sources near new_pos.
+        init_vec = position_aware_init_vec(
+            target_layer, new_pos, source_layer,
+            sigma=LOCUS_POSITION_AWARE_SIGMA,
+        )
+
+    # Soft-apoptosis: prefer recovering a latched cell over fresh growth.
+    # Latched cells already occupy substrate slots; reactivating them
+    # is essentially free vs allocating new ones. The position-aware
+    # init_vec (computed above) replaces the cell's W under the
+    # "reinit" policy; "preserve" keeps the original; "blend" mixes.
+    if SOFT_APOPTOSIS_ENABLED and target_layer.routing_latched.any():
+        with torch.no_grad():
+            latched_idxs = target_layer.routing_latched.nonzero(
+                as_tuple=True
+            )[0].tolist()
+        if latched_idxs:
+            # Pick the LATCHED cell whose position is nearest to new_pos
+            # (if we have a hotspot) — recovery in the right region.
+            # Falls back to first latched cell if no hotspot.
+            if new_pos is not None and len(latched_idxs) > 1:
+                with torch.no_grad():
+                    latched_pos = target_layer.cell_position[latched_idxs]
+                    dists = (latched_pos - new_pos.unsqueeze(0)).norm(dim=1)
+                    pick = latched_idxs[int(dists.argmin().item())]
+            else:
+                pick = latched_idxs[0]
+            target_layer.recover_latched_cell(
+                idx=int(pick),
+                init_vec=init_vec,
+                w_policy=RECOVER_W_POLICY,
+                blend=RECOVER_BLEND,
+            )
+            # Update task_of_origin to the current task for age-tracking
+            # consistency (recovered cell is "reborn" for utility/age
+            # purposes, even though W may carry prior state).
+            with torch.no_grad():
+                target_layer.task_of_origin[pick] = int(task_idx)
+                if new_pos is not None:
+                    target_layer.cell_position[pick] = new_pos.to(
+                        dtype=target_layer.cell_position.dtype,
+                        device=target_layer.cell_position.device,
+                    )
+            return True, f"ok(recovered_latched={pick})"
+
+    net.grow_layer(target_layer_idx, init_vec=init_vec, task_idx=task_idx)
+
+    # Phase E (iii): write the assigned position to cell_position[new].
+    # grow_layer appended a zero-position row in cell_position; we
+    # overwrite it now with the stress-hotspot location.
+    if new_pos is not None:
+        target_layer = net.layers[target_layer_idx]
+        new_idx = target_layer.n_nodes - 1
+        with torch.no_grad():
+            target_layer.cell_position[new_idx] = new_pos.to(
+                dtype=target_layer.cell_position.dtype,
+                device=target_layer.cell_position.device,
+            )
+
     return True, "ok"
 
 
@@ -1770,6 +2061,32 @@ def _build_classification_probe(
     return out
 
 
+def _apply_age_protection(
+    net: TrioronNetwork,
+    target_layer_idx: int,
+    current_task_idx: int,
+    grace_tasks: int = 1,
+    u_boost: float = 1e-2,
+) -> int:
+    """Age-protected apoptosis: boost u for cells whose task_of_origin
+    is within `grace_tasks` of the current task. These are "newborn"
+    cells that haven't had time to consolidate via dream-replay; their
+    raw u is artificially low, but they may still represent useful
+    capacity. Boost their u just above the purge threshold so they
+    survive the next purge round.
+
+    Returns the number of cells boosted (for logging).
+    """
+    layer = net.layers[target_layer_idx]
+    with torch.no_grad():
+        age = current_task_idx - layer.task_of_origin
+        is_young = age <= grace_tasks
+        n_boost = int(is_young.sum().item())
+        if n_boost > 0:
+            layer.u[is_young] = layer.u[is_young].clamp_min(u_boost)
+    return n_boost
+
+
 def classification_dreaming_block(
     net: TrioronNetwork,
     past_views: Sequence[TaskDataView],
@@ -1777,6 +2094,7 @@ def classification_dreaming_block(
     *,
     rng: random.Random,
     mode: str,
+    age_protect_task_idx: Optional[int] = None,
 ) -> Dict[str, object]:
     """CE-shaped dreaming. Two modes:
 
@@ -1849,19 +2167,75 @@ def classification_dreaming_block(
                 apoptosis_spike_init=DREAM_APOPTOSIS_SPIKE_INIT,
                 skip_output_layer=True,
             )
+        # Trioron 2.0 — age-protected apoptosis (Rocky 2026-05-21).
+        # When LOCUS_AGE_PROTECT_ENABLED, boost u of cells born
+        # within the last LOCUS_AGE_PROTECT_TASKS tasks so they
+        # survive purge. This addresses Phase E's phase-3 regression:
+        # newborn EMNIST cells haven't accumulated u and get killed
+        # before consolidating. The grace period maps to biological
+        # synaptic consolidation windows.
+        if (LOCUS_AGE_PROTECT_ENABLED
+                and age_protect_task_idx is not None):
+            n_protected = _apply_age_protection(
+                net,
+                target_layer_idx=GROWTH_TARGET_LAYER_IDX,
+                current_task_idx=age_protect_task_idx,
+                grace_tasks=LOCUS_AGE_PROTECT_TASKS,
+                u_boost=LOCUS_AGE_PROTECT_BOOST,
+            )
+            if n_protected > 0:
+                print(
+                    f"  [dream-reclaim] age-protect: boosted u on "
+                    f"{n_protected} young cells (task<={age_protect_task_idx}, "
+                    f"grace={LOCUS_AGE_PROTECT_TASKS})"
+                )
+
         # Restrict purge to the growth-target layer ONLY. Layer 0
         # (the input adapter) and the head (output) stay untouched.
         # Throttle: at most DREAM_MAX_PURGES_PER_EVENT victims per
         # dream block (biology runs apoptosis slowly; the bench needs
         # multi-event reclaim across the curriculum, not single-event
         # collapse).
-        purges = purge(
-            net,
-            layer_idxs=[GROWTH_TARGET_LAYER_IDX],
-            u_threshold=DREAM_U_THRESHOLD,
-            skip_output_layer=False,  # we already constrain via layer_idxs
-            max_purges=DREAM_MAX_PURGES_PER_EVENT,
-        )
+        #
+        # Soft-apoptosis mode (TRIORON_SOFT_APOPTOSIS=1): instead of
+        # deleting cells via purge(), SOFT-LATCH the same low-u cells.
+        # They persist in the substrate with routing_scale=0 (silent
+        # in forward, no gradient flow). Their slot can later be
+        # RECOVERED via try_grow_one's recovery path. No W/b deletion;
+        # no downstream column removal. Biologically correct.
+        if SOFT_APOPTOSIS_ENABLED:
+            purges = []
+            target = net.layers[GROWTH_TARGET_LAYER_IDX]
+            with torch.no_grad():
+                u = target.u.detach()
+                below_mask = (u < DREAM_U_THRESHOLD) & (~target.archived) & (~target.routing_latched)
+                # Don't latch the last non-latched cell — keep at least
+                # one active cell for the layer to function.
+                active_count = int((~target.routing_latched).sum().item())
+                max_latches = min(
+                    DREAM_MAX_PURGES_PER_EVENT,
+                    max(0, active_count - 1),
+                )
+                if max_latches > 0 and below_mask.any():
+                    # Pick lowest-u cells first.
+                    u_vals = u.clone()
+                    u_vals[~below_mask] = float("inf")
+                    victims = u_vals.argsort()[:max_latches].tolist()
+                    for vidx in victims:
+                        if below_mask[vidx]:
+                            target.soft_latch(int(vidx))
+                            purges.append({"layer": GROWTH_TARGET_LAYER_IDX, "node": int(vidx)})
+            if purges:
+                print(f"  [dream-reclaim] soft-latched {len(purges)} "
+                      f"cells (no deletion; W/b persist)")
+        else:
+            purges = purge(
+                net,
+                layer_idxs=[GROWTH_TARGET_LAYER_IDX],
+                u_threshold=DREAM_U_THRESHOLD,
+                skip_output_layer=False,  # we already constrain via layer_idxs
+                max_purges=DREAM_MAX_PURGES_PER_EVENT,
+            )
 
     return {
         "n_params_before": n_before,
@@ -2964,6 +3338,7 @@ def run_chained_curriculum(
                             rescue = classification_dreaming_block(
                                 net, past_views, past_actives,
                                 rng=rng, mode="reclaim",
+                                age_protect_task_idx=local_task_idx,
                             )
                             cumulative_purges += rescue["n_purges"]
                             cumulative_latched += rescue["n_latched"]

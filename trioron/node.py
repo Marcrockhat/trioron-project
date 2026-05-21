@@ -1507,6 +1507,106 @@ class TrioronLayer(nn.Module):
                 contrib, alpha=1.0 - self.fisher_decay,
             )
 
+    def soft_latch(self, idx: int) -> None:
+        """Trioron 2.0 — soft (recoverable) apoptosis.
+
+        Silences cell `idx` without deleting it: routing_scale → 0,
+        routing_latched → True. Cell's W, b, and all other state
+        persist. Forward contribution becomes σ(b) (constant); backward
+        gradient to this row's W is zero (because W_eff = W·scale = 0).
+
+        Next layer's connecting column is NOT dropped — it stays in
+        place, multiplied by the constant σ(b) signal. When the cell
+        is later recovered via recover_latched_cell(), the downstream
+        connection automatically re-engages.
+
+        Idempotent: latching an already-latched cell is a no-op.
+        """
+        if not (0 <= idx < self.n_nodes):
+            raise IndexError(
+                f"soft_latch idx {idx} out of range [0, {self.n_nodes})"
+            )
+        with torch.no_grad():
+            self.routing_scale[idx] = 0.0
+            self.routing_latched[idx] = True
+
+    def recover_latched_cell(
+        self,
+        idx: int,
+        init_vec: Optional[torch.Tensor] = None,
+        w_policy: str = "reinit",
+        blend: float = 0.5,
+    ) -> None:
+        """Trioron 2.0 — un-latch a previously soft-latched cell.
+
+        Reactivates cell `idx`: routing_scale → 1.0, routing_latched →
+        False, optionally re-initializes W to give the recovered cell
+        a fresh role.
+
+        w_policy:
+          "reinit"   — W[idx] ← init_vec (or Kaiming if None). Cell
+                       becomes a fresh specialist. Old knowledge
+                       discarded.
+          "preserve" — W[idx] unchanged. Cell wakes up with prior
+                       knowledge. Closest to biological dormant-neuron
+                       reactivation.
+          "blend"    — W[idx] ← blend · old_W + (1-blend) · init_vec.
+                       Compromise: keeps partial prior memory, adds
+                       new specialization. Requires init_vec.
+
+        Also resets u, internal_stress, branch_utility for the cell
+        (treat as new arrival for utility-tracking purposes), and
+        sets task_of_origin to the caller's choice via the task_idx
+        argument is NOT taken here — caller can update it explicitly
+        if needed. Defaults to leaving task_of_origin at its prior
+        value (the original birth task).
+        """
+        if not (0 <= idx < self.n_nodes):
+            raise IndexError(
+                f"recover_latched_cell idx {idx} out of range "
+                f"[0, {self.n_nodes})"
+            )
+        if w_policy not in ("reinit", "preserve", "blend"):
+            raise ValueError(
+                f"w_policy must be 'reinit' | 'preserve' | 'blend', "
+                f"got {w_policy!r}"
+            )
+        device = self.W.device
+        with torch.no_grad():
+            if w_policy == "reinit":
+                if init_vec is None:
+                    gain = 2.0 if self.activation == "relu" else 1.0
+                    std = (gain / self.fan_in) ** 0.5
+                    init_vec = torch.randn(self.fan_in, device=device) * std
+                init_vec = init_vec.to(
+                    dtype=self.W.dtype, device=device,
+                ).reshape(self.fan_in)
+                self.W.data[idx] = init_vec
+            elif w_policy == "blend":
+                if init_vec is None:
+                    raise ValueError(
+                        "w_policy='blend' requires init_vec"
+                    )
+                if not (0.0 <= blend <= 1.0):
+                    raise ValueError(
+                        f"blend must be in [0, 1], got {blend}"
+                    )
+                init_vec = init_vec.to(
+                    dtype=self.W.dtype, device=device,
+                ).reshape(self.fan_in)
+                self.W.data[idx] = (
+                    blend * self.W.data[idx] + (1.0 - blend) * init_vec
+                )
+            # "preserve": W untouched.
+
+            self.routing_scale[idx] = 1.0
+            self.routing_latched[idx] = False
+            # Reset utility-tracking signals (treat as new arrival).
+            self.u[idx] = 0.0
+            self.internal_stress[idx] = 0.0
+            self.branch_utility[idx].zero_()
+            self.apoptosis_pulse[idx] = 0.0
+
     def reset_dendritic_state(self) -> None:
         """Reset all Axis 5 dendritic state to K=1 / point-neuron form.
 
