@@ -258,6 +258,11 @@ RECOVER_W_POLICY = os.environ.get(
     "TRIORON_RECOVER_W_POLICY", "reinit"
 )  # "reinit" | "preserve" | "blend"
 RECOVER_BLEND = float(os.environ.get("TRIORON_RECOVER_BLEND", "0.5"))
+# Fix A (2026-05-21): under SA, latch only as many cells as the immediately
+# pending grow can recover. Default 0 = inherit DREAM_MAX_PURGES_PER_EVENT
+# (legacy behaviour, leaks ~3 silent cells per rescue). Set to 1 to make
+# each rescue latch-and-recover one cell, eliminating silent-latched leak.
+LATCH_PER_EVENT = int(os.environ.get("TRIORON_LATCH_PER_EVENT", "0"))
 # Trioron 2.0 Axis 3 — mid-curriculum depth growth. When the dendrite
 # flag is on, fire one insert_layer event at the end of this task
 # (post-consolidation). 0-indexed; default = 7 = halfway through the
@@ -566,7 +571,7 @@ HIPPOCAMPAL_SYNTH_DIV_WEIGHT = 1.0   # within-K diversity reg: penalize
 # chained-15 (vs hippo K=50 = 768 KB; vs raw rehearsal = 4.7 MB).
 # Replay path identical to hippo: forward_from_layer(z, start=1) +
 # masked_cross_entropy. Frozen-L0 only.
-MANIFOLD_REPLAY_ENABLED = False
+MANIFOLD_REPLAY_ENABLED = os.environ.get("TRIORON_MANIFOLD_REPLAY", "0") == "1"
 MANIFOLD_REPLAY_BATCH = 64           # per-step sample count
 MANIFOLD_REPLAY_LOSS_WEIGHT = 1.0    # parity with new-task CE
 MANIFOLD_NOISE_SCALE = 1.0           # multiplier on σ when sampling;
@@ -2212,8 +2217,12 @@ def classification_dreaming_block(
                 # Don't latch the last non-latched cell — keep at least
                 # one active cell for the layer to function.
                 active_count = int((~target.routing_latched).sum().item())
+                latch_budget = (
+                    LATCH_PER_EVENT if LATCH_PER_EVENT > 0
+                    else DREAM_MAX_PURGES_PER_EVENT
+                )
                 max_latches = min(
-                    DREAM_MAX_PURGES_PER_EVENT,
+                    latch_budget,
                     max(0, active_count - 1),
                 )
                 if max_latches > 0 and below_mask.any():
