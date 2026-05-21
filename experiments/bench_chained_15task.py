@@ -115,7 +115,26 @@ from experiments.datasets import (
 # Defaults
 # ---------------------------------------------------------------------
 
-INPUT_DIM = 784
+# Topographic senses (2026-05-21 — pure-trioron sensorium, no learned
+# cortex). When TRIORON_SENSES=1, raw input is replaced by a 3-stream
+# concatenation (raw / 2x-downsample / Sobel magnitude), L0's W is
+# block-sparse so each L0 cell group reads from one sense only, and
+# L0 cell positions are laid out in three contiguous sub-cubes of the
+# unit cube. Position-aware grow (Phase E) then specializes new L1
+# cells per sense via stress hotspots. L0 stays frozen (post-warmup),
+# so the R·S handshake for donor absorption survives.
+SENSES_ENABLED = os.environ.get("TRIORON_SENSES", "0") == "1"
+SENSE_CELLS_RAW = 64
+SENSE_CELLS_DOWN = 32
+SENSE_CELLS_SOBEL = 32
+SENSE_DIMS_RAW = 784        # 28*28
+SENSE_DIMS_DOWN = 196       # 14*14
+SENSE_DIMS_SOBEL = 784      # 28*28
+
+INPUT_DIM = (
+    SENSE_DIMS_RAW + SENSE_DIMS_DOWN + SENSE_DIMS_SOBEL
+    if SENSES_ENABLED else 784
+)
 L0_WIDTH = 128                # frozen feature-extractor (random projection)
 H_INIT_GROWN = 32
 H_FIXED = 64
@@ -246,11 +265,12 @@ LOCUS_AGE_PROTECT_BOOST = float(
 # reversible soft-latching. Three coupled behaviors when enabled:
 #   1. Dream-reclaim latches (routing_scale=0, routing_latched=True)
 #      instead of deleting cells. W/b persist.
-#   2. Cap accounting excludes latched cells — they take RAM but not
-#      training-param budget, so growth can continue.
+#   2. Cap budgets MEMORY: latched cells still count (they occupy RAM).
+#      The cap is only relaxed by what recovery makes free — namely the
+#      fresh-allocation delta, which recovery skips entirely.
 #   3. try_grow_one first tries to RECOVER a latched cell (un-latch +
-#      re-init W) before allocating a fresh cell. New cells become
-#      a recycling operation.
+#      re-init W) before allocating a fresh cell. Recovery costs zero
+#      new bytes, so it bypasses the cap check.
 SOFT_APOPTOSIS_ENABLED = (
     os.environ.get("TRIORON_SOFT_APOPTOSIS", "0") == "1"
 )
@@ -711,6 +731,110 @@ LOG_EVERY = 500
 
 
 # ---------------------------------------------------------------------
+# Topographic senses helpers
+# ---------------------------------------------------------------------
+
+# Fixed Sobel kernels. (Module-level so we allocate once and reuse.)
+_SOBEL_GX = torch.tensor(
+    [[[[-1., 0., 1.],
+       [-2., 0., 2.],
+       [-1., 0., 1.]]]]
+)
+_SOBEL_GY = torch.tensor(
+    [[[[-1., -2., -1.],
+       [ 0.,  0.,  0.],
+       [ 1.,  2.,  1.]]]]
+)
+
+
+def compute_senses(x_flat: torch.Tensor) -> torch.Tensor:
+    """Map (B, 784) raw MNIST-shape flat → (B, 1764) sense-stacked.
+
+    Streams (deterministic, no learned parameters):
+      raw    : flatten 28×28                                → 784-d
+      down2x : 2×2 average pool, flatten 14×14              → 196-d
+      sobel  : sqrt(gx² + gy²) with fixed kernels, padding=1 → 784-d
+    """
+    x_img = x_flat.reshape(-1, 1, 28, 28)
+    down = F.avg_pool2d(x_img, kernel_size=2, stride=2).reshape(-1, 196)
+    gx_k = _SOBEL_GX.to(dtype=x_flat.dtype, device=x_flat.device)
+    gy_k = _SOBEL_GY.to(dtype=x_flat.dtype, device=x_flat.device)
+    gx = F.conv2d(x_img, gx_k, padding=1)
+    gy = F.conv2d(x_img, gy_k, padding=1)
+    sobel = torch.sqrt(gx.pow(2) + gy.pow(2) + 1e-12).reshape(-1, 784)
+    return torch.cat([x_flat, down, sobel], dim=1)
+
+
+def apply_senses_to_view(view: TaskDataView) -> TaskDataView:
+    """Pre-compute sense streams for every image in `view` once, so
+    downstream sampling is unchanged. The returned view's images are
+    (N, 1764) instead of (N, 784)."""
+    return TaskDataView(
+        name=view.name,
+        images=compute_senses(view.images),
+        labels_global=view.labels_global,
+        local_classes=list(view.local_classes),
+        global_classes=list(view.global_classes),
+    )
+
+
+def build_sense_mask(
+    input_dim: int = INPUT_DIM,
+    l0_width: int = L0_WIDTH,
+) -> torch.Tensor:
+    """Block-sparse mask for L0.W of shape (l0_width, input_dim).
+    Each cell group reads from exactly one sense's input range; all
+    other entries are forced to zero (multiplicative mask applied
+    after every grad step during warmup and effectively baked in once
+    L0 is frozen)."""
+    expected_in = SENSE_DIMS_RAW + SENSE_DIMS_DOWN + SENSE_DIMS_SOBEL
+    expected_cells = SENSE_CELLS_RAW + SENSE_CELLS_DOWN + SENSE_CELLS_SOBEL
+    if input_dim != expected_in:
+        raise ValueError(
+            f"sense mask expects input_dim={expected_in}, got {input_dim}"
+        )
+    if l0_width != expected_cells:
+        raise ValueError(
+            f"sense mask expects l0_width={expected_cells}, got {l0_width}"
+        )
+    mask = torch.zeros(l0_width, input_dim)
+    raw_end = SENSE_CELLS_RAW
+    down_end = raw_end + SENSE_CELLS_DOWN
+    d_raw_end = SENSE_DIMS_RAW
+    d_down_end = d_raw_end + SENSE_DIMS_DOWN
+    mask[:raw_end, :d_raw_end] = 1.0
+    mask[raw_end:down_end, d_raw_end:d_down_end] = 1.0
+    mask[down_end:, d_down_end:] = 1.0
+    return mask
+
+
+def install_sense_mask(net: TrioronNetwork, l0_layer_idx: int = 0) -> None:
+    """Register `W_sense_mask` as a non-trainable buffer on L0 and
+    zero out the off-block entries of L0.W. Idempotent."""
+    layer = net.layers[l0_layer_idx]
+    mask = build_sense_mask(layer.fan_in, layer.n_nodes).to(
+        device=layer.W.device, dtype=layer.W.dtype,
+    )
+    if hasattr(layer, "W_sense_mask"):
+        layer.W_sense_mask.copy_(mask)
+    else:
+        layer.register_buffer("W_sense_mask", mask)
+    with torch.no_grad():
+        layer.W.data.mul_(mask)
+        layer.W_anchor.data.mul_(mask.to(layer.W_anchor.dtype))
+
+
+def reapply_sense_mask(net: TrioronNetwork, l0_layer_idx: int = 0) -> None:
+    """Multiply L0.W by W_sense_mask in-place. Call after every
+    optimizer step that touches L0 (i.e., during warmup)."""
+    layer = net.layers[l0_layer_idx]
+    if not hasattr(layer, "W_sense_mask"):
+        return
+    with torch.no_grad():
+        layer.W.data.mul_(layer.W_sense_mask)
+
+
+# ---------------------------------------------------------------------
 # Network construction + forward helpers
 # ---------------------------------------------------------------------
 
@@ -748,17 +872,31 @@ def make_classifier(
         # init = W_anchor), and Adam built with `requires_grad`-filtered
         # params won't allocate moments for L0.
         l0 = net.layers[0]
+        # Topographic senses: install block-sparse mask BEFORE freeze so
+        # the off-block entries are zeroed and stay zeroed forever. Mask
+        # buffer persists in state_dict for resume.
+        if SENSES_ENABLED:
+            install_sense_mask(net, l0_layer_idx=0)
         l0.W.requires_grad_(False)
         l0.b.requires_grad_(False)
         return net
     # fixed_ewc baseline: trainable, no growth, 2-hidden MLP at H=hidden.
-    return TrioronNetwork(
+    net = TrioronNetwork(
         [
             (input_dim, hidden, "relu"),
             (hidden, hidden, "relu"),
             (hidden, init_classes, "linear"),
         ]
     )
+    # fixed_ewc baseline doesn't have a separate L0 to gate, so senses
+    # mode is incompatible with it — explicit guard rather than silent
+    # mismatch.
+    if SENSES_ENABLED:
+        raise RuntimeError(
+            "TRIORON_SENSES=1 requires freeze_l0=True (grown_* arms). "
+            "The fixed_ewc baseline has no separate L0 to gate."
+        )
+    return net
 
 
 def trainable_params(net: TrioronNetwork) -> int:
@@ -766,52 +904,6 @@ def trainable_params(net: TrioronNetwork) -> int:
     the cap-accounting denominator so the frozen L0 doesn't eat the
     growable budget."""
     return sum(p.numel() for p in net.parameters() if p.requires_grad)
-
-
-def latched_param_count(net: TrioronNetwork) -> int:
-    """Count parameters belonging to soft-latched cells (routing_scale=0,
-    routing_latched=True). These cells persist in the substrate but
-    contribute neither to forward output nor to gradient flow — their
-    params should NOT count toward the cap budget under soft-apoptosis
-    semantics (cells are "freed in spirit" while staying in memory).
-
-    For each latched cell at layer L, the freed params are:
-      L's W row  (fan_in entries)
-    + L's b      (1 entry)
-    + L+1's W column at the corresponding source-index (n_nodes_{L+1}
-      entries) — because the downstream column reading from this cell
-      receives a constant input (σ(b)) and gradient to it is dampened
-      to near-zero, so it's effectively non-trainable under latch.
-    """
-    total = 0
-    for L_idx, layer in enumerate(net.layers):
-        if not layer.W.requires_grad:
-            continue
-        n_latched = int(layer.routing_latched.sum().item())
-        if n_latched == 0:
-            continue
-        total += n_latched * (layer.fan_in + 1)
-        if L_idx + 1 < len(net.layers):
-            nxt = net.layers[L_idx + 1]
-            if nxt.W.requires_grad:
-                total += n_latched * nxt.n_nodes
-    return total
-
-
-def effective_trainable_params(net: TrioronNetwork) -> int:
-    """trainable_params minus the cost of soft-latched cells.
-
-    Under soft-apoptosis (TRIORON_SOFT_APOPTOSIS=1), latched cells
-    consume substrate slots but should not count against the cap —
-    they can be recovered (un-latched) or replaced by fresh growth.
-    Returns the actual training-budget consumption for cap accounting.
-
-    When soft-apoptosis is disabled this returns the same number as
-    trainable_params (no cells are ever latched in pure-purge mode).
-    """
-    if SOFT_APOPTOSIS_ENABLED:
-        return trainable_params(net) - latched_param_count(net)
-    return trainable_params(net)
 
 
 def trainable_param_iter(net: TrioronNetwork):
@@ -874,6 +966,11 @@ def warmup_l0(
     with torch.no_grad():
         temp_net.layers[0].W.copy_(real_l0.W.data)
         temp_net.layers[0].b.copy_(real_l0.b.data)
+    # Topographic senses: temp_net's L0 must inherit the same block-sparse
+    # mask so warmup gradients can't leak across senses. Re-applied after
+    # every opt step below.
+    if SENSES_ENABLED:
+        install_sense_mask(temp_net, l0_layer_idx=0)
 
     # All warmup classes are active: standard CE over the full 30-output
     # head, no masking.
@@ -887,6 +984,8 @@ def warmup_l0(
         opt.zero_grad()
         loss.backward()
         opt.step()
+        if SENSES_ENABLED:
+            reapply_sense_mask(temp_net, l0_layer_idx=0)
         last_loss = float(loss.item())
         if step == 0 or (step + 1) % 100 == 0 or step == n_steps - 1:
             print(f"  [warmup] step {step:4d}  loss {last_loss:.4f}")
@@ -900,6 +999,11 @@ def warmup_l0(
         real_l0.b.data.copy_(temp_net.layers[0].b.data)
         real_l0.W_anchor.copy_(temp_net.layers[0].W.data)
         real_l0.b_anchor.copy_(temp_net.layers[0].b.data)
+        if SENSES_ENABLED:
+            real_l0.W.data.mul_(real_l0.W_sense_mask)
+            real_l0.W_anchor.data.mul_(
+                real_l0.W_sense_mask.to(real_l0.W_anchor.dtype)
+            )
 
     return {"warmup_final_loss": last_loss, "n_warmup_steps": n_steps}
 
@@ -912,28 +1016,72 @@ def warmup_l0(
 def projected_trainable_after_grow(
     net: TrioronNetwork, target_layer_idx: int,
 ) -> int:
-    """Predict trainable_params(net) after one grow_layer(target_layer_idx).
+    """Predict trainable_params(net) after one fresh grow_layer.
 
-    Both the new row (W + b on target) and the new column (W on next
-    layer) are trainable iff the affected layers are trainable. In the
-    frozen-L0 design, target_layer_idx=1 (trainable) and the next layer
-    is the head (trainable), so all delta params count.
+    Memory-cap semantics: the cap budgets bytes actually allocated, so
+    latched cells stay counted (they still occupy RAM). Recovery of a
+    latched cell allocates nothing and is handled out-of-band in
+    `try_grow_one`; this function only models fresh-growth allocation.
 
-    Under TRIORON_SOFT_APOPTOSIS, latched cells contribute zero to the
-    effective trainable count (they take RAM but no training budget),
-    so growth can continue even when nominal trainable_params is at
-    cap. Recovery of a latched cell is cheaper than fresh growth.
+    Fresh grow_layer adds, to a layer L whose W requires_grad:
+      - W row             : fan_in_L  floats
+      - b                 : 1         float
+      - branch_weight row : B_max_L   floats   (Trioron 2.0 Axis 5;
+                                                B_max=1 collapses to
+                                                a point neuron)
+    plus, on layer L+1 if it exists and is trainable:
+      - W column          : n_nodes_{L+1} floats
     """
     target = net.layers[target_layer_idx]
     delta = 0
     if target.W.requires_grad:
-        delta += target.fan_in       # +1 W row
-        delta += 1                    # +1 b entry
+        delta += target.fan_in              # +1 W row
+        delta += 1                          # +1 b entry
+        delta += int(target.B_max)          # +1 branch_weight row
     if target_layer_idx + 1 < len(net.layers):
         nxt = net.layers[target_layer_idx + 1]
         if nxt.W.requires_grad:
-            delta += nxt.n_nodes      # +1 W col on next
-    return effective_trainable_params(net) + delta
+            delta += nxt.n_nodes            # +1 W col on next
+    return trainable_params(net) + delta
+
+
+def _grid_positions_in_slab(
+    n: int,
+    x_lo: float,
+    x_hi: float,
+) -> torch.Tensor:
+    """Lay `n` 3D positions in [x_lo, x_hi] × [0, 1] × [0, 1] on a grid.
+    Returns a tensor of shape (n, 3)."""
+    cbrt = int(round(n ** (1.0 / 3.0)))
+    best = None
+    for d1 in range(max(1, cbrt - 2), cbrt + 3):
+        for d2 in range(max(1, d1 - 1), d1 + 2):
+            d3 = n // (d1 * d2) if (d1 * d2) > 0 else 0
+            if d3 > 0 and d1 * d2 * d3 == n:
+                spread = max(d1, d2, d3) - min(d1, d2, d3)
+                if best is None or spread < best[1]:
+                    best = ((d1, d2, d3), spread)
+    if best is None:
+        d1, d2, d3 = 1, 1, n
+    else:
+        d1, d2, d3 = best[0]
+    xs = torch.linspace(x_lo, x_hi, d1) if d1 > 1 else torch.tensor([0.5 * (x_lo + x_hi)])
+    ys = torch.linspace(0.0, 1.0, d2) if d2 > 1 else torch.zeros(1)
+    zs = torch.linspace(0.0, 1.0, d3) if d3 > 1 else torch.zeros(1)
+    out = torch.zeros(n, 3)
+    idx = 0
+    for x in xs:
+        for y in ys:
+            for z in zs:
+                if idx >= n:
+                    break
+                out[idx] = torch.tensor([x.item(), y.item(), z.item()])
+                idx += 1
+            if idx >= n:
+                break
+        if idx >= n:
+            break
+    return out
 
 
 def init_l0_grid_positions(
@@ -946,51 +1094,32 @@ def init_l0_grid_positions(
     cube [0, 1]³. The grid dims are chosen as the closest factorization
     of L0_width into three integers (preferring near-equal sides).
 
+    When TRIORON_SENSES=1, the cube is split along the x-axis into
+    three slabs (raw [0.00, 0.50] / down [0.50, 0.75] / sobel [0.75,
+    1.00]) and each sense's L0 cell group is gridded inside its own
+    slab. This gives Phase E's position-aware grow a topographic prior:
+    a stress hotspot near the raw slab pulls new L1 cells' weights
+    from raw-reading L0 sources, etc.
+
     L0 cells are "anchor points" in position-space; downstream layers
     will have their positions computed relative to these anchors via
     develop_positions(). Once set here, L0 positions are immutable for
-    the run (L0 is frozen in arms that have freeze_l0=True; for the
-    fixed_ewc baseline this is a no-op since LOCUS_DEVELOPMENTAL
-    is only used in growth arms).
+    the run.
     """
     layer = net.layers[l0_layer_idx]
     n = layer.n_nodes
-    # Find a 3D factorization of n. Walk dim1 outwards from cube-root,
-    # then dim2 from sqrt(remainder), then dim3 takes the rest. Pads
-    # to grid_size with extras at the front (which then get truncated).
-    cbrt = int(round(n ** (1.0 / 3.0)))
-    best = None
-    for d1 in range(max(1, cbrt - 2), cbrt + 3):
-        for d2 in range(max(1, d1 - 1), d1 + 2):
-            d3 = n // (d1 * d2)
-            if d1 * d2 * d3 == n and (d1 * d2 * d3) > 0:
-                # Prefer near-equal sides — minimize max - min.
-                spread = max(d1, d2, d3) - min(d1, d2, d3)
-                if best is None or spread < best[1]:
-                    best = ((d1, d2, d3), spread)
-    if best is None:
-        # n doesn't factor into 3 ints (e.g., prime). Fall back to
-        # 1 × 1 × n (a line) — still valid, just degenerate.
-        d1, d2, d3 = 1, 1, n
+    if SENSES_ENABLED:
+        if n != SENSE_CELLS_RAW + SENSE_CELLS_DOWN + SENSE_CELLS_SOBEL:
+            raise ValueError(
+                f"senses on but L0 width {n} != "
+                f"{SENSE_CELLS_RAW}+{SENSE_CELLS_DOWN}+{SENSE_CELLS_SOBEL}"
+            )
+        raw_pos = _grid_positions_in_slab(SENSE_CELLS_RAW, 0.00, 0.50)
+        down_pos = _grid_positions_in_slab(SENSE_CELLS_DOWN, 0.50, 0.75)
+        sobel_pos = _grid_positions_in_slab(SENSE_CELLS_SOBEL, 0.75, 1.00)
+        grid_pos = torch.cat([raw_pos, down_pos, sobel_pos], dim=0)
     else:
-        d1, d2, d3 = best[0]
-    # Build the grid: positions are evenly spaced in [0, 1] per axis.
-    xs = torch.linspace(0.0, 1.0, d1) if d1 > 1 else torch.zeros(1)
-    ys = torch.linspace(0.0, 1.0, d2) if d2 > 1 else torch.zeros(1)
-    zs = torch.linspace(0.0, 1.0, d3) if d3 > 1 else torch.zeros(1)
-    grid_pos = torch.zeros(n, 3)
-    idx = 0
-    for x in xs:
-        for y in ys:
-            for z in zs:
-                if idx >= n:
-                    break
-                grid_pos[idx] = torch.tensor([x.item(), y.item(), z.item()])
-                idx += 1
-            if idx >= n:
-                break
-        if idx >= n:
-            break
+        grid_pos = _grid_positions_in_slab(n, 0.0, 1.0)
     with torch.no_grad():
         layer.cell_position.copy_(grid_pos.to(layer.cell_position.device))
 
@@ -1410,12 +1539,6 @@ def try_grow_one(
     the problem is failing, not just HOW MUCH capacity it has —
     co-adaptation to resource AND problem.
     """
-    projected_bytes = projected_trainable_after_grow(
-        net, target_layer_idx,
-    ) * bytes_per_param
-    if projected_bytes > cap_bytes:
-        return False, f"cap_exceeded(projected={projected_bytes}B > cap={cap_bytes}B)"
-
     init_vec = None
     new_pos = None
     target_layer = net.layers[target_layer_idx]
@@ -1438,9 +1561,11 @@ def try_grow_one(
 
     # Soft-apoptosis: prefer recovering a latched cell over fresh growth.
     # Latched cells already occupy substrate slots; reactivating them
-    # is essentially free vs allocating new ones. The position-aware
-    # init_vec (computed above) replaces the cell's W under the
-    # "reinit" policy; "preserve" keeps the original; "blend" mixes.
+    # allocates zero new memory, so this branch bypasses the cap check
+    # entirely — the cap budgets RAM, and recovery uses none. The
+    # position-aware init_vec (computed above) replaces the cell's W
+    # under the "reinit" policy; "preserve" keeps the original; "blend"
+    # mixes.
     if SOFT_APOPTOSIS_ENABLED and target_layer.routing_latched.any():
         with torch.no_grad():
             latched_idxs = target_layer.routing_latched.nonzero(
@@ -1474,6 +1599,14 @@ def try_grow_one(
                         device=target_layer.cell_position.device,
                     )
             return True, f"ok(recovered_latched={pick})"
+
+    # Fresh growth path: cap budgets newly-allocated bytes, so the
+    # check runs here (after the SA recovery branch has been ruled out).
+    projected_bytes = projected_trainable_after_grow(
+        net, target_layer_idx,
+    ) * bytes_per_param
+    if projected_bytes > cap_bytes:
+        return False, f"cap_exceeded(projected={projected_bytes}B > cap={cap_bytes}B)"
 
     net.grow_layer(target_layer_idx, init_vec=init_vec, task_idx=task_idx)
 
@@ -4716,6 +4849,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
               f"covering {len(set(infancy_view.labels_global.tolist()))} global classes")
     else:
         infancy_view = None
+
+    # Topographic senses: pre-compute sense streams for every image
+    # exactly once, so the rest of the bench (sampling, dreaming,
+    # manifold replay) sees (N, 1764) tensors without further changes.
+    if SENSES_ENABLED:
+        print(f"[senses] enabled — input_dim {784} → {INPUT_DIM} "
+              f"(raw {SENSE_DIMS_RAW} + down2x {SENSE_DIMS_DOWN} + "
+              f"sobel {SENSE_DIMS_SOBEL}); "
+              f"L0 cells {SENSE_CELLS_RAW}/{SENSE_CELLS_DOWN}/"
+              f"{SENSE_CELLS_SOBEL} per sense")
+        train_views = [apply_senses_to_view(v) for v in train_views]
+        eval_views = [apply_senses_to_view(v) for v in eval_views]
+        if infancy_view is not None:
+            infancy_view = apply_senses_to_view(infancy_view)
 
     all_results: List[Dict[str, object]] = []
     for seed_idx, seed in enumerate(seeds):
