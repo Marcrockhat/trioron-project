@@ -364,6 +364,21 @@ class TrioronLayer(nn.Module):
         self._last_y_branches: Optional[torch.Tensor] = None
         self._last_z_branches: Optional[torch.Tensor] = None
 
+        # Branch plasticity (opt-in via enable_branch_plasticity()). When
+        # active, the discrete branch_id is replaced by a soft Gumbel-
+        # Softmax-style routing parameter `branch_routing` of shape
+        # (n_nodes, fan_in, B_max); the dendritic forward mixes column
+        # contributions across branches with weights softmax(routing).
+        # Gradient flows through the mix, letting SGD discover which
+        # column belongs on which branch. harden_branch_routing() copies
+        # argmax(routing) back into branch_id for inference / serialization.
+        # Default off → byte-identical to scatter_add fast path.
+        self.branch_plasticity_enabled: bool = False
+        self.branch_routing: Optional[nn.Parameter] = None
+        # Temperature divides logits before softmax. Lower temp = sharper
+        # routing (closer to one-hot); higher = more mixing.
+        self.branch_plasticity_temperature: float = 1.0
+
     # ----- properties -----
     @property
     def n_nodes(self) -> int:
@@ -463,11 +478,32 @@ class TrioronLayer(nn.Module):
             keep = (~self.dendrite_orphan).unsqueeze(0).to(contrib.dtype)
             contrib = contrib * keep
 
-        # scatter_add per-branch sum: z_branches[batch, i, b] =
-        #   Σ_{j : branch_id[i, j] == b} contrib[batch, i, j].
-        z_branches = contrib.new_zeros(batch_size, n_nodes, B_max)
-        idx = self.branch_id.unsqueeze(0).expand(batch_size, -1, -1)
-        z_branches = z_branches.scatter_add(2, idx, contrib)
+        # Branch routing: by default scatter_add via the discrete
+        # branch_id (byte-identical fast path). When branch plasticity
+        # is enabled, mix contributions through a soft routing parameter
+        # so SGD can re-assign columns to branches across training.
+        if self.branch_plasticity_enabled and self.branch_routing is not None:
+            # Mask dead branches (b ≥ B_per_node[i]) so softmax only
+            # distributes across live slots. Without this the soft net
+            # can dump contributions into branch_weight=0 slots to
+            # dilute the live branches — a solution that vanishes
+            # under hardening since dead-slot weight is 0.
+            B_max = self.branch_routing.shape[2]
+            b_idx = torch.arange(B_max, device=self.branch_routing.device)
+            live_mask = b_idx.view(1, 1, B_max) < self.B_per_node.view(-1, 1, 1)
+            masked = self.branch_routing.masked_fill(~live_mask, float("-inf"))
+            pi = F.softmax(
+                masked / self.branch_plasticity_temperature,
+                dim=2,
+            ).to(contrib.dtype)
+            # contrib (B, N, F) × pi (N, F, B_max) → (B, N, B_max).
+            z_branches = torch.einsum("bnf,nfk->bnk", contrib, pi)
+        else:
+            # scatter_add per-branch sum: z_branches[batch, i, b] =
+            #   Σ_{j : branch_id[i, j] == b} contrib[batch, i, j].
+            z_branches = contrib.new_zeros(batch_size, n_nodes, B_max)
+            idx = self.branch_id.unsqueeze(0).expand(batch_size, -1, -1)
+            z_branches = z_branches.scatter_add(2, idx, contrib)
 
         # σ_branch on all cells uniformly, then per-cell shortcut
         # restores identity for K=1 cells. is_k1 is a (1, n_nodes, 1)
@@ -492,6 +528,102 @@ class TrioronLayer(nn.Module):
     def _capture_upstream(self, grad: torch.Tensor) -> None:
         """Backward hook: record ∂L/∂y for saliency_utility()."""
         self._last_upstream = grad.detach()
+
+    # ----- branch plasticity (opt-in) -----
+
+    def enable_branch_plasticity(
+        self,
+        init: str = "match",
+        init_logit: float = 5.0,
+        temperature: float = 1.0,
+    ) -> None:
+        """Activate soft branch routing for the K>1 dendritic forward.
+
+        Replaces the discrete `branch_id` partition with a learnable
+        per-(cell, column) softmax over branches. Adds n_nodes × fan_in
+        × B_max trainable scalars and routes contributions through their
+        softmax during the dendritic forward. SGD can then re-assign
+        columns to branches via gradient on `branch_routing`.
+
+        init:
+          - "match" (default): initial logits are `init_logit` at the
+            current branch_id index and 0 elsewhere, so softmax starts
+            near one-hot at the current discrete assignment.
+            Plasticity drifts from there.
+          - "uniform": all logits 0, softmax = 1/K. Maximally agnostic
+            initial state — the test case for "can SGD discover the
+            right partition from scratch."
+
+        After training, call harden_branch_routing() to copy
+        argmax(routing) into branch_id and turn the soft path off.
+
+        Caveat: grow_node / grow_branch / prune_branch are NOT yet
+        plumbed to keep branch_routing in sync with branch_id growth.
+        Enable plasticity AFTER any structural mutation; do not call
+        grow_node/grow_branch while plasticity is active.
+        """
+        if self.branch_routing is None:
+            logits = torch.zeros(
+                self.n_nodes, self.fan_in, self.B_max,
+                device=self.W.device, dtype=torch.float32,
+            )
+            if init == "match":
+                for i in range(self.n_nodes):
+                    for j in range(self.fan_in):
+                        logits[i, j, int(self.branch_id[i, j])] = init_logit
+            elif init == "uniform":
+                pass
+            elif init == "noisy_uniform":
+                # Small-noise break of the perfect symmetry around uniform.
+                # Without this, gradient at exact uniform may degenerate
+                # (collapses all columns to the same branch when branch_weight
+                # has an asymmetric prior).
+                logits.normal_(mean=0.0, std=0.5)
+            else:
+                raise ValueError(
+                    f"init must be 'match' / 'uniform' / 'noisy_uniform', "
+                    f"got {init!r}"
+                )
+            self.branch_routing = nn.Parameter(logits)
+        self.branch_plasticity_enabled = True
+        self.branch_plasticity_temperature = float(temperature)
+
+    def harden_branch_routing(self) -> None:
+        """Copy argmax(branch_routing) into branch_id, disable
+        plasticity. After this, forward uses the hard scatter_add path
+        with the discovered partition.
+
+        Argmax is restricted to LIVE branches (per-cell branches with
+        index < B_per_node[i]). Dead branches (slots b ≥ B_per_node[i])
+        have branch_weight=0 and contribute nothing to the soma, so
+        landing a column on one would orphan that column under the
+        hard forward — which is exactly what's happening when the
+        unrestricted argmax picks a dead slot. The soft path doesn't
+        suffer this because dead branches' z values are simply
+        multiplied by branch_weight=0 inside the soma pool; the soft
+        net can even USE dead branches as 'trash bins' to dilute
+        contributions to live branches (eliminating quadratic
+        cross-terms when σ_branch=quad). The hard path can't, so we
+        restrict per-cell argmax to live branches before copying.
+        """
+        if self.branch_routing is None:
+            self.branch_plasticity_enabled = False
+            return
+        with torch.no_grad():
+            # Build per-cell live-branch mask: live[i, b] = (b < B_per_node[i]).
+            B_max = self.branch_routing.shape[2]
+            b_idx = torch.arange(B_max, device=self.branch_routing.device)
+            live = b_idx.view(1, 1, B_max) < self.B_per_node.view(-1, 1, 1)
+            # Mask dead branches to -inf so they're never chosen by argmax.
+            masked_logits = self.branch_routing.masked_fill(~live, float("-inf"))
+            new_branch_id = masked_logits.argmax(dim=2).to(self.branch_id.dtype)
+            self.branch_id.copy_(new_branch_id)
+        self.branch_plasticity_enabled = False
+
+    def disable_branch_plasticity(self) -> None:
+        """Turn off soft routing without hardening — branch_routing is
+        retained so re-enabling preserves learned logits."""
+        self.branch_plasticity_enabled = False
 
     # ----- state updates (call in this order during training) -----
 

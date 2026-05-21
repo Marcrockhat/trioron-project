@@ -118,6 +118,7 @@ def train_arm(
     probe_every: int = 100,
     trigger_threshold: float = 0.01,
     trigger_ceiling: float = 1e9,
+    temp_anneal: tuple[float, float] | None = None,
 ) -> dict:
     """Train end-to-end. grow_mode ∈ {none, forced, trigger}.
 
@@ -127,12 +128,23 @@ def train_arm(
     - "trigger":  every `probe_every` steps, call
                   internal_frustration_candidates() and grow_branch on
                   the returned cells (column partition: col 1 → branch 1).
+
+    temp_anneal: when set to (start, end), linearly anneals the L1
+        layer's branch_plasticity_temperature from `start` (at step 0)
+        to `end` (at step steps-1). Drives soft routing toward one-hot
+        by end of training so soft and hard pi match.
     """
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = nn.CrossEntropyLoss()
     grow_events: list[int] = []
 
     for step in range(steps):
+        if temp_anneal is not None:
+            start_t, end_t = temp_anneal
+            frac = step / max(1, steps - 1)
+            model.l1.branch_plasticity_temperature = (
+                start_t + (end_t - start_t) * frac
+            )
         logits = model(X_train)
         loss = loss_fn(logits, y_train)
         opt.zero_grad()
@@ -201,7 +213,62 @@ def run_seed(seed: int) -> dict:
     out["K=2_forced"] = train_arm(m2, X_train, y_train, X_test, y_test,
                                   grow_mode="forced")
 
-    # Arm 3: K=1 → trigger-grown.
+    # Arm 3: K=2 with plastic branch_routing.
+    # Same structural setup as K=2_forced (every cell pre-grown to K=2
+    # via grow_branch), BUT:
+    #   - branch_weight rebalanced to symmetric [0.5, 0.5] (default
+    #     grow_branch init is [1.0, 0.1] which biases gradient toward
+    #     branch 0 and collapses plasticity to a degenerate one-branch
+    #     solution).
+    #   - branch routing is soft (Gumbel-softmax-style mixing) so SGD
+    #     can re-assign columns to branches via gradient on
+    #     branch_routing.
+    #   - init logits are "noisy_uniform" — small random perturbation
+    #     around zero so the per-(cell, column) softmax has slight
+    #     initial asymmetry. With perfectly uniform pi gradient
+    #     directions for all columns would be identical and routing
+    #     would collapse rather than discover the partition.
+    # At end of training, harden_branch_routing() converts the soft
+    # routing back to discrete branch_id (argmax), so the final
+    # accuracy is computed under the hard scatter_add path — directly
+    # comparable to K=2_forced.
+    torch.manual_seed(seed)
+    m4 = FourRingClassifier(branch_activation="quad")
+    for i in range(4):
+        m4.l1.grow_branch(node_idx=i, source_cols=[1])
+        # Rebalance branch_weight for symmetric branches; default
+        # [1, 0.1] creates an asymmetric gradient prior that
+        # collapses plasticity to one branch.
+        with torch.no_grad():
+            m4.l1.branch_weight.data[i, 0] = 0.5
+            m4.l1.branch_weight.data[i, 1] = 0.5
+    # Reseed before noisy init so each seed's logit randomness is
+    # paired with its data + W init (reproducibility).
+    torch.manual_seed(seed + 99_999)
+    m4.l1.enable_branch_plasticity(
+        init="noisy_uniform",
+        temperature=1.0,
+    )
+    out["K=2_plastic"] = train_arm(
+        m4, X_train, y_train, X_test, y_test,
+        grow_mode="none",
+        temp_anneal=(1.0, 0.1),
+    )
+    # Harden then re-evaluate on the test set under the hard
+    # scatter_add path. train_arm already evaluated under soft
+    # routing; we overwrite with the hard-routed number plus capture
+    # the discovered partition.
+    m4.l1.harden_branch_routing()
+    with torch.no_grad():
+        logits_hard = m4(X_test)
+        acc_hard = (logits_hard.argmax(dim=1) == y_test).float().mean().item()
+    out["K=2_plastic"]["acc_soft"] = out["K=2_plastic"]["acc"]
+    out["K=2_plastic"]["acc"] = acc_hard
+    out["K=2_plastic"]["branch_id_per_cell"] = (
+        m4.l1.branch_id.detach().cpu().tolist()
+    )
+
+    # Arm 4: K=1 → trigger-grown.
     torch.manual_seed(seed)
     m3 = FourRingClassifier(branch_activation="quad")
     # Threshold tuned to fire on K=1 cells that are clearly engaged
@@ -239,7 +306,7 @@ def main() -> None:
     log("trioron 2.0 — Phase 6 multi-class within-niche bench")
     log("task: 4 concentric rings (radii 1.0/1.3/1.6/1.9, noise=0.05)")
     log("substrate: L1 TrioronLayer(fan_in=2, n_nodes=4, linear) + Linear(4,4) head")
-    log(f"arms: K=1 / K=2_forced / K=1->trigger    n_seeds={n_seeds}")
+    log(f"arms: K=1 / K=2_forced / K=2_plastic / K=1->trigger    n_seeds={n_seeds}")
     log("")
 
     for seed in range(n_seeds):
@@ -248,6 +315,9 @@ def main() -> None:
         log(
             f"seed {seed:2d}: K=1 acc={r['K=1']['acc']:.4f} | "
             f"K=2_forced acc={r['K=2_forced']['acc']:.4f} | "
+            f"K=2_plastic acc={r['K=2_plastic']['acc']:.4f} "
+            f"(soft={r['K=2_plastic']['acc_soft']:.4f}, "
+            f"partition={r['K=2_plastic']['branch_id_per_cell']}) | "
             f"K=1->trigger acc={r['K=1->trigger']['acc']:.4f} "
             f"(K_final={r['K=1->trigger']['K_final_per_cell']}, "
             f"grow_events={r['K=1->trigger']['n_grow_events']})"
@@ -257,7 +327,7 @@ def main() -> None:
     log("aggregate (mean ± std across seeds):")
 
     summary_rows: list[dict] = []
-    for arm in ("K=1", "K=2_forced", "K=1->trigger"):
+    for arm in ("K=1", "K=2_forced", "K=2_plastic", "K=1->trigger"):
         accs = [all_results[s][arm]["acc"] for s in range(n_seeds)]
         mean = statistics.mean(accs)
         std = statistics.pstdev(accs)
@@ -281,13 +351,20 @@ def main() -> None:
     trig_mean = statistics.mean(
         all_results[s]["K=1->trigger"]["acc"] for s in range(n_seeds)
     )
+    plastic_mean = statistics.mean(
+        all_results[s]["K=2_plastic"]["acc"] for s in range(n_seeds)
+    )
     delta_forced = k2_mean - k1_mean
     delta_trigger = trig_mean - k1_mean
     delta_trigger_vs_forced = trig_mean - k2_mean
+    delta_plastic = plastic_mean - k1_mean
+    delta_plastic_vs_forced = plastic_mean - k2_mean
 
     log("")
     log("findings:")
     log(f"  Δ(K=2_forced  − K=1)        = {delta_forced:+.4f}")
+    log(f"  Δ(K=2_plastic − K=1)        = {delta_plastic:+.4f}")
+    log(f"  Δ(K=2_plastic − K=2_forced) = {delta_plastic_vs_forced:+.4f}")
     log(f"  Δ(K=1->trigger − K=1)       = {delta_trigger:+.4f}")
     log(f"  Δ(K=1->trigger − K=2_forced) = {delta_trigger_vs_forced:+.4f}")
 
@@ -304,6 +381,19 @@ def main() -> None:
         log("  K=2 forced ≤ K=1 + 0.05 → no architectural lift at this "
             "task scale. The K=1 baseline already saturates the rings "
             "(4 ReLU cells + linear head may suffice).")
+
+    if abs(delta_plastic_vs_forced) <= 0.05:
+        log("  K=2_plastic matches K=2_forced within ±0.05 → soft "
+            "branch routing successfully rediscovers a working "
+            "(column → branch) partition from a noisy-uniform start. "
+            "Plastic connectivity validated on this task.")
+    elif delta_plastic_vs_forced < -0.05:
+        log("  K=2_plastic lags K=2_forced by >0.05 → SGD on the soft "
+            "routing collapses or fails to find the partition. "
+            "Plasticity falsified at this scale / this init.")
+    else:
+        log("  K=2_plastic beats K=2_forced (unexpected) → soft routing "
+            "may help via smoothness; investigate per-seed partitions.")
 
     if abs(delta_trigger_vs_forced) <= 0.05:
         log("  K=1->trigger matches K=2_forced within ±0.05 → Phase 2.5 "
