@@ -123,6 +123,117 @@ INIT_CLASSES = 2
 GROWTH_TARGET_LAYER_IDX = 1   # second hidden (L1) — NOT the head, NOT L0
 N_GROW_PER_TASK = 4           # deterministic per-task hidden growth
 
+# Trioron 2.0 Axis 5 — opt-in dendritic growth on top of the existing
+# width-growth machinery. Default OFF preserves byte-for-byte behavior
+# with the 1.0-era headline numbers (n=10 manifold-grown chained-15 at
+# 0.601/0.677/0.961). Enable via env var to A/B against the baseline
+# without forking the bench file:
+#
+#   TRIORON_DENDRITIC_GROWTH=1 python3 -m experiments.bench_chained_15task ...
+#
+# When on:
+#   - layer.update_internal_stress() fires on the L1 layer after every
+#     backward pass (collects per-cell within-niche frustration signal)
+#   - layer.update_branch_utility() fires on the L1 layer after every
+#     backward pass (per-(cell, branch) saliency; no-op until K>1)
+#   - after each task's consolidate_task, internal_frustration_candidates
+#     is polled on L1 and grow_branch is called on up to
+#     DENDRITIC_MAX_GROWS_PER_TASK cells with a deterministic half-half
+#     column partition (first half stays on branch 0, second half →
+#     branch 1)
+DENDRITIC_GROWTH_ENABLED = os.environ.get("TRIORON_DENDRITIC_GROWTH", "0") == "1"
+# Per-axis sub-flags for ablation runs. Default each to the master
+# flag so existing TRIORON_DENDRITIC_GROWTH=1 invocations still
+# enable all three axes; set each explicitly to "0" or "1" to override
+# in ablation runs (e.g., TRIORON_AXIS_4=0 disables axonal_gain).
+AXIS_3_ENABLED = os.environ.get(
+    "TRIORON_AXIS_3", "1" if DENDRITIC_GROWTH_ENABLED else "0",
+) == "1"
+AXIS_4_ENABLED = os.environ.get(
+    "TRIORON_AXIS_4", "1" if DENDRITIC_GROWTH_ENABLED else "0",
+) == "1"
+AXIS_5_ENABLED = os.environ.get(
+    "TRIORON_AXIS_5", "1" if DENDRITIC_GROWTH_ENABLED else "0",
+) == "1"
+# Master "any axis on" view — drives REASONING profile activation and
+# the "update internal_stress per backward" loop (used by Axis 5).
+ANY_AXIS_ENABLED = AXIS_3_ENABLED or AXIS_4_ENABLED or AXIS_5_ENABLED
+DENDRITIC_INTERNAL_STRESS_THRESHOLD = float(
+    os.environ.get("TRIORON_DENDRITIC_THRESHOLD", "1e-5")
+)
+DENDRITIC_OVERALL_SALIENCY_CEILING = float(
+    os.environ.get("TRIORON_DENDRITIC_SALIENCY_CEILING", "1e9")
+)
+DENDRITIC_MAX_GROWS_PER_TASK = int(
+    os.environ.get("TRIORON_DENDRITIC_MAX_GROWS_PER_TASK", "4")
+)
+# Probabilistic K-penalty on grow_branch. p_fire = 1/(1+alpha*(K-1)).
+# Default alpha=1.0 = "1/K" shape: K=1 always fires; K=2 50%; K=3 33%;
+# K=7 14%. Set to 0 to disable. See try_grow_branches_one_pass.
+DENDRITIC_PROB_PENALTY_ALPHA = float(
+    os.environ.get("TRIORON_DENDRITIC_PROB_PENALTY_ALPHA", "1.0")
+)
+# Dendrite-first priority on grow_node. When AXIS_5 is on, suppress
+# the bench's deterministic grow_node attempts as long as target-layer
+# cells have B_per_node below this fraction of B_max. Default 0.5 =
+# half-saturation. Set to 0 to disable (grow_node always allowed).
+DENDRITIC_FIRST_SATURATION_FRAC = float(
+    os.environ.get("TRIORON_DENDRITIC_FIRST_SATURATION_FRAC", "0.5")
+)
+# Trioron 2.0 — Recipe A: PCA-developmental L1 init. After L0
+# warmup (which settles the frozen projection on infancy data),
+# compute the top-K right singular vectors of L0's activations on
+# the infancy view and use them to initialize L1's W rows. Mimics
+# biological "75% of brain develops before birth" — cells start
+# tuned to the dominant input variance directions of the world
+# they'll see, rather than from uniform Kaiming. Blend controls
+# how much PCA vs Kaiming (1.0 = pure PCA, 0.0 = pure Kaiming).
+DEVELOPMENTAL_PCA_ENABLED = (
+    os.environ.get("TRIORON_DEVELOPMENTAL_PCA", "0") == "1"
+)
+DEVELOPMENTAL_PCA_BLEND = float(
+    os.environ.get("TRIORON_DEVELOPMENTAL_PCA_BLEND", "0.7")
+)
+
+# Trioron 2.0 — Locus developmental positioning. Rocky's framing
+# (2026-05-21): "75% of brain develops before birth" — the substrate
+# should have a coordinate system installed during a developmental
+# phase, not learned from scratch via gradient. L0 = ground zero
+# (fixed 3D grid of anchor points). L1+ cells get one-shot position
+# assignment via W-magnitude-weighted centroid in upstream-position
+# space. Diffusion provides the spatial structure as long as L0
+# anchors are present. Volume (3D) chosen as default per
+# "diffusion itself provides spatial information as long as there
+# are anchoring points."
+LOCUS_DEVELOPMENTAL_ENABLED = (
+    os.environ.get("TRIORON_LOCUS_DEVELOPMENTAL", "0") == "1"
+)
+# Trioron 2.0 Axis 3 — mid-curriculum depth growth. When the dendrite
+# flag is on, fire one insert_layer event at the end of this task
+# (post-consolidation). 0-indexed; default = 7 = halfway through the
+# 15-task curriculum, after the MNIST phase has stabilized. Uses
+# growth_direction init from from_activation_residuals (label-free)
+# plus noise_scale=1e-2 (pneuma's identity-escape lesson).
+DENDRITIC_INSERT_AT_TASK = int(
+    os.environ.get("TRIORON_DENDRITIC_INSERT_AT_TASK", "7")
+)
+DENDRITIC_INSERT_NOISE_SCALE = float(
+    os.environ.get("TRIORON_DENDRITIC_INSERT_NOISE", "1e-2")
+)
+# Trioron 2.0 Axis 4 — per-task axonal_gain modulation via held-out
+# eval saliency. After each task's consolidate_task, read per-cell
+# saliency on a held-out eval batch (external signal, not the cell's
+# own training gradient) and apply as a small multiplicative bump on
+# axonal_gain, then decay toward 1.0. Softer clamps [0.5, 1.5]
+# (compared to the prior [0.1, 2.0] binary-clamp) so the gain is
+# modulation, not gating.
+DENDRITIC_AXONAL_FLOOR = float(
+    os.environ.get("TRIORON_DENDRITIC_AXONAL_FLOOR", "0.5")
+)
+DENDRITIC_AXONAL_CEILING = float(
+    os.environ.get("TRIORON_DENDRITIC_AXONAL_CEILING", "1.5")
+)
+
 N_EPOCHS_PER_TASK = 8                 # full bench: ~180 batches × 8 = ~1440 steps
 N_EPOCHS_PER_TASK_SMOKE = 4           # smoke: 4 epochs so Fix B (settle→grow→
                                        # post-grow) has room to operate
@@ -717,6 +828,349 @@ def projected_trainable_after_grow(
         if nxt.W.requires_grad:
             delta += nxt.n_nodes      # +1 W col on next
     return trainable_params(net) + delta
+
+
+def init_l0_grid_positions(
+    net: TrioronNetwork,
+    l0_layer_idx: int = 0,
+) -> None:
+    """Trioron 2.0 — Phase B: L0 ground-zero positions.
+
+    Lays L0's cell_position out on a regular 3D grid spanning the unit
+    cube [0, 1]³. The grid dims are chosen as the closest factorization
+    of L0_width into three integers (preferring near-equal sides).
+
+    L0 cells are "anchor points" in position-space; downstream layers
+    will have their positions computed relative to these anchors via
+    develop_positions(). Once set here, L0 positions are immutable for
+    the run (L0 is frozen in arms that have freeze_l0=True; for the
+    fixed_ewc baseline this is a no-op since LOCUS_DEVELOPMENTAL
+    is only used in growth arms).
+    """
+    layer = net.layers[l0_layer_idx]
+    n = layer.n_nodes
+    # Find a 3D factorization of n. Walk dim1 outwards from cube-root,
+    # then dim2 from sqrt(remainder), then dim3 takes the rest. Pads
+    # to grid_size with extras at the front (which then get truncated).
+    cbrt = int(round(n ** (1.0 / 3.0)))
+    best = None
+    for d1 in range(max(1, cbrt - 2), cbrt + 3):
+        for d2 in range(max(1, d1 - 1), d1 + 2):
+            d3 = n // (d1 * d2)
+            if d1 * d2 * d3 == n and (d1 * d2 * d3) > 0:
+                # Prefer near-equal sides — minimize max - min.
+                spread = max(d1, d2, d3) - min(d1, d2, d3)
+                if best is None or spread < best[1]:
+                    best = ((d1, d2, d3), spread)
+    if best is None:
+        # n doesn't factor into 3 ints (e.g., prime). Fall back to
+        # 1 × 1 × n (a line) — still valid, just degenerate.
+        d1, d2, d3 = 1, 1, n
+    else:
+        d1, d2, d3 = best[0]
+    # Build the grid: positions are evenly spaced in [0, 1] per axis.
+    xs = torch.linspace(0.0, 1.0, d1) if d1 > 1 else torch.zeros(1)
+    ys = torch.linspace(0.0, 1.0, d2) if d2 > 1 else torch.zeros(1)
+    zs = torch.linspace(0.0, 1.0, d3) if d3 > 1 else torch.zeros(1)
+    grid_pos = torch.zeros(n, 3)
+    idx = 0
+    for x in xs:
+        for y in ys:
+            for z in zs:
+                if idx >= n:
+                    break
+                grid_pos[idx] = torch.tensor([x.item(), y.item(), z.item()])
+                idx += 1
+            if idx >= n:
+                break
+        if idx >= n:
+            break
+    with torch.no_grad():
+        layer.cell_position.copy_(grid_pos.to(layer.cell_position.device))
+
+
+def develop_positions(
+    net: TrioronNetwork,
+    start_layer_idx: int = 1,
+    eps: float = 1e-8,
+    weight_power: float = 4.0,
+) -> List[Tuple[int, Tuple[int, int, int]]]:
+    """Trioron 2.0 — Phase C: assign positions to downstream layers
+    via one-shot weighted-centroid from upstream positions.
+
+    For each layer at index L ≥ start_layer_idx, for each cell i:
+
+        pos[L, i] = Σ_j (|W[i, j]|^p · pos[src_layer, src_node(j)])
+                    / Σ_j (|W[i, j]|^p + eps)
+
+    where src_layer and src_node(j) are derived from input_sources
+    (sentinel columns default to the immediate predecessor layer at
+    the same column index), and p (weight_power, default 4) controls
+    how peaked the per-(cell, source) attention is.
+
+    The temperature is non-obvious. With p=2 (uniform-style W²
+    centroid) and Kaiming-random W over fan_in=128, the weighted
+    centroid collapses near the global L0 mean because all per-source
+    weights are similar in magnitude — cells don't differentiate. With
+    p=4, the strongest few W entries per cell dominate, and the
+    centroid actually picks up on which sources each cell cares about
+    most. Higher p (=6, 8) approaches argmax (winner-take-all source
+    position). p=4 is the empirical sweet spot for Kaiming-init L1.
+
+    Biologically: "cells settle where their dominant inputs live."
+    The temperature controls how strict "dominant" is.
+    """
+    info: List[Tuple[int, Tuple[int, int, int]]] = []
+    for L in range(start_layer_idx, len(net.layers)):
+        layer = net.layers[L]
+        prev_layer = net.layers[L - 1]
+        with torch.no_grad():
+            W = layer.W.data.to(torch.float32)        # (n_dst, fan_in)
+            W_sq = W.abs().pow(weight_power)
+            # Source positions per column: sentinel columns map to
+            # prev_layer.cell_position[col_idx]; explicit columns map
+            # to net.layers[src_layer].cell_position[src_node].
+            src = layer.input_sources                  # (fan_in, 2)
+            fan_in = layer.fan_in
+            src_pos = torch.zeros(fan_in, 3, dtype=torch.float32,
+                                  device=W.device)
+            for j in range(fan_in):
+                sl = int(src[j, 0].item())
+                sn = int(src[j, 1].item())
+                if sl < 0:
+                    # Sentinel: read from previous layer at col j.
+                    if j < prev_layer.cell_position.shape[0]:
+                        src_pos[j] = prev_layer.cell_position[j].to(
+                            torch.float32
+                        )
+                    # else leave zero (shouldn't happen if shapes
+                    # are consistent)
+                else:
+                    if (0 <= sl < len(net.layers)
+                            and 0 <= sn < net.layers[sl].n_nodes):
+                        src_pos[j] = net.layers[sl].cell_position[sn].to(
+                            torch.float32
+                        )
+            # Weighted centroid: pos[i, :] = Σ_j (W_sq[i, j] · src_pos[j, :])
+            #                             / (Σ_j W_sq[i, j] + eps).
+            weighted_sum = W_sq @ src_pos                # (n_dst, 3)
+            weights_sum = W_sq.sum(dim=1, keepdim=True) + eps  # (n_dst, 1)
+            new_pos = weighted_sum / weights_sum         # (n_dst, 3)
+            layer.cell_position.copy_(
+                new_pos.to(layer.cell_position.dtype)
+            )
+        # Compute summary statistics for reporting.
+        with torch.no_grad():
+            pos = layer.cell_position
+            spread = float((pos.max(dim=0).values - pos.min(dim=0).values)
+                           .norm().item())
+        info.append((L, (layer.n_nodes, layer.fan_in, 0)))
+    return info
+
+
+def fire_insert_layer_event(
+    net: TrioronNetwork,
+    train_view,
+    target_layer_idx: int,
+    noise_scale: float = 1e-2,
+    cache_batch: int = 64,
+) -> int:
+    """Trioron 2.0 Axis 3 — fire ONE mid-curriculum insert_layer event.
+
+    Inserts a new layer between L0 (idx 0) and the current target
+    growth layer (idx target_layer_idx). The new layer's W is
+    initialized from from_activation_residuals on a fresh batch of L0
+    output (label-free residual SVD per pneuma Chloe's 2026-05-20
+    field report), plus a small Gaussian noise (noise_scale * randn)
+    to seed asymmetry under decaying-LR continual training.
+
+    Returns the NEW target_growth_idx (target_layer_idx + 1, since the
+    new layer goes BELOW the old growth target). Caller must rebuild
+    the optimizer and update its local target tracker.
+    """
+    from trioron.growth_direction import (
+        features_at_growth_point,
+        from_activation_residuals,
+    )
+
+    # Sample one batch of L0 output at the original growth-target's
+    # input position. features_at_growth_point runs forward up to but
+    # not including the target layer — exactly the activations the new
+    # inserted layer will consume.
+    x_batch, _ = train_view.sample(batch=cache_batch)
+    with torch.no_grad():
+        l0_acts = features_at_growth_point(net, x_batch, target_layer_idx)
+
+    # Width of the inserted layer matches the current target's n_nodes
+    # so the downstream layer's fan_in doesn't need resizing.
+    target_layer = net.layers[target_layer_idx]
+    n_nodes = target_layer.n_nodes
+
+    vecs = from_activation_residuals(l0_acts, k=n_nodes)
+    new_idx = net.insert_layer(
+        between=(target_layer_idx - 1, target_layer_idx),
+        n_nodes=n_nodes,
+        activation="relu",   # supralinear stage between L0 and the niche layer
+        init_mode="growth_direction",
+        init_vecs=vecs,
+        noise_scale=noise_scale,
+    )
+    # After insert, the original target layer is at target_layer_idx + 1.
+    return target_layer_idx + 1
+
+
+def update_axonal_gain_from_eval_saliency(
+    net: TrioronNetwork,
+    target_layer_idx: int,
+    eval_view,
+    active_classes,
+    n_batches: int = 4,
+    batch: int = 64,
+    bump_strength: float = 0.10,
+    decay_rate: float = 0.05,
+    floor: float = 0.5,
+    ceiling: float = 1.5,
+) -> None:
+    """Trioron 2.0 Axis 4 — external-signal axonal_gain update.
+
+    Reads per-cell saliency on a HELD-OUT eval batch (not the cell's
+    own training-time gradient), applies a small multiplicative bump
+    on axonal_gain, then decays toward 1.0. Cells that consistently
+    show eval-time saliency drift upward in gain over many tasks;
+    cells quiet on eval drift back toward neutral.
+
+    Differences from the prior self-saliency wiring (which dropped
+    chained-15 by −0.12 abs in the seed-0 ablation):
+      - Signal source: held-out eval data, NOT the just-finished task's
+        training gradient. The cell's amplitude is set by something
+        external to its training-fit, matching the spec's
+        "neuromodulator broadcast" framing (reward/attention/emotion
+        come from external systems, not from the cell itself).
+      - Application: small multiplicative bump (× ~0.9 to × ~1.1)
+        per task, NOT full absolute overwrite. Cells accumulate gain
+        slowly over many tasks instead of bouncing between extremes
+        every task.
+      - Decay toward 1.0 (rate = 0.05/task): prevents unbounded drift
+        and gives a slow forgetting curve. After ~14 tasks of no
+        saliency signal, a cell's gain decays back to within ~50% of
+        neutral from any boundary value.
+      - Softer clamp [0.5, 1.5]: gain is a modulation, not a gate. The
+        prior [0.1, 2.0] clamp produced binary on/off behavior every
+        task (both extremes were hit on every printout).
+
+    The forward+backward through eval data accumulates gradients on
+    net.parameters(); we explicitly zero them at the end so the eval
+    signal doesn't bleed into the optimizer's next step.
+    """
+    from trioron import masked_cross_entropy
+    layer = net.layers[target_layer_idx]
+
+    # 1. Compute per-cell saliency on held-out eval batches. Each
+    # backward populates _last_upstream via the hook on _last_y;
+    # saliency_utility reads them and we accumulate across batches.
+    sal_sum = torch.zeros(layer.n_nodes, device=layer.W.device)
+    n_actual = 0
+    for _ in range(n_batches):
+        for p in net.parameters():
+            if p.grad is not None:
+                p.grad.zero_()
+        x, y = eval_view.sample(batch=batch)
+        logits = net(x)
+        loss = masked_cross_entropy(logits, y, active_classes=list(active_classes))
+        loss.backward()
+        b_sal = layer.saliency_utility()
+        if b_sal.sum().item() > 0:
+            sal_sum += b_sal
+            n_actual += 1
+
+    # Clear gradients so the eval signal doesn't bleed into the
+    # next training step's optimizer.
+    for p in net.parameters():
+        if p.grad is not None:
+            p.grad = None
+
+    if n_actual == 0:
+        return
+    sal = sal_sum / n_actual
+
+    # 2. Center to mean=0, normalize by std, tanh-bound the bump.
+    mean = sal.mean()
+    std = sal.std().clamp_min(1e-6)
+    centered = (sal - mean) / std
+    bump = 1.0 + bump_strength * centered.tanh()
+
+    # 3. Multiplicative apply.
+    layer.set_axonal_gain(bump, mode="multiplicative")
+
+    # 4. Decay toward 1.0 (neutral), then clamp.
+    with torch.no_grad():
+        target = torch.ones_like(layer.axonal_gain)
+        new_gain = (
+            layer.axonal_gain * (1.0 - decay_rate)
+            + target * decay_rate
+        )
+        new_gain.clamp_(min=floor, max=ceiling)
+        layer.axonal_gain.copy_(new_gain)
+
+
+def try_grow_branches_one_pass(
+    net: TrioronNetwork,
+    target_layer_idx: int = GROWTH_TARGET_LAYER_IDX,
+    max_grows: int = 4,
+    threshold: float = 1e-5,
+    overall_saliency_ceiling: float = 1e9,
+    prob_penalty_alpha: float = 1.0,
+) -> Tuple[int, List[int]]:
+    """Trioron 2.0 Phase 2.5 — poll internal_frustration_candidates on
+    the target layer and call grow_branch on top candidates.
+
+    Returns (n_grown, cell_ids_grown). When DENDRITIC_GROWTH_ENABLED is
+    False this helper is never called; it's the policy layer atop the
+    structural mutator grow_branch (which stays callable directly).
+
+    Partition heuristic for the first cut: deterministic half-half on
+    fan_in (cols [fan_in//2, fan_in) → branch 1). The 0.1·mean init for
+    the new branch_weight slot keeps the cell's immediate forward
+    quiet; gradient descent then shapes the partition's actual
+    utility. A future heuristic could route cols by |W| value (route
+    the cell's loudest reads to one branch) but the simplest thing
+    that exercises the trigger machinery wins for the first comparison.
+    """
+    layer = net.layers[target_layer_idx]
+    cands = layer.internal_frustration_candidates(
+        threshold=threshold,
+        overall_saliency_ceiling=overall_saliency_ceiling,
+    )
+    grown_cells: List[int] = []
+    for cell_idx in cands[:max_grows]:
+        K = int(layer.B_per_node[cell_idx].item())
+        if K >= layer.B_max:
+            continue
+        # Probabilistic K-penalty (Rocky 2026-05-21): "more dendrite
+        # means less probability to generate more". Models the rising
+        # metabolic cost of growing additional dendritic branches —
+        # cheaper at low K, increasingly committed-and-expensive at
+        # high K. p_fire = 1 / (1 + alpha * (K - 1)):
+        #   K=1 → 100%, K=2 → 50%, K=3 → 33%, K=7 → 14%, K=8 → 12.5%.
+        # alpha=0 disables (always fires); larger alpha = sharper
+        # penalty. Sampled from torch.rand so the per-run seed
+        # determines firing pattern reproducibly.
+        if prob_penalty_alpha > 0 and K > 1:
+            p_fire = 1.0 / (1.0 + prob_penalty_alpha * (K - 1))
+            if torch.rand(1).item() >= p_fire:
+                continue
+        # Deterministic half-half partition.
+        fan_in = layer.fan_in
+        n_half = fan_in // 2
+        if n_half < 1:
+            continue
+        source_cols = list(range(n_half, fan_in))
+        try:
+            layer.grow_branch(node_idx=cell_idx, source_cols=source_cols)
+            grown_cells.append(int(cell_idx))
+        except (ValueError, IndexError):
+            pass
+    return len(grown_cells), grown_cells
 
 
 def try_grow_one(
@@ -1817,6 +2271,16 @@ def train_one_task(
             # rows archived.
             if ARCHIVE_ENABLED:
                 net.mask_archived_grads_all()
+            # Trioron 2.0 Axis 5: collect within-niche frustration
+            # signal on the target growth layer. Only fires when Axis
+            # 5 is enabled; layer-level methods read the _last_y /
+            # _last_upstream caches populated by the forward+backward
+            # we just ran. update_branch_utility is a no-op until any
+            # cell has grown to K>1.
+            if AXIS_5_ENABLED:
+                target = net.layers[GROWTH_TARGET_LAYER_IDX]
+                target.update_internal_stress()
+                target.update_branch_utility()
             # Note: NOT updating per-node utilities during normal
             # training — u is now driven exclusively by dream-rescue
             # replay (set in classification_dreaming_block when
@@ -2423,6 +2887,34 @@ def run_chained_curriculum(
                 pass_grows_allowed if (do_growth and pass_grows_allowed > 0)
                 else 0
             )
+            # Trioron 2.0 dendrite-first priority. When Axis 5 is on,
+            # dendritic growth is the cheap response to frustration
+            # (biology: growing a new dendritic branch is metabolically
+            # cheaper than birthing a new neuron). Suppress the
+            # deterministic per-task grow_node attempts as long as
+            # target-layer cells still have dendritic headroom — defer
+            # population growth until dendritic capacity is half-saturated
+            # or more. Cells only birth as the *fallback* after dendrites
+            # have done what they can.
+            if (AXIS_5_ENABLED and grows_this_task > 0
+                    and DENDRITIC_FIRST_SATURATION_FRAC > 0):
+                target_layer_view = net.layers[GROWTH_TARGET_LAYER_IDX]
+                B_max_val = int(target_layer_view.B_max)
+                K_per_cell = target_layer_view.B_per_node
+                # "Dendritic headroom remaining" = at least one cell still
+                # under fractional saturation. Default frac=0.5 (half-
+                # saturation); tunable via env. Higher frac = stricter
+                # gating (cells must be more saturated before grow_node
+                # fires); lower frac = more permissive.
+                sat_threshold = max(
+                    1, int(round(B_max_val * DENDRITIC_FIRST_SATURATION_FRAC))
+                )
+                has_headroom = bool((K_per_cell < sat_threshold).any().item())
+                if has_headroom:
+                    grows_this_task = 0
+                    print(f"  [{label}] dendrite-first: grow_node suppressed "
+                          f"(median B_per_node = {int(K_per_cell.median().item())} "
+                          f"< sat_threshold={sat_threshold})")
             split_training = grows_this_task > 0 and K_SETTLE_EPOCHS > 0
             if split_training:
                 settle_epochs = min(K_SETTLE_EPOCHS, n_epochs_per_task)
@@ -2562,6 +3054,62 @@ def run_chained_curriculum(
                 net, train_view, active,
                 online_ewc_gamma=online_ewc_gamma,
             )
+            # 4*. Trioron 2.0 Axis 4 + Axis 5 — per-task substrate
+            #     modulation. Both fire only when DENDRITIC_GROWTH_ENABLED.
+            #
+            #     Axis 4 (axonal_gain): normalize the layer's saliency_
+            #     utility to mean=1 and write to axonal_gain. Cells that
+            #     fired strongly on the just-completed task get amplified
+            #     outgoing influence into the head; quiet cells damped.
+            #     Runs first so the dendritic-growth signal (consulted
+            #     below) sees post-modulation forward state at the next
+            #     task.
+            #
+            #     Axis 5 (grow_branch): poll internal_frustration_
+            #     candidates on the target layer and call grow_branch on
+            #     top-K cells with high within-niche frustration. The
+            #     grow event is buffer-only (branch_weight Parameter
+            #     object unchanged), so the optimizer stays valid.
+            if AXIS_4_ENABLED:
+                update_axonal_gain_from_eval_saliency(
+                    net,
+                    target_layer_idx=GROWTH_TARGET_LAYER_IDX,
+                    eval_view=eval_views[local_task_idx],
+                    active_classes=active,
+                    n_batches=2,
+                    batch=64,
+                    bump_strength=0.10,
+                    decay_rate=0.05,
+                    floor=DENDRITIC_AXONAL_FLOOR,
+                    ceiling=DENDRITIC_AXONAL_CEILING,
+                )
+            if AXIS_5_ENABLED:
+                n_grown, grown_cells = try_grow_branches_one_pass(
+                    net,
+                    target_layer_idx=GROWTH_TARGET_LAYER_IDX,
+                    max_grows=DENDRITIC_MAX_GROWS_PER_TASK,
+                    threshold=DENDRITIC_INTERNAL_STRESS_THRESHOLD,
+                    overall_saliency_ceiling=DENDRITIC_OVERALL_SALIENCY_CEILING,
+                    prob_penalty_alpha=DENDRITIC_PROB_PENALTY_ALPHA,
+                )
+            else:
+                n_grown, grown_cells = 0, []
+            if AXIS_4_ENABLED or AXIS_5_ENABLED:
+                target_layer_view = net.layers[GROWTH_TARGET_LAYER_IDX]
+                gain_min = float(target_layer_view.axonal_gain.min().item())
+                gain_max = float(target_layer_view.axonal_gain.max().item())
+                K_dist = target_layer_view.B_per_node.tolist()
+                tag = "dendrite+axonal" if (n_grown > 0 and AXIS_4_ENABLED) else (
+                    "dendrite" if n_grown > 0 else "axonal"
+                )
+                if n_grown > 0:
+                    print(f"  [{label}] {tag}: grew {n_grown} branches "
+                          f"on cells {grown_cells}; K_distribution={K_dist}; "
+                          f"axonal_gain∈[{gain_min:.3f}, {gain_max:.3f}]")
+                else:
+                    print(f"  [{label}] {tag}: "
+                          f"axonal_gain∈[{gain_min:.3f}, {gain_max:.3f}] "
+                          f"(no dendrite growth this task)")
             # 4a. Archive (Phase 1). After consolidate (so λ + Fisher
             #     are fresh) mark stable rows as developmentally closed.
             #     Skipped on PackNet/HAT arms (their per-task masks
@@ -3125,25 +3673,127 @@ def run_arm(
             seed=seed + 1009,
         )
 
-    return run_chained_curriculum(
-        net, label=arm,
-        do_growth=cfg["do_growth"], do_dream=cfg["do_dream"],
-        cap_bytes=cfg["cap_bytes"], n_grow_per_task=N_GROW_PER_TASK,
-        train_views=train_views, eval_views=eval_views,
-        task_class_lists=task_class_lists,
-        n_epochs_per_task=n_epochs_per_task,
-        rng_seed=seed + 7919,
-        n_passes=n_passes,
-        packnet_mode=cfg.get("packnet_mode"),
-        hat_mode=cfg.get("hat_mode"),
-        online_ewc_gamma=cfg.get("online_ewc_gamma"),
-        extension_train_views=extension_train_views,
-        extension_eval_views=extension_eval_views,
-        extension_task_class_lists=extension_task_class_lists,
-        extension_cap_bytes=extension_cap_bytes,
-        extension_permanent_int8=extension_permanent_int8,
-        return_state=return_state,
-    )
+    # Trioron 2.0 — Locus developmental positioning. After L0 settles,
+    # install the coordinate system: (B) L0 onto a 3D anchor grid;
+    # (C) downstream layers via W-magnitude-weighted centroid in
+    # upstream-position-space. No forward-path consumer of positions
+    # yet — this phase just installs the substrate's locus structure
+    # for later position-aware policies. Skipped on non-frozen-L0
+    # baselines (the moving L0 makes the anchor concept unstable).
+    # Doesn't require infancy data (operates purely on the
+    # post-construction W matrix), so independent of WARMUP_ENABLED.
+    if LOCUS_DEVELOPMENTAL_ENABLED and cfg["freeze_l0"]:
+        init_l0_grid_positions(net, l0_layer_idx=0)
+        info = develop_positions(net, start_layer_idx=1)
+        # Report what just happened.
+        l0_pos = net.layers[0].cell_position
+        l0_extent = (l0_pos.max(dim=0).values - l0_pos.min(dim=0).values)
+        print(
+            f"[{arm}] Locus developmental: L0 anchor grid at extent "
+            f"{l0_extent.tolist()}; positioned {len(info)} downstream layers."
+        )
+        for L, (n_d, fan_in, _) in info:
+            pos = net.layers[L].cell_position
+            extent = (pos.max(dim=0).values - pos.min(dim=0).values)
+            print(
+                f"  L{L}: n={n_d} positioned in extent {extent.tolist()}"
+            )
+
+    # Trioron 2.0 Recipe A — PCA-developmental L1 init. After L0 has
+    # settled on infancy data, compute the top-K right singular vectors
+    # of L0's activation distribution and use them to (partially)
+    # initialize L1's W rows. Cells start "pre-specialized" along the
+    # dominant directions of the input variance they'll see — Rocky's
+    # biological framing: human brain is 75-95% developed before
+    # significant external learning. PCA via from_activation_residuals
+    # is the cheapest computable "developmental program" for a
+    # post-L0 trainable layer.
+    if (DEVELOPMENTAL_PCA_ENABLED
+            and cfg["freeze_l0"]
+            and infancy_view is not None
+            and cfg.get("packnet_mode") is None
+            and cfg.get("hat_mode") is None):
+        from trioron.growth_direction import (
+            features_at_growth_point,
+            from_activation_residuals,
+        )
+        x_sample, _ = infancy_view.sample(batch=256)
+        with torch.no_grad():
+            l0_acts = features_at_growth_point(
+                net, x_sample, GROWTH_TARGET_LAYER_IDX,
+            )
+        layer_l1 = net.layers[GROWTH_TARGET_LAYER_IDX]
+        n_l1 = layer_l1.n_nodes
+        k_pca = int(min(n_l1, l0_acts.shape[0], l0_acts.shape[1]))
+        if k_pca >= 1:
+            vecs = from_activation_residuals(l0_acts, k=k_pca)
+            blend = DEVELOPMENTAL_PCA_BLEND
+            with torch.no_grad():
+                old_W = layer_l1.W.data
+                pca_rows = vecs.to(dtype=old_W.dtype, device=old_W.device)
+                new_W = old_W.clone()
+                new_W[:k_pca] = (
+                    blend * pca_rows + (1.0 - blend) * old_W[:k_pca]
+                )
+                layer_l1.W.data.copy_(new_W)
+                layer_l1.W_anchor.copy_(
+                    new_W.to(layer_l1.W_anchor.dtype)
+                )
+            print(
+                f"[{arm}] Recipe A — PCA-developmental init: "
+                f"blended top-{k_pca} L0-activation singular vectors "
+                f"into L1 W rows (blend={blend:.2f}; "
+                f"|PCA-Kaiming|_F={((pca_rows - old_W[:k_pca]).norm()).item():.3f})"
+            )
+
+    # Trioron 2.0 Axis 3 — fire a single insert_layer event at run
+    # startup (post-warmup, pre-curriculum). Uses growth_direction
+    # init from from_activation_residuals on a fresh L0 batch + a
+    # small Gaussian noise (pneuma's identity-escape lesson). Mutates
+    # the module-level GROWTH_TARGET_LAYER_IDX so all downstream
+    # callsites see the bumped index. Reset in a finally block at
+    # the bottom of run_arm.
+    bumped_target_idx = False
+    if (AXIS_3_ENABLED
+            and cfg.get("do_growth", False)
+            and cfg.get("packnet_mode") is None
+            and cfg.get("hat_mode") is None):
+        sample_view = train_views[0]
+        new_target_idx = fire_insert_layer_event(
+            net, sample_view,
+            target_layer_idx=GROWTH_TARGET_LAYER_IDX,
+            noise_scale=DENDRITIC_INSERT_NOISE_SCALE,
+        )
+        globals()['GROWTH_TARGET_LAYER_IDX'] = new_target_idx
+        bumped_target_idx = True
+        print(f"[{arm}] Axis 3 insert_layer fired: arch={net.n_nodes_per_layer()} "
+              f"target_idx 1 → {new_target_idx} | noise_scale={DENDRITIC_INSERT_NOISE_SCALE}")
+
+    try:
+        return run_chained_curriculum(
+            net, label=arm,
+            do_growth=cfg["do_growth"], do_dream=cfg["do_dream"],
+            cap_bytes=cfg["cap_bytes"], n_grow_per_task=N_GROW_PER_TASK,
+            train_views=train_views, eval_views=eval_views,
+            task_class_lists=task_class_lists,
+            n_epochs_per_task=n_epochs_per_task,
+            rng_seed=seed + 7919,
+            n_passes=n_passes,
+            packnet_mode=cfg.get("packnet_mode"),
+            hat_mode=cfg.get("hat_mode"),
+            online_ewc_gamma=cfg.get("online_ewc_gamma"),
+            extension_train_views=extension_train_views,
+            extension_eval_views=extension_eval_views,
+            extension_task_class_lists=extension_task_class_lists,
+            extension_cap_bytes=extension_cap_bytes,
+            extension_permanent_int8=extension_permanent_int8,
+            return_state=return_state,
+        )
+    finally:
+        # Reset GROWTH_TARGET_LAYER_IDX to default so the next seed's
+        # run_arm starts from a clean topology assumption.
+        if bumped_target_idx:
+            globals()['GROWTH_TARGET_LAYER_IDX'] = 1
 
 
 def run_extension_only(
@@ -3586,6 +4236,24 @@ def write_csv(results: Sequence[Dict[str, object]], csv_path: str) -> None:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    # Trioron 2.0 — activate the REASONING profile when ANY axis is
+    # enabled. Aligns allow_grow_node / allow_grow_branch /
+    # allow_insert_layer + re_apply_after_donor_load across all gates.
+    if ANY_AXIS_ENABLED:
+        from trioron.profile import TrioronProfile, REASONING
+        TrioronProfile.set_active(REASONING)
+        axis_states = " ".join(
+            f"Axis{n}={'on' if e else 'off'}"
+            for n, e in [(3, AXIS_3_ENABLED),
+                         (4, AXIS_4_ENABLED),
+                         (5, AXIS_5_ENABLED)]
+        )
+        print(f"[bench_chained_15task] 2.0 axes: {axis_states} | "
+              f"profile={REASONING.name} | "
+              f"threshold={DENDRITIC_INTERNAL_STRESS_THRESHOLD} | "
+              f"max_grows/task={DENDRITIC_MAX_GROWS_PER_TASK} | "
+              f"noise_scale={DENDRITIC_INSERT_NOISE_SCALE}")
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--smoke", action="store_true",
@@ -3674,9 +4342,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print("#" * 78)
         seed_results: List[Dict[str, object]] = []
         for arm in arms:
+            # Per-arm seed offset must be deterministic across
+            # processes. Python's hash() is salted per-process by
+            # default (PYTHONHASHSEED=random), so hash(arm) produces
+            # different offsets every invocation — that made every
+            # single-seed comparison this session noisy in a way I
+            # didn't catch until the 2026-05-21 audit. zlib.adler32
+            # gives a deterministic 32-bit checksum of the arm
+            # string; mod 7919 keeps the same offset range.
+            import zlib as _zlib
+            arm_offset = _zlib.adler32(arm.encode("utf-8")) % 7919
             r = run_arm(
                 arm,
-                seed=seed + (hash(arm) % 7919),
+                seed=seed + arm_offset,
                 n_epochs_per_task=n_epochs,
                 train_views=train_views, eval_views=eval_views,
                 task_class_lists=task_class_lists,

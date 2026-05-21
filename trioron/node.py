@@ -331,6 +331,23 @@ class TrioronLayer(nn.Module):
             torch.zeros(n_nodes, fan_in, dtype=torch.bool),
         )
 
+        # Trioron 2.0 — Locus position (developmental coordinate system).
+        # Per-cell continuous 3D position. Initialized to zero; populated
+        # during a developmental phase by a stress-guided assignment from
+        # upstream-layer positions ("L0 = ground zero"). Cells at distinct
+        # positions can host distinct functional roles; new cells born
+        # during the curriculum are placed at high-stress under-served
+        # regions of position-space. No forward-path consumer yet — this
+        # is the coordinate-system primitive; downstream policies
+        # (position-aware grow_input, locus-biased connectivity) consume
+        # it. position_dim=3 chosen because "diffusion provides spatial
+        # information as long as there are anchoring points" (Rocky
+        # 2026-05-21).
+        self.position_dim = 3
+        self.register_buffer(
+            "cell_position", torch.zeros(n_nodes, self.position_dim),
+        )
+
         # Saliency caches for |a · g| utility (Mozer & Smolensky 1989,
         # OBD/blueprint §3.2). _last_y is stashed on each grad-enabled
         # forward; _last_upstream is captured by a backward hook on y
@@ -403,6 +420,29 @@ class TrioronLayer(nn.Module):
         σ_branch=identity inside this path (matching the fast-path
         semantics), so a K=1 cell embedded in a mixed-K population stays
         point-neuron-equivalent. Only K>1 cells see σ_branch.
+
+        INVARIANT — branching is antenna-side only.
+        ----------------------------------------------
+        Every Axis 5 buffer (branch_id, dendrite_orphan, branch_weight,
+        branch_weight_anchor, fisher_branch_weight, B_per_node,
+        branch_utility) lives upstream of the soma. The scatter axis
+        is fan_in (input columns); σ_branch is applied per dendritic
+        branch BEFORE the soma pools them. The output of this method
+        is a single scalar per cell, which σ_soma then maps to one
+        axonal broadcast value — there is NO branched axon structure.
+
+        Strict mapping:
+          - branch_id, dendrite_orphan, σ_branch  : pure dendritic
+          - branch_weight, branch_utility         : soma's per-branch
+                                                    pool weight + EMA
+          - σ_soma (applied by caller, not here)  : soma → axon
+          - axonal_gain (modulates the OUTPUT)    : pure axonal
+
+        If you find yourself adding output-side mechanism here (e.g.,
+        per-(cell, downstream-destination) routing weights, branched
+        axonal_gain, split soma output), stop — that's the Out-of-Scope
+        "Multi-output sinks" item from spec §7 and belongs in a new
+        substrate axis, not this method.
         """
         batch_size = x.shape[0]
         n_nodes = self.n_nodes
@@ -955,6 +995,18 @@ class TrioronLayer(nn.Module):
                              dtype=torch.bool, device=device)],
                 dim=0,
             )
+            # Locus position for the new cell: default to zeros. The
+            # developmental phase (or a later position-update event)
+            # is responsible for setting a meaningful position. Until
+            # then, cells with all-zero position are treated as
+            # "uninitialized" by the downstream locus-aware policies.
+            new_cell_position = torch.cat(
+                [self.cell_position,
+                 torch.zeros(1, self.position_dim,
+                             dtype=self.cell_position.dtype,
+                             device=device)],
+                dim=0,
+            )
 
         # Re-register parameters and buffers with new shapes.
         self._replace_parameter("W", new_W)
@@ -982,6 +1034,7 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("internal_stress", new_internal_stress)
         self._replace_buffer("branch_utility", new_branch_utility)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
+        self._replace_buffer("cell_position", new_cell_position)
 
         # Axis 5 sister-specialist inheritance. inherit_dendrite
         # validates parent_idx against the post-grow n_nodes and refuses
@@ -1150,6 +1203,7 @@ class TrioronLayer(nn.Module):
             new_internal_stress = self.internal_stress.index_select(0, keep_t)
             new_branch_utility = self.branch_utility.index_select(0, keep_t)
             new_dendrite_orphan_row = self.dendrite_orphan.index_select(0, keep_t)
+            new_cell_position_row = self.cell_position.index_select(0, keep_t)
 
         self._replace_parameter("W", new_W)
         self._replace_parameter("b", new_b)
@@ -1176,6 +1230,7 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("internal_stress", new_internal_stress)
         self._replace_buffer("branch_utility", new_branch_utility)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan_row)
+        self._replace_buffer("cell_position", new_cell_position_row)
 
     # ----- dendritic plasticity (Trioron 2.0 Axis 5, Phase 2.5) -----
 
@@ -1580,6 +1635,8 @@ class TrioronLayer(nn.Module):
         "branch_utility",
         # Phase 2.5 (orphan mask for prune_branch):
         "dendrite_orphan",
+        # Locus coordinate system (developmental placement):
+        "cell_position",
     )
 
     def _load_from_state_dict(

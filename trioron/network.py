@@ -106,9 +106,31 @@ class TrioronNetwork(nn.Module):
         in-network predecessor; `prev_layer_gain` is None and sentinel
         columns pass `prev_output` through unscaled.
 
-        Pure Python column loop, used only on the slow path. The fast
-        path skips this entirely.
+        Two-tier dispatch:
+          1. All-sentinel layer → vectorized `prev_output *
+             prev_layer_gain.unsqueeze(0)` (or pass-through when no
+             predecessor gain). Common case when Axis 4 is active but
+             Axis 1 is not — e.g., chained-15 with per-task axonal_gain
+             updates. Cheap and exact.
+          2. Any non-sentinel column → fall to the Python column loop.
+             The loop is unavoidable here because each column may pull
+             from a different (src_layer, src_node); only the long-
+             range-edge case ever hits this path.
         """
+        # Tier 1: fully-sentinel input_sources. With the sentinel
+        # convention (-1, -1), `(input_sources < 0).all()` over all
+        # entries is the cleanest check; for a long buffer it's still
+        # one .all().item() call (single CPU sync) which is cheap
+        # compared to a fan_in-long Python loop with per-column
+        # .item() syncs.
+        if bool((layer.input_sources < 0).all().item()):
+            if prev_layer_gain is None:
+                return prev_output
+            scale = prev_layer_gain.to(prev_output.dtype).unsqueeze(0)
+            return prev_output * scale
+
+        # Tier 2: at least one long-range column. Fall to the per-
+        # column gather loop.
         src = layer.input_sources
         cols: List[torch.Tensor] = []
         for j in range(layer.fan_in):
