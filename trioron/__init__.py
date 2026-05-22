@@ -22,6 +22,22 @@ from .classification import (
     accuracy,
     summarize,
 )
+from .profile import (
+    TrioronProfile,
+    OPEN,
+    REASONING,
+    CLASSIFICATION,
+    EDGE,
+    PRESETS,
+)
+from .spatial import (
+    grid_positions_2d,
+    pixel_positions_2d,
+    pool_id,
+    pool_centroid,
+    build_lcn_mask,
+    locality_metric,
+)
 
 __all__ = [
     "TrioronLayer",
@@ -39,5 +55,17 @@ __all__ = [
     "predict_full",
     "accuracy",
     "summarize",
+    "TrioronProfile",
+    "OPEN",
+    "REASONING",
+    "CLASSIFICATION",
+    "EDGE",
+    "PRESETS",
+    "grid_positions_2d",
+    "pixel_positions_2d",
+    "pool_id",
+    "pool_centroid",
+    "build_lcn_mask",
+    "locality_metric",
 ]
 __version__ = "0.2.2"

@@ -1088,7 +1088,146 @@ def deploy_agent(
     )
 
 
+# ---------------------------------------------------------------------
+# Public: per-axis writers (Trioron 2.0)
+# ---------------------------------------------------------------------
+#
+# Thin forwarders over the underlying TrioronLayer / TrioronNetwork
+# methods. Each names its paper §Axis section so a reader of the v2
+# paper can exercise the substrate's six axes without learning the
+# net.layers[i].* / net.* method layout.
+
+
+def set_axonal_gain(
+    net,
+    layer_idx: int,
+    signal: torch.Tensor,
+    *,
+    mode: str = "absolute",
+) -> None:
+    """Axis 4 — slow axonal gain (v2 paper §3.5).
+
+    Write the per-source multiplicative gain on each node's outgoing
+    edges in ``net.layers[layer_idx]``. Modulatory time-scale; written
+    from arbitrary signals (reward, attention, manual priors).
+
+    Args:
+        net: a TrioronNetwork.
+        layer_idx: which layer to write to.
+        signal: shape (n_nodes_in_layer,). Cast to layer dtype/device.
+        mode: ``"absolute"`` (replace) | ``"additive"`` | ``"multiplicative"``.
+            Gains are clamped to ≥0 — see :meth:`TrioronLayer.set_axonal_gain`.
+    """
+    net.layers[layer_idx].set_axonal_gain(signal, mode=mode)
+
+
+def archive_input(net, layer_idx: int, col_idx: int) -> None:
+    """Axis 2 — plastic fanout sparsity (v2 paper §3.3).
+
+    Mark input column ``col_idx`` of ``net.layers[layer_idx]`` as
+    archived. The column snaps to its anchor, Fisher zeros, and
+    subsequent gradient flow into the column is masked by
+    :meth:`TrioronLayer.mask_archived_input_grads` (caller must invoke
+    that after backward and before the optimizer step). Idempotent.
+
+    Source-side apoptosis (a network-level archive_input cascade) is
+    not part of this thin wrapper; use the layer-level method on each
+    downstream layer if you want cross-layer sparsity propagation.
+    """
+    net.layers[layer_idx].archive_input(col_idx)
+
+
+def insert_layer(
+    net,
+    *,
+    between: Tuple[int, int],
+    n_nodes: Optional[int] = None,
+    activation: str = "linear",
+    init_mode: str = "identity",
+    init_vecs: Optional[torch.Tensor] = None,
+    K_insert: int = 3,
+    noise_scale: float = 0.0,
+) -> int:
+    """Axis 3 — depth growth (v2 paper §3.4).
+
+    Insert a new TrioronLayer between layers ``i`` and ``j == i + 1``.
+    Default ``init_mode="identity"`` + ``activation="linear"`` gives
+    Net2Net-style identity preservation (forward unchanged at the
+    moment of insertion). ``K_insert`` caps how many inserts can land
+    in any one slot.
+
+    Caller MUST rebuild any optimizer holding the network's parameters
+    — new Parameter objects appear, plus the downstream layer's fan_in
+    Parameter is replaced.
+    """
+    return net.insert_layer(
+        between=between,
+        n_nodes=n_nodes,
+        activation=activation,
+        init_mode=init_mode,
+        init_vecs=init_vecs,
+        K_insert=K_insert,
+        noise_scale=noise_scale,
+    )
+
+
+def axis6_spawn(
+    net,
+    layer_idx: int,
+    candidate_idx: int,
+    *,
+    position_jitter: float = 0.3,
+) -> int:
+    """Axis 6 — field-conditional cellular division (v2 paper §3.7).
+
+    Grow a new cell in ``net.layers[layer_idx]`` at
+    ``cell_position[candidate_idx] + N(0, position_jitter²)`` and reset
+    the candidate's ``epi_A`` (refractory). Returns the new cell's
+    index.
+
+    Candidate selection is the caller's responsibility — use
+    :meth:`TrioronLayer.field_conditional_growth_candidate` after
+    running :meth:`TrioronLayer.update_internal_stress` and the
+    Gaussian-diffusion update of ``epi_A`` over training. Optimizer
+    rebuild caveat from :meth:`TrioronNetwork.grow_layer` applies.
+    """
+    return net.axis6_spawn(
+        layer_idx=layer_idx,
+        candidate_idx=candidate_idx,
+        position_jitter=position_jitter,
+    )
+
+
+def inherit_dendrite(
+    net,
+    layer_idx: int,
+    *,
+    parent_idx: int,
+    child_idx: int,
+    perturb_frac: float = 0.05,
+) -> None:
+    """Axis 5 — dendritic compartmentalization, sister-specialist seed
+    (v2 paper §3.6).
+
+    Copy the parent cell's branch_id row, branch_weight row, and
+    B_per_node entry into the child, then randomly reassign
+    ``perturb_frac`` of the child's columns to other existing branches
+    (the ε structural perturbation that prevents literal cloning).
+    Fisher / utility / orphan state on the child resets to defaults.
+
+    Typically called immediately after a grow event so the child cell
+    inherits dendritic structure from a chosen parent rather than from
+    the layer's default K=1 seed.
+    """
+    net.layers[layer_idx].inherit_dendrite(
+        parent_idx=parent_idx,
+        child_idx=child_idx,
+        perturb_frac=perturb_frac,
+    )
+
+
 __all__ = [
+    # Donor-build / compose / deploy
     "TaskData",
     "TrioronConfig",
     "AdvancedConfig",
@@ -1098,4 +1237,15 @@ __all__ = [
     "extend",
     "evaluate",
     "deploy_agent",
+    # Pool-matched absorption + manifold (v2 §3.9, Appendix A.3-A.4)
+    "pool_matched_absorb",
+    "merge_manifold",
+    "ManifoldStore",
+    "settle_head_via_manifold",
+    # Per-axis writers (v2 §3.2-§3.7)
+    "set_axonal_gain",
+    "archive_input",
+    "insert_layer",
+    "axis6_spawn",
+    "inherit_dendrite",
 ]

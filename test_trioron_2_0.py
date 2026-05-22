@@ -1047,3 +1047,109 @@ def test_K_insert_invalid_arg_raises():
     net = TrioronNetwork([(4, 5, "relu"), (5, 3, "linear")])
     with pytest.raises(ValueError, match="K_insert must be >= 1"):
         net.insert_layer(between=(0, 1), K_insert=0)
+
+
+# ---------- v1→v2 backcompat: real-disk donor regression ----------
+
+import os
+import pytest
+
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_real_v1_donor(path: str):
+    """Helper: load a real shipped v1 donor checkpoint into a v2
+    TrioronNetwork by reading its n_nodes_per_layer and input_dim, then
+    forwarding the state_dict through the back-compat _load_from_state_dict
+    path. Returns (net, payload)."""
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    n_nodes = list(payload["n_nodes_per_layer"])
+    input_dim = int(payload["input_dim"])
+    specs = []
+    prev = input_dim
+    for i, n in enumerate(n_nodes):
+        act = "linear" if i == len(n_nodes) - 1 else "relu"
+        specs.append((prev, int(n), act))
+        prev = int(n)
+    net = TrioronNetwork(specs)
+    net.load_state_dict(payload["state_dict"])  # strict=True
+    return net, payload
+
+
+@pytest.mark.skipif(
+    not os.path.exists(os.path.join(REPO_ROOT, "outputs", "poc_donor_digits.pt")),
+    reason="shipped v1 donor checkpoint not present (outputs/ gitignored CSVs)",
+)
+def test_real_v1_donor_loads_under_v2_substrate():
+    """A real on-disk v1 donor (no version field, no branch_id in its
+    state_dict, predates every 2.0 buffer) must load into a freshly-
+    constructed v2 TrioronNetwork via strict-mode load_state_dict and
+    produce a sensible forward.
+
+    This is the paper §4.3 backwards-compatibility claim. The synthetic
+    `_legacy_state_dict` tests above strip 2.0 keys from a freshly-built
+    layer; this one exercises an actual shipped donor whose state_dict
+    was authored before any of the 2.0 keys existed.
+    """
+    path = os.path.join(REPO_ROOT, "outputs", "poc_donor_digits.pt")
+    net, payload = _load_real_v1_donor(path)
+
+    # The shipped donor must look v1-shaped: no version field, no
+    # branch_id key. Guard against accidental upgrade-in-place.
+    assert payload.get("version") in (None, 1)
+    assert not any("branch_id" in k for k in payload["state_dict"])
+
+    # All 2.0 buffers must have been default-injected at load.
+    for layer in net.layers:
+        assert (layer.input_sources == -1).all()
+        assert not layer.input_archived.any()
+        assert torch.allclose(layer.axonal_gain,
+                              torch.ones(layer.n_nodes))
+        assert (layer.B_per_node == 1).all()  # K=1 = point-neuron
+        assert torch.allclose(layer.epi_A, torch.zeros(layer.n_nodes))
+
+    # Fast-path predicate: a freshly-loaded v1 donor must remain on the
+    # sequential-and-unmodulated path so forward equivalence with the
+    # pre-2.0 substrate is byte-identical.
+    assert net._is_sequential_and_unmodulated()
+
+    # Forward must run without raising and produce a finite tensor of
+    # the right head shape.
+    input_dim = int(payload["input_dim"])
+    head_width = int(payload["n_nodes_per_layer"][-1])
+    x = torch.randn(4, input_dim)
+    y = net(x)
+    assert y.shape == (4, head_width)
+    assert torch.isfinite(y).all()
+
+
+@pytest.mark.skipif(
+    not os.path.exists(os.path.join(REPO_ROOT, "outputs", "poc_donor_digits.pt")),
+    reason="shipped v1 donor checkpoint not present",
+)
+def test_real_v1_donor_branch_activation_follows_profile():
+    """When a v1 donor (no branch_id key) loads under the default OPEN
+    profile, branch_activation flips to 'identity' (re_apply_after_donor_load
+    is False on OPEN, so the v1 silent-override stands). Under a profile
+    with re_apply=True (REASONING, CLASSIFICATION, EDGE), the profile's
+    branch_activation wins post-load.
+    """
+    from trioron.profile import TrioronProfile, OPEN, REASONING
+
+    path = os.path.join(REPO_ROOT, "outputs", "poc_donor_digits.pt")
+
+    with TrioronProfile.use(OPEN):
+        net, _ = _load_real_v1_donor(path)
+        for layer in net.layers:
+            assert layer.branch_activation == "identity", (
+                "OPEN.re_apply_after_donor_load=False should leave the "
+                "v1 silent-override branch_activation='identity' in place"
+            )
+
+    with TrioronProfile.use(REASONING):
+        net, _ = _load_real_v1_donor(path)
+        for layer in net.layers:
+            assert layer.branch_activation == "quad", (
+                "REASONING.re_apply_after_donor_load=True should override "
+                "the v1 silent-override and install the profile's quad"
+            )
