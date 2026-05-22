@@ -39,47 +39,7 @@ from experiments.pool_matched_absorption import (
     pool_matched_absorb, pool_id, merge_manifold,
 )
 from trioron import masked_cross_entropy
-
-
-def settle_head_via_manifold(
-    net,
-    manifold,
-    seen_classes,
-    n_steps: int = 200,
-    batch_size: int = 64,
-    lr: float = 0.01,
-    noise_scale: float = 1.0,
-) -> float:
-    """Brief head-only training pass under manifold replay. Updates only
-    head.W using synthetic L1 features sampled from manifold per-class
-    (μ, σ) — re-balances head logits across the union of classes so the
-    cosine head doesn't favor one donor's classes over the other's.
-
-    L1 cells are NOT updated (no_grad through L1). Returns final loss.
-    """
-    if not manifold.has_classes():
-        return float("nan")
-    head = net.layers[2]
-    # Build optimizer over just head.W (cosine head ignores head.b).
-    opt = torch.optim.Adam([head.W], lr=lr)
-    last_loss = float("nan")
-    for step in range(n_steps):
-        sample = manifold.sample_synthetic(batch_size, noise_scale=noise_scale)
-        if sample is None:
-            break
-        synth_feats, synth_labels = sample
-        with torch.no_grad():
-            h0 = synth_feats  # manifold stores L0 outputs directly
-            h1 = net.layers[1](h0)
-        logits = cosine_logits(h1, head.W)
-        loss = masked_cross_entropy(
-            logits, synth_labels, active_classes=list(seen_classes),
-        )
-        opt.zero_grad()
-        loss.backward()
-        opt.step()
-        last_loss = float(loss.item())
-    return last_loss
+from trioron.manifold import settle_head_via_manifold  # noqa: F401
 
 
 def train_donor(

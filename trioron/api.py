@@ -686,6 +686,59 @@ def merge_manifold(recipient_manifold, donor_manifold) -> int:
 
 
 # ---------------------------------------------------------------------
+# Public: manifold archive + head-settle
+# ---------------------------------------------------------------------
+
+
+def ManifoldStore(*args, **kwargs):
+    """Construct a per-class manifold archive over L0 codes.
+
+    Thin re-export of :class:`trioron.manifold.ManifoldStore`. See
+    that module for the full API (``store_task`` / ``store_codes`` /
+    ``sample_synthetic`` / ``has_classes``). Construct with the L0
+    width: ``ManifoldStore(n_l0=net.layers[0].n_nodes)``.
+    """
+    from trioron.manifold import ManifoldStore as _MS
+    return _MS(*args, **kwargs)
+
+
+def settle_head_via_manifold(
+    net,
+    manifold,
+    seen_classes,
+    *,
+    n_steps: int = 200,
+    batch_size: int = 64,
+    lr: float = 0.01,
+    noise_scale: float = 1.0,
+    head_layer_idx: int = 2,
+    head_logits_fn=None,
+) -> float:
+    """Brief head-only training pass under manifold replay.
+
+    Re-calibrates the head's W parameter using synthetic L1 features
+    sampled from the manifold's per-class (μ, σ). Standard post-
+    absorption step: after :func:`pool_matched_absorb` combines two
+    donors' cells, the head's per-class logits need re-balancing
+    across the union of classes.
+
+    L1 (and everything upstream) stays at no_grad — only the head
+    re-calibrates. See :func:`trioron.manifold.settle_head_via_manifold`
+    for the full signature.
+    """
+    from trioron.manifold import settle_head_via_manifold as _settle
+    return _settle(
+        net, manifold, seen_classes,
+        n_steps=n_steps,
+        batch_size=batch_size,
+        lr=lr,
+        noise_scale=noise_scale,
+        head_layer_idx=head_layer_idx,
+        head_logits_fn=head_logits_fn,
+    )
+
+
+# ---------------------------------------------------------------------
 # Public: extend (ship-wake-extend loop)
 # ---------------------------------------------------------------------
 

@@ -270,21 +270,14 @@ def cosine_logits(
     head_W: torch.Tensor,
     temperature: float = COSINE_TEMPERATURE,
 ) -> torch.Tensor:
-    """Cosine-similarity head: outs[b, k] = τ · cos(l1_features[b], head_W[k]).
+    """Delegate to trioron.manifold.cosine_logits.
 
-    No bias term — each class's head row IS its prototype vector in L1
-    feature space. Both l1_features and head_W are L2-normalized so the
-    inner product gives bounded similarities in [-1, 1]. Temperature τ
-    scales for cross-entropy softmax sharpness.
-
-    This removes the bias-accumulation pathology of linear+softmax heads
-    in the streamlined-arch setup (no EWC, fixed-size head, credit-frozen
-    L1): synth replay can no longer pump stored-class logits to large
-    positive bias values, because the cosine output is bounded.
+    Kept here as a thin wrapper so the env-tunable
+    ``AXIS6_COS_TEMP`` default still applies for chained-15 callers
+    who don't pass an explicit temperature.
     """
-    h_norm = F.normalize(l1_features, dim=-1, eps=1e-8)
-    w_norm = F.normalize(head_W, dim=-1, eps=1e-8)
-    return temperature * (h_norm @ w_norm.t())
+    from trioron.manifold import cosine_logits as _cosine
+    return _cosine(l1_features, head_W, temperature=temperature)
 
 
 # ----------------------------------------------------------------------
@@ -770,102 +763,13 @@ def build_net(
 
 
 # ----------------------------------------------------------------------
-# Manifold replay store — per-class μ/σ of L0 (frozen perception) codes
+# Manifold replay store — promoted to trioron.manifold.
 # ----------------------------------------------------------------------
-@dataclass
-class ManifoldStore:
-    """Stores per-class (μ, σ) over L0 OUTPUT codes (post-LCN-perception).
-
-    Why L0 not L1: L0 is the frozen perception adapter (LCN-masked, no
-    backward). Its output for a given image is deterministic and stable
-    across the entire curriculum. Storing μ/σ at L0 means synthetic
-    samples drawn now will be statistically equivalent to L0 outputs
-    drawn at eval time on the same class.
-
-    During training of subsequent tasks, synthetic L0 codes are forwarded
-    through the CURRENT L1 + head (forward_from_layer(start_layer=1)).
-    This means synthetic samples pass through the same L1 cells the real
-    eval-time data will pass through — including new cells that spawned
-    after the class was stored. Head learns a consistent decision over
-    all classes' representations under the current L1.
-
-    Storage: ~128 × 4 × 2 = 1 KB/class. 30 classes = ~30 KB total.
-    """
-    mu_per_class: Dict[int, torch.Tensor] = field(default_factory=dict)
-    sigma_per_class: Dict[int, torch.Tensor] = field(default_factory=dict)
-    n_l0: int = 0
-    sigma_floor: float = 1e-3
-
-    def has_classes(self) -> bool:
-        return len(self.mu_per_class) > 0
-
-    def store_task(
-        self,
-        net: TrioronNetwork,
-        view: TaskDataView,
-        task_global_classes: Sequence[int],
-        batch_size: int = 1024,
-    ) -> None:
-        """Compute per-class μ/σ of L0 codes on this task's training set.
-
-        L0 codes = post-activation output of layer 0 (frozen LCN-masked
-        perception). Stable across the curriculum (L0 has requires_grad
-        False). Stored AFTER credit-freezing for symmetry with the
-        rest of the pipeline.
-        """
-        L0 = net.layers[0]
-        with torch.no_grad():
-            x, y = view.all_examples()
-            n = x.shape[0]
-            feats_chunks: List[torch.Tensor] = []
-            label_chunks: List[torch.Tensor] = []
-            for start in range(0, n, batch_size):
-                end = min(start + batch_size, n)
-                h0 = L0(x[start:end])
-                feats_chunks.append(h0.detach().cpu())
-                label_chunks.append(y[start:end])
-            feats = torch.cat(feats_chunks, dim=0)
-            labels = torch.cat(label_chunks, dim=0)
-            for c in task_global_classes:
-                m = (labels == c)
-                if int(m.sum().item()) > 0:
-                    cf = feats[m]
-                    self.mu_per_class[int(c)] = cf.mean(dim=0)
-                    self.sigma_per_class[int(c)] = (
-                        cf.std(dim=0, unbiased=False).clamp(min=self.sigma_floor)
-                    )
-            self.n_l0 = L0.n_nodes
-
-    def sample_synthetic(
-        self,
-        n_total: int,
-        generator: Optional[torch.Generator] = None,
-        noise_scale: float = 1.0,
-    ) -> Optional[Tuple[torch.Tensor, torch.Tensor]]:
-        """Draw n_total synthetic L0 codes, each from a uniformly-chosen
-        stored class. Matches bench's ManifoldBuffer.sample pattern: fixed
-        total budget, sparse-per-class as the curriculum grows.
-
-        Returns (codes [n_total, n_l0], labels [n_total]) or None if no
-        classes stored. Codes are clamped to >=0 since L0 uses ReLU.
-        """
-        if not self.mu_per_class:
-            return None
-        classes_sorted = sorted(self.mu_per_class.keys())
-        choice = torch.randint(
-            0, len(classes_sorted), (n_total,), generator=generator,
-        )
-        d = self.mu_per_class[classes_sorted[0]].shape[0]
-        feats = torch.zeros(n_total, d)
-        labels = torch.zeros(n_total, dtype=torch.long)
-        for i in range(n_total):
-            c = classes_sorted[int(choice[i])]
-            mu = self.mu_per_class[c]
-            sigma = self.sigma_per_class[c] * noise_scale
-            noise = torch.randn(d, generator=generator)
-            feats[i] = (mu + sigma * noise).clamp(min=0.0)
-            labels[i] = c
-        return feats, labels
+# ``ManifoldStore`` now lives in ``trioron/manifold.py``; this re-export
+# preserves the experiments-level import path. ``store_task`` accepts
+# any object with an ``all_examples() -> (X, y)`` method (TaskDataView
+# qualifies), via duck typing in the promoted implementation.
+from trioron.manifold import ManifoldStore  # noqa: E402, F401
 
 
 # ----------------------------------------------------------------------
