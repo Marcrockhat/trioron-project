@@ -1,0 +1,24 @@
+========================================================================================
+L1 diffusion-of-W sweep — λ_diff ∈ [0.0, 0.05, 0.1, 0.2, 0.3], n=1 seeds, 4 epochs, LCN=on
+========================================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+[λ=0.00 seed=0]  task_aware=0.964  full=0.572  max|drift|=0.041  H=91  spawns=75  frozen=50  (23s)
+[λ=0.05 seed=0]  task_aware=0.961  full=0.555  max|drift|=0.068  H=91  spawns=75  frozen=71  (26s)
+[λ=0.10 seed=0]  task_aware=0.958  full=0.556  max|drift|=0.061  H=91  spawns=75  frozen=69  (35s)
+[λ=0.20 seed=0]  task_aware=0.963  full=0.559  max|drift|=0.049  H=91  spawns=75  frozen=76  (40s)
+[λ=0.30 seed=0]  task_aware=0.958  full=0.559  max|drift|=0.053  H=91  spawns=75  frozen=78  (38s)
+
+========================================================================================
+AGGREGATE — λ_diff sweep (n=1 seeds)
+========================================================================================
+  λ_diff      task_aware            full      max|drift|        H_L1      frozen
+    0.00   0.964 ± 0.000   0.572 ± 0.000   0.041 ± 0.000   91.0 ± 0.0   50.0 ± 0.0
+    0.05   0.961 ± 0.000   0.555 ± 0.000   0.068 ± 0.000   91.0 ± 0.0   71.0 ± 0.0
+    0.10   0.958 ± 0.000   0.556 ± 0.000   0.061 ± 0.000   91.0 ± 0.0   69.0 ± 0.0
+    0.20   0.963 ± 0.000   0.559 ± 0.000   0.049 ± 0.000   91.0 ± 0.0   76.0 ± 0.0
+    0.30   0.958 ± 0.000   0.559 ± 0.000   0.053 ± 0.000   91.0 ± 0.0   78.0 ± 0.0

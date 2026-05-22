@@ -24,6 +24,7 @@ fully plastic.
 """
 from __future__ import annotations
 
+import math
 import os
 import sys
 import time
@@ -60,6 +61,81 @@ N_CLASSES = 30
 COSINE_TEMPERATURE = float(os.environ.get("AXIS6_COS_TEMP", "16.0"))
 
 
+def diffused_l1_weight(
+    L1,
+    lambda_diff: float,
+    credit_mask: Optional[torch.Tensor] = None,
+    W_snapshot: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    """Compute L1's effective weight matrix under spatial diffusion.
+
+      W_eff = (1-λ) · W + λ · (kernel @ W)
+
+    where `kernel` is the same Gaussian-over-cell_position used by Axis 6
+    field diffusion. Reuses L1._field_kernel (lazily built on first call).
+
+    If a credit_mask + W_snapshot are provided, credited cells use the
+    snapshot (their W_eff at credit-grant time) instead of the live
+    diffusion. This decouples credited cells from later neighbor changes:
+    their feature identity stays locked even as uncredited neighbors learn.
+    """
+    if lambda_diff <= 0.0:
+        # Degenerate: no diffusion, just return W directly.
+        return L1.W
+    # Kernel is lazily built/cached on L1; build if missing or stale.
+    n = L1.n_nodes
+    if (L1._field_kernel is None
+            or L1._field_kernel.shape[0] != n):
+        L1._field_kernel = L1._compute_field_kernel()
+    kernel = L1._field_kernel.to(device=L1.W.device, dtype=L1.W.dtype)
+    diffused = kernel @ L1.W
+    W_eff_live = (1.0 - lambda_diff) * L1.W + lambda_diff * diffused
+    if (credit_mask is not None
+            and W_snapshot is not None
+            and credit_mask.numel() == n
+            and credit_mask.any()):
+        # Pad snapshot if L1 has grown since last sync (new rows = uncredited
+        # so they'd never be selected by the where).
+        if W_snapshot.shape[0] < n:
+            pad = torch.zeros(
+                n - W_snapshot.shape[0], W_snapshot.shape[1],
+                dtype=W_snapshot.dtype, device=W_snapshot.device,
+            )
+            W_snapshot = torch.cat([W_snapshot, pad], dim=0)
+        mask_2d = credit_mask.unsqueeze(1).to(device=L1.W.device)
+        return torch.where(mask_2d, W_snapshot.to(device=L1.W.device), W_eff_live)
+    return W_eff_live
+
+
+def l1_forward_diffused(
+    L1,
+    h0: torch.Tensor,
+    lambda_diff: float,
+    credit_mask: Optional[torch.Tensor] = None,
+    W_snapshot: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    """L1 forward with diffused effective weight. Mirrors TrioronLayer
+    point-neuron forward (matmul + bias + ReLU), plus _last_y caching
+    and backward hook for internal_stress (the field signal stays alive).
+    """
+    if lambda_diff <= 0.0:
+        # No diffusion → standard forward.
+        return L1(h0)
+    W_eff = diffused_l1_weight(L1, lambda_diff, credit_mask, W_snapshot)
+    y_pre = h0 @ W_eff.t() + L1.b
+    if L1.activation == "relu":
+        y = F.relu(y_pre)
+    elif L1.activation == "tanh":
+        y = torch.tanh(y_pre)
+    else:
+        y = y_pre
+    # Same hook caching as TrioronLayer.forward, so internal_stress works.
+    if y.requires_grad:
+        L1._last_y = y.detach()
+        y.register_hook(L1._capture_upstream)
+    return y
+
+
 def cosine_logits(
     l1_features: torch.Tensor,
     head_W: torch.Tensor,
@@ -83,9 +159,9 @@ def cosine_logits(
 
 
 # ----------------------------------------------------------------------
-# Build a 3-layer trioron with LCN-masked frozen L0 + growable L1 + head
+# Build a 3-layer trioron with frozen L0 (LCN or random) + growable L1 + head
 # ----------------------------------------------------------------------
-def build_net(seed: int) -> TrioronNetwork:
+def build_net(seed: int, lcn_enabled: bool = True) -> TrioronNetwork:
     torch.manual_seed(seed)
     net = TrioronNetwork([
         (INPUT_DIM, L0_WIDTH, "relu"),    # L0: perception
@@ -95,21 +171,25 @@ def build_net(seed: int) -> TrioronNetwork:
     L0 = net.layers[0]
     L1 = net.layers[1]
 
-    # Install LCN mask on L0 (multiplicative), then freeze L0.
-    mask = build_lcn_mask(INPUT_DIM, L0_WIDTH, LCN_SIGMA).to(
-        device=L0.W.device, dtype=L0.W.dtype,
-    )
-    L0.register_buffer("W_lcn_mask", mask)
-    with torch.no_grad():
-        L0.W.data.mul_(mask)
-        if hasattr(L0, "W_anchor"):
-            L0.W_anchor.data.mul_(mask.to(L0.W_anchor.dtype))
+    # Either LCN-masked (locally-connected with Gaussian receptive fields)
+    # or pure random projection (no spatial inductive bias). Either way,
+    # L0 is frozen — only L1 + head train.
+    if lcn_enabled:
+        mask = build_lcn_mask(INPUT_DIM, L0_WIDTH, LCN_SIGMA).to(
+            device=L0.W.device, dtype=L0.W.dtype,
+        )
+        L0.register_buffer("W_lcn_mask", mask)
+        with torch.no_grad():
+            L0.W.data.mul_(mask)
+            if hasattr(L0, "W_anchor"):
+                L0.W_anchor.data.mul_(mask.to(L0.W_anchor.dtype))
     L0.W.requires_grad_(False)
     L0.b.requires_grad_(False)
     if hasattr(L0, "branch_weight"):
         L0.branch_weight.requires_grad_(False)
 
     # L0 cell positions live in image-space [0,1]² (third dim padded to 0).
+    # Even without LCN we keep grid positions for diagnostic consistency.
     with torch.no_grad():
         l0_xy = _lcn_cell_centers()  # (128, 2)
         L0.cell_position[:, 0] = l0_xy[:, 0]
@@ -123,15 +203,21 @@ def build_net(seed: int) -> TrioronNetwork:
         head.b.data.zero_()
     head.b.requires_grad_(False)
 
-    # L1 cells start at uniform random positions in image-space [0,1]² so
-    # the Axis 6 field diffuses over image coordinates, not arbitrary
-    # indices. New spawned L1 cells will appear near stressed parents
-    # (with jitter), letting the substrate self-organize a locus.
-    g = torch.Generator().manual_seed(seed + 7)
+    # L1 cell positions: regular grid in image [0,1]² space. For H_init=16
+    # → 4×4. This gives diffusion neighbors a meaningful structure:
+    # close-in-position L1 cells are responsible for adjacent image
+    # regions, so kernel-diffused weights effectively form a learned
+    # local filter aligned with image space (conv by emergence).
+    n = L1.n_nodes
+    side = max(1, int(math.ceil(math.sqrt(n))))
+    cx = (torch.arange(side).float() + 0.5) / side
+    cy = (torch.arange(side).float() + 0.5) / side
+    grid_x, grid_y = torch.meshgrid(cx, cy, indexing="ij")
+    positions = torch.stack([grid_x, grid_y], dim=-1).reshape(-1, 2)[:n]
     with torch.no_grad():
-        L1.cell_position[:, 0] = torch.rand(L1.n_nodes, generator=g)
-        L1.cell_position[:, 1] = torch.rand(L1.n_nodes, generator=g)
-        L1.cell_position[:, 2] = 0.0
+        L1.cell_position[:n, 0] = positions[:, 0]
+        L1.cell_position[:n, 1] = positions[:, 1]
+        L1.cell_position[:n, 2] = 0.0
 
     return net
 
@@ -268,6 +354,8 @@ def train_one_task(
     manifold_total_batch: int = 64,
     manifold_noise_scale: float = 1.0,
     seen_classes_global: Optional[Sequence[int]] = None,
+    lambda_diff: float = 0.0,
+    W_snapshot: Optional[torch.Tensor] = None,
     verbose: bool = False,
 ) -> TaskTrainResult:
     L1 = net.layers[1]
@@ -302,7 +390,10 @@ def train_one_task(
             # Explicit L0 → L1 forward (so we can apply cosine head and
             # also have L1's _last_y / hook properly cached for stress).
             h0 = net.layers[0](xb)
-            h1 = net.layers[1](h0)
+            h1 = l1_forward_diffused(
+                net.layers[1], h0, lambda_diff,
+                credit_mask=l1_credit_mask, W_snapshot=W_snapshot,
+            )
             outs = cosine_logits(h1, net.layers[2].W)
             # Task-local labels: map global → local-in-task ({0, 1})
             yb_local = torch.zeros_like(yb_global)
@@ -333,7 +424,11 @@ def train_one_task(
                     # (uncredited) cells toward predicting OLD classes,
                     # fighting the credit anchor and degrading task_aware.
                     with torch.no_grad():
-                        synth_h1 = net.layers[1](synth_feats)
+                        synth_h1 = l1_forward_diffused(
+                            net.layers[1], synth_feats, lambda_diff,
+                            credit_mask=l1_credit_mask,
+                            W_snapshot=W_snapshot,
+                        )
                     synth_logits = cosine_logits(synth_h1, net.layers[2].W)
                     synth_loss = masked_cross_entropy(
                         synth_logits, synth_labels,
@@ -452,9 +547,18 @@ def train_one_task(
 # Evaluate a single task in the GLOBAL-class space (task-aware metric:
 # argmax restricted to task's 2 class outputs).
 # ----------------------------------------------------------------------
-def _forward_logits(net: TrioronNetwork, x: torch.Tensor) -> torch.Tensor:
+def _forward_logits(
+    net: TrioronNetwork,
+    x: torch.Tensor,
+    lambda_diff: float = 0.0,
+    credit_mask: Optional[torch.Tensor] = None,
+    W_snapshot: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
     h0 = net.layers[0](x)
-    h1 = net.layers[1](h0)
+    h1 = l1_forward_diffused(
+        net.layers[1], h0, lambda_diff,
+        credit_mask=credit_mask, W_snapshot=W_snapshot,
+    )
     return cosine_logits(h1, net.layers[2].W)
 
 
@@ -462,11 +566,17 @@ def evaluate_task_aware(
     net: TrioronNetwork,
     view: TaskDataView,
     task_global_classes: List[int],
+    lambda_diff: float = 0.0,
+    credit_mask: Optional[torch.Tensor] = None,
+    W_snapshot: Optional[torch.Tensor] = None,
 ) -> float:
     head_class_idx = torch.tensor(task_global_classes, dtype=torch.long)
     with torch.no_grad():
         x, y_global = view.all_examples()
-        outs = _forward_logits(net, x)
+        outs = _forward_logits(
+            net, x, lambda_diff=lambda_diff,
+            credit_mask=credit_mask, W_snapshot=W_snapshot,
+        )
         task_logits = outs[:, head_class_idx]
         pred_local = task_logits.argmax(dim=1)
         pred_global = head_class_idx[pred_local]
@@ -476,10 +586,16 @@ def evaluate_task_aware(
 def evaluate_full(
     net: TrioronNetwork,
     view: TaskDataView,
+    lambda_diff: float = 0.0,
+    credit_mask: Optional[torch.Tensor] = None,
+    W_snapshot: Optional[torch.Tensor] = None,
 ) -> float:
     with torch.no_grad():
         x, y_global = view.all_examples()
-        outs = _forward_logits(net, x)
+        outs = _forward_logits(
+            net, x, lambda_diff=lambda_diff,
+            credit_mask=credit_mask, W_snapshot=W_snapshot,
+        )
         pred_global = outs.argmax(dim=1)
     return float((pred_global == y_global).float().mean().item())
 
@@ -506,7 +622,7 @@ def run_arm(
     verbose: bool = False,
 ) -> dict:
     if starting_net is None:
-        net = build_net(seed=seed)
+        net = build_net(seed=seed, lcn_enabled=hp.get("lcn_enabled", True))
         cell_credit = (
             torch.zeros(net.layers[1].n_nodes, dtype=torch.bool)
             if credit_enabled else None
@@ -522,6 +638,18 @@ def run_arm(
         ManifoldStore(n_l0=net.layers[0].n_nodes)
         if manifold_enabled else None
     )
+
+    lambda_diff = hp.get("lambda_diff", 0.0)
+    # W_snapshot: per-cell snapshot of W_eff at credit-grant time. Used
+    # to lock credited cells' effective behavior against later neighbor
+    # changes under diffusion. None if diffusion is off or credit is off.
+    W_snapshot: Optional[torch.Tensor] = None
+    if lambda_diff > 0.0 and credit_enabled:
+        L1 = net.layers[1]
+        W_snapshot = torch.zeros(
+            L1.n_nodes, L1.W.shape[1],
+            dtype=L1.W.dtype, device=L1.W.device,
+        )
 
     K = len(train_views)
     retention_task_aware: List[List[float]] = []
@@ -555,16 +683,29 @@ def run_arm(
             manifold_total_batch=hp["manifold_total_batch"],
             manifold_noise_scale=hp["manifold_noise_scale"],
             seen_classes_global=list(seen_classes),
+            lambda_diff=lambda_diff,
+            W_snapshot=W_snapshot,
             verbose=verbose,
         )
         for step, msg in res.events:
             all_events.append((name, step, msg))
         # End-of-task: snapshot retention on every task seen so far.
         row_ta = [
-            evaluate_task_aware(net, eval_views[k], task_class_lists[k])
+            evaluate_task_aware(
+                net, eval_views[k], task_class_lists[k],
+                lambda_diff=lambda_diff,
+                credit_mask=cell_credit, W_snapshot=W_snapshot,
+            )
             for k in range(K)
         ]
-        row_full = [evaluate_full(net, eval_views[k]) for k in range(K)]
+        row_full = [
+            evaluate_full(
+                net, eval_views[k],
+                lambda_diff=lambda_diff,
+                credit_mask=cell_credit, W_snapshot=W_snapshot,
+            )
+            for k in range(K)
+        ]
         retention_task_aware.append(row_ta)
         retention_full.append(row_full)
         if verbose:
@@ -593,6 +734,38 @@ def run_arm(
                     print(f"    [credit] +{int(newly.sum().item())} new; "
                           f"total frozen = {int(cell_credit.sum().item())}/"
                           f"{cell_credit.numel()}")
+                # Snapshot W_eff at credit-grant time for newly credited
+                # cells (only when diffusion is on). The snapshot freezes
+                # their effective behavior under later neighbor changes.
+                if lambda_diff > 0.0 and W_snapshot is not None:
+                    L1 = net.layers[1]
+                    if W_snapshot.shape[0] < L1.n_nodes:
+                        pad = torch.zeros(
+                            L1.n_nodes - W_snapshot.shape[0],
+                            W_snapshot.shape[1],
+                            dtype=W_snapshot.dtype, device=W_snapshot.device,
+                        )
+                        W_snapshot = torch.cat([W_snapshot, pad], dim=0)
+                    if newly.any():
+                        # Compute current live W_eff for the L1 layer.
+                        # We pass credit_mask=None so the snapshot doesn't
+                        # use itself; we want the LIVE diffused value.
+                        W_eff_live = diffused_l1_weight(
+                            L1, lambda_diff,
+                            credit_mask=None, W_snapshot=None,
+                        )
+                        if newly.numel() < L1.n_nodes:
+                            newly_padded = torch.cat([
+                                newly,
+                                torch.zeros(
+                                    L1.n_nodes - newly.numel(),
+                                    dtype=torch.bool,
+                                ),
+                            ])
+                        else:
+                            newly_padded = newly
+                        snap_idx = newly_padded.nonzero().flatten()
+                        W_snapshot[snap_idx] = W_eff_live[snap_idx].detach()
         # Snapshot manifold per-class μ/σ AFTER credit is applied so the
         # stored features reflect the frozen-from-now-on representation.
         if manifold is not None:
@@ -668,6 +841,11 @@ def main() -> int:
     lambda_manifold = float(os.environ.get("AXIS6_LAMBDA_MANIFOLD", "1.0"))
     manifold_total_batch = int(os.environ.get("AXIS6_MANIFOLD_BATCH", "64"))
     manifold_noise_scale = float(os.environ.get("AXIS6_MANIFOLD_NOISE", "1.0"))
+    lcn_enabled = os.environ.get("AXIS6_LCN", "1") == "1"
+    # Diffusion-of-W on L1: λ blends own weight with neighbor-averaged
+    # weights via the same Gaussian kernel that diffuses internal_stress.
+    # 0.0 = no diffusion (current behavior). 0.3 = moderate sharing.
+    lambda_diff = float(os.environ.get("AXIS6_LAMBDA_DIFF", "0.0"))
     data_root = os.environ.get("AXIS6_DATA_ROOT", DEFAULT_DATA_ROOT)
     arms_env = os.environ.get(
         "AXIS6_ARMS",
@@ -683,14 +861,17 @@ def main() -> int:
         lambda_manifold=lambda_manifold,
         manifold_total_batch=manifold_total_batch,
         manifold_noise_scale=manifold_noise_scale,
+        lcn_enabled=lcn_enabled,
+        lambda_diff=lambda_diff,
     )
 
     print("=" * 88)
     print(f"axis6_credit_chained15 — LCN perception + L1 substrate")
     print(f"epochs/task={n_epochs}  batch={batch_size}  lr={lr}  "
           f"n_seeds={n_seeds}  spawn_cap={spawn_cap}  credit_thr={credit_thr}")
-    print(f"H_init(L1)={H_INIT}  L0_width(frozen,LCN)={L0_WIDTH}  "
-          f"LCN_grid={LCN_GRID_X}×{LCN_GRID_Y}  LCN_σ={LCN_SIGMA}")
+    print(f"H_init(L1)={H_INIT}  L0_width(frozen)={L0_WIDTH}  "
+          f"LCN={'on' if lcn_enabled else 'OFF (random projection)'}  "
+          f"grid={LCN_GRID_X}×{LCN_GRID_Y}  LCN_σ={LCN_SIGMA}")
     print(f"field_sigma={field_sigma}  diff_floor={diff_floor}  "
           f"cooldown={cooldown_steps}")
     print("=" * 88)
