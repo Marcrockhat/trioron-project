@@ -2459,6 +2459,32 @@ class TrioronLayer(nn.Module):
             full_key = prefix + key_name
             if full_key not in state_dict:
                 state_dict[full_key] = getattr(self, key_name).detach().clone()
+
+        # LCN buffers (W_lcn_mask, lcn_in_positions) are opt-in and
+        # registered only on enable_lcn(). When the incoming state_dict
+        # carries them but this layer wasn't enabled at construction,
+        # pre-register zero-shaped buffers of the saved tensors' shapes
+        # so super() copies into them rather than reporting them as
+        # unexpected_keys. When the layer IS already enabled the
+        # existing buffers absorb the saved values via copy_. When the
+        # state_dict doesn't carry them, nothing happens here — a layer
+        # that wasn't enabled stays disabled.
+        for lcn_key in ("W_lcn_mask", "lcn_in_positions"):
+            full_key = prefix + lcn_key
+            if full_key in state_dict and lcn_key not in self._buffers:
+                saved = state_dict[full_key]
+                placeholder = torch.zeros_like(saved)
+                self.register_buffer(lcn_key, placeholder)
+
+        # Extra-state (LCN mode/sigma/k metadata). When the incoming
+        # state_dict lacks _extra_state (legacy donors) inject a default
+        # empty dict so super() doesn't trip on the missing-key check
+        # in strict mode. When present, set_extra_state pulls the LCN
+        # config out and restores the Python attributes.
+        full_extra_key = prefix + "_extra_state"
+        if full_extra_key not in state_dict:
+            state_dict[full_extra_key] = {}
+
         return super()._load_from_state_dict(
             state_dict,
             prefix,
@@ -2468,6 +2494,43 @@ class TrioronLayer(nn.Module):
             unexpected_keys,
             error_msgs,
         )
+
+    # ----- extra-state serialization (LCN config) -----
+
+    def get_extra_state(self) -> dict:
+        """Serialize non-tensor configuration that isn't covered by
+        parameters / buffers.
+
+        Currently carries the LCN mode/sigma/k triple — without this
+        a state-dict round-trip would restore W_lcn_mask but leave the
+        receiving layer with the default ``_lcn_mode='off'`` /
+        ``_lcn_sigma=0.0`` / ``_lcn_k=0``, so subsequent
+        ``extend_lcn_mask`` calls would build wrong-mode mask rows.
+        Other Python-attribute config (axis6_enabled, field_sigma,
+        branch_plasticity_enabled, branch_plasticity_temperature) is
+        intentionally NOT serialized here — they're runtime toggles
+        that the caller re-applies after load, matching pre-2.0
+        behavior.
+        """
+        return {
+            "lcn_mode": self._lcn_mode,
+            "lcn_sigma": float(self._lcn_sigma),
+            "lcn_k": int(self._lcn_k),
+        }
+
+    def set_extra_state(self, state) -> None:
+        """Inverse of ``get_extra_state``. ``state`` is the dict that
+        the saved checkpoint stashed under ``_extra_state``; an empty
+        dict is treated as legacy (pre-LCN) and leaves all attributes
+        at their construction defaults."""
+        if not state:
+            return
+        if "lcn_mode" in state:
+            self._lcn_mode = str(state["lcn_mode"])
+        if "lcn_sigma" in state:
+            self._lcn_sigma = float(state["lcn_sigma"])
+        if "lcn_k" in state:
+            self._lcn_k = int(state["lcn_k"])
 
     def __repr__(self) -> str:
         return (
