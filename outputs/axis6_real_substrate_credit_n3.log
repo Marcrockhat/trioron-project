@@ -1,0 +1,236 @@
+========================================================================================
+Trioron 2.0 Axis 6 — real-substrate, n=3 seeds
+H_init=4  mode=absolute  k=1.0  floor=0.005  b_thr=1.0  sigma=1.5  dt=0.1  tol=0.0  spawn_cap=3  cooldown=50  credit_thr=0.1
+========================================================================================
+  [linear] epoch   0: loss=1.2544  acc=0.543  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 100: loss=0.2429  acc=0.967  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 199: loss=0.2373  acc=0.970  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch   0: loss=1.1085  acc=0.487  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 100: loss=0.2474  acc=0.963  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 200: loss=0.2259  acc=0.973  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 300: loss=0.2174  acc=0.977  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 399: loss=0.2185  acc=0.963  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch   0: loss=2.0052  acc=0.387  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 100: loss=0.3150  acc=0.953  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 200: loss=0.2830  acc=0.957  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 300: loss=0.2813  acc=0.950  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 399: loss=0.2806  acc=0.947  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch   0: loss=3.1554  acc=0.450  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 100: loss=0.2869  acc=0.940  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 200: loss=0.2795  acc=0.950  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 300: loss=0.2714  acc=0.953  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 399: loss=0.2663  acc=0.957  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch   0: loss=4.9262  acc=0.183  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 100: loss=0.1906  acc=0.980  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 200: loss=0.0884  acc=0.987  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 300: loss=0.0502  acc=0.987  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 399: loss=0.0385  acc=0.990  H=4  epi_A_max=0.000  epi_B_max=0.000
+[seed 0  arm BASELINE_frozen ]  max|drift|=0.623  sum_final=3.240  H=4  spawns=0  frozen=0
+  [linear] epoch   0: loss=1.2544  acc=0.543  H=4  epi_A_max=0.000  epi_B_max=0.063
+  [linear] epoch 100: loss=0.2429  acc=0.967  H=4  epi_A_max=0.005  epi_B_max=0.783
+  [linear] epoch 199: loss=0.0682  acc=0.987  H=6  epi_A_max=0.005  epi_B_max=1.301
+  [XOR] epoch   0: loss=1.1178  acc=0.487  H=6  epi_A_max=0.000  epi_B_max=0.131
+  [XOR] epoch 100: loss=0.2448  acc=0.977  H=7  epi_A_max=0.006  epi_B_max=1.096
+  [XOR] epoch 200: loss=0.2097  acc=0.987  H=9  epi_A_max=0.014  epi_B_max=1.173
+  [XOR] epoch 300: loss=0.1813  acc=0.993  H=9  epi_A_max=0.022  epi_B_max=1.219
+  [XOR] epoch 399: loss=0.1653  acc=0.990  H=9  epi_A_max=0.030  epi_B_max=1.301
+  [rings] epoch   0: loss=1.7261  acc=0.483  H=9  epi_A_max=0.000  epi_B_max=0.131
+  [rings] epoch 100: loss=0.2500  acc=0.977  H=10  epi_A_max=0.007  epi_B_max=1.131
+  [rings] epoch 200: loss=0.2383  acc=0.973  H=12  epi_A_max=0.011  epi_B_max=0.847
+  [rings] epoch 300: loss=0.1725  acc=0.977  H=12  epi_A_max=0.015  epi_B_max=0.841
+  [rings] epoch 399: loss=0.1606  acc=0.977  H=12  epi_A_max=0.018  epi_B_max=0.711
+  [diamond] epoch   0: loss=2.5375  acc=0.340  H=12  epi_A_max=0.000  epi_B_max=0.070
+  [diamond] epoch 100: loss=0.2148  acc=0.957  H=12  epi_A_max=0.004  epi_B_max=0.897
+  [diamond] epoch 200: loss=0.1549  acc=0.967  H=14  epi_A_max=0.006  epi_B_max=0.854
+  [diamond] epoch 300: loss=0.1276  acc=0.973  H=15  epi_A_max=0.009  epi_B_max=0.834
+  [diamond] epoch 399: loss=0.1066  acc=0.977  H=15  epi_A_max=0.011  epi_B_max=1.047
+  [stripe] epoch   0: loss=1.2308  acc=0.223  H=15  epi_A_max=0.000  epi_B_max=0.106
+  [stripe] epoch 100: loss=0.0489  acc=0.993  H=15  epi_A_max=0.003  epi_B_max=1.574
+  [stripe] epoch 200: loss=0.0337  acc=0.993  H=16  epi_A_max=0.006  epi_B_max=1.726
+  [stripe] epoch 300: loss=0.0374  acc=0.990  H=18  epi_A_max=0.008  epi_B_max=1.723
+  [stripe] epoch 399: loss=0.0312  acc=0.993  H=18  epi_A_max=0.009  epi_B_max=1.751
+[seed 0  arm AXIS6_emerge    ]  max|drift|=0.513  sum_final=3.287  H=18  spawns=14  frozen=0
+  [linear] epoch   0: loss=1.2544  acc=0.543  H=4  epi_A_max=0.000  epi_B_max=0.063
+  [linear] epoch 100: loss=0.2429  acc=0.967  H=4  epi_A_max=0.005  epi_B_max=0.783
+  [linear] epoch 199: loss=0.0682  acc=0.987  H=6  epi_A_max=0.005  epi_B_max=1.301
+  [XOR] epoch   0: loss=1.1178  acc=0.487  H=6  epi_A_max=0.000  epi_B_max=0.131
+  [XOR] epoch 100: loss=0.4476  acc=0.863  H=7  epi_A_max=0.006  epi_B_max=1.308
+  [XOR] epoch 200: loss=0.3212  acc=0.927  H=9  epi_A_max=0.010  epi_B_max=1.308
+  [XOR] epoch 300: loss=0.2819  acc=0.940  H=9  epi_A_max=0.019  epi_B_max=1.308
+  [XOR] epoch 399: loss=0.2809  acc=0.933  H=9  epi_A_max=0.029  epi_B_max=1.308
+  [rings] epoch   0: loss=1.8853  acc=0.527  H=9  epi_A_max=0.000  epi_B_max=0.131
+  [rings] epoch 100: loss=0.2759  acc=0.960  H=11  epi_A_max=0.009  epi_B_max=1.308
+  [rings] epoch 200: loss=0.2651  acc=0.977  H=12  epi_A_max=0.016  epi_B_max=1.308
+  [rings] epoch 300: loss=0.2641  acc=0.977  H=12  epi_A_max=0.025  epi_B_max=1.308
+  [rings] epoch 399: loss=0.2637  acc=0.970  H=12  epi_A_max=0.033  epi_B_max=1.308
+  [diamond] epoch   0: loss=4.8973  acc=0.517  H=12  epi_A_max=0.000  epi_B_max=0.131
+  [diamond] epoch 100: loss=0.2772  acc=0.920  H=14  epi_A_max=0.009  epi_B_max=1.308
+  [diamond] epoch 200: loss=0.2291  acc=0.933  H=15  epi_A_max=0.016  epi_B_max=1.308
+  [diamond] epoch 300: loss=0.2074  acc=0.957  H=15  epi_A_max=0.023  epi_B_max=1.308
+  [diamond] epoch 399: loss=0.2010  acc=0.960  H=15  epi_A_max=0.032  epi_B_max=1.308
+  [stripe] epoch   0: loss=1.1059  acc=0.160  H=15  epi_A_max=0.000  epi_B_max=0.131
+  [stripe] epoch 100: loss=0.1369  acc=0.983  H=16  epi_A_max=0.007  epi_B_max=1.308
+  [stripe] epoch 200: loss=0.0737  acc=0.983  H=18  epi_A_max=0.010  epi_B_max=1.308
+  [stripe] epoch 300: loss=0.0411  acc=0.987  H=18  epi_A_max=0.013  epi_B_max=1.308
+  [stripe] epoch 399: loss=0.0297  acc=0.990  H=18  epi_A_max=0.016  epi_B_max=1.308
+[seed 0  arm AXIS6_credit    ]  max|drift|=0.000  sum_final=4.847  H=18  spawns=14  frozen=17
+  [linear] epoch   0: loss=1.4297  acc=0.097  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 100: loss=0.3131  acc=0.970  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 199: loss=0.3130  acc=0.973  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch   0: loss=1.1428  acc=0.360  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 100: loss=0.8169  acc=0.670  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 200: loss=0.8167  acc=0.670  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 300: loss=0.8167  acc=0.670  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 399: loss=0.8167  acc=0.670  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch   0: loss=1.0380  acc=0.130  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 100: loss=0.8715  acc=0.590  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 200: loss=0.8715  acc=0.590  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 300: loss=0.8715  acc=0.590  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 399: loss=0.8715  acc=0.590  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch   0: loss=1.2096  acc=0.003  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 100: loss=0.6855  acc=0.747  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 200: loss=0.6791  acc=0.747  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 300: loss=0.6791  acc=0.747  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 399: loss=0.6791  acc=0.747  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch   0: loss=1.8942  acc=0.000  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 100: loss=0.2676  acc=0.940  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 200: loss=0.2050  acc=0.977  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 300: loss=0.2049  acc=0.977  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 399: loss=0.2049  acc=0.977  H=4  epi_A_max=0.000  epi_B_max=0.000
+[seed 1  arm BASELINE_frozen ]  max|drift|=0.227  sum_final=3.537  H=4  spawns=0  frozen=0
+  [linear] epoch   0: loss=1.4297  acc=0.097  H=4  epi_A_max=0.000  epi_B_max=0.044
+  [linear] epoch 100: loss=0.3131  acc=0.970  H=4  epi_A_max=0.003  epi_B_max=1.474
+  [linear] epoch 199: loss=0.2486  acc=0.970  H=5  epi_A_max=0.004  epi_B_max=1.194
+  [XOR] epoch   0: loss=1.0109  acc=0.277  H=5  epi_A_max=0.000  epi_B_max=0.119
+  [XOR] epoch 100: loss=0.4420  acc=0.850  H=6  epi_A_max=0.004  epi_B_max=0.985
+  [XOR] epoch 200: loss=0.2954  acc=0.920  H=7  epi_A_max=0.007  epi_B_max=1.262
+  [XOR] epoch 300: loss=0.2317  acc=0.967  H=8  epi_A_max=0.012  epi_B_max=1.328
+  [XOR] epoch 399: loss=0.2161  acc=0.967  H=8  epi_A_max=0.020  epi_B_max=1.363
+  [rings] epoch   0: loss=1.0722  acc=0.203  H=8  epi_A_max=0.000  epi_B_max=0.138
+  [rings] epoch 100: loss=0.2807  acc=0.940  H=9  epi_A_max=0.007  epi_B_max=1.184
+  [rings] epoch 200: loss=0.2744  acc=0.950  H=11  epi_A_max=0.013  epi_B_max=1.539
+  [rings] epoch 300: loss=0.2650  acc=0.967  H=11  epi_A_max=0.021  epi_B_max=1.575
+  [rings] epoch 399: loss=0.2633  acc=0.967  H=11  epi_A_max=0.030  epi_B_max=1.595
+  [diamond] epoch   0: loss=1.8076  acc=0.090  H=11  epi_A_max=0.000  epi_B_max=0.160
+  [diamond] epoch 100: loss=0.2904  acc=0.943  H=12  epi_A_max=0.007  epi_B_max=1.750
+  [diamond] epoch 200: loss=0.2675  acc=0.960  H=14  epi_A_max=0.010  epi_B_max=1.694
+  [diamond] epoch 300: loss=0.2062  acc=0.970  H=14  epi_A_max=0.015  epi_B_max=1.775
+  [diamond] epoch 399: loss=0.2008  acc=0.973  H=14  epi_A_max=0.021  epi_B_max=1.906
+  [stripe] epoch   0: loss=2.1997  acc=0.090  H=14  epi_A_max=0.000  epi_B_max=0.192
+  [stripe] epoch 100: loss=0.0686  acc=0.993  H=14  epi_A_max=0.005  epi_B_max=1.477
+  [stripe] epoch 200: loss=0.0451  acc=0.990  H=16  epi_A_max=0.007  epi_B_max=1.438
+  [stripe] epoch 300: loss=0.0345  acc=0.990  H=17  epi_A_max=0.008  epi_B_max=1.454
+  [stripe] epoch 399: loss=0.0282  acc=0.993  H=17  epi_A_max=0.008  epi_B_max=1.463
+[seed 1  arm AXIS6_emerge    ]  max|drift|=0.547  sum_final=2.960  H=17  spawns=13  frozen=0
+  [linear] epoch   0: loss=1.4297  acc=0.097  H=4  epi_A_max=0.000  epi_B_max=0.044
+  [linear] epoch 100: loss=0.3131  acc=0.970  H=4  epi_A_max=0.003  epi_B_max=1.474
+  [linear] epoch 199: loss=0.2486  acc=0.970  H=5  epi_A_max=0.004  epi_B_max=1.194
+  [XOR] epoch   0: loss=1.0109  acc=0.277  H=5  epi_A_max=0.000  epi_B_max=0.119
+  [XOR] epoch 100: loss=0.4471  acc=0.863  H=6  epi_A_max=0.004  epi_B_max=1.191
+  [XOR] epoch 200: loss=0.3526  acc=0.900  H=8  epi_A_max=0.010  epi_B_max=1.256
+  [XOR] epoch 300: loss=0.3208  acc=0.913  H=8  epi_A_max=0.017  epi_B_max=1.286
+  [XOR] epoch 399: loss=0.3202  acc=0.910  H=8  epi_A_max=0.027  epi_B_max=1.304
+  [rings] epoch   0: loss=1.0336  acc=0.327  H=8  epi_A_max=0.000  epi_B_max=0.130
+  [rings] epoch 100: loss=0.3087  acc=0.950  H=10  epi_A_max=0.009  epi_B_max=1.304
+  [rings] epoch 200: loss=0.2889  acc=0.960  H=11  epi_A_max=0.022  epi_B_max=1.305
+  [rings] epoch 300: loss=0.2730  acc=0.950  H=11  epi_A_max=0.038  epi_B_max=1.305
+  [rings] epoch 399: loss=0.2646  acc=0.940  H=11  epi_A_max=0.057  epi_B_max=1.373
+  [diamond] epoch   0: loss=1.6329  acc=0.210  H=11  epi_A_max=0.000  epi_B_max=0.139
+  [diamond] epoch 100: loss=0.2941  acc=0.930  H=13  epi_A_max=0.013  epi_B_max=1.388
+  [diamond] epoch 200: loss=0.2813  acc=0.940  H=14  epi_A_max=0.021  epi_B_max=1.388
+  [diamond] epoch 300: loss=0.2545  acc=0.943  H=14  epi_A_max=0.027  epi_B_max=1.388
+  [diamond] epoch 399: loss=0.2489  acc=0.937  H=14  epi_A_max=0.034  epi_B_max=1.388
+  [stripe] epoch   0: loss=2.5537  acc=0.203  H=14  epi_A_max=0.000  epi_B_max=0.139
+  [stripe] epoch 100: loss=0.2422  acc=0.967  H=15  epi_A_max=0.005  epi_B_max=1.388
+  [stripe] epoch 200: loss=0.1763  acc=0.973  H=17  epi_A_max=0.008  epi_B_max=1.388
+  [stripe] epoch 300: loss=0.1084  acc=0.990  H=17  epi_A_max=0.011  epi_B_max=1.388
+  [stripe] epoch 399: loss=0.0970  acc=0.983  H=17  epi_A_max=0.014  epi_B_max=1.388
+[seed 1  arm AXIS6_credit    ]  max|drift|=0.230  sum_final=4.510  H=17  spawns=13  frozen=14
+  [linear] epoch   0: loss=0.9176  acc=0.677  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 100: loss=0.2378  acc=0.970  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 199: loss=0.2372  acc=0.970  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch   0: loss=0.9686  acc=0.513  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 100: loss=0.2889  acc=0.943  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 200: loss=0.2760  acc=0.947  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 300: loss=0.2703  acc=0.953  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 399: loss=0.2685  acc=0.953  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch   0: loss=1.0507  acc=0.420  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 100: loss=0.4666  acc=0.837  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 200: loss=0.2878  acc=0.953  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 300: loss=0.2873  acc=0.953  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 399: loss=0.2873  acc=0.953  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch   0: loss=4.2506  acc=0.247  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 100: loss=0.3500  acc=0.917  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 200: loss=0.3203  acc=0.953  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 300: loss=0.3151  acc=0.947  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 399: loss=0.3150  acc=0.950  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch   0: loss=3.7996  acc=0.537  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 100: loss=0.1851  acc=0.977  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 200: loss=0.1626  acc=0.990  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 300: loss=0.1623  acc=0.990  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 399: loss=0.1622  acc=0.990  H=4  epi_A_max=0.000  epi_B_max=0.000
+[seed 2  arm BASELINE_frozen ]  max|drift|=0.423  sum_final=3.533  H=4  spawns=0  frozen=0
+  [linear] epoch   0: loss=0.9176  acc=0.677  H=4  epi_A_max=0.000  epi_B_max=0.031
+  [linear] epoch 100: loss=0.2378  acc=0.970  H=4  epi_A_max=0.005  epi_B_max=0.733
+  [linear] epoch 199: loss=0.0940  acc=0.987  H=6  epi_A_max=0.007  epi_B_max=1.022
+  [XOR] epoch   0: loss=1.0386  acc=0.513  H=6  epi_A_max=0.000  epi_B_max=0.107
+  [XOR] epoch 100: loss=0.2470  acc=0.983  H=7  epi_A_max=0.006  epi_B_max=1.074
+  [XOR] epoch 200: loss=0.2318  acc=0.990  H=9  epi_A_max=0.010  epi_B_max=1.005
+  [XOR] epoch 300: loss=0.1952  acc=0.983  H=9  epi_A_max=0.016  epi_B_max=1.056
+  [XOR] epoch 399: loss=0.1880  acc=0.983  H=9  epi_A_max=0.025  epi_B_max=1.080
+  [rings] epoch   0: loss=1.0872  acc=0.397  H=9  epi_A_max=0.000  epi_B_max=0.109
+  [rings] epoch 100: loss=0.2581  acc=0.987  H=10  epi_A_max=0.007  epi_B_max=0.879
+  [rings] epoch 200: loss=0.2251  acc=0.980  H=12  epi_A_max=0.010  epi_B_max=0.832
+  [rings] epoch 300: loss=0.2076  acc=0.973  H=12  epi_A_max=0.012  epi_B_max=0.848
+  [rings] epoch 399: loss=0.2066  acc=0.973  H=12  epi_A_max=0.015  epi_B_max=0.989
+  [diamond] epoch   0: loss=1.6320  acc=0.077  H=12  epi_A_max=0.000  epi_B_max=0.101
+  [diamond] epoch 100: loss=0.2901  acc=0.943  H=12  epi_A_max=0.004  epi_B_max=0.701
+  [diamond] epoch 200: loss=0.2550  acc=0.963  H=14  epi_A_max=0.006  epi_B_max=0.710
+  [diamond] epoch 300: loss=0.1604  acc=0.970  H=15  epi_A_max=0.008  epi_B_max=0.520
+  [diamond] epoch 399: loss=0.1363  acc=0.973  H=15  epi_A_max=0.011  epi_B_max=0.556
+  [stripe] epoch   0: loss=2.0095  acc=0.143  H=15  epi_A_max=0.000  epi_B_max=0.056
+  [stripe] epoch 100: loss=0.0547  acc=0.993  H=15  epi_A_max=0.003  epi_B_max=1.712
+  [stripe] epoch 200: loss=0.0313  acc=0.993  H=15  epi_A_max=0.004  epi_B_max=2.059
+  [stripe] epoch 300: loss=0.0286  acc=0.993  H=17  epi_A_max=0.006  epi_B_max=2.137
+  [stripe] epoch 399: loss=0.0297  acc=0.993  H=18  epi_A_max=0.008  epi_B_max=2.135
+[seed 2  arm AXIS6_emerge    ]  max|drift|=0.533  sum_final=3.240  H=18  spawns=14  frozen=0
+  [linear] epoch   0: loss=0.9176  acc=0.677  H=4  epi_A_max=0.000  epi_B_max=0.031
+  [linear] epoch 100: loss=0.2378  acc=0.970  H=4  epi_A_max=0.005  epi_B_max=0.733
+  [linear] epoch 199: loss=0.0940  acc=0.987  H=6  epi_A_max=0.007  epi_B_max=1.022
+  [XOR] epoch   0: loss=1.0386  acc=0.513  H=6  epi_A_max=0.000  epi_B_max=0.107
+  [XOR] epoch 100: loss=0.3462  acc=0.937  H=7  epi_A_max=0.007  epi_B_max=1.067
+  [XOR] epoch 200: loss=0.2519  acc=0.950  H=9  epi_A_max=0.013  epi_B_max=1.067
+  [XOR] epoch 300: loss=0.2206  acc=0.953  H=9  epi_A_max=0.025  epi_B_max=1.067
+  [XOR] epoch 399: loss=0.2199  acc=0.953  H=9  epi_A_max=0.037  epi_B_max=1.067
+  [rings] epoch   0: loss=1.1026  acc=0.487  H=9  epi_A_max=0.000  epi_B_max=0.107
+  [rings] epoch 100: loss=0.3103  acc=0.957  H=11  epi_A_max=0.008  epi_B_max=1.067
+  [rings] epoch 200: loss=0.2705  acc=0.957  H=12  epi_A_max=0.016  epi_B_max=1.067
+  [rings] epoch 300: loss=0.2377  acc=0.960  H=12  epi_A_max=0.026  epi_B_max=1.067
+  [rings] epoch 399: loss=0.2369  acc=0.967  H=12  epi_A_max=0.036  epi_B_max=1.067
+  [diamond] epoch   0: loss=2.1542  acc=0.253  H=12  epi_A_max=0.000  epi_B_max=0.107
+  [diamond] epoch 100: loss=0.2747  acc=0.933  H=13  epi_A_max=0.008  epi_B_max=1.067
+  [diamond] epoch 200: loss=0.2526  acc=0.943  H=15  epi_A_max=0.014  epi_B_max=1.192
+  [diamond] epoch 300: loss=0.2370  acc=0.940  H=15  epi_A_max=0.022  epi_B_max=1.340
+  [diamond] epoch 399: loss=0.2237  acc=0.943  H=15  epi_A_max=0.029  epi_B_max=1.539
+  [stripe] epoch   0: loss=1.6076  acc=0.537  H=15  epi_A_max=0.000  epi_B_max=0.156
+  [stripe] epoch 100: loss=0.1912  acc=0.990  H=16  epi_A_max=0.006  epi_B_max=1.558
+  [stripe] epoch 200: loss=0.1751  acc=0.980  H=18  epi_A_max=0.007  epi_B_max=1.558
+  [stripe] epoch 300: loss=0.1421  acc=0.977  H=18  epi_A_max=0.010  epi_B_max=1.558
+  [stripe] epoch 399: loss=0.1305  acc=0.980  H=18  epi_A_max=0.013  epi_B_max=1.558
+[seed 2  arm AXIS6_credit    ]  max|drift|=0.000  sum_final=4.830  H=18  spawns=14  frozen=16
+
+========================================================================================
+AGGREGATE (n=3 seeds, mean ± std)
+========================================================================================
+  arm                   max|drift|       sum_final     H_final    spawns    frozen
+  BASELINE_frozen    0.424 ± 0.198   3.437 ± 0.170   4.0 ± 0.0  0.0 ± 0.0  0.0 ± 0.0
+  AXIS6_emerge       0.531 ± 0.017   3.162 ± 0.177  17.7 ± 0.6  13.7 ± 0.6  0.0 ± 0.0
+  AXIS6_credit       0.077 ± 0.133   4.729 ± 0.190  17.7 ± 0.6  13.7 ± 0.6  15.7 ± 1.5
+
+  per-task final acc (mean ± std across 3 seeds):
+  arm                       linear             XOR           rings         diamond          stripe
+  BASELINE_frozen    0.547 ± 0.200   0.522 ± 0.040   0.638 ± 0.059   0.744 ± 0.013   0.986 ± 0.008
+  AXIS6_emerge       0.561 ± 0.104   0.552 ± 0.122   0.513 ± 0.092   0.542 ± 0.104   0.993 ± 0.000
+  AXIS6_credit       0.981 ± 0.010   0.934 ± 0.022   0.882 ± 0.149   0.947 ± 0.012   0.984 ± 0.005
+
+  CSV → outputs/axis6_real_substrate_credit_n3.csv

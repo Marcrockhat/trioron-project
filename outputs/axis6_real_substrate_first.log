@@ -1,0 +1,104 @@
+========================================================================================
+Trioron 2.0 Axis 6 — real-substrate field emergence test
+H_init=2  k=1.0  floor=0.005  b_thr=100.0  sigma=1.5  dt=0.1  tol=0.0  spawn_cap=3  cooldown=50
+========================================================================================
+
+========== ARM: BASELINE_frozen ==========
+
+[Phase 1: training task 'linear']
+  [linear] epoch   0: loss=1.6790  acc=0.540  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 100: loss=0.2859  acc=0.960  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 199: loss=0.2851  acc=0.960  H=2  epi_A_max=0.000  epi_B_max=0.000
+  >> linear final acc = 0.960  hidden_now = 2
+
+[Phase 2: training task 'XOR']
+  [XOR] epoch   0: loss=1.7427  acc=0.460  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 100: loss=0.8169  acc=0.670  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 200: loss=0.8167  acc=0.670  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 300: loss=0.8167  acc=0.670  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 399: loss=0.8167  acc=0.670  H=2  epi_A_max=0.000  epi_B_max=0.000
+  >> XOR final acc = 0.670  hidden_now = 2
+
+[Phase 3: training task 'rings']
+  [rings] epoch   0: loss=1.4295  acc=0.467  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 100: loss=0.8726  acc=0.590  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 200: loss=0.8718  acc=0.590  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 300: loss=0.8718  acc=0.590  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 399: loss=0.8718  acc=0.590  H=2  epi_A_max=0.000  epi_B_max=0.000
+  >> rings final acc = 0.590  hidden_now = 2
+
+[Phase 4: training task 'diamond']
+  [diamond] epoch   0: loss=0.8175  acc=0.747  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 100: loss=0.6791  acc=0.747  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 200: loss=0.6791  acc=0.747  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 300: loss=0.6791  acc=0.747  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 399: loss=0.6791  acc=0.747  H=2  epi_A_max=0.000  epi_B_max=0.000
+  >> diamond final acc = 0.747  hidden_now = 2
+
+[Phase 5: training task 'stripe']
+  [stripe] epoch   0: loss=1.7297  acc=0.463  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 100: loss=0.2160  acc=0.967  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 200: loss=0.2049  acc=0.977  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 300: loss=0.2049  acc=0.977  H=2  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 399: loss=0.2049  acc=0.977  H=2  epi_A_max=0.000  epi_B_max=0.000
+  >> stripe final acc = 0.977  hidden_now = 2
+
+BASELINE_frozen summary:
+  hidden final: 2 (init 2)
+  spawn events: 0
+  per-task acc:
+    linear     0.960
+    XOR        0.670
+    rings      0.590
+    diamond    0.747
+    stripe     0.977
+
+========== ARM: AXIS6_emerge ==========
+
+[Phase 1: training task 'linear']
+  [linear] epoch   0: loss=1.6790  acc=0.540  H=2  epi_A_max=0.000  epi_B_max=0.063
+  [linear] epoch 100: loss=0.2859  acc=0.960  H=2  epi_A_max=0.007  epi_B_max=9.185
+  [linear] epoch 199: loss=0.2851  acc=0.960  H=2  epi_A_max=0.023  epi_B_max=21.934
+  >> linear final acc = 0.960  hidden_now = 2
+
+[Phase 2: training task 'XOR']
+  [XOR] epoch   0: loss=1.7427  acc=0.460  H=2  epi_A_max=0.000  epi_B_max=0.128
+  [XOR] epoch 100: loss=0.8169  acc=0.670  H=2  epi_A_max=0.017  epi_B_max=5.385
+  [XOR] epoch 200: loss=0.8167  acc=0.670  H=2  epi_A_max=0.029  epi_B_max=8.881
+  [XOR] epoch 300: loss=0.8167  acc=0.670  H=2  epi_A_max=0.040  epi_B_max=12.417
+  [XOR] epoch 399: loss=0.8167  acc=0.670  H=2  epi_A_max=0.050  epi_B_max=15.918
+  >> XOR final acc = 0.670  hidden_now = 2
+
+[Phase 3: training task 'rings']
+  [rings] epoch   0: loss=1.4295  acc=0.467  H=2  epi_A_max=0.000  epi_B_max=0.035
+  [rings] epoch 100: loss=0.8726  acc=0.590  H=2  epi_A_max=0.008  epi_B_max=1.462
+  [rings] epoch 200: loss=0.8718  acc=0.590  H=2  epi_A_max=0.014  epi_B_max=3.233
+  [rings] epoch 300: loss=0.8718  acc=0.590  H=2  epi_A_max=0.020  epi_B_max=5.008
+  [rings] epoch 399: loss=0.8718  acc=0.590  H=2  epi_A_max=0.025  epi_B_max=6.766
+  >> rings final acc = 0.590  hidden_now = 2
+
+[Phase 4: training task 'diamond']
+  [diamond] epoch   0: loss=0.8175  acc=0.747  H=2  epi_A_max=0.000  epi_B_max=0.018
+  [diamond] epoch 100: loss=0.6791  acc=0.747  H=2  epi_A_max=0.005  epi_B_max=3.086
+  [diamond] epoch 200: loss=0.6791  acc=0.747  H=2  epi_A_max=0.010  epi_B_max=6.552
+  [diamond] epoch 300: loss=0.6791  acc=0.747  H=2  epi_A_max=0.015  epi_B_max=10.022
+  [diamond] epoch 399: loss=0.6791  acc=0.747  H=2  epi_A_max=0.020  epi_B_max=13.458
+  >> diamond final acc = 0.747  hidden_now = 2
+
+[Phase 5: training task 'stripe']
+  [stripe] epoch   0: loss=1.7297  acc=0.463  H=2  epi_A_max=0.000  epi_B_max=0.035
+  [stripe] epoch 100: loss=0.2160  acc=0.967  H=2  epi_A_max=0.006  epi_B_max=5.491
+  [stripe] epoch 200: loss=0.2049  acc=0.977  H=2  epi_A_max=0.016  epi_B_max=23.584
+  [stripe] epoch 300: loss=0.2049  acc=0.977  H=2  epi_A_max=0.027  epi_B_max=42.064
+  [stripe] epoch 399: loss=0.2049  acc=0.977  H=2  epi_A_max=0.040  epi_B_max=60.359
+  >> stripe final acc = 0.977  hidden_now = 2
+
+AXIS6_emerge summary:
+  hidden final: 2 (init 2)
+  spawn events: 0
+  per-task acc:
+    linear     0.960
+    XOR        0.670
+    rings      0.590
+    diamond    0.747
+    stripe     0.977

@@ -519,6 +519,43 @@ class TrioronNetwork(nn.Module):
 
         return new_idx
 
+    def axis6_spawn(
+        self,
+        layer_idx: int,
+        candidate_idx: int,
+        position_jitter: float = 0.3,
+    ) -> int:
+        """Trioron 2.0 Axis 6 — field-conditional cellular division.
+
+        Equivalent to `grow_layer(layer_idx)` followed by placing the
+        new cell's locus at the candidate's locus + Gaussian jitter and
+        resetting the candidate's epi_A (refractory). Returns the new
+        cell's index in `layer_idx`. Optimizer rebuild caveat from
+        grow_layer applies.
+
+        The caller is responsible for triggering this via
+        `layer.field_conditional_growth_candidate()`; this method is
+        the orchestration half.
+        """
+        target = self.layers[layer_idx]
+        if not (0 <= candidate_idx < target.n_nodes):
+            raise IndexError(
+                f"candidate_idx {candidate_idx} out of range "
+                f"[0, {target.n_nodes})"
+            )
+        parent_pos = target.cell_position[candidate_idx].detach().clone()
+        new_idx = self.grow_layer(layer_idx)
+        with torch.no_grad():
+            jitter = torch.randn(
+                target.position_dim,
+                device=target.cell_position.device,
+                dtype=target.cell_position.dtype,
+            ) * position_jitter
+            target.cell_position[new_idx] = parent_pos + jitter
+            target.epi_A[candidate_idx] = 0.0
+        target._field_kernel = None
+        return new_idx
+
     def insert_layer(
         self,
         between: Tuple[int, int],

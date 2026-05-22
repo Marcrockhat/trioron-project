@@ -1,0 +1,160 @@
+========================================================================================
+Trioron 2.0 Axis 6 — real-substrate field emergence test
+H_init=4  mode=absolute  k=1.0  floor=0.005  b_thr=1.0  sigma=1.5  dt=0.1  tol=0.0  spawn_cap=3  cooldown=50
+========================================================================================
+
+========== ARM: BASELINE_frozen ==========
+
+[Phase 1: training task 'linear']
+  [linear] epoch   0: loss=0.8481  acc=0.577  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 100: loss=0.2368  acc=0.973  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [linear] epoch 199: loss=0.2325  acc=0.977  H=4  epi_A_max=0.000  epi_B_max=0.000
+  >> linear final acc = 0.977  hidden_now = 4
+
+[Phase 2: training task 'XOR']
+  [XOR] epoch   0: loss=1.9349  acc=0.437  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 100: loss=0.2984  acc=0.937  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 200: loss=0.2864  acc=0.933  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 300: loss=0.2828  acc=0.933  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [XOR] epoch 399: loss=0.2805  acc=0.927  H=4  epi_A_max=0.000  epi_B_max=0.000
+  >> XOR final acc = 0.940  hidden_now = 4
+
+[Phase 3: training task 'rings']
+  [rings] epoch   0: loss=2.1814  acc=0.403  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 100: loss=0.6937  acc=0.747  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 200: loss=0.6144  acc=0.753  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 300: loss=0.6131  acc=0.763  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [rings] epoch 399: loss=0.6130  acc=0.763  H=4  epi_A_max=0.000  epi_B_max=0.000
+  >> rings final acc = 0.763  hidden_now = 4
+
+[Phase 4: training task 'diamond']
+  [diamond] epoch   0: loss=0.6476  acc=0.767  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 100: loss=0.5295  acc=0.803  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 200: loss=0.5218  acc=0.803  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 300: loss=0.5218  acc=0.803  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [diamond] epoch 399: loss=0.5218  acc=0.803  H=4  epi_A_max=0.000  epi_B_max=0.000
+  >> diamond final acc = 0.803  hidden_now = 4
+
+[Phase 5: training task 'stripe']
+  [stripe] epoch   0: loss=1.5166  acc=0.540  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 100: loss=0.0524  acc=0.993  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 200: loss=0.0332  acc=0.990  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 300: loss=0.0312  acc=0.990  H=4  epi_A_max=0.000  epi_B_max=0.000
+  [stripe] epoch 399: loss=0.0297  acc=0.990  H=4  epi_A_max=0.000  epi_B_max=0.000
+  >> stripe final acc = 0.990  hidden_now = 4
+
+BASELINE_frozen summary:
+  retention matrix (rows = after-phase, cols = per task):
+    phase               linear       XOR     rings   diamond    stripe
+    after linear          0.977     0.437     0.507     0.477     0.747
+    after XOR             0.460     0.940     0.403     0.427     0.470
+    after rings           0.520     0.413     0.763     0.767     0.563
+    after diamond         0.510     0.490     0.700     0.803     0.540
+    after stripe          0.740     0.467     0.517     0.480     0.990
+  per-task drift (acc when first learned − acc at end):
+    linear     learned 0.977  final 0.740  drift +0.237
+    XOR        learned 0.940  final 0.467  drift +0.473
+    rings      learned 0.763  final 0.517  drift +0.247
+    diamond    learned 0.803  final 0.480  drift +0.323
+    stripe     learned 0.990  final 0.990  drift +0.000
+  max |drift| = 0.473
+  hidden final: 4 (init 4)
+  spawn events: 0
+  per-task acc:
+    linear     0.977
+    XOR        0.940
+    rings      0.763
+    diamond    0.803
+    stripe     0.990
+
+========== ARM: AXIS6_emerge ==========
+
+[Phase 1: training task 'linear']
+  [linear] epoch   0: loss=0.8481  acc=0.577  H=4  epi_A_max=0.000  epi_B_max=0.063
+  [linear] epoch 100: loss=0.2368  acc=0.973  H=4  epi_A_max=0.004  epi_B_max=1.053
+  [linear] epoch 199: loss=0.1510  acc=0.977  H=6  epi_A_max=0.008  epi_B_max=2.237
+    >> AXIS6 spawn: candidate cell 3 → new cell 4 @ [2.6786437034606934, 0.03681037575006485, -0.1698952615261078]  (epoch 115)
+    >> AXIS6 spawn: candidate cell 0 → new cell 5 @ [-0.4527323246002197, 0.11111807078123093, 0.43695077300071716]  (epoch 196)
+  >> linear final acc = 0.947  hidden_now = 6
+
+[Phase 2: training task 'XOR']
+  [XOR] epoch   0: loss=2.1314  acc=0.407  H=6  epi_A_max=0.000  epi_B_max=0.236
+  [XOR] epoch 100: loss=0.3170  acc=0.937  H=8  epi_A_max=0.012  epi_B_max=2.393
+  [XOR] epoch 200: loss=0.2420  acc=0.967  H=9  epi_A_max=0.023  epi_B_max=2.357
+  [XOR] epoch 300: loss=0.2001  acc=0.963  H=9  epi_A_max=0.038  epi_B_max=2.458
+  [XOR] epoch 399: loss=0.1872  acc=0.963  H=9  epi_A_max=0.054  epi_B_max=2.620
+    >> AXIS6 spawn: candidate cell 3 → new cell 6 @ [3.057560920715332, 0.37913843989372253, -0.3871305286884308]  (epoch 35)
+    >> AXIS6 spawn: candidate cell 2 → new cell 7 @ [1.7844560146331787, 0.15559104084968567, -0.39375659823417664]  (epoch 85)
+    >> AXIS6 spawn: candidate cell 6 → new cell 8 @ [2.3919272422790527, 0.4568338096141815, -0.6960412263870239]  (epoch 135)
+  >> XOR final acc = 0.963  hidden_now = 9
+
+[Phase 3: training task 'rings']
+  [rings] epoch   0: loss=1.9904  acc=0.440  H=9  epi_A_max=0.000  epi_B_max=0.264
+  [rings] epoch 100: loss=0.2705  acc=0.970  H=11  epi_A_max=0.018  epi_B_max=2.694
+  [rings] epoch 200: loss=0.2511  acc=0.953  H=12  epi_A_max=0.031  epi_B_max=2.614
+  [rings] epoch 300: loss=0.2445  acc=0.970  H=12  epi_A_max=0.044  epi_B_max=2.567
+  [rings] epoch 399: loss=0.2429  acc=0.977  H=12  epi_A_max=0.056  epi_B_max=2.558
+    >> AXIS6 spawn: candidate cell 0 → new cell 9 @ [-0.27543002367019653, -0.012126326560974121, 0.08643504977226257]  (epoch 26)
+    >> AXIS6 spawn: candidate cell 6 → new cell 10 @ [2.7309858798980713, 0.29915952682495117, -0.33030349016189575]  (epoch 76)
+    >> AXIS6 spawn: candidate cell 8 → new cell 11 @ [2.381300687789917, 0.4756494462490082, -0.9259331226348877]  (epoch 126)
+  >> rings final acc = 0.977  hidden_now = 12
+
+[Phase 4: training task 'diamond']
+  [diamond] epoch   0: loss=0.4626  acc=0.833  H=12  epi_A_max=0.000  epi_B_max=0.256
+  [diamond] epoch 100: loss=0.2808  acc=0.957  H=14  epi_A_max=0.012  epi_B_max=2.495
+  [diamond] epoch 200: loss=0.2305  acc=0.957  H=15  epi_A_max=0.023  epi_B_max=2.657
+  [diamond] epoch 300: loss=0.1969  acc=0.960  H=15  epi_A_max=0.032  epi_B_max=2.877
+  [diamond] epoch 399: loss=0.1832  acc=0.967  H=15  epi_A_max=0.040  epi_B_max=2.959
+    >> AXIS6 spawn: candidate cell 0 → new cell 12 @ [0.05258500203490257, -0.27945634722709656, -0.45164692401885986]  (epoch 37)
+    >> AXIS6 spawn: candidate cell 10 → new cell 13 @ [2.7421202659606934, 0.2136867344379425, -0.37033602595329285]  (epoch 87)
+    >> AXIS6 spawn: candidate cell 6 → new cell 14 @ [2.9200422763824463, 0.27834200859069824, -0.8581264019012451]  (epoch 137)
+  >> diamond final acc = 0.967  hidden_now = 15
+
+[Phase 5: training task 'stripe']
+  [stripe] epoch   0: loss=1.8500  acc=0.497  H=15  epi_A_max=0.000  epi_B_max=0.296
+  [stripe] epoch 100: loss=0.1373  acc=0.983  H=17  epi_A_max=0.010  epi_B_max=2.787
+  [stripe] epoch 200: loss=0.0625  acc=0.990  H=18  epi_A_max=0.018  epi_B_max=2.744
+  [stripe] epoch 300: loss=0.0354  acc=0.993  H=18  epi_A_max=0.023  epi_B_max=2.716
+  [stripe] epoch 399: loss=0.0285  acc=0.993  H=18  epi_A_max=0.026  epi_B_max=2.704
+    >> AXIS6 spawn: candidate cell 0 → new cell 15 @ [0.3513307273387909, 0.1300535947084427, -0.5202750563621521]  (epoch 42)
+    >> AXIS6 spawn: candidate cell 10 → new cell 16 @ [2.9613730907440186, 0.3162934184074402, -0.2631159722805023]  (epoch 92)
+    >> AXIS6 spawn: candidate cell 2 → new cell 17 @ [2.005316734313965, 0.039547909051179886, 0.3059300482273102]  (epoch 142)
+  >> stripe final acc = 0.997  hidden_now = 18
+
+AXIS6_emerge summary:
+  retention matrix (rows = after-phase, cols = per task):
+    phase               linear       XOR     rings   diamond    stripe
+    after linear          0.947     0.407     0.523     0.480     0.757
+    after XOR             0.450     0.963     0.440     0.457     0.473
+    after rings           0.500     0.453     0.977     0.833     0.537
+    after diamond         0.480     0.480     0.857     0.967     0.497
+    after stripe          0.740     0.467     0.523     0.487     0.997
+  per-task drift (acc when first learned − acc at end):
+    linear     learned 0.947  final 0.740  drift +0.207
+    XOR        learned 0.963  final 0.467  drift +0.497
+    rings      learned 0.977  final 0.523  drift +0.453
+    diamond    learned 0.967  final 0.487  drift +0.480
+    stripe     learned 0.997  final 0.997  drift +0.000
+  max |drift| = 0.497
+  hidden final: 18 (init 4)
+  spawn events: 14
+    linear @ epoch 115: AXIS6 spawn: candidate cell 3 → new cell 4 @ [2.6786437034606934, 0.03681037575006485, -0.1698952615261078]
+    linear @ epoch 196: AXIS6 spawn: candidate cell 0 → new cell 5 @ [-0.4527323246002197, 0.11111807078123093, 0.43695077300071716]
+    XOR @ epoch 35: AXIS6 spawn: candidate cell 3 → new cell 6 @ [3.057560920715332, 0.37913843989372253, -0.3871305286884308]
+    XOR @ epoch 85: AXIS6 spawn: candidate cell 2 → new cell 7 @ [1.7844560146331787, 0.15559104084968567, -0.39375659823417664]
+    XOR @ epoch 135: AXIS6 spawn: candidate cell 6 → new cell 8 @ [2.3919272422790527, 0.4568338096141815, -0.6960412263870239]
+    rings @ epoch 26: AXIS6 spawn: candidate cell 0 → new cell 9 @ [-0.27543002367019653, -0.012126326560974121, 0.08643504977226257]
+    rings @ epoch 76: AXIS6 spawn: candidate cell 6 → new cell 10 @ [2.7309858798980713, 0.29915952682495117, -0.33030349016189575]
+    rings @ epoch 126: AXIS6 spawn: candidate cell 8 → new cell 11 @ [2.381300687789917, 0.4756494462490082, -0.9259331226348877]
+    diamond @ epoch 37: AXIS6 spawn: candidate cell 0 → new cell 12 @ [0.05258500203490257, -0.27945634722709656, -0.45164692401885986]
+    diamond @ epoch 87: AXIS6 spawn: candidate cell 10 → new cell 13 @ [2.7421202659606934, 0.2136867344379425, -0.37033602595329285]
+    diamond @ epoch 137: AXIS6 spawn: candidate cell 6 → new cell 14 @ [2.9200422763824463, 0.27834200859069824, -0.8581264019012451]
+    stripe @ epoch 42: AXIS6 spawn: candidate cell 0 → new cell 15 @ [0.3513307273387909, 0.1300535947084427, -0.5202750563621521]
+    stripe @ epoch 92: AXIS6 spawn: candidate cell 10 → new cell 16 @ [2.9613730907440186, 0.3162934184074402, -0.2631159722805023]
+    stripe @ epoch 142: AXIS6 spawn: candidate cell 2 → new cell 17 @ [2.005316734313965, 0.039547909051179886, 0.3059300482273102]
+  per-task acc:
+    linear     0.947
+    XOR        0.963
+    rings      0.977
+    diamond    0.967
+    stripe     0.997

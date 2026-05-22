@@ -348,6 +348,28 @@ class TrioronLayer(nn.Module):
             "cell_position", torch.zeros(n_nodes, self.position_dim),
         )
 
+        # Trioron 2.0 Axis 6 — field-conditional layer emergence.
+        # Two field channels diffuse over cell_position:
+        #   epi_A — chronic neighborhood frustration. Integrates the
+        #           Gaussian-diffused per-cell internal_stress.
+        #   epi_B — self-activity. Integrates |y_i| from the most recent
+        #           forward, per cell.
+        # A relative-rule trigger fires grow_node at the locus of any
+        # cell whose epi_A is anomalously high (mean + k·std) AND whose
+        # epi_B is low (i.e. the cell is in a high-stress region but is
+        # itself quiet, so the new cell takes on the load instead of
+        # competing with an already-engaged neighbor). Default OFF;
+        # enable per-layer via enable_axis6_field(). When off the
+        # buffers stay zero and there's zero forward-path cost.
+        self.axis6_enabled: bool = False
+        self.field_sigma: float = 1.5
+        self.register_buffer("epi_A", torch.zeros(n_nodes))
+        self.register_buffer("epi_B", torch.zeros(n_nodes))
+        # Lazy Gaussian-kernel cache over cell_position. Recomputed when
+        # None or when n_nodes drifts (after grow_node / prune_node).
+        # NOT a buffer — it's derivable from cell_position + field_sigma.
+        self._field_kernel: Optional[torch.Tensor] = None
+
         # Saliency caches for |a · g| utility (Mozer & Smolensky 1989,
         # OBD/blueprint §3.2). _last_y is stashed on each grad-enabled
         # forward; _last_upstream is captured by a backward hook on y
@@ -1139,6 +1161,15 @@ class TrioronLayer(nn.Module):
                              device=device)],
                 dim=0,
             )
+            # Axis 6 — extend epi_A / epi_B with a zero row so the new
+            # cell starts uncommitted. The kernel cache is invalidated
+            # below (size-mismatch guard in update_epi_field rebuilds).
+            new_epi_A = torch.cat(
+                [self.epi_A, torch.zeros(1, dtype=self.epi_A.dtype, device=device)]
+            )
+            new_epi_B = torch.cat(
+                [self.epi_B, torch.zeros(1, dtype=self.epi_B.dtype, device=device)]
+            )
 
         # Re-register parameters and buffers with new shapes.
         self._replace_parameter("W", new_W)
@@ -1167,6 +1198,10 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("branch_utility", new_branch_utility)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
         self._replace_buffer("cell_position", new_cell_position)
+        self._replace_buffer("epi_A", new_epi_A)
+        self._replace_buffer("epi_B", new_epi_B)
+        # Axis 6 — cell_position changed, kernel must rebuild lazily.
+        self._field_kernel = None
 
         # Axis 5 sister-specialist inheritance. inherit_dendrite
         # validates parent_idx against the post-grow n_nodes and refuses
@@ -1336,6 +1371,8 @@ class TrioronLayer(nn.Module):
             new_branch_utility = self.branch_utility.index_select(0, keep_t)
             new_dendrite_orphan_row = self.dendrite_orphan.index_select(0, keep_t)
             new_cell_position_row = self.cell_position.index_select(0, keep_t)
+            new_epi_A = self.epi_A.index_select(0, keep_t)
+            new_epi_B = self.epi_B.index_select(0, keep_t)
 
         self._replace_parameter("W", new_W)
         self._replace_parameter("b", new_b)
@@ -1363,6 +1400,10 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("branch_utility", new_branch_utility)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan_row)
         self._replace_buffer("cell_position", new_cell_position_row)
+        self._replace_buffer("epi_A", new_epi_A)
+        self._replace_buffer("epi_B", new_epi_B)
+        # Axis 6 — cell_position changed, kernel must rebuild lazily.
+        self._field_kernel = None
 
     # ----- dendritic plasticity (Trioron 2.0 Axis 5, Phase 2.5) -----
 
@@ -1595,9 +1636,17 @@ class TrioronLayer(nn.Module):
         engaged(y) = 1(y > 0) for ReLU; 1(|y| > 0.05) for tanh / linear.
 
         Call AFTER loss.backward() (so _last_upstream is populated).
-        No-op if no grad-enabled forward + backward has run yet.
+        No-op if no grad-enabled forward + backward has run yet, or
+        if the cached _last_y / _last_upstream are from different
+        forwards (size mismatch on the batch dim — can happen after
+        a plastic rewiring block whose last batch was partial, then
+        a no_grad eval that doesn't update _last_y, then a fresh
+        forward that updates _last_y but whose backward hook hasn't
+        fired yet).
         """
         if self._last_y is None or self._last_upstream is None:
+            return
+        if self._last_y.shape[0] != self._last_upstream.shape[0]:
             return
         with torch.no_grad():
             if self.activation == "relu":
@@ -1612,6 +1661,209 @@ class TrioronLayer(nn.Module):
             self.internal_stress.mul_(self.fisher_decay).add_(
                 stress, alpha=1.0 - self.fisher_decay,
             )
+
+    # ----- Axis 6: field-conditional layer emergence -----
+
+    def enable_axis6_field(self, field_sigma: float = 1.5) -> None:
+        """Turn on field-conditional emergence on this layer.
+
+        Sets axis6_enabled=True, installs the Gaussian length-scale,
+        and invalidates the kernel cache so the next update_epi_field()
+        rebuilds it from the current cell_position.
+        """
+        self.axis6_enabled = True
+        self.field_sigma = float(field_sigma)
+        self._field_kernel = None
+
+    def disable_axis6_field(self) -> None:
+        """Turn off Axis 6. Keeps epi_A/epi_B/cell_position intact (so
+        the field state can be resumed later) but bypasses
+        update_epi_field and field_conditional_growth_candidate."""
+        self.axis6_enabled = False
+
+    def _compute_field_kernel(self) -> torch.Tensor:
+        """Gaussian over cell_position, zero diagonal, row-normalized.
+
+        Cached in self._field_kernel; the size-vs-n_nodes guard in
+        update_epi_field invalidates the cache after grow / prune.
+        """
+        pos = self.cell_position.to(dtype=torch.float32)
+        diff = pos.unsqueeze(0) - pos.unsqueeze(1)
+        dist = diff.norm(dim=-1)
+        kernel = torch.exp(-(dist / max(self.field_sigma, 1e-6)) ** 2)
+        kernel.fill_diagonal_(0.0)
+        row_sum = kernel.sum(dim=1, keepdim=True).clamp_min(1e-8)
+        kernel = kernel / row_sum
+        return kernel
+
+    def update_epi_field(
+        self,
+        dt: float = 0.1,
+        stress_tolerance: float = 0.05,
+    ) -> None:
+        """One step of Axis 6 field integration.
+
+        Diffuses internal_stress through the cell_position kernel to
+        compute per-cell ambient_A, then integrates:
+
+            epi_A[c] += dt * max(ambient_A[c] - stress_tolerance, 0)
+            epi_B[c] += dt * |y_c|     (from the most recent forward)
+
+        epi_A is clamped at zero from below (a cell that briefly sits
+        in a low-stress region doesn't bank "negative stress credit").
+        epi_B has no clamp — naturally non-negative.
+
+        No-op when axis6_enabled is False or the field machinery hasn't
+        been initialized for the current n_nodes.
+
+        Call AFTER update_internal_stress so the diffused signal reflects
+        the latest |∂L/∂y| · engaged signal.
+        """
+        if not self.axis6_enabled:
+            return
+        n = self.n_nodes
+        with torch.no_grad():
+            if self._field_kernel is None or self._field_kernel.shape[0] != n:
+                self._field_kernel = self._compute_field_kernel()
+            kernel = self._field_kernel.to(
+                device=self.internal_stress.device,
+                dtype=torch.float32,
+            )
+            stress_f32 = self.internal_stress.to(torch.float32)
+            ambient_A = kernel @ stress_f32
+            self.epi_A.add_(
+                dt * (ambient_A - stress_tolerance).clamp_min(0.0),
+            )
+            self.epi_A.clamp_(min=0.0)
+            # epi_B as bounded EMA of |y| (NOT integrator). In the toy
+            # PoC epi_B integrated and was meant to lock out
+            # already-activated potentials over the short toy curriculum;
+            # at real-trioron training lengths an integrator saturates
+            # and the gate goes dead. EMA gives a "currently engaged"
+            # signal that decays when the cell goes quiet — the same
+            # semantic intent, with bounded dynamic range.
+            if self._last_y is not None:
+                activity = self._last_y.detach().abs().mean(dim=0).to(
+                    device=self.epi_B.device,
+                    dtype=self.epi_B.dtype,
+                )
+                if activity.shape[0] == n:
+                    self.epi_B.mul_(0.9).add_(activity, alpha=0.1)
+
+    def reset_epi_field(self) -> None:
+        """Zero epi_A and epi_B. Use after a task switch when you want
+        the field to forget pre-switch dynamics (e.g. before benchmarking
+        recruitment on the next task in a curriculum)."""
+        with torch.no_grad():
+            self.epi_A.zero_()
+            self.epi_B.zero_()
+
+    def field_conditional_growth_candidate(
+        self,
+        mode: str = "absolute",
+        k: float = 2.0,
+        stress_floor: float = 0.05,
+        b_threshold: float = 1.0,
+        min_pool: int = 1,
+    ) -> Optional[int]:
+        """Pick the cell whose neighborhood begs for a new sibling.
+        Returns the cell index or None if no cell qualifies.
+
+        Two modes:
+            absolute  — fire on argmax(epi_A) if epi_A[that] > stress_floor.
+                Recommended for real-trioron layers (small all-active
+                pools where outlier-style "anomalous" detection is
+                degenerate). Default.
+            relative  — fire on epi_A[c] > mean + k*std + stress_floor.
+                Matches the cl5 toy PoC's rule. Best when the pool has
+                many quiet "potential" cells (n_pool >> active cells).
+
+        Both modes also require `epi_B[c] < b_threshold` (default 1.0
+        is a no-op against the bounded-EMA epi_B which stays in
+        ~[0, max_activity]). Tighter b_threshold prefers spawning near
+        QUIET cells in HOT neighborhoods rather than near already-
+        engaged cells.
+
+        If multiple cells qualify in relative mode, returns the one
+        with highest epi_A. The caller is expected to spawn near this
+        cell's locus via TrioronNetwork.axis6_spawn().
+        """
+        if not self.axis6_enabled:
+            return None
+        n = self.n_nodes
+        if n < min_pool:
+            return None
+        with torch.no_grad():
+            epi_A = self.epi_A.to(torch.float32)
+            if mode == "absolute":
+                a_max, a_argmax = epi_A.max(dim=0)
+                a_max = float(a_max.item())
+                idx = int(a_argmax.item())
+                if a_max <= stress_floor:
+                    return None
+                if float(self.epi_B[idx].item()) >= b_threshold:
+                    # Best candidate is already engaged; fall back to
+                    # the next-quietest cell above floor.
+                    candidates = [
+                        (float(epi_A[c].item()), c)
+                        for c in range(n)
+                        if float(epi_A[c].item()) > stress_floor
+                        and float(self.epi_B[c].item()) < b_threshold
+                    ]
+                    if not candidates:
+                        return None
+                    candidates.sort(reverse=True)
+                    return candidates[0][1]
+                return idx
+            # relative mode
+            mu = float(epi_A.mean().item())
+            sd = float(epi_A.std(unbiased=False).item())
+            if sd < 1e-6:
+                return None
+            bar = mu + k * sd
+            candidates: list[tuple[float, int]] = []
+            for c in range(n):
+                a = float(epi_A[c].item())
+                b = float(self.epi_B[c].item())
+                if a > bar and a > stress_floor and b < b_threshold:
+                    candidates.append((a, c))
+            if not candidates:
+                return None
+            candidates.sort(reverse=True)
+            return candidates[0][1]
+
+    def grow_at_field_hotspot(
+        self,
+        idx: int,
+        position_jitter: float = 0.3,
+    ) -> int:
+        """Layer-side half of Axis 6 spawn: grow a new cell at the
+        hotspot's locus + jitter, then enter a refractory by zeroing
+        the hotspot's epi_A.
+
+        Returns the new cell's index. Caller is still responsible for
+        calling grow_input on the downstream layer so the network accepts
+        the new column. The kernel cache is invalidated implicitly via
+        grow_node's hook; we also reset epi_A on the hotspot so it won't
+        re-fire on the same step.
+        """
+        if not (0 <= idx < self.n_nodes):
+            raise IndexError(
+                f"grow_at_field_hotspot idx {idx} out of range "
+                f"[0, {self.n_nodes})"
+            )
+        parent_pos = self.cell_position[idx].detach().clone()
+        new_idx = self.grow_node()
+        with torch.no_grad():
+            jitter = torch.randn(
+                self.position_dim,
+                device=self.cell_position.device,
+                dtype=self.cell_position.dtype,
+            ) * position_jitter
+            self.cell_position[new_idx] = parent_pos + jitter
+            self.epi_A[idx] = 0.0
+        self._field_kernel = None
+        return new_idx
 
     def update_branch_utility(self) -> None:
         """EMA update of per-(cell, branch) saliency.
@@ -1869,6 +2121,9 @@ class TrioronLayer(nn.Module):
         "dendrite_orphan",
         # Locus coordinate system (developmental placement):
         "cell_position",
+        # Axis 6 field channels (load as zeros for pre-Axis-6 donors):
+        "epi_A",
+        "epi_B",
     )
 
     def _load_from_state_dict(
