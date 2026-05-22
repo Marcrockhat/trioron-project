@@ -113,6 +113,54 @@ if HEBBIAN_MODE != "off" and L1_LCN_MODE != "off":
         "neighbors are.' Pick one for a clean comparison."
     )
 
+# Finite-space mechanics: trioron's flat substrate has positions but no
+# mechanical conservation law. Spawn places a new cell at parent + jitter
+# and no existing cell moves. Biology's finite-space constraint (skull,
+# meristem disk) makes spawn DISPLACE neighbors, which packs cells into
+# distinct positions over time. These helpers add that mechanic — after
+# every axis6_spawn, run a few iterations of pairwise repulsion so any
+# two cells within min_sep push apart, then clamp positions back into a
+# bounding region. Cells now have to share finite space; spawn has a
+# positional cost; high-density regions force later spawns elsewhere.
+# Env-gated; default off preserves existing behavior.
+FINITE_SPACE_ENABLED = os.environ.get("AXIS6_FINITE_SPACE", "0") == "1"
+REPULSE_STEPS = int(os.environ.get("AXIS6_REPULSE_STEPS", "8"))
+REPULSE_MIN_SEP = float(os.environ.get("AXIS6_REPULSE_MIN_SEP", "0.08"))
+REPULSE_STRENGTH = float(os.environ.get("AXIS6_REPULSE_STRENGTH", "0.4"))
+BOUND_REGION = os.environ.get("AXIS6_BOUND_REGION", "unit_box").lower()
+REPULSE_DIMS = int(os.environ.get("AXIS6_REPULSE_DIMS", "2"))
+if BOUND_REGION not in {"none", "unit_box", "unit_sphere"}:
+    raise ValueError(
+        f"AXIS6_BOUND_REGION must be none/unit_box/unit_sphere, "
+        f"got {BOUND_REGION!r}"
+    )
+if REPULSE_DIMS not in {2, 3}:
+    raise ValueError(f"AXIS6_REPULSE_DIMS must be 2 or 3, got {REPULSE_DIMS}")
+
+# Boquila aux loss: rewards substrate ORGANIZATION instead of only
+# output accuracy. Activation-correlated cells get pulled toward each
+# other in position space — substrate layout emerges from substrate
+# activity (Boquila vine reads its leaf shape from host morphology;
+# trioron reads its substrate shape from its own activation profile).
+#
+#   L_align = mean over (i, j) of corr_ema[i, j] * dist²(p_i, p_j)
+#
+# Where corr_ema is the same activation-correlation EMA the Hebbian
+# kernel uses (constant w.r.t. positions), and dist is differentiable
+# through cell_position_learnable. Gradient pulls cells together;
+# finite-space repulsion pushes them apart; equilibrium is a
+# topographic map where layout reflects functional clustering.
+#
+# Requires: cells need learnable positions (cell_position in node.py
+# is a buffer, so we install a parallel Parameter on L1 and copy it
+# back to the buffer after every opt.step so the rest of the substrate
+# sees the migrated positions). Env-gated, default off.
+ALIGN_ENABLED = os.environ.get("AXIS6_ALIGN", "0") == "1"
+ALIGN_WEIGHT = float(os.environ.get("AXIS6_ALIGN_WEIGHT", "0.01"))
+ALIGN_DIMS = int(os.environ.get("AXIS6_ALIGN_DIMS", "2"))
+if ALIGN_DIMS not in {2, 3}:
+    raise ValueError(f"AXIS6_ALIGN_DIMS must be 2 or 3, got {ALIGN_DIMS}")
+
 
 def diffused_l1_weight(
     L1,
@@ -482,6 +530,184 @@ def extend_act_corr_on_spawn(L1, parent_idx: int, new_idx: int) -> None:
 
 
 # ----------------------------------------------------------------------
+# Finite-space mechanics: spawn DISPLACES neighbors, positions bounded
+# ----------------------------------------------------------------------
+
+
+def relax_positions_step(
+    positions: torch.Tensor,
+    min_sep: float,
+    strength: float,
+    dims: int,
+) -> torch.Tensor:
+    """One iteration of pairwise repulsive relaxation. positions
+    shape: (n, position_dim). Only the first `dims` columns participate
+    in the repulsion — the rest (typically z) is held rigid. Returns
+    updated positions, same shape."""
+    n = positions.shape[0]
+    if n < 2:
+        return positions
+    pos2d = positions[:, :dims]                        # (n, d)
+    diff = pos2d.unsqueeze(1) - pos2d.unsqueeze(0)     # (n, n, d): i - j
+    dist = diff.norm(dim=-1)                            # (n, n)
+    # Avoid div-by-zero anywhere: clamp instead of adding eye, so two
+    # cells at identical positions don't NaN the direction computation.
+    # (The diagonal IS zero distance — but we zero out diagonal overlap
+    # below so direction at i==j multiplies by zero anyway.) If two
+    # off-diagonal cells coincide, push direction defaults to zero
+    # (diff is 0), which is the right behavior — they'll separate as
+    # soon as any other repulsion or alignment moves either of them.
+    dist_safe = dist.clamp(min=1e-6)
+    overlap = (min_sep - dist).clamp(min=0.0)           # (n, n) positive where too close
+    overlap.fill_diagonal_(0.0)                          # no self-push
+    direction = diff / dist_safe.unsqueeze(-1)          # (n, n, d) unit vector j → i
+    push = (overlap.unsqueeze(-1) * direction).sum(dim=1)  # (n, d)
+    pos2d_new = pos2d + strength * push
+    new_positions = positions.clone()
+    new_positions[:, :dims] = pos2d_new
+    return new_positions
+
+
+def clamp_to_region(
+    positions: torch.Tensor,
+    mode: str,
+    dims: int,
+) -> torch.Tensor:
+    """Clamp first `dims` columns to a bounding region. 'unit_box':
+    [0, 1]^d. 'unit_sphere': ball of radius 0.5 centered at 0.5. 'none':
+    no clamp (substrate unbounded; equivalent to no skull)."""
+    if mode == "none":
+        return positions
+    new_positions = positions.clone()
+    if mode == "unit_box":
+        new_positions[:, :dims] = new_positions[:, :dims].clamp(0.0, 1.0)
+    elif mode == "unit_sphere":
+        center = 0.5
+        radius = 0.5
+        offset = new_positions[:, :dims] - center
+        norm = offset.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+        scale = torch.where(norm > radius, radius / norm, torch.ones_like(norm))
+        new_positions[:, :dims] = center + offset * scale
+    return new_positions
+
+
+def relax_after_spawn(
+    L1,
+    n_steps: int = REPULSE_STEPS,
+    min_sep: float = REPULSE_MIN_SEP,
+    strength: float = REPULSE_STRENGTH,
+    mode: str = BOUND_REGION,
+    dims: int = REPULSE_DIMS,
+) -> float:
+    """Run `n_steps` iterations of pairwise-repulsion + clamp on the
+    LIVE positions (all cells, not just the newly-spawned one — biology's
+    pressure propagates from the new cell outward through the substrate).
+    Invalidates the field kernel cache so the next forward picks up the
+    new positions. Returns max displacement (any cell, any axis) for
+    diagnostics."""
+    if n_steps <= 0:
+        return 0.0
+    with torch.no_grad():
+        n = L1.n_nodes
+        positions = L1.cell_position[:n].clone()
+        original = positions.clone()
+        for _ in range(n_steps):
+            positions = relax_positions_step(positions, min_sep, strength, dims)
+            positions = clamp_to_region(positions, mode, dims)
+        L1.cell_position[:n] = positions
+        max_displacement = float((positions - original).abs().max().item())
+    L1._field_kernel = None
+    return max_displacement
+
+
+# ----------------------------------------------------------------------
+# Boquila alignment: learnable positions + activation-position aux loss
+# ----------------------------------------------------------------------
+
+
+def install_learnable_positions(L1) -> None:
+    """Register cell_position_learnable as a Parameter on L1, initialized
+    from the current cell_position buffer. After every opt.step we copy
+    the .data back to cell_position so the rest of the substrate (Axis 6,
+    Hebbian kernel, LCN mask, repulsion) sees migrated positions. Idempotent.
+    """
+    if hasattr(L1, "cell_position_learnable"):
+        return
+    init = L1.cell_position[: L1.n_nodes].clone().detach()
+    import torch.nn as nn
+    L1.cell_position_learnable = nn.Parameter(init)
+
+
+def extend_learnable_positions(L1) -> None:
+    """After axis6_spawn extends L1, pad cell_position_learnable with
+    rows for the new cells (taken from the substrate's cell_position
+    buffer, which axis6_spawn already populated with parent+jitter)."""
+    learn = getattr(L1, "cell_position_learnable", None)
+    if learn is None:
+        return
+    n_new = L1.n_nodes
+    n_old = learn.shape[0]
+    if n_new <= n_old:
+        return
+    import torch.nn as nn
+    new_rows = L1.cell_position[n_old:n_new].clone().detach()
+    new_param = torch.cat([learn.data, new_rows], dim=0)
+    # Re-register as a fresh Parameter; the caller is expected to rebuild
+    # the optimizer (same pattern as W after grow_node).
+    L1.cell_position_learnable = nn.Parameter(new_param)
+
+
+def sync_positions_to_buffer(L1) -> None:
+    """Copy the learnable parameter's data back into the cell_position
+    buffer so Axis 6 / Hebbian / LCN / repulsion all see the updated
+    positions. Also invalidates the field kernel cache since positions
+    changed. Call after every opt.step that touched cell_position_learnable.
+    """
+    learn = getattr(L1, "cell_position_learnable", None)
+    if learn is None:
+        return
+    with torch.no_grad():
+        n = min(learn.shape[0], L1.cell_position.shape[0])
+        L1.cell_position[:n] = learn.data[:n]
+    L1._field_kernel = None
+
+
+def alignment_aux_loss(L1, dims: int = ALIGN_DIMS) -> torch.Tensor:
+    """Boquila aux loss: pull activation-correlated cells toward each
+    other in position space.
+
+      L_align = mean over (i, j) of corr_ema[i, j] · dist²(p_i, p_j)
+
+    The correlation EMA is detached (constant w.r.t. positions); the
+    gradient flows only through cell_position_learnable. Zeroes the
+    diagonal so a cell isn't pulled toward itself.
+
+    Returns 0.0 (no grad) when the Hebbian EMA hasn't been seeded yet
+    (first batch), or when positions aren't learnable. Caller is
+    expected to add this scaled by ALIGN_WEIGHT to the total loss."""
+    learn = getattr(L1, "cell_position_learnable", None)
+    if learn is None:
+        return torch.tensor(0.0)
+    corr = getattr(L1, "_act_corr_ema", None)
+    if corr is None or not getattr(L1, "_act_corr_initialized", False):
+        return torch.tensor(0.0)
+    n = L1.n_nodes
+    if learn.shape[0] != n or corr.shape[0] != n:
+        return torch.tensor(0.0)
+    pos = learn[:, :dims]                               # (n, d)
+    diff = pos.unsqueeze(1) - pos.unsqueeze(0)          # (n, n, d)
+    dist2 = (diff ** 2).sum(dim=-1)                     # (n, n)
+    weight = corr.detach().to(device=dist2.device, dtype=dist2.dtype)
+    weight = weight - torch.diag(torch.diag(weight))    # zero self
+    # Use only positive correlations — negative would PUSH cells apart
+    # via the position loss, but the finite-space repulsion already does
+    # that. Keep the alignment loss strictly attractive.
+    weight = weight.clamp(min=0.0)
+    n_pairs = max(1, n * (n - 1))
+    return (weight * dist2).sum() / n_pairs
+
+
+# ----------------------------------------------------------------------
 # Build a 3-layer trioron with frozen L0 (LCN or random) + growable L1 + head
 # ----------------------------------------------------------------------
 def build_net(
@@ -554,6 +780,12 @@ def build_net(
     install_l1_lcn_mask(
         net, mode=l1_lcn_mode, sigma=l1_lcn_sigma, k=l1_lcn_k,
     )
+
+    # Boquila alignment: install learnable position parameter so cells
+    # can migrate under aux-loss gradient + finite-space repulsion.
+    # No-op when AXIS6_ALIGN=0.
+    if ALIGN_ENABLED:
+        install_learnable_positions(L1)
 
     return net
 
@@ -730,10 +962,11 @@ def train_one_task(
                 net.layers[1], h0, lambda_diff,
                 credit_mask=l1_credit_mask, W_snapshot=W_snapshot,
             )
-            # Hebbian kernel: update activation-correlation EMA from this
-            # batch's L1 activations. No-op when HEBBIAN_MODE=off (still
-            # cheap — we always call so spawn-extend stays in sync).
-            if HEBBIAN_MODE != "off" and lambda_diff > 0.0:
+            # Update activation-correlation EMA. Needed by both Hebbian
+            # kernel (when HEBBIAN_MODE != off) AND Boquila alignment
+            # (when ALIGN_ENABLED). Skip when neither consumer is on to
+            # save compute.
+            if (HEBBIAN_MODE != "off" and lambda_diff > 0.0) or ALIGN_ENABLED:
                 update_activation_correlation(L1, h1)
             outs = cosine_logits(h1, net.layers[2].W)
             # Task-local labels: map global → local-in-task ({0, 1})
@@ -776,6 +1009,12 @@ def train_one_task(
                         active_classes=list(seen_classes_global),
                     )
             loss = real_loss + lambda_manifold * synth_loss
+            if ALIGN_ENABLED:
+                # Boquila aux: pull activation-correlated cells together
+                # in position space. Returns 0 (no grad) until Hebbian
+                # EMA is seeded.
+                align_loss = alignment_aux_loss(L1)
+                loss = loss + ALIGN_WEIGHT * align_loss
             loss.backward()
             L1.update_internal_stress()
 
@@ -826,6 +1065,36 @@ def train_one_task(
                         L1.b.grad[cm] = 0.0
 
             opt.step()
+            # Boquila alignment: positions just moved under SGD. Clamp
+            # back into the bounding region, then if finite-space is on,
+            # run a relaxation step so the alignment pull (every step)
+            # is BALANCED by repulsion (every step). Without per-step
+            # repulsion, alignment dominates over many steps and cells
+            # collapse to a centroid. Finally sync into the substrate
+            # buffer so kernel/Hebbian/LCN see the migrated positions.
+            if ALIGN_ENABLED:
+                with torch.no_grad():
+                    L1.cell_position_learnable.data = clamp_to_region(
+                        L1.cell_position_learnable.data,
+                        mode=BOUND_REGION,
+                        dims=REPULSE_DIMS,
+                    )
+                    if FINITE_SPACE_ENABLED:
+                        # Single relaxation step on the LEARNABLE param
+                        # (not the buffer) so the next SGD step sees the
+                        # post-repulsion positions.
+                        L1.cell_position_learnable.data = relax_positions_step(
+                            L1.cell_position_learnable.data,
+                            min_sep=REPULSE_MIN_SEP,
+                            strength=REPULSE_STRENGTH,
+                            dims=REPULSE_DIMS,
+                        )
+                        L1.cell_position_learnable.data = clamp_to_region(
+                            L1.cell_position_learnable.data,
+                            mode=BOUND_REGION,
+                            dims=REPULSE_DIMS,
+                        )
+                sync_positions_to_buffer(L1)
             # LCN-on-L1: we deliberately DO NOT call reapply_l1_lcn_mask
             # per step. Soft Gaussian masks with values in (0, 1) would
             # iteratively shrink in-window entries under repeated multiply
@@ -859,13 +1128,34 @@ def train_one_task(
                         # Must come BEFORE opt rebuild so any later reapply
                         # finds the matching shape.
                         extend_l1_lcn_mask(net)
-                        # Hebbian kernel: extend activation-correlation
-                        # buffer. New cell inherits parent's row/col as
-                        # warm start (it IS a noisy copy of parent post-
-                        # spawn, so neighbors of parent ≈ neighbors of
-                        # new). No-op when HEBBIAN_MODE=off.
-                        if HEBBIAN_MODE != "off":
+                        # Activation-correlation buffer extension (needed
+                        # by Hebbian kernel and/or Boquila alignment).
+                        # New cell inherits parent's row/col as warm
+                        # start (it IS a noisy copy of parent post-spawn).
+                        if HEBBIAN_MODE != "off" or ALIGN_ENABLED:
                             extend_act_corr_on_spawn(L1, cand, new_idx)
+                        # Finite-space mechanics: the new cell pushes its
+                        # neighbors, which push THEIR neighbors. Pressure
+                        # propagates outward; positions repack so cells
+                        # maintain at least min_sep separation, clamped to
+                        # the bounding region. No-op when AXIS6_FINITE_
+                        # SPACE=0. After this, _field_kernel is None so
+                        # the next forward rebuilds from new positions.
+                        if FINITE_SPACE_ENABLED:
+                            max_disp = relax_after_spawn(L1)
+                            if max_disp > 0.01:
+                                events.append(
+                                    (step,
+                                     f"FINITE_SPACE relax: max_disp="
+                                     f"{max_disp:.3f}")
+                                )
+                        # Boquila alignment: extend learnable positions
+                        # with the new cell. The substrate's cell_position
+                        # buffer already has parent+jitter (set by spawn);
+                        # plus any finite-space displacement just applied.
+                        # The new learnable param mirrors that.
+                        if ALIGN_ENABLED:
+                            extend_learnable_positions(L1)
                         # Rebuild opt to include new parameter slots.
                         opt = torch.optim.Adam(
                             [p for p in net.parameters() if p.requires_grad],
@@ -1157,12 +1447,18 @@ def run_arm(
     ]
     max_drift_ta = max((abs(d) for d in drift_task_aware), default=0.0)
 
+    # n_spawns counts AXIS6_spawn events only (not relax-displacement
+    # diagnostics which also go into all_events). Match on the message
+    # prefix used by the spawn-event log in train_one_task.
+    n_spawn_events = sum(
+        1 for _, _, msg in all_events if msg.startswith("AXIS6 spawn:")
+    )
     return {
         "seed": seed,
         "arm": arm_label,
         "elapsed_s": elapsed,
         "n_hidden_L1": net.layers[1].n_nodes,
-        "n_spawns": len(all_events),
+        "n_spawns": n_spawn_events,
         "n_frozen": int(cell_credit.sum().item()) if cell_credit is not None else 0,
         "retention_task_aware": retention_task_aware,
         "retention_full": retention_full,
