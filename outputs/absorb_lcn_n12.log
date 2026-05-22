@@ -1,0 +1,229 @@
+==============================================================================
+Multi-seed absorption sentinel (n=12 seeds: [42, 43, 44, 1, 7, 11, 13, 17, 19, 23, 29, 31])
+==============================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+--- seed=42 ---
+  [A_seed42] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed42] trained on tasks [2, 3]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.996
+      task 1: task_aware=0.945  full=0.024
+      MEAN  : task_aware=0.972  full=0.510
+      task 2: task_aware=0.966  full=0.808
+      task 3: task_aware=0.993  full=0.033
+      MEAN  : task_aware=0.980  full=0.421
+      task 0: task_aware=0.998  full=0.749
+      task 1: task_aware=0.942  full=0.578
+      MEAN  : task_aware=0.970  full=0.664
+      task 2: task_aware=0.947  full=0.474
+      task 3: task_aware=0.978  full=0.573
+      MEAN  : task_aware=0.963  full=0.523
+  seed=42 in 7s  Δta_a=-0.002  Δta_b=-0.017  Δfull_a=+0.153  Δfull_b=+0.102  loc=0.787
+
+--- seed=43 ---
+  [A_seed43] trained on tasks [0, 1]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+  [B_seed43] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.990
+      task 1: task_aware=0.946  full=0.000
+      MEAN  : task_aware=0.972  full=0.495
+      task 2: task_aware=0.971  full=0.971
+      task 3: task_aware=0.996  full=0.012
+      MEAN  : task_aware=0.984  full=0.491
+      task 0: task_aware=0.999  full=0.470
+      task 1: task_aware=0.908  full=0.302
+      MEAN  : task_aware=0.953  full=0.386
+      task 2: task_aware=0.955  full=0.085
+      task 3: task_aware=0.987  full=0.143
+      MEAN  : task_aware=0.971  full=0.114
+  seed=43 in 6s  Δta_a=-0.019  Δta_b=-0.013  Δfull_a=-0.109  Δfull_b=-0.377  loc=0.787
+
+--- seed=44 ---
+  [A_seed44] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed44] trained on tasks [2, 3]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.997
+      task 1: task_aware=0.916  full=0.000
+      MEAN  : task_aware=0.957  full=0.498
+      task 2: task_aware=0.927  full=0.678
+      task 3: task_aware=0.992  full=0.000
+      MEAN  : task_aware=0.959  full=0.339
+      task 0: task_aware=0.998  full=0.863
+      task 1: task_aware=0.908  full=0.244
+      MEAN  : task_aware=0.953  full=0.554
+      task 2: task_aware=0.928  full=0.273
+      task 3: task_aware=0.970  full=0.399
+      MEAN  : task_aware=0.949  full=0.336
+  seed=44 in 4s  Δta_a=-0.004  Δta_b=-0.010  Δfull_a=+0.055  Δfull_b=-0.003  loc=0.790
+
+--- seed=1 ---
+  [A_seed1] trained on tasks [0, 1]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+  [B_seed1] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.999
+      task 1: task_aware=0.885  full=0.000
+      MEAN  : task_aware=0.942  full=0.500
+      task 2: task_aware=0.969  full=0.150
+      task 3: task_aware=0.989  full=0.000
+      MEAN  : task_aware=0.979  full=0.075
+      task 0: task_aware=0.999  full=0.400
+      task 1: task_aware=0.897  full=0.110
+      MEAN  : task_aware=0.948  full=0.255
+      task 2: task_aware=0.951  full=0.160
+      task 3: task_aware=0.976  full=0.129
+      MEAN  : task_aware=0.964  full=0.144
+  seed=1 in 7s  Δta_a=+0.006  Δta_b=-0.015  Δfull_a=-0.245  Δfull_b=+0.069  loc=0.785
+
+--- seed=7 ---
+  [A_seed7] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed7] trained on tasks [2, 3]  L1.n_nodes=26  frozen=6  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.984
+      task 1: task_aware=0.939  full=0.000
+      MEAN  : task_aware=0.968  full=0.492
+      task 2: task_aware=0.946  full=0.946
+      task 3: task_aware=0.993  full=0.017
+      MEAN  : task_aware=0.970  full=0.481
+      task 0: task_aware=0.992  full=0.528
+      task 1: task_aware=0.922  full=0.554
+      MEAN  : task_aware=0.957  full=0.541
+      task 2: task_aware=0.928  full=0.475
+      task 3: task_aware=0.971  full=0.496
+      MEAN  : task_aware=0.950  full=0.485
+  seed=7 in 7s  Δta_a=-0.011  Δta_b=-0.020  Δfull_a=+0.049  Δfull_b=+0.004  loc=0.781
+
+--- seed=11 ---
+  [A_seed11] trained on tasks [0, 1]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+  [B_seed11] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.997
+      task 1: task_aware=0.956  full=0.000
+      MEAN  : task_aware=0.977  full=0.499
+      task 2: task_aware=0.973  full=0.550
+      task 3: task_aware=0.992  full=0.012
+      MEAN  : task_aware=0.983  full=0.281
+      task 0: task_aware=0.999  full=0.549
+      task 1: task_aware=0.943  full=0.400
+      MEAN  : task_aware=0.971  full=0.475
+      task 2: task_aware=0.968  full=0.455
+      task 3: task_aware=0.982  full=0.461
+      MEAN  : task_aware=0.975  full=0.458
+  seed=11 in 7s  Δta_a=-0.007  Δta_b=-0.008  Δfull_a=-0.024  Δfull_b=+0.177  loc=0.794
+
+--- seed=13 ---
+  [A_seed13] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed13] trained on tasks [2, 3]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.995
+      task 1: task_aware=0.958  full=0.000
+      MEAN  : task_aware=0.978  full=0.497
+      task 2: task_aware=0.949  full=0.492
+      task 3: task_aware=0.990  full=0.021
+      MEAN  : task_aware=0.970  full=0.257
+      task 0: task_aware=0.996  full=0.853
+      task 1: task_aware=0.960  full=0.463
+      MEAN  : task_aware=0.978  full=0.658
+      task 2: task_aware=0.933  full=0.311
+      task 3: task_aware=0.973  full=0.435
+      MEAN  : task_aware=0.953  full=0.373
+  seed=13 in 8s  Δta_a=+0.001  Δta_b=-0.017  Δfull_a=+0.161  Δfull_b=+0.116  loc=0.779
+
+--- seed=17 ---
+  [A_seed17] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed17] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.998
+      task 1: task_aware=0.964  full=0.004
+      MEAN  : task_aware=0.981  full=0.501
+      task 2: task_aware=0.964  full=0.943
+      task 3: task_aware=0.992  full=0.000
+      MEAN  : task_aware=0.978  full=0.472
+      task 0: task_aware=0.999  full=0.671
+      task 1: task_aware=0.947  full=0.593
+      MEAN  : task_aware=0.973  full=0.632
+      task 2: task_aware=0.952  full=0.319
+      task 3: task_aware=0.982  full=0.498
+      MEAN  : task_aware=0.967  full=0.409
+  seed=17 in 6s  Δta_a=-0.009  Δta_b=-0.011  Δfull_a=+0.131  Δfull_b=-0.063  loc=0.792
+
+--- seed=19 ---
+  [A_seed19] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed19] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.997
+      task 1: task_aware=0.969  full=0.000
+      MEAN  : task_aware=0.983  full=0.499
+      task 2: task_aware=0.977  full=0.870
+      task 3: task_aware=0.990  full=0.000
+      MEAN  : task_aware=0.984  full=0.435
+      task 0: task_aware=0.998  full=0.742
+      task 1: task_aware=0.959  full=0.524
+      MEAN  : task_aware=0.979  full=0.633
+      task 2: task_aware=0.954  full=0.349
+      task 3: task_aware=0.974  full=0.423
+      MEAN  : task_aware=0.964  full=0.386
+  seed=19 in 9s  Δta_a=-0.005  Δta_b=-0.020  Δfull_a=+0.134  Δfull_b=-0.049  loc=0.783
+
+--- seed=23 ---
+  [A_seed23] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed23] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.998
+      task 1: task_aware=0.949  full=0.000
+      MEAN  : task_aware=0.973  full=0.499
+      task 2: task_aware=0.951  full=0.662
+      task 3: task_aware=0.990  full=0.000
+      MEAN  : task_aware=0.971  full=0.331
+      task 0: task_aware=0.995  full=0.791
+      task 1: task_aware=0.950  full=0.451
+      MEAN  : task_aware=0.973  full=0.621
+      task 2: task_aware=0.940  full=0.566
+      task 3: task_aware=0.978  full=0.747
+      MEAN  : task_aware=0.959  full=0.657
+  seed=23 in 9s  Δta_a=-0.000  Δta_b=-0.011  Δfull_a=+0.122  Δfull_b=+0.326  loc=0.781
+
+--- seed=29 ---
+  [A_seed29] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed29] trained on tasks [2, 3]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.998
+      task 1: task_aware=0.931  full=0.000
+      MEAN  : task_aware=0.965  full=0.499
+      task 2: task_aware=0.962  full=0.855
+      task 3: task_aware=0.993  full=0.000
+      MEAN  : task_aware=0.978  full=0.428
+      task 0: task_aware=0.995  full=0.757
+      task 1: task_aware=0.901  full=0.557
+      MEAN  : task_aware=0.948  full=0.657
+      task 2: task_aware=0.912  full=0.471
+      task 3: task_aware=0.991  full=0.640
+      MEAN  : task_aware=0.952  full=0.556
+  seed=29 in 7s  Δta_a=-0.017  Δta_b=-0.026  Δfull_a=+0.158  Δfull_b=+0.128  loc=0.788
+
+--- seed=31 ---
+  [A_seed31] trained on tasks [0, 1]  L1.n_nodes=26  frozen=17  W_lcn_mask installed: True
+  [B_seed31] trained on tasks [2, 3]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.999
+      task 1: task_aware=0.950  full=0.000
+      MEAN  : task_aware=0.974  full=0.499
+      task 2: task_aware=0.977  full=0.850
+      task 3: task_aware=0.986  full=0.007
+      MEAN  : task_aware=0.982  full=0.428
+      task 0: task_aware=0.999  full=0.776
+      task 1: task_aware=0.940  full=0.314
+      MEAN  : task_aware=0.969  full=0.545
+      task 2: task_aware=0.945  full=0.220
+      task 3: task_aware=0.978  full=0.147
+      MEAN  : task_aware=0.961  full=0.183
+  seed=31 in 9s  Δta_a=-0.005  Δta_b=-0.021  Δfull_a=+0.046  Δfull_b=-0.245  loc=0.771
+
+Total: 84s
+
+==============================================================================
+AGGREGATE (n=12)
+==============================================================================
+             task-aware Δ on A-tasks  mean=-0.0060  σ=0.0071  n=12
+             task-aware Δ on B-tasks  mean=-0.0157  σ=0.0053  n=12
+        full-softmax lift on A-tasks  mean=+0.0526  σ=0.1247  n=12
+        full-softmax lift on B-tasks  mean=+0.0155  σ=0.1878  n=12
+                post-absorb locality  mean=+0.7848  σ=0.0065  n=12
+
+v2 paper §4.2 claims vs measured:
+  task-aware preserved within Δ ≤ 0.026  → worst Δ across both arms = -0.0258
+  full-softmax lift +0.20 to +0.31      → A mean +0.0526  B mean +0.0155
+  post-absorb locality ≥ 0.78           → mean 0.7848  min 0.7709
