@@ -24,15 +24,15 @@ logs/
 .DS_Store
 ~$*
 
-# LaTeX build artifacts (paper/)
-paper/*.aux
-paper/*.log
-paper/*.out
-paper/*.toc
-paper/*.fls
-paper/*.fdb_latexmk
-paper/*.synctex.gz
-paper/*.blg
+# LaTeX build artifacts (paper/ and paper/v2/)
+paper/**/*.aux
+paper/**/*.log
+paper/**/*.out
+paper/**/*.toc
+paper/**/*.fls
+paper/**/*.fdb_latexmk
+paper/**/*.synctex.gz
+paper/**/*.blg
 
 # HF Space build artifact (assembled at push time, not source)
 hf_space_build/
