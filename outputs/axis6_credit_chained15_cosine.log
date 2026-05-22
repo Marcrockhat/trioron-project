@@ -1,0 +1,194 @@
+========================================================================================
+axis6_credit_chained15 — LCN perception + L1 substrate
+epochs/task=2  batch=256  lr=0.01  n_seeds=1  spawn_cap=5  credit_thr=0.3
+H_init(L1)=16  L0_width(frozen,LCN)=128  LCN_grid=16×8  LCN_σ=0.1
+field_sigma=0.15  diff_floor=0.0005  cooldown=20
+========================================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+Curriculum: ['mnist_0_1', 'mnist_2_3', 'mnist_4_5', 'mnist_6_7', 'mnist_8_9', 'fashion_mnist_0_1', 'fashion_mnist_2_3', 'fashion_mnist_4_5', 'fashion_mnist_6_7', 'fashion_mnist_8_9', 'emnist_letters_0_1', 'emnist_letters_2_3', 'emnist_letters_4_5', 'emnist_letters_6_7', 'emnist_letters_8_9']
+Train sizes: [12665, 12089, 11263, 12183, 11800, 12000, 12000, 12000, 12000, 12000, 9600, 9600, 9600, 9600, 9600]
+Eval  sizes: [2115, 2042, 1874, 1986, 1983, 2000, 2000, 2000, 2000, 2000, 1600, 1600, 1600, 1600, 1600]
+
+
+========== SEED 0  ARM: AXIS6_credit ==========
+  [phase 1/15: mnist_0_1] L1.H=16  frozen=0
+    [epoch 0] loss=0.0310 acc=0.992 H=19 spawns=3 stress_max=0.0013 epi_A_max=0.0035 epi_B_max=0.1627
+    [epoch 1] loss=0.0009 acc=1.000 H=21 spawns=5 stress_max=0.0009 epi_A_max=0.0043 epi_B_max=0.2142
+    task_aware(this)=0.998  task_aware(mean_seen)=0.998  full(this)=0.054  spawn_events=5
+    [credit] +12 new; total frozen = 12/21
+  [phase 2/15: mnist_2_3] L1.H=21  frozen=12
+    [epoch 0] loss=0.2732 acc=0.877 H=24 spawns=3 stress_max=0.0051 epi_A_max=0.0080 epi_B_max=0.4670
+    [epoch 1] loss=0.1006 acc=0.965 H=26 spawns=5 stress_max=0.0042 epi_A_max=0.0171 epi_B_max=0.3091
+    task_aware(this)=0.946  task_aware(mean_seen)=0.971  full(this)=0.034  spawn_events=5
+    [credit] +6 new; total frozen = 18/26
+  [phase 3/15: mnist_4_5] L1.H=26  frozen=18
+    [epoch 0] loss=0.1288 acc=0.945 H=29 spawns=3 stress_max=0.0038 epi_A_max=0.0086 epi_B_max=0.2815
+    [epoch 1] loss=0.1359 acc=0.957 H=31 spawns=5 stress_max=0.0029 epi_A_max=0.0148 epi_B_max=0.2740
+    task_aware(this)=0.978  task_aware(mean_seen)=0.974  full(this)=0.179  spawn_events=5
+    [credit] +4 new; total frozen = 22/31
+  [phase 4/15: mnist_6_7] L1.H=31  frozen=22
+    [epoch 0] loss=0.0374 acc=0.993 H=34 spawns=3 stress_max=0.0032 epi_A_max=0.0075 epi_B_max=0.2947
+    [epoch 1] loss=0.0227 acc=0.993 H=36 spawns=5 stress_max=0.0021 epi_A_max=0.0127 epi_B_max=0.3426
+    task_aware(this)=0.989  task_aware(mean_seen)=0.978  full(this)=0.184  spawn_events=5
+    [credit] +1 new; total frozen = 23/36
+  [phase 5/15: mnist_8_9] L1.H=36  frozen=23
+    [epoch 0] loss=0.0886 acc=0.958 H=39 spawns=3 stress_max=0.0040 epi_A_max=0.0053 epi_B_max=0.2687
+    [epoch 1] loss=0.0825 acc=0.958 H=41 spawns=5 stress_max=0.0046 epi_A_max=0.0111 epi_B_max=0.2702
+    task_aware(this)=0.966  task_aware(mean_seen)=0.975  full(this)=0.001  spawn_events=5
+    [credit] +3 new; total frozen = 26/41
+  [phase 6/15: fashion_mnist_0_1] L1.H=41  frozen=26
+    [epoch 0] loss=0.0840 acc=0.973 H=44 spawns=3 stress_max=0.0044 epi_A_max=0.0073 epi_B_max=0.4884
+    [epoch 1] loss=0.0971 acc=0.964 H=46 spawns=5 stress_max=0.0028 epi_A_max=0.0111 epi_B_max=0.4966
+    task_aware(this)=0.974  task_aware(mean_seen)=0.975  full(this)=0.010  spawn_events=5
+    [credit] +4 new; total frozen = 30/46
+  [phase 7/15: fashion_mnist_2_3] L1.H=46  frozen=30
+    [epoch 0] loss=0.2086 acc=0.929 H=49 spawns=3 stress_max=0.0032 epi_A_max=0.0052 epi_B_max=0.4511
+    [epoch 1] loss=0.2111 acc=0.938 H=51 spawns=5 stress_max=0.0028 epi_A_max=0.0084 epi_B_max=0.4512
+    task_aware(this)=0.951  task_aware(mean_seen)=0.971  full(this)=0.287  spawn_events=5
+    [credit] +2 new; total frozen = 32/51
+  [phase 8/15: fashion_mnist_4_5] L1.H=51  frozen=32
+    [epoch 0] loss=0.0109 acc=0.996 H=54 spawns=3 stress_max=0.0022 epi_A_max=0.0036 epi_B_max=0.3751
+    [epoch 1] loss=0.0315 acc=0.991 H=56 spawns=5 stress_max=0.0014 epi_A_max=0.0056 epi_B_max=0.3867
+    task_aware(this)=0.999  task_aware(mean_seen)=0.975  full(this)=0.986  spawn_events=5
+    [credit] +3 new; total frozen = 35/56
+  [phase 9/15: fashion_mnist_6_7] L1.H=56  frozen=35
+    [epoch 0] loss=0.0004 acc=1.000 H=58 spawns=2 stress_max=0.0013 epi_A_max=0.0019 epi_B_max=0.3867
+    [epoch 1] loss=0.0001 acc=1.000 H=61 spawns=5 stress_max=0.0008 epi_A_max=0.0030 epi_B_max=0.3909
+    task_aware(this)=0.999  task_aware(mean_seen)=0.977  full(this)=0.146  spawn_events=5
+    [credit] +4 new; total frozen = 39/61
+  [phase 10/15: fashion_mnist_8_9] L1.H=61  frozen=39
+    [epoch 0] loss=0.0722 acc=0.973 H=63 spawns=2 stress_max=0.0018 epi_A_max=0.0017 epi_B_max=0.5258
+    [epoch 1] loss=0.0511 acc=0.987 H=65 spawns=4 stress_max=0.0016 epi_A_max=0.0035 epi_B_max=0.5269
+    task_aware(this)=0.985  task_aware(mean_seen)=0.978  full(this)=0.175  spawn_events=4
+    [credit] +1 new; total frozen = 40/65
+  [phase 11/15: emnist_letters_0_1] L1.H=65  frozen=40
+    [epoch 0] loss=0.2133 acc=0.906 H=67 spawns=2 stress_max=0.0029 epi_A_max=0.0020 epi_B_max=0.3644
+    [epoch 1] loss=0.1355 acc=0.961 H=69 spawns=4 stress_max=0.0028 epi_A_max=0.0041 epi_B_max=0.3753
+    task_aware(this)=0.935  task_aware(mean_seen)=0.974  full(this)=0.045  spawn_events=4
+    [credit] +3 new; total frozen = 43/69
+  [phase 12/15: emnist_letters_2_3] L1.H=69  frozen=43
+    [epoch 0] loss=0.1245 acc=0.938 H=71 spawns=2 stress_max=0.0026 epi_A_max=0.0028 epi_B_max=0.3661
+    [epoch 1] loss=0.0615 acc=0.984 H=73 spawns=4 stress_max=0.0020 epi_A_max=0.0048 epi_B_max=0.3743
+    task_aware(this)=0.966  task_aware(mean_seen)=0.974  full(this)=0.111  spawn_events=4
+    [credit] +5 new; total frozen = 48/73
+  [phase 13/15: emnist_letters_4_5] L1.H=73  frozen=48
+    [epoch 0] loss=0.1224 acc=0.969 H=75 spawns=2 stress_max=0.0026 epi_A_max=0.0024 epi_B_max=0.3555
+    [epoch 1] loss=0.0898 acc=0.961 H=77 spawns=4 stress_max=0.0023 epi_A_max=0.0047 epi_B_max=0.3584
+    task_aware(this)=0.973  task_aware(mean_seen)=0.974  full(this)=0.048  spawn_events=4
+    [credit] +3 new; total frozen = 51/77
+  [phase 14/15: emnist_letters_6_7] L1.H=77  frozen=51
+    [epoch 0] loss=0.2023 acc=0.930 H=79 spawns=2 stress_max=0.0021 epi_A_max=0.0024 epi_B_max=0.3542
+    [epoch 1] loss=0.1269 acc=0.953 H=81 spawns=4 stress_max=0.0017 epi_A_max=0.0044 epi_B_max=0.3582
+    task_aware(this)=0.949  task_aware(mean_seen)=0.968  full(this)=0.014  spawn_events=4
+    [credit] +4 new; total frozen = 55/81
+  [phase 15/15: emnist_letters_8_9] L1.H=81  frozen=55
+    [epoch 0] loss=0.2053 acc=0.922 H=83 spawns=2 stress_max=0.0034 epi_A_max=0.0025 epi_B_max=0.3531
+    [epoch 1] loss=0.2196 acc=0.906 H=85 spawns=4 stress_max=0.0040 epi_A_max=0.0050 epi_B_max=0.3626
+    task_aware(this)=0.936  task_aware(mean_seen)=0.966  full(this)=0.046  spawn_events=4
+    [credit] +1 new; total frozen = 56/85
+[seed 0  arm AXIS6_credit]  task_aware_mean=0.966  full_mean=0.120  max|drift|_ta=0.022  H=85  spawns=69  frozen=56  elapsed=8.4s
+
+========== SEED 0  ARM: AXIS6_credit_manifold ==========
+  [phase 1/15: mnist_0_1] L1.H=16  frozen=0
+    [epoch 0] loss=0.0434 acc=0.992 H=19 spawns=3 stress_max=0.0014 epi_A_max=0.0036 epi_B_max=0.1881
+    [epoch 1] loss=0.0016 acc=1.000 H=21 spawns=5 stress_max=0.0010 epi_A_max=0.0044 epi_B_max=0.2027
+    task_aware(this)=0.998  task_aware(mean_seen)=0.998  full(this)=0.098  spawn_events=5
+    [credit] +15 new; total frozen = 15/21
+    [manifold] stored 2 classes; total stored = 2 classes (n_l0=128)
+  [phase 2/15: mnist_2_3] L1.H=21  frozen=15
+    [epoch 0] loss=0.1616 acc=0.912 H=24 spawns=3 stress_max=0.0050 epi_A_max=0.0078 epi_B_max=0.6427
+    [epoch 1] loss=0.1256 acc=0.965 H=26 spawns=5 stress_max=0.0042 epi_A_max=0.0162 epi_B_max=0.5148
+    task_aware(this)=0.942  task_aware(mean_seen)=0.969  full(this)=0.000  spawn_events=5
+    [credit] +5 new; total frozen = 20/26
+    [manifold] stored 2 classes; total stored = 4 classes (n_l0=128)
+  [phase 3/15: mnist_4_5] L1.H=26  frozen=20
+    [epoch 0] loss=0.2413 acc=0.961 H=29 spawns=3 stress_max=0.0047 epi_A_max=0.0080 epi_B_max=0.4906
+    [epoch 1] loss=0.2198 acc=0.957 H=31 spawns=5 stress_max=0.0037 epi_A_max=0.0151 epi_B_max=0.4954
+    task_aware(this)=0.977  task_aware(mean_seen)=0.971  full(this)=0.000  spawn_events=5
+    [credit] +3 new; total frozen = 23/31
+    [manifold] stored 2 classes; total stored = 6 classes (n_l0=128)
+  [phase 4/15: mnist_6_7] L1.H=31  frozen=23
+    [epoch 0] loss=0.4693 acc=0.987 H=34 spawns=3 stress_max=0.0026 epi_A_max=0.0061 epi_B_max=0.4597
+    [epoch 1] loss=0.3350 acc=0.993 H=36 spawns=5 stress_max=0.0017 epi_A_max=0.0096 epi_B_max=0.4629
+    task_aware(this)=0.984  task_aware(mean_seen)=0.973  full(this)=0.000  spawn_events=5
+    [credit] +2 new; total frozen = 25/36
+    [manifold] stored 2 classes; total stored = 8 classes (n_l0=128)
+  [phase 5/15: mnist_8_9] L1.H=36  frozen=25
+    [epoch 0] loss=0.4796 acc=0.958 H=39 spawns=3 stress_max=0.0036 epi_A_max=0.0042 epi_B_max=0.4882
+    [epoch 1] loss=0.4135 acc=1.000 H=41 spawns=5 stress_max=0.0035 epi_A_max=0.0083 epi_B_max=0.4899
+    task_aware(this)=0.967  task_aware(mean_seen)=0.973  full(this)=0.000  spawn_events=5
+    [credit] +2 new; total frozen = 27/41
+    [manifold] stored 2 classes; total stored = 10 classes (n_l0=128)
+  [phase 6/15: fashion_mnist_0_1] L1.H=41  frozen=27
+    [epoch 0] loss=0.6930 acc=0.946 H=44 spawns=3 stress_max=0.0042 epi_A_max=0.0060 epi_B_max=0.6518
+    [epoch 1] loss=0.5404 acc=0.991 H=46 spawns=5 stress_max=0.0029 epi_A_max=0.0105 epi_B_max=0.6579
+    task_aware(this)=0.974  task_aware(mean_seen)=0.971  full(this)=0.000  spawn_events=5
+    [credit] +3 new; total frozen = 30/46
+    [manifold] stored 2 classes; total stored = 12 classes (n_l0=128)
+  [phase 7/15: fashion_mnist_2_3] L1.H=46  frozen=30
+    [epoch 0] loss=0.7259 acc=0.964 H=49 spawns=3 stress_max=0.0032 epi_A_max=0.0044 epi_B_max=0.6747
+    [epoch 1] loss=0.6072 acc=0.938 H=51 spawns=5 stress_max=0.0031 epi_A_max=0.0075 epi_B_max=0.6782
+    task_aware(this)=0.953  task_aware(mean_seen)=0.967  full(this)=0.000  spawn_events=5
+    [credit] +3 new; total frozen = 33/51
+    [manifold] stored 2 classes; total stored = 14 classes (n_l0=128)
+  [phase 8/15: fashion_mnist_4_5] L1.H=51  frozen=33
+    [epoch 0] loss=0.6104 acc=0.982 H=54 spawns=3 stress_max=0.0024 epi_A_max=0.0030 epi_B_max=0.5212
+    [epoch 1] loss=0.5091 acc=0.991 H=56 spawns=5 stress_max=0.0015 epi_A_max=0.0050 epi_B_max=0.5222
+    task_aware(this)=0.997  task_aware(mean_seen)=0.971  full(this)=0.001  spawn_events=5
+    [credit] +2 new; total frozen = 35/56
+    [manifold] stored 2 classes; total stored = 16 classes (n_l0=128)
+  [phase 9/15: fashion_mnist_6_7] L1.H=56  frozen=35
+    [epoch 0] loss=0.5333 acc=1.000 H=58 spawns=2 stress_max=0.0015 epi_A_max=0.0018 epi_B_max=0.5232
+    [epoch 1] loss=0.4816 acc=1.000 H=61 spawns=5 stress_max=0.0010 epi_A_max=0.0029 epi_B_max=0.5213
+    task_aware(this)=0.999  task_aware(mean_seen)=0.972  full(this)=0.000  spawn_events=5
+    [credit] +2 new; total frozen = 37/61
+    [manifold] stored 2 classes; total stored = 18 classes (n_l0=128)
+  [phase 10/15: fashion_mnist_8_9] L1.H=61  frozen=37
+    [epoch 0] loss=0.6564 acc=0.960 H=63 spawns=2 stress_max=0.0019 epi_A_max=0.0015 epi_B_max=0.7378
+    [epoch 1] loss=0.8530 acc=0.964 H=65 spawns=4 stress_max=0.0017 epi_A_max=0.0031 epi_B_max=0.7369
+    task_aware(this)=0.985  task_aware(mean_seen)=0.975  full(this)=0.000  spawn_events=4
+    [credit] +2 new; total frozen = 39/65
+    [manifold] stored 2 classes; total stored = 20 classes (n_l0=128)
+  [phase 11/15: emnist_letters_0_1] L1.H=65  frozen=39
+    [epoch 0] loss=0.9116 acc=0.914 H=67 spawns=2 stress_max=0.0020 epi_A_max=0.0017 epi_B_max=0.6145
+    [epoch 1] loss=0.9023 acc=0.906 H=69 spawns=4 stress_max=0.0018 epi_A_max=0.0034 epi_B_max=0.6261
+    task_aware(this)=0.931  task_aware(mean_seen)=0.969  full(this)=0.000  spawn_events=4
+    [credit] +2 new; total frozen = 41/69
+    [manifold] stored 2 classes; total stored = 22 classes (n_l0=128)
+  [phase 12/15: emnist_letters_2_3] L1.H=69  frozen=41
+    [epoch 0] loss=0.7683 acc=0.961 H=71 spawns=2 stress_max=0.0025 epi_A_max=0.0021 epi_B_max=0.5533
+    [epoch 1] loss=0.9153 acc=0.977 H=73 spawns=4 stress_max=0.0022 epi_A_max=0.0040 epi_B_max=0.5630
+    task_aware(this)=0.967  task_aware(mean_seen)=0.965  full(this)=0.000  spawn_events=4
+    [credit] +3 new; total frozen = 44/73
+    [manifold] stored 2 classes; total stored = 24 classes (n_l0=128)
+  [phase 13/15: emnist_letters_4_5] L1.H=73  frozen=44
+    [epoch 0] loss=1.0101 acc=0.906 H=75 spawns=2 stress_max=0.0029 epi_A_max=0.0023 epi_B_max=0.5296
+    [epoch 1] loss=0.7690 acc=0.961 H=77 spawns=4 stress_max=0.0026 epi_A_max=0.0044 epi_B_max=0.5387
+    task_aware(this)=0.976  task_aware(mean_seen)=0.963  full(this)=0.000  spawn_events=4
+    [credit] +3 new; total frozen = 47/77
+    [manifold] stored 2 classes; total stored = 26 classes (n_l0=128)
+  [phase 14/15: emnist_letters_6_7] L1.H=77  frozen=47
+    [epoch 0] loss=1.0387 acc=0.945 H=79 spawns=2 stress_max=0.0023 epi_A_max=0.0022 epi_B_max=0.5762
+    [epoch 1] loss=1.0036 acc=0.930 H=81 spawns=4 stress_max=0.0018 epi_A_max=0.0044 epi_B_max=0.5885
+    task_aware(this)=0.938  task_aware(mean_seen)=0.960  full(this)=0.009  spawn_events=4
+    [credit] +4 new; total frozen = 51/81
+    [manifold] stored 2 classes; total stored = 28 classes (n_l0=128)
+  [phase 15/15: emnist_letters_8_9] L1.H=81  frozen=51
+    [epoch 0] loss=1.3274 acc=0.891 H=83 spawns=2 stress_max=0.0032 epi_A_max=0.0023 epi_B_max=0.4662
+    [epoch 1] loss=1.0016 acc=0.953 H=85 spawns=4 stress_max=0.0037 epi_A_max=0.0045 epi_B_max=0.4763
+    task_aware(this)=0.933  task_aware(mean_seen)=0.953  full(this)=0.000  spawn_events=4
+    [credit] +2 new; total frozen = 53/85
+    [manifold] stored 2 classes; total stored = 30 classes (n_l0=128)
+[seed 0  arm AXIS6_credit_manifold]  task_aware_mean=0.953  full_mean=0.526  max|drift|_ta=0.049  H=85  spawns=69  frozen=53  elapsed=15.4s
+
+========================================================================================
+AGGREGATE (n=1 seeds, mean ± std)
+========================================================================================
+  arm                   task_aware            full   max|drift|_ta        H_L1    spawns    frozen
+  AXIS6_credit       0.966 ± 0.000   0.120 ± 0.000   0.022 ± 0.000  85.0 ± 0.0  69.0 ± 0.0  56.0 ± 0.0
+  AXIS6_credit_manifold   0.953 ± 0.000   0.526 ± 0.000   0.049 ± 0.000  85.0 ± 0.0  69.0 ± 0.0  53.0 ± 0.0

@@ -329,6 +329,26 @@ DENDRITIC_AXONAL_CEILING = float(
     os.environ.get("TRIORON_DENDRITIC_AXONAL_CEILING", "1.5")
 )
 
+# Trioron 2.0 Axis 5.5 — plastic branch_id (rewireable connectivity).
+# After Axis 5 grow_branch fires, open a short "rewiring block": enable
+# soft branch_routing on the target layer (Gumbel-Softmax-style), mini-
+# train for PLASTIC_REWIRE_STEPS steps with linear temperature anneal
+# so SGD can re-assign columns to branches via gradient, then call
+# harden_branch_routing() to copy argmax back into discrete branch_id
+# and disable plasticity. Outside this window the substrate uses the
+# fast hard scatter_add path so the K-fold dendritic slowdown only
+# applies to the rewiring steps, not the whole curriculum.
+#
+# Cost: PLASTIC_REWIRE_STEPS × K × N_TASKS plastic forwards per seed
+# (default 50 × 8 × 15 = 6000 plastic forwards at 8× dendritic cost,
+# small fraction of the ~22k regular training forwards).
+PLASTIC_ENABLED = os.environ.get("TRIORON_PLASTIC", "0") == "1"
+PLASTIC_REWIRE_STEPS = int(os.environ.get("TRIORON_PLASTIC_REWIRE_STEPS", "50"))
+PLASTIC_TEMP_START = float(os.environ.get("TRIORON_PLASTIC_TEMP_START", "1.0"))
+PLASTIC_TEMP_END = float(os.environ.get("TRIORON_PLASTIC_TEMP_END", "0.1"))
+PLASTIC_INIT = os.environ.get("TRIORON_PLASTIC_INIT", "match")
+PLASTIC_LR = float(os.environ.get("TRIORON_PLASTIC_LR", "1e-2"))
+
 N_EPOCHS_PER_TASK = 8                 # full bench: ~180 batches × 8 = ~1440 steps
 N_EPOCHS_PER_TASK_SMOKE = 4           # smoke: 4 epochs so Fix B (settle→grow→
                                        # post-grow) has room to operate
@@ -2574,6 +2594,99 @@ def consolidation_dream_pass(
 
 
 # ---------------------------------------------------------------------
+# Plastic branch_id rewiring (Trioron 2.0 Axis 5.5)
+# ---------------------------------------------------------------------
+
+
+def run_plastic_rewiring_block(
+    net: TrioronNetwork,
+    target_layer_idx: int,
+    train_view: TaskDataView,
+    active_classes: Sequence[int],
+    n_steps: int,
+    temp_start: float,
+    temp_end: float,
+    init: str,
+    lr: float,
+    label: str,
+) -> None:
+    """Open a plastic rewiring window on the target layer.
+
+    Sequence:
+      1. enable_branch_plasticity(init=init) — replaces the discrete
+         scatter_add forward with a soft softmax-over-branches that
+         routes contributions via learnable branch_routing logits.
+      2. Mini-train for n_steps with linear temperature anneal
+         temp_start → temp_end. A plastic-only Adam optimizer is built
+         over the layer's branch_routing parameter; W, branch_weight,
+         head, and all other layers stay frozen — this block rewires
+         connectivity only, not representations.
+      3. harden_branch_routing() — copy argmax(branch_routing) over
+         LIVE branches into discrete branch_id, return to fast hard
+         scatter_add path.
+
+    No-op when the target layer has no cell with K >= 2 (no branches
+    means no rewiring to do).
+    """
+    target = net.layers[target_layer_idx]
+    if int(target.B_per_node.max().item()) < 2:
+        return
+    target.enable_branch_plasticity(
+        init=init,
+        temperature=temp_start,
+    )
+    # Plastic-only optimizer. Everything else stays frozen during
+    # the rewiring window — this is rewiring, not learning new W.
+    plastic_opt = torch.optim.Adam([target.branch_routing], lr=lr)
+
+    step = 0
+    epoch_iter = train_view.iter_epoch(BATCH)
+    active = list(active_classes)
+    while step < n_steps:
+        try:
+            x, y_global = next(epoch_iter)
+        except StopIteration:
+            epoch_iter = train_view.iter_epoch(BATCH)
+            x, y_global = next(epoch_iter)
+        # Linear temperature anneal toward one-hot so soft ≈ hard at
+        # harden time (Phase 6 lesson — constant temp leaves a soft/
+        # hard gap).
+        frac = step / max(1, n_steps - 1)
+        temp = temp_start + (temp_end - temp_start) * frac
+        target.branch_plasticity_temperature = temp
+        logits = net(x)
+        loss = masked_cross_entropy(logits, y_global, active_classes=active)
+        plastic_opt.zero_grad()
+        loss.backward()
+        plastic_opt.step()
+        step += 1
+    target.harden_branch_routing()
+    target.disable_branch_plasticity()
+    # Clear cached _last_y / _last_upstream — plastic's final
+    # forward+backward may have left these sized to a partial batch
+    # (e.g. 19 from the last minibatch of an epoch), which then
+    # mismatches the next task's first training step's batch size when
+    # update_internal_stress reads both caches. The next legitimate
+    # forward+backward will repopulate them in sync.
+    target._last_y = None
+    target._last_upstream = None
+    target._last_z_branches = None
+    target._last_y_branches = None
+    # Clear any grad accumulation on the layer's W / branch_weight
+    # left by plastic's loss.backward() — plastic_opt only updated
+    # branch_routing, so other params have stale grads sitting on
+    # them. The main opt will zero_grad before the next backward,
+    # but that happens after the next forward → safer to clear now.
+    for p in target.parameters():
+        if p.grad is not None:
+            p.grad.detach_()
+            p.grad.zero_()
+    print(f"  [{label}] plastic rewiring: {n_steps} steps, "
+          f"temp {temp_start:.2f}→{temp_end:.2f}, final_loss "
+          f"{float(loss.item()):.4f}, hardened")
+
+
+# ---------------------------------------------------------------------
 # Per-task training loop
 # ---------------------------------------------------------------------
 
@@ -3732,6 +3845,24 @@ def run_chained_curriculum(
                     overall_saliency_ceiling=DENDRITIC_OVERALL_SALIENCY_CEILING,
                     prob_penalty_alpha=DENDRITIC_PROB_PENALTY_ALPHA,
                 )
+                # Axis 5.5 — plastic branch_id rewiring window. Fires
+                # only when (a) plasticity is enabled and (b) at least
+                # one cell on the target layer currently has K>=2 (so
+                # there's an actual partition to rewire). The block
+                # itself no-ops if neither condition holds.
+                if PLASTIC_ENABLED:
+                    run_plastic_rewiring_block(
+                        net,
+                        target_layer_idx=GROWTH_TARGET_LAYER_IDX,
+                        train_view=train_view,
+                        active_classes=active,
+                        n_steps=PLASTIC_REWIRE_STEPS,
+                        temp_start=PLASTIC_TEMP_START,
+                        temp_end=PLASTIC_TEMP_END,
+                        init=PLASTIC_INIT,
+                        lr=PLASTIC_LR,
+                        label=label,
+                    )
             else:
                 n_grown, grown_cells = 0, []
             if AXIS_4_ENABLED or AXIS_5_ENABLED:
@@ -4886,13 +5017,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             f"Axis{n}={'on' if e else 'off'}"
             for n, e in [(3, AXIS_3_ENABLED),
                          (4, AXIS_4_ENABLED),
-                         (5, AXIS_5_ENABLED)]
+                         (5, AXIS_5_ENABLED),
+                         ("5.5", PLASTIC_ENABLED)]
         )
         print(f"[bench_chained_15task] 2.0 axes: {axis_states} | "
               f"profile={REASONING.name} | "
               f"threshold={DENDRITIC_INTERNAL_STRESS_THRESHOLD} | "
               f"max_grows/task={DENDRITIC_MAX_GROWS_PER_TASK} | "
               f"noise_scale={DENDRITIC_INSERT_NOISE_SCALE}")
+        if PLASTIC_ENABLED:
+            print(f"[bench_chained_15task] plastic: "
+                  f"steps={PLASTIC_REWIRE_STEPS} "
+                  f"temp={PLASTIC_TEMP_START}→{PLASTIC_TEMP_END} "
+                  f"init={PLASTIC_INIT} lr={PLASTIC_LR}")
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

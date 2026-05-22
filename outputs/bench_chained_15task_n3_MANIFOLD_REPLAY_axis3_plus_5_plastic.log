@@ -1,0 +1,851 @@
+[bench_chained_15task] 2.0 axes: Axis3=on Axis4=off Axis5=on Axis5.5=on | profile=reasoning | threshold=1e-05 | max_grows/task=4 | noise_scale=0.01
+[bench_chained_15task] plastic: steps=50 temp=1.0→0.1 init=match lr=0.01
+==============================================================================
+Trioron — bench_chained_15task: MNIST → FashionMNIST → EMNIST-letters
+==============================================================================
+Epochs/task:        8
+K_settle epochs:    2  (Fix B — growth deferred until after settle)
+L0 width (frozen):  128
+H_init grown (L1):  32
+H fixed:            64
+N_grow_per_task:    4
+Cap (trainable):    32_000 B = 8_000 params
+EWC intertask:      30.0
+Curriculum passes:  1
+Warmup enabled:     False
+Arms:               ['grown_uncapped_dream']
+Seeds (n=3):     [0, 1, 2]
+
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+##############################################################################
+#   SEED 0  (1/3)
+##############################################################################
+[grown_uncapped_dream] Axis 3 insert_layer fired: arch=[128, 32, 32, 2] target_idx 1 → 2 | noise_scale=0.01
+
+[grown_uncapped_dream] start — arch (128, 32, 32, 2)  params 107282 (trainable 6802)  growth=True dream=True  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_uncapped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_uncapped_dream] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 32, 32, 2] params=107282 (trainable 6802/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.1168  last_loss 0.0039  steps 197  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0060  last_loss 0.0017  steps 394  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0041  last_loss 0.0008  steps 591  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0028  last_loss 0.0000  steps 788  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0019  last_loss 0.0000  steps 985  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0022  last_loss 0.0001  steps 1182  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0014  last_loss 0.0001  steps 1379  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0008  last_loss 0.0000  steps 1576  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0012, hardened
+  [grown_uncapped_dream] dendrite: grew 1 branches on cells [8]; K_distribution=[1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0002→0.0004 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 2] (115474→115474 params)
+[grown_uncapped_dream] After pass 1 task 1: own=0.9981 (domain 0.9981, task 0.9981)  avg=0.9981 (domain 0.9981, task 0.9981)  arch=[128, 32, 32, 2] params=115474 (trainable 14994)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 32, 32, 4] params=115556 (trainable 15076/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.4151  last_loss 0.1717  steps 188  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.1967  last_loss 0.0520  steps 376  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.1710  last_loss 0.1269  steps 564  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.1600  last_loss 0.1283  steps 752  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.1533  last_loss 0.1569  steps 940  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.1473  last_loss 0.1211  steps 1128  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.1421  last_loss 0.1981  steps 1316  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.1400  last_loss 0.2289  steps 1504  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.3419, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [28, 22, 13]; K_distribution=[1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.5118→0.1194 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 4] (115556→115556 params)
+[grown_uncapped_dream] After pass 1 task 2: own=0.1126 (domain 0.1126, task 0.9589)  avg=0.5558 (domain 0.5558, task 0.9790)  arch=[128, 32, 32, 4] params=115556 (trainable 15076)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 32, 32, 6] params=115638 (trainable 15158/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.4125  last_loss 0.3718  steps 175  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.2527  last_loss 0.1584  steps 350  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.1881  last_loss 0.1888  steps 525  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.1525  last_loss 0.2991  steps 700  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.1334  last_loss 0.1131  steps 875  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.1189  last_loss 0.1528  steps 1050  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.1087  last_loss 0.1687  steps 1225  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.1014  last_loss 0.0761  steps 1400  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.6150, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [6, 10, 12, 30]; K_distribution=[1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.5444→0.0680 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 6] (115638→115638 params)
+[grown_uncapped_dream] After pass 1 task 3: own=0.0390 (domain 0.0390, task 0.8367)  avg=0.6053 (domain 0.6053, task 0.9319)  arch=[128, 32, 32, 6] params=115638 (trainable 15158)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 32, 32, 8] params=115720 (trainable 15240/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.5219  last_loss 0.2117  steps 189  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.1339  last_loss 0.1005  steps 378  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0973  last_loss 0.1037  steps 567  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0809  last_loss 0.0654  steps 756  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0723  last_loss 0.0916  steps 945  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0653  last_loss 0.0491  steps 1134  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0613  last_loss 0.1265  steps 1323  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0573  last_loss 0.0254  steps 1512  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.9210, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [4, 3, 18, 8]; K_distribution=[1, 1, 1, 2, 2, 1, 2, 1, 3, 1, 2, 1, 2, 2, 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0422→0.0000 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 8] (115720→115720 params)
+[grown_uncapped_dream] After pass 1 task 4: own=0.3983 (domain 0.3983, task 0.8993)  avg=0.6331 (domain 0.6331, task 0.9405)  arch=[128, 32, 32, 8] params=115720 (trainable 15240)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 32, 32, 10] params=115802 (trainable 15322/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.5099  last_loss 0.1325  steps 183  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1692  last_loss 0.1082  steps 366  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.1440  last_loss 0.2036  steps 549  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.1333  last_loss 0.1985  steps 732  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.1319  last_loss 0.2096  steps 915  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.1229  last_loss 0.0621  steps 1098  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.1170  last_loss 0.0669  steps 1281  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.1166  last_loss 0.0959  steps 1464  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 4.2263, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [5, 0, 26]; K_distribution=[2, 1, 1, 2, 2, 2, 2, 1, 3, 1, 2, 1, 2, 2, 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0431→0.0751 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 10] (115802→115802 params)
+[grown_uncapped_dream] After pass 1 task 5: own=0.1306 (domain 0.1306, task 0.5305)  avg=0.5856 (domain 0.5856, task 0.8806)  arch=[128, 32, 32, 10] params=115802 (trainable 15322)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 32, 32, 12] params=115884 (trainable 15404/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.7010  last_loss 0.2768  steps 186  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.1869  last_loss 0.1088  steps 372  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.1401  last_loss 0.0702  steps 558  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.1215  last_loss 0.1529  steps 744  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.1109  last_loss 0.0641  steps 930  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.1044  last_loss 0.1532  steps 1116  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.1012  last_loss 0.1183  steps 1302  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0952  last_loss 0.4841  steps 1488  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1143, hardened
+  [grown_uncapped_dream] dendrite: grew 2 branches on cells [25, 27]; K_distribution=[2, 1, 1, 2, 2, 2, 2, 1, 3, 1, 2, 1, 2, 2, 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 2, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.1937→0.0810 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 12] (115884→115884 params)
+[grown_uncapped_dream] After pass 1 task 6: own=0.0105 (domain 0.9385, task 0.9385)  avg=0.5884 (domain 0.7434, task 0.9587)  arch=[128, 32, 32, 12] params=115884 (trainable 15404)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 32, 32, 14] params=115966 (trainable 15486/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.4949  last_loss 0.2382  steps 186  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.2116  last_loss 0.1476  steps 372  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.1824  last_loss 0.1716  steps 558  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.1697  last_loss 0.1447  steps 744  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.1631  last_loss 0.1406  steps 930  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.1539  last_loss 0.0983  steps 1116  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.1506  last_loss 0.0889  steps 1302  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.1467  last_loss 0.1703  steps 1488  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1163, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [30, 14, 5]; K_distribution=[2, 1, 1, 2, 2, 3, 2, 1, 3, 1, 2, 1, 2, 2, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 3, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.8267→0.1836 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 14] (115966→115966 params)
+[grown_uncapped_dream] After pass 1 task 7: own=0.0000 (domain 0.0360, task 0.9445)  avg=0.5840 (domain 0.6202, task 0.9255)  arch=[128, 32, 32, 14] params=115966 (trainable 15486)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 32, 32, 16] params=116048 (trainable 15568/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.4722  last_loss 0.0579  steps 186  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.0878  last_loss 0.0745  steps 372  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0672  last_loss 0.0874  steps 558  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0583  last_loss 0.0489  steps 744  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0548  last_loss 0.0399  steps 930  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0496  last_loss 0.0490  steps 1116  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0525  last_loss 0.0432  steps 1302  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0476  last_loss 0.0376  steps 1488  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.3814, hardened
+  [grown_uncapped_dream] dendrite: grew 1 branches on cells [23]; K_distribution=[2, 1, 1, 2, 2, 3, 2, 1, 3, 1, 2, 1, 2, 2, 2, 1, 1, 1, 2, 1, 1, 1, 2, 2, 1, 2, 2, 2, 2, 1, 3, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.3047→0.1383 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 16] (116048→116048 params)
+[grown_uncapped_dream] After pass 1 task 8: own=0.0005 (domain 0.0895, task 0.9330)  avg=0.5621 (domain 0.6136, task 0.9525)  arch=[128, 32, 32, 16] params=116048 (trainable 15568)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 32, 32, 18] params=116130 (trainable 15650/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.4631  last_loss 0.1139  steps 186  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0833  last_loss 0.0404  steps 372  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0553  last_loss 0.0350  steps 558  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0454  last_loss 0.0311  steps 744  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0379  last_loss 0.0075  steps 930  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0336  last_loss 0.0328  steps 1116  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0317  last_loss 0.0260  steps 1302  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0287  last_loss 0.0384  steps 1488  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0089, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [14, 8, 1, 16]; K_distribution=[2, 2, 1, 2, 2, 3, 2, 1, 4, 1, 2, 1, 2, 2, 3, 1, 2, 1, 2, 1, 1, 1, 2, 2, 1, 2, 2, 2, 2, 1, 3, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.2109→0.0312 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 18] (116130→116130 params)
+[grown_uncapped_dream] After pass 1 task 9: own=0.0000 (domain 0.0000, task 0.9895)  avg=0.3732 (domain 0.4471, task 0.8429)  arch=[128, 32, 32, 18] params=116130 (trainable 15650)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 32, 32, 20] params=116212 (trainable 15732/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.9246  last_loss 0.0053  steps 187  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0584  last_loss 0.0074  steps 374  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0432  last_loss 0.0007  steps 561  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0363  last_loss 0.0003  steps 748  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0339  last_loss 0.0005  steps 935  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0313  last_loss 0.3556  steps 1122  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0275  last_loss 0.0018  steps 1309  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0270  last_loss 0.0043  steps 1496  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 5.8249, hardened
+  [grown_uncapped_dream] dendrite: grew 2 branches on cells [11, 21]; K_distribution=[2, 2, 1, 2, 2, 3, 2, 1, 4, 1, 2, 2, 2, 2, 3, 1, 2, 1, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 2, 1, 3, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 4.0784→0.3081 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 20] (116212→116212 params)
+[grown_uncapped_dream] After pass 1 task 10: own=0.0000 (domain 0.0000, task 0.5540)  avg=0.3004 (domain 0.3797, task 0.8118)  arch=[128, 32, 32, 20] params=116212 (trainable 15732)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 32, 32, 22] params=116294 (trainable 15814/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.5664  last_loss 0.2617  steps 150  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2533  last_loss 0.2929  steps 300  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.2177  last_loss 0.4446  steps 450  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.1938  last_loss 0.1904  steps 600  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.1851  last_loss 0.0935  steps 750  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.1841  last_loss 0.1064  steps 900  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.1695  last_loss 0.2675  steps 1050  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.1652  last_loss 0.0883  steps 1200  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1833, hardened
+  [grown_uncapped_dream] dendrite: grew 1 branches on cells [4]; K_distribution=[2, 2, 1, 2, 3, 3, 2, 1, 4, 1, 2, 2, 2, 2, 3, 1, 2, 1, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 2, 1, 3, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.3056→0.0798 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 22] (116294→116294 params)
+[grown_uncapped_dream] After pass 1 task 11: own=0.0050 (domain 0.9388, task 0.9388)  avg=0.6026 (domain 0.7108, task 0.9533)  arch=[128, 32, 32, 22] params=116294 (trainable 15814)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 32, 32, 24] params=116376 (trainable 15896/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 1.1522  last_loss 0.2551  steps 150  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.3657  last_loss 0.1814  steps 300  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.2484  last_loss 0.2518  steps 450  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.1991  last_loss 0.6280  steps 600  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.1737  last_loss 0.1588  steps 750  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.1518  last_loss 0.2465  steps 900  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.1492  last_loss 0.2004  steps 1050  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.1352  last_loss 0.1720  steps 1200  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 1.4229, hardened
+  [grown_uncapped_dream] dendrite: grew 2 branches on cells [19, 20]; K_distribution=[2, 2, 1, 2, 3, 3, 2, 1, 4, 1, 2, 2, 2, 2, 3, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 3, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 1.0467→0.0404 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 24] (116376→116376 params)
+[grown_uncapped_dream] After pass 1 task 12: own=0.0094 (domain 0.1456, task 0.9325)  avg=0.5590 (domain 0.6526, task 0.9462)  arch=[128, 32, 32, 24] params=116376 (trainable 15896)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 32, 32, 26] params=116458 (trainable 15978/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.8469  last_loss 0.3327  steps 150  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.2572  last_loss 0.3186  steps 300  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.2037  last_loss 0.2753  steps 450  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.1773  last_loss 0.0684  steps 600  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1648  last_loss 0.3485  steps 750  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1558  last_loss 0.3319  steps 900  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1519  last_loss 0.0406  steps 1050  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1428  last_loss 0.1217  steps 1200  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1281, hardened
+  [grown_uncapped_dream] axonal: axonal_gain∈[1.000, 1.000] (no dendrite growth this task)
+  [grown_uncapped_dream] post-task DREAM: replay 0.4102→0.0857 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 26] (116458→116458 params)
+[grown_uncapped_dream] After pass 1 task 13: own=0.0056 (domain 0.1637, task 0.9450)  avg=0.5458 (domain 0.6493, task 0.9521)  arch=[128, 32, 32, 26] params=116458 (trainable 15978)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 32, 32, 28] params=116540 (trainable 16060/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.6066  last_loss 0.5275  steps 150  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.2790  last_loss 0.1834  steps 300  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.2179  last_loss 0.0889  steps 450  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.1880  last_loss 0.2418  steps 600  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.1756  last_loss 0.1226  steps 750  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.1653  last_loss 0.3129  steps 900  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.1563  last_loss 0.2395  steps 1050  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.1494  last_loss 0.0574  steps 1200  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1484, hardened
+  [grown_uncapped_dream] dendrite: grew 1 branches on cells [26]; K_distribution=[2, 2, 1, 2, 3, 3, 2, 1, 4, 1, 2, 2, 2, 2, 3, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 3, 2, 2, 1, 3, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.1910→0.0871 on 4p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 28] (116540→116540 params)
+[grown_uncapped_dream] After pass 1 task 14: own=0.0006 (domain 0.0050, task 0.9463)  avg=0.5629 (domain 0.6426, task 0.9446)  arch=[128, 32, 32, 28] params=116540 (trainable 16060)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 32, 32, 30] params=116622 (trainable 16142/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 0.8485  last_loss 0.4708  steps 150  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.2433  last_loss 0.2111  steps 300  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2169  last_loss 0.1352  steps 450  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2116  last_loss 0.1034  steps 600  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.2017  last_loss 0.3713  steps 750  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.1980  last_loss 0.2020  steps 900  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.1969  last_loss 0.2250  steps 1050  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.1955  last_loss 0.2272  steps 1200  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.3039, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [4, 19, 7]; K_distribution=[2, 2, 1, 2, 4, 3, 2, 2, 4, 1, 2, 2, 2, 2, 3, 1, 2, 1, 2, 3, 2, 2, 2, 2, 1, 2, 3, 2, 2, 1, 3, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.2736→0.2167 on 4p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 30] (116622→116622 params)
+[grown_uncapped_dream] After pass 1 task 15: own=0.0063 (domain 0.3450, task 0.9237)  avg=0.5152 (domain 0.6229, task 0.9359)  arch=[128, 32, 32, 30] params=116622 (trainable 16142)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] <<< PASS 1/1 done — full=0.5152  domain=0.6229  task=0.9359
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[grown_uncapped_dream]
+  arch:               (128, 32, 32, 2) → (128, 32, 32, 30)
+  params total:       107282 → 116622
+  params trainable:   6802 → 16142  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.5152  (30-class full-softmax — headline)
+  final acc domain:   0.6229  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9359  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full -0.4294  domain -0.3574  task -0.0549
+  wall-clock:         342.5s
+  per-phase (full / domain / task):
+     phase1_mnist         0.6596  /  0.7351  /  0.9514
+     phase2_fashion       0.5729  /  0.6364  /  0.9674
+     phase3_emnist        0.3131  /  0.4974  /  0.8889
+
+Headline (full / domain / task across arms):
+  grown_uncapped_dream          full 0.5152  domain 0.6229  task 0.9359  (full-forget -0.4294)
+
+
+##############################################################################
+#   SEED 1  (2/3)
+##############################################################################
+[grown_uncapped_dream] Axis 3 insert_layer fired: arch=[128, 32, 32, 2] target_idx 1 → 2 | noise_scale=0.01
+
+[grown_uncapped_dream] start — arch (128, 32, 32, 2)  params 107282 (trainable 6802)  growth=True dream=True  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_uncapped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_uncapped_dream] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 32, 32, 2] params=107282 (trainable 6802/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.1191  last_loss 0.0015  steps 197  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0067  last_loss 0.0007  steps 394  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0045  last_loss 0.0001  steps 591  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0032  last_loss 0.0000  steps 788  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0026  last_loss 0.0001  steps 985  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0018  last_loss 0.0000  steps 1182  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0017  last_loss 0.0008  steps 1379  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0015  last_loss 0.0000  steps 1576  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0006, hardened
+  [grown_uncapped_dream] dendrite: grew 1 branches on cells [13]; K_distribution=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0003→0.0011 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 2] (115474→115474 params)
+[grown_uncapped_dream] After pass 1 task 1: own=0.9981 (domain 0.9981, task 0.9981)  avg=0.9981 (domain 0.9981, task 0.9981)  arch=[128, 32, 32, 2] params=115474 (trainable 14994)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 32, 32, 4] params=115556 (trainable 15076/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.3327  last_loss 0.1820  steps 188  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.1618  last_loss 0.2824  steps 376  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.1454  last_loss 0.0928  steps 564  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.1399  last_loss 0.1137  steps 752  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.1315  last_loss 0.1195  steps 940  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.1282  last_loss 0.1100  steps 1128  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.1224  last_loss 0.1010  steps 1316  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.1229  last_loss 0.2558  steps 1504  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.4832, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [3, 31, 16, 9]; K_distribution=[1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.1745→0.1179 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 4] (115556→115556 params)
+[grown_uncapped_dream] After pass 1 task 2: own=0.3643 (domain 0.3643, task 0.9608)  avg=0.6810 (domain 0.6810, task 0.9792)  arch=[128, 32, 32, 4] params=115556 (trainable 15076)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 32, 32, 6] params=115638 (trainable 15158/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.3290  last_loss 0.1049  steps 175  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.1188  last_loss 0.1069  steps 350  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.0970  last_loss 0.0804  steps 525  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.0850  last_loss 0.1505  steps 700  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.0773  last_loss 0.0376  steps 875  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0736  last_loss 0.0503  steps 1050  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0706  last_loss 0.0421  steps 1225  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0674  last_loss 0.0522  steps 1400  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0601, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [20, 15, 11, 10]; K_distribution=[1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 2, 2, 1, 2, 1, 2, 2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0399→0.0284 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 6] (115638→115638 params)
+[grown_uncapped_dream] After pass 1 task 3: own=0.1414 (domain 0.1414, task 0.9883)  avg=0.6387 (domain 0.6387, task 0.9602)  arch=[128, 32, 32, 6] params=115638 (trainable 15158)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 32, 32, 8] params=115720 (trainable 15240/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.3109  last_loss 0.0908  steps 189  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0687  last_loss 0.0371  steps 378  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0529  last_loss 0.0568  steps 567  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0461  last_loss 0.0336  steps 756  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0403  last_loss 0.0823  steps 945  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0382  last_loss 0.0514  steps 1134  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0356  last_loss 0.0295  steps 1323  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0339  last_loss 0.0269  steps 1512  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0964, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [21, 22, 4]; K_distribution=[1, 1, 1, 2, 2, 1, 1, 1, 1, 2, 2, 2, 1, 2, 1, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0033→0.0000 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 8] (115720→115720 params)
+[grown_uncapped_dream] After pass 1 task 4: own=0.0060 (domain 0.0060, task 0.9602)  avg=0.6072 (domain 0.6072, task 0.9706)  arch=[128, 32, 32, 8] params=115720 (trainable 15240)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 32, 32, 10] params=115802 (trainable 15322/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.3244  last_loss 0.1686  steps 183  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1597  last_loss 0.1589  steps 366  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.1375  last_loss 0.2540  steps 549  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.1303  last_loss 0.2312  steps 732  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.1241  last_loss 0.1435  steps 915  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.1219  last_loss 0.2362  steps 1098  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.1190  last_loss 0.0660  steps 1281  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.1181  last_loss 0.1096  steps 1464  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0992, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [26, 9, 19]; K_distribution=[1, 1, 1, 2, 2, 1, 1, 1, 1, 3, 2, 2, 1, 2, 1, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0195→0.0188 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 10] (115802→115802 params)
+[grown_uncapped_dream] After pass 1 task 5: own=0.0308 (domain 0.0308, task 0.9551)  avg=0.6408 (domain 0.6408, task 0.9712)  arch=[128, 32, 32, 10] params=115802 (trainable 15322)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 32, 32, 12] params=115884 (trainable 15404/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.3059  last_loss 0.2659  steps 186  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.1545  last_loss 0.1654  steps 372  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.1387  last_loss 0.0940  steps 558  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.1287  last_loss 0.0880  steps 744  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.1209  last_loss 0.2067  steps 930  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.1179  last_loss 0.0785  steps 1116  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.1155  last_loss 0.0339  steps 1302  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.1090  last_loss 0.0835  steps 1488  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.3029, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [11, 7, 12, 15]; K_distribution=[1, 1, 1, 2, 2, 1, 1, 2, 1, 3, 2, 3, 2, 2, 1, 3, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.2373→0.1432 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 12] (115884→115884 params)
+[grown_uncapped_dream] After pass 1 task 6: own=0.0205 (domain 0.9620, task 0.9620)  avg=0.6108 (domain 0.7677, task 0.9666)  arch=[128, 32, 32, 12] params=115884 (trainable 15404)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 32, 32, 14] params=115966 (trainable 15486/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 0.3576  last_loss 0.1576  steps 186  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.1658  last_loss 0.1018  steps 372  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.1561  last_loss 0.0591  steps 558  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.1495  last_loss 0.0766  steps 744  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.1455  last_loss 0.1648  steps 930  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.1415  last_loss 0.0817  steps 1116  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.1396  last_loss 0.0902  steps 1302  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.1389  last_loss 0.0942  steps 1488  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.3075, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [18, 28, 17]; K_distribution=[1, 1, 1, 2, 2, 1, 1, 2, 1, 3, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 2, 1, 2, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.2728→0.0425 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 14] (115966→115966 params)
+[grown_uncapped_dream] After pass 1 task 7: own=0.0950 (domain 0.3850, task 0.9325)  avg=0.5910 (domain 0.6703, task 0.9508)  arch=[128, 32, 32, 14] params=115966 (trainable 15486)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 32, 32, 16] params=116048 (trainable 15568/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.6799  last_loss 0.2620  steps 186  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.1337  last_loss 0.1361  steps 372  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.0912  last_loss 0.0523  steps 558  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0758  last_loss 0.1274  steps 744  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0669  last_loss 0.0468  steps 930  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0621  last_loss 0.0660  steps 1116  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0573  last_loss 0.0809  steps 1302  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0550  last_loss 0.0742  steps 1488  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0542, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [3, 9, 20]; K_distribution=[1, 1, 1, 3, 2, 1, 1, 2, 1, 4, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 3, 2, 2, 1, 1, 1, 2, 1, 2, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.2199→0.1674 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 16] (116048→116048 params)
+[grown_uncapped_dream] After pass 1 task 8: own=0.0010 (domain 0.0690, task 0.9820)  avg=0.6302 (domain 0.6844, task 0.9666)  arch=[128, 32, 32, 16] params=116048 (trainable 15568)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 32, 32, 18] params=116130 (trainable 15650/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.1021  last_loss 0.0873  steps 186  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0543  last_loss 0.0269  steps 372  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0439  last_loss 0.0376  steps 558  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0372  last_loss 0.0239  steps 744  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0338  last_loss 0.0065  steps 930  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0320  last_loss 0.0114  steps 1116  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0295  last_loss 0.0152  steps 1302  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0272  last_loss 0.1082  steps 1488  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0171, hardened
+  [grown_uncapped_dream] dendrite: grew 2 branches on cells [3, 22]; K_distribution=[1, 1, 1, 4, 2, 1, 1, 2, 1, 4, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 3, 2, 3, 1, 1, 1, 2, 1, 2, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0073→0.0159 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 18] (116130→116130 params)
+[grown_uncapped_dream] After pass 1 task 9: own=0.0000 (domain 0.0440, task 0.9955)  avg=0.6007 (domain 0.6536, task 0.9656)  arch=[128, 32, 32, 18] params=116130 (trainable 15650)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 32, 32, 20] params=116212 (trainable 15732/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.1892  last_loss 0.0003  steps 187  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0468  last_loss 0.0036  steps 374  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0423  last_loss 0.0001  steps 561  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0411  last_loss 0.0176  steps 748  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0382  last_loss 0.0688  steps 935  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0377  last_loss 0.0001  steps 1122  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0357  last_loss 0.0000  steps 1309  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0346  last_loss 0.0165  steps 1496  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.2708, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [28, 2, 6]; K_distribution=[1, 1, 2, 4, 2, 1, 2, 2, 1, 4, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 3, 2, 3, 1, 1, 1, 2, 1, 3, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.6304→0.0465 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 20] (116212→116212 params)
+[grown_uncapped_dream] After pass 1 task 10: own=0.0000 (domain 0.0035, task 0.9480)  avg=0.5316 (domain 0.5917, task 0.9615)  arch=[128, 32, 32, 20] params=116212 (trainable 15732)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 32, 32, 22] params=116294 (trainable 15814/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.6825  last_loss 0.3989  steps 150  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2662  last_loss 0.3709  steps 300  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.2264  last_loss 0.4462  steps 450  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.2109  last_loss 0.3526  steps 600  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.2002  last_loss 0.1029  steps 750  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.1937  last_loss 0.1406  steps 900  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.1877  last_loss 0.2535  steps 1050  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.1873  last_loss 0.2355  steps 1200  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.2623, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [7, 9, 25]; K_distribution=[1, 1, 2, 4, 2, 1, 2, 3, 1, 5, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 3, 2, 3, 1, 1, 2, 2, 1, 3, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.2513→0.1997 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 22] (116294→116294 params)
+[grown_uncapped_dream] After pass 1 task 11: own=0.0100 (domain 0.9356, task 0.9356)  avg=0.6209 (domain 0.7326, task 0.9642)  arch=[128, 32, 32, 22] params=116294 (trainable 15814)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 32, 32, 24] params=116376 (trainable 15896/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 1.1620  last_loss 0.3686  steps 150  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.2564  last_loss 0.2756  steps 300  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.1971  last_loss 0.0247  steps 450  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.1713  last_loss 0.0806  steps 600  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.1545  last_loss 0.1644  steps 750  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.1439  last_loss 0.2002  steps 900  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.1351  last_loss 0.1177  steps 1050  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.1265  last_loss 0.1402  steps 1200  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1378, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [25, 2, 15, 3]; K_distribution=[1, 1, 3, 5, 2, 1, 2, 3, 1, 5, 2, 3, 2, 2, 1, 4, 2, 2, 2, 2, 3, 2, 3, 1, 1, 3, 2, 1, 3, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0562→0.0321 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 24] (116376→116376 params)
+[grown_uncapped_dream] After pass 1 task 12: own=0.0050 (domain 0.3181, task 0.9525)  avg=0.5908 (domain 0.6904, task 0.9595)  arch=[128, 32, 32, 24] params=116376 (trainable 15896)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 32, 32, 26] params=116458 (trainable 15978/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 0.9789  last_loss 0.2319  steps 150  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.2471  last_loss 0.2398  steps 300  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.1995  last_loss 0.1673  steps 450  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.1754  last_loss 0.1625  steps 600  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1630  last_loss 0.0652  steps 750  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1477  last_loss 0.1513  steps 900  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1444  last_loss 0.0314  steps 1050  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1385  last_loss 0.1295  steps 1200  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1253, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [4, 2, 19]; K_distribution=[1, 1, 4, 5, 3, 1, 2, 3, 1, 5, 2, 3, 2, 2, 1, 4, 2, 2, 2, 3, 3, 2, 3, 1, 1, 3, 2, 1, 3, 1, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.1833→0.0498 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 26] (116458→116458 params)
+[grown_uncapped_dream] After pass 1 task 13: own=0.0006 (domain 0.0088, task 0.9488)  avg=0.5590 (domain 0.6441, task 0.9520)  arch=[128, 32, 32, 26] params=116458 (trainable 15978)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 32, 32, 28] params=116540 (trainable 16060/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.3963  last_loss 0.1504  steps 150  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.2155  last_loss 0.1599  steps 300  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.1912  last_loss 0.0896  steps 450  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.1781  last_loss 0.0698  steps 600  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.1778  last_loss 0.4088  steps 750  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.1691  last_loss 0.1634  steps 900  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.1624  last_loss 0.4720  steps 1050  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.1611  last_loss 0.1437  steps 1200  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 2.4280, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [23, 29, 21]; K_distribution=[1, 1, 4, 5, 3, 1, 2, 3, 1, 5, 2, 3, 2, 2, 1, 4, 2, 2, 2, 3, 3, 3, 3, 2, 1, 3, 2, 1, 3, 2, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.1551→0.0344 on 4p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 28] (116540→116540 params)
+[grown_uncapped_dream] After pass 1 task 14: own=0.0019 (domain 0.0356, task 0.6144)  avg=0.4375 (domain 0.5535, task 0.9042)  arch=[128, 32, 32, 28] params=116540 (trainable 16060)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 32, 32, 30] params=116622 (trainable 16142/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 1.3911  last_loss 0.5720  steps 150  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.3579  last_loss 0.4400  steps 300  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2996  last_loss 0.1421  steps 450  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2728  last_loss 0.4083  steps 600  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.2575  last_loss 0.3609  steps 750  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.2504  last_loss 0.2593  steps 900  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.2423  last_loss 0.5476  steps 1050  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.2335  last_loss 0.2627  steps 1200  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.2456, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [0, 25, 7]; K_distribution=[2, 1, 4, 5, 3, 1, 2, 4, 1, 5, 2, 3, 2, 2, 1, 4, 2, 2, 2, 3, 3, 3, 3, 2, 1, 4, 2, 1, 3, 2, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0795→0.0861 on 4p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 30] (116622→116622 params)
+[grown_uncapped_dream] After pass 1 task 15: own=0.0044 (domain 0.5431, task 0.9025)  avg=0.5249 (domain 0.6381, task 0.9358)  arch=[128, 32, 32, 30] params=116622 (trainable 16142)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] <<< PASS 1/1 done — full=0.5249  domain=0.6381  task=0.9358
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[grown_uncapped_dream]
+  arch:               (128, 32, 32, 2) → (128, 32, 32, 30)
+  params total:       107282 → 116622
+  params trainable:   6802 → 16142  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.5249  (30-class full-softmax — headline)
+  final acc domain:   0.6381  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9358  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full -0.4425  domain -0.3376  task -0.0000
+  wall-clock:         336.6s
+  per-phase (full / domain / task):
+     phase1_mnist         0.6941  /  0.7374  /  0.9489
+     phase2_fashion       0.6184  /  0.6594  /  0.9649
+     phase3_emnist        0.2622  /  0.5176  /  0.8935
+
+Headline (full / domain / task across arms):
+  grown_uncapped_dream          full 0.5249  domain 0.6381  task 0.9358  (full-forget -0.4425)
+
+
+##############################################################################
+#   SEED 2  (3/3)
+##############################################################################
+[grown_uncapped_dream] Axis 3 insert_layer fired: arch=[128, 32, 32, 2] target_idx 1 → 2 | noise_scale=0.01
+
+[grown_uncapped_dream] start — arch (128, 32, 32, 2)  params 107282 (trainable 6802)  growth=True dream=True  cap_bytes=2147483648  K=15  passes=1  epochs/task=8  rehearsal=off  lwf=off  brainstem=off  engrams=off  hippocampus=off  differential=off  manifold=on
+
+[grown_uncapped_dream] >>> PASS 1/1  grows_per_task=4  (developmental)
+
+[grown_uncapped_dream] === Pass 1/1 Task 1/15: mnist_0_1 (active [0, 1])  pre-arch=[128, 32, 32, 2] params=107282 (trainable 6802/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 1/8  avg_loss 0.1046  last_loss 0.0010  steps 197  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 2/8  avg_loss 0.0095  last_loss 0.0004  steps 394  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 3/8  avg_loss 0.0066  last_loss 0.0003  steps 591  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 4/8  avg_loss 0.0048  last_loss 0.0001  steps 788  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 5/8  avg_loss 0.0041  last_loss 0.0029  steps 985  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 6/8  avg_loss 0.0027  last_loss 0.0000  steps 1182  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 7/8  avg_loss 0.0021  last_loss 0.0000  steps 1379  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] task 1/15 (mnist_0_1) epoch 8/8  avg_loss 0.0028  last_loss 0.0002  steps 1576  arch [128, 32, 32, 2]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0001, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [29, 2, 19, 9]; K_distribution=[1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0012→0.0001 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 2] (115474→115474 params)
+[grown_uncapped_dream] After pass 1 task 1: own=0.9986 (domain 0.9986, task 0.9986)  avg=0.9986 (domain 0.9986, task 0.9986)  arch=[128, 32, 32, 2] params=115474 (trainable 14994)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 2/15: mnist_2_3 (active [2, 3])  pre-arch=[128, 32, 32, 4] params=115556 (trainable 15076/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 1/8  avg_loss 0.3611  last_loss 0.2193  steps 188  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 2/8  avg_loss 0.1613  last_loss 0.0819  steps 376  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 3/8  avg_loss 0.1479  last_loss 0.1875  steps 564  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 4/8  avg_loss 0.1434  last_loss 0.0621  steps 752  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 5/8  avg_loss 0.1397  last_loss 0.1854  steps 940  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 6/8  avg_loss 0.1391  last_loss 0.1233  steps 1128  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 7/8  avg_loss 0.1381  last_loss 0.0781  steps 1316  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] task 2/15 (mnist_2_3) epoch 8/8  avg_loss 0.1357  last_loss 0.1172  steps 1504  arch [128, 32, 32, 4]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1510, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [25, 15, 2, 20]; K_distribution=[1, 1, 3, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.3134→0.0348 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 4] (115556→115556 params)
+[grown_uncapped_dream] After pass 1 task 2: own=0.1092 (domain 0.1092, task 0.9608)  avg=0.5534 (domain 0.5534, task 0.9792)  arch=[128, 32, 32, 4] params=115556 (trainable 15076)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 3/15: mnist_4_5 (active [4, 5])  pre-arch=[128, 32, 32, 6] params=115638 (trainable 15158/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 1/8  avg_loss 0.4922  last_loss 0.1798  steps 175  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 2/8  avg_loss 0.1563  last_loss 0.0544  steps 350  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 3/8  avg_loss 0.1238  last_loss 0.1762  steps 525  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 4/8  avg_loss 0.1111  last_loss 0.1437  steps 700  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 5/8  avg_loss 0.1011  last_loss 0.1544  steps 875  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 6/8  avg_loss 0.0932  last_loss 0.0526  steps 1050  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 7/8  avg_loss 0.0896  last_loss 0.1223  steps 1225  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] task 3/15 (mnist_4_5) epoch 8/8  avg_loss 0.0842  last_loss 0.1385  steps 1400  arch [128, 32, 32, 6]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.3207, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [22, 25, 8, 17]; K_distribution=[1, 1, 3, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 1, 3, 1, 1, 1, 2, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0000→0.0000 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 6] (115638→115638 params)
+[grown_uncapped_dream] After pass 1 task 3: own=0.0133 (domain 0.0133, task 0.9568)  avg=0.5913 (domain 0.5913, task 0.9686)  arch=[128, 32, 32, 6] params=115638 (trainable 15158)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 4/15: mnist_6_7 (active [6, 7])  pre-arch=[128, 32, 32, 8] params=115720 (trainable 15240/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 1/8  avg_loss 0.2295  last_loss 0.0752  steps 189  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 2/8  avg_loss 0.0607  last_loss 0.0763  steps 378  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 3/8  avg_loss 0.0471  last_loss 0.0252  steps 567  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 4/8  avg_loss 0.0410  last_loss 0.0175  steps 756  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 5/8  avg_loss 0.0382  last_loss 0.0670  steps 945  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 6/8  avg_loss 0.0359  last_loss 0.0275  steps 1134  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 7/8  avg_loss 0.0338  last_loss 0.0266  steps 1323  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] task 4/15 (mnist_6_7) epoch 8/8  avg_loss 0.0319  last_loss 0.0802  steps 1512  arch [128, 32, 32, 8]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0776, hardened
+  [grown_uncapped_dream] dendrite: grew 4 branches on cells [18, 26, 29, 13]; K_distribution=[1, 1, 3, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 2, 1, 2, 1, 1, 3, 2, 1, 1, 3, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.1642→0.2670 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 8] (115720→115720 params)
+[grown_uncapped_dream] After pass 1 task 4: own=0.1541 (domain 0.1541, task 0.9658)  avg=0.6283 (domain 0.6283, task 0.9661)  arch=[128, 32, 32, 8] params=115720 (trainable 15240)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 5/15: mnist_8_9 (active [8, 9])  pre-arch=[128, 32, 32, 10] params=115802 (trainable 15322/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 1/8  avg_loss 0.3246  last_loss 0.1373  steps 183  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 2/8  avg_loss 0.1488  last_loss 0.1606  steps 366  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 3/8  avg_loss 0.1336  last_loss 0.1030  steps 549  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 4/8  avg_loss 0.1285  last_loss 0.0459  steps 732  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 5/8  avg_loss 0.1240  last_loss 0.1083  steps 915  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 6/8  avg_loss 0.1209  last_loss 0.0928  steps 1098  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 7/8  avg_loss 0.1202  last_loss 0.1676  steps 1281  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] task 5/15 (mnist_8_9) epoch 8/8  avg_loss 0.1209  last_loss 0.0313  steps 1464  arch [128, 32, 32, 10]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 1.7547, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [15, 21, 3]; K_distribution=[1, 1, 3, 2, 1, 1, 1, 1, 2, 2, 1, 1, 1, 2, 1, 3, 1, 2, 2, 2, 2, 2, 2, 1, 1, 3, 2, 1, 1, 3, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.6274→0.0983 on 1p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 10] (115802→115802 params)
+[grown_uncapped_dream] After pass 1 task 5: own=0.0777 (domain 0.0777, task 0.7252)  avg=0.6302 (domain 0.6302, task 0.9230)  arch=[128, 32, 32, 10] params=115802 (trainable 15322)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 6/15: fashion_mnist_0_1 (active [10, 11])  pre-arch=[128, 32, 32, 12] params=115884 (trainable 15404/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 1 < sat_threshold=4)
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 1/8  avg_loss 0.5107  last_loss 0.2281  steps 186  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 2/8  avg_loss 0.1363  last_loss 0.0503  steps 372  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 3/8  avg_loss 0.1098  last_loss 0.0525  steps 558  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 4/8  avg_loss 0.0967  last_loss 0.0818  steps 744  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 5/8  avg_loss 0.0883  last_loss 0.0616  steps 930  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 6/8  avg_loss 0.0827  last_loss 0.1658  steps 1116  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 7/8  avg_loss 0.0814  last_loss 0.0214  steps 1302  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] task 6/15 (fashion_mnist_0_1) epoch 8/8  avg_loss 0.0767  last_loss 0.0488  steps 1488  arch [128, 32, 32, 12]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1255, hardened
+  [grown_uncapped_dream] dendrite: grew 2 branches on cells [23, 24]; K_distribution=[1, 1, 3, 2, 1, 1, 1, 1, 2, 2, 1, 1, 1, 2, 1, 3, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 1, 1, 3, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.1679→0.0547 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 12] (115884→115884 params)
+[grown_uncapped_dream] After pass 1 task 6: own=0.0005 (domain 0.9730, task 0.9730)  avg=0.5962 (domain 0.7587, task 0.9628)  arch=[128, 32, 32, 12] params=115884 (trainable 15404)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 7/15: fashion_mnist_2_3 (active [12, 13])  pre-arch=[128, 32, 32, 14] params=115966 (trainable 15486/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 1/8  avg_loss 1.1172  last_loss 0.2034  steps 186  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 2/8  avg_loss 0.1811  last_loss 0.3626  steps 372  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 3/8  avg_loss 0.1601  last_loss 0.0997  steps 558  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 4/8  avg_loss 0.1486  last_loss 0.1311  steps 744  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 5/8  avg_loss 0.1465  last_loss 0.1630  steps 930  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 6/8  avg_loss 0.1419  last_loss 0.1434  steps 1116  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 7/8  avg_loss 0.1379  last_loss 0.1223  steps 1302  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] task 7/15 (fashion_mnist_2_3) epoch 8/8  avg_loss 0.1373  last_loss 0.1453  steps 1488  arch [128, 32, 32, 14]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.6468, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [29, 11, 18]; K_distribution=[1, 1, 3, 2, 1, 1, 1, 1, 2, 2, 1, 2, 1, 2, 1, 3, 1, 2, 3, 2, 2, 2, 2, 2, 2, 3, 2, 1, 1, 4, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.6543→0.2499 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 14] (115966→115966 params)
+[grown_uncapped_dream] After pass 1 task 7: own=0.0025 (domain 0.0875, task 0.9360)  avg=0.6339 (domain 0.6667, task 0.9622)  arch=[128, 32, 32, 14] params=115966 (trainable 15486)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 8/15: fashion_mnist_4_5 (active [14, 15])  pre-arch=[128, 32, 32, 16] params=116048 (trainable 15568/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 1/8  avg_loss 0.2901  last_loss 0.1886  steps 186  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 2/8  avg_loss 0.1270  last_loss 0.0580  steps 372  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 3/8  avg_loss 0.1016  last_loss 0.0703  steps 558  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 4/8  avg_loss 0.0876  last_loss 0.1008  steps 744  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 5/8  avg_loss 0.0772  last_loss 0.0298  steps 930  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 6/8  avg_loss 0.0705  last_loss 0.1826  steps 1116  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 7/8  avg_loss 0.0650  last_loss 0.0200  steps 1302  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] task 8/15 (fashion_mnist_4_5) epoch 8/8  avg_loss 0.0599  last_loss 0.0700  steps 1488  arch [128, 32, 32, 16]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0914, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [28, 18, 1]; K_distribution=[1, 2, 3, 2, 1, 1, 1, 1, 2, 2, 1, 2, 1, 2, 1, 3, 1, 2, 4, 2, 2, 2, 2, 2, 2, 3, 2, 1, 2, 4, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.5770→0.1875 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 16] (116048→116048 params)
+[grown_uncapped_dream] After pass 1 task 8: own=0.0005 (domain 0.3590, task 0.9775)  avg=0.6198 (domain 0.7147, task 0.9657)  arch=[128, 32, 32, 16] params=116048 (trainable 15568)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 9/15: fashion_mnist_6_7 (active [16, 17])  pre-arch=[128, 32, 32, 18] params=116130 (trainable 15650/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 1/8  avg_loss 0.5156  last_loss 0.1596  steps 186  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 2/8  avg_loss 0.0630  last_loss 0.0140  steps 372  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 3/8  avg_loss 0.0372  last_loss 0.0284  steps 558  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 4/8  avg_loss 0.0279  last_loss 0.0069  steps 744  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 5/8  avg_loss 0.0231  last_loss 0.0091  steps 930  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 6/8  avg_loss 0.0216  last_loss 0.0147  steps 1116  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 7/8  avg_loss 0.0190  last_loss 0.0473  steps 1302  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] task 9/15 (fashion_mnist_6_7) epoch 8/8  avg_loss 0.0174  last_loss 0.0141  steps 1488  arch [128, 32, 32, 18]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.4117, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [0, 10, 23]; K_distribution=[2, 2, 3, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 2, 1, 3, 1, 2, 4, 2, 2, 2, 2, 3, 2, 3, 2, 1, 2, 4, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.0727→0.0196 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 18] (116130→116130 params)
+[grown_uncapped_dream] After pass 1 task 9: own=0.0045 (domain 0.0055, task 0.9945)  avg=0.5441 (domain 0.5917, task 0.9532)  arch=[128, 32, 32, 18] params=116130 (trainable 15650)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 10/15: fashion_mnist_8_9 (active [18, 19])  pre-arch=[128, 32, 32, 20] params=116212 (trainable 15732/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 1/8  avg_loss 0.1666  last_loss 0.0083  steps 187  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 2/8  avg_loss 0.0543  last_loss 0.1877  steps 374  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 3/8  avg_loss 0.0442  last_loss 0.0046  steps 561  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 4/8  avg_loss 0.0410  last_loss 0.0305  steps 748  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 5/8  avg_loss 0.0388  last_loss 0.0003  steps 935  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 6/8  avg_loss 0.0360  last_loss 0.0312  steps 1122  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 7/8  avg_loss 0.0345  last_loss 0.0001  steps 1309  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] task 10/15 (fashion_mnist_8_9) epoch 8/8  avg_loss 0.0356  last_loss 0.0065  steps 1496  arch [128, 32, 32, 20]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0358, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [25, 27, 22]; K_distribution=[2, 2, 3, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 2, 1, 3, 1, 2, 4, 2, 2, 2, 3, 3, 2, 4, 2, 2, 2, 4, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.4512→0.0868 on 2p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 20] (116212→116212 params)
+[grown_uncapped_dream] After pass 1 task 10: own=0.0095 (domain 0.0285, task 0.9825)  avg=0.6008 (domain 0.6258, task 0.9640)  arch=[128, 32, 32, 20] params=116212 (trainable 15732)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 11/15: emnist_letters_0_1 (active [20, 21])  pre-arch=[128, 32, 32, 22] params=116294 (trainable 15814/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 1/8  avg_loss 0.6135  last_loss 0.2330  steps 150  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 2/8  avg_loss 0.2906  last_loss 0.0795  steps 300  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 3/8  avg_loss 0.2630  last_loss 0.2902  steps 450  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 4/8  avg_loss 0.2463  last_loss 0.1651  steps 600  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 5/8  avg_loss 0.2403  last_loss 0.2634  steps 750  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 6/8  avg_loss 0.2320  last_loss 0.2795  steps 900  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 7/8  avg_loss 0.2300  last_loss 0.4130  steps 1050  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] task 11/15 (emnist_letters_0_1) epoch 8/8  avg_loss 0.2222  last_loss 0.2984  steps 1200  arch [128, 32, 32, 22]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.1589, hardened
+  [grown_uncapped_dream] dendrite: grew 1 branches on cells [13]; K_distribution=[2, 2, 3, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 3, 1, 3, 1, 2, 4, 2, 2, 2, 3, 3, 2, 4, 2, 2, 2, 4, 1, 1]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.3939→0.2270 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 22] (116294→116294 params)
+[grown_uncapped_dream] After pass 1 task 11: own=0.0037 (domain 0.9294, task 0.9294)  avg=0.5935 (domain 0.7085, task 0.9638)  arch=[128, 32, 32, 22] params=116294 (trainable 15814)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 12/15: emnist_letters_2_3 (active [22, 23])  pre-arch=[128, 32, 32, 24] params=116376 (trainable 15896/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 1/8  avg_loss 0.4100  last_loss 0.2458  steps 150  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 2/8  avg_loss 0.1642  last_loss 0.0718  steps 300  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 3/8  avg_loss 0.1345  last_loss 0.0840  steps 450  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 4/8  avg_loss 0.1230  last_loss 0.0395  steps 600  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 5/8  avg_loss 0.1152  last_loss 0.1038  steps 750  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 6/8  avg_loss 0.1126  last_loss 0.0574  steps 900  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 7/8  avg_loss 0.1056  last_loss 0.0913  steps 1050  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] task 12/15 (emnist_letters_2_3) epoch 8/8  avg_loss 0.1066  last_loss 0.0383  steps 1200  arch [128, 32, 32, 24]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 17.6356, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [31, 14, 4]; K_distribution=[2, 2, 3, 2, 2, 1, 1, 1, 2, 2, 2, 2, 1, 3, 2, 3, 1, 2, 4, 2, 2, 2, 3, 3, 2, 4, 2, 2, 2, 4, 1, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 28.3725→0.0433 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 24] (116376→116376 params)
+[grown_uncapped_dream] After pass 1 task 12: own=0.0344 (domain 0.4550, task 0.5644)  avg=0.2418 (domain 0.4663, task 0.8404)  arch=[128, 32, 32, 24] params=116376 (trainable 15896)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 13/15: emnist_letters_4_5 (active [24, 25])  pre-arch=[128, 32, 32, 26] params=116458 (trainable 15978/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 1/8  avg_loss 2.7422  last_loss 0.1644  steps 150  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 2/8  avg_loss 0.2228  last_loss 0.1987  steps 300  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 3/8  avg_loss 0.1875  last_loss 0.2438  steps 450  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 4/8  avg_loss 0.1731  last_loss 0.2197  steps 600  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 5/8  avg_loss 0.1727  last_loss 0.5201  steps 750  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 6/8  avg_loss 0.1606  last_loss 0.1453  steps 900  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 7/8  avg_loss 0.1635  last_loss 0.1674  steps 1050  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] task 13/15 (emnist_letters_4_5) epoch 8/8  avg_loss 0.1510  last_loss 0.0649  steps 1200  arch [128, 32, 32, 26]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 4.4461, hardened
+  [grown_uncapped_dream] dendrite: grew 3 branches on cells [6, 4, 30]; K_distribution=[2, 2, 3, 2, 3, 1, 2, 1, 2, 2, 2, 2, 1, 3, 2, 3, 1, 2, 4, 2, 2, 2, 3, 3, 2, 4, 2, 2, 2, 4, 2, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 1.6741→0.1512 on 3p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 26] (116458→116458 params)
+[grown_uncapped_dream] After pass 1 task 13: own=0.0000 (domain 0.0000, task 0.9369)  avg=0.5387 (domain 0.6263, task 0.9339)  arch=[128, 32, 32, 26] params=116458 (trainable 15978)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 14/15: emnist_letters_6_7 (active [26, 27])  pre-arch=[128, 32, 32, 28] params=116540 (trainable 16060/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 1/8  avg_loss 0.3127  last_loss 0.2974  steps 150  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 2/8  avg_loss 0.1885  last_loss 0.0844  steps 300  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 3/8  avg_loss 0.1723  last_loss 0.0596  steps 450  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 4/8  avg_loss 0.1672  last_loss 0.0722  steps 600  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 5/8  avg_loss 0.1516  last_loss 0.1399  steps 750  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 6/8  avg_loss 0.1538  last_loss 0.0668  steps 900  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 7/8  avg_loss 0.1534  last_loss 0.0745  steps 1050  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] task 14/15 (emnist_letters_6_7) epoch 8/8  avg_loss 0.1440  last_loss 0.1669  steps 1200  arch [128, 32, 32, 28]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.0895, hardened
+  [grown_uncapped_dream] dendrite: grew 1 branches on cells [1]; K_distribution=[2, 3, 3, 2, 3, 1, 2, 1, 2, 2, 2, 2, 1, 3, 2, 3, 1, 2, 4, 2, 2, 2, 3, 3, 2, 4, 2, 2, 2, 4, 2, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.4480→0.2142 on 4p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 28] (116540→116540 params)
+[grown_uncapped_dream] After pass 1 task 14: own=0.0031 (domain 0.1163, task 0.9513)  avg=0.5688 (domain 0.6398, task 0.9527)  arch=[128, 32, 32, 28] params=116540 (trainable 16060)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] === Pass 1/1 Task 15/15: emnist_letters_8_9 (active [28, 29])  pre-arch=[128, 32, 32, 30] params=116622 (trainable 16142/∞) ===
+  [grown_uncapped_dream] dendrite-first: grow_node suppressed (median B_per_node = 2 < sat_threshold=4)
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 1/8  avg_loss 1.2681  last_loss 0.4871  steps 150  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 2/8  avg_loss 0.3633  last_loss 0.2648  steps 300  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 3/8  avg_loss 0.2792  last_loss 0.1492  steps 450  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 4/8  avg_loss 0.2547  last_loss 0.3779  steps 600  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 5/8  avg_loss 0.2409  last_loss 0.1539  steps 750  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 6/8  avg_loss 0.2359  last_loss 0.1177  steps 900  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 7/8  avg_loss 0.2338  last_loss 0.2448  steps 1050  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] task 15/15 (emnist_letters_8_9) epoch 8/8  avg_loss 0.2292  last_loss 0.3196  steps 1200  arch [128, 32, 32, 30]
+  [grown_uncapped_dream] plastic rewiring: 50 steps, temp 1.00→0.10, final_loss 0.3664, hardened
+  [grown_uncapped_dream] dendrite: grew 1 branches on cells [16]; K_distribution=[2, 3, 3, 2, 3, 1, 2, 1, 2, 2, 2, 2, 1, 3, 2, 3, 2, 2, 4, 2, 2, 2, 3, 3, 2, 4, 2, 2, 2, 4, 2, 2]; axonal_gain∈[1.000, 1.000]
+  [grown_uncapped_dream] post-task DREAM: replay 0.2840→0.1330 on 4p; merges=0 purges=0 latched=0 → arch [128, 32, 32, 30] (116622→116622 params)
+[grown_uncapped_dream] After pass 1 task 15: own=0.0725 (domain 0.0838, task 0.8988)  avg=0.4684 (domain 0.5317, task 0.9434)  arch=[128, 32, 32, 30] params=116622 (trainable 16142)  cum_grows=0 cum_denied=0 cum_purges=0 cum_latched=0
+
+[grown_uncapped_dream] <<< PASS 1/1 done — full=0.4684  domain=0.5317  task=0.9434
+
+==============================================================================
+bench_chained_15task — Final Report
+==============================================================================
+
+[grown_uncapped_dream]
+  arch:               (128, 32, 32, 2) → (128, 32, 32, 30)
+  params total:       107282 → 116622
+  params trainable:   6802 → 16142  (cap-relevant)
+  cap_bytes:          2_147_483_648  (= 536_870_912 trainable params)
+  cum grows allowed:  0
+  cum grows denied:   0
+  cum dream purges:   0
+  cum dream latched:  0
+  final acc full:     0.4684  (30-class full-softmax — headline)
+  final acc domain:   0.5317  (10-class restricted to dataset group — realistic deployment)
+  final acc task:     0.9434  (2-class restricted to binary task — generous diagnostic)
+  avg forgetting:     full -0.3958  domain -0.2560  task -0.0285
+  wall-clock:         339.4s
+  per-phase (full / domain / task):
+     phase1_mnist         0.6315  /  0.7052  /  0.9490
+     phase2_fashion       0.5706  /  0.6005  /  0.9732
+     phase3_emnist        0.2030  /  0.2892  /  0.9079
+
+Headline (full / domain / task across arms):
+  grown_uncapped_dream          full 0.4684  domain 0.5317  task 0.9434  (full-forget -0.3958)
+
+
+==============================================================================
+bench_chained_15task — Multi-seed Report (n=3 seeds)
+==============================================================================
+Seeds: [0, 1, 2]
+
+[grown_uncapped_dream]  (3 seeds)
+  final acc full   : 0.5028 ± 0.0302  (n=3)
+  final acc domain : 0.5976 ± 0.0576  (n=3)
+  final acc task   : 0.9383 ± 0.0044  (n=3)
+  forgetting full   : -0.4226 ± 0.0241
+  forgetting domain : -0.3170 ± 0.0537
+  forgetting task   : -0.0278 ± 0.0275
+  per-phase full:
+     phase1_mnist           0.6617 ± 0.0314
+     phase2_fashion         0.5873 ± 0.0270
+     phase3_emnist          0.2595 ± 0.0551
+  per-phase domain:
+     phase1_mnist           0.7259 ± 0.0179
+     phase2_fashion         0.6321 ± 0.0297
+     phase3_emnist          0.4348 ± 0.1264
+  per-phase task:
+     phase1_mnist           0.9498 ± 0.0014
+     phase2_fashion         0.9685 ± 0.0043
+     phase3_emnist          0.8967 ± 0.0099
+  cum grows allowed : 0.00 ± 0.00
+  cum grows denied  : 0.00 ± 0.00
+  cum dream purges  : 0.00 ± 0.00
+  final trainable    : 16142 ± 0
+
+Headline (mean ± std across seeds):
+  arm                           full                domain              task              
+  grown_uncapped_dream          0.5028±0.0302       0.5976±0.0576       0.9383±0.0044     
+
+Paired σ-differences (arm_a − arm_b across seeds):
+  comparison                                        metric        mean Δ      std Δ       σ    n
+
+  log: /home/marcrockhat/trioron-project/outputs/bench_chained_15task_n3_MANIFOLD_REPLAY_axis3_plus_5_plastic_multiseed.csv

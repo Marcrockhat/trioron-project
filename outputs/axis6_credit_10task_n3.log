@@ -1,0 +1,36 @@
+========================================================================================
+Trioron 2.0 Axis 6 + credit — 10-task curriculum, n=3 seeds
+H_init=4  mode=absolute  k=1.0  floor=0.005  b_thr=1.0  sigma=1.5  dt=0.1  spawn_cap=3  cooldown=50  credit_thr=0.1
+tasks: ['linear', 'XOR', 'rings', 'diamond', 'stripe', 'anti_linear', 'half_plane', 'checker', 'annulus', 'y_stripe']
+========================================================================================
+[seed 0  arm BASELINE_frozen ]  max|drift|=0.687  sum_final=5.460  mean_final=0.546  H=4  spawns=0  frozen=0
+[seed 0  arm AXIS6_emerge    ]  max|drift|=0.507  sum_final=6.340  mean_final=0.634  H=27  spawns=23  frozen=0
+[seed 0  arm AXIS6_credit    ]  max|drift|=0.000  sum_final=9.487  mean_final=0.949  H=33  spawns=29  frozen=28
+[seed 1  arm BASELINE_frozen ]  max|drift|=0.740  sum_final=5.960  mean_final=0.596  H=4  spawns=0  frozen=0
+[seed 1  arm AXIS6_emerge    ]  max|drift|=0.503  sum_final=5.617  mean_final=0.562  H=31  spawns=27  frozen=0
+[seed 1  arm AXIS6_credit    ]  max|drift|=0.000  sum_final=9.467  mean_final=0.947  H=32  spawns=28  frozen=27
+[seed 2  arm BASELINE_frozen ]  max|drift|=0.523  sum_final=5.657  mean_final=0.566  H=4  spawns=0  frozen=0
+[seed 2  arm AXIS6_emerge    ]  max|drift|=0.693  sum_final=5.493  mean_final=0.549  H=31  spawns=27  frozen=0
+[seed 2  arm AXIS6_credit    ]  max|drift|=0.010  sum_final=9.327  mean_final=0.933  H=33  spawns=29  frozen=25
+
+========================================================================================
+AGGREGATE (n=3 seeds, mean ± std) — 10-task curriculum
+========================================================================================
+  arm                   max|drift|       sum_final      mean_final     H_final    spawns    frozen
+  BASELINE_frozen    0.650 ± 0.113   5.692 ± 0.252   0.569 ± 0.025   4.0 ± 0.0  0.0 ± 0.0  0.0 ± 0.0
+  AXIS6_emerge       0.568 ± 0.109   5.817 ± 0.457   0.582 ± 0.046  29.7 ± 2.3  25.7 ± 2.3  0.0 ± 0.0
+  AXIS6_credit       0.003 ± 0.006   9.427 ± 0.087   0.943 ± 0.009  32.7 ± 0.6  28.7 ± 0.6  26.7 ± 1.5
+
+  per-task final acc (mean ± std across 3 seeds):
+  linear          BASELINE:0.413±0.162   AXIS6_em:0.480±0.027   AXIS6_cr:0.976±0.016   
+  XOR             BASELINE:0.497±0.029   AXIS6_em:0.544±0.051   AXIS6_cr:0.947±0.009   
+  rings           BASELINE:0.524±0.069   AXIS6_em:0.580±0.018   AXIS6_cr:0.968±0.005   
+  diamond         BASELINE:0.558±0.164   AXIS6_em:0.538±0.049   AXIS6_cr:0.952±0.008   
+  stripe          BASELINE:0.494±0.017   AXIS6_em:0.548±0.075   AXIS6_cr:0.991±0.002   
+  anti_linear     BASELINE:0.531±0.230   AXIS6_em:0.570±0.125   AXIS6_cr:0.967±0.009   
+  half_plane      BASELINE:0.492±0.025   AXIS6_em:0.506±0.203   AXIS6_cr:0.993±0.003   
+  checker         BASELINE:0.516±0.021   AXIS6_em:0.493±0.035   AXIS6_cr:0.768±0.057   
+  annulus         BASELINE:0.682±0.031   AXIS6_em:0.560±0.081   AXIS6_cr:0.876±0.041   
+  y_stripe        BASELINE:0.984±0.018   AXIS6_em:0.998±0.002   AXIS6_cr:0.990±0.012   
+
+  CSV → outputs/axis6_credit_10task_n3.csv

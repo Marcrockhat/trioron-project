@@ -1,0 +1,79 @@
+========================================================================================
+Cell-first CL PoC — 5 tasks, 6x6 grid, retention test
+diff_mode=relative  diff_k=3.0  diff_floor=0.05
+========================================================================================
+Setup:
+  grid:         6×6 = 36 cells
+  inputs:       [0, 5] at [(0, 0), (0, 5)]
+  outputs:      [31, 32, 33, 34, 35] at [(5, 1), (5, 2), (5, 3), (5, 4), (5, 5)]
+  tasks:        ['linear', 'XOR', 'rings', 'diamond', 'stripe']
+
+[Phase 1: training task 'linear']
+  [linear] epoch   0: loss=0.8290  acc=0.767  hidden_total=0
+  [linear] epoch 100: loss=0.3381  acc=0.960  hidden_total=0
+  [linear] epoch 199: loss=0.3381  acc=0.960  hidden_total=0
+  >> after phase 1 (linear): acc = ['0.960', '0.530', '0.503', '0.530', '0.450']  hidden_total=0
+
+[Phase 2: training task 'XOR']
+  [XOR] epoch   0: loss=1.0980  acc=0.530  hidden_total=0
+  [XOR] epoch  36: NEW HIDDEN cells [26] @ [(4, 2)]
+  [XOR] epoch 100: loss=0.4565  acc=0.850  hidden_total=1
+  [XOR] epoch 200: loss=0.4489  acc=0.850  hidden_total=1
+  [XOR] epoch 300: loss=0.4489  acc=0.850  hidden_total=1
+  [XOR] epoch 399: loss=0.4489  acc=0.850  hidden_total=1
+  >> after phase 2 (XOR): acc = ['0.960', '0.850', '0.503', '0.530', '0.450']  hidden_total=1
+
+[Phase 3: training task 'rings']
+  [rings] epoch   0: loss=1.0164  acc=0.503  hidden_total=1
+  [rings] epoch  42: NEW HIDDEN cells [27] @ [(4, 3)]
+  [rings] epoch 100: loss=0.5762  acc=0.790  hidden_total=2
+  [rings] epoch 200: loss=0.5728  acc=0.797  hidden_total=2
+  [rings] epoch 300: loss=0.5728  acc=0.797  hidden_total=2
+  [rings] epoch 399: loss=0.5728  acc=0.797  hidden_total=2
+  >> after phase 3 (rings): acc = ['0.960', '0.850', '0.797', '0.530', '0.450']  hidden_total=2
+
+[Phase 4: training task 'diamond']
+  [diamond] epoch   0: loss=1.0220  acc=0.530  hidden_total=2
+  [diamond] epoch 100: loss=0.7550  acc=0.747  hidden_total=2
+  [diamond] epoch 200: loss=0.7550  acc=0.747  hidden_total=2
+  [diamond] epoch 300: loss=0.7550  acc=0.747  hidden_total=2
+  [diamond] epoch 399: loss=0.7550  acc=0.747  hidden_total=2
+  >> after phase 4 (diamond): acc = ['0.960', '0.850', '0.797', '0.747', '0.450']  hidden_total=2
+
+[Phase 5: training task 'stripe']
+  [stripe] epoch   0: loss=1.0451  acc=0.450  hidden_total=2
+  [stripe] epoch   9: NEW HIDDEN cells [29] @ [(4, 5)]
+  [stripe] epoch 100: loss=0.2304  acc=0.990  hidden_total=3
+  [stripe] epoch 200: loss=0.2303  acc=0.990  hidden_total=3
+  [stripe] epoch 300: loss=0.2303  acc=0.990  hidden_total=3
+  [stripe] epoch 399: loss=0.2303  acc=0.990  hidden_total=3
+  >> after phase 5 (stripe): acc = ['0.960', '0.850', '0.797', '0.747', '0.990']  hidden_total=3
+
+========================================================================================
+Retention matrix (rows = after phase, cols = per task)
+========================================================================================
+  phase              linear      XOR    rings  diamond   stripe
+  after linear         0.960    0.530    0.503    0.530    0.450
+  after XOR            0.960    0.850    0.503    0.530    0.450
+  after rings          0.960    0.850    0.797    0.530    0.450
+  after diamond        0.960    0.850    0.797    0.747    0.450
+  after stripe         0.960    0.850    0.797    0.747    0.990
+  hidden_total                                                    counts: [0, 1, 2, 2, 3]
+
+========================================================================================
+Per-output hidden-cell distribution
+========================================================================================
+  output 31 (task 'linear', pos=(5, 1)) hidden_neighbors=[] incoming=[0, 5]
+  output 32 (task 'XOR', pos=(5, 2)) hidden_neighbors=[26] incoming=[0, 5, 26]
+  output 33 (task 'rings', pos=(5, 3)) hidden_neighbors=[27] incoming=[0, 5, 27]
+  output 34 (task 'diamond', pos=(5, 4)) hidden_neighbors=[] incoming=[0, 5, 29]
+  output 35 (task 'stripe', pos=(5, 5)) hidden_neighbors=[29] incoming=[0, 5]
+
+Per-task drift (acc when first learned − acc at end):
+  linear    : learned at 0.960, final 0.960,  drift = +0.000
+  XOR       : learned at 0.850, final 0.850,  drift = +0.000
+  rings     : learned at 0.797, final 0.797,  drift = +0.000
+  diamond   : learned at 0.747, final 0.747,  drift = +0.000
+  stripe    : learned at 0.990, final 0.990,  drift = +0.000
+
+VERDICT: no observable forgetting across 5 tasks (max drift 0.000)

@@ -1,0 +1,108 @@
+========================================================================================
+axis6_credit_chained15 — LCN perception + L1 substrate
+epochs/task=2  batch=256  lr=0.01  n_seeds=1  spawn_cap=5  credit_thr=0.3
+H_init(L1)=16  L0_width(frozen,LCN)=128  LCN_grid=16×8  LCN_σ=0.1
+field_sigma=0.15  diff_floor=0.0005  cooldown=20
+========================================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+Curriculum: ['mnist_0_1', 'mnist_2_3', 'mnist_4_5', 'mnist_6_7', 'mnist_8_9', 'fashion_mnist_0_1', 'fashion_mnist_2_3', 'fashion_mnist_4_5', 'fashion_mnist_6_7', 'fashion_mnist_8_9', 'emnist_letters_0_1', 'emnist_letters_2_3', 'emnist_letters_4_5', 'emnist_letters_6_7', 'emnist_letters_8_9']
+Train sizes: [12665, 12089, 11263, 12183, 11800, 12000, 12000, 12000, 12000, 12000, 9600, 9600, 9600, 9600, 9600]
+Eval  sizes: [2115, 2042, 1874, 1986, 1983, 2000, 2000, 2000, 2000, 2000, 1600, 1600, 1600, 1600, 1600]
+
+
+========== SEED 0  ARM: AXIS6_credit ==========
+  [phase 1/15: mnist_0_1] L1.H=16  frozen=0
+    [epoch 0] loss=0.0165 acc=1.000 H=16 spawns=0 stress_max=0.0001 epi_A_max=0.0005 epi_B_max=0.5522
+    [epoch 1] loss=0.0388 acc=0.983 H=19 spawns=3 stress_max=0.0001 epi_A_max=0.0009 epi_B_max=0.6392
+    task_aware(this)=0.995  task_aware(mean_seen)=0.995  full(this)=0.992  spawn_events=3
+    [credit] +15 new; total frozen = 15/19
+  [phase 2/15: mnist_2_3] L1.H=19  frozen=15
+    [epoch 0] loss=0.4141 acc=0.877 H=21 spawns=2 stress_max=0.0005 epi_A_max=0.0010 epi_B_max=0.7925
+    [epoch 1] loss=0.3165 acc=0.895 H=23 spawns=4 stress_max=0.0007 epi_A_max=0.0027 epi_B_max=0.9082
+    task_aware(this)=0.923  task_aware(mean_seen)=0.959  full(this)=0.323  spawn_events=4
+    [credit] +5 new; total frozen = 20/23
+  [phase 3/15: mnist_4_5] L1.H=23  frozen=20
+    [epoch 0] loss=0.3954 acc=0.863 H=25 spawns=2 stress_max=0.0007 epi_A_max=0.0020 epi_B_max=0.7737
+    [epoch 1] loss=0.1984 acc=0.929 H=27 spawns=4 stress_max=0.0008 epi_A_max=0.0038 epi_B_max=0.7858
+    task_aware(this)=0.957  task_aware(mean_seen)=0.959  full(this)=0.532  spawn_events=4
+    [credit] +5 new; total frozen = 25/27
+  [phase 4/15: mnist_6_7] L1.H=27  frozen=25
+    [epoch 0] loss=0.3056 acc=0.947 H=29 spawns=2 stress_max=0.0009 epi_A_max=0.0020 epi_B_max=0.7910
+    [epoch 1] loss=0.0687 acc=0.993 H=32 spawns=5 stress_max=0.0009 epi_A_max=0.0041 epi_B_max=0.9548
+    task_aware(this)=0.972  task_aware(mean_seen)=0.962  full(this)=0.533  spawn_events=5
+    [credit] +4 new; total frozen = 29/32
+  [phase 5/15: mnist_8_9] L1.H=32  frozen=29
+    [epoch 0] loss=0.2278 acc=0.958 H=34 spawns=2 stress_max=0.0007 epi_A_max=0.0019 epi_B_max=1.2507
+    [epoch 1] loss=0.1427 acc=0.958 H=37 spawns=5 stress_max=0.0007 epi_A_max=0.0037 epi_B_max=1.2452
+    task_aware(this)=0.956  task_aware(mean_seen)=0.961  full(this)=0.485  spawn_events=5
+    [credit] +5 new; total frozen = 34/37
+  [phase 6/15: fashion_mnist_0_1] L1.H=37  frozen=34
+    [epoch 0] loss=0.3408 acc=0.911 H=39 spawns=2 stress_max=0.0007 epi_A_max=0.0020 epi_B_max=1.4330
+    [epoch 1] loss=0.1035 acc=0.960 H=42 spawns=5 stress_max=0.0006 epi_A_max=0.0035 epi_B_max=1.4551
+    task_aware(this)=0.964  task_aware(mean_seen)=0.961  full(this)=0.119  spawn_events=5
+    [credit] +6 new; total frozen = 40/42
+  [phase 7/15: fashion_mnist_2_3] L1.H=42  frozen=40
+    [epoch 0] loss=0.2242 acc=0.906 H=44 spawns=2 stress_max=0.0005 epi_A_max=0.0015 epi_B_max=1.5876
+    [epoch 1] loss=0.1384 acc=0.955 H=46 spawns=4 stress_max=0.0006 epi_A_max=0.0028 epi_B_max=1.6071
+    task_aware(this)=0.938  task_aware(mean_seen)=0.958  full(this)=0.083  spawn_events=4
+    [credit] +4 new; total frozen = 44/46
+  [phase 8/15: fashion_mnist_4_5] L1.H=46  frozen=44
+    [epoch 0] loss=0.1772 acc=0.942 H=48 spawns=2 stress_max=0.0004 epi_A_max=0.0012 epi_B_max=1.1594
+    [epoch 1] loss=0.0564 acc=0.987 H=50 spawns=4 stress_max=0.0003 epi_A_max=0.0023 epi_B_max=1.1635
+    task_aware(this)=0.986  task_aware(mean_seen)=0.961  full(this)=0.473  spawn_events=4
+    [credit] +4 new; total frozen = 48/50
+  [phase 9/15: fashion_mnist_6_7] L1.H=50  frozen=48
+    [epoch 0] loss=0.0591 acc=0.987 H=52 spawns=2 stress_max=0.0004 epi_A_max=0.0010 epi_B_max=1.1104
+    [epoch 1] loss=0.0108 acc=0.996 H=54 spawns=4 stress_max=0.0003 epi_A_max=0.0017 epi_B_max=1.1167
+    task_aware(this)=0.998  task_aware(mean_seen)=0.966  full(this)=0.865  spawn_events=4
+    [credit] +4 new; total frozen = 52/54
+  [phase 10/15: fashion_mnist_8_9] L1.H=54  frozen=52
+    [epoch 0] loss=0.1982 acc=0.960 H=55 spawns=1 stress_max=0.0004 epi_A_max=0.0008 epi_B_max=1.3654
+    [epoch 1] loss=0.0900 acc=0.987 H=58 spawns=4 stress_max=0.0004 epi_A_max=0.0016 epi_B_max=1.3752
+    task_aware(this)=0.975  task_aware(mean_seen)=0.967  full(this)=0.155  spawn_events=4
+    [credit] +3 new; total frozen = 55/58
+  [phase 11/15: emnist_letters_0_1] L1.H=58  frozen=55
+    [epoch 0] loss=0.2678 acc=0.914 H=59 spawns=1 stress_max=0.0004 epi_A_max=0.0007 epi_B_max=0.9928
+    [epoch 1] loss=0.2831 acc=0.898 H=61 spawns=3 stress_max=0.0006 epi_A_max=0.0015 epi_B_max=1.0195
+    task_aware(this)=0.911  task_aware(mean_seen)=0.961  full(this)=0.057  spawn_events=3
+    [credit] +2 new; total frozen = 57/61
+  [phase 12/15: emnist_letters_2_3] L1.H=61  frozen=57
+    [epoch 0] loss=0.3124 acc=0.883 H=62 spawns=1 stress_max=0.0005 epi_A_max=0.0009 epi_B_max=1.0568
+    [epoch 1] loss=0.2309 acc=0.922 H=64 spawns=3 stress_max=0.0005 epi_A_max=0.0019 epi_B_max=1.0716
+    task_aware(this)=0.907  task_aware(mean_seen)=0.957  full(this)=0.031  spawn_events=3
+    [credit] +3 new; total frozen = 60/64
+  [phase 13/15: emnist_letters_4_5] L1.H=64  frozen=60
+    [epoch 0] loss=0.2331 acc=0.922 H=66 spawns=2 stress_max=0.0006 epi_A_max=0.0011 epi_B_max=0.9667
+    [epoch 1] loss=0.1882 acc=0.961 H=67 spawns=3 stress_max=0.0006 epi_A_max=0.0021 epi_B_max=0.9830
+    task_aware(this)=0.911  task_aware(mean_seen)=0.953  full(this)=0.029  spawn_events=3
+    [credit] +2 new; total frozen = 62/67
+  [phase 14/15: emnist_letters_6_7] L1.H=67  frozen=62
+    [epoch 0] loss=0.4452 acc=0.797 H=69 spawns=2 stress_max=0.0005 epi_A_max=0.0011 epi_B_max=0.9515
+    [epoch 1] loss=0.3307 acc=0.883 H=70 spawns=3 stress_max=0.0005 epi_A_max=0.0021 epi_B_max=0.9706
+    task_aware(this)=0.877  task_aware(mean_seen)=0.948  full(this)=0.000  spawn_events=3
+    [credit] +2 new; total frozen = 64/70
+  [phase 15/15: emnist_letters_8_9] L1.H=70  frozen=64
+    [epoch 0] loss=0.3212 acc=0.875 H=72 spawns=2 stress_max=0.0007 epi_A_max=0.0011 epi_B_max=0.9348
+    [epoch 1] loss=0.2110 acc=0.906 H=73 spawns=3 stress_max=0.0008 epi_A_max=0.0020 epi_B_max=0.9524
+    task_aware(this)=0.913  task_aware(mean_seen)=0.946  full(this)=0.103  spawn_events=3
+    [credit] +2 new; total frozen = 66/73
+[seed 0  arm AXIS6_credit]  task_aware_mean=0.946  full_mean=0.173  max|drift|_ta=0.001  H=73  spawns=57  frozen=66  elapsed=8.0s
+
+========== SEED 0  ARM: AXIS6_credit_manifold ==========
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/marcrockhat/trioron-project/experiments/axis6_credit_chained15.py", line 725, in <module>
+    sys.exit(main())
+  File "/home/marcrockhat/trioron-project/experiments/axis6_credit_chained15.py", line 678, in main
+    r = run_arm(
+  File "/home/marcrockhat/trioron-project/experiments/axis6_credit_chained15.py", line 475, in run_arm
+    ManifoldStore(n_l1=net.layers[1].n_nodes)
+TypeError: ManifoldStore.__init__() got an unexpected keyword argument 'n_l1'

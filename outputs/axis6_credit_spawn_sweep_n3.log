@@ -1,0 +1,45 @@
+====================================================================================================
+AXIS6_credit spawn_cap sweep — caps=[2, 3, 5, 8, 12], n=3 seeds, 10 tasks
+H_init=4  credit_thr=0.1  cooldown=50  field_sigma=1.5  floor=0.005
+tasks: ['linear', 'XOR', 'rings', 'diamond', 'stripe', 'anti_linear', 'half_plane', 'checker', 'annulus', 'y_stripe']
+====================================================================================================
+  [spawn_cap= 2  seed=0]  max|drift|=0.000  sum_final=9.363  mean_final=0.936  H=24  spawns=20  frozen=21
+  [spawn_cap= 2  seed=1]  max|drift|=0.000  sum_final=9.277  mean_final=0.928  H=23  spawns=19  frozen=19
+  [spawn_cap= 2  seed=2]  max|drift|=0.000  sum_final=9.157  mean_final=0.916  H=24  spawns=20  frozen=19
+  [spawn_cap= 3  seed=0]  max|drift|=0.000  sum_final=9.487  mean_final=0.949  H=33  spawns=29  frozen=28
+  [spawn_cap= 3  seed=1]  max|drift|=0.000  sum_final=9.467  mean_final=0.947  H=32  spawns=28  frozen=27
+  [spawn_cap= 3  seed=2]  max|drift|=0.010  sum_final=9.327  mean_final=0.933  H=33  spawns=29  frozen=25
+  [spawn_cap= 5  seed=0]  max|drift|=0.000  sum_final=9.577  mean_final=0.958  H=50  spawns=46  frozen=38
+  [spawn_cap= 5  seed=1]  max|drift|=0.000  sum_final=9.523  mean_final=0.952  H=49  spawns=45  frozen=39
+  [spawn_cap= 5  seed=2]  max|drift|=0.000  sum_final=9.507  mean_final=0.951  H=49  spawns=45  frozen=31
+  [spawn_cap= 8  seed=0]  max|drift|=0.000  sum_final=9.520  mean_final=0.952  H=59  spawns=55  frozen=49
+  [spawn_cap= 8  seed=1]  max|drift|=0.000  sum_final=9.460  mean_final=0.946  H=57  spawns=53  frozen=46
+  [spawn_cap= 8  seed=2]  max|drift|=0.000  sum_final=9.383  mean_final=0.938  H=61  spawns=57  frozen=45
+  [spawn_cap=12  seed=0]  max|drift|=0.000  sum_final=9.520  mean_final=0.952  H=59  spawns=55  frozen=49
+  [spawn_cap=12  seed=1]  max|drift|=0.000  sum_final=9.460  mean_final=0.946  H=57  spawns=53  frozen=46
+  [spawn_cap=12  seed=2]  max|drift|=0.000  sum_final=9.383  mean_final=0.938  H=61  spawns=57  frozen=45
+
+====================================================================================================
+AGGREGATE — spawn_cap sweep (mean ± std across 3 seeds)
+====================================================================================================
+   spawn_cap      max|drift|       sum_final      mean_final     H_final      frozen
+           2   0.000 ± 0.000   9.266 ± 0.104   0.927 ± 0.010   23.7 ± 0.6   19.7 ± 1.2
+           3   0.003 ± 0.006   9.427 ± 0.087   0.943 ± 0.009   32.7 ± 0.6   26.7 ± 1.5
+           5   0.000 ± 0.000   9.536 ± 0.037   0.954 ± 0.004   49.3 ± 0.6   36.0 ± 4.4
+           8   0.000 ± 0.000   9.454 ± 0.069   0.945 ± 0.007   59.0 ± 2.0   46.7 ± 2.1
+          12   0.000 ± 0.000   9.454 ± 0.069   0.945 ± 0.007   59.0 ± 2.0   46.7 ± 2.1
+
+  Per-task final acc (mean across 3 seeds) — columns = spawn_cap:
+  task            cap 2  cap 3  cap 5  cap 8  cap12
+  linear          0.976  0.976  0.976  0.976  0.976
+  XOR             0.933  0.947  0.969  0.974  0.974
+  rings           0.950  0.968  0.959  0.957  0.957
+  diamond         0.933  0.952  0.953  0.956  0.956
+  stripe          0.979  0.991  0.988  0.982  0.982
+  anti_linear     0.980  0.967  0.978  0.946  0.946
+  half_plane      0.984  0.993  0.989  0.984  0.984
+  checker         0.717  0.768  0.817  0.818  0.818
+  annulus         0.826  0.876  0.922  0.881  0.881
+  y_stripe        0.988  0.990  0.986  0.981  0.981
+
+  CSV → outputs/axis6_credit_spawn_sweep_n3.csv

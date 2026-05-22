@@ -1,0 +1,22 @@
+=================================================================
+[per_axis_ablation] starting axis3_only at 2026-05-22T05:23:37+07:00
+  env: TRIORON_MANIFOLD_REPLAY=1 TRIORON_AXIS_3=1
+=================================================================
+[per_axis_ablation] finished axis3_only with rc=0 at 2026-05-22T05:35:32+07:00
+=================================================================
+[per_axis_ablation] starting axis4_only at 2026-05-22T05:35:32+07:00
+  env: TRIORON_MANIFOLD_REPLAY=1 TRIORON_AXIS_4=1
+=================================================================
+[per_axis_ablation] finished axis4_only with rc=0 at 2026-05-22T05:46:14+07:00
+=================================================================
+[per_axis_ablation] starting axis5_only at 2026-05-22T05:46:14+07:00
+  env: TRIORON_MANIFOLD_REPLAY=1 TRIORON_AXIS_5=1
+=================================================================
+[per_axis_ablation] finished axis5_only with rc=0 at 2026-05-22T06:00:15+07:00
+=================================================================
+[per_axis_ablation] starting axis5_plus_plastic at 2026-05-22T06:00:15+07:00
+  env: TRIORON_MANIFOLD_REPLAY=1 TRIORON_AXIS_5=1 TRIORON_PLASTIC=1 TRIORON_PLASTIC_REWIRE_STEPS=50
+=================================================================
+[per_axis_ablation] finished axis5_plus_plastic with rc=0 at 2026-05-22T06:14:33+07:00
+
+[per_axis_ablation] all conditions done at 2026-05-22T06:14:33+07:00

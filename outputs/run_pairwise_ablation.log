@@ -1,0 +1,17 @@
+=================================================================
+[pairwise] starting axis3_plus_4 at 2026-05-22T08:25:03+07:00
+  env: TRIORON_MANIFOLD_REPLAY=1 TRIORON_AXIS_3=1 TRIORON_AXIS_4=1
+=================================================================
+[pairwise] finished axis3_plus_4 with rc=0 at 2026-05-22T08:37:17+07:00
+=================================================================
+[pairwise] starting axis3_plus_5_plastic at 2026-05-22T08:37:17+07:00
+  env: TRIORON_MANIFOLD_REPLAY=1 TRIORON_AXIS_3=1 TRIORON_AXIS_5=1 TRIORON_PLASTIC=1 TRIORON_PLASTIC_REWIRE_STEPS=50
+=================================================================
+[pairwise] finished axis3_plus_5_plastic with rc=0 at 2026-05-22T08:53:13+07:00
+=================================================================
+[pairwise] starting axis4_plus_5_plastic at 2026-05-22T08:53:13+07:00
+  env: TRIORON_MANIFOLD_REPLAY=1 TRIORON_AXIS_4=1 TRIORON_AXIS_5=1 TRIORON_PLASTIC=1 TRIORON_PLASTIC_REWIRE_STEPS=50
+=================================================================
+[pairwise] finished axis4_plus_5_plastic with rc=0 at 2026-05-22T09:10:05+07:00
+
+[pairwise] all conditions done at 2026-05-22T09:10:05+07:00
