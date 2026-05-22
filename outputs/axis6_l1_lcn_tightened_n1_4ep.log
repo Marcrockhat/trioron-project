@@ -1,0 +1,62 @@
+================================================================================================
+L1 co-design sweep — modes ∈ ['off', 'soft', 'hard'], λ_diff ∈ [0.0, 0.1, 0.2], σ ∈ [0.15, 0.25, 0.4], K ∈ [4, 8, 16, 32], n=1 seeds, 4 ep, L0_LCN=on, cells=24
+================================================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+[mask= off  λ=0.00        —  seed=0]  task_aware=0.964  full=0.575  max|drift|=0.041  H=91  spawns=75  frozen=49  (26s)
+[mask= off  λ=0.10        —  seed=0]  task_aware=0.961  full=0.576  max|drift|=0.042  H=91  spawns=75  frozen=74  (26s)
+[mask= off  λ=0.20        —  seed=0]  task_aware=0.960  full=0.552  max|drift|=0.048  H=91  spawns=75  frozen=77  (35s)
+[mask=soft  λ=0.00   σ=0.15  seed=0]  task_aware=0.961  full=0.534  max|drift|=0.061  H=91  spawns=75  frozen=31  (41s)
+[mask=soft  λ=0.00   σ=0.25  seed=0]  task_aware=0.965  full=0.554  max|drift|=0.038  H=91  spawns=75  frozen=31  (36s)
+[mask=soft  λ=0.00    σ=0.4  seed=0]  task_aware=0.958  full=0.546  max|drift|=0.058  H=91  spawns=75  frozen=35  (41s)
+[mask=soft  λ=0.10   σ=0.15  seed=0]  task_aware=0.940  full=0.545  max|drift|=0.073  H=91  spawns=75  frozen=60  (36s)
+[mask=soft  λ=0.10   σ=0.25  seed=0]  task_aware=0.948  full=0.533  max|drift|=0.064  H=91  spawns=75  frozen=71  (37s)
+[mask=soft  λ=0.10    σ=0.4  seed=0]  task_aware=0.952  full=0.554  max|drift|=0.054  H=91  spawns=75  frozen=64  (38s)
+[mask=soft  λ=0.20   σ=0.15  seed=0]  task_aware=0.933  full=0.518  max|drift|=0.098  H=91  spawns=75  frozen=54  (38s)
+[mask=soft  λ=0.20   σ=0.25  seed=0]  task_aware=0.947  full=0.537  max|drift|=0.071  H=91  spawns=75  frozen=58  (38s)
+[mask=soft  λ=0.20    σ=0.4  seed=0]  task_aware=0.956  full=0.554  max|drift|=0.054  H=91  spawns=75  frozen=74  (37s)
+[mask=hard  λ=0.00      K=4  seed=0]  task_aware=0.952  full=0.524  max|drift|=0.051  H=91  spawns=75  frozen=21  (38s)
+[mask=hard  λ=0.00      K=8  seed=0]  task_aware=0.955  full=0.520  max|drift|=0.050  H=91  spawns=75  frozen=29  (36s)
+[mask=hard  λ=0.00     K=16  seed=0]  task_aware=0.962  full=0.554  max|drift|=0.033  H=91  spawns=75  frozen=28  (40s)
+[mask=hard  λ=0.00     K=32  seed=0]  task_aware=0.963  full=0.550  max|drift|=0.050  H=91  spawns=75  frozen=36  (36s)
+[mask=hard  λ=0.10      K=4  seed=0]  task_aware=0.919  full=0.491  max|drift|=0.082  H=91  spawns=75  frozen=54  (37s)
+[mask=hard  λ=0.10      K=8  seed=0]  task_aware=0.931  full=0.528  max|drift|=0.088  H=91  spawns=75  frozen=58  (33s)
+[mask=hard  λ=0.10     K=16  seed=0]  task_aware=0.932  full=0.541  max|drift|=0.069  H=91  spawns=75  frozen=64  (33s)
+[mask=hard  λ=0.10     K=32  seed=0]  task_aware=0.942  full=0.556  max|drift|=0.074  H=91  spawns=75  frozen=75  (38s)
+[mask=hard  λ=0.20      K=4  seed=0]  task_aware=0.927  full=0.492  max|drift|=0.095  H=91  spawns=75  frozen=43  (32s)
+[mask=hard  λ=0.20      K=8  seed=0]  task_aware=0.927  full=0.483  max|drift|=0.079  H=91  spawns=75  frozen=53  (36s)
+[mask=hard  λ=0.20     K=16  seed=0]  task_aware=0.941  full=0.541  max|drift|=0.065  H=91  spawns=75  frozen=68  (37s)
+[mask=hard  λ=0.20     K=32  seed=0]  task_aware=0.944  full=0.552  max|drift|=0.066  H=91  spawns=75  frozen=69  (38s)
+
+================================================================================================
+AGGREGATE — mask × λ_diff × hp (n=1 seeds)
+================================================================================================
+  mask  λ_diff        hp      task_aware            full      max|drift|        H_L1      frozen
+   off    0.00         —   0.964 ± 0.000   0.575 ± 0.000   0.041 ± 0.000   91.0 ± 0.0   49.0 ± 0.0
+   off    0.10         —   0.961 ± 0.000   0.576 ± 0.000   0.042 ± 0.000   91.0 ± 0.0   74.0 ± 0.0
+   off    0.20         —   0.960 ± 0.000   0.552 ± 0.000   0.048 ± 0.000   91.0 ± 0.0   77.0 ± 0.0
+  soft    0.00    σ=0.15   0.961 ± 0.000   0.534 ± 0.000   0.061 ± 0.000   91.0 ± 0.0   31.0 ± 0.0
+  soft    0.00    σ=0.25   0.965 ± 0.000   0.554 ± 0.000   0.038 ± 0.000   91.0 ± 0.0   31.0 ± 0.0
+  soft    0.00     σ=0.4   0.958 ± 0.000   0.546 ± 0.000   0.058 ± 0.000   91.0 ± 0.0   35.0 ± 0.0
+  soft    0.10    σ=0.15   0.940 ± 0.000   0.545 ± 0.000   0.073 ± 0.000   91.0 ± 0.0   60.0 ± 0.0
+  soft    0.10    σ=0.25   0.948 ± 0.000   0.533 ± 0.000   0.064 ± 0.000   91.0 ± 0.0   71.0 ± 0.0
+  soft    0.10     σ=0.4   0.952 ± 0.000   0.554 ± 0.000   0.054 ± 0.000   91.0 ± 0.0   64.0 ± 0.0
+  soft    0.20    σ=0.15   0.933 ± 0.000   0.518 ± 0.000   0.098 ± 0.000   91.0 ± 0.0   54.0 ± 0.0
+  soft    0.20    σ=0.25   0.947 ± 0.000   0.537 ± 0.000   0.071 ± 0.000   91.0 ± 0.0   58.0 ± 0.0
+  soft    0.20     σ=0.4   0.956 ± 0.000   0.554 ± 0.000   0.054 ± 0.000   91.0 ± 0.0   74.0 ± 0.0
+  hard    0.00       K=4   0.952 ± 0.000   0.524 ± 0.000   0.051 ± 0.000   91.0 ± 0.0   21.0 ± 0.0
+  hard    0.00       K=8   0.955 ± 0.000   0.520 ± 0.000   0.050 ± 0.000   91.0 ± 0.0   29.0 ± 0.0
+  hard    0.00      K=16   0.962 ± 0.000   0.554 ± 0.000   0.033 ± 0.000   91.0 ± 0.0   28.0 ± 0.0
+  hard    0.00      K=32   0.963 ± 0.000   0.550 ± 0.000   0.050 ± 0.000   91.0 ± 0.0   36.0 ± 0.0
+  hard    0.10       K=4   0.919 ± 0.000   0.491 ± 0.000   0.082 ± 0.000   91.0 ± 0.0   54.0 ± 0.0
+  hard    0.10       K=8   0.931 ± 0.000   0.528 ± 0.000   0.088 ± 0.000   91.0 ± 0.0   58.0 ± 0.0
+  hard    0.10      K=16   0.932 ± 0.000   0.541 ± 0.000   0.069 ± 0.000   91.0 ± 0.0   64.0 ± 0.0
+  hard    0.10      K=32   0.942 ± 0.000   0.556 ± 0.000   0.074 ± 0.000   91.0 ± 0.0   75.0 ± 0.0
+  hard    0.20       K=4   0.927 ± 0.000   0.492 ± 0.000   0.095 ± 0.000   91.0 ± 0.0   43.0 ± 0.0
+  hard    0.20       K=8   0.927 ± 0.000   0.483 ± 0.000   0.079 ± 0.000   91.0 ± 0.0   53.0 ± 0.0
+  hard    0.20      K=16   0.941 ± 0.000   0.541 ± 0.000   0.065 ± 0.000   91.0 ± 0.0   68.0 ± 0.0
+  hard    0.20      K=32   0.944 ± 0.000   0.552 ± 0.000   0.066 ± 0.000   91.0 ± 0.0   69.0 ± 0.0

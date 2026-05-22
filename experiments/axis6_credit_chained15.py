@@ -60,6 +60,59 @@ N_CLASSES = 30
 # (matches CosFace / ArcFace conventions for shallow heads).
 COSINE_TEMPERATURE = float(os.environ.get("AXIS6_COS_TEMP", "16.0"))
 
+# LCN-on-L1: each L1 cell at position p reads only from L0 cells near p.
+# Co-designed with diffusion-of-W: with shared input topology across
+# position-neighbors, diffusion of W smooths same-aligned local filters
+# → emergent locally-connected proto-conv. Three modes:
+#   "off"  : no mask (full read).
+#   "soft" : Gaussian falloff in image-position space (mirrors L0 LCN).
+#   "hard" : binary top-k window — each L1 cell reads from its K
+#            nearest L0 cells, rest pinned at zero.
+# Sigma default 0.25 = L1 cell spacing on the 4×4 grid (~50% overlap
+# between adjacent windows, matches the L0 "1× spacing" convention).
+L1_LCN_MODE = os.environ.get("AXIS6_L1_LCN_MODE", "off").lower()
+L1_LCN_SIGMA = float(os.environ.get("AXIS6_L1_LCN_SIGMA", "0.25"))
+L1_LCN_K = int(os.environ.get("AXIS6_L1_LCN_K", "8"))
+if L1_LCN_MODE not in {"off", "soft", "hard"}:
+    raise ValueError(
+        f"AXIS6_L1_LCN_MODE must be one of off/soft/hard, got {L1_LCN_MODE!r}"
+    )
+
+# Hebbian (activity-driven) kernel for diffusion-of-W: replaces the
+# Gaussian-over-hand-coded-position kernel with one derived from
+# activation correlation between L1 cells. Cells that fire together on
+# similar inputs become diffusion neighbors → their W rows smooth toward
+# each other → emergent weight-sharing → conv-like organization,
+# *earned by activity* rather than declared. Preserves the absorption
+# invariant (no positional commitments — any cell can accept) and the
+# substrate emergence principle (structure derives from what cells do,
+# not from hand-coded coordinates).
+#
+# Modes:
+#   "off"     : use Axis 6 Gaussian-over-cell_position kernel (default,
+#               legacy behavior).
+#   "softmax" : EMA of cosine similarity between L1 activation profiles,
+#               row-softmaxed at use time with diagonal zeroed.
+#   "topk"    : same EMA + cosine, but each row keeps only its K most-
+#               correlated neighbors as a binary kernel (then normalized).
+# Mutually exclusive with AXIS6_L1_LCN_MODE — the kernel and the read-
+# mask are independent mechanisms but the comparison is muddled if both
+# fire, so the smoke run gate insists on at most one being non-off.
+HEBBIAN_MODE = os.environ.get("AXIS6_HEBBIAN", "off").lower()
+HEBBIAN_DECAY = float(os.environ.get("AXIS6_HEBBIAN_DECAY", "0.9"))
+HEBBIAN_K = int(os.environ.get("AXIS6_HEBBIAN_K", "4"))
+HEBBIAN_TEMP = float(os.environ.get("AXIS6_HEBBIAN_TEMP", "1.0"))
+if HEBBIAN_MODE not in {"off", "softmax", "topk"}:
+    raise ValueError(
+        f"AXIS6_HEBBIAN must be one of off/softmax/topk, got {HEBBIAN_MODE!r}"
+    )
+if HEBBIAN_MODE != "off" and L1_LCN_MODE != "off":
+    raise RuntimeError(
+        "AXIS6_HEBBIAN and AXIS6_L1_LCN_MODE are mutually exclusive: "
+        "both are alternative answers to 'how do L1 cells decide who their "
+        "neighbors are.' Pick one for a clean comparison."
+    )
+
 
 def diffused_l1_weight(
     L1,
@@ -67,29 +120,57 @@ def diffused_l1_weight(
     credit_mask: Optional[torch.Tensor] = None,
     W_snapshot: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
-    """Compute L1's effective weight matrix under spatial diffusion.
+    """Compute L1's effective weight matrix under spatial diffusion + LCN.
 
-      W_eff = (1-λ) · W + λ · (kernel @ W)
+      W_eff = ((1-λ) · W + λ · (kernel @ W))  ⊙  W_lcn_mask
 
-    where `kernel` is the same Gaussian-over-cell_position used by Axis 6
-    field diffusion. Reuses L1._field_kernel (lazily built on first call).
+    where `kernel` is the Gaussian-over-cell_position from Axis 6 field
+    machinery, and `W_lcn_mask` (optional, on L1) enforces input-side
+    positional locality. The mask is applied AFTER diffusion so that
+    diffusion can mix neighbor rows but the effective read stays inside
+    each cell's window — preserves the "L1 cells read positionally-
+    local L0 cells" prior even when neighbors smear their weights.
 
     If a credit_mask + W_snapshot are provided, credited cells use the
     snapshot (their W_eff at credit-grant time) instead of the live
-    diffusion. This decouples credited cells from later neighbor changes:
-    their feature identity stays locked even as uncredited neighbors learn.
+    diffusion+mask. This decouples credited cells from later neighbor
+    changes: their feature identity stays locked even as uncredited
+    neighbors learn.
     """
-    if lambda_diff <= 0.0:
-        # Degenerate: no diffusion, just return W directly.
-        return L1.W
-    # Kernel is lazily built/cached on L1; build if missing or stale.
     n = L1.n_nodes
-    if (L1._field_kernel is None
-            or L1._field_kernel.shape[0] != n):
-        L1._field_kernel = L1._compute_field_kernel()
-    kernel = L1._field_kernel.to(device=L1.W.device, dtype=L1.W.dtype)
-    diffused = kernel @ L1.W
-    W_eff_live = (1.0 - lambda_diff) * L1.W + lambda_diff * diffused
+    lcn = getattr(L1, "W_lcn_mask", None)
+    if lambda_diff <= 0.0 and lcn is None:
+        # Degenerate: no diffusion, no mask → return W directly.
+        return L1.W
+    if lambda_diff > 0.0:
+        # Kernel source: Hebbian (activity-driven) if armed and seeded,
+        # otherwise fall back to Axis 6 Gaussian-over-cell_position.
+        # Hebbian returns None when not yet seeded (first-batch warmup),
+        # which auto-falls-through to position kernel — clean cold-start.
+        kernel = hebbian_kernel(L1)
+        if kernel is None:
+            if (L1._field_kernel is None
+                    or L1._field_kernel.shape[0] != n):
+                L1._field_kernel = L1._compute_field_kernel()
+            kernel = L1._field_kernel
+        kernel = kernel.to(device=L1.W.device, dtype=L1.W.dtype)
+        diffused = kernel @ L1.W
+        W_eff_live = (1.0 - lambda_diff) * L1.W + lambda_diff * diffused
+    else:
+        # λ=0 but mask is on — diffusion is a no-op, just apply the mask.
+        W_eff_live = L1.W
+    if lcn is not None:
+        # Mask may be stale-shaped if extend_l1_lcn_mask hasn't fired yet
+        # for a fresh spawn. Pad with zeros (= no read) for missing rows
+        # so the multiply is safe; extend will overwrite next opportunity.
+        if lcn.shape[0] < n:
+            pad = torch.zeros(
+                n - lcn.shape[0], lcn.shape[1],
+                dtype=lcn.dtype, device=lcn.device,
+            )
+            lcn = torch.cat([lcn, pad], dim=0)
+        W_eff_live = W_eff_live * lcn.to(device=W_eff_live.device,
+                                         dtype=W_eff_live.dtype)
     if (credit_mask is not None
             and W_snapshot is not None
             and credit_mask.numel() == n
@@ -159,9 +240,257 @@ def cosine_logits(
 
 
 # ----------------------------------------------------------------------
+# LCN-on-L1 mask: positional locality on the input-read side of L1
+# ----------------------------------------------------------------------
+
+
+def _l1_lcn_rows(
+    l1_positions: torch.Tensor,
+    l0_positions: torch.Tensor,
+    mode: str,
+    sigma: float,
+    k: int,
+) -> torch.Tensor:
+    """Return (n_l1, n_l0) mask using 2D distance in image position space.
+
+    "soft" → exp(-d² / 2σ²). "hard" → 1 for each cell's k nearest L0
+    cells, 0 elsewhere. Both rows live in [0, 1].
+    """
+    # (n_l1, n_l0) squared distance in xy.
+    d2 = ((l1_positions.unsqueeze(1) - l0_positions.unsqueeze(0)) ** 2).sum(-1)
+    if mode == "soft":
+        return torch.exp(-d2 / (2.0 * sigma ** 2))
+    if mode == "hard":
+        k_eff = max(1, min(k, d2.shape[1]))
+        # topk on -d2 → smallest distances → nearest neighbors.
+        _, idx = torch.topk(-d2, k_eff, dim=1)
+        mask = torch.zeros_like(d2)
+        mask.scatter_(1, idx, 1.0)
+        return mask
+    raise ValueError(f"unsupported L1 LCN mode: {mode!r}")
+
+
+def build_l1_lcn_mask(
+    L1,
+    L0,
+    mode: str = L1_LCN_MODE,
+    sigma: float = L1_LCN_SIGMA,
+    k: int = L1_LCN_K,
+) -> torch.Tensor:
+    """(L1.n_nodes, L0.n_nodes) mask in L1.W dtype/device."""
+    l1_pos = L1.cell_position[: L1.n_nodes, :2].detach().to(dtype=torch.float32)
+    l0_pos = L0.cell_position[: L0.n_nodes, :2].detach().to(dtype=torch.float32)
+    mask = _l1_lcn_rows(l1_pos, l0_pos, mode=mode, sigma=sigma, k=k)
+    return mask.to(device=L1.W.device, dtype=L1.W.dtype)
+
+
+def install_l1_lcn_mask(
+    net: TrioronNetwork,
+    mode: str = L1_LCN_MODE,
+    sigma: float = L1_LCN_SIGMA,
+    k: int = L1_LCN_K,
+    l1_layer_idx: int = 1,
+    l0_layer_idx: int = 0,
+) -> None:
+    """Register `W_lcn_mask` on L1 and apply once to L1.W (+ W_anchor).
+    No-op when mode='off'. Persists in state_dict for resume."""
+    if mode == "off":
+        return
+    L1 = net.layers[l1_layer_idx]
+    L0 = net.layers[l0_layer_idx]
+    mask = build_l1_lcn_mask(L1, L0, mode=mode, sigma=sigma, k=k)
+    if hasattr(L1, "W_lcn_mask"):
+        # Replace by buffer copy if shape matches; otherwise re-register.
+        if L1.W_lcn_mask.shape == mask.shape:
+            L1.W_lcn_mask.copy_(mask)
+        else:
+            del L1._buffers["W_lcn_mask"]
+            L1.register_buffer("W_lcn_mask", mask)
+    else:
+        L1.register_buffer("W_lcn_mask", mask)
+    # Stash mode/sigma/k for later extension on spawn.
+    L1._lcn_mode = mode
+    L1._lcn_sigma = sigma
+    L1._lcn_k = k
+    with torch.no_grad():
+        L1.W.data.mul_(mask)
+        if hasattr(L1, "W_anchor"):
+            L1.W_anchor.data.mul_(mask.to(L1.W_anchor.dtype))
+
+
+def reapply_l1_lcn_mask(L1) -> None:
+    """Multiply L1.W by W_lcn_mask in-place. Call after every optimizer
+    step that touches L1 so off-window entries don't accumulate."""
+    mask = getattr(L1, "W_lcn_mask", None)
+    if mask is None:
+        return
+    with torch.no_grad():
+        L1.W.data.mul_(mask)
+
+
+def extend_l1_lcn_mask(
+    net: TrioronNetwork,
+    l1_layer_idx: int = 1,
+    l0_layer_idx: int = 0,
+) -> None:
+    """After axis6_spawn grows L1, extend W_lcn_mask with rows for the
+    new cells using their assigned cell_position. Zeroes the off-window
+    entries of the newly-spawned W rows so spawn doesn't introduce a
+    global read pattern through the back door."""
+    L1 = net.layers[l1_layer_idx]
+    L0 = net.layers[l0_layer_idx]
+    mask = getattr(L1, "W_lcn_mask", None)
+    if mask is None:
+        return
+    old_n = mask.shape[0]
+    new_n = L1.n_nodes
+    if new_n == old_n:
+        return
+    mode = getattr(L1, "_lcn_mode", L1_LCN_MODE)
+    sigma = getattr(L1, "_lcn_sigma", L1_LCN_SIGMA)
+    k = getattr(L1, "_lcn_k", L1_LCN_K)
+    new_l1_pos = L1.cell_position[old_n:new_n, :2].detach().to(dtype=torch.float32)
+    l0_pos = L0.cell_position[: L0.n_nodes, :2].detach().to(dtype=torch.float32)
+    new_rows = _l1_lcn_rows(
+        new_l1_pos, l0_pos, mode=mode, sigma=sigma, k=k,
+    ).to(device=mask.device, dtype=mask.dtype)
+    full = torch.cat([mask, new_rows], dim=0)
+    del L1._buffers["W_lcn_mask"]
+    L1.register_buffer("W_lcn_mask", full)
+    with torch.no_grad():
+        L1.W.data[old_n:new_n].mul_(new_rows.to(L1.W.device, L1.W.dtype))
+
+
+# ----------------------------------------------------------------------
+# Hebbian (activity-driven) kernel — alternative to Gaussian-over-position
+# ----------------------------------------------------------------------
+
+
+def _ensure_act_corr_buffer(L1) -> None:
+    """Lazily allocate (n_nodes, n_nodes) EMA buffer for activation
+    correlation, plus a 'has data yet' flag. Idempotent."""
+    n = L1.n_nodes
+    buf = getattr(L1, "_act_corr_ema", None)
+    if buf is None or buf.shape[0] != n:
+        L1.register_buffer(
+            "_act_corr_ema",
+            torch.zeros(n, n, device=L1.W.device, dtype=torch.float32),
+        )
+        L1._act_corr_initialized = False
+
+
+def update_activation_correlation(
+    L1,
+    h1_batch: torch.Tensor,
+    decay: float = HEBBIAN_DECAY,
+) -> None:
+    """EMA update: cosine similarity between L1 cells' per-batch
+    activation profiles. h1_batch is (B, n_nodes) post-ReLU.
+
+    cor[i, j] = mean over batch of normalized(h1[:, i]) · normalized(h1[:, j])
+    Stored as L1._act_corr_ema with exponential decay:
+        ema ← decay · ema + (1 - decay) · cor
+    First call seeds ema directly (no smoothing toward zero)."""
+    _ensure_act_corr_buffer(L1)
+    n = L1.n_nodes
+    if h1_batch.shape[1] != n:
+        # Stale shape (mid-spawn). Skip — extend will reseed on next pass.
+        return
+    h = h1_batch.detach().to(dtype=torch.float32)
+    # Center? No — we want raw co-activation, so cosine on raw activations
+    # gives a [-1, 1] score that's positive when cells co-fire and zero
+    # when they're orthogonal across the batch.
+    norm = h.norm(dim=0, keepdim=True).clamp(min=1e-8)
+    h_n = h / norm                                       # (B, n)
+    cor = h_n.t() @ h_n                                  # (n, n)
+    if not getattr(L1, "_act_corr_initialized", False):
+        L1._act_corr_ema.copy_(cor)
+        L1._act_corr_initialized = True
+    else:
+        L1._act_corr_ema.mul_(decay).add_(cor, alpha=(1.0 - decay))
+
+
+def hebbian_kernel(
+    L1,
+    mode: str = HEBBIAN_MODE,
+    k: int = HEBBIAN_K,
+    temp: float = HEBBIAN_TEMP,
+) -> Optional[torch.Tensor]:
+    """Convert the EMA correlation buffer into a row-stochastic kernel
+    suitable for `kernel @ W` diffusion. Returns None when mode='off'
+    or when the buffer hasn't been seeded yet.
+
+    Diagonal is always zeroed (a cell doesn't smooth toward itself —
+    that's already covered by the (1-λ)·W term in the diffusion update)."""
+    if mode == "off":
+        return None
+    ema = getattr(L1, "_act_corr_ema", None)
+    if ema is None or not getattr(L1, "_act_corr_initialized", False):
+        return None
+    n = L1.n_nodes
+    if ema.shape[0] != n:
+        return None
+    cor = ema.clone()
+    cor.fill_diagonal_(0.0)
+    if mode == "softmax":
+        # Row-softmax with temperature. Negative correlations get
+        # weak weight; positive correlations dominate.
+        return torch.softmax(cor / max(temp, 1e-8), dim=1).to(
+            device=L1.W.device, dtype=L1.W.dtype,
+        )
+    if mode == "topk":
+        k_eff = max(1, min(k, n - 1))
+        # Pick top-k correlations per row; everything else → 0.
+        _, idx = torch.topk(cor, k_eff, dim=1)
+        ker = torch.zeros_like(cor)
+        ker.scatter_(1, idx, 1.0)
+        # Row-normalize so each row sums to 1 (so diffusion is a
+        # convex combination, no scale drift).
+        row_sum = ker.sum(dim=1, keepdim=True).clamp(min=1e-8)
+        ker = ker / row_sum
+        return ker.to(device=L1.W.device, dtype=L1.W.dtype)
+    raise ValueError(f"unsupported HEBBIAN mode {mode!r}")
+
+
+def extend_act_corr_on_spawn(L1, parent_idx: int, new_idx: int) -> None:
+    """After axis6_spawn grows L1, extend the activation-correlation
+    EMA buffer. New cell inherits parent's row/column as a warm start
+    (since axis6_spawn copies parent W + adds jitter — the new cell IS
+    a noisy copy of parent at spawn time, so it should diffuse toward
+    parent's neighbors)."""
+    buf = getattr(L1, "_act_corr_ema", None)
+    if buf is None:
+        return
+    n_new = L1.n_nodes
+    n_old = buf.shape[0]
+    if n_new <= n_old:
+        return
+    # Pad to new shape.
+    new_buf = torch.zeros(n_new, n_new, device=buf.device, dtype=buf.dtype)
+    new_buf[:n_old, :n_old] = buf
+    if 0 <= parent_idx < n_old and n_old <= new_idx < n_new:
+        # Inherit parent's correlations for the new cell. Then the
+        # parent and new cell start strongly correlated with each other
+        # (since they ARE near-copies) — set their pairwise entry to 1.
+        new_buf[new_idx, :n_old] = buf[parent_idx, :n_old]
+        new_buf[:n_old, new_idx] = buf[:n_old, parent_idx]
+        new_buf[parent_idx, new_idx] = 1.0
+        new_buf[new_idx, parent_idx] = 1.0
+        new_buf[new_idx, new_idx] = 1.0
+    del L1._buffers["_act_corr_ema"]
+    L1.register_buffer("_act_corr_ema", new_buf)
+
+
+# ----------------------------------------------------------------------
 # Build a 3-layer trioron with frozen L0 (LCN or random) + growable L1 + head
 # ----------------------------------------------------------------------
-def build_net(seed: int, lcn_enabled: bool = True) -> TrioronNetwork:
+def build_net(
+    seed: int,
+    lcn_enabled: bool = True,
+    l1_lcn_mode: str = L1_LCN_MODE,
+    l1_lcn_sigma: float = L1_LCN_SIGMA,
+    l1_lcn_k: int = L1_LCN_K,
+) -> TrioronNetwork:
     torch.manual_seed(seed)
     net = TrioronNetwork([
         (INPUT_DIM, L0_WIDTH, "relu"),    # L0: perception
@@ -218,6 +547,13 @@ def build_net(seed: int, lcn_enabled: bool = True) -> TrioronNetwork:
         L1.cell_position[:n, 0] = positions[:, 0]
         L1.cell_position[:n, 1] = positions[:, 1]
         L1.cell_position[:n, 2] = 0.0
+
+    # LCN-on-L1 (co-design with diffusion-of-W). Must come AFTER L1
+    # cell_position is set so distances are computed in image space.
+    # No-op when l1_lcn_mode='off'.
+    install_l1_lcn_mask(
+        net, mode=l1_lcn_mode, sigma=l1_lcn_sigma, k=l1_lcn_k,
+    )
 
     return net
 
@@ -394,6 +730,11 @@ def train_one_task(
                 net.layers[1], h0, lambda_diff,
                 credit_mask=l1_credit_mask, W_snapshot=W_snapshot,
             )
+            # Hebbian kernel: update activation-correlation EMA from this
+            # batch's L1 activations. No-op when HEBBIAN_MODE=off (still
+            # cheap — we always call so spawn-extend stays in sync).
+            if HEBBIAN_MODE != "off" and lambda_diff > 0.0:
+                update_activation_correlation(L1, h1)
             outs = cosine_logits(h1, net.layers[2].W)
             # Task-local labels: map global → local-in-task ({0, 1})
             yb_local = torch.zeros_like(yb_global)
@@ -485,6 +826,16 @@ def train_one_task(
                         L1.b.grad[cm] = 0.0
 
             opt.step()
+            # LCN-on-L1: we deliberately DO NOT call reapply_l1_lcn_mask
+            # per step. Soft Gaussian masks with values in (0, 1) would
+            # iteratively shrink in-window entries under repeated multiply
+            # (degenerate behavior: a weight at mask=0.135 halves an order
+            # of magnitude per ~7 steps). The forward-time multiply inside
+            # diffused_l1_weight (W_eff_live * lcn) gives correct gradient
+            # scaling on its own — off-window entries see grad ∝ mask, so
+            # binary masks freeze them at init (mask=0 → grad=0) and soft
+            # masks keep them small without runaway drift. Install-time
+            # zeroing (in install_l1_lcn_mask) handles the starting point.
             step += 1
 
             if axis6:
@@ -504,6 +855,17 @@ def train_one_task(
                              f"AXIS6 spawn: parent {cand} → new {new_idx} "
                              f"@ {L1.cell_position[new_idx][:2].tolist()}")
                         )
+                        # LCN-on-L1: extend mask with new cell's window.
+                        # Must come BEFORE opt rebuild so any later reapply
+                        # finds the matching shape.
+                        extend_l1_lcn_mask(net)
+                        # Hebbian kernel: extend activation-correlation
+                        # buffer. New cell inherits parent's row/col as
+                        # warm start (it IS a noisy copy of parent post-
+                        # spawn, so neighbors of parent ≈ neighbors of
+                        # new). No-op when HEBBIAN_MODE=off.
+                        if HEBBIAN_MODE != "off":
+                            extend_act_corr_on_spawn(L1, cand, new_idx)
                         # Rebuild opt to include new parameter slots.
                         opt = torch.optim.Adam(
                             [p for p in net.parameters() if p.requires_grad],
@@ -622,7 +984,13 @@ def run_arm(
     verbose: bool = False,
 ) -> dict:
     if starting_net is None:
-        net = build_net(seed=seed, lcn_enabled=hp.get("lcn_enabled", True))
+        net = build_net(
+            seed=seed,
+            lcn_enabled=hp.get("lcn_enabled", True),
+            l1_lcn_mode=hp.get("l1_lcn_mode", L1_LCN_MODE),
+            l1_lcn_sigma=hp.get("l1_lcn_sigma", L1_LCN_SIGMA),
+            l1_lcn_k=hp.get("l1_lcn_k", L1_LCN_K),
+        )
         cell_credit = (
             torch.zeros(net.layers[1].n_nodes, dtype=torch.bool)
             if credit_enabled else None
