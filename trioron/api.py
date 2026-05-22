@@ -591,6 +591,101 @@ def load_organism(path: Union[str, Path]):
 
 
 # ---------------------------------------------------------------------
+# Public: cell-granularity absorption
+# ---------------------------------------------------------------------
+
+
+def pool_matched_absorb(
+    recipient,
+    donor,
+    *,
+    layer_idx: int = 1,
+    grid_size: int = 4,
+    pool_capacity: Optional[int] = None,
+    snap_to_pool_centroid: bool = False,
+    donor_trained_classes: Optional[Sequence[int]] = None,
+) -> List[Tuple[int, int]]:
+    """Cell-granularity absorption between two TrioronNetwork instances.
+
+    The recipient gains one new cell at ``layer_idx`` for every donor
+    cell whose pool isn't full in the recipient. Both networks must
+    share the layer's fan_in (i.e. the same L0 width — guaranteed by
+    the R·S handshake under a shared L0 seed) and the same head width.
+
+    This is the lower-level sibling of :func:`absorb`, which composes
+    DONORS into a multi-branch ORGANISM at branch granularity.
+    Pool-matched absorption operates at the CELL granularity inside
+    one organism's substrate — the recipient ends up with one
+    contiguous L1 carrying the union of the donor's cells, not a
+    parallel branch tree. Use this when you want one substrate that
+    behaves as a single network rather than a routed ensemble.
+
+    The architectural invariant: absorption respects POOLS, not exact
+    cell positions. The unit square is partitioned into a grid (by
+    default 4×4 = 16 pools); a donor cell at pool k lands on a
+    recipient cell-slot in pool k. Inside a pool, cells are
+    interchangeable; across pools they are not. This is what makes
+    LCN and pool-matched absorption compose: both donor and recipient
+    share the pool convention, so the recipient's mask extension is
+    idempotent on the absorbed donor cells. See ``trioron.spatial``
+    for the pool/LCN primitives.
+
+    Args:
+        recipient: the host TrioronNetwork that will gain new cells.
+        donor: the donor TrioronNetwork whose cells are absorbed.
+        layer_idx: which layer of the substrate to absorb at (default 1,
+            i.e. the L1 in a [L0, L1, head] trio).
+        grid_size: pool partition resolution. Default 4 = 16 pools.
+        pool_capacity: optional per-pool cap on how many cells the
+            recipient can hold in any single pool. Donor cells in a
+            full pool are skipped.
+        snap_to_pool_centroid: when True, position the new cell at the
+            centroid of its donor-side pool (canonical position; loses
+            donor's exact migration history). Default False keeps the
+            donor's position bit-for-bit.
+        donor_trained_classes: when provided, head columns for any
+            class NOT in this set are zeroed before transfer
+            (eliminates random-init interference on the recipient's
+            predictions for classes the donor never saw). Strongly
+            recommended whenever the donor's curriculum is narrower
+            than the recipient's class space.
+
+    Returns:
+        A list of (donor_idx, new_recipient_idx) for the cells that
+        were absorbed. Skipped cells are omitted.
+
+    Caller MUST rebuild any optimizer holding the recipient's
+    ``layers[layer_idx]`` or head parameters — the W Parameter objects
+    are replaced by the underlying grow_layer call.
+    """
+    return recipient.pool_matched_absorb(
+        donor,
+        layer_idx=layer_idx,
+        grid_size=grid_size,
+        pool_capacity=pool_capacity,
+        snap_to_pool_centroid=snap_to_pool_centroid,
+        donor_trained_classes=donor_trained_classes,
+    )
+
+
+def merge_manifold(recipient_manifold, donor_manifold) -> int:
+    """Merge a donor's per-class manifold archive into the recipient's.
+
+    Cell absorption transfers the substrate (W rows); the manifold
+    merge transfers the per-class signatures the head needs to
+    calibrate over the union of classes the recipient now covers.
+    Both arguments duck-type a ManifoldStore (``mu_per_class`` /
+    ``sigma_per_class`` mappings + ``n_l0``).
+
+    Returns the number of newly-added classes — donor classes already
+    present in the recipient are left untouched (the recipient's own
+    training is more trustworthy than a transferred snapshot).
+    """
+    from trioron.network import merge_manifold as _merge
+    return _merge(recipient_manifold, donor_manifold)
+
+
+# ---------------------------------------------------------------------
 # Public: extend (ship-wake-extend loop)
 # ---------------------------------------------------------------------
 

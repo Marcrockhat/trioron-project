@@ -340,30 +340,26 @@ def install_l1_lcn_mask(
     l1_layer_idx: int = 1,
     l0_layer_idx: int = 0,
 ) -> None:
-    """Register `W_lcn_mask` on L1 and apply once to L1.W (+ W_anchor).
-    No-op when mode='off'. Persists in state_dict for resume."""
+    """Install LCN-on-L1 via the substrate API.
+
+    Thin wrapper around ``TrioronLayer.enable_lcn`` — pulls input
+    positions from L0's ``cell_position`` (the upstream layer's image-
+    plane coordinates) and delegates. The substrate caches
+    ``lcn_in_positions`` so subsequent ``grow_node`` calls extend the
+    mask automatically; legacy callers that hit ``extend_l1_lcn_mask``
+    explicitly remain compatible (the substrate-level extend is
+    idempotent on already-extended rows).
+
+    No-op when mode='off'.
+    """
     if mode == "off":
         return
     L1 = net.layers[l1_layer_idx]
     L0 = net.layers[l0_layer_idx]
-    mask = build_l1_lcn_mask(L1, L0, mode=mode, sigma=sigma, k=k)
-    if hasattr(L1, "W_lcn_mask"):
-        # Replace by buffer copy if shape matches; otherwise re-register.
-        if L1.W_lcn_mask.shape == mask.shape:
-            L1.W_lcn_mask.copy_(mask)
-        else:
-            del L1._buffers["W_lcn_mask"]
-            L1.register_buffer("W_lcn_mask", mask)
-    else:
-        L1.register_buffer("W_lcn_mask", mask)
-    # Stash mode/sigma/k for later extension on spawn.
-    L1._lcn_mode = mode
-    L1._lcn_sigma = sigma
-    L1._lcn_k = k
-    with torch.no_grad():
-        L1.W.data.mul_(mask)
-        if hasattr(L1, "W_anchor"):
-            L1.W_anchor.data.mul_(mask.to(L1.W_anchor.dtype))
+    in_positions = L0.cell_position[: L0.n_nodes, :2].detach().clone()
+    L1.enable_lcn(
+        in_positions, mode=mode, sigma=float(sigma), k=int(k),
+    )
 
 
 def reapply_l1_lcn_mask(L1) -> None:
@@ -381,32 +377,15 @@ def extend_l1_lcn_mask(
     l1_layer_idx: int = 1,
     l0_layer_idx: int = 0,
 ) -> None:
-    """After axis6_spawn grows L1, extend W_lcn_mask with rows for the
-    new cells using their assigned cell_position. Zeroes the off-window
-    entries of the newly-spawned W rows so spawn doesn't introduce a
-    global read pattern through the back door."""
-    L1 = net.layers[l1_layer_idx]
-    L0 = net.layers[l0_layer_idx]
-    mask = getattr(L1, "W_lcn_mask", None)
-    if mask is None:
-        return
-    old_n = mask.shape[0]
-    new_n = L1.n_nodes
-    if new_n == old_n:
-        return
-    mode = getattr(L1, "_lcn_mode", L1_LCN_MODE)
-    sigma = getattr(L1, "_lcn_sigma", L1_LCN_SIGMA)
-    k = getattr(L1, "_lcn_k", L1_LCN_K)
-    new_l1_pos = L1.cell_position[old_n:new_n, :2].detach().to(dtype=torch.float32)
-    l0_pos = L0.cell_position[: L0.n_nodes, :2].detach().to(dtype=torch.float32)
-    new_rows = _l1_lcn_rows(
-        new_l1_pos, l0_pos, mode=mode, sigma=sigma, k=k,
-    ).to(device=mask.device, dtype=mask.dtype)
-    full = torch.cat([mask, new_rows], dim=0)
-    del L1._buffers["W_lcn_mask"]
-    L1.register_buffer("W_lcn_mask", full)
-    with torch.no_grad():
-        L1.W.data[old_n:new_n].mul_(new_rows.to(L1.W.device, L1.W.dtype))
+    """Delegate to substrate-level extension.
+
+    ``TrioronLayer.extend_lcn_mask`` already fires automatically inside
+    ``grow_node`` (and therefore ``axis6_spawn`` and any other grow
+    path). Calling this explicitly is idempotent — when shapes match
+    it's a no-op. Kept for back-compat with legacy training loops that
+    invoke it after every spawn event.
+    """
+    net.layers[l1_layer_idx].extend_lcn_mask()
 
 
 # ----------------------------------------------------------------------

@@ -370,6 +370,27 @@ class TrioronLayer(nn.Module):
         # NOT a buffer — it's derivable from cell_position + field_sigma.
         self._field_kernel: Optional[torch.Tensor] = None
 
+        # Locally-Connected-Network mask (trioron.spatial). Optional;
+        # absent by default. When enable_lcn() installs a mask:
+        #   W_lcn_mask        — shape (n_nodes, fan_in), values in [0, 1].
+        #                       Multiplied into W_eff in forward() so each
+        #                       cell only reads from input positions inside
+        #                       its window.
+        #   lcn_in_positions  — shape (fan_in, 2..3), the input-side
+        #                       positions snapshotted at enable_lcn time.
+        #                       Cached on the layer so grow_node can
+        #                       recompute mask rows for newly-spawned
+        #                       cells without re-passing positions.
+        # Both register as persistent buffers (saved in state_dict) so
+        # donors carry their locality convention into absorption. When
+        # absent, forward fast-paths through (zero overhead).
+        # _lcn_mode / _lcn_sigma / _lcn_k are plain Python attributes —
+        # configuration metadata, not state. Recovered from the active
+        # TrioronProfile or supplied explicitly to enable_lcn().
+        self._lcn_mode: str = "off"
+        self._lcn_sigma: float = 0.0
+        self._lcn_k: int = 0
+
         # Saliency caches for |a · g| utility (Mozer & Smolensky 1989,
         # OBD/blueprint §3.2). _last_y is stashed on each grad-enabled
         # forward; _last_upstream is captured by a backward hook on y
@@ -421,6 +442,15 @@ class TrioronLayer(nn.Module):
             x = x.to(self.W.dtype)
         scale = self.routing_scale.unsqueeze(1).to(self.W.dtype)
         W_eff = self.W * scale
+
+        # Locally-Connected-Network mask (trioron.spatial). When the
+        # layer has an installed LCN mask, every cell's incoming weight
+        # row is multiplied by its window mask before the linear. Cells
+        # with positions outside the window get near-zero contributions.
+        # No-op when the mask isn't installed (the default).
+        lcn_mask = getattr(self, "W_lcn_mask", None)
+        if lcn_mask is not None:
+            W_eff = W_eff * lcn_mask.to(dtype=self.W.dtype)
 
         # Axis 5 two-stage forward. All-K=1 is the entire installed base
         # (every 1.0 donor + every freshly-constructed substrate before
@@ -550,6 +580,179 @@ class TrioronLayer(nn.Module):
     def _capture_upstream(self, grad: torch.Tensor) -> None:
         """Backward hook: record ∂L/∂y for saliency_utility()."""
         self._last_upstream = grad.detach()
+
+    # ----- LCN (locally-connected mask, opt-in) -----
+
+    def enable_lcn(
+        self,
+        in_positions: torch.Tensor,
+        *,
+        mode: str = "soft",
+        sigma: float = 0.25,
+        k: int = 8,
+        apply_to_weights: bool = True,
+    ) -> None:
+        """Install a Locally-Connected-Network mask on this layer.
+
+        Each cell's incoming-weight row is multiplied by a window mask
+        built from `cell_position` (this layer's cells) and
+        `in_positions` (the upstream layer's cells, or pixel positions
+        for an input-reading L0). After enable_lcn, forward applies
+        `W_lcn_mask` automatically and grow_node extends the mask in
+        place so newly-spawned cells inherit the locality convention.
+
+        in_positions: shape (fan_in, d) where d == position dim of
+            cell_position (default 2 — only the first 2 cell_position
+            coords are read on this side). Snapshotted on the layer.
+        mode: "soft" (Gaussian falloff) or "hard" (top-K). See
+            trioron.spatial.build_lcn_mask.
+        sigma: Gaussian length-scale (soft mode). 0.25 ≈ image-width / 4.
+        k: nearest-neighbour count (hard mode).
+        apply_to_weights: when True (default), multiply self.W and
+            self.W_anchor by the mask in-place — off-window entries
+            collapse to zero immediately. When False, the mask is
+            installed but not yet applied (caller will apply via
+            reapply_lcn_mask after a setup step).
+
+        Use trioron.spatial.grid_positions_2d / pixel_positions_2d to
+        seed in_positions. The L1 case is typically driven by an
+        upstream layer's cell_position (e.g. L0.cell_position[:, :2]).
+        """
+        from trioron.spatial import build_lcn_mask
+        if in_positions.ndim != 2:
+            raise ValueError(
+                f"in_positions must be 2-D, got {tuple(in_positions.shape)}"
+            )
+        if in_positions.shape[0] != self.fan_in:
+            raise ValueError(
+                f"in_positions has {in_positions.shape[0]} rows but layer "
+                f"fan_in is {self.fan_in}"
+            )
+        # Build with the layer's own cell_position (first 2 coords —
+        # the image-plane coordinates that LCN cares about). Cast to
+        # the layer's W dtype/device for direct multiplication.
+        own_pos = self.cell_position[:, :in_positions.shape[1]]
+        mask = build_lcn_mask(
+            own_pos, in_positions, mode=mode, sigma=sigma, k=k,
+        ).to(device=self.W.device, dtype=self.W.dtype)
+        self._replace_buffer("W_lcn_mask", mask)
+        self._replace_buffer(
+            "lcn_in_positions",
+            in_positions.detach().clone().to(
+                device=self.W.device, dtype=torch.float32,
+            ),
+        )
+        self._lcn_mode = mode
+        self._lcn_sigma = float(sigma)
+        self._lcn_k = int(k)
+        if apply_to_weights:
+            with torch.no_grad():
+                self.W.data.mul_(mask)
+                if hasattr(self, "W_anchor"):
+                    self.W_anchor.data.mul_(mask.to(self.W_anchor.dtype))
+
+    def disable_lcn(self) -> None:
+        """Remove the LCN mask. W is left at its current values (the
+        masking is not undone — that would require re-initializing
+        off-window weights, which is not generally meaningful).
+        Idempotent.
+        """
+        if "W_lcn_mask" in self._buffers:
+            del self._buffers["W_lcn_mask"]
+        if "lcn_in_positions" in self._buffers:
+            del self._buffers["lcn_in_positions"]
+        self._lcn_mode = "off"
+        self._lcn_sigma = 0.0
+        self._lcn_k = 0
+
+    def reapply_lcn_mask(self) -> None:
+        """Multiply self.W by W_lcn_mask in-place. Call after every
+        optimizer step that touches this layer if you want strict
+        zero-outside-window weights — gradient descent will otherwise
+        slowly accumulate small off-window entries. No-op when LCN
+        is not installed."""
+        mask = getattr(self, "W_lcn_mask", None)
+        if mask is None:
+            return
+        with torch.no_grad():
+            self.W.data.mul_(mask.to(self.W.dtype))
+
+    def extend_lcn_mask(self, apply_to_w: bool = True) -> None:
+        """Recompute mask rows for newly-spawned cells.
+
+        Two-phase contract:
+
+          - ``grow_node`` calls this automatically with
+            ``apply_to_w=False`` to ensure shape consistency (the W and
+            mask tensors must agree on n_nodes or forward will crash).
+            The new mask rows are computed from the current
+            ``cell_position`` of the new cells — which is typically
+            zero at insertion time, so the inserted mask rows are
+            placeholders.
+
+          - Callers that position the new cell AFTER ``grow_node``
+            returns (axis6_spawn, absorb_cell, manual growth flows)
+            should call this again WITHOUT ``apply_to_w=False`` —
+            the default ``apply_to_w=True`` recomputes the trailing
+            mask rows against the now-correct cell_position AND
+            multiplies the new W rows by the corrected mask, so the
+            substrate ends up with locality-constrained cells without
+            corrupting earlier rows.
+
+        Idempotent at shape match: when called twice in a row with no
+        intervening growth, the second call re-applies the mask to W
+        — useful as a "clean up off-window weights after the optimizer
+        step" pass (similar to ``reapply_lcn_mask`` but limited to the
+        most recent grow).
+        """
+        mask = getattr(self, "W_lcn_mask", None)
+        if mask is None:
+            return
+        in_pos = getattr(self, "lcn_in_positions", None)
+        if in_pos is None:
+            return
+        old_n = mask.shape[0]
+        new_n = self.n_nodes
+        if new_n < old_n:
+            # Pruning path — handled by prune_node directly.
+            return
+        from trioron.spatial import build_lcn_mask
+        if new_n > old_n:
+            new_own_pos = self.cell_position[
+                old_n:new_n, :in_pos.shape[1]
+            ]
+            new_rows = build_lcn_mask(
+                new_own_pos, in_pos,
+                mode=self._lcn_mode,
+                sigma=self._lcn_sigma,
+                k=self._lcn_k,
+            ).to(device=mask.device, dtype=mask.dtype)
+            full = torch.cat([mask, new_rows], dim=0)
+            self._replace_buffer("W_lcn_mask", full)
+            mask = full
+        if apply_to_w:
+            # Recompute the trailing rows against current positions and
+            # apply to W. `old_n` here is "the count BEFORE the most
+            # recent growth event" only when we just extended; on the
+            # no-growth refresh path we refresh just the most recent
+            # row to keep cost predictable.
+            recompute_from = old_n if new_n > old_n else max(0, new_n - 1)
+            with torch.no_grad():
+                own_pos = self.cell_position[
+                    recompute_from:new_n, :in_pos.shape[1]
+                ]
+                refreshed = build_lcn_mask(
+                    own_pos, in_pos,
+                    mode=self._lcn_mode,
+                    sigma=self._lcn_sigma,
+                    k=self._lcn_k,
+                ).to(device=mask.device, dtype=mask.dtype)
+                mask[recompute_from:new_n].copy_(refreshed)
+                self.W.data[recompute_from:new_n].mul_(
+                    refreshed.to(
+                        device=self.W.device, dtype=self.W.dtype,
+                    )
+                )
 
     # ----- branch plasticity (opt-in) -----
 
@@ -1203,6 +1406,17 @@ class TrioronLayer(nn.Module):
         # Axis 6 — cell_position changed, kernel must rebuild lazily.
         self._field_kernel = None
 
+        # LCN mask shape extension. Append a placeholder row computed
+        # from the new cell's current cell_position (typically zero at
+        # this point). The caller (axis6_spawn / absorb_cell / explicit
+        # grow flows) is expected to set cell_position to the intended
+        # value and then call extend_lcn_mask() with apply_to_w=True to
+        # recompute the row against the real position and mask the new
+        # W row accordingly. Without this two-phase contract, grow_node
+        # would multiply W by a wrong-position mask before the caller
+        # had a chance to position the cell.
+        self.extend_lcn_mask(apply_to_w=False)
+
         # Axis 5 sister-specialist inheritance. inherit_dendrite
         # validates parent_idx against the post-grow n_nodes and refuses
         # parent_idx == child_idx, so the validation happens there.
@@ -1215,6 +1429,7 @@ class TrioronLayer(nn.Module):
         self,
         init_col: Optional[torch.Tensor] = None,
         source: Optional[tuple] = None,
+        in_position: Optional[torch.Tensor] = None,
     ) -> None:
         """Extend fan_in by 1, adding a new column to W. Used for cross-layer
         growth: when the previous layer adds a node, this layer must accept
@@ -1229,6 +1444,14 @@ class TrioronLayer(nn.Module):
             None (default), the sentinel (-1, -1) is recorded, meaning
             "this column reads from the immediate sequential predecessor."
             Sequential-default behavior is preserved byte-identically.
+
+        in_position: optional (d,) tensor giving the new input column's
+            2D (or higher) position for LCN mask extension. Required
+            when LCN is installed and you want the new column to be
+            visible to cells whose window includes that position. If
+            None (default), the new column gets a zero mask (no cell
+            reads it) — safe for non-LCN layers and for cases where
+            the caller will reapply the mask later.
 
         Per blueprint §4.1.4 ("Connecting it to all nodes whose `u` is currently
         elevated"), callers can pass a utility-weighted column to bias toward
@@ -1297,6 +1520,61 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("branch_id", new_branch_id)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
 
+        # LCN mask extension on the column side. When LCN is installed
+        # we either compute a real mask column from `in_position`
+        # (caller knows where the new input lives in position space) or
+        # default to a zero column (new input is invisible until the
+        # caller updates positions and rebuilds the mask).
+        mask = getattr(self, "W_lcn_mask", None)
+        if mask is not None:
+            with torch.no_grad():
+                if in_position is not None:
+                    in_pos = getattr(self, "lcn_in_positions", None)
+                    pos_dim = in_pos.shape[1] if in_pos is not None else 2
+                    pos = in_position.detach().to(
+                        device=mask.device, dtype=torch.float32,
+                    ).reshape(1, -1)[:, :pos_dim]
+                    from trioron.spatial import build_lcn_mask
+                    own_pos = self.cell_position[:, :pos_dim].to(
+                        device=mask.device, dtype=torch.float32,
+                    )
+                    new_col = build_lcn_mask(
+                        own_pos, pos,
+                        mode=self._lcn_mode,
+                        sigma=self._lcn_sigma,
+                        k=self._lcn_k,
+                    ).to(device=mask.device, dtype=mask.dtype)
+                    full = torch.cat([mask, new_col], dim=1)
+                    self._replace_buffer("W_lcn_mask", full)
+                    self.W.data[:, -1].mul_(
+                        new_col.squeeze(1).to(
+                            device=self.W.device, dtype=self.W.dtype,
+                        )
+                    )
+                    if in_pos is not None:
+                        new_in_pos = torch.cat(
+                            [in_pos,
+                             pos.to(device=in_pos.device, dtype=in_pos.dtype)],
+                            dim=0,
+                        )
+                        self._replace_buffer("lcn_in_positions", new_in_pos)
+                else:
+                    zero_col = torch.zeros(
+                        mask.shape[0], 1,
+                        dtype=mask.dtype, device=mask.device,
+                    )
+                    full = torch.cat([mask, zero_col], dim=1)
+                    self._replace_buffer("W_lcn_mask", full)
+                    self.W.data[:, -1].zero_()
+                    in_pos = getattr(self, "lcn_in_positions", None)
+                    if in_pos is not None:
+                        sentinel = torch.zeros(
+                            1, in_pos.shape[1],
+                            dtype=in_pos.dtype, device=in_pos.device,
+                        )
+                        new_in_pos = torch.cat([in_pos, sentinel], dim=0)
+                        self._replace_buffer("lcn_in_positions", new_in_pos)
+
     def prune_input(self, col_idx: int) -> None:
         """Remove the input column at `col_idx`. Inverse of grow_input.
 
@@ -1331,6 +1609,16 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("fisher_W", new_fisher_W)
         self._replace_buffer("input_sources", new_input_sources)
         self._replace_buffer("input_archived", new_input_archived)
+        # LCN mask: drop the matching column on both the mask itself
+        # and the cached input-positions snapshot.
+        mask = getattr(self, "W_lcn_mask", None)
+        if mask is not None:
+            new_mask = mask.index_select(1, keep_t)
+            self._replace_buffer("W_lcn_mask", new_mask)
+            in_pos = getattr(self, "lcn_in_positions", None)
+            if in_pos is not None and in_pos.shape[0] == mask.shape[1]:
+                new_in_pos = in_pos.index_select(0, keep_t)
+                self._replace_buffer("lcn_in_positions", new_in_pos)
         self._replace_buffer("branch_id", new_branch_id)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
 
@@ -1400,6 +1688,12 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("branch_utility", new_branch_utility)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan_row)
         self._replace_buffer("cell_position", new_cell_position_row)
+        # LCN mask: drop the matching row (no input-position change).
+        mask = getattr(self, "W_lcn_mask", None)
+        if mask is not None:
+            self._replace_buffer(
+                "W_lcn_mask", mask.index_select(0, keep_t),
+            )
         self._replace_buffer("epi_A", new_epi_A)
         self._replace_buffer("epi_B", new_epi_B)
         # Axis 6 — cell_position changed, kernel must rebuild lazily.

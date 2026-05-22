@@ -10,13 +10,14 @@ layer i, the corresponding input column is added to layer i+1.
 """
 
 from __future__ import annotations
-from typing import Callable, Iterable, Optional, Sequence, Tuple, List
+from typing import Any, Callable, Iterable, Optional, Sequence, Tuple, List
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from .node import TrioronLayer, _ACTIVATIONS
+from .spatial import pool_id, pool_centroid
 
 
 LayerSpec = Tuple[int, int, str]  # (fan_in, n_nodes, activation)
@@ -553,6 +554,9 @@ class TrioronNetwork(nn.Module):
             ) * position_jitter
             target.cell_position[new_idx] = parent_pos + jitter
             target.epi_A[candidate_idx] = 0.0
+        # Refresh the LCN mask row at the newly-positioned cell and
+        # apply to its W row. No-op when LCN is absent.
+        target.extend_lcn_mask(apply_to_w=True)
         target._field_kernel = None
         return new_idx
 
@@ -869,6 +873,182 @@ class TrioronNetwork(nn.Module):
         if has_next:
             self.layers[layer_idx + 1].prune_input(node_idx)
 
+    # ----- pool-matched absorption (cell-granularity) -----
+
+    def absorb_cell(
+        self,
+        donor: "TrioronNetwork",
+        donor_cell_idx: int,
+        *,
+        layer_idx: int = 1,
+        snap_to_pool_centroid: bool = False,
+        grid_size: int = 4,
+        donor_trained_classes: Optional[Sequence[int]] = None,
+    ) -> int:
+        """Absorb one cell from ``donor`` at ``donor.layers[layer_idx]``
+        into this network at the same layer index. Returns the new
+        recipient cell index.
+
+        Donor and recipient must share the layer's ``fan_in`` (i.e. they
+        must share the same L0 width — guaranteed by the R·S handshake
+        when both organisms were trained with the same L0 seed) and the
+        same head width.
+
+        The recipient grows by one cell at ``layer_idx`` (with the
+        donor's W row, bias, and cell_position) and gains one new
+        head-input column (the donor's head column). When LCN is
+        installed on the recipient, the new cell's mask row is
+        recomputed automatically via ``extend_lcn_mask`` — the cell
+        inherits the recipient's locality convention rather than the
+        donor's saved mask, so absorbed cells stay window-clean.
+
+        snap_to_pool_centroid: if True, position the new cell at the
+            centroid of its donor-side pool (loses donor's exact
+            position but stays canonical). Default False keeps the
+            donor's exact position, preserving migration history.
+
+        donor_trained_classes: head columns for classes the donor never
+            trained on are random-init noise; transferring them produces
+            additive interference on the recipient's predictions for
+            those classes. When provided, every class NOT in this set
+            has its head column zeroed before transfer. Strongly
+            recommended for any donor that wasn't trained on the full
+            class union.
+
+        Caller MUST rebuild any optimizer holding recipient's
+        ``layers[layer_idx]`` or head parameters — the W Parameter
+        objects are replaced.
+        """
+        donor_layer = donor.layers[layer_idx]
+        recip_layer = self.layers[layer_idx]
+        if layer_idx + 1 >= len(donor.layers):
+            raise ValueError(
+                f"absorb_cell layer_idx={layer_idx} has no downstream "
+                f"head layer in donor"
+            )
+        if layer_idx + 1 >= len(self.layers):
+            raise ValueError(
+                f"absorb_cell layer_idx={layer_idx} has no downstream "
+                f"head layer in recipient"
+            )
+        donor_head = donor.layers[layer_idx + 1]
+        recip_head = self.layers[layer_idx + 1]
+        if donor_layer.fan_in != recip_layer.fan_in:
+            raise ValueError(
+                f"layer fan_in mismatch: donor={donor_layer.fan_in} "
+                f"recipient={recip_layer.fan_in} — both must share the "
+                f"upstream layer's width"
+            )
+        if donor_head.n_nodes != recip_head.n_nodes:
+            raise ValueError(
+                f"head width mismatch: donor={donor_head.n_nodes} "
+                f"recipient={recip_head.n_nodes}"
+            )
+        if not (0 <= donor_cell_idx < donor_layer.n_nodes):
+            raise IndexError(
+                f"donor_cell_idx {donor_cell_idx} out of range "
+                f"[0, {donor_layer.n_nodes})"
+            )
+
+        donor_W_row = donor_layer.W[donor_cell_idx].detach().clone()
+        donor_b = float(donor_layer.b[donor_cell_idx].item())
+        donor_head_col = donor_head.W[:, donor_cell_idx].detach().clone()
+        donor_pos = donor_layer.cell_position[donor_cell_idx, :].detach().clone()
+
+        if donor_trained_classes is not None:
+            trained_set = {int(c) for c in donor_trained_classes}
+            n_classes = donor_head_col.shape[0]
+            for c in range(n_classes):
+                if c not in trained_set:
+                    donor_head_col[c] = 0.0
+
+        new_idx = self.grow_layer(
+            layer_idx,
+            init_vec=donor_W_row,
+            peer_init_for_next=donor_head_col,
+        )
+
+        with torch.no_grad():
+            recip_layer.b.data[new_idx] = donor_b
+            if snap_to_pool_centroid:
+                pid = pool_id(donor_pos[:2].tolist(), grid_size=grid_size)
+                cx, cy = pool_centroid(pid, grid_size=grid_size)
+                recip_layer.cell_position[new_idx, 0] = cx
+                recip_layer.cell_position[new_idx, 1] = cy
+            else:
+                recip_layer.cell_position[new_idx, :2] = donor_pos[:2]
+            # Match the 2D convention used in chained-15: z stays 0.
+            if recip_layer.cell_position.shape[1] >= 3:
+                recip_layer.cell_position[new_idx, 2] = 0.0
+        # cell_position is now set to the donor's. grow_layer extended
+        # the LCN mask shape with a placeholder row computed at the
+        # default zero position; call extend_lcn_mask to recompute the
+        # trailing row against the real position and apply it to the
+        # new W row (still carrying the donor's clean weights — the
+        # placeholder phase deliberately didn't touch W).
+        recip_layer.extend_lcn_mask(apply_to_w=True)
+        recip_layer._field_kernel = None
+        return new_idx
+
+    def pool_matched_absorb(
+        self,
+        donor: "TrioronNetwork",
+        *,
+        layer_idx: int = 1,
+        grid_size: int = 4,
+        pool_capacity: Optional[int] = None,
+        snap_to_pool_centroid: bool = False,
+        donor_trained_classes: Optional[Sequence[int]] = None,
+    ) -> List[Tuple[int, int]]:
+        """Absorb every cell of ``donor.layers[layer_idx]`` into this
+        network via pool match.
+
+        For each donor cell, its position is mapped to a pool ID via
+        ``pool_id``. If ``pool_capacity`` is set and the recipient has
+        already reached capacity in that pool, the donor cell is
+        skipped; otherwise it is appended via :meth:`absorb_cell`.
+
+        donor_trained_classes (recommended): set of global class IDs
+            the donor was actually trained on, forwarded to
+            :meth:`absorb_cell` so untrained head columns are zeroed.
+            Without this, recipient classes degrade ~10 pp from the
+            donor's random-init head weights for unseen classes.
+
+        Returns a list of (donor_idx, new_recipient_idx) tuples for the
+        cells that were absorbed; skipped cells are omitted.
+        """
+        donor_layer = donor.layers[layer_idx]
+        recip_layer = self.layers[layer_idx]
+
+        pool_counts: dict = {}
+        for i in range(recip_layer.n_nodes):
+            pid = pool_id(
+                recip_layer.cell_position[i, :2].tolist(),
+                grid_size,
+            )
+            pool_counts[pid] = pool_counts.get(pid, 0) + 1
+
+        absorbed: List[Tuple[int, int]] = []
+        for donor_idx in range(donor_layer.n_nodes):
+            donor_pos = donor_layer.cell_position[donor_idx, :2].tolist()
+            pid = pool_id(donor_pos, grid_size)
+            if (
+                pool_capacity is not None
+                and pool_counts.get(pid, 0) >= pool_capacity
+            ):
+                continue
+            new_idx = self.absorb_cell(
+                donor,
+                donor_idx,
+                layer_idx=layer_idx,
+                snap_to_pool_centroid=snap_to_pool_centroid,
+                grid_size=grid_size,
+                donor_trained_classes=donor_trained_classes,
+            )
+            pool_counts[pid] = pool_counts.get(pid, 0) + 1
+            absorbed.append((donor_idx, new_idx))
+        return absorbed
+
     # ----- introspection -----
 
     def to_mixed_precision(
@@ -911,3 +1091,54 @@ class TrioronNetwork(nn.Module):
             for layer in self.layers
         )
         return f"TrioronNetwork({layers_repr})"
+
+
+# ---------------------------------------------------------------------
+# Module-level absorption helpers
+# ---------------------------------------------------------------------
+
+
+def merge_manifold(recipient_manifold: Any, donor_manifold: Any) -> int:
+    """Merge a donor's per-class (μ, σ) archive into the recipient's.
+
+    The pool-matched absorption mechanism transfers cells (rows of W);
+    the manifold merge transfers the per-class signatures the head
+    needs to calibrate over the union of classes. Together they let
+    the recipient predict on every class the donor knew about without
+    re-running the donor's training data.
+
+    Both archives are duck-typed: any object exposing
+    ``mu_per_class`` / ``sigma_per_class`` mappings (class id → tensor)
+    and an ``n_l0`` attribute. The canonical implementation is
+    ``experiments.axis6_credit_chained15.ManifoldStore`` (not yet
+    promoted into the trioron package — pending a follow-up that lifts
+    ManifoldStore alongside its dream-cycle consumers).
+
+    For each class in the donor:
+      - If the recipient doesn't have it: copy (μ, σ) over.
+      - If the recipient has it: skip — the recipient's own training
+        is more trustworthy than a transferred snapshot.
+
+    Returns the number of newly-added classes.
+    """
+    if donor_manifold.n_l0 != recipient_manifold.n_l0:
+        raise ValueError(
+            f"manifold n_l0 mismatch: "
+            f"donor={donor_manifold.n_l0} recipient={recipient_manifold.n_l0}"
+        )
+    n_added = 0
+    for c, mu in donor_manifold.mu_per_class.items():
+        if c in recipient_manifold.mu_per_class:
+            continue
+        recipient_manifold.mu_per_class[c] = mu.detach().clone()
+        recipient_manifold.sigma_per_class[c] = (
+            donor_manifold.sigma_per_class[c].detach().clone()
+        )
+        n_added += 1
+    return n_added
+
+
+__all__ = [
+    "TrioronNetwork",
+    "merge_manifold",
+]

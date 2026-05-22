@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import ClassVar, Iterator, Optional
+from typing import ClassVar, Dict, Iterator, Mapping, Optional
 
 
 @dataclass(frozen=True)
@@ -64,6 +64,18 @@ class TrioronProfile:
           branch_activation post-load. Set False to honor the v1
           override and treat the loaded layer as functionally
           point-neuron forever.
+      lcn: Optional per-layer LCN (Locally-Connected-Network) config.
+          Keyed by layer index (int). Each entry is a dict carrying
+          ``mode`` ("soft" | "hard" | "off"), ``sigma`` (Gaussian
+          length-scale, soft mode), ``k`` (nearest-neighbour count,
+          hard mode), and ``pool_grid`` (grid_size for pool-matched
+          absorption on this layer). None means LCN is off for every
+          layer; this is the default for every shipped profile because
+          chained-15's L0 / L1 nulls established that locality only
+          pays off when the data has exploitable spatial structure
+          (CIFAR-100 and beyond). Profile declares the intent;
+          ``TrioronLayer.enable_lcn`` installs the mask after layer
+          construction once cell positions are known.
     """
     name: str
     branch_activation: str = "quad"
@@ -74,6 +86,7 @@ class TrioronProfile:
     memory_cap_bytes: Optional[int] = None
     time_cap_seconds: Optional[float] = None
     re_apply_after_donor_load: bool = True
+    lcn: Optional[Mapping[int, Mapping[str, object]]] = None
 
     # Class-level active profile state. Default OPEN is set below
     # after the preset constants are defined.
