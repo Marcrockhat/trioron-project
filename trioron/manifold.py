@@ -338,6 +338,215 @@ def score_via_manifold(
     return float((preds == synth_labels.to(preds.device)).float().mean().item())
 
 
+def donor_compatibility_score(
+    donor_a: TrioronNetwork,
+    donor_b: TrioronNetwork,
+    manifold_a: ManifoldStore,
+    manifold_b: ManifoldStore,
+    *,
+    n_samples: int = 256,
+    noise_scale: float = 1.0,
+    l1_layer_idx: int = 1,
+    generator: Optional[torch.Generator] = None,
+) -> Dict[str, float]:
+    """Pre-absorption compatibility score between two donors.
+
+    The absorption variance arc (see [[head_provenance_mask_result]])
+    showed that no absorb-time intervention rescues a doomed donor
+    pair — the collapse is determined upstream by donor-training
+    trajectory and L1 feature geometry. This function quantifies how
+    likely a given pair is to collapse, so callers can refuse the
+    absorption rather than wasting compute on a guaranteed-bad merge.
+
+    Mechanism:
+      For each donor, forward synthetic L0 codes from that donor's
+      manifold through that donor's L1 to obtain per-class L1
+      centroids (mean L1 feature vector per archived class). Then
+      compute the cosine-similarity matrix between donor_a's
+      centroids and donor_b's centroids across all class pairs. The
+      MAX value is the worst-case cross-donor class confusion: when
+      it's high, the donors encode some class pair so similarly in
+      L1 space that no post-absorb head can separate them.
+
+    Returns a dict:
+      - "max_cosine"      : worst-case cross-donor class-pair similarity
+      - "mean_cosine"     : average cosine across all pairs
+      - "max_pair"        : (class_a, class_b) of the worst-case pair
+      - "n_pairs"         : number of cross-donor class pairs evaluated
+
+    Interpretation rough rule: max_cosine > 0.8 = high collapse risk;
+    < 0.5 = low risk. Calibrate against your own benches.
+
+    Args:
+        donor_a, donor_b: trained TrioronNetwork instances, sharing
+            fan_in at l1_layer_idx (R·S handshake invariant).
+        manifold_a, manifold_b: each donor's per-class manifold (μ, σ).
+        n_samples: synthetic L0 codes drawn per class for the centroid
+            estimate. 256 is plenty for diagonal-Gaussian classes.
+        noise_scale: σ multiplier on manifold draws.
+        l1_layer_idx: which layer carries the L1 features (default 1).
+        generator: optional Generator for reproducible synthetic draws.
+
+    Raises ValueError when either manifold is empty.
+    """
+    if not manifold_a.has_classes():
+        raise ValueError("donor_a's manifold has no archived classes")
+    if not manifold_b.has_classes():
+        raise ValueError("donor_b's manifold has no archived classes")
+
+    classes_a = sorted(manifold_a.mu_per_class.keys())
+    classes_b = sorted(manifold_b.mu_per_class.keys())
+    centroids_a = _l1_centroids(
+        donor_a, manifold_a, classes_a, n_samples,
+        noise_scale, l1_layer_idx, generator,
+    )
+    centroids_b = _l1_centroids(
+        donor_b, manifold_b, classes_b, n_samples,
+        noise_scale, l1_layer_idx, generator,
+    )
+
+    a_norm = F.normalize(centroids_a, dim=1, eps=1e-8)
+    b_norm = F.normalize(centroids_b, dim=1, eps=1e-8)
+    cos = a_norm @ b_norm.t()
+    max_cos, max_idx = torch.max(cos.flatten(), dim=0)
+    i, j = int(max_idx // cos.shape[1]), int(max_idx % cos.shape[1])
+
+    return {
+        "max_cosine": float(max_cos.item()),
+        "mean_cosine": float(cos.mean().item()),
+        "max_pair": (classes_a[i], classes_b[j]),
+        "n_pairs": cos.numel(),
+    }
+
+
+def _l1_centroids(
+    net: TrioronNetwork,
+    manifold: ManifoldStore,
+    classes: Sequence[int],
+    n_samples: int,
+    noise_scale: float,
+    l1_layer_idx: int,
+    generator: Optional[torch.Generator],
+) -> torch.Tensor:
+    """Build per-class L1 centroids by forwarding manifold-sampled L0
+    codes through net.layers[l1_layer_idx]. Returns (len(classes), L1_dim)."""
+    l1 = net.layers[l1_layer_idx]
+    rows = []
+    for c in classes:
+        mu = manifold.mu_per_class[c]
+        sigma = manifold.sigma_per_class[c] * noise_scale
+        if generator is not None:
+            noise = torch.randn(n_samples, mu.shape[0], generator=generator)
+        else:
+            noise = torch.randn(n_samples, mu.shape[0])
+        codes = (mu.unsqueeze(0) + sigma.unsqueeze(0) * noise).clamp(min=0.0)
+        with torch.no_grad():
+            feats = l1(codes)
+        rows.append(feats.mean(dim=0))
+    return torch.stack(rows, dim=0)
+
+
+def post_absorb_separability(
+    donor_a: TrioronNetwork,
+    donor_b: TrioronNetwork,
+    manifold_a: ManifoldStore,
+    manifold_b: ManifoldStore,
+    *,
+    n_samples: int = 256,
+    noise_scale: float = 1.0,
+    l1_layer_idx: int = 1,
+    generator: Optional[torch.Generator] = None,
+) -> Dict[str, float]:
+    """Simulate the post-absorb L1 by concatenating both donors' L1
+    forward passes, then measure cross-class separability.
+
+    Each donor only has manifold codes for its OWN trained classes,
+    so we compute centroids in the SIMULATED post-absorb L1 space:
+    L1_post(L0_codes) = concat(donor_a.L1(L0_codes), donor_b.L1(L0_codes)).
+    This matches what pool_matched_absorb actually produces: a wider
+    L1 carrying cells from both donors.
+
+    For every archived class (across both donors), sample L0 codes
+    from that class's manifold, forward through L1_post, and average.
+    Then compute the (n_classes × n_classes) pairwise cosine of the
+    centroids. Return summary statistics over the OFF-DIAGONAL
+    cross-class entries:
+
+      - "min_separation"  = 1 - max(off-diag cosine)  (worst-case)
+      - "mean_separation" = 1 - mean(off-diag cosine)
+      - "max_pair"        = (class_i, class_j) of worst pair
+      - "n_classes"       = total classes in the union
+
+    Lower min_separation → likely collapse. Higher mean separation
+    → easier head-settle. Unlike the cross-donor cosine in
+    :func:`donor_compatibility_score`, this signal lives in a
+    well-defined unified L1 space and compares ALL classes against
+    each other, capturing both within-donor and cross-donor
+    confusion in the same metric.
+    """
+    if not manifold_a.has_classes():
+        raise ValueError("donor_a's manifold has no archived classes")
+    if not manifold_b.has_classes():
+        raise ValueError("donor_b's manifold has no archived classes")
+
+    classes_a = sorted(manifold_a.mu_per_class.keys())
+    classes_b = sorted(manifold_b.mu_per_class.keys())
+    all_classes: List[Tuple[int, ManifoldStore]] = (
+        [(c, manifold_a) for c in classes_a]
+        + [(c, manifold_b) for c in classes_b]
+    )
+
+    l1_a = donor_a.layers[l1_layer_idx]
+    l1_b = donor_b.layers[l1_layer_idx]
+
+    centroids: List[torch.Tensor] = []
+    labels: List[int] = []
+    for c, manif in all_classes:
+        mu = manif.mu_per_class[c]
+        sigma = manif.sigma_per_class[c] * noise_scale
+        if generator is not None:
+            noise = torch.randn(n_samples, mu.shape[0], generator=generator)
+        else:
+            noise = torch.randn(n_samples, mu.shape[0])
+        codes = (mu.unsqueeze(0) + sigma.unsqueeze(0) * noise).clamp(min=0.0)
+        with torch.no_grad():
+            feats_a = l1_a(codes)
+            feats_b = l1_b(codes)
+            feats_post = torch.cat([feats_a, feats_b], dim=1)
+        centroids.append(feats_post.mean(dim=0))
+        labels.append(c)
+
+    C = torch.stack(centroids, dim=0)
+    Cn = F.normalize(C, dim=1, eps=1e-8)
+    cos = Cn @ Cn.t()
+    n = cos.shape[0]
+    mask = ~torch.eye(n, dtype=torch.bool)
+    off = cos[mask]
+    max_cos, max_flat = torch.max(off, dim=0)
+    # Recover the (i, j) of the worst pair.
+    flat_off_idx = int(max_flat.item())
+    flat_full_idx = 0
+    seen = 0
+    for k in range(n * n):
+        i, j = k // n, k % n
+        if i == j:
+            continue
+        if seen == flat_off_idx:
+            flat_full_idx = k
+            break
+        seen += 1
+    i, j = flat_full_idx // n, flat_full_idx % n
+
+    return {
+        "min_separation": float(1.0 - max_cos.item()),
+        "mean_separation": float(1.0 - off.mean().item()),
+        "max_cosine": float(max_cos.item()),
+        "mean_cosine": float(off.mean().item()),
+        "max_pair": (labels[i], labels[j]),
+        "n_classes": n,
+    }
+
+
 def settle_head_with_retry(
     net: TrioronNetwork,
     manifold: ManifoldStore,
@@ -438,4 +647,6 @@ __all__ = [
     "settle_head_via_manifold",
     "score_via_manifold",
     "settle_head_with_retry",
+    "donor_compatibility_score",
+    "post_absorb_separability",
 ]

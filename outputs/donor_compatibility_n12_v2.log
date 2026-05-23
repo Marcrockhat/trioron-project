@@ -1,0 +1,177 @@
+==============================================================================
+Donor compatibility validation (n=12 seeds)
+==============================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+--- seed=42 ---
+  [A_seed42] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed42] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.719
+      task 1: task_aware=0.945  full=0.365
+      MEAN  : task_aware=0.971  full=0.542
+      task 2: task_aware=0.943  full=0.251
+      task 3: task_aware=0.986  full=0.370
+      MEAN  : task_aware=0.964  full=0.310
+  seed=42 in 9s  score_max=0.668  score_mean=0.417  max_pair=(3, 4)  full=(0.542,0.310)  combined=0.426
+
+--- seed=43 ---
+  [A_seed43] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed43] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.888
+      task 1: task_aware=0.924  full=0.611
+      MEAN  : task_aware=0.961  full=0.750
+      task 2: task_aware=0.941  full=0.617
+      task 3: task_aware=0.979  full=0.699
+      MEAN  : task_aware=0.960  full=0.658
+  seed=43 in 9s  score_max=0.685  score_mean=0.414  max_pair=(3, 6)  full=(0.750,0.658)  combined=0.704
+
+--- seed=44 ---
+  [A_seed44] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed44] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.923
+      task 1: task_aware=0.918  full=0.611
+      MEAN  : task_aware=0.958  full=0.767
+      task 2: task_aware=0.947  full=0.621
+      task 3: task_aware=0.982  full=0.777
+      MEAN  : task_aware=0.964  full=0.699
+  seed=44 in 6s  score_max=0.466  score_mean=0.298  max_pair=(2, 7)  full=(0.767,0.699)  combined=0.733
+
+--- seed=1 ---
+  [A_seed1] trained on tasks [0, 1]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+  [B_seed1] trained on tasks [2, 3]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.589
+      task 1: task_aware=0.931  full=0.136
+      MEAN  : task_aware=0.965  full=0.363
+      task 2: task_aware=0.951  full=0.062
+      task 3: task_aware=0.978  full=0.213
+      MEAN  : task_aware=0.965  full=0.137
+  seed=1 in 10s  score_max=0.432  score_mean=0.330  max_pair=(3, 6)  full=(0.363,0.137)  combined=0.250
+
+--- seed=7 ---
+  [A_seed7] trained on tasks [0, 1]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+  [B_seed7] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.986  full=0.541
+      task 1: task_aware=0.939  full=0.474
+      MEAN  : task_aware=0.963  full=0.507
+      task 2: task_aware=0.930  full=0.215
+      task 3: task_aware=0.967  full=0.475
+      MEAN  : task_aware=0.948  full=0.345
+  seed=7 in 9s  score_max=0.750  score_mean=0.494  max_pair=(2, 6)  full=(0.507,0.345)  combined=0.426
+
+--- seed=11 ---
+  [A_seed11] trained on tasks [0, 1]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+  [B_seed11] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=1.000  full=0.812
+      task 1: task_aware=0.945  full=0.594
+      MEAN  : task_aware=0.972  full=0.703
+      task 2: task_aware=0.950  full=0.537
+      task 3: task_aware=0.975  full=0.621
+      MEAN  : task_aware=0.963  full=0.579
+  seed=11 in 9s  score_max=0.625  score_mean=0.277  max_pair=(3, 6)  full=(0.703,0.579)  combined=0.641
+
+--- seed=13 ---
+  [A_seed13] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed13] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.995  full=0.743
+      task 1: task_aware=0.956  full=0.348
+      MEAN  : task_aware=0.976  full=0.546
+      task 2: task_aware=0.912  full=0.253
+      task 3: task_aware=0.976  full=0.442
+      MEAN  : task_aware=0.944  full=0.348
+  seed=13 in 6s  score_max=0.656  score_mean=0.369  max_pair=(3, 4)  full=(0.546,0.348)  combined=0.447
+
+--- seed=17 ---
+  [A_seed17] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed17] trained on tasks [2, 3]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.024
+      task 1: task_aware=0.944  full=0.166
+      MEAN  : task_aware=0.971  full=0.095
+      task 2: task_aware=0.941  full=0.076
+      task 3: task_aware=0.969  full=0.061
+      MEAN  : task_aware=0.955  full=0.069
+  seed=17 in 9s  score_max=0.680  score_mean=0.414  max_pair=(3, 7)  full=(0.095,0.069)  combined=0.082
+
+--- seed=19 ---
+  [A_seed19] trained on tasks [0, 1]  L1.n_nodes=26  frozen=16  W_lcn_mask installed: True
+  [B_seed19] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.908
+      task 1: task_aware=0.951  full=0.703
+      MEAN  : task_aware=0.974  full=0.805
+      task 2: task_aware=0.931  full=0.489
+      task 3: task_aware=0.972  full=0.678
+      MEAN  : task_aware=0.952  full=0.584
+  seed=19 in 9s  score_max=0.743  score_mean=0.406  max_pair=(2, 7)  full=(0.805,0.584)  combined=0.695
+
+--- seed=23 ---
+  [A_seed23] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed23] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.996  full=0.459
+      task 1: task_aware=0.950  full=0.339
+      MEAN  : task_aware=0.973  full=0.399
+      task 2: task_aware=0.940  full=0.502
+      task 3: task_aware=0.975  full=0.510
+      MEAN  : task_aware=0.958  full=0.506
+  seed=23 in 7s  score_max=0.872  score_mean=0.530  max_pair=(2, 7)  full=(0.399,0.506)  combined=0.453
+
+--- seed=29 ---
+  [A_seed29] trained on tasks [0, 1]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+  [B_seed29] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.856
+      task 1: task_aware=0.914  full=0.520
+      MEAN  : task_aware=0.955  full=0.688
+      task 2: task_aware=0.955  full=0.502
+      task 3: task_aware=0.993  full=0.531
+      MEAN  : task_aware=0.974  full=0.516
+  seed=29 in 9s  score_max=0.782  score_mean=0.467  max_pair=(0, 5)  full=(0.688,0.516)  combined=0.602
+
+--- seed=31 ---
+  [A_seed31] trained on tasks [0, 1]  L1.n_nodes=26  frozen=16  W_lcn_mask installed: True
+  [B_seed31] trained on tasks [2, 3]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.920
+      task 1: task_aware=0.942  full=0.745
+      MEAN  : task_aware=0.970  full=0.833
+      task 2: task_aware=0.947  full=0.641
+      task 3: task_aware=0.985  full=0.804
+      MEAN  : task_aware=0.966  full=0.723
+  seed=31 in 9s  score_max=0.695  score_mean=0.402  max_pair=(2, 5)  full=(0.833,0.723)  combined=0.778
+
+Total: 102s
+
+==============================================================================
+CORRELATION (n=12)  score_max vs post-absorb full
+==============================================================================
+  score_max    vs A_full          Pearson r=-0.004  Spearman ρ=+0.035
+  score_max    vs B_full          Pearson r=+0.157  Spearman ρ=+0.126
+  score_max    vs combined_full   Pearson r=+0.078  Spearman ρ=+0.126
+  score_mean   vs A_full          Pearson r=-0.245  Spearman ρ=-0.399
+  score_mean   vs B_full          Pearson r=-0.102  Spearman ρ=-0.322
+  score_mean   vs combined_full   Pearson r=-0.179  Spearman ρ=-0.322
+  sep_min      vs A_full          Pearson r=+0.110  Spearman ρ=+0.077
+  sep_min      vs B_full          Pearson r=+0.319  Spearman ρ=+0.210
+  sep_min      vs combined_full   Pearson r=+0.219  Spearman ρ=+0.210
+  sep_mean     vs A_full          Pearson r=+0.293  Spearman ρ=+0.350
+  sep_mean     vs B_full          Pearson r=+0.420  Spearman ρ=+0.364
+  sep_mean     vs combined_full   Pearson r=+0.365  Spearman ρ=+0.364
+  sep_max_cos  vs A_full          Pearson r=-0.110  Spearman ρ=-0.077
+  sep_max_cos  vs B_full          Pearson r=-0.319  Spearman ρ=-0.210
+  sep_max_cos  vs combined_full   Pearson r=-0.219  Spearman ρ=-0.210
+
+Seeds sorted by sep_min ascending (most-confused → least-confused):
+seed    sep_min  sep_mean  sep_max_cos   sep_max_pair  score_max   combined    a_full    b_full
+7         0.015     0.155        0.985         (3, 5)      0.750      0.426     0.507     0.345
+11        0.015     0.270        0.985         (3, 5)      0.625      0.641     0.703     0.579
+43        0.017     0.161        0.983         (3, 5)      0.685      0.704     0.750     0.658
+19        0.022     0.199        0.978         (3, 5)      0.743      0.695     0.805     0.584
+42        0.024     0.289        0.976         (3, 5)      0.668      0.426     0.542     0.310
+17        0.024     0.196        0.976         (2, 6)      0.680      0.082     0.095     0.069
+29        0.025     0.247        0.975         (3, 5)      0.782      0.602     0.688     0.516
+1         0.026     0.157        0.974         (3, 5)      0.432      0.250     0.363     0.137
+13        0.032     0.201        0.968         (3, 5)      0.656      0.447     0.546     0.348
+44        0.036     0.243        0.964         (3, 5)      0.466      0.733     0.767     0.699
+23        0.048     0.278        0.952         (3, 5)      0.872      0.453     0.399     0.506
+31        0.057     0.305        0.943         (3, 5)      0.695      0.778     0.833     0.723

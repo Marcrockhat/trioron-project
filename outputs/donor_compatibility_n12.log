@@ -1,0 +1,168 @@
+==============================================================================
+Donor compatibility validation (n=12 seeds)
+==============================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+--- seed=42 ---
+  [A_seed42] trained on tasks [0, 1]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+  [B_seed42] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.835
+      task 1: task_aware=0.941  full=0.517
+      MEAN  : task_aware=0.969  full=0.676
+      task 2: task_aware=0.954  full=0.444
+      task 3: task_aware=0.973  full=0.608
+      MEAN  : task_aware=0.963  full=0.526
+  seed=42 in 7s  score_max=0.603  score_mean=0.201  max_pair=(1, 4)  full=(0.676,0.526)  combined=0.601
+
+--- seed=43 ---
+  [A_seed43] trained on tasks [0, 1]  L1.n_nodes=26  frozen=16  W_lcn_mask installed: True
+  [B_seed43] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.533
+      task 1: task_aware=0.919  full=0.477
+      MEAN  : task_aware=0.959  full=0.505
+      task 2: task_aware=0.938  full=0.319
+      task 3: task_aware=0.977  full=0.200
+      MEAN  : task_aware=0.957  full=0.259
+  seed=43 in 4s  score_max=0.668  score_mean=0.437  max_pair=(2, 6)  full=(0.505,0.259)  combined=0.382
+
+--- seed=44 ---
+  [A_seed44] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed44] trained on tasks [2, 3]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.855
+      task 1: task_aware=0.906  full=0.585
+      MEAN  : task_aware=0.952  full=0.720
+      task 2: task_aware=0.938  full=0.604
+      task 3: task_aware=0.981  full=0.638
+      MEAN  : task_aware=0.959  full=0.621
+  seed=44 in 7s  score_max=0.631  score_mean=0.265  max_pair=(2, 5)  full=(0.720,0.621)  combined=0.671
+
+--- seed=1 ---
+  [A_seed1] trained on tasks [0, 1]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+  [B_seed1] trained on tasks [2, 3]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.518
+      task 1: task_aware=0.943  full=0.346
+      MEAN  : task_aware=0.971  full=0.432
+      task 2: task_aware=0.941  full=0.158
+      task 3: task_aware=0.987  full=0.145
+      MEAN  : task_aware=0.964  full=0.151
+  seed=1 in 8s  score_max=0.679  score_mean=0.451  max_pair=(3, 5)  full=(0.432,0.151)  combined=0.292
+
+--- seed=7 ---
+  [A_seed7] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed7] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.994  full=0.534
+      task 1: task_aware=0.930  full=0.530
+      MEAN  : task_aware=0.962  full=0.532
+      task 2: task_aware=0.943  full=0.406
+      task 3: task_aware=0.968  full=0.393
+      MEAN  : task_aware=0.955  full=0.399
+  seed=7 in 9s  score_max=0.678  score_mean=0.424  max_pair=(2, 6)  full=(0.532,0.399)  combined=0.466
+
+--- seed=11 ---
+  [A_seed11] trained on tasks [0, 1]  L1.n_nodes=26  frozen=17  W_lcn_mask installed: True
+  [B_seed11] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.520
+      task 1: task_aware=0.931  full=0.566
+      MEAN  : task_aware=0.965  full=0.543
+      task 2: task_aware=0.946  full=0.482
+      task 3: task_aware=0.972  full=0.628
+      MEAN  : task_aware=0.959  full=0.555
+  seed=11 in 7s  score_max=0.721  score_mean=0.295  max_pair=(2, 6)  full=(0.543,0.555)  combined=0.549
+
+--- seed=13 ---
+  [A_seed13] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed13] trained on tasks [2, 3]  L1.n_nodes=26  frozen=7  W_lcn_mask installed: True
+      task 0: task_aware=0.996  full=0.761
+      task 1: task_aware=0.952  full=0.344
+      MEAN  : task_aware=0.974  full=0.553
+      task 2: task_aware=0.923  full=0.280
+      task 3: task_aware=0.915  full=0.340
+      MEAN  : task_aware=0.919  full=0.310
+  seed=13 in 9s  score_max=0.765  score_mean=0.427  max_pair=(3, 4)  full=(0.553,0.310)  combined=0.431
+
+--- seed=17 ---
+  [A_seed17] trained on tasks [0, 1]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+  [B_seed17] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.021
+      task 1: task_aware=0.944  full=0.068
+      MEAN  : task_aware=0.971  full=0.044
+      task 2: task_aware=0.944  full=0.009
+      task 3: task_aware=0.942  full=0.053
+      MEAN  : task_aware=0.943  full=0.031
+  seed=17 in 9s  score_max=0.475  score_mean=0.191  max_pair=(2, 6)  full=(0.044,0.031)  combined=0.038
+
+--- seed=19 ---
+  [A_seed19] trained on tasks [0, 1]  L1.n_nodes=26  frozen=16  W_lcn_mask installed: True
+  [B_seed19] trained on tasks [2, 3]  L1.n_nodes=26  frozen=8  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.901
+      task 1: task_aware=0.955  full=0.740
+      MEAN  : task_aware=0.977  full=0.821
+      task 2: task_aware=0.948  full=0.525
+      task 3: task_aware=0.974  full=0.597
+      MEAN  : task_aware=0.961  full=0.561
+  seed=19 in 6s  score_max=0.596  score_mean=0.399  max_pair=(2, 6)  full=(0.821,0.561)  combined=0.691
+
+--- seed=23 ---
+  [A_seed23] trained on tasks [0, 1]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+  [B_seed23] trained on tasks [2, 3]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+      task 0: task_aware=0.995  full=0.113
+      task 1: task_aware=0.945  full=0.109
+      MEAN  : task_aware=0.970  full=0.111
+      task 2: task_aware=0.927  full=0.140
+      task 3: task_aware=0.989  full=0.180
+      MEAN  : task_aware=0.958  full=0.160
+  seed=23 in 9s  score_max=0.591  score_mean=0.308  max_pair=(2, 5)  full=(0.111,0.160)  combined=0.135
+
+--- seed=29 ---
+  [A_seed29] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed29] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.995  full=0.774
+      task 1: task_aware=0.902  full=0.525
+      MEAN  : task_aware=0.948  full=0.650
+      task 2: task_aware=0.909  full=0.489
+      task 3: task_aware=0.989  full=0.595
+      MEAN  : task_aware=0.949  full=0.542
+  seed=29 in 10s  score_max=0.801  score_mean=0.502  max_pair=(2, 4)  full=(0.650,0.542)  combined=0.596
+
+--- seed=31 ---
+  [A_seed31] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed31] trained on tasks [2, 3]  L1.n_nodes=26  frozen=16  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.903
+      task 1: task_aware=0.947  full=0.758
+      MEAN  : task_aware=0.972  full=0.830
+      task 2: task_aware=0.934  full=0.583
+      task 3: task_aware=0.956  full=0.655
+      MEAN  : task_aware=0.945  full=0.619
+  seed=31 in 9s  score_max=0.669  score_mean=0.354  max_pair=(3, 6)  full=(0.830,0.619)  combined=0.724
+
+Total: 93s
+
+==============================================================================
+CORRELATION (n=12)  score_max vs post-absorb full
+==============================================================================
+  score_max    vs A_full          Pearson r=+0.457  Spearman ρ=+0.175
+  score_max    vs B_full          Pearson r=+0.391  Spearman ρ=+0.182
+  score_max    vs combined_full   Pearson r=+0.439  Spearman ρ=+0.147
+  score_mean   vs A_full          Pearson r=+0.288  Spearman ρ=-0.021
+  score_mean   vs B_full          Pearson r=+0.038  Spearman ρ=-0.126
+  score_mean   vs combined_full   Pearson r=+0.179  Spearman ρ=-0.063
+
+Seeds sorted by score_max ascending (predicted-good → predicted-bad):
+seed    score_max  score_mean  combined_full    a_full    b_full
+17          0.475       0.191          0.038     0.044     0.031
+23          0.591       0.308          0.135     0.111     0.160
+19          0.596       0.399          0.691     0.821     0.561
+42          0.603       0.201          0.601     0.676     0.526
+44          0.631       0.265          0.671     0.720     0.621
+43          0.668       0.437          0.382     0.505     0.259
+31          0.669       0.354          0.724     0.830     0.619
+7           0.678       0.424          0.466     0.532     0.399
+1           0.679       0.451          0.292     0.432     0.151
+11          0.721       0.295          0.549     0.543     0.555
+13          0.765       0.427          0.431     0.553     0.310
+29          0.801       0.502          0.596     0.650     0.542
