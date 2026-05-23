@@ -157,21 +157,20 @@ def tie_channel_weights(
     n_channels: int,
     cell_credit: Optional[torch.Tensor] = None,
 ) -> int:
-    """Real conv emergence: cells indexed by (channel, pool) share W
-    ACROSS pools within a channel. With n_channels groups of equal
-    size, cells 0..N/n_C-1 are channel 0, N/n_C..2N/n_C-1 channel 1,
-    etc. After averaging W within each channel, we have n_channels
-    unique kernels applied at all pool positions = translation
-    invariance.
+    """Real conv emergence: cells with the same channel_id share W
+    across positions. Channel assignment is ROUND-ROBIN by cell
+    index (channel_id = cell_idx % n_channels), so new cells from
+    axis6_spawn distribute across channels rather than all falling
+    into the last bucket. After averaging W within each channel, we
+    have n_channels unique kernels applied at all spatial positions
+    where channel members live = translation invariance.
 
     Skips credited cells. Returns number of channels that had >=2
     plastic cells (diagnostic)."""
     n = layer.n_nodes
     if n_channels < 1 or n < n_channels:
         return 0
-    per_ch = n // n_channels
-    channel_id = torch.arange(n) // per_ch
-    channel_id = channel_id.clamp(max=n_channels - 1)
+    channel_id = torch.arange(n) % n_channels
     n_tied = 0
     if cell_credit is not None and cell_credit.numel() >= n:
         plastic = ~cell_credit[:n]
@@ -475,18 +474,21 @@ def build_arm_h_channel_tied(seed: int) -> TrioronNetwork:
     L0 = net.layers[0]
     _setup_head(net)
     _seed_l0_positions(net)
-    # L1 cell positions: cell (c, p) at pool_centroid(p). Index
-    # convention: cell_idx = c * N_P + p.
+    # L1 cell positions: round-robin (cell_idx % N_C = channel,
+    # cell_idx // N_C = pool). Cells 0..N_C-1 are at pool 0 with
+    # channels 0..N_C-1; cells N_C..2N_C-1 are at pool 1; etc.
+    # This matches tie_channel_weights' modulo channel assignment, so
+    # axis6_spawn (which appends new cells at the end) distributes
+    # new cells across channels as the substrate grows.
     L1 = net.layers[1]
     from trioron.spatial import pool_centroid
     with torch.no_grad():
-        for c in range(ARM_H_N_CHANNELS):
-            for p in range(ARM_H_N_POOLS):
-                cx, cy = pool_centroid(p, grid_size=ARM_H_POOL_GRID)
-                idx = c * ARM_H_N_POOLS + p
-                L1.cell_position[idx, 0] = cx
-                L1.cell_position[idx, 1] = cy
-                L1.cell_position[idx, 2] = 0.0
+        for idx in range(ARM_H_H_INIT):
+            p = idx // ARM_H_N_CHANNELS
+            cx, cy = pool_centroid(p, grid_size=ARM_H_POOL_GRID)
+            L1.cell_position[idx, 0] = cx
+            L1.cell_position[idx, 1] = cy
+            L1.cell_position[idx, 2] = 0.0
     # Substrate LCN on L0 (apply_to_weights=False so L0.W stays full).
     L0.enable_lcn(
         pixel_positions_rgb(), mode="soft", sigma=LCN_SIGMA,
