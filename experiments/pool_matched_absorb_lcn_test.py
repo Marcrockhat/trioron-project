@@ -172,6 +172,7 @@ def main() -> int:
         donor_a, donor_b, grid_size=4, pool_capacity=None,
         snap_to_pool_centroid=False,
         donor_trained_classes=trained_b,
+        recipient_trained_classes=trained_a,
     )
     print(f"  absorbed {len(absorbed)}/{donor_b.layers[1].n_nodes} donor B cells")
     print(f"  donor A post-absorb L1.n_nodes = {donor_a.layers[1].n_nodes}")

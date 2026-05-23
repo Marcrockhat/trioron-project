@@ -75,6 +75,7 @@ def run_seed(seed: int, train_views, eval_views, task_class_lists) -> dict:
         donor_a, donor_b, grid_size=4, pool_capacity=None,
         snap_to_pool_centroid=False,
         donor_trained_classes=trained_b,
+        recipient_trained_classes=trained_a,
     )
     extend_l1_lcn_mask(donor_a)
     locality = _locality_mean(donor_a.layers[1])

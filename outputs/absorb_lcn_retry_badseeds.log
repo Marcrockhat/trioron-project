@@ -1,0 +1,167 @@
+==============================================================================
+Retry head-to-head (n_attempts=10, n_seeds=6: [11, 17, 13, 43, 19, 23])
+==============================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+--- seed=11 ---
+  [A_seed11] trained on tasks [0, 1]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+  [B_seed11] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.994
+      task 1: task_aware=0.954  full=0.000
+      MEAN  : task_aware=0.977  full=0.497
+      task 2: task_aware=0.972  full=0.734
+      task 3: task_aware=0.989  full=0.011
+      MEAN  : task_aware=0.980  full=0.372
+      task 0: task_aware=1.000  full=0.351
+      task 1: task_aware=0.954  full=0.334
+      MEAN  : task_aware=0.977  full=0.343
+      task 2: task_aware=0.962  full=0.419
+      task 3: task_aware=0.967  full=0.613
+      MEAN  : task_aware=0.964  full=0.516
+      task 0: task_aware=1.000  full=0.320
+      task 1: task_aware=0.957  full=0.342
+      MEAN  : task_aware=0.978  full=0.331
+      task 2: task_aware=0.962  full=0.455
+      task 3: task_aware=0.968  full=0.616
+      MEAN  : task_aware=0.965  full=0.535
+  seed=11 in 25s  base_full=(0.343,0.516)  retry_full=(0.331,0.535)  Δ_a=-0.012  Δ_b=+0.019  best_trial=0  best_score=0.934
+
+--- seed=17 ---
+  [A_seed17] trained on tasks [0, 1]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+  [B_seed17] trained on tasks [2, 3]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.937
+      task 1: task_aware=0.950  full=0.000
+      MEAN  : task_aware=0.974  full=0.469
+      task 2: task_aware=0.954  full=0.859
+      task 3: task_aware=0.996  full=0.000
+      MEAN  : task_aware=0.975  full=0.430
+      task 0: task_aware=0.998  full=0.005
+      task 1: task_aware=0.938  full=0.041
+      MEAN  : task_aware=0.968  full=0.023
+      task 2: task_aware=0.949  full=0.002
+      task 3: task_aware=0.974  full=0.016
+      MEAN  : task_aware=0.962  full=0.009
+      task 0: task_aware=0.998  full=0.003
+      task 1: task_aware=0.941  full=0.040
+      MEAN  : task_aware=0.969  full=0.021
+      task 2: task_aware=0.960  full=0.002
+      task 3: task_aware=0.974  full=0.018
+      MEAN  : task_aware=0.967  full=0.010
+  seed=17 in 25s  base_full=(0.023,0.009)  retry_full=(0.021,0.010)  Δ_a=-0.001  Δ_b=+0.001  best_trial=0  best_score=0.887
+
+--- seed=13 ---
+  [A_seed13] trained on tasks [0, 1]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+  [B_seed13] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.996
+      task 1: task_aware=0.965  full=0.000
+      MEAN  : task_aware=0.981  full=0.498
+      task 2: task_aware=0.943  full=0.779
+      task 3: task_aware=0.993  full=0.045
+      MEAN  : task_aware=0.968  full=0.412
+      task 0: task_aware=0.995  full=0.748
+      task 1: task_aware=0.956  full=0.469
+      MEAN  : task_aware=0.976  full=0.609
+      task 2: task_aware=0.920  full=0.204
+      task 3: task_aware=0.961  full=0.371
+      MEAN  : task_aware=0.941  full=0.287
+      task 0: task_aware=0.995  full=0.763
+      task 1: task_aware=0.959  full=0.431
+      MEAN  : task_aware=0.977  full=0.597
+      task 2: task_aware=0.920  full=0.242
+      task 3: task_aware=0.973  full=0.256
+      MEAN  : task_aware=0.946  full=0.249
+  seed=13 in 22s  base_full=(0.609,0.287)  retry_full=(0.597,0.249)  Δ_a=-0.012  Δ_b=-0.038  best_trial=2  best_score=0.902
+
+--- seed=43 ---
+  [A_seed43] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed43] trained on tasks [2, 3]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.960
+      task 1: task_aware=0.942  full=0.000
+      MEAN  : task_aware=0.970  full=0.480
+      task 2: task_aware=0.967  full=0.919
+      task 3: task_aware=0.995  full=0.001
+      MEAN  : task_aware=0.981  full=0.460
+      task 0: task_aware=0.996  full=0.576
+      task 1: task_aware=0.928  full=0.243
+      MEAN  : task_aware=0.962  full=0.409
+      task 2: task_aware=0.934  full=0.080
+      task 3: task_aware=0.989  full=0.092
+      MEAN  : task_aware=0.962  full=0.086
+      task 0: task_aware=0.997  full=0.564
+      task 1: task_aware=0.926  full=0.246
+      MEAN  : task_aware=0.961  full=0.405
+      task 2: task_aware=0.933  full=0.090
+      task 3: task_aware=0.991  full=0.103
+      MEAN  : task_aware=0.962  full=0.096
+  seed=43 in 23s  base_full=(0.409,0.086)  retry_full=(0.405,0.096)  Δ_a=-0.004  Δ_b=+0.011  best_trial=3  best_score=0.941
+
+--- seed=19 ---
+  [A_seed19] trained on tasks [0, 1]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+  [B_seed19] trained on tasks [2, 3]  L1.n_nodes=26  frozen=8  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.996
+      task 1: task_aware=0.964  full=0.000
+      MEAN  : task_aware=0.981  full=0.498
+      task 2: task_aware=0.959  full=0.769
+      task 3: task_aware=0.993  full=0.000
+      MEAN  : task_aware=0.976  full=0.384
+      task 0: task_aware=0.998  full=0.535
+      task 1: task_aware=0.954  full=0.146
+      MEAN  : task_aware=0.976  full=0.340
+      task 2: task_aware=0.946  full=0.139
+      task 3: task_aware=0.973  full=0.145
+      MEAN  : task_aware=0.959  full=0.142
+      task 0: task_aware=0.999  full=0.515
+      task 1: task_aware=0.954  full=0.137
+      MEAN  : task_aware=0.976  full=0.326
+      task 2: task_aware=0.940  full=0.122
+      task 3: task_aware=0.971  full=0.162
+      MEAN  : task_aware=0.956  full=0.142
+  seed=19 in 23s  base_full=(0.340,0.142)  retry_full=(0.326,0.142)  Δ_a=-0.014  Δ_b=+0.000  best_trial=7  best_score=0.941
+
+--- seed=23 ---
+  [A_seed23] trained on tasks [0, 1]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+  [B_seed23] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.998
+      task 1: task_aware=0.940  full=0.000
+      MEAN  : task_aware=0.969  full=0.499
+      task 2: task_aware=0.964  full=0.771
+      task 3: task_aware=0.991  full=0.000
+      MEAN  : task_aware=0.978  full=0.386
+      task 0: task_aware=0.993  full=0.720
+      task 1: task_aware=0.939  full=0.422
+      MEAN  : task_aware=0.966  full=0.571
+      task 2: task_aware=0.933  full=0.557
+      task 3: task_aware=0.975  full=0.648
+      MEAN  : task_aware=0.954  full=0.602
+      task 0: task_aware=0.994  full=0.662
+      task 1: task_aware=0.953  full=0.499
+      MEAN  : task_aware=0.974  full=0.580
+      task 2: task_aware=0.931  full=0.507
+      task 3: task_aware=0.972  full=0.688
+      MEAN  : task_aware=0.952  full=0.598
+  seed=23 in 25s  base_full=(0.571,0.602)  retry_full=(0.580,0.598)  Δ_a=+0.010  Δ_b=-0.004  best_trial=6  best_score=0.934
+
+Total: 143s
+
+==============================================================================
+AGGREGATE (n=6)  baseline vs retry-10
+==============================================================================
+                 baseline A-tasks full  mean=+0.3825  σ=0.2098  n=6
+                 retry    A-tasks full  mean=+0.3768  σ=0.2105  n=6
+           Δ_full A (retry − baseline)  mean=-0.0056  σ=0.0089  n=6
+
+                 baseline B-tasks full  mean=+0.2738  σ=0.2407  n=6
+                 retry    B-tasks full  mean=+0.2718  σ=0.2419  n=6
+           Δ_full B (retry − baseline)  mean=-0.0020  σ=0.0197  n=6
+
+                 baseline A task-aware  mean=+0.9708  σ=0.0064  n=6
+                 retry    A task-aware  mean=+0.9727  σ=0.0065  n=6
+                 baseline B task-aware  mean=+0.9570  σ=0.0086  n=6
+                 retry    B task-aware  mean=+0.9579  σ=0.0081  n=6
+
+retry beat baseline on A-tasks in 1/6 seeds; on B-tasks in 4/6 seeds.

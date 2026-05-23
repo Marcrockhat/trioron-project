@@ -1,0 +1,134 @@
+==============================================================================
+Jitter head-to-head (σ=0.1, n_seeds=6: [11, 17, 13, 43, 19, 23])
+==============================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+--- seed=11 ---
+  [A_seed11] trained on tasks [0, 1]  L1.n_nodes=26  frozen=16  W_lcn_mask installed: True
+  [B_seed11] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.326
+      task 1: task_aware=0.941  full=0.281
+      MEAN  : task_aware=0.970  full=0.303
+      task 2: task_aware=0.954  full=0.329
+      task 3: task_aware=0.977  full=0.343
+      MEAN  : task_aware=0.965  full=0.336
+      task 0: task_aware=0.999  full=0.337
+      task 1: task_aware=0.938  full=0.293
+      MEAN  : task_aware=0.968  full=0.315
+      task 2: task_aware=0.958  full=0.297
+      task 3: task_aware=0.972  full=0.324
+      MEAN  : task_aware=0.965  full=0.310
+  seed=11 in 5s  base_full=(0.303,0.336)  jit_full=(0.315,0.310)  Δ_a=+0.012  Δ_b=-0.026
+
+--- seed=17 ---
+  [A_seed17] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed17] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.256
+      task 1: task_aware=0.941  full=0.278
+      MEAN  : task_aware=0.970  full=0.267
+      task 2: task_aware=0.950  full=0.117
+      task 3: task_aware=0.973  full=0.130
+      MEAN  : task_aware=0.962  full=0.124
+      task 0: task_aware=0.999  full=0.254
+      task 1: task_aware=0.944  full=0.249
+      MEAN  : task_aware=0.971  full=0.252
+      task 2: task_aware=0.942  full=0.110
+      task 3: task_aware=0.962  full=0.137
+      MEAN  : task_aware=0.952  full=0.124
+  seed=17 in 7s  base_full=(0.267,0.124)  jit_full=(0.252,0.124)  Δ_a=-0.015  Δ_b=+0.000
+
+--- seed=13 ---
+  [A_seed13] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed13] trained on tasks [2, 3]  L1.n_nodes=26  frozen=8  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.710
+      task 1: task_aware=0.953  full=0.791
+      MEAN  : task_aware=0.975  full=0.751
+      task 2: task_aware=0.925  full=0.509
+      task 3: task_aware=0.983  full=0.739
+      MEAN  : task_aware=0.954  full=0.624
+      task 0: task_aware=0.997  full=0.691
+      task 1: task_aware=0.953  full=0.787
+      MEAN  : task_aware=0.975  full=0.739
+      task 2: task_aware=0.903  full=0.435
+      task 3: task_aware=0.978  full=0.712
+      MEAN  : task_aware=0.941  full=0.574
+  seed=13 in 7s  base_full=(0.751,0.624)  jit_full=(0.739,0.574)  Δ_a=-0.012  Δ_b=-0.050
+
+--- seed=43 ---
+  [A_seed43] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed43] trained on tasks [2, 3]  L1.n_nodes=26  frozen=8  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.507
+      task 1: task_aware=0.916  full=0.204
+      MEAN  : task_aware=0.957  full=0.356
+      task 2: task_aware=0.951  full=0.009
+      task 3: task_aware=0.987  full=0.044
+      MEAN  : task_aware=0.969  full=0.026
+      task 0: task_aware=0.998  full=0.503
+      task 1: task_aware=0.920  full=0.163
+      MEAN  : task_aware=0.959  full=0.333
+      task 2: task_aware=0.885  full=0.003
+      task 3: task_aware=0.984  full=0.041
+      MEAN  : task_aware=0.935  full=0.022
+  seed=43 in 7s  base_full=(0.356,0.026)  jit_full=(0.333,0.022)  Δ_a=-0.022  Δ_b=-0.004
+
+--- seed=19 ---
+  [A_seed19] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed19] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.913
+      task 1: task_aware=0.962  full=0.694
+      MEAN  : task_aware=0.980  full=0.804
+      task 2: task_aware=0.954  full=0.482
+      task 3: task_aware=0.992  full=0.696
+      MEAN  : task_aware=0.973  full=0.589
+      task 0: task_aware=0.999  full=0.907
+      task 1: task_aware=0.963  full=0.674
+      MEAN  : task_aware=0.981  full=0.790
+      task 2: task_aware=0.950  full=0.461
+      task 3: task_aware=0.981  full=0.608
+      MEAN  : task_aware=0.966  full=0.534
+  seed=19 in 5s  base_full=(0.804,0.589)  jit_full=(0.790,0.534)  Δ_a=-0.014  Δ_b=-0.055
+
+--- seed=23 ---
+  [A_seed23] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed23] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.809
+      task 1: task_aware=0.947  full=0.451
+      MEAN  : task_aware=0.972  full=0.630
+      task 2: task_aware=0.940  full=0.511
+      task 3: task_aware=0.989  full=0.580
+      MEAN  : task_aware=0.965  full=0.545
+      task 0: task_aware=0.998  full=0.850
+      task 1: task_aware=0.939  full=0.481
+      MEAN  : task_aware=0.968  full=0.666
+      task 2: task_aware=0.935  full=0.523
+      task 3: task_aware=0.985  full=0.568
+      MEAN  : task_aware=0.960  full=0.546
+  seed=23 in 8s  base_full=(0.630,0.545)  jit_full=(0.666,0.546)  Δ_a=+0.036  Δ_b=+0.000
+
+Total: 38s
+
+==============================================================================
+AGGREGATE (n=6)  baseline vs jitter σ=0.1
+==============================================================================
+                 baseline A-tasks full  mean=+0.5184  σ=0.2383  n=6
+                 jitter   A-tasks full  mean=+0.5158  σ=0.2413  n=6
+          Δ_full A (jitter − baseline)  mean=-0.0026  σ=0.0221  n=6
+
+                 baseline B-tasks full  mean=+0.3740  σ=0.2542  n=6
+                 jitter   B-tasks full  mean=+0.3516  σ=0.2378  n=6
+          Δ_full B (jitter − baseline)  mean=-0.0224  σ=0.0252  n=6
+
+                 baseline A task-aware  mean=+0.9707  σ=0.0079  n=6
+                 jitter   A task-aware  mean=+0.9705  σ=0.0074  n=6
+                 baseline B task-aware  mean=+0.9647  σ=0.0066  n=6
+                 jitter   B task-aware  mean=+0.9531  σ=0.0130  n=6
+
+                     baseline locality  mean=+0.7838  σ=0.0084  n=6
+                     jitter   locality  mean=+0.7832  σ=0.0087  n=6
+
+jitter beat baseline on A-tasks in 2/6 seeds; on B-tasks in 2/6 seeds.
