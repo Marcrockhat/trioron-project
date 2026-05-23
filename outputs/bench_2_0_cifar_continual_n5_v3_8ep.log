@@ -1,0 +1,31 @@
+bench_2_0_cifar_continual: arms=['a', 'b', 'c', 'd'] seeds=5 epochs=8 tasks=10x10 batch=256 lr=0.01 smoke=False
+loading CIFAR-100 + building tasks (one-time)...
+  built 10 tasks; first task class range 0..9, train=5000
+[seed 0 arm a v1.0 random Gaussian] full=0.1024 task=0.3754 L1=64 spawns=0 t=154s
+[seed 0 arm b v1.0 + LCN] full=0.1084 task=0.3936 L1=64 spawns=0 t=145s
+[seed 0 arm c v2.0 static oracle] full=0.1189 task=0.4062 L1=88 spawns=0 t=146s
+[seed 0 arm d v2.0 self-arrange] full=0.1249 task=0.4119 L1=94 spawns=30 t=148s
+[seed 1 arm a v1.0 random Gaussian] full=0.1079 task=0.3783 L1=64 spawns=0 t=144s
+[seed 1 arm b v1.0 + LCN] full=0.1071 task=0.3872 L1=64 spawns=0 t=156s
+[seed 1 arm c v2.0 static oracle] full=0.1177 task=0.3962 L1=88 spawns=0 t=145s
+[seed 1 arm d v2.0 self-arrange] full=0.1184 task=0.4060 L1=94 spawns=30 t=161s
+[seed 2 arm a v1.0 random Gaussian] full=0.1068 task=0.3821 L1=64 spawns=0 t=148s
+[seed 2 arm b v1.0 + LCN] full=0.1101 task=0.3885 L1=64 spawns=0 t=147s
+[seed 2 arm c v2.0 static oracle] full=0.1159 task=0.3939 L1=88 spawns=0 t=150s
+[seed 2 arm d v2.0 self-arrange] full=0.1217 task=0.3991 L1=94 spawns=30 t=149s
+[seed 3 arm a v1.0 random Gaussian] full=0.1015 task=0.3790 L1=64 spawns=0 t=149s
+[seed 3 arm b v1.0 + LCN] full=0.1139 task=0.3929 L1=64 spawns=0 t=150s
+[seed 3 arm c v2.0 static oracle] full=0.1165 task=0.3958 L1=88 spawns=0 t=154s
+[seed 3 arm d v2.0 self-arrange] full=0.1252 task=0.4057 L1=94 spawns=30 t=149s
+[seed 4 arm a v1.0 random Gaussian] full=0.1033 task=0.3791 L1=64 spawns=0 t=149s
+[seed 4 arm b v1.0 + LCN] full=0.1024 task=0.3871 L1=64 spawns=0 t=158s
+[seed 4 arm c v2.0 static oracle] full=0.1121 task=0.3934 L1=88 spawns=0 t=151s
+[seed 4 arm d v2.0 self-arrange] full=0.1254 task=0.4128 L1=94 spawns=30 t=152s
+
+=== aggregate (mean ± std across seeds) ===
+  arm a           v1.0 random Gaussian  full=0.1044 ± 0.0028  task=0.3788 ± 0.0024  L1=64.0  spawns=0.0
+  arm b                     v1.0 + LCN  full=0.1084 ± 0.0042  task=0.3899 ± 0.0032  L1=64.0  spawns=0.0
+  arm c             v2.0 static oracle  full=0.1162 ± 0.0026  task=0.3971 ± 0.0052  L1=88.0  spawns=0.0
+  arm d              v2.0 self-arrange  full=0.1231 ± 0.0030  task=0.4071 ± 0.0055  L1=94.0  spawns=30.0
+
+wrote /home/marcrockhat/trioron-project/outputs/bench_2_0_cifar_continual.csv

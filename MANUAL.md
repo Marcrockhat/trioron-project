@@ -23,8 +23,9 @@ instead. For the cross-modal bridge / encoder reference,
 10. [Deploying as an agent (REPL + HTTP)](#10-deploying-as-an-agent-repl--http)
 11. [Tool registration](#11-tool-registration)
 12. [The Python API at a glance](#12-the-python-api-at-a-glance)
-13. [Troubleshooting](#13-troubleshooting)
-14. [Reference: CLI commands](#14-reference-cli-commands)
+13. [Trioron 2.0 — profiles, axes, topography](#13-trioron-20--profiles-axes-topography)
+14. [Troubleshooting](#14-troubleshooting)
+15. [Reference: CLI commands](#15-reference-cli-commands)
 
 ---
 
@@ -661,6 +662,20 @@ from trioron.bridge import (
     Tool, ToolDispatcher,
     BridgedOrganism, Decision,
 )
+
+# 2.0 surface — see §13 for usage. All opt-in; not needed for the
+# 1.0 build_donor → absorb → deploy flow.
+from trioron import (
+    TrioronProfile, OPEN, REASONING, CLASSIFICATION, EDGE, PRESETS,
+    grid_positions_2d, pixel_positions_2d, pool_id, pool_centroid,
+    build_lcn_mask, locality_metric,
+)
+from trioron.api import (
+    set_axonal_gain, archive_input, insert_layer,
+    axis6_spawn, inherit_dendrite,
+    pool_matched_absorb, merge_manifold,
+    ManifoldStore, settle_head_via_manifold, settle_head_with_retry,
+)
 ```
 
 A full mini-app in 30 lines:
@@ -698,7 +713,243 @@ print(agent.act("world"))
 
 ---
 
-## 13. Troubleshooting
+## 13. Trioron 2.0 — profiles, axes, topography
+
+The 2.0 substrate adds extra architectural axes on top of the 1.0
+donor. They are all opt-in: `TrioronConfig` stays 1.0-shape and the
+default donor build does not enable any 2.0 axis.
+
+| axis | what it adds | API entry point |
+|---|---|---|
+| 2 — plastic fanout sparsity | Lock an input column (anchor + Fisher zero + grad mask) | `archive_input` |
+| 3 — depth growth | Insert a new layer between two existing layers, identity-init | `insert_layer` |
+| 4 — slow axonal gain | Per-cell multiplicative output gain, written from reward / attention | `set_axonal_gain` |
+| 5 — dendritic compartmentalization | K parallel branches per cell with optional supralinear σ_branch | `inherit_dendrite` + `TrioronProfile` |
+| 6 — field-conditional spawn | New cells spawn at perturbed positions near a stressed parent | `axis6_spawn` |
+| topography (LCN) | Locally-connected L0 mask: each L0 cell sees a Gaussian image patch | `build_lcn_mask` + `grid_positions_2d` + `pixel_positions_2d` |
+
+**Empirical caveat (2026-05-23):** at n=1 on the standard chain-15
+curriculum (default bench config), turning on depth + LCN + positional
+plasticity together **regresses** full accuracy by ~8 points vs the
+1.0 baseline, at +17% wall-clock. The 2026-05-21 n=3 result for axes
+3+4+5 showed the same direction at the same magnitude. The
+closed-form Phase 6 falsification gate (concentric rings,
+fine-discrimination) passed at +0.49 absolute lift for K=2 dendrites,
+so the substrate primitives work — they just don't lift the chain-15
+default config. The current best practice is: leave 2.0 axes off for
+chain-15-style continual-learning benches; the axes are exploratory
+research surface, not the default deployment configuration.
+
+### 13.1 Profiles
+
+`trioron.profile` ships four named profiles. Each is a frozen bundle
+of substrate-construction defaults. Activate one before
+`build_donor` and every `TrioronLayer` constructed inside that scope
+inherits its defaults.
+
+| profile | branch_activation | B_max | grow_node | grow_branch | insert_layer | hardware caps |
+|---|---|---|---|---|---|---|
+| `OPEN` (default) | quad | 8 | on | on | on | none |
+| `REASONING` | quad | 8 | on | on | on | none |
+| `CLASSIFICATION` | identity | 1 | on | off | on | none |
+| `EDGE` | identity | 1 | on | off | off | 256 MB / 30 s |
+
+`OPEN` matches pre-2.0 construction byte-for-byte. `REASONING` is the
+depth-heavy regime; `CLASSIFICATION` strips dendrites (Axis 5
+functionally off) so capacity scales through cell count, matching the
+"freeze trioron as a feature bank" pattern. `EDGE` is sized for
+Orange-Pi-class deployment.
+
+```python
+import trioron.profile as tp
+from trioron.api import build_donor, TrioronConfig
+
+# Scoped activation — restores the previous profile on exit.
+with tp.TrioronProfile.use(tp.REASONING):
+    build_donor(
+        label="reasoner", tasks=tasks, seed=42, out_path="reasoner.pt",
+        config=TrioronConfig(cap_bytes=64_000),
+    )
+
+# Or process-wide:
+tp.TrioronProfile.set_active(tp.EDGE)
+```
+
+Explicit kwargs at layer construction always override the profile.
+
+### 13.2 Depth growth (Axis 3)
+
+```python
+from trioron.api import insert_layer
+
+new_idx = insert_layer(
+    net,
+    between=(1, 2),         # between layer 1 and layer 2 (the head)
+    n_nodes=64,
+    activation="linear",
+    init_mode="identity",   # Net2Net-style: forward unchanged at insertion
+    K_insert=3,             # cap on inserts landing in the same slot
+)
+# Caller MUST rebuild any optimizer — new Parameter objects appear,
+# and the downstream layer's W is replaced.
+```
+
+Identity-init keeps the forward pass mathematically unchanged at the
+moment of insertion, so the network's existing accuracy is preserved.
+Gradients flow through the inserted layer immediately, so the new
+depth is plastic from the first post-insert step.
+
+### 13.3 Topography — LCN masks
+
+LCN replaces L0's dense random projection with a locally-connected
+one: each L0 cell sees only a Gaussian-weighted local image patch.
+For data with spatial structure (CIFAR-100, natural images), this
+adds inductive bias without losing the random-projection freeze. On
+chain-15 it is null (28×28 glyphs leave nothing for locality to
+exploit).
+
+```python
+from trioron import build_lcn_mask, grid_positions_2d, pixel_positions_2d
+
+# Lay 128 L0 cells on a 16×8 retinotopic grid on the unit square.
+cell_pos  = grid_positions_2d(grid_x=16, grid_y=8)
+pixel_pos = pixel_positions_2d(h=28, w=28)
+# Gaussian mask, σ=0.10 — each L0 cell sees a soft local patch.
+mask = build_lcn_mask(cell_pos, pixel_pos, sigma=0.10)
+net.layers[0].W.data *= mask
+```
+
+Per-layer LCN can also be declared on `TrioronProfile.lcn` (dict
+keyed by layer index); `TrioronLayer.enable_lcn` installs the mask
+post-construction.
+
+### 13.4 Positional plasticity (Axis 6)
+
+```python
+from trioron.api import axis6_spawn, inherit_dendrite
+
+# Caller picks the stressed parent.
+parent_idx = net.layers[1].field_conditional_growth_candidate()
+child_idx = axis6_spawn(
+    net, layer_idx=1, candidate_idx=parent_idx, position_jitter=0.3,
+)
+# Optionally: child inherits parent's dendritic structure with an
+# ε perturbation, so it starts specialized but distinguishable.
+inherit_dendrite(net, layer_idx=1,
+                 parent_idx=parent_idx, child_idx=child_idx,
+                 perturb_frac=0.05)
+```
+
+Use this when growth should respect the cell field's geometry — new
+cells appear near stressed regions rather than at random positions in
+parameter space.
+
+### 13.5 Slow axonal gain (Axis 4)
+
+```python
+from trioron.api import set_axonal_gain
+
+# Per-cell multiplicative output gain on layer 1.
+set_axonal_gain(net, layer_idx=1, signal=reward_vec,
+                mode="multiplicative")
+```
+
+Modes: `"absolute"` (replace), `"additive"`, `"multiplicative"`.
+Gains are clamped to ≥ 0. Written from arbitrary signals — reward,
+attention, manual priors. The gain is part of the substrate state, so
+it persists across `state_dict` save/load.
+
+### 13.6 Plastic fanout sparsity (Axis 2)
+
+```python
+from trioron.api import archive_input
+
+archive_input(net, layer_idx=1, col_idx=17)
+# Caller must invoke layer.mask_archived_input_grads() after .backward()
+# and before optimizer.step() to enforce the grad mask.
+```
+
+Idempotent. Useful for protecting inputs that consolidation has
+identified as load-bearing.
+
+### 13.7 Pool-matched cell-level absorption
+
+The 1.0 `absorb` step composes donors at *branch* granularity — the
+organism gets one branch per donor. `pool_matched_absorb` operates at
+the *cell* level inside one organism's substrate: the recipient
+gains one new cell per donor cell, with both networks respecting the
+same spatial pool partition.
+
+```python
+from trioron.api import (
+    pool_matched_absorb,
+    merge_manifold,
+    settle_head_via_manifold,
+)
+
+# Both networks must share the L0 width and the head width.
+new_pairs = pool_matched_absorb(
+    recipient,
+    donor,
+    layer_idx=1,
+    grid_size=4,                       # 4×4 = 16 pools
+    pool_capacity=8,
+    donor_trained_classes=[0, 1, 2, 3],
+    recipient_trained_classes=[4, 5, 6, 7],
+)
+merge_manifold(recipient.manifold, donor.manifold)
+settle_head_via_manifold(
+    recipient, recipient.manifold, seen_classes=range(8),
+)
+# Caller MUST rebuild the optimizer — the W Parameter objects are
+# replaced by the underlying grow_layer call.
+```
+
+Use this when you want one substrate (not a routed multi-branch
+ensemble) carrying the union of two donors' cells.
+
+### 13.8 Continual-learning benchmark — split-CIFAR-100
+
+`experiments/bench_2_0_cifar_continual.py` is the canonical
+v2.0-vs-v1.0 head-to-head on split-CIFAR-100 (10×10 continual
+classification, raw 32×32 RGB with augmentation). Four arms isolate
+contributions:
+
+| Arm | Substrate | Differentiates |
+|---|---|---|
+| a | v1.0, dense random-Gaussian L0 | floor |
+| b | v1.0 + LCN L0 (frozen retinotopic mask) | LCN's contribution |
+| c | v2.0 static oracle (LCN + L1 baked at +24 cells) | architecture's contribution |
+| d | v2.0 self-arrange (LCN + Axis 6 spawn) | the growth process |
+
+All arms share the same CL machinery (credit-based row freezing +
+cosine head + manifold replay + **post-phase
+`settle_head_with_retry`**). The post-phase head re-settle is
+load-bearing: without it, full-softmax collapses to the
+"remembers-only-last-task" floor (~5%) regardless of arm; with it,
+v2.0 lifts to ~12% at n=5 and the v2.0-vs-v1.0 gap becomes
+statistically significant.
+
+```
+CIFAR_N_SEEDS=5 CIFAR_EPOCHS=8 CIFAR_ARMS=a,b,c,d \
+  python3 -u experiments/bench_2_0_cifar_continual.py
+```
+
+n=5 headline result (2026-05-23): v2.0 self-arrange beats v1.0 floor
+by Δ=+0.0187 full at 7.6σ paired-significance, Δ=+0.0283 task-aware
+at 8.6σ. Per-step contributions (LCN, baked axes, self-arrangement)
+are each 1-2σ; the headline emerges by stacking. See
+`outputs/bench_2_0_cifar_continual_n5_v3_8ep.{csv,log}` for the raw
+numbers.
+
+Experimental arms `e/f/g/h` extend the bench with LCN-on-L1,
+learnable L0/L1 positions, and pool/channel weight-tying for
+"conv-by-emergence" probes — all null at the bench's current scale
+(H_INIT=64-128). Kept env-gated for future capacity-pushed retries.
+
+---
+
+## 14. Troubleshooting
 
 ### "donors have mismatched L0 seeds {42, 7}"
 
@@ -844,7 +1095,7 @@ mode="additive")` to layer the environmental signal on top.
 
 ---
 
-## 14. Reference: CLI commands
+## 15. Reference: CLI commands
 
 ```
 trioron train     train one donor (built-in split or --from-py)
