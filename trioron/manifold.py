@@ -641,6 +641,101 @@ def settle_head_with_retry(
     return best_trial, best_score
 
 
+def simulate_absorption_score(
+    recipient: TrioronNetwork,
+    donor: TrioronNetwork,
+    manifold_recip: ManifoldStore,
+    manifold_donor: ManifoldStore,
+    *,
+    layer_idx: int = 1,
+    settle_steps: int = 50,
+    settle_lr: float = 0.01,
+    settle_batch_size: int = 64,
+    settle_noise_scale: float = 1.0,
+    score_samples: int = 256,
+    score_noise_scale: float = 1.0,
+    generator: Optional[torch.Generator] = None,
+    pool_matched_absorb_kwargs: Optional[Dict] = None,
+) -> float:
+    """Predict the post-absorb full-softmax outcome by running the
+    absorption + head-settle on a deep copy of recipient + manifold,
+    then scoring against a synthetic batch.
+
+    Cost: one deep copy + one absorb call + ``settle_steps`` (default
+    50 — a quarter of the standard 200) + one synthetic-batch score.
+    Roughly 25-30% of a full deployment. Cheap enough to use as a
+    deployment-time gate.
+
+    Use case: paste-and-go absorption between two independently-trained
+    donors. The simulation runs the exact same code path the
+    deployment would, just on copies, so the returned score predicts
+    the real outcome without committing the merge. Caller compares the
+    score to a threshold and either commits the real absorption or
+    refuses the union.
+
+    Caveat: the synthetic-sample score is the same proxy used by
+    :func:`score_via_manifold` and :func:`settle_head_with_retry`. It
+    saturates around 0.85-0.95 on most absorptions and does not
+    correlate cleanly with real-data full-softmax at the trial level
+    (per the retry-and-pick null in [[head_provenance_mask_result]]).
+    However, on the n=12 absorption sentinel the simulation score
+    DOES separate the worst collapse seeds from the good ones — so
+    use it as a coarse gate (refuse below ~0.5), not a fine ranking.
+
+    Args:
+        recipient, donor: trained TrioronNetwork instances. Neither is
+            mutated by this call.
+        manifold_recip, manifold_donor: per-donor manifolds. Neither
+            is mutated.
+        layer_idx: which layer the absorption operates on (default 1).
+        settle_steps: number of settle gradient steps in the simulation
+            (cheaper than the full 200).
+        score_samples: synthetic batch size for scoring.
+        generator: optional Generator for reproducible synthetic draws.
+        pool_matched_absorb_kwargs: forwarded to the simulated
+            ``pool_matched_absorb`` call (e.g.
+            ``donor_trained_classes``, ``recipient_trained_classes``,
+            ``position_jitter``, ``grid_size``).
+
+    Returns:
+        A score in [0, 1] — synthetic-sample accuracy of the simulated
+        post-absorb head.
+    """
+    import copy
+
+    pool_matched_absorb_kwargs = pool_matched_absorb_kwargs or {}
+
+    recipient_sim = copy.deepcopy(recipient)
+    manifold_sim = copy.deepcopy(manifold_recip)
+    manifold_donor_clone = copy.deepcopy(manifold_donor)
+
+    recipient_sim.pool_matched_absorb(
+        donor, layer_idx=layer_idx, **pool_matched_absorb_kwargs,
+    )
+    # Inline manifold merge (avoid a circular import on network.merge_manifold).
+    for c, mu in manifold_donor_clone.mu_per_class.items():
+        if c not in manifold_sim.mu_per_class:
+            manifold_sim.mu_per_class[c] = mu.clone()
+            manifold_sim.sigma_per_class[c] = (
+                manifold_donor_clone.sigma_per_class[c].clone()
+            )
+    classes = sorted(manifold_sim.mu_per_class.keys())
+
+    settle_head_via_manifold(
+        recipient_sim, manifold_sim, classes,
+        n_steps=settle_steps,
+        lr=settle_lr,
+        batch_size=settle_batch_size,
+        noise_scale=settle_noise_scale,
+    )
+    return score_via_manifold(
+        recipient_sim, manifold_sim, classes,
+        n_samples=score_samples,
+        noise_scale=score_noise_scale,
+        generator=generator,
+    )
+
+
 __all__ = [
     "cosine_logits",
     "ManifoldStore",
@@ -649,4 +744,5 @@ __all__ = [
     "settle_head_with_retry",
     "donor_compatibility_score",
     "post_absorb_separability",
+    "simulate_absorption_score",
 ]

@@ -807,6 +807,7 @@ def train_one_task(
     seen_classes_global: Optional[Sequence[int]] = None,
     lambda_diff: float = 0.0,
     W_snapshot: Optional[torch.Tensor] = None,
+    lambda_l1_ortho: float = 0.0,
     verbose: bool = False,
 ) -> TaskTrainResult:
     L1 = net.layers[1]
@@ -898,6 +899,26 @@ def train_one_task(
                 # EMA is seeded.
                 align_loss = alignment_aux_loss(L1)
                 loss = loss + ALIGN_WEIGHT * align_loss
+            if lambda_l1_ortho > 0.0:
+                # L1 cell orthogonality regulariser. Penalises the
+                # squared off-diagonal of the row-normalised W·Wᵀ —
+                # i.e. pushes cell direction vectors apart so each
+                # cell occupies a distinct slice of input space. Each
+                # donor sparsifies its OWN L1 in isolation; no
+                # cross-donor coordination needed, so the paste-and-go
+                # invariant is preserved (per Rocky 2026-05-23). The
+                # statistical effect at absorb time is that two
+                # independently-orthogonalised L1s have less prior
+                # probability of feature-direction collision than two
+                # dense L1s.
+                W_norm = F.normalize(L1.W, dim=1, eps=1e-8)
+                gram = W_norm @ W_norm.t()
+                n_rows = gram.shape[0]
+                off_mask = ~torch.eye(
+                    n_rows, dtype=torch.bool, device=gram.device,
+                )
+                ortho_loss = (gram[off_mask] ** 2).mean()
+                loss = loss + lambda_l1_ortho * ortho_loss
             loss.backward()
             L1.update_internal_stress()
 

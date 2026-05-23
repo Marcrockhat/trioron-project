@@ -50,8 +50,16 @@ def train_donor_lcn(
     train_views, eval_views, task_class_lists,
     n_epochs: int = 4,
     label: str = "donor",
+    lambda_l1_ortho: float = 0.0,
 ):
-    """train_donor variant with LCN-on-L1 enabled."""
+    """train_donor variant with LCN-on-L1 enabled.
+
+    lambda_l1_ortho: optional weight on the L1 cell orthogonality
+        regulariser. Pushes the donor's L1 W rows toward mutual
+        orthogonality so the donor occupies a sparse subspace of L1
+        feature directions. Preserves paste-and-go (each donor
+        sparsifies its own L1 independently).
+    """
     net = build_net(
         seed=seed, lcn_enabled=True,
         l1_lcn_mode=LCN_MODE, l1_lcn_sigma=LCN_SIGMA, l1_lcn_k=LCN_K,
@@ -78,6 +86,7 @@ def train_donor_lcn(
             manifold_noise_scale=1.0,
             seen_classes_global=list(seen_classes),
             lambda_diff=0.0, W_snapshot=None,
+            lambda_l1_ortho=lambda_l1_ortho,
             verbose=False,
         )
         if r.engagement_frac is not None:

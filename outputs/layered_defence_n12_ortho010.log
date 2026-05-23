@@ -1,0 +1,183 @@
+==============================================================================
+Layered-defence validation  λ_l1_ortho=0.1  n_seeds=12: [42, 43, 44, 1, 7, 11, 13, 17, 19, 23, 29, 31]
+==============================================================================
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+
+--- seed=42 ---
+  [A_seed42] trained on tasks [0, 1]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+  [B_seed42] trained on tasks [2, 3]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.727
+      task 1: task_aware=0.943  full=0.524
+      MEAN  : task_aware=0.970  full=0.625
+      task 2: task_aware=0.956  full=0.546
+      task 3: task_aware=0.975  full=0.690
+      MEAN  : task_aware=0.966  full=0.618
+  seed=42 in 5s  sim_score=0.852  full=(0.625,0.618)  combined=0.622
+
+--- seed=43 ---
+  [A_seed43] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed43] trained on tasks [2, 3]  L1.n_nodes=26  frozen=8  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.545
+      task 1: task_aware=0.922  full=0.131
+      MEAN  : task_aware=0.959  full=0.338
+      task 2: task_aware=0.931  full=0.114
+      task 3: task_aware=0.956  full=0.018
+      MEAN  : task_aware=0.944  full=0.066
+  seed=43 in 7s  sim_score=0.785  full=(0.338,0.066)  combined=0.202
+
+--- seed=44 ---
+  [A_seed44] trained on tasks [0, 1]  L1.n_nodes=26  frozen=16  W_lcn_mask installed: True
+  [B_seed44] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.852
+      task 1: task_aware=0.938  full=0.615
+      MEAN  : task_aware=0.968  full=0.733
+      task 2: task_aware=0.936  full=0.512
+      task 3: task_aware=0.978  full=0.642
+      MEAN  : task_aware=0.957  full=0.577
+  seed=44 in 8s  sim_score=0.836  full=(0.733,0.577)  combined=0.655
+
+--- seed=1 ---
+  [A_seed1] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed1] trained on tasks [2, 3]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.501
+      task 1: task_aware=0.941  full=0.137
+      MEAN  : task_aware=0.969  full=0.319
+      task 2: task_aware=0.944  full=0.128
+      task 3: task_aware=0.988  full=0.193
+      MEAN  : task_aware=0.966  full=0.160
+  seed=1 in 8s  sim_score=0.879  full=(0.319,0.160)  combined=0.240
+
+--- seed=7 ---
+  [A_seed7] trained on tasks [0, 1]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+  [B_seed7] trained on tasks [2, 3]  L1.n_nodes=26  frozen=10  W_lcn_mask installed: True
+      task 0: task_aware=0.992  full=0.514
+      task 1: task_aware=0.945  full=0.478
+      MEAN  : task_aware=0.969  full=0.496
+      task 2: task_aware=0.916  full=0.381
+      task 3: task_aware=0.980  full=0.555
+      MEAN  : task_aware=0.948  full=0.468
+  seed=7 in 7s  sim_score=0.816  full=(0.496,0.468)  combined=0.482
+
+--- seed=11 ---
+  [A_seed11] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed11] trained on tasks [2, 3]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+      task 0: task_aware=0.999  full=0.187
+      task 1: task_aware=0.952  full=0.306
+      MEAN  : task_aware=0.976  full=0.246
+      task 2: task_aware=0.943  full=0.197
+      task 3: task_aware=0.972  full=0.277
+      MEAN  : task_aware=0.957  full=0.237
+  seed=11 in 10s  sim_score=0.883  full=(0.246,0.237)  combined=0.242
+
+--- seed=13 ---
+  [A_seed13] trained on tasks [0, 1]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+  [B_seed13] trained on tasks [2, 3]  L1.n_nodes=26  frozen=6  W_lcn_mask installed: True
+      task 0: task_aware=0.997  full=0.848
+      task 1: task_aware=0.964  full=0.796
+      MEAN  : task_aware=0.980  full=0.822
+      task 2: task_aware=0.912  full=0.490
+      task 3: task_aware=0.937  full=0.692
+      MEAN  : task_aware=0.925  full=0.591
+  seed=13 in 11s  sim_score=0.824  full=(0.822,0.591)  combined=0.706
+
+--- seed=17 ---
+  [A_seed17] trained on tasks [0, 1]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+  [B_seed17] trained on tasks [2, 3]  L1.n_nodes=26  frozen=12  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.522
+      task 1: task_aware=0.942  full=0.321
+      MEAN  : task_aware=0.970  full=0.422
+      task 2: task_aware=0.959  full=0.077
+      task 3: task_aware=0.962  full=0.153
+      MEAN  : task_aware=0.961  full=0.115
+  seed=17 in 7s  sim_score=0.793  full=(0.422,0.115)  combined=0.268
+
+--- seed=19 ---
+  [A_seed19] trained on tasks [0, 1]  L1.n_nodes=26  frozen=15  W_lcn_mask installed: True
+  [B_seed19] trained on tasks [2, 3]  L1.n_nodes=26  frozen=11  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.916
+      task 1: task_aware=0.949  full=0.621
+      MEAN  : task_aware=0.973  full=0.769
+      task 2: task_aware=0.935  full=0.526
+      task 3: task_aware=0.986  full=0.635
+      MEAN  : task_aware=0.961  full=0.581
+  seed=19 in 10s  sim_score=0.863  full=(0.769,0.581)  combined=0.675
+
+--- seed=23 ---
+  [A_seed23] trained on tasks [0, 1]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+  [B_seed23] trained on tasks [2, 3]  L1.n_nodes=26  frozen=13  W_lcn_mask installed: True
+      task 0: task_aware=0.995  full=0.932
+      task 1: task_aware=0.948  full=0.566
+      MEAN  : task_aware=0.971  full=0.749
+      task 2: task_aware=0.936  full=0.733
+      task 3: task_aware=0.981  full=0.670
+      MEAN  : task_aware=0.959  full=0.701
+  seed=23 in 11s  sim_score=0.852  full=(0.749,0.701)  combined=0.725
+
+--- seed=29 ---
+  [A_seed29] trained on tasks [0, 1]  L1.n_nodes=26  frozen=16  W_lcn_mask installed: True
+  [B_seed29] trained on tasks [2, 3]  L1.n_nodes=26  frozen=9  W_lcn_mask installed: True
+      task 0: task_aware=0.990  full=0.777
+      task 1: task_aware=0.914  full=0.497
+      MEAN  : task_aware=0.952  full=0.637
+      task 2: task_aware=0.935  full=0.353
+      task 3: task_aware=0.993  full=0.407
+      MEAN  : task_aware=0.964  full=0.380
+  seed=29 in 7s  sim_score=0.891  full=(0.637,0.380)  combined=0.509
+
+--- seed=31 ---
+  [A_seed31] trained on tasks [0, 1]  L1.n_nodes=26  frozen=18  W_lcn_mask installed: True
+  [B_seed31] trained on tasks [2, 3]  L1.n_nodes=26  frozen=14  W_lcn_mask installed: True
+      task 0: task_aware=0.998  full=0.891
+      task 1: task_aware=0.944  full=0.389
+      MEAN  : task_aware=0.971  full=0.640
+      task 2: task_aware=0.940  full=0.257
+      task 3: task_aware=0.978  full=0.353
+      MEAN  : task_aware=0.959  full=0.305
+  seed=31 in 11s  sim_score=0.852  full=(0.640,0.305)  combined=0.473
+
+Total: 102s
+
+==============================================================================
+AGGREGATE (n=12)  λ_l1_ortho=0.1
+==============================================================================
+                      A-tasks full  mean=+0.5664  σ=0.1961
+                      B-tasks full  mean=+0.3999  σ=0.2194
+                     combined full  mean=+0.4832  σ=0.1994
+                      A task-aware  mean=+0.9691  σ=0.0073
+                      B task-aware  mean=+0.9555  σ=0.0118
+                          locality  mean=+0.7282  σ=0.0102
+     simulation_score (pre-absorb)  mean=+0.8438  σ=0.0340
+
+simulation_score vs realised outcome:
+  sim_score vs A_full          Pearson r=+0.067  Spearman ρ=-0.042
+  sim_score vs B_full          Pearson r=+0.222  Spearman ρ=+0.155
+  sim_score vs combined_full   Pearson r=+0.155  Spearman ρ=+0.077
+
+Simulated gate (refuse if sim_score < threshold):
+ threshold  refused  kept   kept_combined_mean
+      0.30        0    12               0.4832
+      0.40        0    12               0.4832
+      0.50        0    12               0.4832
+      0.60        0    12               0.4832
+      0.70        0    12               0.4832
+      0.80        2    10               0.5328
+
+Seeds sorted by sim_score ascending:
+seed    sim_score   combined    a_full    b_full    a_ta    b_ta
+43          0.785      0.202     0.338     0.066   0.959   0.944
+17          0.793      0.268     0.422     0.115   0.970   0.961
+7           0.816      0.482     0.496     0.468   0.969   0.948
+13          0.824      0.706     0.822     0.591   0.980   0.925
+44          0.836      0.655     0.733     0.577   0.968   0.957
+42          0.852      0.622     0.625     0.618   0.970   0.966
+23          0.852      0.725     0.749     0.701   0.971   0.959
+31          0.852      0.473     0.640     0.305   0.971   0.959
+19          0.863      0.675     0.769     0.581   0.973   0.961
+1           0.879      0.240     0.319     0.160   0.969   0.966
+11          0.883      0.242     0.246     0.237   0.976   0.957
+29          0.891      0.509     0.637     0.380   0.952   0.964
