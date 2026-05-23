@@ -604,6 +604,8 @@ def pool_matched_absorb(
     pool_capacity: Optional[int] = None,
     snap_to_pool_centroid: bool = False,
     donor_trained_classes: Optional[Sequence[int]] = None,
+    recipient_trained_classes: Optional[Sequence[int]] = None,
+    position_jitter: float = 0.0,
 ) -> List[Tuple[int, int]]:
     """Cell-granularity absorption between two TrioronNetwork instances.
 
@@ -649,6 +651,20 @@ def pool_matched_absorb(
             predictions for classes the donor never saw). Strongly
             recommended whenever the donor's curriculum is narrower
             than the recipient's class space.
+        recipient_trained_classes: paired with ``donor_trained_classes``.
+            When both are provided, the call installs a
+            head_provenance_mask on the downstream head layer so
+            subsequent head-settle gradients only flow into cells whose
+            source-of-record covered each target class. Required for
+            stable full-softmax recovery after absorption (see
+            [[absorption_sentinel_n12_collapse]]).
+        position_jitter: Gaussian σ added to each absorbed cell's
+            (x, y) position so two cells in the same pool don't share
+            an exact locus. Analog of ``axis6_spawn``'s parent-jitter
+            mechanism applied to absorption. Useful values are small
+            relative to the pool extent (e.g. 0.05 for grid_size=4
+            where pool extent is 0.25). Default 0.0 preserves
+            exact-position behaviour.
 
     Returns:
         A list of (donor_idx, new_recipient_idx) for the cells that
@@ -665,6 +681,8 @@ def pool_matched_absorb(
         pool_capacity=pool_capacity,
         snap_to_pool_centroid=snap_to_pool_centroid,
         donor_trained_classes=donor_trained_classes,
+        recipient_trained_classes=recipient_trained_classes,
+        position_jitter=position_jitter,
     )
 
 
@@ -733,6 +751,44 @@ def settle_head_via_manifold(
         batch_size=batch_size,
         lr=lr,
         noise_scale=noise_scale,
+        head_layer_idx=head_layer_idx,
+        head_logits_fn=head_logits_fn,
+    )
+
+
+def settle_head_with_retry(
+    net,
+    manifold,
+    seen_classes,
+    *,
+    n_attempts: int = 10,
+    score_samples: int = 256,
+    score_noise_scale: float = 1.0,
+    seed_offset: int = 0,
+    settle_kwargs=None,
+    head_layer_idx: int = 2,
+    head_logits_fn=None,
+):
+    """Run ``n_attempts`` head-settle passes; keep the one with the
+    highest held-out synthetic-sample accuracy.
+
+    Opt-in absorption-time variance-reduction wrapper around
+    :func:`settle_head_via_manifold`. Each retry restores the head
+    from a pre-settle snapshot, settles under a fresh global RNG seed,
+    and scores against a held-out synthetic batch drawn from an
+    independent Generator. The best (W, b) is committed.
+
+    See :func:`trioron.manifold.settle_head_with_retry` for the full
+    signature and motivation.
+    """
+    from trioron.manifold import settle_head_with_retry as _retry
+    return _retry(
+        net, manifold, seen_classes,
+        n_attempts=n_attempts,
+        score_samples=score_samples,
+        score_noise_scale=score_noise_scale,
+        seed_offset=seed_offset,
+        settle_kwargs=settle_kwargs,
         head_layer_idx=head_layer_idx,
         head_logits_fn=head_logits_fn,
     )
@@ -1242,6 +1298,7 @@ __all__ = [
     "merge_manifold",
     "ManifoldStore",
     "settle_head_via_manifold",
+    "settle_head_with_retry",
     # Per-axis writers (v2 §3.2-§3.7)
     "set_axonal_gain",
     "archive_input",

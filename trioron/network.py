@@ -884,6 +884,7 @@ class TrioronNetwork(nn.Module):
         snap_to_pool_centroid: bool = False,
         grid_size: int = 4,
         donor_trained_classes: Optional[Sequence[int]] = None,
+        position_jitter: float = 0.0,
     ) -> int:
         """Absorb one cell from ``donor`` at ``donor.layers[layer_idx]``
         into this network at the same layer index. Returns the new
@@ -914,6 +915,17 @@ class TrioronNetwork(nn.Module):
             has its head column zeroed before transfer. Strongly
             recommended for any donor that wasn't trained on the full
             class union.
+
+        position_jitter: Gaussian σ added to the donor cell's (x, y)
+            position before LCN mask installation. Analog of the
+            ``axis6_spawn`` displacement: prevents the absorbed cell
+            from landing on the exact locus of a pre-existing recipient
+            cell, which would force them to share an LCN input window
+            while carrying different W rows ("you can't fill a locus
+            if there's already a cell in it"). Default 0.0 preserves
+            existing exact-position behaviour. Typical useful values
+            are small relative to the pool extent (e.g. 0.05 for
+            grid_size=4 where pool extent is 0.25).
 
         Caller MUST rebuild any optimizer holding recipient's
         ``layers[layer_idx]`` or head parameters — the W Parameter
@@ -980,12 +992,25 @@ class TrioronNetwork(nn.Module):
             # Match the 2D convention used in chained-15: z stays 0.
             if recip_layer.cell_position.shape[1] >= 3:
                 recip_layer.cell_position[new_idx, 2] = 0.0
-        # cell_position is now set to the donor's. grow_layer extended
-        # the LCN mask shape with a placeholder row computed at the
-        # default zero position; call extend_lcn_mask to recompute the
-        # trailing row against the real position and apply it to the
-        # new W row (still carrying the donor's clean weights — the
-        # placeholder phase deliberately didn't touch W).
+            # Intra-pool jitter: small Gaussian displacement so two
+            # cells absorbed into the same pool don't end up sharing
+            # the exact same locus (which would couple their LCN input
+            # windows while their W rows diverge). Analog of
+            # axis6_spawn's parent-jitter mechanism applied to
+            # absorption.
+            if position_jitter > 0.0:
+                jit = torch.randn(
+                    2,
+                    device=recip_layer.cell_position.device,
+                    dtype=recip_layer.cell_position.dtype,
+                ) * position_jitter
+                recip_layer.cell_position[new_idx, :2] += jit
+        # cell_position is now set to the donor's (optionally jittered).
+        # grow_layer extended the LCN mask shape with a placeholder row
+        # computed at the default zero position; call extend_lcn_mask
+        # to recompute the trailing row against the real position and
+        # apply it to the new W row (still carrying the donor's clean
+        # weights — the placeholder phase deliberately didn't touch W).
         recip_layer.extend_lcn_mask(apply_to_w=True)
         recip_layer._field_kernel = None
         return new_idx
@@ -999,6 +1024,8 @@ class TrioronNetwork(nn.Module):
         pool_capacity: Optional[int] = None,
         snap_to_pool_centroid: bool = False,
         donor_trained_classes: Optional[Sequence[int]] = None,
+        recipient_trained_classes: Optional[Sequence[int]] = None,
+        position_jitter: float = 0.0,
     ) -> List[Tuple[int, int]]:
         """Absorb every cell of ``donor.layers[layer_idx]`` into this
         network via pool match.
@@ -1013,6 +1040,21 @@ class TrioronNetwork(nn.Module):
             :meth:`absorb_cell` so untrained head columns are zeroed.
             Without this, recipient classes degrade ~10 pp from the
             donor's random-init head weights for unseen classes.
+
+        recipient_trained_classes (recommended, paired with the donor
+            arg): set of global class IDs the recipient was trained on
+            BEFORE absorption. When both are provided, this method
+            installs a head_provenance_mask on the downstream head layer
+            so subsequent head-settle gradients only flow into cells
+            whose source-of-record covered each target class. Required
+            for stable full-softmax recovery after absorption (see
+            [[absorption_sentinel_n12_collapse]] for the unfixed case).
+
+        position_jitter: forwarded to :meth:`absorb_cell`. Gaussian σ
+            added to each absorbed cell's (x, y) position so two cells
+            in the same pool don't end up sharing an exact locus
+            (analog of axis6_spawn's parent-jitter mechanism). Default
+            0.0 preserves exact-position behaviour.
 
         Returns a list of (donor_idx, new_recipient_idx) tuples for the
         cells that were absorbed; skipped cells are omitted.
@@ -1044,9 +1086,47 @@ class TrioronNetwork(nn.Module):
                 snap_to_pool_centroid=snap_to_pool_centroid,
                 grid_size=grid_size,
                 donor_trained_classes=donor_trained_classes,
+                position_jitter=position_jitter,
             )
             pool_counts[pid] = pool_counts.get(pid, 0) + 1
             absorbed.append((donor_idx, new_idx))
+
+        # Install the head provenance mask iff both class sets are
+        # known. The mask gates the head layer's W so head-settle
+        # gradients only flow into cells whose source-of-record was
+        # trained on the target class. Without this fix, the head W
+        # carries a random-init "leakage quadrant" (recipient's
+        # existing cells × donor's classes) that competes with the
+        # donor's signal during head-settle and makes full-softmax
+        # recovery wild seed-to-seed. See the v2 paper §4.2 rewrite
+        # following [[absorption_sentinel_n12_collapse]].
+        if (
+            donor_trained_classes is not None
+            and recipient_trained_classes is not None
+            and absorbed
+        ):
+            head = self.layers[layer_idx + 1]
+            n_classes = head.n_nodes
+            n_cells = head.fan_in
+            donor_cell_set = {int(new_idx) for (_, new_idx) in absorbed}
+            recip_class_set = {int(c) for c in recipient_trained_classes}
+            donor_class_set = {int(c) for c in donor_trained_classes}
+            new_mask = torch.ones(
+                n_classes, n_cells,
+                dtype=head.head_provenance_mask.dtype,
+                device=head.head_provenance_mask.device,
+            )
+            for c in range(n_classes):
+                for j in range(n_cells):
+                    is_donor_cell = j in donor_cell_set
+                    src_classes = (
+                        donor_class_set if is_donor_cell else recip_class_set
+                    )
+                    if c not in src_classes:
+                        new_mask[c, j] = 0.0
+            head.head_provenance_mask.data.copy_(new_mask)
+            head.head_provenance_mask_active = True
+
         return absorbed
 
     # ----- introspection -----

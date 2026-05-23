@@ -289,8 +289,153 @@ def settle_head_via_manifold(
     return last_loss
 
 
+def score_via_manifold(
+    net: TrioronNetwork,
+    manifold: ManifoldStore,
+    seen_classes: Sequence[int],
+    *,
+    n_samples: int = 256,
+    noise_scale: float = 1.0,
+    head_layer_idx: int = 2,
+    head_logits_fn: Optional[
+        Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+    ] = None,
+    generator: Optional[torch.Generator] = None,
+) -> float:
+    """Synthetic-sample accuracy proxy used as the retry-and-pick signal
+    for :func:`settle_head_with_retry`.
+
+    Draws ``n_samples`` L0 codes from the manifold's per-class
+    (μ, σ), forwards them through L1 + head, and returns the fraction
+    of argmax-over-active-classes predictions matching the true class.
+
+    Pass a dedicated ``generator`` so the scoring batch is independent
+    from the settle-time draws — that way we measure generalisation to
+    fresh synthetic samples, not memorisation of the training draws.
+    """
+    if not manifold.has_classes():
+        return float("nan")
+    if head_logits_fn is None:
+        head_logits_fn = cosine_logits
+
+    sample = manifold.sample_synthetic(
+        n_samples, generator=generator, noise_scale=noise_scale,
+    )
+    if sample is None:
+        return float("nan")
+    synth_feats, synth_labels = sample
+    head = net.layers[head_layer_idx]
+    with torch.no_grad():
+        h1 = net.layers[head_layer_idx - 1](synth_feats)
+        logits = head_logits_fn(h1, head.W)
+    active = sorted({int(c) for c in seen_classes})
+    if not active:
+        return float("nan")
+    masked = torch.full_like(logits, float("-inf"))
+    idx = torch.tensor(active, dtype=torch.long, device=logits.device)
+    masked.index_copy_(1, idx, logits.index_select(1, idx))
+    preds = masked.argmax(dim=1)
+    return float((preds == synth_labels.to(preds.device)).float().mean().item())
+
+
+def settle_head_with_retry(
+    net: TrioronNetwork,
+    manifold: ManifoldStore,
+    seen_classes: Sequence[int],
+    *,
+    n_attempts: int = 10,
+    score_samples: int = 256,
+    score_noise_scale: float = 1.0,
+    seed_offset: int = 0,
+    settle_kwargs: Optional[Dict] = None,
+    head_layer_idx: int = 2,
+    head_logits_fn: Optional[
+        Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+    ] = None,
+) -> Tuple[int, float]:
+    """Run ``n_attempts`` independent head-settle passes; keep the one
+    with the highest held-out synthetic-sample accuracy.
+
+    Strategy:
+      1. Snapshot head's pre-settle W and b.
+      2. For each trial:
+         - restore head from snapshot
+         - seed the global RNG (``seed_offset + trial``)
+         - run :func:`settle_head_via_manifold`
+         - score against a *fresh* synthetic batch drawn from a
+           per-trial Generator that is independent of the settle-time
+           draws (so we score generalisation, not memorisation)
+         - record (W, b) snapshots for the best score so far
+      3. Commit the best (W, b) onto the head.
+
+    Returns ``(best_trial_index, best_score)``.
+
+    Motivation: post-absorption, ``settle_head_via_manifold``'s yield
+    is highly RNG-dependent — same absorbed substrate can land in a
+    high-accuracy basin or a chance-level one depending on which
+    synthetic-batch draws gradient descent happens to see (see
+    [[head_provenance_mask_result]] for the n=84 σ characterisation).
+    Retry-and-pick directly attacks that variance source by trading a
+    few extra seconds of absorption-time compute for a near-best-case
+    final head.
+
+    The retry is opt-in and absorption-time-only — it costs zero at
+    inference and zero persistent storage.
+    """
+    if settle_kwargs is None:
+        settle_kwargs = {}
+    head = net.layers[head_layer_idx]
+    W_snap = head.W.detach().clone()
+    b_snap = head.b.detach().clone()
+
+    best_score = -float("inf")
+    best_trial = -1
+    best_W: Optional[torch.Tensor] = None
+    best_b: Optional[torch.Tensor] = None
+
+    for trial in range(n_attempts):
+        with torch.no_grad():
+            head.W.data.copy_(W_snap)
+            head.b.data.copy_(b_snap)
+
+        torch.manual_seed(seed_offset + trial)
+        settle_head_via_manifold(
+            net, manifold, seen_classes,
+            head_layer_idx=head_layer_idx,
+            head_logits_fn=head_logits_fn,
+            **settle_kwargs,
+        )
+
+        score_gen = torch.Generator().manual_seed(
+            seed_offset + 100_000 + trial,
+        )
+        score = score_via_manifold(
+            net, manifold, seen_classes,
+            n_samples=score_samples,
+            noise_scale=score_noise_scale,
+            head_layer_idx=head_layer_idx,
+            head_logits_fn=head_logits_fn,
+            generator=score_gen,
+        )
+
+        if score > best_score:
+            best_score = score
+            best_trial = trial
+            best_W = head.W.detach().clone()
+            best_b = head.b.detach().clone()
+
+    with torch.no_grad():
+        if best_W is not None:
+            head.W.data.copy_(best_W)
+        if best_b is not None:
+            head.b.data.copy_(best_b)
+    return best_trial, best_score
+
+
 __all__ = [
     "cosine_logits",
     "ManifoldStore",
     "settle_head_via_manifold",
+    "score_via_manifold",
+    "settle_head_with_retry",
 ]

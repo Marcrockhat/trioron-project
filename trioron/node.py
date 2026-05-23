@@ -331,6 +331,26 @@ class TrioronLayer(nn.Module):
             torch.zeros(n_nodes, fan_in, dtype=torch.bool),
         )
 
+        # Head provenance mask (Trioron 2.0 — absorption integrity fix,
+        # 2026-05-23). When the head layer's W has cells from multiple
+        # donors absorbed into it, columns inherit donor-trained classes
+        # but their rows still carry random-init noise for classes the
+        # source donor never trained. Head-settle then fights that noise,
+        # so absorbed-organism full-softmax recovery is wild seed-to-seed
+        # (see [[absorption_sentinel_n12_collapse]] for the n=12 collapse
+        # diagnosis). This buffer is a per-(row, column) mask over W:
+        # mask[i, j] = 1 iff the source-of-record for column j is
+        # responsible for output class i. When the gating flag is
+        # active, forward multiplies W_eff by the mask; gradients then
+        # only flow into cells the constructing absorb step authorized
+        # for each class. Default ones + inactive = byte-identical fast
+        # path; inactive-but-saved still round-trips through state_dict
+        # so any pre-flipped configuration survives reload.
+        self.register_buffer(
+            "head_provenance_mask", torch.ones(n_nodes, fan_in),
+        )
+        self.head_provenance_mask_active: bool = False
+
         # Trioron 2.0 — Locus position (developmental coordinate system).
         # Per-cell continuous 3D position. Initialized to zero; populated
         # during a developmental phase by a stress-guided assignment from
@@ -451,6 +471,14 @@ class TrioronLayer(nn.Module):
         lcn_mask = getattr(self, "W_lcn_mask", None)
         if lcn_mask is not None:
             W_eff = W_eff * lcn_mask.to(dtype=self.W.dtype)
+
+        # Head provenance mask. When pool_matched_absorb has flipped
+        # head_provenance_mask_active=True on the head layer, multiply
+        # W_eff by the per-(class, cell) mask so gradients only flow
+        # into cells the absorb step authorized for each output class.
+        # No-op (and zero forward overhead) when the flag is False.
+        if self.head_provenance_mask_active:
+            W_eff = W_eff * self.head_provenance_mask.to(dtype=self.W.dtype)
 
         # Axis 5 two-stage forward. All-K=1 is the entire installed base
         # (every 1.0 donor + every freshly-constructed substrate before
@@ -1352,6 +1380,17 @@ class TrioronLayer(nn.Module):
                              dtype=torch.bool, device=device)],
                 dim=0,
             )
+            # Head provenance mask: append an all-ones row for the new
+            # cell. New cells default to "authorized for every class";
+            # any subsequent absorb step is responsible for narrowing
+            # the row down to the donor's trained classes.
+            new_head_provenance_mask = torch.cat(
+                [self.head_provenance_mask,
+                 torch.ones(1, self.fan_in,
+                            dtype=self.head_provenance_mask.dtype,
+                            device=device)],
+                dim=0,
+            )
             # Locus position for the new cell: default to zeros. The
             # developmental phase (or a later position-update event)
             # is responsible for setting a meaningful position. Until
@@ -1400,6 +1439,7 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("internal_stress", new_internal_stress)
         self._replace_buffer("branch_utility", new_branch_utility)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
+        self._replace_buffer("head_provenance_mask", new_head_provenance_mask)
         self._replace_buffer("cell_position", new_cell_position)
         self._replace_buffer("epi_A", new_epi_A)
         self._replace_buffer("epi_B", new_epi_B)
@@ -1510,6 +1550,18 @@ class TrioronLayer(nn.Module):
                  torch.zeros(self.n_nodes, 1, dtype=torch.bool, device=device)],
                 dim=1,
             )
+            # Head provenance mask: extend with an all-ones column so a
+            # newly-introduced source defaults to "authorized for every
+            # row." Provenance restrictions only apply to head layers
+            # post-absorption; on non-head layers the mask stays all
+            # ones and the gating flag stays False.
+            new_head_provenance_mask = torch.cat(
+                [self.head_provenance_mask,
+                 torch.ones(self.n_nodes, 1,
+                            dtype=self.head_provenance_mask.dtype,
+                            device=device)],
+                dim=1,
+            )
 
         self.fan_in += 1
         self._replace_parameter("W", new_W)
@@ -1519,6 +1571,7 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("input_archived", new_input_archived)
         self._replace_buffer("branch_id", new_branch_id)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
+        self._replace_buffer("head_provenance_mask", new_head_provenance_mask)
 
         # LCN mask extension on the column side. When LCN is installed
         # we either compute a real mask column from `in_position`
@@ -1602,6 +1655,9 @@ class TrioronLayer(nn.Module):
             # dendrite_orphan columns.
             new_branch_id = self.branch_id.index_select(1, keep_t)
             new_dendrite_orphan = self.dendrite_orphan.index_select(1, keep_t)
+            new_head_provenance_mask = (
+                self.head_provenance_mask.index_select(1, keep_t)
+            )
 
         self.fan_in -= 1
         self._replace_parameter("W", new_W)
@@ -1621,6 +1677,7 @@ class TrioronLayer(nn.Module):
                 self._replace_buffer("lcn_in_positions", new_in_pos)
         self._replace_buffer("branch_id", new_branch_id)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan)
+        self._replace_buffer("head_provenance_mask", new_head_provenance_mask)
 
     def prune_node(self, idx: int) -> None:
         """Remove the node at index `idx`. Same optimizer rebuild caveat as grow_node."""
@@ -1658,6 +1715,9 @@ class TrioronLayer(nn.Module):
             new_internal_stress = self.internal_stress.index_select(0, keep_t)
             new_branch_utility = self.branch_utility.index_select(0, keep_t)
             new_dendrite_orphan_row = self.dendrite_orphan.index_select(0, keep_t)
+            new_head_provenance_mask_row = (
+                self.head_provenance_mask.index_select(0, keep_t)
+            )
             new_cell_position_row = self.cell_position.index_select(0, keep_t)
             new_epi_A = self.epi_A.index_select(0, keep_t)
             new_epi_B = self.epi_B.index_select(0, keep_t)
@@ -1687,6 +1747,9 @@ class TrioronLayer(nn.Module):
         self._replace_buffer("internal_stress", new_internal_stress)
         self._replace_buffer("branch_utility", new_branch_utility)
         self._replace_buffer("dendrite_orphan", new_dendrite_orphan_row)
+        self._replace_buffer(
+            "head_provenance_mask", new_head_provenance_mask_row,
+        )
         self._replace_buffer("cell_position", new_cell_position_row)
         # LCN mask: drop the matching row (no input-position change).
         mask = getattr(self, "W_lcn_mask", None)
@@ -2413,6 +2476,8 @@ class TrioronLayer(nn.Module):
         "branch_utility",
         # Phase 2.5 (orphan mask for prune_branch):
         "dendrite_orphan",
+        # Absorption integrity (head provenance mask, 2026-05-23):
+        "head_provenance_mask",
         # Locus coordinate system (developmental placement):
         "cell_position",
         # Axis 6 field channels (load as zeros for pre-Axis-6 donors):
