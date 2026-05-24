@@ -81,54 +81,90 @@ class CellGraph:
         """BFS topological rank (Kahn's algorithm).  O(cells + edges).
 
         Back-edges into recurrent cells and self-edges are excluded
-        from the DAG used for ranking.
+        from the DAG used for ranking.  Fully vectorized edge filtering;
+        adjacency as CSR for cache-friendly BFS.
         """
         a = self._arena
-        alive = set(a.alive_ids().tolist())
-        if not alive:
+        alive_ids = a.alive_ids()
+        if alive_ids.numel() == 0:
             a.rank_dirty = False
             return
 
-        # Build forward adjacency and in-degree
-        successors: dict[int, list[int]] = {c: [] for c in alive}
-        in_deg: dict[int, int] = {c: 0 for c in alive}
+        n = a.capacity
+        src_all = a.edge_src[: a.edge_cursor]
+        dst_all = a.edge_dst[: a.edge_cursor]
 
-        src = a.edge_src[: a.edge_cursor]
-        dst = a.edge_dst[: a.edge_cursor]
+        # Vectorized edge filtering
+        if a.edge_cursor > 0:
+            valid = (
+                (src_all != dst_all)
+                & a.alive[src_all.long()]
+                & a.alive[dst_all.long()]
+            )
+            src_f = src_all[valid].long()
+            dst_f = dst_all[valid].long()
+        else:
+            src_f = torch.tensor([], dtype=torch.long)
+            dst_f = torch.tensor([], dtype=torch.long)
 
-        for i in range(a.edge_cursor):
-            s = int(src[i].item())
-            d = int(dst[i].item())
-            if s == d or s not in alive or d not in alive:
-                continue
-            successors[s].append(d)
-            in_deg[d] += 1
+        ne = src_f.numel()
 
-        # Kahn's BFS
+        # Vectorized in-degree
+        in_deg = torch.zeros(n, dtype=torch.int32, device=a.device)
+        if ne > 0:
+            in_deg.scatter_add_(0, dst_f, torch.ones(ne, dtype=torch.int32, device=a.device))
+
+        # CSR successor index: sort edges by src, then build row pointers
+        if ne > 0:
+            order = src_f.argsort()
+            src_sorted = src_f[order]
+            dst_sorted = dst_f[order]
+            # row_ptr[i] = first edge index where src == i
+            # Use searchsorted on the sorted src array
+            ids = torch.arange(n, device=a.device)
+            row_ptr = torch.searchsorted(src_sorted, ids)
+            row_end = torch.searchsorted(src_sorted, ids, right=True)
+            dst_list = dst_sorted.tolist()
+            row_ptr_list = row_ptr.tolist()
+            row_end_list = row_end.tolist()
+        else:
+            dst_list = []
+            row_ptr_list = [0] * n
+            row_end_list = [0] * n
+
+        # Kahn's BFS on CPU with CSR adjacency
         a.rank.fill_(0)
+        in_deg_arr = in_deg.tolist()
+        rank_arr = [0] * n
+
         queue: deque[int] = deque()
-        for c in alive:
-            if in_deg[c] == 0:
+        alive_list = alive_ids.tolist()
+        for c in alive_list:
+            if in_deg_arr[c] == 0:
                 queue.append(c)
 
         visited = 0
         while queue:
             u = queue.popleft()
             visited += 1
-            u_rank = int(a.rank[u].item())
-            for v in successors[u]:
+            u_rank = rank_arr[u]
+            for ei in range(row_ptr_list[u], row_end_list[u]):
+                v = dst_list[ei]
                 new_rank = u_rank + 1
-                if new_rank > int(a.rank[v].item()):
-                    a.rank[v] = new_rank
-                in_deg[v] -= 1
-                if in_deg[v] == 0:
+                if new_rank > rank_arr[v]:
+                    rank_arr[v] = new_rank
+                in_deg_arr[v] -= 1
+                if in_deg_arr[v] == 0:
                     queue.append(v)
 
-        if visited < len(alive):
-            # Cells still in a cycle — assign max_rank + 1 provisionally
-            max_rank = int(a.rank.max().item())
-            for c in alive:
-                if in_deg[c] > 0:
+        # Write back to tensor
+        for c in alive_list:
+            a.rank[c] = rank_arr[c]
+
+        if visited < len(alive_list):
+            max_rank = max(rank_arr[c] for c in alive_list)
+            for c in alive_list:
+                if in_deg_arr[c] > 0:
                     a.rank[c] = max_rank + 1
 
         a.rank_dirty = False

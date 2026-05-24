@@ -98,10 +98,11 @@ class Arena:
         s = self.edge_cursor
         self.edge_src[s : s + n] = src.to(torch.int32)
         self.edge_dst[s : s + n] = dst.to(torch.int32)
-        if weights is not None:
-            self.edge_weight[s : s + n] = weights
-        else:
-            torch.nn.init.normal_(self.edge_weight[s : s + n], std=0.01)
+        with torch.no_grad():
+            if weights is not None:
+                self.edge_weight[s : s + n] = weights
+            else:
+                self.edge_weight[s : s + n].normal_(std=0.01)
         self.edge_cursor += n
         self.rank_dirty = True
 
