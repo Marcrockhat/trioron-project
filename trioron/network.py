@@ -1024,7 +1024,6 @@ class TrioronNetwork(nn.Module):
         pool_capacity: Optional[int] = None,
         snap_to_pool_centroid: bool = False,
         donor_trained_classes: Optional[Sequence[int]] = None,
-        recipient_trained_classes: Optional[Sequence[int]] = None,
         position_jitter: float = 0.0,
     ) -> List[Tuple[int, int]]:
         """Absorb every cell of ``donor.layers[layer_idx]`` into this
@@ -1040,15 +1039,6 @@ class TrioronNetwork(nn.Module):
             :meth:`absorb_cell` so untrained head columns are zeroed.
             Without this, recipient classes degrade ~10 pp from the
             donor's random-init head weights for unseen classes.
-
-        recipient_trained_classes (recommended, paired with the donor
-            arg): set of global class IDs the recipient was trained on
-            BEFORE absorption. When both are provided, this method
-            installs a head_provenance_mask on the downstream head layer
-            so subsequent head-settle gradients only flow into cells
-            whose source-of-record covered each target class. Required
-            for stable full-softmax recovery after absorption (see
-            [[absorption_sentinel_n12_collapse]] for the unfixed case).
 
         position_jitter: forwarded to :meth:`absorb_cell`. Gaussian σ
             added to each absorbed cell's (x, y) position so two cells
@@ -1090,42 +1080,6 @@ class TrioronNetwork(nn.Module):
             )
             pool_counts[pid] = pool_counts.get(pid, 0) + 1
             absorbed.append((donor_idx, new_idx))
-
-        # Install the head provenance mask iff both class sets are
-        # known. The mask gates the head layer's W so head-settle
-        # gradients only flow into cells whose source-of-record was
-        # trained on the target class. Without this fix, the head W
-        # carries a random-init "leakage quadrant" (recipient's
-        # existing cells × donor's classes) that competes with the
-        # donor's signal during head-settle and makes full-softmax
-        # recovery wild seed-to-seed. See the v2 paper §4.2 rewrite
-        # following [[absorption_sentinel_n12_collapse]].
-        if (
-            donor_trained_classes is not None
-            and recipient_trained_classes is not None
-            and absorbed
-        ):
-            head = self.layers[layer_idx + 1]
-            n_classes = head.n_nodes
-            n_cells = head.fan_in
-            donor_cell_set = {int(new_idx) for (_, new_idx) in absorbed}
-            recip_class_set = {int(c) for c in recipient_trained_classes}
-            donor_class_set = {int(c) for c in donor_trained_classes}
-            new_mask = torch.ones(
-                n_classes, n_cells,
-                dtype=head.head_provenance_mask.dtype,
-                device=head.head_provenance_mask.device,
-            )
-            for c in range(n_classes):
-                for j in range(n_cells):
-                    is_donor_cell = j in donor_cell_set
-                    src_classes = (
-                        donor_class_set if is_donor_cell else recip_class_set
-                    )
-                    if c not in src_classes:
-                        new_mask[c, j] = 0.0
-            head.head_provenance_mask.data.copy_(new_mask)
-            head.head_provenance_mask_active = True
 
         return absorbed
 

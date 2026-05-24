@@ -70,7 +70,6 @@ def pool_matched_absorb(
     l1_layer_idx: int = 1,
     snap_to_pool_centroid: bool = False,
     donor_trained_classes: Optional[Sequence[int]] = None,
-    recipient_trained_classes: Optional[Sequence[int]] = None,
     position_jitter: float = 0.0,
 ) -> List[Tuple[int, int]]:
     """Legacy free-function alias for ``TrioronNetwork.pool_matched_absorb``.
@@ -86,7 +85,6 @@ def pool_matched_absorb(
         pool_capacity=pool_capacity,
         snap_to_pool_centroid=snap_to_pool_centroid,
         donor_trained_classes=donor_trained_classes,
-        recipient_trained_classes=recipient_trained_classes,
         position_jitter=position_jitter,
     )
 

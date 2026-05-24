@@ -30,7 +30,7 @@ import torch
 
 from experiments.axis6_credit_chained15 import (
     build_net, train_one_task, evaluate_task_aware, evaluate_full,
-    ManifoldStore, cosine_logits, l1_forward_diffused,
+    ManifoldStore, cosine_logits,
 )
 from experiments.datasets import (
     DatasetBundle, build_task_views, chained_15_specs, DEFAULT_DATA_ROOT,

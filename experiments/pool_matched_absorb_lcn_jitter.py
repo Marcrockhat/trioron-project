@@ -68,7 +68,6 @@ def _absorb_and_settle(
         pool_capacity=None,
         snap_to_pool_centroid=False,
         donor_trained_classes=trained_b,
-        recipient_trained_classes=trained_a,
         position_jitter=position_jitter,
     )
     extend_l1_lcn_mask(donor_a)

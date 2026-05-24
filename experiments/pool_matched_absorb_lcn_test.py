@@ -26,7 +26,7 @@ import torch
 
 from experiments.axis6_credit_chained15 import (
     build_net, train_one_task, evaluate_task_aware, evaluate_full,
-    ManifoldStore, extend_l1_lcn_mask, build_l1_lcn_mask,
+    ManifoldStore, extend_l1_lcn_mask,
 )
 from experiments.datasets import (
     DatasetBundle, build_task_views, chained_15_specs, DEFAULT_DATA_ROOT,
@@ -181,7 +181,6 @@ def main() -> int:
         donor_a, donor_b, grid_size=4, pool_capacity=None,
         snap_to_pool_centroid=False,
         donor_trained_classes=trained_b,
-        recipient_trained_classes=trained_a,
     )
     print(f"  absorbed {len(absorbed)}/{donor_b.layers[1].n_nodes} donor B cells")
     print(f"  donor A post-absorb L1.n_nodes = {donor_a.layers[1].n_nodes}")

@@ -45,7 +45,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from trioron.network import TrioronNetwork
 from trioron import masked_cross_entropy
 from trioron.spatial import (
-    build_lcn_mask, grid_positions_2d, pixel_positions_2d, pool_id,
+    build_lcn_mask, grid_positions_2d, pixel_positions_2d,
 )
 from trioron.manifold import (
     ManifoldStore, cosine_logits, settle_head_with_retry,
@@ -59,12 +59,10 @@ from experiments.cifar.datasets import load_cifar100
 # Per [[conv_by_emergence_null_result]] these were null on chained-15
 # glyphs; CIFAR's real spatial structure is the natural test bed.
 from experiments.axis6_credit_chained15 import (
-    install_l1_lcn_mask,
     extend_l1_lcn_mask,
     reapply_l1_lcn_mask,
     update_activation_correlation,
     extend_act_corr_on_spawn,
-    l1_forward_diffused,
     install_learnable_positions,
     extend_learnable_positions,
     sync_positions_to_buffer,
@@ -137,159 +135,6 @@ def recompute_l0_lcn_mask(net: TrioronNetwork) -> None:
     )
 
 
-# ----------------------------------------------------------------------
-# Pool weight-tying — the wiring piece for real conv emergence
-# ----------------------------------------------------------------------
-def pool_assignments(layer, grid_size: int = 4) -> torch.Tensor:
-    """Return (n_nodes,) long tensor of pool_id per cell, computed
-    from each cell's current (x, y) position via spatial.pool_id."""
-    n = layer.n_nodes
-    pos = layer.cell_position[:n, :2].detach().cpu()
-    return torch.tensor(
-        [pool_id((float(pos[i, 0]), float(pos[i, 1])), grid_size)
-         for i in range(n)],
-        dtype=torch.long,
-    )
-
-
-def _ensure_channel_state(layer, n_channels_init: int) -> None:
-    """Initialize layer._arm_h_channel_id and layer._arm_h_n_channels
-    on first use, and extend the channel_id table when n_nodes has
-    grown (axis6_spawn appended cells)."""
-    if not hasattr(layer, "_arm_h_n_channels"):
-        layer._arm_h_n_channels = n_channels_init
-    n_c = layer._arm_h_n_channels
-    n = layer.n_nodes
-    if not hasattr(layer, "_arm_h_channel_id") or layer._arm_h_channel_id is None:
-        layer._arm_h_channel_id = torch.arange(n) % n_c
-        return
-    cur = layer._arm_h_channel_id.numel()
-    if cur < n:
-        # New cells appended by spawn — assign round-robin over current
-        # n_channels starting from where the table ended.
-        new_ids = (torch.arange(cur, n) % n_c)
-        layer._arm_h_channel_id = torch.cat([
-            layer._arm_h_channel_id, new_ids,
-        ])
-
-
-def tie_channel_weights(
-    layer,
-    n_channels: int,
-    cell_credit: Optional[torch.Tensor] = None,
-) -> int:
-    """Real conv emergence: cells with the same channel_id share W
-    across positions. Channel assignment is stored on the layer as
-    `_arm_h_channel_id` (initialized round-robin, mutated by
-    `split_channel`). After averaging W within each channel, we have
-    `layer._arm_h_n_channels` unique kernels applied at all spatial
-    positions where channel members live = translation invariance.
-
-    Skips credited cells. Returns number of channels that had >=2
-    plastic cells (diagnostic)."""
-    n = layer.n_nodes
-    if n_channels < 1 or n < n_channels:
-        return 0
-    _ensure_channel_state(layer, n_channels)
-    channel_id = layer._arm_h_channel_id[:n]
-    n_c = layer._arm_h_n_channels
-    n_tied = 0
-    if cell_credit is not None and cell_credit.numel() >= n:
-        plastic = ~cell_credit[:n]
-    else:
-        plastic = torch.ones(n, dtype=torch.bool)
-    with torch.no_grad():
-        for c in range(n_c):
-            mask = (channel_id == c) & plastic
-            if int(mask.sum().item()) < 2:
-                continue
-            idx = mask.nonzero(as_tuple=False).flatten()
-            W_avg = layer.W.data[idx].mean(dim=0)
-            b_avg = layer.b.data[idx].mean()
-            layer.W.data[idx] = W_avg.unsqueeze(0).expand(idx.numel(), -1)
-            layer.b.data[idx] = b_avg
-            n_tied += 1
-    return n_tied
-
-
-def split_channel(
-    layer,
-    parent_c: int,
-    sigma_split: float = 0.1,
-    cell_credit: Optional[torch.Tensor] = None,
-) -> Optional[int]:
-    """Fork channel `parent_c` into two by reassigning half of its
-    plastic cells to a new channel id `n_c_old`, then perturbing
-    those migrated cells' W rows by N(0, sigma_split * ||W_row||) so
-    the daughters diverge under subsequent gradient steps.
-
-    Kernel-space analog of `axis6_spawn`'s positional jitter. Caller
-    is responsible for triggering this (e.g., once per phase under
-    frustration).
-
-    Returns the new channel id, or None if parent_c had < 2 plastic
-    cells (nothing to split)."""
-    n = layer.n_nodes
-    _ensure_channel_state(layer, n_channels_init=8)
-    cid = layer._arm_h_channel_id[:n]
-    if cell_credit is not None and cell_credit.numel() >= n:
-        plastic = ~cell_credit[:n]
-    else:
-        plastic = torch.ones(n, dtype=torch.bool)
-    in_parent = (cid == parent_c) & plastic
-    parent_idx = in_parent.nonzero(as_tuple=False).flatten()
-    if parent_idx.numel() < 2:
-        return None
-    # Migrate the second half of parent's plastic cells to the new
-    # channel id. Cheapest selection rule for v1 — no engagement or
-    # error heuristic; just split the bucket in half.
-    new_c = layer._arm_h_n_channels
-    half = parent_idx.numel() // 2
-    migrants = parent_idx[half:]
-    with torch.no_grad():
-        layer._arm_h_channel_id[migrants] = new_c
-        row_norms = layer.W.data[migrants].norm(dim=1, keepdim=True)
-        noise = torch.randn_like(layer.W.data[migrants]) * sigma_split
-        layer.W.data[migrants] = layer.W.data[migrants] + noise * row_norms
-    layer._arm_h_n_channels = new_c + 1
-    return new_c
-
-
-def tie_pool_weights(
-    layer, grid_size: int = 4,
-    cell_credit: Optional[torch.Tensor] = None,
-) -> int:
-    """Average W and b within each pool, broadcast back. This is the
-    post-step wiring that turns "many independent local kernels" into
-    "one kernel per pool replicated across cells in that pool" -
-    i.e., translation invariance at the pool granularity. Real conv
-    emergence (locality + weight sharing).
-
-    Skips credited cells: their weights are protected and don't
-    participate in the pool average (otherwise credit-freezing is
-    silently undone by post-step averaging).
-
-    Returns the number of pools that had at least 2 plastic cells
-    (diagnostic for how much tying actually happened)."""
-    n = layer.n_nodes
-    assign = pool_assignments(layer, grid_size=grid_size)
-    n_tied_pools = 0
-    if cell_credit is not None and cell_credit.numel() >= n:
-        plastic = ~cell_credit[:n]
-    else:
-        plastic = torch.ones(n, dtype=torch.bool)
-    with torch.no_grad():
-        for p in range(grid_size * grid_size):
-            mask = (assign == p) & plastic
-            if int(mask.sum().item()) < 2:
-                continue
-            idx = mask.nonzero(as_tuple=False).flatten()
-            W_avg = layer.W.data[idx].mean(dim=0)
-            b_avg = layer.b.data[idx].mean()
-            layer.W.data[idx] = W_avg.unsqueeze(0).expand(idx.numel(), -1)
-            layer.b.data[idx] = b_avg
-            n_tied_pools += 1
-    return n_tied_pools
 
 
 # ----------------------------------------------------------------------
@@ -471,143 +316,6 @@ def build_arm_d_self_arrange(seed: int) -> TrioronNetwork:
     return build_arm_b_lcn(seed)  # same shape; arm differs by training loop
 
 
-def build_arm_e_conv_emergence(seed: int) -> TrioronNetwork:
-    """v2.0 conv-by-emergence: arm d + (LCN-on-L1, Hebbian diffusion,
-    learnable L1 positions, alignment loss, finite-space repulsion).
-
-    Mechanism: L1 cells acquire positions and learn locally-connected
-    receptive fields onto L0. Activity-correlated cells get their
-    weights smoothed toward each other (Hebbian diffusion), creating
-    de-facto weight sharing — emergent conv kernels at the L1->L0 read.
-
-    Per Rocky's hypothesis: chained-15's NULL result was a
-    glyph-substrate artifact; CIFAR raw images carry the spatial
-    structure these mechanisms are designed to exploit."""
-    net = build_arm_b_lcn(seed)  # start from arm-b base
-    L1 = net.layers[1]
-    # Soft LCN-on-L1: each L1 cell reads from positionally-local L0
-    # cells via a Gaussian falloff. sigma=0.25 ~= L1 cell spacing on
-    # the 8x8 grid (H_INIT=64 -> ceil(sqrt) = 8 -> 1/8 spacing).
-    # sigma=0.5 keeps mask values > 0.1 for ~half the unit square -
-    # not strictly conv-like locality but a soft spatial prior.
-    # Smaller sigma (0.25 or less) collapsed CIFAR training within
-    # one phase - too aggressive a sparsification.
-    sigma = float(os.environ.get("CIFAR_CONV_LCN_SIGMA", "0.5"))
-    install_l1_lcn_mask(net, mode="soft", sigma=sigma, k=8)
-    # Learnable L1 positions for alignment-loss gradient.
-    install_learnable_positions(L1)
-    return net
-
-
-def build_arm_g_pool_tying(seed: int) -> TrioronNetwork:
-    """v2.0 arm g: arm f + pool weight-tying (within-pool).
-
-    NULL at current scale: ties within-pool collapse representational
-    capacity to N_pools unique kernels (16) at H_INIT=64. Kept as the
-    "wrong direction" reference."""
-    return build_arm_f_l0_plastic_pos(seed)
-
-
-# Arm h constants — bigger L1 so channel-tying has meaningful per-pool
-# multiplicity. H_H = N_CHANNELS * N_POOLS. Default 8 channels * 16
-# pools (4x4) = 128 cells.
-ARM_H_N_CHANNELS = 8
-ARM_H_POOL_GRID = 4
-ARM_H_N_POOLS = ARM_H_POOL_GRID * ARM_H_POOL_GRID
-ARM_H_H_INIT = ARM_H_N_CHANNELS * ARM_H_N_POOLS   # 128
-
-
-def build_arm_h_channel_tied(seed: int) -> TrioronNetwork:
-    """v2.0 arm h: real translation-invariant conv emergence.
-
-    Cells indexed by (channel, pool). N_C channels x N_P pool
-    positions = N_C*N_P cells. Cell (c, p) sits at pool_centroid(p).
-    All cells with the same c share W (translation invariance).
-
-    H_INIT = ARM_H_H_INIT = N_C * N_P (default 8 * 16 = 128).
-
-    This is real conv: N_C unique kernels applied at N_P positions.
-    Compared to arm g which had per-pool kernels (no translation
-    invariance) and arm e/f which had per-cell kernels (no sharing
-    at all)."""
-    torch.manual_seed(seed)
-    net = TrioronNetwork([
-        (INPUT_DIM, L0_WIDTH, "relu"),
-        (L0_WIDTH, ARM_H_H_INIT, "relu"),
-        (ARM_H_H_INIT, N_CLASSES, "linear"),
-    ])
-    L0 = net.layers[0]
-    _setup_head(net)
-    _seed_l0_positions(net)
-    # L1 cell positions: round-robin (cell_idx % N_C = channel,
-    # cell_idx // N_C = pool). Cells 0..N_C-1 are at pool 0 with
-    # channels 0..N_C-1; cells N_C..2N_C-1 are at pool 1; etc.
-    # This matches tie_channel_weights' modulo channel assignment, so
-    # axis6_spawn (which appends new cells at the end) distributes
-    # new cells across channels as the substrate grows.
-    L1 = net.layers[1]
-    from trioron.spatial import pool_centroid
-    with torch.no_grad():
-        for idx in range(ARM_H_H_INIT):
-            p = idx // ARM_H_N_CHANNELS
-            cx, cy = pool_centroid(p, grid_size=ARM_H_POOL_GRID)
-            L1.cell_position[idx, 0] = cx
-            L1.cell_position[idx, 1] = cy
-            L1.cell_position[idx, 2] = 0.0
-    # Substrate LCN on L0 (apply_to_weights=False so L0.W stays full).
-    L0.enable_lcn(
-        pixel_positions_rgb(), mode="soft", sigma=LCN_SIGMA,
-        apply_to_weights=False,
-    )
-    _freeze_l0(net)
-    # LCN-on-L1: each L1 cell reads from L0 cells near its pool position.
-    sigma_l1 = float(os.environ.get("CIFAR_CONV_LCN_SIGMA", "0.5"))
-    install_l1_lcn_mask(net, mode="soft", sigma=sigma_l1, k=8)
-    return net
-
-
-def build_arm_f_l0_plastic_pos(seed: int) -> TrioronNetwork:
-    """v2.0 arm f: arm e + L0 positions are LEARNABLE.
-
-    Per Rocky's recall: the conv-emergence failure mode is that L0
-    cells can't move to where features live - they're stuck on a
-    uniform grid. Making L0 positions plastic lets L0 cells migrate
-    via alignment loss + Hebbian correlation toward information-rich
-    image regions. Frozen L0.W (random Gaussian) gets applied at the
-    cell's migrated position via the recomputed LCN mask - same
-    feature detector, learnable placement. Pool-to-pool absorption
-    keeps this absorption-compatible ([[pool_matched_absorption]]).
-
-    Uses the substrate's enable_lcn (apply_to_weights=False) so L0.W
-    stays at its full random init; mask is applied only in forward.
-    That way recomputing the mask after a position move doesn't
-    repeatedly attenuate L0.W entries."""
-    torch.manual_seed(seed)
-    net = TrioronNetwork([
-        (INPUT_DIM, L0_WIDTH, "relu"),
-        (L0_WIDTH, H_INIT, "relu"),
-        (H_INIT, N_CLASSES, "linear"),
-    ])
-    L0 = net.layers[0]
-    _setup_head(net)
-    _seed_l0_positions(net)
-    _seed_l1_grid_positions(net, H_INIT)
-    # Substrate LCN install — mask in buffer, NOT multiplied into W.
-    L0.enable_lcn(
-        pixel_positions_rgb(), mode="soft", sigma=LCN_SIGMA,
-        apply_to_weights=False,
-    )
-    _freeze_l0(net)
-    # arm-e additions on L1
-    L1 = net.layers[1]
-    sigma_l1 = float(os.environ.get("CIFAR_CONV_LCN_SIGMA", "0.5"))
-    install_l1_lcn_mask(net, mode="soft", sigma=sigma_l1, k=8)
-    install_learnable_positions(L1)
-    # arm-f addition: learnable L0 positions
-    install_learnable_positions(L0)
-    return net
-
-
 # ----------------------------------------------------------------------
 # Training loop (one task) — shared across arms; flags toggle features
 # ----------------------------------------------------------------------
@@ -619,8 +327,6 @@ class TaskResult:
     train_acc_final: float
     n_spawns: int
     spawn_events: List[Tuple[int, str]]
-    n_splits: int = 0
-    n_channels_final: int = 0
 
 
 def _forward(
@@ -665,16 +371,9 @@ def train_one_task(
     enable_axis6: bool,
     enable_conv_emergence: bool = False,
     enable_l0_plastic: bool = False,
-    enable_pool_tie: bool = False,
-    pool_tie_grid: int = 4,
-    enable_channel_tie: bool = False,
-    channel_tie_n_channels: int = 8,
     spawn_cooldown_steps: int = 50,
     spawn_cap_per_phase: int = 16,
     spawn_trigger: str = "frustrated",   # "frustrated" | "always"
-    enable_channel_split: bool = False,
-    channel_split_sigma: float = 0.1,
-    channel_split_thr: float = 0.5,
     manifold_batch: int = 256,
     manifold_loss_weight: float = 1.0,
     conv_lambda_diff: float = float(os.environ.get("CIFAR_CONV_LAMBDA_DIFF", "0.0")),
@@ -704,8 +403,6 @@ def train_one_task(
     spawn_events: List[Tuple[int, str]] = []
     n_spawns = 0
     last_spawn_step = -spawn_cooldown_steps
-    n_splits = 0
-    split_done_this_phase = False
     step = 0
 
     for epoch in range(n_epochs):
@@ -717,15 +414,11 @@ def train_one_task(
             x_in = augment_batch(x)
 
             if enable_conv_emergence:
-                # Diffused forward: L1 W gets smoothed by activation-
-                # correlation kernel before matmul, so co-active cells
-                # share weight rows -> emergent conv kernels at L1<-L0.
+                # Conv-emergence diffusion was removed (null results).
+                # Fall through to standard forward.
                 h0 = net.layers[0](x_in)
-                h1 = l1_forward_diffused(
-                    L1, h0, conv_lambda_diff,
-                    credit_mask=cell_credit, W_snapshot=None,
-                )
-                # EMA updates for Hebbian/alignment. L1 always when
+                h1 = L1(h0)
+                # EMA updates for alignment. L1 always when
                 # conv_emergence; L0 only when l0_plastic so we don't
                 # pay the cost for the existing arms.
                 update_activation_correlation(L1, h1, decay=conv_hebbian_decay)
@@ -784,51 +477,6 @@ def train_one_task(
                 # LCN mask so forward picks up the new cells' positions.
                 sync_positions_to_buffer(L0)
                 recompute_l0_lcn_mask(net)
-            if enable_pool_tie:
-                # Pool weight-tying: cells in the same pool share W
-                # (after credit). Per-pool kernels, no translation
-                # invariance. NULL at H_INIT=64.
-                tie_pool_weights(L1, grid_size=pool_tie_grid,
-                                 cell_credit=cell_credit)
-            if enable_channel_tie:
-                # Channel-tied real conv: cells in the same channel
-                # share W across pools. N_C unique kernels applied at
-                # N_P positions = translation invariance.
-                tie_channel_weights(L1, n_channels=channel_tie_n_channels,
-                                    cell_credit=cell_credit)
-
-            # Channel-split trigger (cheapest-first v1): once per phase,
-            # when frustrated past epoch 0, fork the channel with the
-            # most plastic cells. Kernel-space analog of axis6 cell
-            # spawn — see [[cifar-arm-h-channel-ceiling]].
-            if (enable_channel_split
-                and enable_channel_tie
-                and not split_done_this_phase
-                and last_acc < channel_split_thr
-                and epoch >= 1):
-                _ensure_channel_state(L1, n_channels_init=channel_tie_n_channels)
-                cid = L1._arm_h_channel_id[:L1.n_nodes]
-                if cell_credit is not None and cell_credit.numel() >= L1.n_nodes:
-                    plastic = ~cell_credit[:L1.n_nodes]
-                else:
-                    plastic = torch.ones(L1.n_nodes, dtype=torch.bool)
-                counts = torch.zeros(L1._arm_h_n_channels, dtype=torch.long)
-                for c in range(L1._arm_h_n_channels):
-                    counts[c] = int(((cid == c) & plastic).sum().item())
-                parent_c = int(counts.argmax().item())
-                new_c = split_channel(
-                    L1, parent_c=parent_c,
-                    sigma_split=channel_split_sigma,
-                    cell_credit=cell_credit,
-                )
-                if new_c is not None:
-                    n_splits += 1
-                    split_done_this_phase = True
-                    spawn_events.append((
-                        step,
-                        f"CHANNEL split: parent={parent_c} -> child={new_c} "
-                        f"(N_C {L1._arm_h_n_channels - 1} -> {L1._arm_h_n_channels})",
-                    ))
 
             with torch.no_grad():
                 last_loss = float(loss.item())
@@ -907,8 +555,6 @@ def train_one_task(
         train_acc_final=last_acc,
         n_spawns=n_spawns,
         spawn_events=spawn_events,
-        n_splits=n_splits,
-        n_channels_final=getattr(L1, "_arm_h_n_channels", 0),
     )
 
 
@@ -970,30 +616,6 @@ ARM_CONFIGS = {
         builder=build_arm_d_self_arrange,
         manifold=True, credit=True, axis6=True, conv_emergence=False,
     ),
-    "e": dict(
-        label="v2.0 conv-by-emergence",
-        builder=build_arm_e_conv_emergence,
-        manifold=True, credit=True, axis6=True, conv_emergence=True,
-    ),
-    "f": dict(
-        label="v2.0 + L0 plastic positions",
-        builder=build_arm_f_l0_plastic_pos,
-        manifold=True, credit=True, axis6=True,
-        conv_emergence=True, l0_plastic=True,
-    ),
-    "g": dict(
-        label="v2.0 + pool weight-tying",
-        builder=build_arm_g_pool_tying,
-        manifold=True, credit=True, axis6=True,
-        conv_emergence=True, l0_plastic=True, pool_tie=True,
-    ),
-    "h": dict(
-        label="v2.0 + channel-tied conv + spawn",
-        builder=build_arm_h_channel_tied,
-        manifold=True, credit=True, axis6=True,
-        conv_emergence=True, channel_tie=True,
-        channel_tie_n_channels=ARM_H_N_CHANNELS,
-    ),
 }
 
 
@@ -1010,9 +632,6 @@ def run_arm(
     spawn_cap_per_phase: int = 16,
     spawn_cooldown_steps: int = 50,
     spawn_trigger: str = "frustrated",
-    enable_channel_split: bool = False,
-    channel_split_sigma: float = 0.1,
-    channel_split_thr: float = 0.5,
     verbose: bool = False,
 ) -> dict:
     cfg = ARM_CONFIGS[arm_key]
@@ -1051,24 +670,15 @@ def run_arm(
             enable_axis6=cfg["axis6"],
             enable_conv_emergence=cfg.get("conv_emergence", False),
             enable_l0_plastic=cfg.get("l0_plastic", False),
-            enable_pool_tie=cfg.get("pool_tie", False),
-            enable_channel_tie=cfg.get("channel_tie", False),
-            channel_tie_n_channels=cfg.get("channel_tie_n_channels", 8),
             spawn_cap_per_phase=spawn_cap_per_phase,
             spawn_cooldown_steps=spawn_cooldown_steps,
             spawn_trigger=spawn_trigger,
-            enable_channel_split=enable_channel_split,
-            channel_split_sigma=channel_split_sigma,
-            channel_split_thr=channel_split_thr,
             manifold_batch=manifold_batch,
             manifold_loss_weight=manifold_loss_weight,
             verbose=verbose,
         )
         for step, msg in res.spawn_events:
             all_events.append((task.name, step, msg))
-        if verbose and (res.n_splits or res.n_channels_final):
-            print(f"    [channel] N_C={res.n_channels_final} "
-                  f"splits_this_phase={res.n_splits}")
 
         # Eval on every task seen so far + future tasks (full=zero on future).
         row_full = [eval_full(net, tasks[k]) for k in range(K)]
@@ -1146,12 +756,6 @@ def run_arm(
         "n_spawns": sum(
             1 for _, _, m in all_events if m.startswith("AXIS6 spawn:")
         ),
-        "n_splits": sum(
-            1 for _, _, m in all_events if m.startswith("CHANNEL split:")
-        ),
-        "n_channels_final": getattr(
-            net.layers[1], "_arm_h_n_channels", 0,
-        ),
         "retention_full": retention_full,
         "retention_task": retention_task,
         "final_full": final_full,
@@ -1195,15 +799,11 @@ def main() -> int:
             f"CIFAR_SPAWN_TRIGGER must be 'frustrated' or 'always', "
             f"got {spawn_trigger!r}"
         )
-    channel_split = os.environ.get("CIFAR_CHANNEL_SPLIT", "0") == "1"
-    channel_split_sigma = float(os.environ.get("CIFAR_CHANNEL_SPLIT_SIGMA", "0.1"))
-    channel_split_thr = float(os.environ.get("CIFAR_CHANNEL_SPLIT_THR", "0.5"))
 
     print(f"bench_2_0_cifar_continual: arms={arms} seeds={n_seeds} "
           f"epochs={n_epochs} tasks={n_tasks}x{per_task} batch={batch_size} "
           f"lr={lr} smoke={smoke} "
-          f"spawn(cap={spawn_cap},cool={spawn_cool},trig={spawn_trigger}) "
-          f"chan_split={channel_split}(sigma={channel_split_sigma},thr={channel_split_thr})")
+          f"spawn(cap={spawn_cap},cool={spawn_cool},trig={spawn_trigger})")
 
     print("loading CIFAR-100 + building tasks (one-time)...")
     tasks = build_cifar_tasks(n_tasks=n_tasks, per_task=per_task)
@@ -1227,9 +827,6 @@ def main() -> int:
                 spawn_cap_per_phase=spawn_cap,
                 spawn_cooldown_steps=spawn_cool,
                 spawn_trigger=spawn_trigger,
-                enable_channel_split=channel_split,
-                channel_split_sigma=channel_split_sigma,
-                channel_split_thr=channel_split_thr,
                 verbose=smoke,
             )
             results.append(r)
@@ -1237,8 +834,6 @@ def main() -> int:
                   f"full={r['mean_final_full']:.4f} "
                   f"task={r['mean_final_task']:.4f} "
                   f"L1={r['n_l1_final']} spawns={r['n_spawns']} "
-                  f"splits={r.get('n_splits', 0)} "
-                  f"N_C={r.get('n_channels_final', 0)} "
                   f"t={r['elapsed_s']:.0f}s")
 
     # Per-arm aggregate

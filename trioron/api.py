@@ -604,7 +604,6 @@ def pool_matched_absorb(
     pool_capacity: Optional[int] = None,
     snap_to_pool_centroid: bool = False,
     donor_trained_classes: Optional[Sequence[int]] = None,
-    recipient_trained_classes: Optional[Sequence[int]] = None,
     position_jitter: float = 0.0,
 ) -> List[Tuple[int, int]]:
     """Cell-granularity absorption between two TrioronNetwork instances.
@@ -651,13 +650,6 @@ def pool_matched_absorb(
             predictions for classes the donor never saw). Strongly
             recommended whenever the donor's curriculum is narrower
             than the recipient's class space.
-        recipient_trained_classes: paired with ``donor_trained_classes``.
-            When both are provided, the call installs a
-            head_provenance_mask on the downstream head layer so
-            subsequent head-settle gradients only flow into cells whose
-            source-of-record covered each target class. Required for
-            stable full-softmax recovery after absorption (see
-            [[absorption_sentinel_n12_collapse]]).
         position_jitter: Gaussian σ added to each absorbed cell's
             (x, y) position so two cells in the same pool don't share
             an exact locus. Analog of ``axis6_spawn``'s parent-jitter
@@ -681,7 +673,6 @@ def pool_matched_absorb(
         pool_capacity=pool_capacity,
         snap_to_pool_centroid=snap_to_pool_centroid,
         donor_trained_classes=donor_trained_classes,
-        recipient_trained_classes=recipient_trained_classes,
         position_jitter=position_jitter,
     )
 
