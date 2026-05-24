@@ -109,8 +109,21 @@ Each step gets its own commit and PR.
 ## Environment notes
 
 - Working directory: `/home/marcrockhat/trioron-project/`
-- Branch at session end: `main` (clean working tree at session start;
-  new files uncommitted at session end — to be committed before push)
+- Branch at session end: `main` (commit `aec18f0` on remote)
 - Platform: Linux 6.6 (WSL2)
 - Python: from `pyproject.toml` — torch + standard scientific stack
 - No new dependencies introduced this session
+
+### Cross-PC setup notes
+
+- **SSH key**: an ed25519 key was generated on this PC at
+  `~/.ssh/id_ed25519` and added to the user's GitHub account. Other
+  PCs need their own key — generate per machine, add each public
+  key to GitHub Settings → SSH and GPG keys, and switch the local
+  remote to SSH:
+  `git remote set-url origin git@github.com:Marcrockhat/trioron-project.git`
+- **GitHub host key** was added to `~/.ssh/known_hosts` on this PC
+  via `ssh-keyscan`. Same step needed on each new machine before
+  the first push.
+- **Git identity** (`user.name`, `user.email`) was set globally on
+  this PC. Set the same values on any new machine before committing.
