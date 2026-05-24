@@ -265,7 +265,7 @@ class CeilingsController:
         # Explicit kwargs always win. Lazy import avoids a circular
         # dependency on the profile module at package init.
         if M_max_bytes is None or T_div_max_seconds is None:
-            from trioron.profile import TrioronProfile
+            from trioron.legacy.profile import TrioronProfile
             active = TrioronProfile.active()
             if M_max_bytes is None:
                 M_max_bytes = (

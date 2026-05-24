@@ -67,7 +67,7 @@ def _config_from_args(args: argparse.Namespace):
     """Build a TrioronConfig from CLI flags, applying defaults for
     anything not specified (unset CLI flags are None and fall through
     to TrioronConfig's own defaults)."""
-    from trioron.api import TrioronConfig, AdvancedConfig
+    from trioron.legacy.api import TrioronConfig, AdvancedConfig
 
     def _v(attr, default):
         v = getattr(args, attr, None)
@@ -147,7 +147,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     split (``--donor``) or from a user-supplied loader
     (``--from-py path:fn``)."""
     if args.from_py:
-        from trioron.api import build_donor
+        from trioron.legacy.api import build_donor
         try:
             loader = _resolve_py_entry(args.from_py)
         except Exception as e:
@@ -211,7 +211,7 @@ def cmd_train(args: argparse.Namespace) -> int:
 
 def cmd_absorb(args: argparse.Namespace) -> int:
     """Assemble a multi-branch organism from saved donors."""
-    from trioron.multibranch import Branch, MultiBranchOrganism
+    from trioron.legacy.multibranch import Branch, MultiBranchOrganism
     paths = [p.strip() for p in args.donors.split(",") if p.strip()]
     if len(paths) < 1:
         print("error: --donors is empty", file=sys.stderr)
@@ -281,11 +281,11 @@ def _load_organism(path: str):
     """Reconstruct a MultiBranchOrganism from a `trioron absorb`
     checkpoint OR (for convenience) from a legacy single-donor
     poc_donor_*.pt — that becomes a 1-branch organism."""
-    from trioron.multibranch import Branch, MultiBranchOrganism
+    from trioron.legacy.multibranch import Branch, MultiBranchOrganism
     payload = torch.load(path, map_location="cpu", weights_only=False)
     if payload.get("kind") == "multibranch_organism":
         # Rebuild branches inline (skips the per-branch checkpoint files).
-        from trioron.network import TrioronNetwork
+        from trioron.legacy.network import TrioronNetwork
         branches = []
         for d in payload["branches"]:
             n_nodes = d["n_nodes_per_layer"]
@@ -578,7 +578,7 @@ def cmd_extend(args: argparse.Namespace) -> int:
       4. Lift the cap to --extension-cap-bytes.
       5. Train on the new tasks loaded via --new-py.
     """
-    from trioron.api import extend
+    from trioron.legacy.api import extend
     try:
         base_loader = _resolve_py_entry(args.base_py)
         new_loader = _resolve_py_entry(args.new_py)
@@ -612,7 +612,7 @@ def cmd_extend(args: argparse.Namespace) -> int:
 
 def _build_bridge(args: argparse.Namespace):
     """Shared bridge construction for both REPL and HTTP serve modes."""
-    from trioron.api import deploy_agent
+    from trioron.legacy.api import deploy_agent
     encoder_factory = _resolve_py_entry(args.encoder)
     encoder = encoder_factory() if callable(encoder_factory) else encoder_factory
     tools = _resolve_py_entry(args.tools)
@@ -620,7 +620,7 @@ def _build_bridge(args: argparse.Namespace):
         # Allow a function returning the dispatcher, for parity with
         # encoder factories.
         try:
-            from trioron.bridge import ToolDispatcher
+            from trioron.legacy.bridge import ToolDispatcher
             maybe = tools()
             if isinstance(maybe, ToolDispatcher):
                 tools = maybe
@@ -665,7 +665,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
                   file=sys.stderr)
             return 2
         import threading
-        from trioron.serve_http import build_app, run_uvicorn
+        from trioron.legacy.serve_http import build_app, run_uvicorn
         app = build_app(bridge)
         t = threading.Thread(
             target=run_uvicorn, args=(app, args.http),

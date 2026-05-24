@@ -123,7 +123,7 @@ class TrioronLayer(nn.Module):
         # (branch_activation="quad", B_max=8). Imported lazily to
         # avoid a circular dependency at module init.
         if branch_activation is None or B_max is None:
-            from trioron.profile import TrioronProfile
+            from trioron.legacy.profile import TrioronProfile
             active = TrioronProfile.active()
             if branch_activation is None:
                 branch_activation = active.branch_activation
@@ -624,7 +624,7 @@ class TrioronLayer(nn.Module):
         seed in_positions. The L1 case is typically driven by an
         upstream layer's cell_position (e.g. L0.cell_position[:, :2]).
         """
-        from trioron.spatial import build_lcn_mask
+        from trioron.legacy.spatial import build_lcn_mask
         if in_positions.ndim != 2:
             raise ValueError(
                 f"in_positions must be 2-D, got {tuple(in_positions.shape)}"
@@ -722,7 +722,7 @@ class TrioronLayer(nn.Module):
         if new_n < old_n:
             # Pruning path — handled by prune_node directly.
             return
-        from trioron.spatial import build_lcn_mask
+        from trioron.legacy.spatial import build_lcn_mask
         if new_n > old_n:
             new_own_pos = self.cell_position[
                 old_n:new_n, :in_pos.shape[1]
@@ -1540,7 +1540,7 @@ class TrioronLayer(nn.Module):
                     pos = in_position.detach().to(
                         device=mask.device, dtype=torch.float32,
                     ).reshape(1, -1)[:, :pos_dim]
-                    from trioron.spatial import build_lcn_mask
+                    from trioron.legacy.spatial import build_lcn_mask
                     own_pos = self.cell_position[:, :pos_dim].to(
                         device=mask.device, dtype=torch.float32,
                     )
@@ -2363,7 +2363,7 @@ class TrioronLayer(nn.Module):
         regimes). grow_branch itself remains callable for explicit
         manual use; this is the policy-layer gate.
         """
-        from trioron.profile import TrioronProfile
+        from trioron.legacy.profile import TrioronProfile
         if not TrioronProfile.active().allow_grow_branch:
             return []
         with torch.no_grad():
@@ -2450,7 +2450,7 @@ class TrioronLayer(nn.Module):
         # v1 silent-override and freeze the loaded layer as
         # point-neuron-equivalent regardless of regime.
         if (prefix + "branch_id") not in state_dict:
-            from trioron.profile import TrioronProfile
+            from trioron.legacy.profile import TrioronProfile
             active = TrioronProfile.active()
             if active.re_apply_after_donor_load:
                 self.branch_activation = active.branch_activation

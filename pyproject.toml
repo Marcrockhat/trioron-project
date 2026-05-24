@@ -60,7 +60,7 @@ dev = [
 ]
 
 [project.scripts]
-trioron = "trioron.cli:main"
+trioron = "trioron.legacy.cli:main"
 
 [project.urls]
 Repository = "https://github.com/marcrockhat/trioron-project"
@@ -72,8 +72,21 @@ Repository = "https://github.com/marcrockhat/trioron-project"
 # artifacts and writeup, not library code.
 packages = [
   "trioron",
-  "trioron.bridge",
-  "trioron.bridge.encoders",
+  "trioron.core",
+  "trioron.phenotype",
+  "trioron.bases",
+  "trioron.learning",
+  "trioron.learning.baselines",
+  "trioron.lifecycle",
+  "trioron.viz",
+  "trioron.viz.templates",
+  "trioron.evolution",
+  "trioron.compat",
+  "trioron.legacy",
+  "trioron.legacy.bridge",
+  "trioron.legacy.bridge.encoders",
+  "trioron.legacy.senses",
+  "trioron.legacy.composition",
   "experiments",
 ]
 

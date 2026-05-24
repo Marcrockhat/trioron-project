@@ -1,17 +1,19 @@
 """Trioron — a dynamically growing neural architecture.
 
-See trioron_blueprint.md for the design document.
+v2.0 modules live under trioron/core/, trioron/phenotype/, etc.
+v1 modules live under trioron/legacy/ and are re-exported here
+for backward compatibility.
 """
 
-from .node import TrioronLayer
-from .network import TrioronNetwork
-from .ceilings import (
+from .legacy.node import TrioronLayer
+from .legacy.network import TrioronNetwork
+from .legacy.ceilings import (
     CeilingsController,
     DivisionDelta,
     PreflightDecision,
     division_param_delta,
 )
-from .classification import (
+from .legacy.classification import (
     SplitClassificationTask,
     SplitClassificationReport,
     split_mnist_tasks,
@@ -22,7 +24,7 @@ from .classification import (
     accuracy,
     summarize,
 )
-from .profile import (
+from .legacy.profile import (
     TrioronProfile,
     OPEN,
     REASONING,
@@ -30,7 +32,7 @@ from .profile import (
     EDGE,
     PRESETS,
 )
-from .spatial import (
+from .legacy.spatial import (
     grid_positions_2d,
     pixel_positions_2d,
     pool_id,
@@ -38,7 +40,7 @@ from .spatial import (
     build_lcn_mask,
     locality_metric,
 )
-from .api import (
+from .legacy.api import (
     cosine_logits,
     track_engagement,
     update_credit,

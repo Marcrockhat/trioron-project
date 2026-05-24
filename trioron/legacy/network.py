@@ -668,7 +668,7 @@ class TrioronNetwork(nn.Module):
         # network-topology mutator and the regime-level choice gates
         # the call directly. Switch profile (e.g.,
         # `with TrioronProfile.use(REASONING)`) to unblock.
-        from trioron.profile import TrioronProfile
+        from trioron.legacy.profile import TrioronProfile
         if not TrioronProfile.active().allow_insert_layer:
             raise ValueError(
                 f"insert_layer blocked by active TrioronProfile "

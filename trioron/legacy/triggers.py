@@ -170,7 +170,7 @@ class GrowthTrigger:
         # the active profile forbids cell-level growth. Lazy import to
         # avoid a circular dependency at module init time.
         if conditions_met:
-            from trioron.profile import TrioronProfile
+            from trioron.legacy.profile import TrioronProfile
             profile_allows = TrioronProfile.active().allow_grow_node
         else:
             profile_allows = True  # moot — fire stays False anyway

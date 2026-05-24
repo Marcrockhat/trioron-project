@@ -9,7 +9,7 @@ Three flows:
 
   1. Build a donor from your own data
   --------------------------------------------------
-  >>> from trioron.api import TaskData, TrioronConfig, build_donor
+  >>> from trioron.legacy.api import TaskData, TrioronConfig, build_donor
   >>> tasks = [
   ...     TaskData(name="cats_vs_dogs",
   ...              X_train=Xtr, y_train=ytr,    # (N, 784) float32, (N,) int64
@@ -30,7 +30,7 @@ Three flows:
 
   2. Compose donors into one organism
   --------------------------------------------------
-  >>> from trioron.api import absorb
+  >>> from trioron.legacy.api import absorb
   >>> organism_path = absorb(
   ...     donor_paths=["my_donor.pt", "another_donor.pt"],
   ...     out_path="organism.pt",
@@ -38,8 +38,8 @@ Three flows:
 
   3. Deploy as an agent
   --------------------------------------------------
-  >>> from trioron.api import deploy_agent
-  >>> from trioron.bridge import ToolDispatcher
+  >>> from trioron.legacy.api import deploy_agent
+  >>> from trioron.legacy.bridge import ToolDispatcher
   >>> tools = ToolDispatcher()
   >>> @tools.tool
   ... def lookup_user(user_id: str) -> dict:
@@ -455,7 +455,7 @@ def _branch_from_organism_dict(d: Dict[str, Any]):
     through disk, so an organism file's branches can be re-absorbed
     without first being un-bundled into per-branch donor files.
     """
-    from trioron.multibranch import Branch, TrioronNetwork
+    from trioron.legacy.multibranch import Branch, TrioronNetwork
     n_nodes = d["n_nodes_per_layer"]
     layer_specs: List[Tuple[int, int, str]] = []
     prev = d["input_dim"]
@@ -484,7 +484,7 @@ def _branches_from_path(path: str) -> List[Any]:
     """Load branches from either a single donor checkpoint or a saved
     multibranch organism. Organisms are expanded into their
     constituent branches; donors return a 1-element list."""
-    from trioron.multibranch import Branch
+    from trioron.legacy.multibranch import Branch
     payload = torch.load(path, map_location="cpu", weights_only=False)
     kind = payload.get("kind")
     if kind == "multibranch_organism":
@@ -516,7 +516,7 @@ def absorb(
         Path to the saved organism, usable by :func:`load_organism`,
         :func:`evaluate`, and :func:`deploy_agent`.
     """
-    from trioron.multibranch import MultiBranchOrganism
+    from trioron.legacy.multibranch import MultiBranchOrganism
     paths = [str(p) for p in donor_paths]
     if not paths:
         raise ValueError("absorb: donor_paths is empty")
@@ -586,7 +586,7 @@ def load_organism(path: Union[str, Path]):
     """Reconstruct a MultiBranchOrganism from an absorb output (or
     legacy single-donor checkpoint, which is wrapped as a 1-branch
     organism)."""
-    from trioron.cli import _load_organism
+    from trioron.legacy.cli import _load_organism
     return _load_organism(str(path))
 
 
@@ -690,7 +690,7 @@ def merge_manifold(recipient_manifold, donor_manifold) -> int:
     present in the recipient are left untouched (the recipient's own
     training is more trustworthy than a transferred snapshot).
     """
-    from trioron.network import merge_manifold as _merge
+    from trioron.legacy.network import merge_manifold as _merge
     return _merge(recipient_manifold, donor_manifold)
 
 
@@ -707,7 +707,7 @@ def ManifoldStore(*args, **kwargs):
     ``sample_synthetic`` / ``has_classes``). Construct with the L0
     width: ``ManifoldStore(n_l0=net.layers[0].n_nodes)``.
     """
-    from trioron.manifold import ManifoldStore as _MS
+    from trioron.legacy.manifold import ManifoldStore as _MS
     return _MS(*args, **kwargs)
 
 
@@ -735,7 +735,7 @@ def settle_head_via_manifold(
     re-calibrates. See :func:`trioron.manifold.settle_head_via_manifold`
     for the full signature.
     """
-    from trioron.manifold import settle_head_via_manifold as _settle
+    from trioron.legacy.manifold import settle_head_via_manifold as _settle
     return _settle(
         net, manifold, seen_classes,
         n_steps=n_steps,
@@ -772,7 +772,7 @@ def settle_head_with_retry(
     See :func:`trioron.manifold.settle_head_with_retry` for the full
     signature and motivation.
     """
-    from trioron.manifold import settle_head_with_retry as _retry
+    from trioron.legacy.manifold import settle_head_with_retry as _retry
     return _retry(
         net, manifold, seen_classes,
         n_attempts=n_attempts,
@@ -998,7 +998,7 @@ def _hydrate_donor(payload: Dict[str, Any], arm: str):
     """
     from experiments import bench_chained_15task as bench
     from experiments.datasets import ManifoldBuffer
-    from trioron.network import TrioronNetwork
+    from trioron.legacy.network import TrioronNetwork
 
     n_nodes = list(payload["n_nodes_per_layer"])
     input_dim = int(payload["input_dim"])
@@ -1115,7 +1115,7 @@ def deploy_agent(
         A ``trioron.bridge.BridgedOrganism`` ready for ``.act(...)``
         or ``.decide(...)`` calls.
     """
-    from trioron.bridge import BridgedOrganism, L0Adapter
+    from trioron.legacy.bridge import BridgedOrganism, L0Adapter
     organism = load_organism(organism_path)
     l0_dim = organism.l0_W.shape[0]
     adapter = L0Adapter(
@@ -1296,7 +1296,7 @@ def cosine_logits(
     Returns:
         (B, C) logit tensor.
     """
-    from trioron.manifold import cosine_logits as _impl
+    from trioron.legacy.manifold import cosine_logits as _impl
     return _impl(features, head_W, temperature=temperature)
 
 
