@@ -92,6 +92,11 @@ class Substrate:
     # ── Info ──────────────────────────────────────────────────────
 
     @property
+    def last_activations(self) -> torch.Tensor | None:
+        """Per-cell activations [batch, capacity] from the most recent forward pass."""
+        return self.scheduler._last_activations
+
+    @property
     def n_cells(self) -> int:
         return self.arena.n_cells
 

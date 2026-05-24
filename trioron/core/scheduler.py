@@ -59,6 +59,7 @@ class Scheduler:
         self._arena = arena
         self._dispatch: dict[int, ForwardFn] = dispatch_table or {}
         self._plan = DispatchPlan()
+        self._last_activations: torch.Tensor | None = None
 
     def set_dispatch_table(self, table: dict[int, ForwardFn]) -> None:
         self._dispatch = table
@@ -178,6 +179,8 @@ class Scheduler:
                 continue
             bucket_act = fn(act, bucket, a)
             act[:, bucket.cell_ids.long()] = bucket_act
+
+        self._last_activations = act.detach()
 
         # Collect output logits
         if plan.output_ids.numel() == 0:
