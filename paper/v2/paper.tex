@@ -28,11 +28,11 @@
 \newcommand{\arm}[1]{\texttt{#1}}
 \newcommand{\headline}{$\bigstar$}
 
-% v2-specific macros.
+% v1.1-specific macros.
 \newcommand{\axis}[1]{\textbf{Axis #1}}
 \newcommand{\substrate}{\texttt{trioron}}
 
-\title{Trioron 2.0: a multi-axis substrate\\
+\title{Trioron 1.1: a multi-axis substrate\\
        for resource-bounded continual learning}
 \author{Marcelinus R.\ Hatorangan%
         \thanks{Correspondence: \texttt{marcelinusrocky@aol.com}.
@@ -48,9 +48,9 @@
 % TODO: rewrite once the §4 Results are settled. Placeholder sets the
 % framing: this paper documents the architectural changes between
 % v1.0 (a three-state node with growth/pruning/EWC/dream-replay) and
-% v2.0 (six per-cell substrate axes plus a pool-matched composition
+% v1.1 (six per-cell substrate axes plus a pool-matched composition
 % mechanism), not a new continual-learning benchmark result.
-We describe \emph{Trioron 2.0}, a substrate-level revision to the
+We describe \emph{Trioron 1.1}, a substrate-level revision to the
 trioron architecture introduced in the companion paper, exposing six per-cell
 axes of structural plasticity: long-range input reach, plastic fanout
 sparsity, depth growth, slow axonal gain, dendritic
@@ -71,7 +71,7 @@ task-aware accuracy is preserved on both donors within
 $\Delta \leq 0.026$, full-softmax accuracy lifts by $+0.20$ to
 $+0.31$ via manifold merge plus a 200-step head-only calibration
 pass, and the post-absorption substrate is \emph{more} locality-clean
-than either donor alone. The 2.0 substrate is backwards-compatible
+than either donor alone. The 1.1 substrate is backwards-compatible
 with 1.0 donors: legacy checkpoints load unchanged and run under the
 extended forward path with the new axes at their default-off
 settings.
@@ -89,7 +89,7 @@ settings.
 %     cell read the predecessor's full output, broadcast its single
 %     output downstream, lived at a fixed depth, had a fixed flat
 %     fan-in, and emerged via a uniform spawn rule.
-%   - v2.0 unpacks each of those into a separate axis. Each axis
+%   - v1.1 unpacks each of those into a separate axis. Each axis
 %     is opt-in (defaults preserve 1.0 byte-identical behavior), each
 %     has its own write API and its own plasticity gate. The
 %     architecture becomes a composition surface rather than a
@@ -132,7 +132,7 @@ settings.
 \subsection{The Trioron Node, recapitulated}
 \label{sec:node}
 
-% TODO: brief recap of (w, λ, u) from v1, then note what v2.0 adds
+% TODO: brief recap of (w, λ, u) from v1, then note what v1.1 adds
 % to the cell's state:
 %   - cell_position : R^3            (developmental coordinate)
 %   - input_sources : (fan_in, 2)    (Axis 1)
@@ -204,7 +204,7 @@ settings.
 % TODO: the architectural unlock. v1.0 absorption operated at branch
 % granularity (Branch + MultiBranchOrganism) and required donors to
 % share the L0 perception layer's exact weights (R·S handshake at
-% L0). v2.0 adds cell-granularity absorption: every donor cell is
+% L0). v1.1 adds cell-granularity absorption: every donor cell is
 % appended to the recipient at its corresponding pool. Donor and
 % recipient must share the upstream layer's width (the R·S handshake)
 % and the head's class space; under those constraints, absorbed
@@ -250,7 +250,7 @@ settings.
 \subsection{Backward compatibility}
 \label{sec:results-backcompat}
 
-% TODO: v1.0 donor checkpoints load into the 2.0 substrate without
+% TODO: v1.0 donor checkpoints load into the 1.1 substrate without
 % changes; the _TRIORON_2_0_KEYS default-injection in
 % _load_from_state_dict handles the missing buffer keys. Profile-
 % level re_apply_after_donor_load=True restores the active profile's
@@ -271,7 +271,7 @@ settings.
 \section{Conclusion}
 \label{sec:conclusion}
 
-% TODO: short. The v2.0 substrate factors what was a single trioron
+% TODO: short. The v1.1 substrate factors what was a single trioron
 % node into six orthogonal axes, each opt-in, each with its own
 % write API. The pool-matched absorption operator the multi-axis
 % substrate enables is the first cell-granularity composition we
@@ -285,7 +285,7 @@ settings.
 \section{Detailed Methods}
 \label{sec:detail}
 
-% TODO: full equations and pseudocode for each axis. The 2.0
+% TODO: full equations and pseudocode for each axis. The 1.1
 % trioron_2_0.md spec is the canonical reference; this section is a
 % paper-formatted extract.
 

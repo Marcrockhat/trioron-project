@@ -38,6 +38,12 @@ from .spatial import (
     build_lcn_mask,
     locality_metric,
 )
+from .api import (
+    cosine_logits,
+    track_engagement,
+    update_credit,
+    apply_credit_mask,
+)
 
 __all__ = [
     "TrioronLayer",
@@ -67,5 +73,9 @@ __all__ = [
     "pool_centroid",
     "build_lcn_mask",
     "locality_metric",
+    "cosine_logits",
+    "track_engagement",
+    "update_credit",
+    "apply_credit_mask",
 ]
-__version__ = "0.2.2"
+__version__ = "1.1.0"

@@ -1273,6 +1273,148 @@ def inherit_dendrite(
     )
 
 
+# ---------------------------------------------------------------------
+# v1.1 — credit-based freezing + cosine head primitives
+# ---------------------------------------------------------------------
+
+
+def cosine_logits(
+    features: torch.Tensor,
+    head_W: torch.Tensor,
+    temperature: float = 16.0,
+) -> torch.Tensor:
+    """Cosine-similarity logits: ``τ · cos(features, head_W)``.
+
+    Bounds output magnitude to ``[-τ, τ]``, dampening bias drift across
+    tasks compared to unbounded linear logits.
+
+    Args:
+        features: (B, D) L1 output features.
+        head_W: (C, D) head weight matrix (one row per class).
+        temperature: scaling factor τ. Default 16.0.
+
+    Returns:
+        (B, C) logit tensor.
+    """
+    from trioron.manifold import cosine_logits as _impl
+    return _impl(features, head_W, temperature=temperature)
+
+
+def track_engagement(
+    layer,
+    engagement_sum: Optional[torch.Tensor] = None,
+    engagement_count: Optional[torch.Tensor] = None,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Accumulate per-cell engagement from the layer's cached activations.
+
+    Call once per training step (after forward, before optimizer step).
+    Tracks the fraction of inputs for which each cell fires (activation
+    > 0 for ReLU layers). Returns updated ``(engagement_sum, engagement_count)``
+    accumulators — pass them back on the next call.
+
+    Args:
+        layer: a ``TrioronLayer`` that has just completed a forward pass
+            (``layer._last_y`` must be populated).
+        engagement_sum: running sum of per-cell activation rates.
+            Pass ``None`` on the first call.
+        engagement_count: running count of accumulation steps.
+            Pass ``None`` on the first call.
+
+    Returns:
+        ``(engagement_sum, engagement_count)`` — feed back into the next call.
+    """
+    n = layer.n_nodes
+    if engagement_sum is None:
+        engagement_sum = torch.zeros(n)
+    if engagement_count is None:
+        engagement_count = torch.zeros(n)
+
+    with torch.no_grad():
+        last_y = getattr(layer, "_last_y", None)
+        if last_y is None:
+            return engagement_sum, engagement_count
+        if layer.activation == "relu":
+            active = (last_y > 0).float()
+        else:
+            active = (last_y.abs() > 0.05).float()
+        per_cell_rate = active.mean(dim=0).cpu()
+        n_cells = per_cell_rate.numel()
+        if engagement_sum.numel() < n_cells:
+            pad = torch.zeros(n_cells - engagement_sum.numel())
+            engagement_sum = torch.cat([engagement_sum, pad])
+            engagement_count = torch.cat([engagement_count, torch.zeros_like(pad)])
+        engagement_sum[:n_cells] += per_cell_rate
+        engagement_count[:n_cells] += 1.0
+
+    return engagement_sum, engagement_count
+
+
+def update_credit(
+    credit_mask: Optional[torch.Tensor],
+    engagement_sum: torch.Tensor,
+    engagement_count: torch.Tensor,
+    n_cells: int,
+    threshold: float = 0.3,
+) -> torch.Tensor:
+    """Update the credit mask after a training phase.
+
+    Cells whose mean engagement fraction exceeds ``threshold`` earn
+    credit and are frozen for all subsequent tasks (their gradients
+    will be zeroed by :func:`apply_credit_mask`).
+
+    Args:
+        credit_mask: bool tensor of already-frozen cells, or ``None``
+            for the first task.
+        engagement_sum: from :func:`track_engagement`.
+        engagement_count: from :func:`track_engagement`.
+        n_cells: current number of cells in the layer (``layer.n_nodes``).
+        threshold: engagement fraction above which a cell earns credit.
+
+    Returns:
+        Updated bool credit mask of shape ``(n_cells,)``.
+    """
+    if credit_mask is None:
+        credit_mask = torch.zeros(n_cells, dtype=torch.bool)
+    elif credit_mask.numel() < n_cells:
+        pad = torch.zeros(n_cells - credit_mask.numel(), dtype=torch.bool)
+        credit_mask = torch.cat([credit_mask, pad])
+
+    engagement_frac = engagement_sum / engagement_count.clamp(min=1.0)
+    if engagement_frac.numel() < n_cells:
+        pad = torch.zeros(n_cells - engagement_frac.numel())
+        engagement_frac = torch.cat([engagement_frac, pad])
+
+    earned = engagement_frac[:n_cells] > threshold
+    credit_mask = credit_mask[:n_cells] | earned
+    return credit_mask
+
+
+def apply_credit_mask(layer, credit_mask: torch.Tensor) -> None:
+    """Zero gradients on frozen (credited) rows of ``layer.W`` and ``layer.b``.
+
+    Call after ``loss.backward()`` and before ``optimizer.step()`` each
+    training step. Credited cells receive zero gradient, anchoring them
+    more strongly than EWC's quadratic penalty.
+
+    Args:
+        layer: a ``TrioronLayer`` whose ``.W.grad`` and ``.b.grad``
+            have been populated by backward.
+        credit_mask: bool tensor from :func:`update_credit`. ``True``
+            entries have their gradients zeroed.
+    """
+    with torch.no_grad():
+        n_cells = layer.W.shape[0]
+        cm = credit_mask
+        if cm.numel() < n_cells:
+            pad = torch.zeros(n_cells - cm.numel(), dtype=torch.bool, device=cm.device)
+            cm = torch.cat([cm, pad])
+        cm = cm[:n_cells]
+        if layer.W.grad is not None:
+            layer.W.grad[cm] = 0.0
+        if layer.b.grad is not None:
+            layer.b.grad[cm] = 0.0
+
+
 __all__ = [
     # Donor-build / compose / deploy
     "TaskData",
@@ -1290,10 +1432,15 @@ __all__ = [
     "ManifoldStore",
     "settle_head_via_manifold",
     "settle_head_with_retry",
-    # Per-axis writers (v2 §3.2-§3.7)
+    # Per-axis writers (§3.2-§3.7)
     "set_axonal_gain",
     "archive_input",
     "insert_layer",
     "axis6_spawn",
     "inherit_dendrite",
+    # v1.1 — credit-based freezing + cosine head
+    "cosine_logits",
+    "track_engagement",
+    "update_credit",
+    "apply_credit_mask",
 ]
