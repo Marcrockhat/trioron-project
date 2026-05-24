@@ -152,32 +152,54 @@ def pool_assignments(layer, grid_size: int = 4) -> torch.Tensor:
     )
 
 
+def _ensure_channel_state(layer, n_channels_init: int) -> None:
+    """Initialize layer._arm_h_channel_id and layer._arm_h_n_channels
+    on first use, and extend the channel_id table when n_nodes has
+    grown (axis6_spawn appended cells)."""
+    if not hasattr(layer, "_arm_h_n_channels"):
+        layer._arm_h_n_channels = n_channels_init
+    n_c = layer._arm_h_n_channels
+    n = layer.n_nodes
+    if not hasattr(layer, "_arm_h_channel_id") or layer._arm_h_channel_id is None:
+        layer._arm_h_channel_id = torch.arange(n) % n_c
+        return
+    cur = layer._arm_h_channel_id.numel()
+    if cur < n:
+        # New cells appended by spawn — assign round-robin over current
+        # n_channels starting from where the table ended.
+        new_ids = (torch.arange(cur, n) % n_c)
+        layer._arm_h_channel_id = torch.cat([
+            layer._arm_h_channel_id, new_ids,
+        ])
+
+
 def tie_channel_weights(
     layer,
     n_channels: int,
     cell_credit: Optional[torch.Tensor] = None,
 ) -> int:
     """Real conv emergence: cells with the same channel_id share W
-    across positions. Channel assignment is ROUND-ROBIN by cell
-    index (channel_id = cell_idx % n_channels), so new cells from
-    axis6_spawn distribute across channels rather than all falling
-    into the last bucket. After averaging W within each channel, we
-    have n_channels unique kernels applied at all spatial positions
-    where channel members live = translation invariance.
+    across positions. Channel assignment is stored on the layer as
+    `_arm_h_channel_id` (initialized round-robin, mutated by
+    `split_channel`). After averaging W within each channel, we have
+    `layer._arm_h_n_channels` unique kernels applied at all spatial
+    positions where channel members live = translation invariance.
 
     Skips credited cells. Returns number of channels that had >=2
     plastic cells (diagnostic)."""
     n = layer.n_nodes
     if n_channels < 1 or n < n_channels:
         return 0
-    channel_id = torch.arange(n) % n_channels
+    _ensure_channel_state(layer, n_channels)
+    channel_id = layer._arm_h_channel_id[:n]
+    n_c = layer._arm_h_n_channels
     n_tied = 0
     if cell_credit is not None and cell_credit.numel() >= n:
         plastic = ~cell_credit[:n]
     else:
         plastic = torch.ones(n, dtype=torch.bool)
     with torch.no_grad():
-        for c in range(n_channels):
+        for c in range(n_c):
             mask = (channel_id == c) & plastic
             if int(mask.sum().item()) < 2:
                 continue
@@ -188,6 +210,49 @@ def tie_channel_weights(
             layer.b.data[idx] = b_avg
             n_tied += 1
     return n_tied
+
+
+def split_channel(
+    layer,
+    parent_c: int,
+    sigma_split: float = 0.1,
+    cell_credit: Optional[torch.Tensor] = None,
+) -> Optional[int]:
+    """Fork channel `parent_c` into two by reassigning half of its
+    plastic cells to a new channel id `n_c_old`, then perturbing
+    those migrated cells' W rows by N(0, sigma_split * ||W_row||) so
+    the daughters diverge under subsequent gradient steps.
+
+    Kernel-space analog of `axis6_spawn`'s positional jitter. Caller
+    is responsible for triggering this (e.g., once per phase under
+    frustration).
+
+    Returns the new channel id, or None if parent_c had < 2 plastic
+    cells (nothing to split)."""
+    n = layer.n_nodes
+    _ensure_channel_state(layer, n_channels_init=8)
+    cid = layer._arm_h_channel_id[:n]
+    if cell_credit is not None and cell_credit.numel() >= n:
+        plastic = ~cell_credit[:n]
+    else:
+        plastic = torch.ones(n, dtype=torch.bool)
+    in_parent = (cid == parent_c) & plastic
+    parent_idx = in_parent.nonzero(as_tuple=False).flatten()
+    if parent_idx.numel() < 2:
+        return None
+    # Migrate the second half of parent's plastic cells to the new
+    # channel id. Cheapest selection rule for v1 — no engagement or
+    # error heuristic; just split the bucket in half.
+    new_c = layer._arm_h_n_channels
+    half = parent_idx.numel() // 2
+    migrants = parent_idx[half:]
+    with torch.no_grad():
+        layer._arm_h_channel_id[migrants] = new_c
+        row_norms = layer.W.data[migrants].norm(dim=1, keepdim=True)
+        noise = torch.randn_like(layer.W.data[migrants]) * sigma_split
+        layer.W.data[migrants] = layer.W.data[migrants] + noise * row_norms
+    layer._arm_h_n_channels = new_c + 1
+    return new_c
 
 
 def tie_pool_weights(
@@ -554,6 +619,8 @@ class TaskResult:
     train_acc_final: float
     n_spawns: int
     spawn_events: List[Tuple[int, str]]
+    n_splits: int = 0
+    n_channels_final: int = 0
 
 
 def _forward(
@@ -604,6 +671,10 @@ def train_one_task(
     channel_tie_n_channels: int = 8,
     spawn_cooldown_steps: int = 50,
     spawn_cap_per_phase: int = 16,
+    spawn_trigger: str = "frustrated",   # "frustrated" | "always"
+    enable_channel_split: bool = False,
+    channel_split_sigma: float = 0.1,
+    channel_split_thr: float = 0.5,
     manifold_batch: int = 256,
     manifold_loss_weight: float = 1.0,
     conv_lambda_diff: float = float(os.environ.get("CIFAR_CONV_LAMBDA_DIFF", "0.0")),
@@ -633,6 +704,8 @@ def train_one_task(
     spawn_events: List[Tuple[int, str]] = []
     n_spawns = 0
     last_spawn_step = -spawn_cooldown_steps
+    n_splits = 0
+    split_done_this_phase = False
     step = 0
 
     for epoch in range(n_epochs):
@@ -724,6 +797,39 @@ def train_one_task(
                 tie_channel_weights(L1, n_channels=channel_tie_n_channels,
                                     cell_credit=cell_credit)
 
+            # Channel-split trigger (cheapest-first v1): once per phase,
+            # when frustrated past epoch 0, fork the channel with the
+            # most plastic cells. Kernel-space analog of axis6 cell
+            # spawn — see [[cifar-arm-h-channel-ceiling]].
+            if (enable_channel_split
+                and enable_channel_tie
+                and not split_done_this_phase
+                and last_acc < channel_split_thr
+                and epoch >= 1):
+                _ensure_channel_state(L1, n_channels_init=channel_tie_n_channels)
+                cid = L1._arm_h_channel_id[:L1.n_nodes]
+                if cell_credit is not None and cell_credit.numel() >= L1.n_nodes:
+                    plastic = ~cell_credit[:L1.n_nodes]
+                else:
+                    plastic = torch.ones(L1.n_nodes, dtype=torch.bool)
+                counts = torch.zeros(L1._arm_h_n_channels, dtype=torch.long)
+                for c in range(L1._arm_h_n_channels):
+                    counts[c] = int(((cid == c) & plastic).sum().item())
+                parent_c = int(counts.argmax().item())
+                new_c = split_channel(
+                    L1, parent_c=parent_c,
+                    sigma_split=channel_split_sigma,
+                    cell_credit=cell_credit,
+                )
+                if new_c is not None:
+                    n_splits += 1
+                    split_done_this_phase = True
+                    spawn_events.append((
+                        step,
+                        f"CHANNEL split: parent={parent_c} -> child={new_c} "
+                        f"(N_C {L1._arm_h_n_channels - 1} -> {L1._arm_h_n_channels})",
+                    ))
+
             with torch.no_grad():
                 last_loss = float(loss.item())
                 preds = logits.argmax(dim=-1)
@@ -740,12 +846,20 @@ def train_one_task(
                     engagement_sum[:fire.numel()] += fire
                     engagement_count += 1
 
-            # Axis 6 spawn trigger (very simple: spawn when train
-            # acc plateaus below 0.5 with cooldown).
+            # Axis 6 spawn trigger.
+            #   "frustrated": spawn when train acc < 0.5 with cooldown
+            #                 (the default; original behavior).
+            #   "always":     spawn every cooldown_steps when under the
+            #                 cap, irrespective of accuracy. Used to test
+            #                 whether the governor (not the gate) is the
+            #                 binding constraint on cell-first growth.
+            trigger_fires = (
+                last_acc < 0.5 if spawn_trigger == "frustrated" else True
+            )
             if (enable_axis6
                 and step - last_spawn_step >= spawn_cooldown_steps
                 and n_spawns < spawn_cap_per_phase
-                and last_acc < 0.5
+                and trigger_fires
                 and epoch >= 1):
                 try:
                     parent_idx = int(L1._last_y.mean(dim=0).argmax().item())
@@ -793,6 +907,8 @@ def train_one_task(
         train_acc_final=last_acc,
         n_spawns=n_spawns,
         spawn_events=spawn_events,
+        n_splits=n_splits,
+        n_channels_final=getattr(L1, "_arm_h_n_channels", 0),
     )
 
 
@@ -891,6 +1007,12 @@ def run_arm(
     credit_thr: float,
     manifold_batch: int = 256,
     manifold_loss_weight: float = 1.0,
+    spawn_cap_per_phase: int = 16,
+    spawn_cooldown_steps: int = 50,
+    spawn_trigger: str = "frustrated",
+    enable_channel_split: bool = False,
+    channel_split_sigma: float = 0.1,
+    channel_split_thr: float = 0.5,
     verbose: bool = False,
 ) -> dict:
     cfg = ARM_CONFIGS[arm_key]
@@ -932,12 +1054,21 @@ def run_arm(
             enable_pool_tie=cfg.get("pool_tie", False),
             enable_channel_tie=cfg.get("channel_tie", False),
             channel_tie_n_channels=cfg.get("channel_tie_n_channels", 8),
+            spawn_cap_per_phase=spawn_cap_per_phase,
+            spawn_cooldown_steps=spawn_cooldown_steps,
+            spawn_trigger=spawn_trigger,
+            enable_channel_split=enable_channel_split,
+            channel_split_sigma=channel_split_sigma,
+            channel_split_thr=channel_split_thr,
             manifold_batch=manifold_batch,
             manifold_loss_weight=manifold_loss_weight,
             verbose=verbose,
         )
         for step, msg in res.spawn_events:
             all_events.append((task.name, step, msg))
+        if verbose and (res.n_splits or res.n_channels_final):
+            print(f"    [channel] N_C={res.n_channels_final} "
+                  f"splits_this_phase={res.n_splits}")
 
         # Eval on every task seen so far + future tasks (full=zero on future).
         row_full = [eval_full(net, tasks[k]) for k in range(K)]
@@ -1015,6 +1146,12 @@ def run_arm(
         "n_spawns": sum(
             1 for _, _, m in all_events if m.startswith("AXIS6 spawn:")
         ),
+        "n_splits": sum(
+            1 for _, _, m in all_events if m.startswith("CHANNEL split:")
+        ),
+        "n_channels_final": getattr(
+            net.layers[1], "_arm_h_n_channels", 0,
+        ),
         "retention_full": retention_full,
         "retention_task": retention_task,
         "final_full": final_full,
@@ -1050,10 +1187,23 @@ def main() -> int:
     arms = [a.strip() for a in arms_str.split(",") if a.strip()]
     n_tasks = int(os.environ.get("CIFAR_N_TASKS", "10"))
     per_task = int(os.environ.get("CIFAR_PER_TASK", "10"))
+    spawn_cap = int(os.environ.get("CIFAR_SPAWN_CAP", "16"))
+    spawn_cool = int(os.environ.get("CIFAR_SPAWN_COOLDOWN", "50"))
+    spawn_trigger = os.environ.get("CIFAR_SPAWN_TRIGGER", "frustrated")
+    if spawn_trigger not in ("frustrated", "always"):
+        raise ValueError(
+            f"CIFAR_SPAWN_TRIGGER must be 'frustrated' or 'always', "
+            f"got {spawn_trigger!r}"
+        )
+    channel_split = os.environ.get("CIFAR_CHANNEL_SPLIT", "0") == "1"
+    channel_split_sigma = float(os.environ.get("CIFAR_CHANNEL_SPLIT_SIGMA", "0.1"))
+    channel_split_thr = float(os.environ.get("CIFAR_CHANNEL_SPLIT_THR", "0.5"))
 
     print(f"bench_2_0_cifar_continual: arms={arms} seeds={n_seeds} "
           f"epochs={n_epochs} tasks={n_tasks}x{per_task} batch={batch_size} "
-          f"lr={lr} smoke={smoke}")
+          f"lr={lr} smoke={smoke} "
+          f"spawn(cap={spawn_cap},cool={spawn_cool},trig={spawn_trigger}) "
+          f"chan_split={channel_split}(sigma={channel_split_sigma},thr={channel_split_thr})")
 
     print("loading CIFAR-100 + building tasks (one-time)...")
     tasks = build_cifar_tasks(n_tasks=n_tasks, per_task=per_task)
@@ -1074,6 +1224,12 @@ def main() -> int:
                 credit_thr=credit_thr,
                 manifold_batch=manifold_batch,
                 manifold_loss_weight=manifold_loss_weight,
+                spawn_cap_per_phase=spawn_cap,
+                spawn_cooldown_steps=spawn_cool,
+                spawn_trigger=spawn_trigger,
+                enable_channel_split=channel_split,
+                channel_split_sigma=channel_split_sigma,
+                channel_split_thr=channel_split_thr,
                 verbose=smoke,
             )
             results.append(r)
@@ -1081,6 +1237,8 @@ def main() -> int:
                   f"full={r['mean_final_full']:.4f} "
                   f"task={r['mean_final_task']:.4f} "
                   f"L1={r['n_l1_final']} spawns={r['n_spawns']} "
+                  f"splits={r.get('n_splits', 0)} "
+                  f"N_C={r.get('n_channels_final', 0)} "
                   f"t={r['elapsed_s']:.0f}s")
 
     # Per-arm aggregate

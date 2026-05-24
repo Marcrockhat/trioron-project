@@ -12,11 +12,26 @@ See trioron_2_0.md §3 for the design spec.
 
 from __future__ import annotations
 
+import pytest
 import torch
 import torch.nn.functional as F
 
 from trioron.node import TrioronLayer
 from trioron.network import TrioronNetwork
+from trioron.profile import TrioronProfile, REASONING
+
+
+@pytest.fixture(autouse=True)
+def _reasoning_profile():
+    """Activate REASONING for every test in this file so Phase 2
+    insert_layer tests pass under the post-trim default profile (OPEN
+    now sets allow_insert_layer=False — see
+    [[pairwise_ablation_axis3_culprit]]). Tests that exercise the
+    profile gate itself use `TrioronProfile.use(...)` context managers
+    which save and restore the active profile, so they nest correctly
+    inside this fixture."""
+    with TrioronProfile.use(REASONING):
+        yield
 
 
 # ---------- input_sources buffer ----------

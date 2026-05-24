@@ -52,8 +52,11 @@ class TrioronProfile:
           permitted. Independent of branch_activation (you can have
           quad branches but freeze their count).
       allow_insert_layer: Whether between-cell depth growth is
-          permitted (Axis 3). Phase 2 in the spec; not yet wired
-          to a trigger, so this gate is documentary for now.
+          permitted (Axis 3). Enforced by `TrioronNetwork.insert_layer`
+          which raises when this gate is False under the active
+          profile. Defaults to False on every regime except REASONING
+          per [[pairwise_ablation_axis3_culprit]] (Axis 3 destroys
+          composability when interacting with axes 4/5/5.5).
       memory_cap_bytes: Hard upper bound on substrate growth in
           bytes (consumed by ceilings.py). None = no cap.
       time_cap_seconds: Per-stabilization-window time ceiling. None =
@@ -82,7 +85,7 @@ class TrioronProfile:
     B_max: int = 8
     allow_grow_node: bool = True
     allow_grow_branch: bool = True
-    allow_insert_layer: bool = True
+    allow_insert_layer: bool = False
     memory_cap_bytes: Optional[int] = None
     time_cap_seconds: Optional[float] = None
     re_apply_after_donor_load: bool = True
@@ -158,7 +161,7 @@ CLASSIFICATION = TrioronProfile(
     B_max=1,
     allow_grow_node=True,
     allow_grow_branch=False,
-    allow_insert_layer=True,
+    allow_insert_layer=False,
     memory_cap_bytes=None,
     time_cap_seconds=None,
     re_apply_after_donor_load=True,
@@ -181,10 +184,10 @@ EDGE = TrioronProfile(
     re_apply_after_donor_load=True,
 )
 
-# Fully unrestricted regime. Everything on, nothing capped. This is
-# the default active profile — matches 1.0-era construction defaults
-# byte-for-byte (the architectural-knob fields just expose the
-# pre-existing defaults under a named label rather than changing them).
+# Default regime. Width growth + dendrites + branch plasticity all on;
+# Axis 3 depth growth (`insert_layer`) is off by default per
+# [[pairwise_ablation_axis3_culprit]] — opt in via REASONING or set
+# allow_insert_layer=True explicitly when depth growth is desired.
 # re_apply_after_donor_load=False here so the v1-load silent override
 # behavior matches prior semantics; the named regimes opt INTO
 # re-application to enforce their chosen branch_activation across
@@ -195,7 +198,7 @@ OPEN = TrioronProfile(
     B_max=8,
     allow_grow_node=True,
     allow_grow_branch=True,
-    allow_insert_layer=True,
+    allow_insert_layer=False,
     memory_cap_bytes=None,
     time_cap_seconds=None,
     re_apply_after_donor_load=False,

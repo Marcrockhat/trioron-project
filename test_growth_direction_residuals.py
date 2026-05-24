@@ -15,6 +15,7 @@ import torch
 
 from trioron.growth_direction import from_activation_residuals
 from trioron.network import TrioronNetwork
+from trioron.profile import TrioronProfile, REASONING
 
 
 # ---------- from_activation_residuals ----------
@@ -206,10 +207,9 @@ def test_noise_scale_ignored_with_growth_direction_init():
 
 @pytest.fixture(autouse=True)
 def _reset_profile():
-    """Some tests in other files mutate the active profile; restore
-    OPEN before each test here so noise_scale tests aren't subject to
-    profile-induced surprises."""
-    from trioron.profile import TrioronProfile, OPEN
-    TrioronProfile.set_active(OPEN)
+    """Restore REASONING before and after each test so insert_layer
+    calls succeed (OPEN now sets allow_insert_layer=False per
+    [[pairwise_ablation_axis3_culprit]])."""
+    TrioronProfile.set_active(REASONING)
     yield
-    TrioronProfile.set_active(OPEN)
+    TrioronProfile.set_active(REASONING)

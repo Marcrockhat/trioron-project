@@ -1,0 +1,38 @@
+bench_2_0_cifar_continual: arms=['h'] seeds=1 epochs=4 tasks=3x10 batch=256 lr=0.01 smoke=True spawn(cap=16,cool=50,trig=frustrated)
+loading CIFAR-100 + building tasks (one-time)...
+  built 3 tasks; first task class range 0..9, train=5000
+
+=== arm h: v2.0 + channel-tied conv + spawn  seed=0 ===
+  [phase 1/3: cifar_000_009] L1.H=128 frozen=0
+    epoch 1/4: loss=2.015 acc=0.000 L1=128 spawns=0
+    epoch 2/4: loss=2.305 acc=0.000 L1=129 spawns=1
+    epoch 3/4: loss=2.177 acc=0.000 L1=129 spawns=1
+    epoch 4/4: loss=2.331 acc=0.000 L1=130 spawns=2
+    full(this)=0.000 task(this)=0.100 spawns=2
+    [credit] +33 new; total frozen = 33/130
+    [head-settle] best_trial=4 score=0.199
+    [post-settle] full(this)=0.000 task(this)=0.167
+  [phase 2/3: cifar_010_019] L1.H=130 frozen=33
+    epoch 1/4: loss=6.924 acc=0.008 L1=130 spawns=0
+    epoch 2/4: loss=7.044 acc=0.098 L1=131 spawns=1
+    epoch 3/4: loss=6.976 acc=0.102 L1=131 spawns=1
+    epoch 4/4: loss=7.029 acc=0.109 L1=132 spawns=2
+    full(this)=0.100 task(this)=0.100 spawns=2
+    [credit] +0 new; total frozen = 33/132
+    [head-settle] best_trial=0 score=0.047
+    [post-settle] full(this)=0.000 task(this)=0.100
+  [phase 3/3: cifar_020_029] L1.H=132 frozen=33
+    epoch 1/4: loss=8.461 acc=0.066 L1=132 spawns=0
+    epoch 2/4: loss=8.354 acc=0.074 L1=133 spawns=1
+    epoch 3/4: loss=8.290 acc=0.102 L1=133 spawns=1
+    epoch 4/4: loss=8.128 acc=0.113 L1=134 spawns=2
+    full(this)=0.164 task(this)=0.183 spawns=2
+    [credit] +1 new; total frozen = 34/134
+    [head-settle] best_trial=4 score=0.180
+    [post-settle] full(this)=0.098 task(this)=0.203
+[seed 0 arm h v2.0 + channel-tied conv + spawn] full=0.0527 task=0.1760 L1=134 spawns=6 t=28s
+
+=== aggregate (mean ± std across seeds) ===
+  arm h v2.0 + channel-tied conv + spawn  full=0.0527 ± 0.0000  task=0.1760 ± 0.0000  L1=134.0  spawns=6.0
+
+wrote /home/marcrockhat/trioron-project/outputs/bench_2_0_cifar_continual.csv
