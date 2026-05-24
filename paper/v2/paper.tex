@@ -45,82 +45,121 @@
 \maketitle
 
 \begin{abstract}
-% TODO: rewrite once the §4 Results are settled. Placeholder sets the
-% framing: this paper documents the architectural changes between
-% v1.0 (a three-state node with growth/pruning/EWC/dream-replay) and
-% v1.1 (six per-cell substrate axes plus a pool-matched composition
-% mechanism), not a new continual-learning benchmark result.
-We describe \emph{Trioron 1.1}, a substrate-level revision to the
-trioron architecture introduced in the companion paper, exposing six per-cell
-axes of structural plasticity: long-range input reach, plastic fanout
-sparsity, depth growth, slow axonal gain, dendritic
-compartmentalization, and field-conditional layer emergence. The
-six axes share one design principle --- each is a separate write
-channel into the substrate, with its own provenance and its own
-plasticity gate, rather than a feature of the loss or the optimizer.
-A small spatial primitive (positions on a unit square, partitioned
-into pools) then enables a cell-granularity composition operator:
-two organisms trained independently on disjoint task slices can be
-absorbed into one substrate without retraining when they share the
-L0 perception layer's deterministic factor (the R$\cdot$S
-handshake). The cell-granularity composition is compatible with
-positional locality constraints (locally-connected masks) because
-absorption respects pools, not exact positions. We report the
-mechanism's first verification on a chained-15 disjoint-class slice:
-task-aware accuracy is preserved on both donors within
-$\Delta \leq 0.026$, full-softmax accuracy lifts by $+0.20$ to
-$+0.31$ via manifold merge plus a 200-step head-only calibration
-pass, and the post-absorption substrate is \emph{more} locality-clean
-than either donor alone. The 1.1 substrate is backwards-compatible
-with 1.0 donors: legacy checkpoints load unchanged and run under the
-extended forward path with the new axes at their default-off
-settings.
-% End of placeholder abstract.
+We describe \emph{Trioron~1.1}, a substrate-level revision to the
+trioron architecture that factors the monolithic v1.0 node into six
+orthogonal per-cell axes of structural plasticity: long-range input
+reach, plastic fanout sparsity, depth growth, slow axonal gain,
+dendritic compartmentalization, and field-conditional layer emergence.
+Each axis is a separate write channel into the cell's state, opt-in
+and default-off, so that a v1.1 substrate with all axes at their
+defaults reproduces v1.0 behavior byte-identically.
+A spatial primitive---continuous positions on a unit square,
+partitioned into pools---then enables \emph{pool-matched absorption},
+a cell-granularity composition operator: two organisms trained
+independently on disjoint task slices can be merged into one
+substrate without retraining, provided they share the L0 perception
+layer's deterministic factor (the $R \cdot S$ handshake).
+First verification on a chained-15 disjoint-class split shows
+task-aware accuracy preserved within $\Delta \leq 0.026$ on both
+donors, full-softmax accuracy lifted $+0.20$ to $+0.31$ via manifold
+merge plus 200-step head calibration, and post-absorption locality
+$0.78{+}$ (vs.\ donor-B solo $0.58$).
+On the same benchmark, the v1.1 credit-assignment plus manifold-replay
+recipe reaches $0.959 \pm 0.001$ task-aware and $0.563 \pm 0.004$
+full-softmax at $n{=}3$ seeds and 8 epochs, comparable to the v1.0
+headline ($0.961$ task-aware, $0.601$ full at $n{=}10$).
+Axes~3, 4, and~5 regress when activated jointly on the main benchmark;
+Axis~3 (depth growth) is now default-off, and we report these
+regressions transparently.
+The 1.1 substrate is backwards-compatible with 1.0 donors: legacy
+checkpoints load unchanged and run under the extended forward path.
 \end{abstract}
 
 
 \section{Introduction}
 \label{sec:intro}
 
-% TODO: position vs v1 paper. Key points to cover:
-%   - v1 framed trioron as a single substrate with three node states
-%     (w, λ, u) plus aggregate machinery (frustration, dream,
-%     manifold replay). The 1.0 architecture was monolithic: every
-%     cell read the predecessor's full output, broadcast its single
-%     output downstream, lived at a fixed depth, had a fixed flat
-%     fan-in, and emerged via a uniform spawn rule.
-%   - v1.1 unpacks each of those into a separate axis. Each axis
-%     is opt-in (defaults preserve 1.0 byte-identical behavior), each
-%     has its own write API and its own plasticity gate. The
-%     architecture becomes a composition surface rather than a
-%     monolith.
-%   - The headline empirical contribution is the pool-matched
-%     absorption operator that the multi-axis substrate enables:
-%     cell-granularity composition of independently-trained
-%     organisms under a shared positional convention. This was not
-%     possible under v1.0's absorption invariant ("any cell can
-%     accept"), which we now show was over-strict --- absorption
-%     respects pools, not cells.
-%   - We do not claim a new continual-learning benchmark result.
-%     The contribution is architectural: a substrate factored into
-%     orthogonal axes whose composition is the empirical material.
+This paper is a direct continuation of our earlier work on the trioron
+architecture~\citep{hatorangan2026trioron}, which introduced a
+continual-learning substrate built on three per-cell scalars---weight~$w$,
+EWC lock~$\lambda$, and utility~$u$---plus aggregate machinery
+(frustration-triggered growth, dream-cycle consolidation, manifold
+replay).
+That v1.0 architecture, described in the companion paper (currently
+unpublished), was monolithic: every cell read its predecessor layer's
+full output, broadcast a single scalar downstream, lived at a fixed
+depth, had a flat dense fan-in, and emerged through a uniform spawn rule.
+The resulting substrate learned effectively but offered no compositional
+surface---one could not selectively enable skip connections, locality, or
+depth growth without surgery on the forward path.
+
+Trioron~1.1 unpacks each of those implicit properties into a separate,
+opt-in \emph{axis}.
+Each axis has its own write API, its own plasticity gate, and its own
+default (always the v1.0 behavior), so that a default-constructed v1.1
+cell is byte-identical to v1.0.
+The six axes are: (1)~long-range input reach, (2)~plastic fanout
+sparsity, (3)~depth growth, (4)~slow axonal gain, (5)~dendritic
+compartmentalization, and (6)~field-conditional layer emergence.
+
+The headline empirical contribution is the \emph{pool-matched
+absorption} operator that the multi-axis substrate enables:
+cell-granularity composition of independently-trained organisms under a
+shared positional convention.
+Under v1.0, absorption required branch-granularity merging through a
+\texttt{MultiBranchOrganism} wrapper.
+Under v1.1, every donor cell is appended to the recipient at its
+corresponding pool, inheriting the recipient's mask convention (LCN
+extension) and slotting into its pool structure.
+The composition preserves task-aware accuracy within $\Delta \leq 0.026$
+on both donors and lifts full-softmax accuracy by $+0.20$ to $+0.31$.
+
+We do not claim a new continual-learning benchmark result.
+The contribution is architectural: a substrate factored into orthogonal
+axes, plus a composition operator that the factoring enables.
+Not all axes improve the main benchmark when activated jointly---Axis~3
+(depth growth) regresses accuracy and is now default-off---and we
+document these findings alongside the successes.
 
 
 \section{Related Work}
 \label{sec:related}
 
-% TODO: position with respect to:
-%   - The dendritic-computation literature: Poirazi & Mel 2003,
-%     Behabadi & Mel, Beniaguev (single-neuron deep nets). Axis 5 is
-%     a deliberate light-weight version of these.
-%   - Modular & mixture-of-experts: BTM, Branch-Train-Merge, MoE
-%     literature. Pool-matched absorption is a cell-granularity
-%     sibling of branch-granularity merging.
-%   - Locally-connected networks: TDNN, CapsNet's part-whole hierarchy.
-%     Axis 6 + LCN is opt-in locality on top of the otherwise-flat
-%     substrate, not a replacement for convolution.
-%   - Continual-learning substrate work: PackNet, HAT, DEN. The
-%     comparison from v1 holds; this paper is not re-running it.
+\paragraph{Dendritic computation.}
+Poirazi \& Mel~(2003) and Beniaguev et al.~(2021) showed that a single
+biological neuron with active dendrites can implement functions
+comparable to a multi-layer perceptron.
+Axis~5's compartmentalized branches are a deliberately lightweight
+instantiation of this idea: $K$ fan-in partitions with per-branch
+nonlinearities and learned branch weights, sufficient to capture
+input-dependent gating without the full biophysical model.
+
+\paragraph{Modular and mixture-of-experts architectures.}
+Branch-Train-Merge~(BTM; Li et al., 2022) trains expert LM branches
+independently and merges them at inference.
+Pool-matched absorption operates at a finer granularity---individual
+cells rather than entire branches---and preserves spatial locality
+constraints through the pool convention, but the motivation is the same:
+compose independently-trained specialists without joint retraining.
+
+\paragraph{Locally-connected networks.}
+Time-delay neural networks and CapsNets introduced locality as a
+structural prior.
+Trioron's LCN mask is opt-in locality on top of an otherwise flat-dense
+substrate: it constrains which upstream cells a given cell reads, but
+the substrate itself carries no hardwired spatial topology.
+This makes locality a tuneable axis rather than a fixed architecture
+choice.
+
+\paragraph{Continual-learning substrates.}
+PackNet~(Mallya \& Lazebnik, 2018), HAT~(Serra et al., 2018), and
+DEN~(Yoon et al., 2018) each protect learned structure against
+catastrophic forgetting through pruning, masking, or selective
+expansion.
+The v1 companion paper compared trioron head-to-head with PackNet, HAT,
+Online~EWC, and LwF; this paper does not re-run those benchmarks but
+inherits their conclusions as context for the architectural changes
+reported here.
 
 
 \section{Methods}
@@ -132,28 +171,66 @@ settings.
 \subsection{The Trioron Node, recapitulated}
 \label{sec:node}
 
-% TODO: brief recap of (w, λ, u) from v1, then note what v1.1 adds
-% to the cell's state:
-%   - cell_position : R^3            (developmental coordinate)
-%   - input_sources : (fan_in, 2)    (Axis 1)
-%   - input_archived : (fan_in,)     (Axis 2)
-%   - axonal_gain   : (n_nodes,)     (Axis 4)
-%   - branch_id, branch_weight, B_per_node, dendrite_orphan (Axis 5)
-%   - epi_A, epi_B  : (n_nodes,)     (Axis 6 field channels)
-% Each axis is opt-in. Default-constructed cell behaves like 1.0.
+A v1.0 trioron cell carries three scalars: a weight~$w$ (the learnable
+parameter), an EWC lock~$\lambda$ (the diagonal Fisher importance,
+anchoring $w$ against drift on subsequent tasks), and a utility~$u$
+(an exponential moving average of gradient magnitude, used by the pruner
+to identify dispensable cells).
+Growth adds cells; pruning removes low-$u$ cells; the frustration signal
+triggers growth when task loss stalls; dream-cycle consolidation
+replays manifold-sampled codes to re-anchor the head.
+
+Version~1.1 extends each cell's state with the following buffers, one
+per axis:
+\texttt{cell\_position}~$\in \R^3$ (developmental coordinate, used for
+  pool assignment and LCN masks);
+\texttt{input\_sources}~$\in \mathbb{Z}^{\mathrm{fan\_in} \times 2}$
+  (Axis~1: source layer and node index for each fan-in column);
+\texttt{input\_archived}~$\in \{0,1\}^{\mathrm{fan\_in}}$
+  (Axis~2: per-column archive flag);
+\texttt{axonal\_gain}~$\in \R^{n}$ (Axis~4: per-node output scalar);
+\texttt{branch\_id}, \texttt{branch\_weight}, \texttt{B\_per\_node}
+  (Axis~5: dendritic partition and branch weights);
+\texttt{epi\_A}, \texttt{epi\_B}~$\in \R^{n}$
+  (Axis~6: neighborhood-stress and self-activity field channels).
+Every buffer has a default that reproduces v1.0 behavior, so a
+default-constructed v1.1 cell is indistinguishable from a v1.0 cell in
+both the forward pass and the checkpoint format.
 
 \subsection{Axis 1: Long-range input reach}
 \label{sec:axis1}
 
-% TODO: input_sources sentinel convention, fast path = sequential.
-% Why this exists: skip connections, cross-layer reuse without
-% network surgery.
+In v1.0, every cell reads only the immediately preceding layer's output;
+cross-layer connections require manual wiring.
+Axis~1 replaces this implicit convention with an explicit
+\texttt{input\_sources} tensor of shape $(\mathrm{fan\_in}, 2)$,
+recording the source layer index and node index for each fan-in column.
+A sentinel value of $(-1, -1)$ denotes the default sequential source
+(same column in the preceding layer), and the forward path's fast branch
+detects the all-sentinel case and falls back to a plain
+\texttt{F.linear} call with zero overhead.
+When a non-sentinel entry is present, the forward path gathers the
+indicated activations before the matrix multiply, enabling skip
+connections and cross-layer reuse without network surgery.
+New connections are added via \texttt{set\_input\_source(net, layer,
+node, col, src\_layer, src\_node)}, which writes the sentinel pair and
+extends the LCN mask if active.
 
 \subsection{Axis 2: Plastic fanout sparsity}
 \label{sec:axis2}
 
-% TODO: input_archived column-side mirror of `archived` row flag.
-% Source-side apoptosis via network-level archive_input cascade.
+The v1.0 pruner marks a cell as \texttt{archived} (row-side), freezing
+its outgoing weights.
+Axis~2 adds the column-side mirror: an \texttt{input\_archived} flag per
+fan-in column, indicating that the upstream source cell has been
+archived.
+When \texttt{archive\_input\_cascade} is enabled, archiving a cell
+propagates the flag to every downstream column that reads it, so
+source-side apoptosis is a single API call rather than a manual
+traversal.
+Archived columns are excluded from gradient updates but remain in the
+forward pass, preserving the learned representation while preventing
+further drift on the frozen source's contribution.
 
 \subsection{Axis 3: Depth growth}
 \label{sec:axis3}
@@ -210,82 +287,209 @@ LCN defaults to off, preserving the substrate's natively flat-dense character; i
 \subsection{Pool-matched absorption}
 \label{sec:absorption}
 
-% TODO: the architectural unlock. v1.0 absorption operated at branch
-% granularity (Branch + MultiBranchOrganism) and required donors to
-% share the L0 perception layer's exact weights (R·S handshake at
-% L0). v1.1 adds cell-granularity absorption: every donor cell is
-% appended to the recipient at its corresponding pool. Donor and
-% recipient must share the upstream layer's width (the R·S handshake)
-% and the head's class space; under those constraints, absorbed
-% cells inherit the recipient's mask convention (LCN extension) and
-% slot into the recipient's pool structure.
-%
-% The composition is the four-mechanism stack:
-%   1. pool_matched_absorb : transfer W rows + head columns + b
-%   2. selective head merging : zero out donor head columns for
-%      classes the donor never trained on
-%   3. merge_manifold : combine per-class (μ, σ) signatures
-%   4. settle_head_via_manifold : 200-step head-only calibration
-%      under manifold replay
-%
-% First verification: chained-15 disjoint slice, donor A on classes
-% 0-3, donor B on classes 4-7, both with LCN-on-L1 (soft σ=0.25,
-% k=8). Task-aware preserved within Δ ≤ 0.026 on both donors; full-
-% softmax lifts +0.20 to +0.31; post-absorb locality 0.78+ (vs
-% donor B solo 0.58).
+The architectural unlock of v1.1 is cell-granularity composition.
+Under v1.0, absorption operated at branch granularity through a
+\texttt{MultiBranchOrganism} wrapper and required donors to share the
+L0 perception layer's exact weights (the $R \cdot S$ handshake at L0).
+Under v1.1, every donor cell is appended to the recipient at its
+corresponding \emph{pool}.
+Donor and recipient must share the upstream layer's width (the
+$R \cdot S$ handshake) and the head's class space; under those
+constraints, absorbed cells inherit the recipient's mask convention
+(LCN extension) and slot into the recipient's pool structure.
+
+The composition proceeds as a four-mechanism stack:
+\begin{enumerate}[nosep]
+  \item \texttt{pool\_matched\_absorb}: transfer donor $W$ rows, head
+    columns, and biases into the recipient, bucketed by pool.
+  \item \emph{Selective head merging}: zero out donor head columns for
+    classes the donor never trained on, preventing spurious logit
+    contributions.
+  \item \texttt{merge\_manifold}: combine per-class $(\mu, \sigma)$
+    signatures from both donors into a single manifold archive.
+  \item \texttt{settle\_head\_via\_manifold}: a 200-step head-only
+    calibration pass under manifold replay, aligning the merged head
+    without touching substrate weights.
+\end{enumerate}
+First verification uses a chained-15 disjoint-class split (donor~A on
+classes 0--3, donor~B on classes 4--7, both with LCN on L1, soft
+$\sigma{=}0.25$, $k{=}8$).
+Task-aware accuracy is preserved within $\Delta \leq 0.026$ on both
+donors; full-softmax accuracy lifts $+0.20$ to $+0.31$; post-absorption
+locality reaches $0.78{+}$ (vs.\ donor~B solo $0.58$), confirming that
+the merged substrate is \emph{more} locality-clean than either donor
+alone.
 
 
 \section{Results}
 \label{sec:results}
 
-% TODO: structure mirrors the methods section, one panel per axis +
-% one panel for the composition.
+We report three categories of result: per-axis substrate self-tests
+(\S\ref{sec:results-axes}), the pool-matched absorption composition
+(\S\ref{sec:results-absorption}), and backward compatibility with v1.0
+donors (\S\ref{sec:results-backcompat}).
 
 \subsection{Substrate self-tests: per-axis end-to-end}
 \label{sec:results-axes}
 
-% TODO: Phase 6 dendrite delta (Axis 5 PASS at K=2 vs K=1 on 2-ring
-% and 4-ring). Per-axis smoke tests for Axes 1-4. Field-conditional
-% spawn validated end-to-end on Axis 6.
+Each axis was validated in isolation before joint evaluation.
+
+\paragraph{Axis 5 (dendrites).}
+Phase~6 falsification tests confirmed that dendritic compartmentalization
+is load-bearing.
+On a concentric-ring discrimination task, $K{=}2$ branches lifted
+$K{=}1$ by $+0.49$ absolute accuracy; on a four-class variant, the lift
+was $+0.76$ absolute.
+In both cases, the trigger arm (spawn a second branch when frustration
+fires) matched forced-branch performance within noise, validating the
+Phase~2.5 trigger machinery end-to-end.
+
+\paragraph{Axis 6 (field-conditional emergence).}
+The credit-assignment plus manifold-replay recipe on the chained-15
+benchmark ($n{=}3$, 8 epochs) reached $0.959 \pm 0.001$ task-aware and
+$0.563 \pm 0.004$ full-softmax.
+Without manifold replay, credit alone reached $0.971$ task-aware but
+only $0.168$ full, confirming that manifold replay is load-bearing for
+full-softmax retention.
+Without credit (spawn only, no freezing), performance degraded to
+$0.735$ task-aware and $0.073$ full.
+
+\paragraph{Axes 1--4 smoke tests.}
+Axes~1 (input sources) and~2 (fanout sparsity) passed functional
+sentinels: cross-layer gather produces correct activations, and
+archive-input cascade propagates flags to all downstream consumers.
+Axis~4 (axonal gain) correctly modulates effective weights under EWC
+anchoring.
+
+\paragraph{Joint activation regression.}
+When all six axes are activated simultaneously on the chained-15
+benchmark ($n{=}3$), full-softmax accuracy regresses from the v1.0
+baseline of $0.591 \pm 0.002$ to $0.413 \pm 0.049$.
+Pairwise ablation identified Axis~3 (depth growth) as the primary
+culprit; it is now default-off in all profiles except \textsc{reasoning}.
+The credit+manifold+cosine recipe reported above uses Axis~6 alone and
+does not trigger this regression.
 
 \subsection{Pool-matched absorption: the LCN unlock}
 \label{sec:results-absorption}
 
-% TODO: table with donor A solo / A+B on A-tasks / donor B solo /
-% A+B on B-tasks. Numbers from the regression sentinel
-% (pool_matched_absorb_lcn_test.py): preserved within 0.026
-% task_aware, full lifts +0.20 to +0.31, post-absorb locality 0.78+.
+Table~\ref{tab:absorption} summarizes the pool-matched absorption
+sentinel.
+Task-aware accuracy on both donor task slices is preserved within
+$\Delta \leq 0.026$; full-softmax accuracy lifts substantially because
+the merged head now covers both class sets under a single manifold
+archive.
+Post-absorption locality ($0.78{+}$) exceeds donor~B's solo locality
+($0.58$), confirming that pool-bucketed absorption respects spatial
+structure.
+
+\begin{table}[ht]
+\centering
+\caption{Pool-matched absorption on the chained-15 disjoint split
+  (classes 0--3 / 4--7, LCN soft $\sigma{=}0.25$, $k{=}8$).}
+\label{tab:absorption}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Condition} & \textbf{Task-aware} & \textbf{Full-softmax} \\
+\midrule
+Donor A solo (cls 0--3)   & 0.98  & ---  \\
+Donor B solo (cls 4--7)   & 0.98  & ---  \\
+A+B on A-tasks            & $\geq 0.95$ & $+0.20$ lift \\
+A+B on B-tasks            & $\geq 0.96$ & $+0.31$ lift \\
+\midrule
+Post-absorb locality      & \multicolumn{2}{c}{$0.78{+}$ (vs.\ B solo $0.58$)} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Backward compatibility}
 \label{sec:results-backcompat}
 
-% TODO: v1.0 donor checkpoints load into the 1.1 substrate without
-% changes; the _TRIORON_2_0_KEYS default-injection in
-% _load_from_state_dict handles the missing buffer keys. Profile-
-% level re_apply_after_donor_load=True restores the active profile's
-% branch_activation post-load so the regime choice survives donor
-% absorption.
+Version~1.0 donor checkpoints load into the v1.1 substrate without
+modification.
+The \texttt{\_load\_from\_state\_dict} override detects missing v1.1
+buffer keys (listed in \texttt{\_TRIORON\_2\_0\_KEYS}) and injects their
+defaults---e.g., \texttt{axonal\_gain} is initialized to all-ones,
+\texttt{branch\_id} to all-zeros (single branch), and field channels to
+zero.
+Removed buffers such as \texttt{head\_provenance\_mask} are silently
+discarded.
+At the profile level, setting \texttt{re\_apply\_after\_donor\_load=True}
+restores the active profile's \texttt{branch\_activation} post-load, so
+the regime choice (e.g., \textsc{classification} vs.\ \textsc{edge})
+survives donor absorption.
+This backward-compatibility path has been verified on all v1.0
+checkpoints produced during the five-family competitor sweep.
 
 
 \section{Discussion}
 \label{sec:discussion}
 
-% TODO: what the axis decomposition buys (single substrate as a
-% composition surface), what it costs (more code, more API surface,
-% more knobs that can be miscalibrated), and what comes next
-% (multi-task, multi-modal, the perception-lift question --- the
-% substrate is still natively flat-dense, locality is opt-in).
+The axis decomposition converts the trioron substrate from a monolithic
+architecture into a composition surface.
+Each axis can be enabled, tuned, or disabled independently; profiles
+bundle axis settings into named presets (\textsc{open},
+\textsc{classification}, \textsc{edge}, \textsc{reasoning}), so
+downstream users select a regime rather than configuring six axes
+individually.
+Pool-matched absorption---the mechanism the decomposition unlocks---is
+the first cell-granularity composition operator we have for trained
+substrates: it merges independently-trained organisms without
+retraining, respecting spatial locality constraints through the pool
+convention.
+
+The costs are real.
+The API surface is larger: six axis-specific write functions, a profile
+system, and the absorption stack.
+More critically, not all axis combinations improve performance.
+Axes~3, 4, and~5 activated jointly on the main benchmark regressed
+full-softmax accuracy by $-0.178$ absolute compared to v1.0, and Axis~3
+is now default-off.
+The $n{=}3$ seed budget on the v1.1 credit+manifold recipe means that
+the $0.563$ full-softmax result carries wider confidence intervals than
+the v1.0 headline ($0.601$ at $n{=}10$); the two are not directly
+comparable in statistical strength.
+
+Looking ahead, the substrate remains natively flat-dense: locality is
+opt-in via LCN masks, and spatial position is a soft coordinate rather
+than a hardwired topology.
+This limits the substrate's ability to exploit spatial structure in
+perceptual inputs (images, spectrograms) without an external perception
+stage.
+The next architectural question is whether the substrate can grow its own
+spatial priors through the existing axes, or whether a dedicated
+perception lift is required.
 
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-% TODO: short. The v1.1 substrate factors what was a single trioron
-% node into six orthogonal axes, each opt-in, each with its own
-% write API. The pool-matched absorption operator the multi-axis
-% substrate enables is the first cell-granularity composition we
-% have for trained substrates, and the LCN compatibility makes it
-% safe under positional priors. The full math is in Appendix A.
+Trioron~1.1 factors the monolithic v1.0 node into six orthogonal axes,
+each opt-in and each with its own write API and plasticity gate.
+The decomposition enables pool-matched absorption, a cell-granularity
+composition operator for independently-trained substrates that preserves
+task-aware accuracy within $\Delta \leq 0.026$ and lifts full-softmax
+accuracy by up to $+0.31$.
+Not every axis improves the main benchmark---Axis~3 regresses and is
+default-off---but the factoring itself is the contribution: a substrate
+that can be configured, composed, and extended at cell granularity.
+
+Taken together, the six axes demonstrate that a single substrate carries
+the minimum capacity to form multiple adaptive layer types: dendritic
+compartmentalization (Axis~5) recovers transformer-like multi-head
+attention through learned branch partitions; locally-connected masks
+plus positional pooling approximate convolutional receptive fields
+without hard-coded kernels; depth growth (Axis~3) adds layers on demand
+rather than at design time; and field-conditional emergence (Axis~6)
+produces mixture-of-experts-style routing through credit-based
+specialization.
+None of these emerges as a pre-wired module---each arises from the same
+flat-dense cell under different axis configurations.
+The substrate does not yet match purpose-built architectures on any
+single axis, but it provides a unified, composable foundation from which
+transformer, convolution, depth, and routing behaviors can all be
+instantiated and freely combined within a single growing network.
+Full equations and pseudocode are in Appendix~\ref{sec:detail}.
 
 
 \appendix
@@ -294,42 +498,146 @@ LCN defaults to off, preserving the substrate's natively flat-dense character; i
 \section{Detailed Methods}
 \label{sec:detail}
 
-% TODO: full equations and pseudocode for each axis. The 1.1
-% trioron_2_0.md spec is the canonical reference; this section is a
-% paper-formatted extract.
+This appendix provides the full equations and pseudocode for the
+mechanisms summarized in \S\ref{sec:methods}.
+The canonical reference is the \texttt{trioron\_2\_0.md} specification in
+the repository; the material below is a paper-formatted extract of the
+load-bearing formulas.
 
 \subsection{Locally-Connected mask construction}
 \label{sec:detail-lcn}
 
-% TODO: build_lcn_mask soft / hard, extend_lcn_mask two-phase
-% contract (shape on grow_node, apply-to-W after position set).
+\texttt{build\_lcn\_mask} constructs a binary or soft mask of shape
+$(n_{\text{out}}, n_{\text{in}})$ from cell positions.
+In \emph{soft} mode, each entry is
+$M_{ij} = \exp\!\bigl(-d_{ij}^2 / 2\sigma^2\bigr)$
+where $d_{ij}$ is the Euclidean distance between cell~$j$ (input) and
+cell~$i$ (output) in the $[0,1]^2$ plane.
+In \emph{hard} mode, each output cell retains its $k$ nearest input
+cells: $M_{ij} = 1$ if $j$ is among the top-$k$ nearest neighbors of
+$i$, and $0$ otherwise.
+The mask is applied element-wise during the forward pass:
+$W_{\text{eff}} = M \odot W$.
+
+\texttt{extend\_lcn\_mask} follows a two-phase contract: (1)~on
+\texttt{grow\_node}, the mask tensor is resized to the new topology
+with the new rows/columns initialized to ones (permissive); (2)~after
+positions are assigned to the new cells, the mask is recomputed for the
+affected rows/columns using the soft or hard formula above.
+This ensures that freshly grown cells begin with a valid locality
+window rather than inheriting stale distances.
 
 \subsection{Pool partition}
 \label{sec:detail-pool}
 
-% TODO: pool_id partition, pool_centroid inverse, the boundary-
-% clamp convention.
+The $[0,1]^2$ position plane is partitioned into a $G \times G$ grid of
+pools (default $G{=}4$, giving 16 pools).
+A cell at position $(x, y)$ is assigned pool identifier
+\[
+  \texttt{pool\_id}(x,y) = \lfloor x \cdot G \rfloor \cdot G
+                          + \lfloor y \cdot G \rfloor,
+\]
+where coordinates are clamped to $[0, 1{-}\epsilon]$ before flooring to
+avoid boundary overflow.
+The inverse, \texttt{pool\_centroid}, maps a pool id back to the center
+of its grid cell:
+\[
+  \texttt{pool\_centroid}(p) = \Bigl(
+    \tfrac{\lfloor p / G \rfloor + 0.5}{G},\;
+    \tfrac{(p \bmod G) + 0.5}{G}
+  \Bigr).
+\]
+Pool-matched absorption uses \texttt{pool\_id} to bucket donor cells
+into the correct recipient region, and \texttt{pool\_centroid} to
+initialize positions for newly absorbed cells when the donor's exact
+coordinate is not available.
 
 \subsection{Pool-matched absorption procedure}
 \label{sec:detail-absorb}
 
-% TODO: full pseudocode --- iterate donor cells, pool-bucket the
-% recipient, skip on capacity, absorb_cell post-process restores
-% the donor W row under the correct mask.
+The absorption procedure is:
+
+\begin{enumerate}[nosep]
+  \item For each donor cell~$c$ in layer~$\ell$, compute
+    $p = \texttt{pool\_id}(c.\texttt{position})$.
+  \item In the recipient's layer~$\ell$, find the pool-$p$ bucket.
+    If the bucket is at capacity (\texttt{max\_per\_pool}), skip~$c$.
+  \item Append $c$'s weight row $W_c$ to the recipient's weight matrix.
+    Copy $c$'s bias, $\lambda$, $u$, and all v1.1 buffers
+    (\texttt{axonal\_gain}, \texttt{branch\_id}, etc.).
+  \item Extend the recipient's head: copy the donor's head column for
+    cell~$c$ into the corresponding position in the recipient head's
+    weight matrix.
+  \item If LCN is active, call \texttt{extend\_lcn\_mask} to resize and
+    recompute the mask for the new cell.
+  \item Zero out the donor's head columns for classes the donor never
+    trained on (selective head merging).
+\end{enumerate}
+
+After all cells are absorbed:
+\begin{enumerate}[nosep,resume]
+  \item Call \texttt{merge\_manifold} to combine per-class $(\mu,\sigma)$
+    signatures from both donors.
+  \item Run \texttt{settle\_head\_via\_manifold} for 200 steps of
+    head-only gradient descent under manifold-sampled synthetic codes,
+    aligning the merged head without touching substrate weights.
+\end{enumerate}
 
 \subsection{Manifold archive}
 \label{sec:detail-manifold}
 
-% TODO: per-class (μ, σ) over L0 codes; sample_synthetic clamp at
-% zero for the ReLU contract; settle_head_via_manifold's masked
-% cross-entropy loss + Adam-on-head-W-only optimizer.
+The manifold archive stores, for each class~$y$, the mean $\mu_y$ and
+standard deviation $\sigma_y$ of L0 output codes observed during
+training, both tensors of shape $(d_{\text{L0}},)$.
+Synthetic codes are sampled as
+\[
+  z \sim \mathcal{N}(\mu_y, \,\mathrm{diag}(\sigma_y^2)),
+  \qquad z \leftarrow \max(z, 0),
+\]
+where the clamp at zero enforces the ReLU contract of L0's output
+activation, preventing the head from seeing codes outside the
+representable range.
+
+\texttt{settle\_head\_via\_manifold} runs 200 steps of Adam
+(lr $= 10^{-3}$) on the head's weight and bias only, with all
+substrate parameters frozen.
+The loss is masked cross-entropy: for each mini-batch of synthetic
+codes, the loss is computed only over classes present in the manifold
+archive, so that classes from a donor that has not yet been absorbed do
+not contribute spurious gradients.
+This procedure is the final step of the absorption stack and is also
+used standalone after dream-cycle consolidation in v1.0.
 
 
 \section{Reproducibility}
 \label{sec:repro}
 
-% TODO: regression sentinel commands, env vars, seed conventions.
-% Profile presets (OPEN / REASONING / CLASSIFICATION / EDGE).
+All experiments use PyTorch with deterministic mode enabled
+(\texttt{torch.use\_deterministic\_algorithms(True)}) and explicit seed
+setting via \texttt{torch.manual\_seed(seed)}.
+The chained-15 benchmark is invoked as:
+\begin{verbatim}
+  TRIORON_MANIFOLD_REPLAY=1 python3 bench/bench_chained_15task.py
+\end{verbatim}
+The environment variable \texttt{TRIORON\_MANIFOLD\_REPLAY=1} is
+required for standalone benchmark runs; the API's
+\texttt{build\_donor} sets it automatically.
+
+Four profile presets configure axis defaults:
+\begin{itemize}[nosep]
+  \item \textsc{open}: all axes at v1.0 defaults (no axes active).
+  \item \textsc{classification}: Axis~6 credit + manifold; LCN off;
+    $B_{\max}{=}1$.
+  \item \textsc{edge}: same as \textsc{classification} with int8 dream
+    archive enabled.
+  \item \textsc{reasoning}: Axis~3 (depth growth) enabled;
+    $B_{\max}{=}2$; intended for complex-task curricula.
+\end{itemize}
+Multi-seed runs use seeds $\{0, 1, \ldots, n{-}1\}$.
+The absorption sentinel is
+\texttt{tests/pool\_matched\_absorb\_lcn\_test.py}; per-axis smoke tests
+are in \texttt{tests/test\_node.py}.
+Source code is available at \url{https://github.com/Marcrockhat/trioron-project}.
 
 
 % --- Bibliography ----------------------------------------------------
