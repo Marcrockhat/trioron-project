@@ -13,11 +13,11 @@ from trioron.core.state import CellState
 
 @dataclass
 class CreditConfig:
-    theta_e: float = 0.3
-    consecutive_tasks: int = 2
-    g_min: float = 1e-4
-    engagement_decay: float = 0.01
-    lock_base_rate: float = 0.5
+    theta_e: float = 0.516
+    consecutive_tasks: int = 4
+    g_min: float = 3.92e-6
+    engagement_decay: float = 0.1
+    lock_base_rate: float = 0.078
     lock_floor: int = 1
 
 

@@ -7,12 +7,12 @@ from collections import deque
 
 @dataclass
 class FrustrationConfig:
-    window_size: int = 50
-    epsilon_improvement: float = 0.01
-    epsilon_reset: float = 0.1
+    window_size: int = 86
+    epsilon_improvement: float = 0.00281
+    epsilon_reset: float = 0.023
     hinge: int = 2
-    gain: float = 0.5
-    ceiling: float = 4.0
+    gain: float = 1.11
+    ceiling: float = 5.04
 
 
 class FrustrationDetector:

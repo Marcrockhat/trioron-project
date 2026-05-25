@@ -18,7 +18,7 @@ from trioron.core.state import CellState
 
 @dataclass
 class ManifoldConfig:
-    replay_steps_per_class: int = 20
+    replay_steps_per_class: int = 14
     code_dim: int = 128
 
 

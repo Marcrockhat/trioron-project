@@ -19,14 +19,14 @@ from .rejuvenate import find_rejuvenation_candidates, rejuvenate, DEFAULT_COOLDO
 
 @dataclass
 class DreamConfig:
-    replay_batch_size: int = 32
-    replay_lr: float = 0.01
-    rejuvenate_base_rate: float = 0.1
+    replay_batch_size: int = 36
+    replay_lr: float = 0.00389
+    rejuvenate_base_rate: float = 0.084
     rejuvenate_floor: int = 1
-    recycle_base_rate: float = 0.1
+    recycle_base_rate: float = 0.462
     recycle_floor: int = 1
-    stability_alpha: float = 0.7
-    stability_beta: float = 0.3
+    stability_alpha: float = 0.786
+    stability_beta: float = 0.438
 
 
 @dataclass

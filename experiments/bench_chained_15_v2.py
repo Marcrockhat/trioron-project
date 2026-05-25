@@ -35,10 +35,10 @@ from trioron.viz.detect import detect_from_directory
 # ── Config ───────────────────────────────────────────────────────
 
 N_GLOBAL_CLASSES = 30
-H_INIT = 32
-BATCH = 64
-LR = 1e-3
-N_GROW_PER_TASK = 4
+H_INIT = 55
+BATCH = 30
+LR = 6.68e-4
+N_GROW_PER_TASK = 9
 PARAM_CAP_BYTES = 200_000
 
 

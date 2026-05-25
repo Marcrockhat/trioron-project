@@ -15,15 +15,15 @@ from trioron.core.state import CellState
 
 @dataclass
 class GrowthConfig:
-    frustration_threshold: float = 2.0
-    frustration_window: int = 100
-    frustration_sustained_frac: float = 0.5
+    frustration_threshold: float = 1.46
+    frustration_window: int = 20
+    frustration_sustained_frac: float = 0.635
     rank_saturation_eps: float = 0.1
     g_min: float = 1e-4
     g_max: float = 1.0
-    inherit_frac: float = 0.5
-    new_edges: int = 4
-    position_jitter: float = 0.02
+    inherit_frac: float = 0.246
+    new_edges: int = 12
+    position_jitter: float = 0.047
 
 
 @dataclass
