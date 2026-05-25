@@ -190,7 +190,13 @@ class Scheduler:
     # ── Gradient mask (commitment 5) ──────────────────────────────
 
     def zero_dormant_grads(self) -> None:
-        """Zero out gradients on dormant cells' parameters."""
+        """Zero out gradients on dormant cells' parameters.
+
+        Protects edges INTO dormant cells (their input weights)
+        AND edges FROM dormant cells (their output connections).
+        Both directions must be frozen to prevent corruption of
+        locked pathways.
+        """
         a = self._arena
         dormant = a.state == CellState.DORMANT
 
@@ -198,6 +204,7 @@ class Scheduler:
             a.bias.grad[dormant] = 0.0
 
         if a.edge_weight.grad is not None and a.edge_cursor > 0:
+            src = a.edge_src[: a.edge_cursor].long()
             dst = a.edge_dst[: a.edge_cursor].long()
-            dormant_edges = dormant[dst]
-            a.edge_weight.grad[: a.edge_cursor][dormant_edges] = 0.0
+            frozen_edges = dormant[dst] | dormant[src]
+            a.edge_weight.grad[: a.edge_cursor][frozen_edges] = 0.0
