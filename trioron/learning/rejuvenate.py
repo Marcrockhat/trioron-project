@@ -28,7 +28,11 @@ def find_rejuvenation_candidates(
     Returns cell ids where engagement exceeds ``engagement_threshold``
     (half the default credit lock threshold).
     """
-    dormant_mask = arena.alive & (arena.state == CellState.DORMANT)
+    dormant_mask = (
+        arena.alive
+        & (arena.state == CellState.DORMANT)
+        & arena.forward_inclusion  # skip astrocytes (storage-only cells)
+    )
     dormant_ids = dormant_mask.nonzero(as_tuple=False).squeeze(-1)
     if dormant_ids.numel() == 0:
         return []
