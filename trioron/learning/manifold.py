@@ -141,16 +141,25 @@ class ManifoldArchive:
                 self.arena.state[astro.cell_id] = CellState.DORMANT
 
     def replay_batches(
-        self, batch_size: int, exclude_class: int | None = None,
+        self,
+        batch_size: int,
+        exclude_class: int | None = None,
+        exclude_classes: set[int] | None = None,
     ) -> list[tuple[torch.Tensor, int]]:
         """Generate replay pseudo-samples for all archived classes.
 
         Returns list of ``(samples, class_id)`` tuples, one per past class,
         each with ``cfg.replay_steps_per_class`` batches collapsed into one.
         """
+        skip: set[int] = set()
+        if exclude_class is not None:
+            skip.add(exclude_class)
+        if exclude_classes is not None:
+            skip.update(exclude_classes)
+
         result = []
         for cid, astro in self._astrocytes.items():
-            if cid == exclude_class:
+            if cid in skip:
                 continue
             if self.arena.state[astro.cell_id] != CellState.DORMANT:
                 continue

@@ -25,7 +25,7 @@ from trioron.bases import seeded
 from trioron.phenotype import default_dispatch_table
 from trioron.learning import (
     CreditTracker, FrustrationDetector, ManifoldArchive,
-    dream_cycle, DreamConfig,
+    dream_cycle, DreamConfig, interleaved_replay_batch,
 )
 from trioron.lifecycle import divide, GrowthConfig
 from trioron.viz import Recorder, export_html
@@ -193,6 +193,20 @@ def train_one_task(
             opt.step()
             opt.zero_grad()
 
+            # Interleaved manifold replay of past tasks
+            replay = interleaved_replay_batch(
+                archive, spec.global_classes,
+                batch_size=BATCH, n_perc=len(code_boundary),
+            )
+            if replay is not None:
+                rx, ry = replay
+                r_logits = sub(rx)
+                r_loss = torch.nn.functional.cross_entropy(r_logits, ry)
+                r_loss.backward()
+                sub.zero_dormant_grads()
+                opt.step()
+                opt.zero_grad()
+
             # Manifold collection
             code = x_batch[:, :len(code_boundary)]
             for gc in spec.global_classes:
@@ -287,7 +301,7 @@ def main():
         dream_cfg = DreamConfig(replay_batch_size=BATCH, replay_lr=LR * 0.1)
         dream_result = dream_cycle(
             sub, credit, archive,
-            current_class=spec.global_classes[-1],
+            current_classes=spec.global_classes,
             cfg=dream_cfg,
         )
         if recorder:

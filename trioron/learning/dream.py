@@ -1,6 +1,6 @@
 """Dream cycle — offline consolidation between tasks.  See spec §4.3.
 
-Sequence: replay → consolidate → rejuvenate-check → compact
+Sequence: replay (all classes) → consolidate → rejuvenate-check → compact
 """
 from __future__ import annotations
 
@@ -54,31 +54,24 @@ def dream_cycle(
     credit: CreditTracker,
     archive: ManifoldArchive,
     *,
+    current_classes: list[int] | int | None = None,
     current_class: int | None = None,
     frustration_pressure: float = 0.0,
     growth_rate: float = 0.0,
     cfg: DreamConfig | None = None,
 ) -> DreamResult:
-    """Run one full dream cycle: replay → consolidate → rejuvenate → compact.
+    """Run one full dream cycle: replay ALL classes → consolidate → rejuvenate → compact.
 
-    Args:
-        substrate: the substrate to consolidate.
-        credit: engagement/locking tracker.
-        archive: manifold replay archive.
-        current_class: the class just trained (excluded from replay).
-        frustration_pressure: mean frustration multiplier from last task.
-        growth_rate: new cells added during last task / sqrt(n_active).
-        cfg: dream cycle configuration.
-
-    Returns:
-        DreamResult summarizing what happened.
+    Replay includes all archived classes (current + past) so the
+    manifold signal for the just-learned task is preserved alongside
+    past tasks.
     """
     cfg = cfg or DreamConfig()
     result = DreamResult()
     phi = stability_factor(frustration_pressure, growth_rate, cfg.stability_alpha, cfg.stability_beta)
 
-    # Stage 1: Replay
-    replay_batches = archive.replay_batches(cfg.replay_batch_size, exclude_class=current_class)
+    # Stage 1: Replay ALL classes (no exclusion)
+    replay_batches = archive.replay_batches(cfg.replay_batch_size)
     if replay_batches:
         result.replay_loss = _run_replay(substrate, replay_batches, cfg)
 
@@ -149,3 +142,38 @@ def _run_replay(
             n_batches += 1
 
     return total_loss / max(n_batches, 1)
+
+
+def interleaved_replay_batch(
+    archive: ManifoldArchive,
+    current_classes: list[int],
+    batch_size: int,
+    n_perc: int,
+) -> tuple[torch.Tensor, torch.Tensor] | None:
+    """Generate one mixed replay batch from all past archived classes.
+
+    Returns (x, y) tensors suitable for cross_entropy, or None if no
+    past classes are archived. Current task classes are excluded —
+    they are represented by real data in the training loop.
+    """
+    past_classes = [
+        cid for cid in archive.class_ids
+        if cid not in current_classes
+        and archive.arena.state[archive.get(cid).cell_id] == CellState.DORMANT
+    ]
+
+    if not past_classes:
+        return None
+
+    per_class = max(1, batch_size // len(past_classes))
+    xs = []
+    ys = []
+
+    for cid in past_classes:
+        astro = archive.get(cid)
+        samples = astro.sample(per_class)
+        x = samples[:, :n_perc] if samples.shape[1] >= n_perc else torch.zeros(per_class, n_perc, device=archive.arena.device)
+        xs.append(x)
+        ys.append(torch.full((x.shape[0],), cid, dtype=torch.long, device=archive.arena.device))
+
+    return torch.cat(xs, dim=0), torch.cat(ys, dim=0)

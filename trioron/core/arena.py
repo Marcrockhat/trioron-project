@@ -8,7 +8,7 @@ from .epigenome import LINEAR, primary_phenotype
 from .state import CellState
 
 _DEFAULT_CAPACITY: int = 4096
-_EDGE_FAN_FACTOR: int = 16
+_EDGE_FAN_FACTOR: int = 64
 
 
 class Arena:
