@@ -49,6 +49,10 @@ class Arena:
         self.output_dim = torch.ones(cap, dtype=torch.int32, device=self.device)
         self.forward_inclusion = torch.ones(cap, dtype=torch.bool, device=self.device)
 
+        # Division mode: probability of symmetric (lateral) division [0, 1]
+        # 1.0 = always lateral (builds width), 0.0 = always axial (builds depth)
+        self.division_mode = torch.full((cap,), 0.8, device=self.device)
+
         # Slot liveness (True if slot holds a cell — active or dormant)
         self.alive = torch.zeros(cap, dtype=torch.bool, device=self.device)
 

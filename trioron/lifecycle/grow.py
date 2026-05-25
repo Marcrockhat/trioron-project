@@ -60,8 +60,22 @@ def divide(
     a.epigenome[cid] = int(a.epigenome[pid].item())
     a.output_dim[cid] = int(a.output_dim[pid].item())
 
-    jitter = torch.randn(3, device=a.device) * cfg.position_jitter
-    a.position[cid] = (a.position[pid] + jitter).clamp(0.0, 1.0)
+    # Division orientation: symmetric (lateral) vs asymmetric (axial)
+    sym_prob = a.division_mode[pid].item()
+    is_symmetric = torch.rand(1, device=a.device).item() < sym_prob
+
+    parent_pos = a.position[pid]
+    if is_symmetric:
+        # Lateral: same z, offset in y (builds width)
+        offset = torch.tensor([0.0, torch.randn(1).item() * 0.05, 0.0], device=a.device)
+    else:
+        # Axial: shift toward higher z (builds depth)
+        offset = torch.tensor([0.0, torch.randn(1).item() * 0.02, 0.03], device=a.device)
+
+    a.position[cid] = (parent_pos + offset).clamp(0.0, 1.0)
+
+    # Inherit division mode with slight mutation
+    a.division_mode[cid] = (a.division_mode[pid] + torch.randn(1, device=a.device).item() * 0.05).clamp(0.0, 1.0)
 
     a.rank[cid] = int(a.rank[pid].item())
     a.refresh_phenotype(cid)

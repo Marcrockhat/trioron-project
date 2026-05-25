@@ -92,21 +92,34 @@ def spawn_stem(
     ids = arena.alloc(n)
     z_lo, z_hi = z_range
 
-    for i, cid in enumerate(ids.tolist()):
-        arena.epigenome[cid] = 0
-        arena.phenotype_cache[cid] = LINEAR
+    # Arrange in bands: n_bands layers, each with n/n_bands cells spread in y
+    n_bands = max(1, min(4, n // 4))
+    cells_per_band = n // n_bands
+    remainder = n - cells_per_band * n_bands
 
-        z = z_lo + (z_hi - z_lo) * i / max(n - 1, 1)
-        y = 0.5 + (torch.randn(1, device=arena.device).item() * y_jitter)
-        arena.position[cid] = torch.tensor(
-            [0.5, max(0.0, min(1.0, y)), z],
-            device=arena.device,
-        )
+    idx = 0
+    for band in range(n_bands):
+        band_z = z_lo + (z_hi - z_lo) * (band + 0.5) / n_bands
+        band_n = cells_per_band + (1 if band < remainder else 0)
 
-        arena.rank[cid] = 1
-        arena.lineage_root[cid] = cid
-        arena.parent[cid] = -1
-        arena.forward_inclusion[cid] = True
+        for j in range(band_n):
+            cid = int(ids[idx].item())
+            arena.epigenome[cid] = 0
+            arena.phenotype_cache[cid] = LINEAR
+
+            y = (j + 0.5) / band_n + torch.randn(1, device=arena.device).item() * y_jitter
+            arena.position[cid] = torch.tensor(
+                [0.5, max(0.0, min(1.0, y)), band_z],
+                device=arena.device,
+            )
+
+            arena.division_mode[cid] = 0.9 - 0.5 * band_z
+
+            arena.rank[cid] = 1
+            arena.lineage_root[cid] = cid
+            arena.parent[cid] = -1
+            arena.forward_inclusion[cid] = True
+            idx += 1
 
     arena.rank_dirty = True
     return ids
@@ -128,9 +141,9 @@ def is_stem(arena: Arena, cell_id: int) -> bool:
 @dataclass
 class GuidanceConfig:
     max_edges: int = 8
-    radius: float = 0.6
-    feedforward_frac: float = 0.8
-    lateral_frac: float = 0.2
+    radius: float = 0.25
+    feedforward_frac: float = 1.0
+    lateral_frac: float = 0.0
 
 
 def axon_guidance(

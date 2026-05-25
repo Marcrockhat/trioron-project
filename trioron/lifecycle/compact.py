@@ -134,6 +134,7 @@ def _defrag(arena: Arena) -> None:
             a.age[new_idx] = a.age[old_idx].clone()
             a.output_dim[new_idx] = a.output_dim[old_idx].clone()
             a.forward_inclusion[new_idx] = a.forward_inclusion[old_idx].clone()
+            a.division_mode[new_idx] = a.division_mode[old_idx].clone()
             a.alive[new_idx] = True
 
     for i in range(new_cursor, a.cursor):

@@ -82,6 +82,7 @@ def _serialize_arena(arena: Arena) -> dict[str, Any]:
         "age": a.age[:a.cursor].clone(),
         "output_dim": a.output_dim[:a.cursor].clone(),
         "forward_inclusion": a.forward_inclusion[:a.cursor].clone(),
+        "division_mode": a.division_mode[:a.cursor].clone(),
         "alive": a.alive[:a.cursor].clone(),
         "edge_src": a.edge_src[:a.edge_cursor].clone(),
         "edge_dst": a.edge_dst[:a.edge_cursor].clone(),

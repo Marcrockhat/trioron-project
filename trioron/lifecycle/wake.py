@@ -102,6 +102,8 @@ def _restore_arena(arena: Arena, saved: dict) -> None:
     a.age[:n] = saved["age"].to(a.device)
     a.output_dim[:n] = saved["output_dim"].to(a.device)
     a.forward_inclusion[:n] = saved["forward_inclusion"].to(a.device)
+    if "division_mode" in saved:
+        a.division_mode[:n] = saved["division_mode"].to(a.device)
     a.alive[:n] = saved["alive"].to(a.device)
 
     ec = saved["edge_cursor"]
