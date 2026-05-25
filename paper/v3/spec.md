@@ -2046,6 +2046,353 @@ is substantially less frequent.
   inherits this caveat; before publishing v2.0 extension results, the
   experiment must be re-run at multi-seed.
 
+### 5.7 Developmental Program (Stem Cells, Morphogens, Redifferentiation)
+
+The v2.0 substrate is a cell-to-cell graph, but the construction
+recipes (Section 2.10) build pre-wired layer-like structures. This
+section specifies the **developmental program** — the mechanism by
+which an undifferentiated cell population self-organizes into a
+functional substrate. The developmental program replaces pre-wired
+construction with signal-driven differentiation, making the
+substrate's architecture an emergent property of its inputs.
+
+#### 5.7.1 Stem Cells
+
+A **stem cell** is a cell with no expression genes set (epigenome
+bits 0–4 all zero). It occupies a position in the arena, has edges
+(or none), and participates in the forward pass as a pass-through
+(identity on its summed inputs). It is uncommitted — it has not
+differentiated into a phenotype.
+
+```python
+STEM = -1  # sentinel; no expression gene set
+
+def spawn_stem(arena, n, region):
+    """Spawn n undifferentiated cells in the given region.
+
+    region: (center, radius) in position space. Cells are
+    scattered uniformly within the ball.
+    """
+```
+
+Stem cells are the substrate's **progenitor pool**. They are spawned:
+
+1. **At construction** — a `developmental` base spawns perception
+   cells, output cells, and a pool of stem cells between them.
+   Unlike `seeded`, no interior cells are pre-assigned a phenotype;
+   no edges are pre-wired between perception and output.
+2. **At graft boundaries** — when a donor is grafted onto a
+   recipient (Section 5.3), stem cells are spawned in the boundary
+   region between the two populations. They differentiate to bridge
+   the donor and recipient, forming connective tissue.
+3. **Under frustration** — when the frustration detector fires and
+   the growth trigger condition is met (Section 5.1), new cells are
+   spawned as stems, not as clones of the parent's phenotype.
+
+#### 5.7.2 Morphogen Field (Adaptive)
+
+A **morphogen field** is a smooth, learnable function over position
+space that encodes regional identity. The field tells each cell
+"where it is" in a developmental sense — not just its (x, y, z)
+coordinate, but its role in the substrate's functional hierarchy.
+
+The morphogen field is parameterized as a small learnable
+projection from position to regional identity:
+
+$$\phi(c) = \sigma(W_\phi \cdot \text{position}(c) + b_\phi)$$
+
+where $W_\phi \in \mathbb{R}^{R \times 3}$ maps 3D position to
+$R$ regional identity channels (default $R = 4$, one per candidate
+phenotype), $b_\phi$ is a bias, and $\sigma$ is sigmoid. The
+parameters $W_\phi, b_\phi$ are substrate-level parameters trained
+alongside cell weights.
+
+**Initialization.** $W_\phi$ is initialized so that the z-component
+dominates: the starting morphogen approximates the static z-gradient
+from Section 5.7.3, but the substrate can learn to reshape regional
+boundaries as training progresses. For example, if a vision task
+benefits from more CONV depth than the default z-threshold assigns,
+the morphogen field shifts the CONV→LINEAR boundary deeper.
+
+**Adaptation signal.** The morphogen is updated by the same
+optimizer that trains cell weights. Its gradient comes from the
+loss: if reassigning a cell's phenotype (via the morphogen shift)
+would reduce loss, the morphogen shifts. This is automatic — no
+explicit morphogen-training phase is needed.
+
+**Cost.** $W_\phi$ has $4 \times 3 + 4 = 16$ parameters. The
+morphogen evaluation is a single matrix multiply per cell, run once
+per compile (not per batch). Negligible cost.
+
+#### 5.7.3 Positional Differentiation (Phase B)
+
+When a stem cell differentiates, its morphogen value $\phi(c)$
+determines the default phenotype. The $R$-channel morphogen output
+maps to phenotypes via argmax:
+
+| Channel | Phenotype | Typical region |
+|---|---|---|
+| 0 | CONV | Near perception; local spatial features |
+| 1 | LINEAR | Mid-depth; feature integration |
+| 2 | ATTENTION | Deep; relational reasoning |
+| 3 | LINEAR | Near output; final projection |
+
+Differentiation is triggered by the cell's first non-zero gradient
+signal. When a stem cell receives gradient (from the loss
+propagating through its connections), it:
+
+1. Evaluates the morphogen field: $\phi(c) \in \mathbb{R}^R$.
+2. Selects phenotype $= \arg\max_r \phi_r(c)$.
+3. Sets the corresponding expression gene in its epigenome.
+4. Sets the CREDIT_ELIGIBLE gene.
+5. If the selected phenotype is CONV, sets the WEIGHT_TIED_LINEAGE
+   gene (Section 5.7.4a).
+6. Refreshes its phenotype cache.
+7. Is now committed — it participates in dispatch as its new
+   phenotype on the next compile.
+
+A stem cell that never receives gradient (disconnected, or in a
+quiescent region) remains undifferentiated indefinitely. It costs
+one bias parameter and zero compute (pass-through in dispatch).
+
+#### 5.7.4 Axon Guidance (Proximity-Based Wiring)
+
+Stem cells do not start with edges. Edges form through **axon
+guidance** — a proximity-based wiring rule that runs after each
+division or spawn event:
+
+```python
+def axon_guidance(arena, cell_id, max_edges=6, radius=0.3):
+    """Wire cell_id to nearby cells based on position proximity.
+
+    Edges are directed: cell_id receives input from cells at
+    LOWER z (closer to perception) and sends output to cells at
+    HIGHER z (closer to output).
+
+    Within the radius, candidates are ranked by distance; the
+    closest max_edges cells are wired.
+    """
+```
+
+Axon guidance replaces the pre-wired fully-connected edges of the
+`seeded` base. The resulting connectivity is:
+
+- **Spatially local** — each cell connects to its neighbors, not
+  to all cells in the substrate. This naturally produces
+  convolutional-like receptive fields near the perception face.
+- **Hierarchically directed** — edges flow from low-z to high-z,
+  creating a feedforward hierarchy without explicit layer
+  boundaries.
+- **Sparse** — each cell has at most `max_edges` inputs, bounded
+  by the fan-in cap. Total edge count grows as
+  $O(n_\text{cells} \cdot \text{max\_edges})$, not
+  $O(n^2)$.
+
+Edge budget allocation:
+- 80% of `max_edges` to lower-z inputs (feedforward)
+- 20% to same-z lateral connections (see §5.7.4b)
+- No backward edges (high-z to low-z) without the RECURRENT gene
+  (Section 3.4)
+
+#### 5.7.4a Lineage-Based Weight Sharing (CONV cells)
+
+CONV cells from the same **lineage root** share edge weights. When
+a CONV cell divides, its child inherits a pointer to the parent's
+weight row, not a copy. All cells in the lineage apply the same
+learned filter at their respective positions.
+
+This is controlled by the `WEIGHT_TIED_LINEAGE` gene (epigenome
+bit 9, already defined in §2.2). The mechanism:
+
+1. When a CONV cell with WEIGHT_TIED_LINEAGE divides, the child's
+   edge weights are **aliased** to the parent's weights. The arena
+   stores one weight per lineage root; all descendants index into
+   the same weight.
+2. During backward, gradients from all cells in the lineage
+   accumulate into the shared weight. This is mathematically
+   equivalent to a convolution: the same filter applied at every
+   position, trained from the union of all positions' gradients.
+3. Non-CONV cells do NOT share weights even if they share a lineage
+   root. Weight sharing is phenotype-gated.
+
+**Why this explains optical illusions.** Shared weights mean the
+same edge detector fires identically regardless of spatial position.
+A Müller-Lyer arrow triggers the same line-end detector at every
+location — the cell cannot distinguish "this is an arrow" from
+"this is a corner" because it applies the same filter everywhere.
+The illusion is not a bug; it is the architectural cost of
+translation invariance. Weight sharing makes perception efficient
+but brittle to adversarial spatial patterns.
+
+**Implementation.** The arena gains a `weight_root` int32 tensor
+(per-cell). For non-tied cells, `weight_root[c] = c`. For tied
+cells, `weight_root[c] = lineage_root[c]`. The scheduler's
+forward pass indexes `arena.edge_weight` via `weight_root` instead
+of directly. The optimizer sees only the root's weight; tied
+descendants contribute gradient but own no parameters.
+
+#### 5.7.4b Lateral Signaling
+
+Cells broadcast a **lateral signal** to neighbors within a
+signaling radius $r_s$ (default $r_s = 0.15$). The lateral signal
+carries three pieces of information:
+
+1. **Position** — the cell's (x, y, z) coordinate.
+2. **Phenotype** — what expression gene the cell has committed to
+   (or STEM if uncommitted).
+3. **Engagement** — how active the cell is (from the credit
+   tracker's EMA).
+
+Lateral signaling serves three functions:
+
+**A. Differentiation coordination.** When a stem cell is about to
+differentiate, it checks its lateral neighbors' phenotypes. If
+$\geq 50\%$ of neighbors within $r_s$ already express the same
+phenotype that the morphogen would assign, the cell may select an
+under-represented alternative phenotype instead (the next-highest
+morphogen channel). This prevents homogeneous clumps and encourages
+phenotypic diversity in dense regions — analogous to lateral
+inhibition (Notch signaling) in real neurogenesis.
+
+**B. Shortest-path wiring.** During axon guidance (Section 5.7.4),
+a cell knows the positions of all neighbors within $r_s$ via their
+lateral broadcast. This allows guidance to prefer the shortest
+physical path: among candidate input cells at lower z, pick the
+nearest ones first. The result is that wiring efficiency tracks
+physical proximity — long-range connections form only when local
+connections are saturated.
+
+**C. Density regulation.** The number of lateral signals a cell
+receives is a proxy for local cell density. When a cell's neighbor
+count exceeds $N_\text{dense}$ (default 12), it inhibits further
+division in that region: the frustration-gated growth trigger
+(Section 5.1) will not spawn new cells within $r_s$ of a dense
+cell. This prevents overcrowding and distributes growth to sparse
+regions — analogous to contact inhibition in tissue growth.
+
+**Cost.** Lateral signaling is evaluated at compile time (not per
+batch). Each cell scans neighbors within $r_s$ using the position
+tensor — an $O(n^2)$ scan in the naive case, or $O(n \log n)$
+with spatial indexing. At Phase 1 scale (≤2048 cells), the naive
+scan is ~1 ms. At 100K cells, spatial indexing (k-d tree or grid
+hash) is needed; this is an implementation concern, not a design
+change.
+
+#### 5.7.5 Signal-Driven Redifferentiation (Phase A Override)
+
+Positional differentiation (Phase B) sets the default. **Signal-
+driven redifferentiation** (Phase A) overrides it when the cell's
+phenotype is a poor fit for the signal it receives.
+
+The mechanism is inspired by plant hormone signaling: a cell that
+is frustrated (receiving strong gradient but not reducing loss)
+emits a **redifferentiation signal**. The signal is local — it
+affects only the cell itself, not its neighbors.
+
+**Trigger.** A committed cell becomes eligible for
+redifferentiation when:
+
+1. Its per-cell frustration (loss contribution not decreasing over
+   $W_r$ batches, default $W_r = 200$) exceeds the
+   redifferentiation threshold $\theta_r$ (default $\theta_r = 3.0$,
+   calibrated to fire only under sustained poor fit).
+2. It has been committed to its current phenotype for at least
+   $T_\text{min}$ tasks (default $T_\text{min} = 2$) — no
+   thrashing on first exposure.
+
+**Process.** When triggered:
+
+1. The cell's current expression gene is cleared.
+2. The cell enters a **trial period** of $W_\text{trial}$ batches
+   (default 100), during which it tries each candidate phenotype
+   in sequence (one per $W_\text{trial} / |\text{candidates}|$
+   batches).
+3. Loss-under-each-phenotype is recorded. The cell commits to the
+   phenotype with the lowest mean loss.
+4. If no phenotype improves over the original, the cell reverts.
+
+**Analogy.** This is the auxin response: a root cell that finds
+itself at a graft junction receives wound signals, dedifferentiates,
+then redifferentiates as shoot tissue. The cell doesn't "know" what
+to become — it tries candidates and the gradient selects.
+
+#### 5.7.6 The Developmental Base
+
+A new base `developmental` replaces `seeded` for the cell-first
+developmental path:
+
+```python
+trioron.bases.developmental(input_dim, initial_classes,
+                            stem_pool=64)
+```
+
+Construction sequence:
+
+1. Allocate `input_dim` perception cells at z=0, scattered along
+   the y-axis.
+2. Allocate `initial_classes` output cells at z=1.
+3. Allocate `stem_pool` stem cells uniformly in the interior
+   (z ∈ [0.1, 0.9]).
+4. Initialize the adaptive morphogen field $W_\phi, b_\phi$ with
+   z-dominant defaults.
+5. Run axon guidance on every cell — this produces the initial
+   sparse, proximity-based wiring.
+6. Do NOT set any expression genes on stem cells. They
+   differentiate on first gradient.
+
+The first forward pass propagates input through the stem cells
+(pass-through). The first backward pass triggers differentiation.
+By the end of the first training batch, the substrate has a
+committed architecture — but one that emerged from position and
+signal, not from pre-wiring.
+
+#### 5.7.7 Interaction with Existing Mechanisms
+
+| Mechanism | Interaction |
+|---|---|
+| **Frustration (§4.2)** | Fires on the substrate level as before. For stem cells, frustration triggers spawn (not division of existing phenotyped cells). |
+| **Division (§5.1)** | Daughter of a committed cell inherits the parent's phenotype. Daughter of a CONV cell with WEIGHT_TIED_LINEAGE shares the parent's weights. Daughter of a stem cell is also a stem cell. |
+| **Credit locking (§4.1)** | Stem cells are not credit-eligible (no CREDIT_ELIGIBLE gene by default). They acquire it upon differentiation. |
+| **Manifold replay (§4.5)** | Unchanged. Manifold astrocytes are phenotype-independent; they store code-space statistics regardless of whether the producing cells are CONV, ATTENTION, or LINEAR. |
+| **Astrocyte-gated replay** | The manifold log-likelihood evaluation is independent of cell phenotype. Gated replay works identically whether the substrate was built by `seeded` or `developmental`. |
+| **Grafting (§5.3)** | Stem cells spawned at the graft boundary differentiate based on the donor's signal profile. The adaptive morphogen field extends continuously across the boundary. |
+| **Compaction (§5.5)** | Undifferentiated stem cells that remain uncommitted for $M_\text{stem}$ tasks (default 5) are recyclable — they had the chance to differentiate and didn't. |
+| **Redifferentiation (§5.7.5)** | Only committed cells redifferentiate. Stem cells differentiate (first commitment), which is a one-way transition on a different code path. |
+| **Lateral signaling (§5.7.4b)** | Coordinates differentiation, guides wiring, regulates density. Evaluated at compile time, not per batch. |
+
+#### 5.7.8 Honest Limits
+
+- **Phenotype implementations required.** This section assumes
+  CONV, ATTENTION, RECURRENT, and DENDRITE phenotypes are
+  implemented in `phenotype/`. Currently only LINEAR is
+  implemented. The developmental program degrades gracefully: if
+  only LINEAR exists, all stem cells differentiate to LINEAR
+  regardless of morphogen value, and the substrate is equivalent
+  to a dynamically-wired dense network.
+- **Weight sharing is CONV-only.** LINEAR, ATTENTION, and other
+  phenotypes do not share weights across lineage. This is by design:
+  weight sharing is the defining property of convolution (translation
+  invariance). Non-convolutional cells need position-specific
+  weights to learn position-dependent features.
+- **Lateral signaling is $O(n^2)$ naive.** At Phase 1 scale
+  (≤2048 cells), the naive position scan is ~1 ms. At 100K+
+  cells, spatial indexing is required — k-d tree or grid hash.
+  This is an implementation optimization, not a design change.
+- **Adaptive morphogen can overfit.** With only 16 parameters,
+  the morphogen is unlikely to overfit in practice. But if the
+  task is very small (few batches), the morphogen may not receive
+  enough gradient to adapt meaningfully. The z-dominant
+  initialization ensures it works even without adaptation.
+- **Redifferentiation is expensive.** The trial period pauses
+  useful learning for that cell. The threshold $\theta_r$ must be
+  high enough that redifferentiation fires rarely — it is a last
+  resort, not a routine operation.
+- **No inter-cell chemical signaling.** Lateral signaling
+  broadcasts position/phenotype/engagement but does not carry
+  arbitrary learned messages. True chemical signaling (where cells
+  emit and receive learned signal molecules) would enable richer
+  coordination but adds significant complexity. Deferred.
+
 ---
 
 ## 6. Performance Contract
