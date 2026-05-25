@@ -6,3 +6,8 @@ from .ship import ship
 from .wake import wake, wake_for_training, get_optimizer_state
 from .extend import extend_envelope
 from .graft import graft, GraftResult, compose_heads
+from .developmental import (
+    spawn_stem, axon_guidance, differentiate, differentiate_all_stems,
+    is_stem, is_dense, neighbor_count,
+    MorphogenField, GuidanceConfig,
+)

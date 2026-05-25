@@ -46,6 +46,7 @@ class Substrate:
         self.graph = CellGraph(arena)
         self.lineage = Lineage(arena)
         self.scheduler = Scheduler(arena, dispatch_table)
+        self.morphogen = None  # set by developmental base if used
 
     # ── Forward ───────────────────────────────────────────────────
 
@@ -77,12 +78,17 @@ class Substrate:
 
     def trainable_tensors(self) -> list[torch.Tensor]:
         """Return tensors that should be passed to the optimizer."""
-        return [self.arena.bias, self.arena.edge_weight]
+        tensors = [self.arena.bias, self.arena.edge_weight]
+        if self.morphogen is not None:
+            tensors.extend(self.morphogen.trainable_tensors())
+        return tensors
 
     def prepare_training(self) -> None:
         """Enable gradients on weight tensors and compile."""
         self.arena.bias.requires_grad_(True)
         self.arena.edge_weight.requires_grad_(True)
+        if self.morphogen is not None:
+            self.morphogen.prepare_training()
         self.compile()
 
     def zero_dormant_grads(self) -> None:
