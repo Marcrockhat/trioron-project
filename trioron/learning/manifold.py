@@ -83,6 +83,12 @@ class ManifoldAstrocyte:
         eps = torch.randn(batch_size, self.code_dim, device=self.arena.device)
         return self.mu + self.sigma * eps
 
+    def log_likelihood(self, code_batch: torch.Tensor) -> torch.Tensor:
+        """Diagonal-Gaussian log p(code | class) for each sample. Returns [B]."""
+        sigma = self.sigma
+        diff = code_batch[:, :self.code_dim] - self.mu
+        return -0.5 * ((diff / sigma) ** 2 + sigma.log() * 2).sum(dim=-1)
+
 
 class ManifoldArchive:
     """Manages all manifold astrocytes across the curriculum."""

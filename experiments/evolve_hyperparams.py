@@ -225,10 +225,12 @@ def evaluate_genome(genome: dict, seed: int, bundle: DatasetBundle, specs: list)
                 opt.step()
                 opt.zero_grad()
 
-                # Interleaved manifold replay of past tasks
+                # Astrocyte-gated replay of at-risk past tasks
+                code = x_batch[:, :len(code_boundary)]
                 replay = interleaved_replay_batch(
                     archive, spec.global_classes,
                     batch_size=batch, n_perc=len(code_boundary),
+                    code_batch=code,
                 )
                 if replay is not None:
                     rx, ry = replay
@@ -238,8 +240,6 @@ def evaluate_genome(genome: dict, seed: int, bundle: DatasetBundle, specs: list)
                     sub.zero_dormant_grads()
                     opt.step()
                     opt.zero_grad()
-
-                code = x_batch[:, :len(code_boundary)]
                 for gc in spec.global_classes:
                     mask = y_batch == gc
                     if mask.any():

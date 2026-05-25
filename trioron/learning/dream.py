@@ -149,12 +149,26 @@ def interleaved_replay_batch(
     current_classes: list[int],
     batch_size: int,
     n_perc: int,
+    code_batch: torch.Tensor | None = None,
+    top_k: int = 4,
 ) -> tuple[torch.Tensor, torch.Tensor] | None:
-    """Generate one mixed replay batch from all past archived classes.
+    """Astrocyte-gated replay: only replay the K most at-risk past classes.
 
-    Returns (x, y) tensors suitable for cross_entropy, or None if no
-    past classes are archived. Current task classes are excluded —
-    they are represented by real data in the training loop.
+    Each astrocyte evaluates how much the current input overlaps its
+    manifold. Only the top-K highest-overlap classes fire protective
+    replay. Cost is O(K) regardless of total class count.
+
+    Args:
+        archive: the manifold archive.
+        current_classes: classes being trained now (excluded from replay).
+        batch_size: total replay samples to generate.
+        n_perc: number of perception cells (input dim).
+        code_batch: current training batch's perception codes [B, code_dim].
+            If None, falls back to uniform replay over all past classes.
+        top_k: max number of past classes to replay per batch.
+
+    Returns:
+        (x, y) tensors for cross_entropy, or None if no past classes.
     """
     past_classes = [
         cid for cid in archive.class_ids
@@ -164,6 +178,16 @@ def interleaved_replay_batch(
 
     if not past_classes:
         return None
+
+    if code_batch is not None and len(past_classes) > top_k:
+        scores = []
+        for cid in past_classes:
+            astro = archive.get(cid)
+            ll = astro.log_likelihood(code_batch)
+            scores.append(ll.mean().item())
+
+        ranked = sorted(zip(scores, past_classes), reverse=True)
+        past_classes = [cid for _, cid in ranked[:top_k]]
 
     per_class = max(1, batch_size // len(past_classes))
     xs = []

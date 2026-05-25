@@ -193,10 +193,12 @@ def train_one_task(
             opt.step()
             opt.zero_grad()
 
-            # Interleaved manifold replay of past tasks
+            # Astrocyte-gated replay of at-risk past tasks
+            code = x_batch[:, :len(code_boundary)]
             replay = interleaved_replay_batch(
                 archive, spec.global_classes,
                 batch_size=BATCH, n_perc=len(code_boundary),
+                code_batch=code,
             )
             if replay is not None:
                 rx, ry = replay
@@ -207,8 +209,7 @@ def train_one_task(
                 opt.step()
                 opt.zero_grad()
 
-            # Manifold collection
-            code = x_batch[:, :len(code_boundary)]
+            # Manifold collection (code already computed above)
             for gc in spec.global_classes:
                 mask = y_batch == gc
                 if mask.any():
