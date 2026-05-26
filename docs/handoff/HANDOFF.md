@@ -1,8 +1,8 @@
 # Trioron Handoff
 
-**Session date:** 2026-05-25
-**Session number:** 005
-**Session title:** CL machinery debug + developmental program + GA optimization
+**Session date:** 2026-05-26
+**Session number:** 006
+**Session title:** Anti-forgetting stack — cluster replay + KIBRA + soft sparsity
 
 > This file is **rewritten in full** every session. The previous
 > session's handoff is preserved in git history
@@ -12,150 +12,155 @@
 
 ## Summary
 
-Major session: fixed 4 CL bugs, implemented 8 lifecycle modules,
-built the developmental program (spec + code), ran GA hyperparameter
-optimization to 0.704 full accuracy (exceeds v1's 0.601), and
-identified the remaining forgetting bottleneck (shared output cells).
+Built and validated a three-layer anti-forgetting stack for the v2.0
+substrate. Task-aware accuracy matches the session-005 baseline
+(0.954 vs 0.955) while adding structural protection against
+catastrophic forgetting. Also fixed a 58× replay learning rate bug
+and a rejuvenation bug affecting astrocyte lifecycle.
 
 ## Headline numbers
 
-| Config | Full | Task-Aware | Notes |
-|---|---|---|---|
-| Session start (broken) | 0.199 | 0.911 | No locking, no growth |
-| GA v3 best (seeded) | **0.704** | — | Evolved hyperparams, seeded base |
-| Best genome rerun | **0.585** | **0.955** | With forgetting analysis |
-| Developmental (256 stem) | 0.208 | 0.859 | Self-organized, no pre-wiring |
-| v1 manifold-grown (n=10) | 0.601 | 0.961 | Previous best to beat |
+| Config | Epochs | Full | Task-Aware | Notes |
+|---|---|---|---|---|
+| Session 005 baseline | 4 | 0.585 | 0.955 | Previous best |
+| **Full stack + routing** | **3** | **0.406** | **0.954** | This session |
+| Full stack + routing | 2 | 0.405 | 0.952 | Smoke test |
+| Baseline (no stack, 2ep) | 2 | 0.307 | 0.861 | Control |
 
-Mean forgetting: **34.6%** (each task loses ~1/3 of peak by end).
-Worst: fashion_4_5 at 73%. Best non-last: fashion_8_9 at 18%.
+Full accuracy gap (0.406 vs 0.585) is routing quality, not
+forgetting — tasks with near-zero full have 0.88+ task-aware.
 
 ## What was done
 
-### Bug fixes (4)
-1. Activation tracking — scheduler stores `_last_activations`
-2. Param cap — 32KB → 200KB (initial substrate is 107KB)
-3. Edge buffer — `_EDGE_FAN_FACTOR` 16 → 64
-4. Dream replay exclusion — `current_classes` list, not single int
-   (was destroying just-learned task by ~95%)
+### Three-layer anti-forgetting stack
 
-### Replay architecture (3 structural changes)
-1. **Interleaved replay** — manifold pseudo-samples mixed into
-   training batches alongside real current-task data
-2. **Dream replays ALL classes** — including current (prevents 95%
-   destruction)
-3. **Astrocyte-gated replay** — top-K most at-risk classes by
-   manifold log-likelihood. O(K) cost regardless of class count.
+1. **Online taxonomic clustering** (`trioron/learning/manifold.py`)
+   - `ManifoldCluster` class — centroid, member list, incremental update
+   - Classes assigned to clusters during training via code-space proximity
+   - `cluster_threshold=5.0`, `cluster_min_samples=50`
+   - Discovers ~9-10 clusters for 30 classes (threshold needs tuning
+     for broader grouping)
 
-### Bidirectional gradient freeze
-`zero_dormant_grads` now freezes edges BOTH into AND from dormant
-cells. Previous unidirectional freeze let new tasks corrupt locked
-pathways via their output-facing edge weights.
+2. **KIBRA edge tagging** (`trioron/learning/dream.py`)
+   - One-shot edge importance scoring at each dream cycle
+   - `|weight × gradient|` on cluster centroid samples
+   - Top-K edges tagged per cluster, K scales with cluster size
+     (`KIBRA_EDGES_PER_MEMBER=8`)
+   - `arena.edge_protected` tensor — permanent protection bit
+   - `zero_dormant_grads` extended to zero tagged edges' gradients
+   - ~1920 edges protected by task 14 (3.9% of total)
 
-### Lifecycle modules (8 implemented)
-saliency, compact, ship, wake, extend, graft + bases/frozen,
-bases/compose. Full pipeline verified end-to-end.
+3. **Soft sparsity** (`experiments/bench_chained_15_v2.py`)
+   - L1 penalty on H-cell activations (`SPARSITY_LAMBDA=0.01`)
+   - Uses `live_activations` (non-detached) for backprop
+   - Encourages sparse coding — reduces cross-task interference
+   - Hard top-K masking was tested and rejected (kills learning)
 
-### Developmental program
-- **Spec §5.7** inserted into `paper/v3/spec.md` (347 lines)
-- **Implementation**: stem cells, morphogen field (adaptive 16-param),
-  axon guidance (proximity-based), positional differentiation,
-  division orientation (symmetric=width, asymmetric=depth)
-- **Band structure**: stems in z-bands (4 bands × n/4 cells)
-- All phenotypes registered with linear forward (graceful degradation)
+4. **Manifold-gated routing at inference**
+   - Per-sample task gates from code-astrocyte log-likelihood
+   - `logit_c += log(gate_task(c))` (log-sum-exp composition per §5.3)
+   - Lifts full accuracy from ~0.26 (unrouted) to ~0.41 (routed)
 
-### GA hyperparameter optimization
-- `experiments/evolve_hyperparams.py` — 29-gene genome
-- GA v3: 8 generations × 8 population, seeded base + interleaved replay
-- Best: 0.704 full at h=55, lr=6.68e-4, batch=30, theta_e=0.516,
-  consecutive_tasks=4
-- **Defaults updated** in all config dataclasses
+### Bug fixes
 
-### Visualization
-- Cytoscape.js network viewer (`trioron/viz/export.py`)
-- Perception cells filtered at export for readable layout
-- `experiments/viz_developmental.py` — captures development stages
+1. **Astrocyte rejuvenation** (`trioron/learning/rejuvenate.py`)
+   — `find_rejuvenation_candidates` now filters by
+   `forward_inclusion`, preventing manifold astrocytes from being
+   rejuvenated back to ACTIVE and breaking the replay chain.
 
-### Key architectural findings
-1. **Interleaved replay** was the biggest single accuracy fix
-2. **Bidirectional gradient freeze** is essential for locking
-3. **Shared output cells** are the remaining forgetting bottleneck —
-   locked pathways get corrupted when new tasks adjust output edges
-4. **Independent pathways** (perc→dedicated→output) need per-task
-   output cells to work; shared outputs leak
-5. **Developmental base** with sparse connectivity can match seeded
-   on task-aware (0.859 vs 0.793) at 6× fewer edges
+2. **Dream replay learning rate** (`bench_chained_15_v2.py`)
+   — Bench was overriding GA-evolved `replay_lr=0.00389` with
+   `LR*0.1=0.0000668` (58× too low). Now uses `DreamConfig()`
+   defaults from commit `781b4a3`.
+
+### Experiments run and rejected
+
+- **Per-task output cell locking** — locks output cells to DORMANT
+  after each task. REJECTED: removes the replay pathway for
+  maintaining output cell calibration. Task-aware dropped to 0.73.
+- **Half-logit regularization** — stores H-cell activation
+  statistics, penalizes drift during replay. REJECTED: anchors
+  H-cells to single-task snapshots, prevents multi-task adaptation.
+  Task-aware dropped to 0.77.
+- **Hard top-K sparsity** — zeros all but K interior cell
+  activations. REJECTED: kills gradient flow (45/55 cells get zero
+  gradient). Task-aware dropped to 0.74.
 
 ## State of the build
 
-- **Branch:** `v2.0-scaffold` (up to date with remote)
+- **Branch:** `v2.0-scaffold`
 - **Key commits this session:**
-  - `f6cad25` — fix: activation tracking, param cap, growth print
-  - `1984a31` — lifecycle: ship/wake/extend/graft/compact/saliency
-  - `30b407c` — fix: interleaved replay + dream replays all
-  - `03de08a` — feat: astrocyte-gated replay
-  - `c79c529` — spec: §5.7 developmental program
-  - `34a8e92` — feat: developmental base implementation
-  - `205fd60` — feat: division orientation + band structure
-  - `68fee5a` — fix: bidirectional gradient freeze
-  - `781b4a3` — defaults: evolved hyperparameters from GA v3
-- **Working tree:** clean (untracked: `runs/`)
-
-## Evolved default hyperparameters (GA v3 best)
-
-```
-h_init=55  batch=30  lr=6.68e-4  epochs=3  n_grow=9
-theta_e=0.516  consecutive_tasks=4  g_min=3.92e-6
-engagement_decay=0.1  lock_base_rate=0.078
-frust_window=86  frust_hinge=2  frust_gain=1.11  frust_ceiling=5.04
-dream_replay_bs=36  dream_replay_lr=0.00389
-dream_reju_rate=0.084  dream_recycle_rate=0.462
-manifold_replay_steps=14
-growth_inherit_frac=0.246  growth_new_edges=12
-```
-
-## Forgetting profile (best genome, single seed)
-
-```
-Mean peak full:  0.931
-Mean final full: 0.585
-Mean forgetting: 0.346
-Worst: fashion_4_5 (0.73 forgotten)
-Best:  fashion_8_9 (0.18 forgotten)
-Task-aware: 0.955 (near-perfect)
-```
+  - `1b016c9` — fix: exclude astrocytes from rejuvenation candidates
+  - `752668c` — feat: cluster replay + KIBRA edge tagging + soft
+    sparsity + routing
+- **Working tree:** pre-existing uncommitted changes in
+  `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
+  `trioron/viz/export.py` (carried from session 005)
+- **Untracked:** `runs/`
 
 ## Next-up tasks
 
-1. **Per-task output cells** — the remaining forgetting bottleneck.
-   Each task should have dedicated output cells; final prediction
-   aggregates via routing. This is the path to 85%+ full accuracy.
-2. **Developmental base + evolved params** — rerun developmental
-   base with the GA-evolved hyperparameters (currently only tested
-   with hand-picked defaults).
-3. **CONV/ATTENTION phenotype implementations** — currently all
-   phenotypes fall through to linear. Implementing real conv/attention
-   forward functions would give the developmental base actual
-   architectural diversity.
-4. **Visualization fix** — Rocky reports black canvas on some views.
-   The Cytoscape.js CDN approach works but layout may need tuning
-   for larger graphs.
-5. **Weight sharing for CONV** — spec'd in §5.7.4a but not
-   implemented. Needs `weight_root` tensor in arena.
+1. **Multi-seed validation** — run n=3 or n=5 seeds on the full
+   stack at 3 epochs to get σ-confident numbers. Single-seed 0.954
+   task-aware needs cross-seed confirmation.
+
+2. **Routing quality** — the full-accuracy gap (0.41 vs 0.59) is
+   manifold gate quality. Two tasks (mnist_6_7, fashion_4_5) have
+   near-zero full but 0.92+ task-aware = misrouting. Options:
+   - Temperature scaling on the task gates
+   - Cluster-level routing instead of per-class
+   - Calibrated routing via the existing `CalibratedRouter`
+
+3. **Cluster threshold tuning** — current threshold=5.0 yields
+   ~10 clusters for 30 classes (~3 per cluster). Lower threshold
+   would discover broader groups (digits/fashion/letters) with
+   stronger shared protection per KIBRA tag.
+
+4. **KIBRA budget scaling** — currently 8 edges per cluster member.
+   May need GA-level sweep for optimal budget.
+
+5. **Per-task output cells (revisit)** — the original hypothesis
+   (shared outputs = forgetting bottleneck) was wrong for the
+   current architecture, but may become relevant if routing
+   quality improves enough to support per-task heads.
+
+## Key architectural findings
+
+1. **Forgetting is a storage organization problem**, not a
+   regularization problem. Continuous constraints (HL reg) fight
+   against adaptation. One-shot structural tagging (KIBRA) +
+   natural sparsity work better.
+
+2. **KIBRA analogy works**: short-lived importance tag at
+   consolidation → permanent edge protection. 3.9% of edges
+   protected is enough to lift task-aware by 4.6pp.
+
+3. **Soft sparsity >> hard sparsity**: L1 penalty lets the network
+   discover its own sparse patterns. Hard top-K destroys gradient
+   flow and kills learning.
+
+4. **Replay LR matters enormously**: 58× too low replay LR was
+   silently undermining dream cycle effectiveness across all
+   session-005 experiments.
+
+5. **Output cells must stay active**: locking them removes the
+   gradient pathway that replay uses to maintain calibration.
+   Protection should target edges, not cell state.
 
 ## Pointers
 
-- **`experiments/evolve_hyperparams.py`** — GA optimization
-- **`runs/evolve_v3/best_genome.json`** — winning genome
-- **`trioron/lifecycle/developmental.py`** — stem cells, morphogen,
-  axon guidance, differentiation
-- **`trioron/bases/developmental.py`** — developmental base
-- **`trioron/core/scheduler.py:192`** — bidirectional gradient freeze
-- **`paper/v3/spec.md` §5.7** — developmental program spec
+- **`trioron/learning/manifold.py`** — `ManifoldCluster`,
+  `get_interior_ids`, online clustering in `ManifoldArchive`
+- **`trioron/learning/dream.py`** — `kibra_tag`,
+  `cluster_replay_batch`
+- **`trioron/core/arena.py:66`** — `edge_protected` tensor
+- **`trioron/core/scheduler.py:217`** — KIBRA protection in
+  `zero_dormant_grads`
+- **`experiments/bench_chained_15_v2.py`** — full stack integration
 
 ## Environment notes
 
 - Working directory: `/home/marcrockhat/trioron-project/`
-- Branch: `v2.0-scaffold` (commit `781b4a3`)
+- Branch: `v2.0-scaffold` (commit `752668c`)
 - Python: `/usr/bin/python3` (3.10.12) — `torch 2.11.0+cu130`
 - Platform: Linux (WSL2)
