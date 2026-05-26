@@ -40,12 +40,13 @@ class Substrate:
         self,
         arena: Arena,
         dispatch_table: dict[int, ForwardFn] | None = None,
+        sparsity_k: int = 0,
     ) -> None:
         self.arena = arena
         self.envelope = arena.envelope
         self.graph = CellGraph(arena)
         self.lineage = Lineage(arena)
-        self.scheduler = Scheduler(arena, dispatch_table)
+        self.scheduler = Scheduler(arena, dispatch_table, sparsity_k=sparsity_k)
         self.morphogen = None  # set by developmental base if used
 
     # ── Forward ───────────────────────────────────────────────────
@@ -99,8 +100,13 @@ class Substrate:
 
     @property
     def last_activations(self) -> torch.Tensor | None:
-        """Per-cell activations [batch, capacity] from the most recent forward pass."""
+        """Per-cell activations [batch, capacity] from the most recent forward pass (detached)."""
         return self.scheduler._last_activations
+
+    @property
+    def live_activations(self) -> torch.Tensor | None:
+        """Non-detached activations — valid only before backward()."""
+        return self.scheduler._live_activations
 
     @property
     def n_cells(self) -> int:
@@ -130,6 +136,7 @@ def construct(
     dispatch_table: dict[int, ForwardFn] | None = None,
     device: str | torch.device = "cpu",
     capacity: int | None = None,
+    sparsity_k: int = 0,
 ) -> Substrate:
     """Build a substrate from a base recipe and an envelope.
 
@@ -141,7 +148,7 @@ def construct(
     if envelope is None:
         envelope = Envelope()
     arena = Arena(envelope, device=device, capacity=capacity)
-    substrate = Substrate(arena, dispatch_table)
+    substrate = Substrate(arena, dispatch_table, sparsity_k=sparsity_k)
     base(substrate)
     substrate.compile()
     return substrate

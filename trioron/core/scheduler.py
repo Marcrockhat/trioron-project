@@ -55,11 +55,13 @@ class Scheduler:
         self,
         arena: Arena,
         dispatch_table: dict[int, ForwardFn] | None = None,
+        sparsity_k: int = 0,
     ) -> None:
         self._arena = arena
         self._dispatch: dict[int, ForwardFn] = dispatch_table or {}
         self._plan = DispatchPlan()
         self._last_activations: torch.Tensor | None = None
+        self.sparsity_k = sparsity_k
 
     def set_dispatch_table(self, table: dict[int, ForwardFn]) -> None:
         self._dispatch = table
@@ -149,7 +151,15 @@ class Scheduler:
             )
 
         buckets.sort(key=lambda b: b.rank)
+
+        # Interior cell IDs (not perception, not output) for sparsity masking
+        is_interior = ~is_perception & ~is_output
+        interior_ids = cell_ids[is_interior]
+        output_rank = int(a.rank[output_ids.long()].max().item()) if output_ids.numel() > 0 else 999
+
         self._plan = DispatchPlan(buckets, perception_ids, output_ids)
+        self._plan.interior_ids = interior_ids
+        self._plan.output_rank = output_rank
 
     # ── Forward ───────────────────────────────────────────────────
 
@@ -180,6 +190,7 @@ class Scheduler:
             bucket_act = fn(act, bucket, a)
             act[:, bucket.cell_ids.long()] = bucket_act
 
+        self._live_activations = act
         self._last_activations = act.detach()
 
         # Collect output logits
@@ -206,5 +217,8 @@ class Scheduler:
         if a.edge_weight.grad is not None and a.edge_cursor > 0:
             src = a.edge_src[: a.edge_cursor].long()
             dst = a.edge_dst[: a.edge_cursor].long()
-            frozen_edges = dormant[dst] | dormant[src]
+            frozen_edges = (
+                dormant[dst] | dormant[src]
+                | a.edge_protected[: a.edge_cursor]  # KIBRA-tagged edges
+            )
             a.edge_weight.grad[: a.edge_cursor][frozen_edges] = 0.0

@@ -13,8 +13,10 @@ from trioron.core.construct import Substrate
 from trioron.core.epigenome import PERCEPTION, has_gene
 from trioron.core.state import CellState
 from .credit import CreditTracker
-from .manifold import ManifoldArchive
+from .manifold import ManifoldArchive, ManifoldCluster
 from .rejuvenate import find_rejuvenation_candidates, rejuvenate, DEFAULT_COOLDOWN_TASKS
+
+KIBRA_EDGES_PER_MEMBER = 8  # edges tagged per cluster member
 
 
 @dataclass
@@ -47,6 +49,75 @@ def stability_factor(
 ) -> float:
     """Compute the stability modulator phi(t) in [0.1, 1.0]."""
     return max(0.1, min(1.0, 1.0 - alpha * frustration_pressure - beta * growth_rate))
+
+
+def kibra_tag(
+    substrate: Substrate,
+    archive: ManifoldArchive,
+    edges_per_member: int = KIBRA_EDGES_PER_MEMBER,
+) -> int:
+    """One-shot KIBRA-like edge tagging: mark critical edges for protection.
+
+    For each cluster, forward centroid samples, compute per-edge importance
+    |weight * gradient|, and tag the top-K edges. K scales with cluster size.
+    The importance scores are discarded (KIBRA degrades); protection persists.
+
+    Returns total number of newly tagged edges.
+    """
+    if not archive.clusters:
+        return 0
+
+    a = substrate.arena
+    perc_ids = (a.alive & has_gene(a.epigenome, PERCEPTION).bool()).nonzero(as_tuple=False).squeeze(-1)
+    n_perc = perc_ids.numel()
+    if n_perc == 0 or a.edge_cursor == 0:
+        return 0
+
+    total_tagged = 0
+
+    for cluster in archive.clusters:
+        dormant_members = [
+            cid for cid in cluster.members
+            if cid in archive._astrocytes
+            and a.state[archive._astrocytes[cid].cell_id] == CellState.DORMANT
+        ]
+        if not dormant_members:
+            continue
+
+        k = edges_per_member * len(dormant_members)
+        xs, ys = cluster.sample(32, archive._astrocytes)
+        if xs.numel() == 0:
+            continue
+        x = xs[:, :n_perc] if xs.shape[1] >= n_perc else torch.zeros(
+            xs.shape[0], n_perc, device=a.device)
+
+        a.bias.requires_grad_(True)
+        a.edge_weight.requires_grad_(True)
+
+        logits = substrate(x)
+        if logits.shape[1] == 0:
+            continue
+        target = ys.clamp(max=logits.shape[1] - 1)
+        loss = torch.nn.functional.cross_entropy(logits, target)
+        loss.backward()
+
+        if a.edge_weight.grad is not None and a.edge_cursor > 0:
+            importance = (
+                a.edge_weight[: a.edge_cursor].detach().abs()
+                * a.edge_weight.grad[: a.edge_cursor].abs()
+            )
+            # Don't re-tag already protected edges
+            importance[a.edge_protected[: a.edge_cursor]] = 0.0
+            n_tag = min(k, int((importance > 0).sum().item()))
+            if n_tag > 0:
+                _, top_idx = importance.topk(n_tag)
+                a.edge_protected[top_idx] = True
+                total_tagged += n_tag
+
+        a.edge_weight.grad = None
+        a.bias.grad = None
+
+    return total_tagged
 
 
 def dream_cycle(
@@ -201,3 +272,67 @@ def interleaved_replay_batch(
         ys.append(torch.full((x.shape[0],), cid, dtype=torch.long, device=archive.arena.device))
 
     return torch.cat(xs, dim=0), torch.cat(ys, dim=0)
+
+
+def cluster_replay_batch(
+    archive: ManifoldArchive,
+    current_classes: list[int],
+    batch_size: int,
+    n_perc: int,
+    code_batch: torch.Tensor | None = None,
+    top_k: int = 4,
+) -> tuple[torch.Tensor, torch.Tensor] | None:
+    """Cluster-structured replay: select at-risk clusters, replay all members.
+
+    Each cluster replay rehearses shared features for ALL member classes.
+    Falls back to per-class replay if no clusters exist yet.
+    """
+    if not archive.clusters:
+        return interleaved_replay_batch(
+            archive, current_classes, batch_size, n_perc, code_batch, top_k,
+        )
+
+    skip = set(current_classes)
+    eligible = []
+    for cluster in archive.clusters:
+        past_members = [
+            cid for cid in cluster.members
+            if cid not in skip
+            and archive.get(cid) is not None
+            and archive.arena.state[archive.get(cid).cell_id] == CellState.DORMANT
+        ]
+        if past_members:
+            eligible.append(cluster)
+
+    if not eligible:
+        return None
+
+    # Rank clusters by risk: highest mean log-likelihood overlap with current input
+    if code_batch is not None and len(eligible) > top_k:
+        scores = []
+        for cluster in eligible:
+            ll_sum = 0.0
+            n = 0
+            for cid in cluster.members:
+                astro = archive.get(cid)
+                if astro is not None:
+                    ll_sum += astro.log_likelihood(code_batch).mean().item()
+                    n += 1
+            scores.append(ll_sum / max(n, 1))
+        ranked = sorted(zip(scores, eligible), reverse=True)
+        eligible = [c for _, c in ranked[:top_k]]
+
+    per_cluster = max(1, batch_size // len(eligible))
+    all_x, all_y = [], []
+
+    for cluster in eligible:
+        xs, ys = cluster.sample(per_cluster, archive._astrocytes)
+        if xs.numel() > 0:
+            x = xs[:, :n_perc] if xs.shape[1] >= n_perc else torch.zeros(
+                xs.shape[0], n_perc, device=archive.arena.device)
+            all_x.append(x)
+            all_y.append(ys)
+
+    if not all_x:
+        return None
+    return torch.cat(all_x), torch.cat(all_y)

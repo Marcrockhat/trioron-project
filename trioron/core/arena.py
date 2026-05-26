@@ -63,6 +63,7 @@ class Arena:
         self.edge_dst = torch.empty(ecap, dtype=torch.int32, device=self.device)
         self.edge_weight = torch.zeros(ecap, device=self.device)
         self.edge_cursor: int = 0
+        self.edge_protected = torch.zeros(ecap, dtype=torch.bool, device=self.device)
 
         # Rank dirtiness flag (commitment 4: deferred recompute)
         self.rank_dirty: bool = False

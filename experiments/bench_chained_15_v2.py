@@ -27,6 +27,8 @@ from trioron.learning import (
     CreditTracker, FrustrationDetector, ManifoldArchive,
     dream_cycle, DreamConfig, interleaved_replay_batch,
 )
+from trioron.learning.dream import cluster_replay_batch, kibra_tag
+from trioron.learning.manifold import get_interior_ids
 from trioron.lifecycle import divide, GrowthConfig
 from trioron.viz import Recorder, export_html
 from trioron.viz.detect import detect_from_directory
@@ -40,6 +42,7 @@ BATCH = 30
 LR = 6.68e-4
 N_GROW_PER_TASK = 9
 PARAM_CAP_BYTES = 200_000
+SPARSITY_LAMBDA = 0.01  # L1 penalty on H-cell activations (soft sparsity)
 
 
 # ── Substrate construction ───────────────────────────────────────
@@ -51,6 +54,7 @@ def build_substrate(seed: int = 42):
         envelope=Envelope(max_parameter_bytes=PARAM_CAP_BYTES),
         dispatch_table=default_dispatch_table(),
         capacity=2048,
+        sparsity_k=0,
     )
     return sub
 
@@ -107,9 +111,15 @@ def evaluate_all_tasks(
     bundle: DatasetBundle,
     specs: list[ChainedTaskSpec],
     tasks_seen: int,
+    archive: ManifoldArchive | None = None,
 ) -> EvalResult:
-    """Evaluate full-softmax and task-aware accuracy on all tasks seen so far."""
+    """Evaluate full-softmax (with optional routing) and task-aware accuracy."""
     result = EvalResult(after_task=tasks_seen - 1)
+
+    n_perc = 0
+    for cid in range(sub.arena.cursor):
+        if sub.arena.alive[cid] and has_gene(int(sub.arena.epigenome[cid].item()), PERCEPTION):
+            n_perc += 1
 
     for t_idx in range(tasks_seen):
         spec = specs[t_idx]
@@ -122,17 +132,38 @@ def evaluate_all_tasks(
         with torch.no_grad():
             logits = sub(x)
 
-        # Full-softmax accuracy (argmax over all 30 classes)
-        pred_full = logits.argmax(dim=1)
-        full_acc = (pred_full == y).float().mean().item()
+            # Routed full-softmax: weight logits by per-task manifold gate
+            if archive is not None and archive.n_classes > 0:
+                code = x[:, :n_perc]
+                task_ll = torch.zeros(x.shape[0], tasks_seen, device=x.device)
+                for tidx in range(tasks_seen):
+                    tspec = specs[tidx]
+                    ll_sum = torch.zeros(x.shape[0], device=x.device)
+                    for gc in tspec.global_classes:
+                        astro = archive.get(gc)
+                        if astro is not None:
+                            ll_sum = ll_sum + astro.log_likelihood(code)
+                    task_ll[:, tidx] = ll_sum / len(tspec.global_classes)
 
-        # Task-aware accuracy (argmax restricted to this task's classes)
-        task_logits = logits[:, spec.global_classes]
-        pred_task_local = task_logits.argmax(dim=1)
-        # Map local prediction back to global
-        gc = torch.tensor(spec.global_classes, dtype=torch.long)
-        pred_task_global = gc[pred_task_local]
-        task_acc = (pred_task_global == y).float().mean().item()
+                task_gates = torch.nn.functional.softmax(task_ll, dim=1)
+                routed = logits.clone()
+                for tidx in range(tasks_seen):
+                    tspec = specs[tidx]
+                    for gc in tspec.global_classes:
+                        routed[:, gc] = logits[:, gc] + torch.log(task_gates[:, tidx] + 1e-10)
+
+                pred_full = routed.argmax(dim=1)
+            else:
+                pred_full = logits.argmax(dim=1)
+
+            full_acc = (pred_full == y).float().mean().item()
+
+            # Task-aware accuracy (argmax restricted to this task's classes)
+            task_logits = logits[:, spec.global_classes]
+            pred_task_local = task_logits.argmax(dim=1)
+            gc_tensor = torch.tensor(spec.global_classes, dtype=torch.long)
+            pred_task_global = gc_tensor[pred_task_local]
+            task_acc = (pred_task_global == y).float().mean().item()
 
         result.per_task.append(TaskResult(
             task_idx=t_idx,
@@ -169,6 +200,8 @@ def train_one_task(
         if has_gene(int(sub.arena.epigenome[cid].item()), PERCEPTION):
             code_boundary.append(cid)
 
+    interior_ids = get_interior_ids(sub.arena).long()
+
     growth_budget = N_GROW_PER_TASK
     growth_count = 0
     frust_steps = 0
@@ -177,6 +210,11 @@ def train_one_task(
         for x_batch, y_batch in train_view.iter_epoch(BATCH):
             logits = sub(x_batch)
             loss = torch.nn.functional.cross_entropy(logits, y_batch)
+
+            # Soft sparsity: L1 penalty on interior H-cell activations
+            if SPARSITY_LAMBDA > 0 and sub.live_activations is not None and interior_ids.numel() > 0:
+                h_live = sub.live_activations[:, interior_ids]
+                loss = loss + SPARSITY_LAMBDA * h_live.abs().mean()
 
             m = frust.step(loss.item())
             if frust.is_frustrated:
@@ -193,9 +231,9 @@ def train_one_task(
             opt.step()
             opt.zero_grad()
 
-            # Astrocyte-gated replay of at-risk past tasks
+            # Cluster-structured replay of at-risk past tasks
             code = x_batch[:, :len(code_boundary)]
-            replay = interleaved_replay_batch(
+            replay = cluster_replay_batch(
                 archive, spec.global_classes,
                 batch_size=BATCH, n_perc=len(code_boundary),
                 code_batch=code,
@@ -230,7 +268,7 @@ def train_one_task(
                         if recorder:
                             recorder.on_growth(sub.arena, task_idx, event.child_id)
                         sub.compile()
-                        # Re-create optimizer to include new parameters
+                        interior_ids = get_interior_ids(sub.arena).long()
                         opt = torch.optim.Adam(sub.trainable_tensors(), lr=LR)
                         frust_steps = 0
 
@@ -299,12 +337,16 @@ def main():
 
         # Dream cycle
         archive.finalize_all()
-        dream_cfg = DreamConfig(replay_batch_size=BATCH, replay_lr=LR * 0.1)
+        dream_cfg = DreamConfig()
         dream_result = dream_cycle(
             sub, credit, archive,
             current_classes=spec.global_classes,
             cfg=dream_cfg,
         )
+
+        # KIBRA: one-shot edge tagging for cluster-level protection
+        n_tagged = kibra_tag(sub, archive)
+
         if recorder:
             recorder.on_dream(sub.arena, task_idx)
 
@@ -318,13 +360,16 @@ def main():
             if astro and sub.arena.state[astro.cell_id] == CellState.DORMANT:
                 sub.arena.state[astro.cell_id] = CellState.ACTIVE
 
-        # Evaluate
-        ev = evaluate_all_tasks(sub, bundle, specs, task_idx + 1)
+        # Evaluate (routed full-softmax via manifold gates)
+        ev = evaluate_all_tasks(sub, bundle, specs, task_idx + 1, archive)
         eval_history.append(ev)
 
+        n_protected = int(sub.arena.edge_protected[:sub.arena.edge_cursor].sum().item())
+        n_clusters = len(archive.clusters)
         elapsed = time.time() - t_task
         print(f"  cells={sub.n_cells}, edges={sub.n_edges}, "
-              f"locked={dream_result.n_locked}, grown={grown}")
+              f"locked={dream_result.n_locked}, grown={grown}, "
+              f"tagged={n_tagged}, protected={n_protected}, clusters={n_clusters}")
         print(f"  mean full={ev.mean_full:.4f}, "
               f"mean task-aware={ev.mean_task:.4f}  ({elapsed:.1f}s)")
 
