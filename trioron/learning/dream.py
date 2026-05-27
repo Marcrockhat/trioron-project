@@ -282,9 +282,12 @@ def cluster_replay_batch(
     code_batch: torch.Tensor | None = None,
     top_k: int = 4,
 ) -> tuple[torch.Tensor, torch.Tensor] | None:
-    """Cluster-structured replay: select at-risk clusters, replay all members.
+    """Cluster-guided replay: select at-risk clusters, then replay member
+    classes using their per-class astrocyte Gaussians directly.
 
-    Each cluster replay rehearses shared features for ALL member classes.
+    The cluster provides the selection signal (which region of code-space
+    is most at risk from the current input). Sampling uses per-class
+    mu/sigma so each replayed class gets a focused gradient signal.
     Falls back to per-class replay if no clusters exist yet.
     """
     if not archive.clusters:
@@ -293,7 +296,7 @@ def cluster_replay_batch(
         )
 
     skip = set(current_classes)
-    eligible = []
+    cluster_members: list[tuple[ManifoldCluster, list[int]]] = []
     for cluster in archive.clusters:
         past_members = [
             cid for cid in cluster.members
@@ -302,36 +305,44 @@ def cluster_replay_batch(
             and archive.arena.state[archive.get(cid).cell_id] == CellState.DORMANT
         ]
         if past_members:
-            eligible.append(cluster)
+            cluster_members.append((cluster, past_members))
 
-    if not eligible:
+    if not cluster_members:
         return None
 
     # Rank clusters by risk: highest mean log-likelihood overlap with current input
-    if code_batch is not None and len(eligible) > top_k:
+    if code_batch is not None and len(cluster_members) > top_k:
         scores = []
-        for cluster in eligible:
+        for cluster, members in cluster_members:
             ll_sum = 0.0
-            n = 0
-            for cid in cluster.members:
+            for cid in members:
                 astro = archive.get(cid)
                 if astro is not None:
                     ll_sum += astro.log_likelihood(code_batch).mean().item()
-                    n += 1
-            scores.append(ll_sum / max(n, 1))
-        ranked = sorted(zip(scores, eligible), reverse=True)
-        eligible = [c for _, c in ranked[:top_k]]
+            scores.append(ll_sum / max(len(members), 1))
+        ranked = sorted(zip(scores, cluster_members), reverse=True)
+        cluster_members = [cm for _, cm in ranked[:top_k]]
 
-    per_cluster = max(1, batch_size // len(eligible))
+    # Collect all replay-eligible classes from selected clusters
+    replay_classes: list[int] = []
+    for _, members in cluster_members:
+        replay_classes.extend(members)
+
+    if not replay_classes:
+        return None
+
+    per_class = max(1, batch_size // len(replay_classes))
     all_x, all_y = [], []
 
-    for cluster in eligible:
-        xs, ys = cluster.sample(per_cluster, archive._astrocytes)
-        if xs.numel() > 0:
-            x = xs[:, :n_perc] if xs.shape[1] >= n_perc else torch.zeros(
-                xs.shape[0], n_perc, device=archive.arena.device)
-            all_x.append(x)
-            all_y.append(ys)
+    for cid in replay_classes:
+        astro = archive.get(cid)
+        if astro is None:
+            continue
+        samples = astro.sample(per_class)
+        x = samples[:, :n_perc] if samples.shape[1] >= n_perc else torch.zeros(
+            per_class, n_perc, device=archive.arena.device)
+        all_x.append(x)
+        all_y.append(torch.full((x.shape[0],), cid, dtype=torch.long, device=archive.arena.device))
 
     if not all_x:
         return None

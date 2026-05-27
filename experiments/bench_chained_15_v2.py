@@ -41,8 +41,9 @@ H_INIT = 55
 BATCH = 30
 LR = 6.68e-4
 N_GROW_PER_TASK = 9
-PARAM_CAP_BYTES = 200_000
+PARAM_CAP_BYTES = 300_000
 SPARSITY_LAMBDA = 0.01  # L1 penalty on H-cell activations (soft sparsity)
+PRIVATE_FAN_IN = 784  # perception edges per task-detector cell
 
 
 # ── Substrate construction ───────────────────────────────────────
@@ -57,6 +58,38 @@ def build_substrate(seed: int = 42):
         sparsity_k=0,
     )
     return sub
+
+
+def add_task_detectors(sub, n_tasks: int = 15, seed: int = 42):
+    """Allocate one task-detector cell per task with full perception input.
+
+    Each detector is a linear neuron that learns to fire HIGH for its
+    task's inputs. Starts DORMANT; activated during training, then
+    re-frozen. At eval, the highest-scoring detector selects the task,
+    and task-aware logits decide the class.
+
+    Returns list of detector cell ids (one per task).
+    """
+    a = sub.arena
+
+    perc_ids = [cid for cid in range(a.cursor)
+                if a.alive[cid] and has_gene(int(a.epigenome[cid].item()), PERCEPTION)]
+
+    detectors = []
+    for t in range(n_tasks):
+        pid = int(a.alloc(1)[0].item())
+        a.rank[pid] = 1
+        a.position[pid] = torch.tensor([0.5, t / max(n_tasks - 1, 1), 0.9])
+        a.state[pid] = CellState.DORMANT
+        a.forward_inclusion[pid] = True
+
+        src = torch.tensor(perc_ids[:PRIVATE_FAN_IN], dtype=torch.int32)
+        dst = torch.full((len(src),), pid, dtype=torch.int32)
+        a.add_edges(src, dst)
+        detectors.append(pid)
+
+    sub.compile()
+    return detectors
 
 
 # ── Head extension ───────────────────────────────────────────────
@@ -112,6 +145,7 @@ def evaluate_all_tasks(
     specs: list[ChainedTaskSpec],
     tasks_seen: int,
     archive: ManifoldArchive | None = None,
+    detectors: list[int] | None = None,
 ) -> EvalResult:
     """Evaluate full-softmax (with optional routing) and task-aware accuracy."""
     result = EvalResult(after_task=tasks_seen - 1)
@@ -131,9 +165,27 @@ def evaluate_all_tasks(
 
         with torch.no_grad():
             logits = sub(x)
+            act = sub.last_activations
 
-            # Routed full-softmax: weight logits by per-task manifold gate
-            if archive is not None and archive.n_classes > 0:
+            # Detector-based routing: pick the task whose detector fires highest
+            if detectors and len(detectors) >= tasks_seen:
+                det_ids = [detectors[tidx] for tidx in range(tasks_seen)]
+                det_scores = act[:, det_ids]  # [B, tasks_seen]
+                best_task = det_scores.argmax(dim=1)  # [B]
+
+                # For each sample, use task-aware logits from the detected task
+                pred_full = torch.zeros(x.shape[0], dtype=torch.long, device=x.device)
+                for tidx in range(tasks_seen):
+                    mask = best_task == tidx
+                    if not mask.any():
+                        continue
+                    tspec = specs[tidx]
+                    tlogits = logits[mask][:, tspec.global_classes]
+                    local_pred = tlogits.argmax(dim=1)
+                    gc_t = torch.tensor(tspec.global_classes, dtype=torch.long)
+                    pred_full[mask] = gc_t[local_pred]
+
+            elif archive is not None and archive.n_classes > 0:
                 code = x[:, :n_perc]
                 task_ll = torch.zeros(x.shape[0], tasks_seen, device=x.device)
                 for tidx in range(tasks_seen):
@@ -187,6 +239,10 @@ def train_one_task(
     task_idx: int,
     epochs: int,
     recorder: Recorder | None = None,
+    *,
+    use_sparsity: bool = True,
+    detector_id: int = -1,
+    use_cluster_replay: bool = True,
 ):
     """Train one task with frustration-gated growth and manifold collection."""
     sub.prepare_training()
@@ -212,7 +268,7 @@ def train_one_task(
             loss = torch.nn.functional.cross_entropy(logits, y_batch)
 
             # Soft sparsity: L1 penalty on interior H-cell activations
-            if SPARSITY_LAMBDA > 0 and sub.live_activations is not None and interior_ids.numel() > 0:
+            if use_sparsity and SPARSITY_LAMBDA > 0 and sub.live_activations is not None and interior_ids.numel() > 0:
                 h_live = sub.live_activations[:, interior_ids]
                 loss = loss + SPARSITY_LAMBDA * h_live.abs().mean()
 
@@ -231,13 +287,20 @@ def train_one_task(
             opt.step()
             opt.zero_grad()
 
-            # Cluster-structured replay of at-risk past tasks
+            # Replay of at-risk past tasks
             code = x_batch[:, :len(code_boundary)]
-            replay = cluster_replay_batch(
-                archive, spec.global_classes,
-                batch_size=BATCH, n_perc=len(code_boundary),
-                code_batch=code,
-            )
+            if use_cluster_replay:
+                replay = cluster_replay_batch(
+                    archive, spec.global_classes,
+                    batch_size=BATCH, n_perc=len(code_boundary),
+                    code_batch=code,
+                )
+            else:
+                replay = interleaved_replay_batch(
+                    archive, spec.global_classes,
+                    batch_size=BATCH, n_perc=len(code_boundary),
+                    code_batch=code,
+                )
             if replay is not None:
                 rx, ry = replay
                 r_logits = sub(rx)
@@ -278,6 +341,63 @@ def train_one_task(
     return growth_count
 
 
+def train_detector(sub, detector_id: int, train_view, archive, n_perc: int, epochs: int = 2):
+    """Train a task detector cell: high for this task, low for past tasks.
+
+    Only the detector cell's input edges are updated (everything else frozen
+    by zero_dormant_grads since only the detector is ACTIVE among private cells).
+    """
+    a = sub.arena
+    det_edges = []
+    for ei in range(a.edge_cursor):
+        if int(a.edge_dst[ei].item()) == detector_id:
+            det_edges.append(ei)
+
+    if not det_edges:
+        return
+
+    det_weight_idx = torch.tensor(det_edges, dtype=torch.long)
+    opt = torch.optim.Adam([a.bias, a.edge_weight], lr=1e-3)
+
+    for epoch in range(epochs):
+        for x_batch, y_batch in train_view.iter_epoch(BATCH):
+            _ = sub(x_batch)
+            det_act = sub.live_activations[:, detector_id]
+            pos_loss = torch.nn.functional.binary_cross_entropy_with_logits(
+                det_act, torch.ones_like(det_act))
+
+            neg_loss = torch.tensor(0.0, device=a.device)
+            past_classes = [c for c in archive.class_ids if archive.arena.state[archive.get(c).cell_id] == CellState.DORMANT]
+            if past_classes:
+                neg_samples = []
+                for cid in past_classes[:8]:
+                    astro = archive.get(cid)
+                    s = astro.sample(4)
+                    neg_samples.append(s[:, :n_perc] if s.shape[1] >= n_perc else
+                                       torch.zeros(4, n_perc, device=a.device))
+                neg_x = torch.cat(neg_samples)
+                _ = sub(neg_x)
+                neg_det = sub.live_activations[:, detector_id]
+                neg_loss = torch.nn.functional.binary_cross_entropy_with_logits(
+                    neg_det, torch.zeros_like(neg_det))
+
+            loss = pos_loss + neg_loss
+            loss.backward()
+
+            # Zero all grads except detector edges and bias
+            if a.edge_weight.grad is not None:
+                mask = torch.ones(a.edge_weight.shape[0], dtype=torch.bool)
+                mask[det_weight_idx] = False
+                a.edge_weight.grad[mask] = 0.0
+            if a.bias.grad is not None:
+                bias_mask = torch.ones(a.bias.shape[0], dtype=torch.bool)
+                bias_mask[detector_id] = False
+                a.bias.grad[bias_mask] = 0.0
+
+            opt.step()
+            opt.zero_grad()
+
+
 # ── Main ─────────────────────────────────────────────────────────
 
 def main():
@@ -286,6 +406,12 @@ def main():
     parser.add_argument("--epochs", type=int, default=4)
     parser.add_argument("--smoke", action="store_true", help="2 epochs, fast")
     parser.add_argument("--viz", action="store_true", help="generate HTML viewer")
+    parser.add_argument("--no-sparsity", action="store_true", help="disable L1 sparsity penalty")
+    parser.add_argument("--no-kibra", action="store_true", help="disable KIBRA edge tagging")
+    parser.add_argument("--no-routing", action="store_true", help="disable manifold routing at eval")
+    parser.add_argument("--legacy-replay", action="store_true", help="use interleaved replay instead of cluster replay")
+    parser.add_argument("--no-dream-replay", action="store_true", help="skip replay stage in dream cycle")
+    parser.add_argument("--no-private-cells", action="store_true", help="disable per-class private cells")
     args = parser.parse_args()
 
     if args.smoke:
@@ -293,8 +419,30 @@ def main():
 
     torch.manual_seed(args.seed)
 
+    use_sparsity = not args.no_sparsity
+    use_kibra = not args.no_kibra
+    use_routing = not args.no_routing
+    use_cluster_replay = not args.legacy_replay
+    use_dream_replay = not args.no_dream_replay
+    use_private_cells = not args.no_private_cells
+
+    flags = []
+    if not use_sparsity:
+        flags.append("no-sparsity")
+    if not use_kibra:
+        flags.append("no-kibra")
+    if not use_routing:
+        flags.append("no-routing")
+    if not use_cluster_replay:
+        flags.append("legacy-replay")
+    if not use_dream_replay:
+        flags.append("no-dream-replay")
+    if not use_private_cells:
+        flags.append("no-private-cells")
+    flag_str = f" [{', '.join(flags)}]" if flags else " [full stack]"
+
     print("=" * 60)
-    print(f"Chained-15 v2.0 — seed={args.seed}, epochs={args.epochs}")
+    print(f"Chained-15 v2.0 — seed={args.seed}, epochs={args.epochs}{flag_str}")
     print("=" * 60)
 
     # Load data
@@ -303,6 +451,9 @@ def main():
 
     # Build substrate
     sub = build_substrate(args.seed)
+    detectors = []
+    if use_private_cells:
+        detectors = add_task_detectors(sub, n_tasks=len(chained_15_specs()), seed=args.seed)
     print(f"Initial substrate: {sub.n_cells} cells, {sub.n_edges} edges")
 
     # Learning components
@@ -330,14 +481,25 @@ def main():
         print(f"\n--- Task {task_idx}: {spec.name} "
               f"(classes {spec.global_classes}) ---")
 
+        # Activate this task's detector cell
+        if use_private_cells and detectors:
+            sub.arena.state[detectors[task_idx]] = CellState.ACTIVE
+            sub.compile()
+
+        det_id = detectors[task_idx] if (use_private_cells and detectors) else -1
         grown = train_one_task(
             sub, credit, frust, archive, train_view, spec,
             task_idx, args.epochs, recorder,
+            use_sparsity=use_sparsity,
+            use_cluster_replay=use_cluster_replay,
+            detector_id=det_id,
         )
 
         # Dream cycle
         archive.finalize_all()
         dream_cfg = DreamConfig()
+        if not use_dream_replay:
+            dream_cfg.replay_steps_per_class = 0
         dream_result = dream_cycle(
             sub, credit, archive,
             current_classes=spec.global_classes,
@@ -345,10 +507,17 @@ def main():
         )
 
         # KIBRA: one-shot edge tagging for cluster-level protection
-        n_tagged = kibra_tag(sub, archive)
+        n_tagged = kibra_tag(sub, archive) if use_kibra else 0
 
         if recorder:
             recorder.on_dream(sub.arena, task_idx)
+
+        # Train and freeze this task's detector cell
+        if use_private_cells and detectors:
+            n_perc = sum(1 for cid in range(sub.arena.cursor)
+                         if sub.arena.alive[cid] and has_gene(int(sub.arena.epigenome[cid].item()), PERCEPTION))
+            train_detector(sub, detectors[task_idx], train_view, archive, n_perc)
+            sub.arena.state[detectors[task_idx]] = CellState.DORMANT
 
         frust.reset()
         sub.end_task()
@@ -360,8 +529,12 @@ def main():
             if astro and sub.arena.state[astro.cell_id] == CellState.DORMANT:
                 sub.arena.state[astro.cell_id] = CellState.ACTIVE
 
-        # Evaluate (routed full-softmax via manifold gates)
-        ev = evaluate_all_tasks(sub, bundle, specs, task_idx + 1, archive)
+        # Evaluate (detector routing > manifold routing > raw logits)
+        ev = evaluate_all_tasks(
+            sub, bundle, specs, task_idx + 1,
+            archive if use_routing else None,
+            detectors if use_private_cells else None,
+        )
         eval_history.append(ev)
 
         n_protected = int(sub.arena.edge_protected[:sub.arena.edge_cursor].sum().item())
