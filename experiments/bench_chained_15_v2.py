@@ -631,17 +631,39 @@ def calibrate_detectors(sub, detectors: list[list[int]], archive, specs, n_perc:
     sub.compile()
 
 
-def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids, full_cov=False):
+def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids, full_cov=False,
+                      source="real", perc_archive=None, n_perc=0, samples_per_class=400):
     """Rebuild the H-space manifold from a fresh pass through the CURRENT substrate.
 
     Fixes stale statistics: H-cell activations drift as later tasks train, so
     statistics collected during each task become outdated. This re-collects
     per-class (mu, sigma[, Σ]) using the final substrate's representation.
 
-    Storage-free variants would refresh from perception-manifold replay; here
-    we refresh from real training data to measure the routing ceiling.
+    source="real":     forward real training data (oracle ceiling — needs past data).
+    source="manifold": sample synthetic inputs from the storage-free perception
+                       manifold, forward through the current substrate. No past
+                       data retained — the honest continual-learning path.
     """
     fresh = ManifoldArchive(sub.arena, full_cov=full_cov)
+
+    if source == "manifold":
+        with torch.no_grad():
+            for t_idx in range(tasks_seen):
+                spec = specs[t_idx]
+                for gc in spec.global_classes:
+                    astro = perc_archive.get(gc) if perc_archive is not None else None
+                    if astro is None:
+                        continue
+                    syn = astro.sample(samples_per_class)  # [N, perc_dim] in pixel space
+                    x_in = torch.zeros(syn.shape[0], n_perc, device=sub.arena.device)
+                    w = min(syn.shape[1], n_perc)
+                    x_in[:, :w] = syn[:, :w]
+                    _ = sub(x_in)
+                    h_act = sub.last_activations[:, h_interior_ids]
+                    fresh.update_class(gc, h_act)
+        fresh.finalize_all()
+        return fresh
+
     for t_idx in range(tasks_seen):
         spec = specs[t_idx]
         train_view = bundle.task_view(
@@ -685,6 +707,8 @@ def main():
     parser.add_argument("--refresh-h", action="store_true", help="rebuild H-manifold from current substrate after training (fixes stale stats)")
     parser.add_argument("--full-cov", action="store_true", help="full-covariance Mahalanobis H-routing instead of diagonal Gaussian")
     parser.add_argument("--h-route-mode", choices=["task", "class"], default="task", help="H-routing granularity (default task)")
+    parser.add_argument("--refresh-source", choices=["real", "manifold"], default="real",
+                        help="refresh H-stats from real data (oracle ceiling) or perception manifold (storage-free)")
     args = parser.parse_args()
 
     if args.smoke:
@@ -706,6 +730,7 @@ def main():
     use_refresh_h = args.refresh_h and use_h_routing
     use_full_cov = args.full_cov and use_h_routing
     h_route_mode = args.h_route_mode
+    refresh_source = args.refresh_source
 
     flags = []
     if not use_sparsity:
@@ -735,7 +760,7 @@ def main():
     if use_full_cov:
         flags.append("full-cov")
     if use_refresh_h:
-        flags.append("refresh-h")
+        flags.append(f"refresh-h({refresh_source})")
     flag_str = f" [{', '.join(flags)}]"
 
     print("=" * 60)
@@ -874,9 +899,12 @@ def main():
 
     # Refresh H-manifold from current substrate (fixes stale statistics)
     if use_refresh_h:
-        print("\n--- Refreshing H-manifold from current substrate ---")
+        print(f"\n--- Refreshing H-manifold ({refresh_source}) ---")
+        n_perc_r = sum(1 for cid in range(sub.arena.cursor)
+                       if sub.arena.alive[cid] and has_gene(int(sub.arena.epigenome[cid].item()), PERCEPTION))
         h_archive = refresh_h_archive(sub, bundle, specs, len(specs), h_interior_ids,
-                                      full_cov=use_full_cov)
+                                      full_cov=use_full_cov, source=refresh_source,
+                                      perc_archive=archive, n_perc=n_perc_r)
         ev_refresh = evaluate_all_tasks(
             sub, bundle, specs, len(specs),
             None, None,
