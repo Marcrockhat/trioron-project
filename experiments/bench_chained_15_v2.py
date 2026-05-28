@@ -232,6 +232,7 @@ def evaluate_all_tasks(
     h_archive: ManifoldArchive | None = None,
     h_interior_ids: torch.Tensor | None = None,
     h_route_mode: str = "task",
+    h_full_cov: bool = False,
 ) -> EvalResult:
     """Evaluate full-softmax (with optional routing) and task-aware accuracy."""
     result = EvalResult(after_task=tasks_seen - 1)
@@ -280,6 +281,8 @@ def evaluate_all_tasks(
             elif h_archive is not None and h_archive.n_classes > 0:
                 # H-space manifold routing in the learned representation
                 h_act = act[:, h_interior_ids]
+                ll_fn = (lambda astro: astro.log_likelihood_full(h_act)) if h_full_cov \
+                    else (lambda astro: astro.log_likelihood(h_act))
                 if h_route_mode == "class":
                     # Pure QDA: per-class log-likelihood, bypasses output projection
                     all_seen_classes = []
@@ -289,7 +292,7 @@ def evaluate_all_tasks(
                     for gc in all_seen_classes:
                         astro = h_archive.get(gc)
                         if astro is not None:
-                            class_ll[:, gc] = astro.log_likelihood(h_act)
+                            class_ll[:, gc] = ll_fn(astro)
                     pred_full = class_ll.argmax(dim=1)
                 else:
                     # Task-level: H-manifold picks task (robust), logits pick class (accurate)
@@ -300,7 +303,7 @@ def evaluate_all_tasks(
                         for gc in tspec.global_classes:
                             astro = h_archive.get(gc)
                             if astro is not None:
-                                ll_max = torch.maximum(ll_max, astro.log_likelihood(h_act))
+                                ll_max = torch.maximum(ll_max, ll_fn(astro))
                         task_ll[:, tidx] = ll_max
                     best_task = task_ll.argmax(dim=1)
                     pred_full = torch.zeros(x.shape[0], dtype=torch.long, device=x.device)
@@ -628,17 +631,17 @@ def calibrate_detectors(sub, detectors: list[list[int]], archive, specs, n_perc:
     sub.compile()
 
 
-def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids):
+def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids, full_cov=False):
     """Rebuild the H-space manifold from a fresh pass through the CURRENT substrate.
 
     Fixes stale statistics: H-cell activations drift as later tasks train, so
     statistics collected during each task become outdated. This re-collects
-    per-class (mu, sigma) using the final substrate's representation.
+    per-class (mu, sigma[, Σ]) using the final substrate's representation.
 
     Storage-free variants would refresh from perception-manifold replay; here
     we refresh from real training data to measure the routing ceiling.
     """
-    fresh = ManifoldArchive(sub.arena)
+    fresh = ManifoldArchive(sub.arena, full_cov=full_cov)
     for t_idx in range(tasks_seen):
         spec = specs[t_idx]
         train_view = bundle.task_view(
@@ -680,6 +683,8 @@ def main():
     parser.add_argument("--no-task-replay", action="store_true", help="disable in-task replay (manifold collection continues)")
     parser.add_argument("--h-routing", action="store_true", help="use H-space manifold for routing instead of perception-space")
     parser.add_argument("--refresh-h", action="store_true", help="rebuild H-manifold from current substrate after training (fixes stale stats)")
+    parser.add_argument("--full-cov", action="store_true", help="full-covariance Mahalanobis H-routing instead of diagonal Gaussian")
+    parser.add_argument("--h-route-mode", choices=["task", "class"], default="task", help="H-routing granularity (default task)")
     args = parser.parse_args()
 
     if args.smoke:
@@ -699,6 +704,8 @@ def main():
     use_task_replay = not args.no_task_replay
     use_h_routing = args.h_routing
     use_refresh_h = args.refresh_h and use_h_routing
+    use_full_cov = args.full_cov and use_h_routing
+    h_route_mode = args.h_route_mode
 
     flags = []
     if not use_sparsity:
@@ -724,7 +731,9 @@ def main():
         if use_calibrate:
             flags.append("calibrate")
     if use_h_routing:
-        flags.append("h-routing")
+        flags.append(f"h-routing({h_route_mode})")
+    if use_full_cov:
+        flags.append("full-cov")
     if use_refresh_h:
         flags.append("refresh-h")
     flag_str = f" [{', '.join(flags)}]"
@@ -753,7 +762,7 @@ def main():
     credit = CreditTracker(sub.arena)
     frust = FrustrationDetector()
     archive = ManifoldArchive(sub.arena)
-    h_archive = ManifoldArchive(sub.arena) if use_h_routing else None
+    h_archive = ManifoldArchive(sub.arena, full_cov=use_full_cov) if use_h_routing else None
     output_anchor: OutputAnchor | None = None
 
     # Recorder
@@ -849,6 +858,8 @@ def main():
             detectors if use_private_cells else None,
             h_archive=h_archive if use_h_routing else None,
             h_interior_ids=h_interior_ids,
+            h_route_mode=h_route_mode,
+            h_full_cov=use_full_cov,
         )
         eval_history.append(ev)
 
@@ -864,12 +875,15 @@ def main():
     # Refresh H-manifold from current substrate (fixes stale statistics)
     if use_refresh_h:
         print("\n--- Refreshing H-manifold from current substrate ---")
-        h_archive = refresh_h_archive(sub, bundle, specs, len(specs), h_interior_ids)
+        h_archive = refresh_h_archive(sub, bundle, specs, len(specs), h_interior_ids,
+                                      full_cov=use_full_cov)
         ev_refresh = evaluate_all_tasks(
             sub, bundle, specs, len(specs),
             None, None,
             h_archive=h_archive,
             h_interior_ids=h_interior_ids,
+            h_route_mode=h_route_mode,
+            h_full_cov=use_full_cov,
         )
         eval_history.append(ev_refresh)
         print(f"  POST-REFRESH: mean full={ev_refresh.mean_full:.4f}, "
@@ -889,6 +903,8 @@ def main():
             detectors,
             h_archive=h_archive if use_h_routing else None,
             h_interior_ids=h_interior_ids,
+            h_route_mode=h_route_mode,
+            h_full_cov=use_full_cov,
         )
         eval_history.append(ev_cal)
         print(f"  POST-CALIBRATION: mean full={ev_cal.mean_full:.4f}, "

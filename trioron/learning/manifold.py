@@ -49,9 +49,16 @@ def get_code_boundary(arena: Arena) -> torch.Tensor:
 
 
 class ManifoldAstrocyte:
-    """Wraps a single manifold archive entry stored as an arena cell."""
+    """Wraps a single manifold archive entry stored as an arena cell.
 
-    def __init__(self, arena: Arena, cell_id: int, class_id: int, code_dim: int) -> None:
+    Stores a diagonal-Gaussian sketch by default.  When ``full_cov`` is set,
+    it additionally accumulates the outer-product sum so a full-covariance
+    (Mahalanobis) likelihood can be used for routing.  Full covariance is
+    opt-in because it costs ``code_dim²`` storage per class.
+    """
+
+    def __init__(self, arena: Arena, cell_id: int, class_id: int, code_dim: int,
+                 full_cov: bool = False) -> None:
         self.arena = arena
         self.cell_id = cell_id
         self.class_id = class_id
@@ -59,6 +66,12 @@ class ManifoldAstrocyte:
         self._n: int = 0
         self._mean = torch.zeros(code_dim, device=arena.device)
         self._m2 = torch.zeros(code_dim, device=arena.device)
+        self.full_cov = full_cov
+        # Outer-product accumulator for full covariance (batched moments)
+        self._sum = torch.zeros(code_dim, device=arena.device) if full_cov else None
+        self._outer = torch.zeros(code_dim, code_dim, device=arena.device) if full_cov else None
+        self._prec: torch.Tensor | None = None       # cached Σ⁻¹
+        self._logdet: float = 0.0                     # cached log|Σ|
 
     def update(self, code_batch: torch.Tensor) -> None:
         """Online Welford update from a batch of code-space activations ``[B, code_dim]``."""
@@ -68,6 +81,10 @@ class ManifoldAstrocyte:
             self._mean += delta / self._n
             delta2 = x - self._mean
             self._m2 += delta * delta2
+        if self.full_cov:
+            self._sum += code_batch.sum(dim=0)
+            self._outer += code_batch.t() @ code_batch
+            self._prec = None  # invalidate cache
 
     def finalize(self) -> None:
         """Write (mu, sigma) into the arena cell's bias/edge_weight as compact storage."""
@@ -101,6 +118,39 @@ class ManifoldAstrocyte:
         sigma = self.sigma
         diff = code_batch[:, :self.code_dim] - self.mu
         return -0.5 * ((diff / sigma) ** 2 + sigma.log() * 2).sum(dim=-1)
+
+    # ── Full-covariance (Mahalanobis) path ────────────────────────
+
+    def _ensure_precision(self, shrinkage: float = 0.1) -> None:
+        """Compute and cache Σ⁻¹ and log|Σ| with diagonal shrinkage for stability.
+
+        Σ_reg = (1-s)·Σ + s·diag(Σ).  Shrinkage toward the diagonal keeps the
+        estimate well-conditioned when n is small relative to code_dim².
+        """
+        if self._prec is not None or not self.full_cov or self._n < 2:
+            return
+        mean = self._sum / self._n
+        cov = self._outer / self._n - torch.outer(mean, mean)
+        cov = cov * (self._n / (self._n - 1))  # Bessel correction
+        diag = torch.diag(torch.diag(cov))
+        cov = (1.0 - shrinkage) * cov + shrinkage * diag
+        cov = cov + 1e-4 * torch.eye(self.code_dim, device=self.arena.device)
+        sign, logabsdet = torch.linalg.slogdet(cov)
+        self._logdet = float(logabsdet.item()) if sign > 0 else 0.0
+        self._prec = torch.linalg.inv(cov)
+
+    def log_likelihood_full(self, code_batch: torch.Tensor,
+                            shrinkage: float = 0.1) -> torch.Tensor:
+        """Full-covariance (Mahalanobis) log p(code | class). Returns [B].
+
+        Falls back to the diagonal likelihood if full covariance is unavailable.
+        """
+        if not self.full_cov or self._n < 2:
+            return self.log_likelihood(code_batch)
+        self._ensure_precision(shrinkage)
+        diff = code_batch[:, :self.code_dim] - self.mu
+        maha = (diff @ self._prec * diff).sum(dim=-1)
+        return -0.5 * (maha + self._logdet)
 
 
 class ManifoldCluster:
@@ -151,9 +201,11 @@ class ManifoldCluster:
 class ManifoldArchive:
     """Manages all manifold astrocytes across the curriculum."""
 
-    def __init__(self, arena: Arena, cfg: ManifoldConfig | None = None) -> None:
+    def __init__(self, arena: Arena, cfg: ManifoldConfig | None = None,
+                 full_cov: bool = False) -> None:
         self.arena = arena
         self.cfg = cfg or ManifoldConfig()
+        self.full_cov = full_cov
         self._astrocytes: dict[int, ManifoldAstrocyte] = {}
         self._clusters: list[ManifoldCluster] = []
         self._class_to_cluster: dict[int, int] = {}  # class_id → cluster_id
@@ -184,7 +236,7 @@ class ManifoldArchive:
         a.parent[cid] = -1
         a.position[cid] = torch.tensor([1.0, class_id * 0.01, 0.9], device=a.device)
 
-        astro = ManifoldAstrocyte(a, cid, class_id, dim)
+        astro = ManifoldAstrocyte(a, cid, class_id, dim, full_cov=self.full_cov)
         self._astrocytes[class_id] = astro
         return astro
 
