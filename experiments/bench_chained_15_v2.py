@@ -632,7 +632,8 @@ def calibrate_detectors(sub, detectors: list[list[int]], archive, specs, n_perc:
 
 
 def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids, full_cov=False,
-                      source="real", perc_archive=None, n_perc=0, samples_per_class=400):
+                      source="real", perc_archive=None, n_perc=0, samples_per_class=400,
+                      perc_full_sample=False, perc_sample_rank=None):
     """Rebuild the H-space manifold from a fresh pass through the CURRENT substrate.
 
     Fixes stale statistics: H-cell activations drift as later tasks train, so
@@ -654,7 +655,10 @@ def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids, full_cov=F
                     astro = perc_archive.get(gc) if perc_archive is not None else None
                     if astro is None:
                         continue
-                    syn = astro.sample(samples_per_class)  # [N, perc_dim] in pixel space
+                    if perc_full_sample:
+                        syn = astro.sample_full(samples_per_class, rank=perc_sample_rank)
+                    else:
+                        syn = astro.sample(samples_per_class)  # [N, perc_dim] in pixel space
                     x_in = torch.zeros(syn.shape[0], n_perc, device=sub.arena.device)
                     w = min(syn.shape[1], n_perc)
                     x_in[:, :w] = syn[:, :w]
@@ -709,6 +713,10 @@ def main():
     parser.add_argument("--h-route-mode", choices=["task", "class"], default="task", help="H-routing granularity (default task)")
     parser.add_argument("--refresh-source", choices=["real", "manifold"], default="real",
                         help="refresh H-stats from real data (oracle ceiling) or perception manifold (storage-free)")
+    parser.add_argument("--perc-full-cov", action="store_true",
+                        help="accumulate full pixel covariance in the perception manifold and sample correlated pixels during storage-free refresh")
+    parser.add_argument("--perc-sample-rank", type=int, default=0,
+                        help="rank-k truncation for correlated pixel sampling (0=full covariance)")
     args = parser.parse_args()
 
     if args.smoke:
@@ -731,6 +739,8 @@ def main():
     use_full_cov = args.full_cov and use_h_routing
     h_route_mode = args.h_route_mode
     refresh_source = args.refresh_source
+    use_perc_full_cov = args.perc_full_cov
+    perc_sample_rank = args.perc_sample_rank if args.perc_sample_rank > 0 else None
 
     flags = []
     if not use_sparsity:
@@ -761,6 +771,9 @@ def main():
         flags.append("full-cov")
     if use_refresh_h:
         flags.append(f"refresh-h({refresh_source})")
+    if use_perc_full_cov:
+        rank_lbl = "full" if perc_sample_rank is None else f"rank{perc_sample_rank}"
+        flags.append(f"perc-cov({rank_lbl})")
     flag_str = f" [{', '.join(flags)}]"
 
     print("=" * 60)
@@ -786,7 +799,7 @@ def main():
     # Learning components
     credit = CreditTracker(sub.arena)
     frust = FrustrationDetector()
-    archive = ManifoldArchive(sub.arena)
+    archive = ManifoldArchive(sub.arena, full_cov=use_perc_full_cov)
     h_archive = ManifoldArchive(sub.arena, full_cov=use_full_cov) if use_h_routing else None
     output_anchor: OutputAnchor | None = None
 
@@ -904,7 +917,9 @@ def main():
                        if sub.arena.alive[cid] and has_gene(int(sub.arena.epigenome[cid].item()), PERCEPTION))
         h_archive = refresh_h_archive(sub, bundle, specs, len(specs), h_interior_ids,
                                       full_cov=use_full_cov, source=refresh_source,
-                                      perc_archive=archive, n_perc=n_perc_r)
+                                      perc_archive=archive, n_perc=n_perc_r,
+                                      perc_full_sample=use_perc_full_cov,
+                                      perc_sample_rank=perc_sample_rank)
         ev_refresh = evaluate_all_tasks(
             sub, bundle, specs, len(specs),
             None, None,

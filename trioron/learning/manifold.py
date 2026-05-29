@@ -113,6 +113,36 @@ class ManifoldAstrocyte:
         eps = torch.randn(batch_size, self.code_dim, device=self.arena.device)
         return self.mu + self.sigma * eps
 
+    def sample_full(self, batch_size: int, rank: int | None = None,
+                    shrinkage: float = 0.1) -> torch.Tensor:
+        """Draw samples from the full (or rank-truncated) Gaussian N(μ, Σ_reg).
+
+        Captures cross-feature correlations the diagonal sampler ignores.
+        ``rank=None`` samples from the full covariance via Cholesky; ``rank=k``
+        keeps the top-k eigen-directions plus an isotropic residual drawn from
+        the mean of the remaining spectrum. Falls back to the diagonal sampler
+        when full covariance is unavailable.
+        """
+        if not self.full_cov or self._n < 2:
+            return self.sample(batch_size)
+        cov = self._regularized_cov(shrinkage)
+        d = self.code_dim
+        dev = self.arena.device
+        if rank is None or rank >= d:
+            L = torch.linalg.cholesky(cov)
+            z = torch.randn(batch_size, d, device=dev)
+            return self.mu + z @ L.t()
+        evals, evecs = torch.linalg.eigh(cov)   # ascending
+        evals = evals.clamp(min=1e-8)
+        top_val = evals[-rank:]                 # [k]
+        V = evecs[:, -rank:]                    # [d, k]
+        zk = torch.randn(batch_size, rank, device=dev)
+        samp = self.mu + (zk * top_val.sqrt()) @ V.t()
+        resid = float(evals[:-rank].mean()) if d > rank else 0.0
+        if resid > 0:
+            samp = samp + (resid ** 0.5) * torch.randn(batch_size, d, device=dev)
+        return samp
+
     def log_likelihood(self, code_batch: torch.Tensor) -> torch.Tensor:
         """Diagonal-Gaussian log p(code | class) for each sample. Returns [B]."""
         sigma = self.sigma
@@ -121,20 +151,25 @@ class ManifoldAstrocyte:
 
     # ── Full-covariance (Mahalanobis) path ────────────────────────
 
-    def _ensure_precision(self, shrinkage: float = 0.1) -> None:
-        """Compute and cache Σ⁻¹ and log|Σ| with diagonal shrinkage for stability.
+    def _regularized_cov(self, shrinkage: float = 0.1) -> torch.Tensor:
+        """Bessel-corrected covariance with diagonal shrinkage + ridge. [d, d].
 
-        Σ_reg = (1-s)·Σ + s·diag(Σ).  Shrinkage toward the diagonal keeps the
-        estimate well-conditioned when n is small relative to code_dim².
+        Σ_reg = (1-s)·Σ + s·diag(Σ) + 1e-4·I.  Shrinkage toward the diagonal
+        keeps the estimate well-conditioned when n is small relative to code_dim².
         """
-        if self._prec is not None or not self.full_cov or self._n < 2:
-            return
         mean = self._sum / self._n
         cov = self._outer / self._n - torch.outer(mean, mean)
         cov = cov * (self._n / (self._n - 1))  # Bessel correction
         diag = torch.diag(torch.diag(cov))
         cov = (1.0 - shrinkage) * cov + shrinkage * diag
         cov = cov + 1e-4 * torch.eye(self.code_dim, device=self.arena.device)
+        return cov
+
+    def _ensure_precision(self, shrinkage: float = 0.1) -> None:
+        """Compute and cache Σ⁻¹ and log|Σ| with diagonal shrinkage for stability."""
+        if self._prec is not None or not self.full_cov or self._n < 2:
+            return
+        cov = self._regularized_cov(shrinkage)
         sign, logabsdet = torch.linalg.slogdet(cov)
         self._logdet = float(logabsdet.item()) if sign > 0 else 0.0
         self._prec = torch.linalg.inv(cov)
