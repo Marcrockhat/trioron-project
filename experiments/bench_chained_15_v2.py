@@ -14,6 +14,7 @@ import time
 from dataclasses import dataclass, field
 
 import torch
+import torch.nn as nn
 
 from experiments.datasets import (
     DatasetBundle, ChainedTaskSpec, chained_15_specs, IMAGE_DIM,
@@ -128,10 +129,10 @@ def anchor_penalty(anchor: OutputAnchor | None, arena, lam: float = ANCHOR_LAMBD
 
 # ── Substrate construction ───────────────────────────────────────
 
-def build_substrate(seed: int = 42):
+def build_substrate(seed: int = 42, h_init: int = H_INIT):
     torch.manual_seed(seed)
     sub = construct(
-        base=seeded(IMAGE_DIM, N_GLOBAL_CLASSES, interior_cells=H_INIT),
+        base=seeded(IMAGE_DIM, N_GLOBAL_CLASSES, interior_cells=h_init),
         envelope=Envelope(max_parameter_bytes=PARAM_CAP_BYTES),
         dispatch_table=default_dispatch_table(),
         capacity=2048,
@@ -384,10 +385,12 @@ def train_one_task(
     anchor_lambda: float = ANCHOR_LAMBDA,
     h_archive: ManifoldArchive | None = None,
     h_interior_ids: torch.Tensor | None = None,
+    lr: float = LR,
+    train_input_noise: float = 0.0,
 ):
     """Train one task with frustration-gated growth and manifold collection."""
     sub.prepare_training()
-    opt = torch.optim.Adam(sub.trainable_tensors(), lr=LR)
+    opt = torch.optim.Adam(sub.trainable_tensors(), lr=lr)
 
     if recorder:
         recorder.on_task_start(sub.arena, task_idx)
@@ -405,7 +408,11 @@ def train_one_task(
 
     for epoch in range(epochs):
         for x_batch, y_batch in train_view.iter_epoch(BATCH):
-            logits = sub(x_batch)
+            if train_input_noise > 0:
+                x_in = x_batch + train_input_noise * torch.randn_like(x_batch)
+            else:
+                x_in = x_batch
+            logits = sub(x_in)
             loss = torch.nn.functional.cross_entropy(logits, y_batch)
 
             # Capture task H-activations now, before replay overwrites last_activations
@@ -490,7 +497,7 @@ def train_one_task(
                             recorder.on_growth(sub.arena, task_idx, event.child_id)
                         sub.compile()
                         interior_ids = get_interior_ids(sub.arena).long()
-                        opt = torch.optim.Adam(sub.trainable_tensors(), lr=LR)
+                        opt = torch.optim.Adam(sub.trainable_tensors(), lr=lr)
                         frust_steps = 0
 
     if recorder:
@@ -633,7 +640,7 @@ def calibrate_detectors(sub, detectors: list[list[int]], archive, specs, n_perc:
 
 def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids, full_cov=False,
                       source="real", perc_archive=None, n_perc=0, samples_per_class=400,
-                      perc_full_sample=False, perc_sample_rank=None):
+                      perc_full_sample=False, perc_sample_rank=None, perc_jitter=0.0):
     """Rebuild the H-space manifold from a fresh pass through the CURRENT substrate.
 
     Fixes stale statistics: H-cell activations drift as later tasks train, so
@@ -655,10 +662,16 @@ def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids, full_cov=F
                     astro = perc_archive.get(gc) if perc_archive is not None else None
                     if astro is None:
                         continue
-                    if perc_full_sample:
-                        syn = astro.sample_full(samples_per_class, rank=perc_sample_rank)
-                    else:
-                        syn = astro.sample(samples_per_class)  # [N, perc_dim] in pixel space
+                    syn = None
+                    if perc_archive is not None and perc_archive.mixture_k > 0:
+                        syn = perc_archive.sample_mixture(gc, samples_per_class)
+                    if syn is None:
+                        if perc_full_sample:
+                            syn = astro.sample_full(samples_per_class, rank=perc_sample_rank)
+                        else:
+                            syn = astro.sample(samples_per_class)  # [N, perc_dim] in pixel space
+                    if perc_jitter > 0:
+                        syn = syn + perc_jitter * torch.randn_like(syn)
                     x_in = torch.zeros(syn.shape[0], n_perc, device=sub.arena.device)
                     w = min(syn.shape[1], n_perc)
                     x_in[:, :w] = syn[:, :w]
@@ -684,6 +697,154 @@ def refresh_h_archive(sub, bundle, specs, tasks_seen, h_interior_ids, full_cov=F
                         fresh.update_class(gc, h_act[mask])
     fresh.finalize_all()
     return fresh
+
+
+# ── Discriminative H-space router ─────────────────────────────────
+
+
+class HRouter(nn.Module):
+    """Discriminative classifier over forwarded H-vectors.
+
+    The generative QDA router keeps only per-class (mu, Sigma); this keeps the
+    full nonlinear sample distribution. Trained on the same forwarded H-vectors
+    the refresh collects, so it is storage-free under source=manifold.
+    """
+
+    def __init__(self, in_dim: int, n_out: int, kind: str = "mlp", hidden: int = 64):
+        super().__init__()
+        if kind == "logistic":
+            self.net = nn.Linear(in_dim, n_out)
+        else:
+            self.net = nn.Sequential(
+                nn.Linear(in_dim, hidden), nn.ReLU(),
+                nn.Linear(hidden, n_out),
+            )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+def collect_h_samples(sub, bundle, specs, tasks_seen, h_interior_ids, source,
+                      perc_archive=None, n_perc=0, samples_per_class=400,
+                      perc_full_sample=False, perc_sample_rank=None, perc_jitter=0.0):
+    """Forward synthetic (storage-free) or real (oracle) inputs through the CURRENT
+    substrate and collect H-vectors with class+task labels — the training set for a
+    discriminative router. Mirrors refresh_h_archive's sampling so the router and the
+    QDA manifold see identical data.
+    """
+    Xs, ycs, yts = [], [], []
+    dev = sub.arena.device
+    with torch.no_grad():
+        if source == "manifold":
+            for t_idx in range(tasks_seen):
+                for gc in specs[t_idx].global_classes:
+                    astro = perc_archive.get(gc) if perc_archive is not None else None
+                    if astro is None:
+                        continue
+                    syn = None
+                    if perc_archive is not None and perc_archive.mixture_k > 0:
+                        syn = perc_archive.sample_mixture(gc, samples_per_class)
+                    if syn is None:
+                        if perc_full_sample:
+                            syn = astro.sample_full(samples_per_class, rank=perc_sample_rank)
+                        else:
+                            syn = astro.sample(samples_per_class)
+                    if perc_jitter > 0:
+                        syn = syn + perc_jitter * torch.randn_like(syn)
+                    x_in = torch.zeros(syn.shape[0], n_perc, device=dev)
+                    w = min(syn.shape[1], n_perc)
+                    x_in[:, :w] = syn[:, :w]
+                    _ = sub(x_in)
+                    h = sub.last_activations[:, h_interior_ids]
+                    Xs.append(h)
+                    ycs.append(torch.full((h.shape[0],), gc, dtype=torch.long, device=dev))
+                    yts.append(torch.full((h.shape[0],), t_idx, dtype=torch.long, device=dev))
+        else:  # real — oracle ceiling
+            for t_idx in range(tasks_seen):
+                spec = specs[t_idx]
+                train_view = bundle.task_view(
+                    spec.dataset_name, spec.local_classes, spec.global_classes,
+                    split="train", task_name=spec.name,
+                )
+                for x_batch, y_batch in train_view.iter_epoch(BATCH):
+                    _ = sub(x_batch)
+                    h = sub.last_activations[:, h_interior_ids]
+                    for gc in spec.global_classes:
+                        mask = y_batch == gc
+                        if mask.any():
+                            nk = int(mask.sum())
+                            Xs.append(h[mask])
+                            ycs.append(torch.full((nk,), gc, dtype=torch.long, device=dev))
+                            yts.append(torch.full((nk,), t_idx, dtype=torch.long, device=dev))
+    return torch.cat(Xs), torch.cat(ycs), torch.cat(yts)
+
+
+def train_h_router(X, y, n_out, kind="mlp", hidden=64, epochs=60, lr=1e-2, batch=256, seed=0):
+    """Train a discriminative router on standardized H-vectors. Returns (model, mu, sd)."""
+    g = torch.Generator(device="cpu").manual_seed(seed)
+    mu = X.mean(dim=0)
+    sd = X.std(dim=0) + 1e-6
+    Xn = (X - mu) / sd
+    model = HRouter(X.shape[1], n_out, kind=kind, hidden=hidden).to(X.device)
+    opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
+    n = Xn.shape[0]
+    for _ in range(epochs):
+        perm = torch.randperm(n, generator=g).to(X.device)
+        for i in range(0, n, batch):
+            idx = perm[i:i + batch]
+            opt.zero_grad()
+            loss = nn.functional.cross_entropy(model(Xn[idx]), y[idx])
+            loss.backward()
+            opt.step()
+    model.eval()
+    return model, mu, sd
+
+
+def evaluate_router(sub, bundle, specs, tasks_seen, h_interior_ids,
+                    router, mu, sd, granularity):
+    """Full + task-aware accuracy using a discriminative H-router for routing.
+
+    granularity='class': router argmax over seen global classes (bypasses head).
+    granularity='task' : router picks the task, output head picks class within it.
+    """
+    result = EvalResult(after_task=tasks_seen - 1)
+    seen_classes = []
+    for ti in range(tasks_seen):
+        seen_classes.extend(specs[ti].global_classes)
+    for t_idx in range(tasks_seen):
+        spec = specs[t_idx]
+        test_view = bundle.task_view(
+            spec.dataset_name, spec.local_classes, spec.global_classes,
+            split="test", task_name=spec.name,
+        )
+        x, y = test_view.all_examples()
+        with torch.no_grad():
+            logits = sub(x)
+            h = (sub.last_activations[:, h_interior_ids] - mu) / sd
+            r = router(h)
+            if granularity == "class":
+                colmask = torch.full((r.shape[1],), float("-inf"), device=r.device)
+                colmask[seen_classes] = 0.0
+                pred_full = (r + colmask).argmax(dim=1)
+            else:
+                best_task = r[:, :tasks_seen].argmax(dim=1)
+                pred_full = torch.zeros(x.shape[0], dtype=torch.long, device=x.device)
+                for ti in range(tasks_seen):
+                    m = best_task == ti
+                    if not m.any():
+                        continue
+                    tspec = specs[ti]
+                    gc_t = torch.tensor(tspec.global_classes, dtype=torch.long)
+                    pred_full[m] = gc_t[logits[m][:, tspec.global_classes].argmax(dim=1)]
+            full_acc = (pred_full == y).float().mean().item()
+            gc_tensor = torch.tensor(spec.global_classes, dtype=torch.long)
+            pred_task = gc_tensor[logits[:, spec.global_classes].argmax(dim=1)]
+            task_acc = (pred_task == y).float().mean().item()
+        result.per_task.append(TaskResult(
+            task_idx=t_idx, task_name=spec.name,
+            full_acc=full_acc, task_acc=task_acc,
+        ))
+    return result
 
 
 # ── Main ─────────────────────────────────────────────────────────
@@ -717,6 +878,22 @@ def main():
                         help="accumulate full pixel covariance in the perception manifold and sample correlated pixels during storage-free refresh")
     parser.add_argument("--perc-sample-rank", type=int, default=0,
                         help="rank-k truncation for correlated pixel sampling (0=full covariance)")
+    parser.add_argument("--perc-mixture-k", type=int, default=0,
+                        help="K diag-Gaussian sub-clusters per class in the perception archive (0=single Gaussian)")
+    parser.add_argument("--perc-jitter", type=float, default=0.0,
+                        help="Gaussian noise sigma added to synthetic pixels before forwarding (storage-free aug)")
+    parser.add_argument("--h-router", choices=["qda", "logistic", "mlp"], default="qda",
+                        help="discriminative H-router probe after refresh (qda=generative only, no router)")
+    parser.add_argument("--router-samples", type=int, default=400,
+                        help="synthetic H-vectors per class for storage-free router training (manifold source)")
+    parser.add_argument("--router-hidden", type=int, default=64, help="router MLP hidden width")
+    parser.add_argument("--router-epochs", type=int, default=60, help="router training epochs")
+    parser.add_argument("--lr", type=float, default=LR,
+                        help=f"substrate optimizer LR (default {LR}); 2x = ~1.34e-3 for less-precise training probe")
+    parser.add_argument("--train-input-noise", type=float, default=0.0,
+                        help="Gaussian noise sigma added to training inputs only (eval/replay unaffected) — upstream regularization probe")
+    parser.add_argument("--h-init", type=int, default=H_INIT,
+                        help=f"interior (H-space) cells at substrate construction (default {H_INIT})")
     args = parser.parse_args()
 
     if args.smoke:
@@ -741,6 +918,9 @@ def main():
     refresh_source = args.refresh_source
     use_perc_full_cov = args.perc_full_cov
     perc_sample_rank = args.perc_sample_rank if args.perc_sample_rank > 0 else None
+    perc_mixture_k = args.perc_mixture_k
+    perc_jitter = args.perc_jitter
+    h_router_kind = args.h_router
 
     flags = []
     if not use_sparsity:
@@ -774,6 +954,18 @@ def main():
     if use_perc_full_cov:
         rank_lbl = "full" if perc_sample_rank is None else f"rank{perc_sample_rank}"
         flags.append(f"perc-cov({rank_lbl})")
+    if perc_mixture_k > 0:
+        flags.append(f"perc-mix(K={perc_mixture_k})")
+    if perc_jitter > 0:
+        flags.append(f"perc-jit({perc_jitter})")
+    if args.lr != LR:
+        flags.append(f"lr={args.lr:g}")
+    if args.train_input_noise > 0:
+        flags.append(f"train-noise({args.train_input_noise})")
+    if args.h_init != H_INIT:
+        flags.append(f"h-init={args.h_init}")
+    if h_router_kind != "qda":
+        flags.append(f"h-router({h_router_kind})")
     flag_str = f" [{', '.join(flags)}]"
 
     print("=" * 60)
@@ -785,7 +977,7 @@ def main():
     bundle = DatasetBundle(["mnist", "fashion_mnist", "emnist_letters"])
 
     # Build substrate
-    sub = build_substrate(args.seed)
+    sub = build_substrate(args.seed, h_init=args.h_init)
     detectors = []
     if use_private_cells:
         detectors = add_task_detectors(sub, n_tasks=len(specs),
@@ -799,7 +991,7 @@ def main():
     # Learning components
     credit = CreditTracker(sub.arena)
     frust = FrustrationDetector()
-    archive = ManifoldArchive(sub.arena, full_cov=use_perc_full_cov)
+    archive = ManifoldArchive(sub.arena, full_cov=use_perc_full_cov, mixture_k=perc_mixture_k)
     h_archive = ManifoldArchive(sub.arena, full_cov=use_full_cov) if use_h_routing else None
     output_anchor: OutputAnchor | None = None
 
@@ -839,6 +1031,8 @@ def main():
             anchor_lambda=anchor_lambda,
             h_archive=h_archive,
             h_interior_ids=h_interior_ids,
+            lr=args.lr,
+            train_input_noise=args.train_input_noise,
         )
 
         # Dream cycle
@@ -919,7 +1113,8 @@ def main():
                                       full_cov=use_full_cov, source=refresh_source,
                                       perc_archive=archive, n_perc=n_perc_r,
                                       perc_full_sample=use_perc_full_cov,
-                                      perc_sample_rank=perc_sample_rank)
+                                      perc_sample_rank=perc_sample_rank,
+                                      perc_jitter=perc_jitter)
         ev_refresh = evaluate_all_tasks(
             sub, bundle, specs, len(specs),
             None, None,
@@ -929,8 +1124,39 @@ def main():
             h_full_cov=use_full_cov,
         )
         eval_history.append(ev_refresh)
-        print(f"  POST-REFRESH: mean full={ev_refresh.mean_full:.4f}, "
+        print(f"  POST-REFRESH (QDA): mean full={ev_refresh.mean_full:.4f}, "
               f"mean task-aware={ev_refresh.mean_task:.4f}")
+
+        # Discriminative H-router probe: trains on the same forwarded H-vectors,
+        # compares task-level (route 15-way, head classifies) vs class-level (30-way).
+        if h_router_kind != "qda":
+            print(f"\n--- Discriminative H-router probe ({h_router_kind}, source={refresh_source}) ---")
+            X, y_class, y_task = collect_h_samples(
+                sub, bundle, specs, len(specs), h_interior_ids, refresh_source,
+                perc_archive=archive, n_perc=n_perc_r, samples_per_class=args.router_samples,
+                perc_full_sample=use_perc_full_cov, perc_sample_rank=perc_sample_rank,
+                perc_jitter=perc_jitter,
+            )
+            print(f"  collected {X.shape[0]} H-vectors ({X.shape[1]}-d)")
+            if perc_mixture_k > 0:
+                print(f"  [mixture diagnostics K={perc_mixture_k}] per-class cluster n:")
+                for ti in range(len(specs)):
+                    for gc in specs[ti].global_classes:
+                        mx = archive._mixtures.get(gc)
+                        if mx is None:
+                            continue
+                        ns = mx.n.tolist()
+                        wt = [n / max(1.0, sum(ns)) for n in ns]
+                        print(f"    cls {gc:2d}: n={ns}  w=[{', '.join('%.2f' % w for w in wt)}]")
+            for gran, n_out, labels in (("task", len(specs), y_task),
+                                        ("class", N_GLOBAL_CLASSES, y_class)):
+                model, mu, sd = train_h_router(X, labels, n_out, kind=h_router_kind,
+                                               hidden=args.router_hidden, epochs=args.router_epochs,
+                                               seed=args.seed)
+                ev_r = evaluate_router(sub, bundle, specs, len(specs), h_interior_ids,
+                                       model, mu, sd, gran)
+                print(f"  POST-ROUTER ({gran}): mean full={ev_r.mean_full:.4f}, "
+                      f"mean task-aware={ev_r.mean_task:.4f}")
 
     # Joint detector calibration after all tasks
     if use_calibrate and detectors:

@@ -188,6 +188,83 @@ class ManifoldAstrocyte:
         return -0.5 * (maha + self._logdet)
 
 
+class StreamingMixture:
+    """K diagonal-Gaussian sub-clusters per class, online k-means assignment.
+
+    A single per-class Gaussian underfits multimodal pixel distributions (digit
+    shapes, letter variants); K diag sub-clusters give the perception model a
+    discrete-mode generative form without storing raw exemplars. Storage scales
+    as K * dim * 2 floats per class (μ_k and Σ²_k accumulators).
+    """
+
+    def __init__(self, dim: int, k: int, device) -> None:
+        self.dim = dim
+        self.k = k
+        self.device = device
+        self.sum_x = torch.zeros(k, dim, device=device)
+        self.sum_x2 = torch.zeros(k, dim, device=device)
+        self.n = torch.zeros(k, device=device)
+        self._n_init = 0  # how many sub-clusters have been seeded
+
+    @property
+    def total_n(self) -> int:
+        return int(self.n.sum().item())
+
+    @property
+    def mu(self) -> torch.Tensor:
+        return self.sum_x / self.n.clamp(min=1.0).unsqueeze(-1)
+
+    @property
+    def var(self) -> torch.Tensor:
+        m = self.mu
+        v = self.sum_x2 / self.n.clamp(min=1.0).unsqueeze(-1) - m * m
+        return v.clamp(min=1e-6)
+
+    def update(self, batch: torch.Tensor) -> None:
+        # Seed empty sub-clusters with the first K incoming samples
+        if self._n_init < self.k:
+            take = min(self.k - self._n_init, batch.shape[0])
+            for i in range(take):
+                j = self._n_init
+                x = batch[i]
+                self.sum_x[j] += x
+                self.sum_x2[j] += x * x
+                self.n[j] += 1.0
+                self._n_init += 1
+            batch = batch[take:]
+            if batch.shape[0] == 0:
+                return
+        # Vectorized assignment to nearest current centroid (L2), batched update
+        d = torch.cdist(batch, self.mu)
+        a = d.argmin(dim=1)
+        for j in range(self.k):
+            mask = a == j
+            if not mask.any():
+                continue
+            xb = batch[mask]
+            self.sum_x[j] += xb.sum(dim=0)
+            self.sum_x2[j] += (xb * xb).sum(dim=0)
+            self.n[j] += float(xb.shape[0])
+
+    def sample(self, n: int) -> torch.Tensor:
+        total = self.n.sum().item()
+        if total == 0:
+            return torch.zeros(0, self.dim, device=self.device)
+        w = self.n / float(total)
+        comp = torch.multinomial(w, n, replacement=True)
+        out = torch.empty(n, self.dim, device=self.device)
+        mu = self.mu
+        sigma = self.var.sqrt()
+        for j in range(self.k):
+            mask = comp == j
+            nj = int(mask.sum().item())
+            if nj == 0:
+                continue
+            eps = torch.randn(nj, self.dim, device=self.device)
+            out[mask] = mu[j] + sigma[j] * eps
+        return out
+
+
 class ManifoldCluster:
     """A discovered group of related classes sharing code-space features."""
 
@@ -237,11 +314,13 @@ class ManifoldArchive:
     """Manages all manifold astrocytes across the curriculum."""
 
     def __init__(self, arena: Arena, cfg: ManifoldConfig | None = None,
-                 full_cov: bool = False) -> None:
+                 full_cov: bool = False, mixture_k: int = 0) -> None:
         self.arena = arena
         self.cfg = cfg or ManifoldConfig()
         self.full_cov = full_cov
+        self.mixture_k = mixture_k
         self._astrocytes: dict[int, ManifoldAstrocyte] = {}
+        self._mixtures: dict[int, StreamingMixture] = {}
         self._clusters: list[ManifoldCluster] = []
         self._class_to_cluster: dict[int, int] = {}  # class_id → cluster_id
 
@@ -286,6 +365,23 @@ class ManifoldArchive:
         if self.arena.state[astro.cell_id] == CellState.ACTIVE:
             astro.update(code_batch)
             self._try_cluster(class_id)
+            if self.mixture_k > 0:
+                mx = self._mixtures.get(class_id)
+                if mx is None:
+                    mx = StreamingMixture(code_batch.shape[-1], self.mixture_k, code_batch.device)
+                    self._mixtures[class_id] = mx
+                mx.update(code_batch)
+
+    def sample_mixture(self, class_id: int, n: int) -> torch.Tensor | None:
+        """Sample n synthetic codes from the per-class K-component mixture.
+
+        Returns None if mixture is not enabled or no samples yet — caller falls
+        back to the single-Gaussian astrocyte sampler.
+        """
+        mx = self._mixtures.get(class_id)
+        if mx is None or mx.total_n == 0:
+            return None
+        return mx.sample(n)
 
     # ── Online clustering ─────────────────────────────────────────
 
