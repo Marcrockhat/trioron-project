@@ -1,8 +1,9 @@
 # Trioron Handoff
 
-**Session date:** 2026-05-30 → 2026-05-31
-**Session number:** 009
-**Session title:** Discriminative H-router lifts storage-free 0.72 → 0.832; substrate-is-bipartite-MLP discovered
+**Session date:** 2026-05-31
+**Session number:** 010
+**Session title:** Self-arrange depth shipped (emerges, doesn't lift) →
+pivot to grounded sense→valence world + Axis 7 (temporal) design
 
 > This file is **rewritten in full** every session. The previous
 > session's handoff is preserved in git history
@@ -12,262 +13,241 @@
 
 ## Summary
 
-Built a discriminative MLP router over forwarded H-vectors that replaces
-generative QDA's per-class (μ, Σ) summary with the full nonlinear sample
-distribution. Storage-free chained-15 full accuracy lifts from QDA's
-0.778 to **0.832 ± 0.009 (n=3 full-epoch)**. The oracle (real-data
-refresh) reaches 0.886 — confirming the H-space has more discriminative
-headroom than QDA was extracting.
+Implemented the **self-arranging substrate** (session 009's next-up #1):
+relaxed `divide()`'s rank policy so a new cell may draw edges from
+same-rank cells (`same_rank_edges`), and Kahn's BFS then promotes it to
+rank+1 — depth self-organizes through growth, no hand-crafting. Wired to a
+`--self-arrange` bench flag. **Depth provably emerges** (rank 5, 40 deep
+cells in probes) and is **cycle-safe by construction** (a freshly-divided
+cell is a sink, so any incoming edge is acyclic — no cycle check needed).
 
-Then probed five levers trying to push toward 0.85: **mixture-of-Gaussians
-perception (A)**, **pixel jitter (B)**, **2× LR**, **train-time input
-noise**, **H_INIT 55 → 80**. **All flat or regressed.** Investigation of
-why H_INIT=80 didn't help exposed a load-bearing architectural finding:
-**the substrate is structurally a 1-hidden-layer MLP**. `seeded()`
-creates only bipartite perception→interior→output edges, and `divide()`'s
-`(a.rank < child_rank)` policy prevents interior cells from ever
-connecting to other interior cells, in seed *or* growth. Everything we've
-built — Axes 1-5, KIBRA, manifold routing, anchor, dream — sits atop a
-single-hidden-layer MLP, not a true graph network. The MLP class-router
-beats QDA by exactly +6pp because the router *is* the missing second
-hidden layer.
+**But depth does not lift accuracy on any learnable task tested (4 task
+families).** chained-15 smoke gave a marginal +1pp (router-class 0.8182 vs
+0.8080), but synthetic parity (unlearnable), teacher-student (width
+suffices), staircase (unlearnable), and a new grounded-world bench all
+show self-arrange ≈ flat width. The depth-favoring regime *coincides* with
+the SGD-unlearnable regime on this substrate — reproducing the project's
+prior `bench_2_0_single_task` "depth didn't win" finding three more times.
 
-Hand-crafted `--interior-layers 2` smoke probe regressed (task-aware
-0.96→0.89, under-training) but doesn't decide depth — the fair test is a
-trioron-native one: relax `divide()`'s rank policy so the substrate can
-self-organize depth via growth, per the design principle Rocky reasserted
-("pure trioron self-adapting network"). Deferred to next session.
+Session then **pivoted, at Rocky's direction**, from "does depth help" to
+the actual roadmap question: **can the substrate learn things that need
+composition — logic, then language.** Long design conversation produced:
+(1) the **sense → logic → symbol → language** curriculum made concrete
+("logic before language" / discover-fire framing); (2) **emotion = learned
+predictive valence** (not innate — racism is the same mechanism
+miscalibrated by biased experience); (3) a **grounded sense→valence world**
+bench; (4) a full **Axis 7 (Temporal / Working Memory) design proposal**.
 
-Three foundational design memories saved this session: logic-before-language
-(reasoning is substrate-level symbolic CL, not LLM-mediated), temporal-
-cognition-gap (working memory via dream-phase signal not per-event
-timestamps), substrate-is-bipartite-mlp (the structural finding above),
-and substrate-self-organizes-architecture (the path-forward principle).
+Built `experiments/bench_grounded_world.py`: ~16 sensory primitives →
+innate drive-consequence labels (the only hardwired valence), substrate
+learns to predict the consequence (= emergent "emotion"). **The loop works
+(iid 0.996)** but **compositional generalization is weak** (nourish-recall
+0.99 i.i.d. → 0.39 on a held-out cue) and **depth doesn't fix it**. Static
+depth is not the missing piece; *state over time* is the untested one —
+which is why the temporal axis is the next real lever.
 
 ## Headline numbers
 
-Chained-15, storage-free, full-epoch (4ep), clean machinery (no anchor /
-no private-cells / no calibrate), n=3 seeds 1/2/3:
+**chained-15 smoke (seed=42, 2ep), clean machinery, MLP class-router:**
+| Config | router-class full | task-aware |
+|---|---|---|
+| baseline (no self-arrange) | 0.8080 | 0.9603 |
+| `--self-arrange` | **0.8182** | 0.9599 |
 
-| Config | full | σ | task-aware |
-|---|---|---|---|
-| QDA (class) | 0.7781 | 0.0041 | 0.9508 |
-| MLP class-router | **0.8319** | **0.0085** | 0.9508 |
-| MLP task-router | 0.8029 | 0.015 | 0.9508 |
-| Oracle MLP class (smoke seed=42, real-data refresh) | 0.886 | (n=1) | 0.96 |
++1pp at half training budget — directional only, NOT confirmed at full n=3
+(that run was deferred when the pivot happened).
 
-**vs v0.2.x published headline 0.601: +23pp.**
-**vs hippo K=50 stored-exemplar baseline 0.637: +20pp** (storage-free).
+**grounded-world bench, n=3 (60ep, h_init=8, grow 40@20, noise=0.1):**
+| Arm | iid | SYS | nourish-recall(SYS) | depth |
+|---|---|---|---|---|
+| no-growth | 0.996 | 0.894 | 0.388 ± 0.032 | rank 1 |
+| bipartite | 0.996 | 0.894 | 0.395 ± 0.040 | rank 1 |
+| self-arrange | 0.996 | 0.895 | 0.391 ± 0.037 | rank 5 |
+
+SYS = systematic (umami-cued) test; nourish-recall(SYS) is the real
+compositional metric (train cues nourishing with *sweet*, test with
+*umami*). All arms identical → depth irrelevant; substrate memorizes the
+surface cue.
 
 ## What was done
 
-### Discriminative H-router (the lift)
+### Self-arrange depth (the mechanism — SHIPPED, opt-in)
+- `trioron/lifecycle/grow.py`: added `GrowthConfig.same_rank_edges` (default
+  **False** — keeps CI/v1 behavior). When True, the edge-source mask uses
+  `a.rank <= child_rank` (vs `<`), and excludes the child id. Sink-safety
+  argument documented inline (no cycle check needed). 60-division probe:
+  baseline stays max_rank=1 (bipartite); self-arrange reaches rank 5 with
+  36 interior cells at rank>1.
+- `experiments/bench_chained_15_v2.py`: `--self-arrange` flag → threads a
+  `GrowthConfig` through `train_one_task` → `divide`. Added to the flags
+  log line.
 
-- `collect_h_samples`: gathers (H-vector, class, task) triples from
-  synthetic (storage-free) or real (oracle) inputs forwarded through the
-  current substrate. Mirrors `refresh_h_archive`'s sampling so QDA and
-  the router see identical data.
-- `HRouter` (`nn.Module`): small MLP (or logistic) over standardized
-  H-vectors. Configurable hidden width + epochs.
-- `train_h_router`: standardize, Adam + CE, weight decay.
-- `evaluate_router`: task granularity (router picks 15-way task, output
-  head picks class within) and class granularity (router picks 30-way
-  class directly, bypasses output head).
-- `--h-router {qda,logistic,mlp}`, `--router-samples`, `--router-hidden`,
-  `--router-epochs` flags. One probe run prints POST-REFRESH (QDA) +
-  POST-ROUTER (task) + POST-ROUTER (class) on identical trained substrate
-  — clean internal comparison.
+### Synthetic depth probes (all non-discriminating)
+- `experiments/bench_arena_hierarchical.py` (new): hierarchical parity /
+  teacher-student / staircase tasks, A/B no-growth / bipartite / self-arrange
+  with deterministic matched growth. **Mechanism confirmed** (depth emerges
+  under real training) but **no task discriminates** depth from width.
+  Fixed a missing `sub.prepare_training()` (substrate wasn't training).
 
-### Regularization-probe knobs (the saturation story)
+### Grounded sense→valence world (the pivot, NEW direction)
+- `experiments/bench_grounded_world.py` (new): the sense→logic curriculum
+  rung. Sensory schema (vision/touch/taste/smell, ~16 dims) → innate drive
+  consequence (nourishing/hydrating/painful/toxic/neutral) via conjunctive
+  grounded rules → substrate learns predictive valence ("emotion"). Reports
+  i.i.d. + **systematic compositional split** + per-class nourish-recall.
 
-- `--perc-mixture-k K`: per-class K-component diagonal-Gaussian mixture
-  in the perception archive via streaming online k-means
-  (`StreamingMixture` class in manifold.py). Online k-means seeding with
-  first K samples; cluster weights well-balanced empirically.
-- `--perc-jitter σ`: Gaussian noise added to synthetic pixel samples
-  before forwarding (downstream regularization).
-- `--lr`: substrate optimizer LR override (default 6.68e-4).
-- `--train-input-noise σ`: Gaussian noise on training x_batch only
-  (eval/replay unaffected; upstream regularization).
-
-### Substrate-capacity knobs
-
-- `--h-init N`: interior cell count at substrate construction (default 55).
-- `--interior-layers N`: number of stacked bipartite hidden layers
-  (1 = current behaviour; 2+ adds compositional depth). Hand-crafted;
-  exploratory only — the trioron-native path is `divide()`-policy work.
+### Axis 7 — Temporal / Working Memory (design proposal, NEW)
+- `docs/design/temporal_axis_v7.md` (new): full design. Two timescales —
+  within-pass recurrence (already specced §3.5, `recurrent` gene, never
+  exercised) + across-pass working memory (NEW gene bit 10 `mnemonic`,
+  leaky trace). Phase signal (wake/dream) as the clock. Temporal frustration
+  as the growth trigger (promote_recurrent / promote_mnemonic, analogue of
+  frustration→divide). Falsification gate (delayed grounded association).
+  Lifetime budget (cheapest axis by storage). **Corrects the
+  `temporal-cognition-gap` mis-numbering: temporal is Axis 7, NOT 6 — Axis 6
+  is `axis6_spawn`.**
 
 ## Key findings
 
-1. **Discriminative > generative for H-space routing.** MLP router beats
-   QDA by +6.3pp smoke / +5pp full-epoch n=3. The router exploits
-   nonlinear structure that QDA's (μ, Σ) summary discards. *Why it
-   matters:* the per-class H-distributions are non-Gaussian enough that
-   a discriminative model can extract significantly more signal.
-2. **Class-level > task-level routing.** Class router (0.832) beats task
-   router (0.803) by ~3pp full-epoch. Bypassing the forgetting-prone
-   output head is the stronger play, consistent with session-008 QDA
-   finding.
-3. **All cheap regularization levers saturated at 0.83.**
-   - Mixture-K=4: router REGRESSED -10pp (diagonal sub-cluster cov
-     loses cross-pixel correlations rank-40 full-cov preserves).
-   - Jitter σ ∈ {0.05, 0.10, 0.20}: router flat (0.831-0.835). Substrate
-     absorbs post-hoc input noise before it reaches the router.
-   - LR×2 (1.336e-3): router -0.010.
-   - Train-time input noise σ=0.10: router flat, task-aware -0.009.
-4. **H_INIT 55→80 also flat.** Bigger hidden layer = wider, not deeper.
-   QDA regressed -4pp (curse of dimensionality on Σ); router flat;
-   task-aware +0.4pp.
-5. **The substrate is structurally a 1-hidden-layer MLP.** Loaded
-   finding — see `substrate-is-bipartite-mlp` memory. `seeded()` lines
-   59-67 create only bipartite layers; `divide()` lines 93-100 enforce
-   `(a.rank < child_rank)` so grown cells can only see lower-rank
-   sources (always perception for interior cells). Width grows via
-   division but depth never does. The arena's `add_edges` accepts any
-   src/dst pair; only the connectivity *policies* enforce the bipartite
-   shape. *Why it matters:* The 0.83 storage-free ceiling has a clean
-   structural explanation, and the path to 0.85+ is concrete — relax
-   the rank policy, let the substrate self-organize depth.
-6. **`recompute_ranks()` is Kahn's BFS topological sort.** Rank is
-   *derived* from edge topology, not set arbitrarily. So adding a single
-   inter-interior edge automatically promotes the receiving cell to
-   rank+1 next compile — depth emerges from topology.
-7. **Hand-crafted 2-layer regressed at smoke training budget.** Same
-   2-epoch budget, 2× substrate params, task-aware crashed 0.96 → 0.89.
-   Under-training, not a refutation of depth. The trioron-native test
-   (`divide()` policy relaxation + growth) is the fair experiment;
-   deferred to next session.
+1. **Self-arrange depth emerges and is cycle-safe, but doesn't lift
+   learnable tasks.** A divided cell is a sink → relaxing the rank policy
+   can't create cycles. Depth grows (rank 5). But across 4 task families,
+   self-arrange ≈ flat width. *Why:* the depth-favoring regime is the
+   SGD-unlearnable regime (parity); everything learnable is width-sufficient
+   (teacher-student, grounded-world). This is intrinsic on this substrate,
+   reproducing `bench_2_0_single_task`'s "depth didn't win."
+2. **The two-substrate split.** chained-15 uses the **Arena** substrate
+   (`divide()`, ranks) where self-arrange lives. CIFAR / hierarchical /
+   absorption use **TrioronNetwork** (fixed layer-list MLP, `axis6_spawn`
+   for *width* growth). My depth change *cannot run* on the latter without a
+   port — Rocky correctly stopped that direction. The CIFAR "self-arrange"
+   arm is a *different* (width/spawn) mechanism.
+3. **Emotion = learned predictive valence, not innate.** Only the drives
+   (hunger/thirst/pain/temperature) are hardwired valence; emotion *emerges*
+   as the substrate learns percept→drive-consequence. Biased experience →
+   biased emotion (racism is the same mechanism). This makes the temporal
+   axis load-bearing: prediction is temporal credit assignment.
+4. **The grounded loop works but the substrate memorizes surface cues.**
+   iid 0.996, but nourish-recall collapses to 0.39 on a held-out cue. Static
+   depth doesn't help. The compositional gap is real.
+5. **My systematic split is arguably too hard** (holds out a *primitive*
+   cue entirely — "umami is edible" never seen in any context). The 0.39 is
+   partly an impossible-without-prior inference, not pure weak-composition.
+   Refine toward a SCAN-style split (all primitives seen, novel
+   *combinations* held out) next.
 
 ## State of the build
 
 - **Branch:** `v2.0-scaffold`
-- **Commits this session (all pushed):**
-  - `53faea8` — feat: discriminative H-router + regularization probes —
-    storage-free 0.72→0.83 (HRouter, collect_h_samples, train_h_router,
-    evaluate_router; mixture/jitter/lr/train-noise knobs; StreamingMixture
-    in manifold.py)
-  - `74d0491` — feat: --interior-layers exploratory probe + --h-init flag
-    (multi-layer Seeded; hand-crafted depth ceiling check)
-- **Pre-existing uncommitted (carried from session 005, NOT touched):**
+- **Committed this session** (selectively — see Decisions): `grow.py`,
+  `bench_chained_15_v2.py`, `bench_arena_hierarchical.py`,
+  `bench_grounded_world.py`, `docs/design/temporal_axis_v7.md`, this handoff.
+- **Pre-existing uncommitted, NOT touched (carried from session 005):**
   `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
-  `trioron/viz/export.py`.
-- **Untracked:** `.claude/`, `runs/` (logs, gitignored).
-- New bench flags: `--h-router {qda,logistic,mlp}`, `--router-samples`,
-  `--router-hidden`, `--router-epochs`, `--perc-mixture-k`,
-  `--perc-jitter`, `--lr`, `--train-input-noise`, `--h-init`,
-  `--interior-layers`.
+  `trioron/viz/export.py`. Left as-is, as in session 009.
+- **Untracked:** `.claude/`, `runs/` (gitignored).
+- **Pre-existing test failure (NOT mine):**
+  `tests/test_v2/test_lifecycle.py::TestGrowth::test_growth_trigger_logic`
+  — fails on clean HEAD too (threshold mismatch: `check_growth_trigger(1.5,
+  50)` returns True, test expects False). Flag for a future cleanup.
 
 ## Decisions made
 
-- **Ship 0.832 ± 0.009 as the storage-free chained-15 headline** (n=3
-  full-epoch, +23pp over v0.2.x). Discriminative router replaces QDA as
-  the headline mechanism; QDA stays available as the baseline.
-- **Bipartite-MLP finding is the architectural lever for the next push.**
-  Modify `divide()`'s rank policy (`a.rank < child_rank` →
-  `a.rank <= child_rank` with cycle check) so the substrate
-  self-organizes depth via growth. Per Rocky: "pure trioron
-  self-adapting network" — do NOT hand-craft.
-- **`--interior-layers` flag is exploratory only**, not a deployment
-  path. Useful as a hand-crafted ceiling check if needed.
-- **The parked anchor/detector/calibrate machinery was hurting QDA by
-  ~6pp.** Clean-config QDA full-epoch n=3 is 0.778 vs n=10 with
-  machinery 0.718. The "POST-REFRESH (QDA)" line is depressed by the
-  same calibration that clobbers FINAL.
+- **Ship self-arrange as opt-in (`same_rank_edges=False` default).** Keeps
+  CI/v1 tests intact; bench opts in via `--self-arrange`. Do NOT flip the
+  default until depth demonstrably helps something.
+- **Stop chasing synthetic depth discriminators.** 4 families failed; it's
+  intrinsic. Self-arrange stays available as a mechanism, not a headline.
+- **Pivot to the grounded sense→logic→symbol→language curriculum** as the
+  real track (Rocky's call). Depth and temporal are composition-in-space vs
+  composition-in-time — the two halves of reasoning.
+- **Emotion is learned, not hardcoded.** Schema hardcodes senses + drives +
+  survival disposition; emotion emerges.
+- **Committed the session's code + handoff and pushed**, per the project's
+  unconditional handoff rule (CLAUDE.md), surgically excluding the
+  session-005 carried files.
 
 ## Open questions
 
-1. **Does self-organized depth help?** Modify `divide()` rank policy
-   (`<=` not `<`), full-epoch n=3, measure router-class. Decisive test
-   of whether 0.85+ is reachable via the trioron-native path. ~3.5h
-   compute.
-2. **Or alternately: 2-layer hand-crafted at full-epoch n=3.** Same
-   ceiling check at proper training budget. If even hand-crafted depth
-   doesn't help, the bipartite ceiling isn't structural and the answer
-   is elsewhere. ~3h compute.
-3. **Mixture-K with per-sub-cluster full covariance.** Diagnosed but not
-   tested — could rescue mixture but K × full_cov memory is ~290MB for
-   K=4. Probably wrong direction; flagging for completeness.
-4. **Same-seed determinism gap.** Same-seed reruns on CPU diverge mildly
-   (seed-1 task-aware 0.952 → 0.940 across runs). Some of the n=3 σ is
-   non-determinism, not seed variance. Worth noting in the paper.
+1. **Does a SCAN-style compositional split (novel combinations, all
+   primitives seen) discriminate depth — or even there does width suffice?**
+   The current split holds out a primitive entirely; refine it.
+2. **chained-15 full n=3 with `--self-arrange`** — still un-run. Worth the
+   3.5h to confirm/deny the +1pp smoke signal? (Low priority given depth's
+   track record, but it's the one real-data signal.)
+3. **Temporal axis falsification gate** — build the delayed grounded
+   association task; does mnemonic/recurrence beat the feed-forward baseline?
+   This is the decisive next experiment for the new direction.
+4. **Survival disposition (run/safe/normal) + active/embodied loop** —
+   deferred; the passive associative version is what's built. Agency pulls
+   temporal in immediately.
 
 ## Next-up tasks (priority order)
 
-1. **`divide()` rank-policy relaxation** — `trioron/lifecycle/grow.py`
-   lines 93-100, change `(a.rank < child_rank)` to
-   `(a.rank <= child_rank)`, rely on existing `_creates_forbidden_cycle`
-   to filter cyclic edges. Run smoke seed=42; if depth emerges
-   (count grown cells with rank > 1), full-epoch n=3. **This is the
-   trioron-native path Rocky reasserted; the work continues here.**
-2. **If (1) lifts router toward 0.85+, update headline to that number.**
-   Otherwise document that depth alone wasn't sufficient and the
-   bipartite ceiling is set by something else (training dynamics, loss
-   structure, output-head forgetting).
-3. **Pivot to symbolic-CL reasoning track** per Rocky's roadmap (see
-   `logic-before-language-principle` memory). Curriculum order
-   (2)→(4)→(1): compositional feature-binding → multi-step inference →
-   abstract math. The (2)→(4) jump introduces temporal cognition; see
-   `temporal-cognition-gap` for the wake/dream-phase framing.
-4. **Update paper** (`paper/paper.tex` headline tables) to replace
-   v0.2.x manifold-grown 0.601 with the new MLP-router 0.832 ± 0.009
-   (n=3). The +23pp over the v0.2.x headline and +20pp over hippo K=50
-   stored-exemplar baseline is the new paper story.
+1. **Build the temporal axis falsification gate** (`docs/design/
+   temporal_axis_v7.md` §7): delayed grounded-association task on the Arena
+   substrate, mnemonic-on vs mnemonic-off. This is the decisive test for the
+   whole new direction and the natural continuation. Implement the
+   `mnemonic` gene (bit 10) + leaky trace + phase-aware forward first.
+2. **Refine the grounded-world compositional split** to SCAN-style
+   (all primitives seen in *some* context, novel combinations held out) so
+   "weak composition" isn't confounded with "unfair held-out primitive."
+3. **Review the Axis 7 design** (`docs/design/temporal_axis_v7.md`) with
+   Rocky; fold accepted parts into spec §3.7 + §9 partition before any
+   `trioron/` temporal code lands (spec-is-source-of-truth discipline).
+4. **(Optional) chained-15 full n=3 `--self-arrange`** if we want the depth
+   verdict on real data closed out.
 
 ## Pointers
 
-- **`experiments/bench_chained_15_v2.py`** — `HRouter`,
-  `collect_h_samples`, `train_h_router`, `evaluate_router` (after
-  `refresh_h_archive`, before `main`). `--h-router` probe wired into
-  `main()` after the QDA POST-REFRESH eval. `build_substrate(h_init,
-  interior_layers)`.
-- **`trioron/learning/manifold.py`** — `StreamingMixture` class (after
-  `ManifoldAstrocyte`); `ManifoldArchive.__init__` accepts `mixture_k`;
-  `update_class` also updates the per-class mixture; `sample_mixture`.
-- **`trioron/bases/seeded.py`** — `Seeded.interior_layers` for the
-  multi-layer hand-crafted probe.
-- **`trioron/lifecycle/grow.py:93-100`** — the `(a.rank < child_rank)`
-  policy that's the next session's first edit.
-- **`trioron/core/graph.py:80-170`** — `recompute_ranks` Kahn's BFS;
-  understand this before changing the divide policy.
-- **`trioron/core/graph.py:174-185`** — `_creates_forbidden_cycle`;
-  relied on as the safety net when we relax the rank constraint.
-- **Logs:** `/tmp/run_router_val_s*.log`, `/tmp/run_jitter_*.log`,
-  `/tmp/run_mix_k4*.log`, `/tmp/run_lr2x_s42.log`,
-  `/tmp/run_tin0p10_s42.log`, `/tmp/run_hinit80_s*.log`,
-  `/tmp/run_layers2_s42.log` (this session, not committed).
-- **Spec §4.5** — manifold replay; the discriminative H-router is not
-  yet specced (spec gap). The bipartite-vs-cell-to-cell architectural
-  finding is also a spec gap — spec implies cell-to-cell, code
-  enforces bipartite. Worth a spec edit pass.
+- **`trioron/lifecycle/grow.py:93-117`** — the `same_rank_edges` policy +
+  sink-safety comment. The one-line lever.
+- **`experiments/bench_chained_15_v2.py`** — `--self-arrange` flag;
+  `growth_cfg` threaded through `train_one_task` (line ~390) → `divide`
+  (line ~493).
+- **`experiments/bench_grounded_world.py`** — the grounded world: `SENSES`,
+  `innate_consequence`, `make_world` (sweet→umami cue swap), `train_arm`,
+  `class_recall`. Run `--smoke` (~1 min) or default n=3 (~3 min).
+- **`experiments/bench_arena_hierarchical.py`** — synthetic depth probes
+  (parity/teacher-student/staircase); mechanism proof that depth emerges.
+- **`docs/design/temporal_axis_v7.md`** — Axis 7 full design.
+- **spec §3.5** (`recurrent` gene, line 873) — the within-pass temporal
+  primitive that already exists. **spec §2.2** — epigenome bits (bit 3
+  recurrent, bits 10-15 free; `mnemonic` proposed at bit 10). **spec line
+  3127** — the axis write-function list (confirms Axis 6 = spawn).
+- **Logs (uncommitted, /tmp):** `run_selfarrange_smoke_s42.log`,
+  `run_baseline_smoke_s42.log`, `run_grounded_world_n3.log`.
+
+## The conceptual through-line (read this to understand the pivot)
+
+Rocky reframed the whole session: depth-for-its-own-sake is the wrong
+target. The real question is whether trioron can do **logic and language** —
+and the honest answer is it shouldn't try to do them like an LLM (that's
+billions-of-params *coverage*, and it's Gemma's job). Trioron is the
+**grounded interface / inner voice** that represents the user's bounded,
+evolving intent — and *that* needs composition (depth in space) + memory
+(depth in time), at honest small scale. The curriculum is **sense → logic
+→ symbol → language**, bottom-up. We're at the **sense→logic** rung:
+grounded percepts → learned valence → compositional generalization. The
+baby-babble test ("understand a 'baaa' you've never heard") = compositional
+generalization = the grounded-world bench's systematic split. Pictographs
+(日+月=明) are the symbol rung above it. Language (frozen Gemma) is last.
 
 ## Memories saved this session (cross-PC persistent)
 
-- `logic-before-language-principle` — reasoning benches = substrate-level
-  symbolic CL, not LLM-mediated; LLM is downstream "storyteller."
-- `temporal-cognition-gap` — substrate has no working memory; (4)
-  reasoning needs time; reuse wake/dream cycle as phase signal not
-  per-event logging.
-- `substrate-is-bipartite-mlp` — seeded() + divide() enforce strict rank
-  hierarchy; structurally a 1-hidden-layer MLP, not cell-to-cell.
-- `substrate-self-organizes-architecture` — design intent: substrate
-  forms own depth via growth+training, not hand-crafted; "pure trioron
-  self-adapting network."
+- `self-arrange-depth-result` — depth emerges via `same_rank_edges`, is
+  cycle-safe (sink argument), but doesn't lift 4 learnable task families;
+  the depth-favoring⟺unlearnable tradeoff is intrinsic.
+- `grounded-sense-valence-curriculum` — the sense→logic→symbol→language
+  design; emotion=learned predictive valence; the grounded-world bench +
+  weak-composition result.
+- `temporal-axis-is-axis-7` — corrects `temporal-cognition-gap`: temporal =
+  Axis 7 (Axis 6 = spawn); design at `docs/design/temporal_axis_v7.md`.
 
 ## Environment notes
 
-- Working directory: `/home/marcrockhat/trioron-project/`
-- Branch: `v2.0-scaffold` (HEAD `74d0491` at session end pre-handoff)
-- Python: `/usr/bin/python3` (3.10.12), torch 2.11.0+cu130
-- Platform: Linux (WSL2), 12 cores, **7.4 GiB RAM**
-- **OOM warning:** two concurrent full-epoch router-training runs each
-  peak ~3 GiB at the router-train phase; the second push over 7.4 GiB
-  triggers the OOM-killer. Stagger or run solo OMP=8 for full-epoch
-  router probes. Smoke probes (~hundreds of MB) fit fine alongside.
-- **Threading:** solo → `OMP_NUM_THREADS=8`; two parallel → OMP=4 each.
-  Use `PYTHONUNBUFFERED=1`.
-- Smoke run timings: full-cov + router-100ep ≈ 15-20 min total;
-  refresh ≈ 1-2 min; router training ≈ 3-5 min.
-- Full-epoch (4ep): ~50 min total per run with current C config.
-- **Other project running:** `python3 -m src.main` from
-  `/home/marcrockhat/resto-bot` (PID floats) — Rocky's other project,
-  idle at 0% CPU, not interfering.
+- Working dir: `/home/marcrockhat/trioron-project/`. Branch `v2.0-scaffold`.
+- Python `/usr/bin/python3` (3.10.12), torch 2.11.0+cu130. Linux WSL2, 12
+  cores, 7.4 GiB RAM. Use `python3`, `OMP_NUM_THREADS=8` solo.
+- grounded-world: ~3 min n=3. chained-15 smoke: ~8.5 min. Full-epoch n=3
+  chained-15: ~3.5h serial (RAM-bound, OOMs on 2 concurrent full runs).

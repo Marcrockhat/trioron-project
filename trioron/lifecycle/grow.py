@@ -24,6 +24,7 @@ class GrowthConfig:
     inherit_frac: float = 0.246
     new_edges: int = 12
     position_jitter: float = 0.047
+    same_rank_edges: bool = False  # allow interior↔interior edges → self-organized depth
 
 
 @dataclass
@@ -91,10 +92,19 @@ def divide(
         n_inherit = 0
 
     child_rank = int(a.rank[cid].item())
+    # Edge-source policy.  Strict `<` keeps the substrate bipartite (a
+    # 1-hidden-layer MLP).  Relaxed `<=` lets a new cell draw from same-rank
+    # cells; recompute_ranks (Kahn's BFS) then promotes it to rank+1, so depth
+    # self-organizes through growth.  The child has zero out-edges at division
+    # time (it is a sink), so any incoming edge is cycle-safe by construction —
+    # no _creates_forbidden_cycle check needed.  Exclude the child itself to
+    # avoid a degenerate self-edge.
+    rank_ok = (a.rank <= child_rank) if cfg.same_rank_edges else (a.rank < child_rank)
     lower_mask = (
         a.alive
         & (a.state == CellState.ACTIVE)
-        & (a.rank < child_rank)
+        & rank_ok
+        & (torch.arange(a.capacity, device=a.device) != cid)
         & ~has_gene(a.epigenome, OUTPUT).bool()
     )
     lower_ids = lower_mask.nonzero(as_tuple=False).squeeze(-1)

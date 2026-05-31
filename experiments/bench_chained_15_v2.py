@@ -388,8 +388,10 @@ def train_one_task(
     h_interior_ids: torch.Tensor | None = None,
     lr: float = LR,
     train_input_noise: float = 0.0,
+    growth_cfg: GrowthConfig | None = None,
 ):
     """Train one task with frustration-gated growth and manifold collection."""
+    growth_cfg = growth_cfg or GrowthConfig()
     sub.prepare_training()
     opt = torch.optim.Adam(sub.trainable_tensors(), lr=lr)
 
@@ -490,7 +492,7 @@ def train_one_task(
                             and sub.arena.state[cid] == CellState.ACTIVE]
                 if interior:
                     parent = interior[torch.randint(0, len(interior), (1,)).item()]
-                    event = divide(sub.arena, parent)
+                    event = divide(sub.arena, parent, growth_cfg)
                     if event:
                         growth_budget -= 1
                         growth_count += 1
@@ -895,6 +897,9 @@ def main():
                         help="Gaussian noise sigma added to training inputs only (eval/replay unaffected) — upstream regularization probe")
     parser.add_argument("--h-init", type=int, default=H_INIT,
                         help=f"interior (H-space) cells at substrate construction (default {H_INIT})")
+    parser.add_argument("--self-arrange", action="store_true",
+                        help="relax divide() rank policy so the substrate self-organizes depth "
+                             "(interior↔interior edges); the trioron-native depth path")
     parser.add_argument("--interior-layers", type=int, default=1,
                         help="number of stacked bipartite interior layers (1=current, 2+ adds compositional depth)")
     args = parser.parse_args()
@@ -924,8 +929,11 @@ def main():
     perc_mixture_k = args.perc_mixture_k
     perc_jitter = args.perc_jitter
     h_router_kind = args.h_router
+    growth_cfg = GrowthConfig(same_rank_edges=args.self_arrange)
 
     flags = []
+    if args.self_arrange:
+        flags.append("self-arrange")
     if not use_sparsity:
         flags.append("no-sparsity")
     if not use_kibra:
@@ -1038,6 +1046,7 @@ def main():
             h_interior_ids=h_interior_ids,
             lr=args.lr,
             train_input_noise=args.train_input_noise,
+            growth_cfg=growth_cfg,
         )
 
         # Dream cycle
