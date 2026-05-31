@@ -169,7 +169,20 @@ buckets only.
 
 ---
 
-## 7. Falsification gate (must pass before the axis ships live)
+## 7. Falsification gate — **PASSED** (2026-05-31, n=3)
+
+> **Result.** `experiments/bench_temporal_gate.py` (delayed grounded recall).
+> temporal-off is pinned at chance (0.200, 5 balanced classes) at every
+> delay — memoryless cannot do delayed recall. temporal-on (substrate carries
+> its own leaky interior trace, BPTT through the sequence) recovers the cue:
+> 0.995±0.003 (1 step) → 0.957±0.011 (2 steps) → 0.726±0.010 (4 steps),
+> λ=0.6. Δ = +0.80 / +0.76 / +0.53 — **PASS at every delay** (bar 0.30), with
+> a clean memory-horizon decay. The faithful version: internal recurrence via
+> fed-back `live_activations`, not a handed-in echo of past input. Contrast:
+> self-arrange *depth* never lifted any task (Δ≈0); temporal memory does. Axis
+> 7 ships live (gate-level); next is the per-cell `mnemonic` gene in core.
+
+Original gate spec (for reference):
 
 Mirror the Phase 6 dendrite-delta gate (`phase_6_dendrite_delta_pass`): a
 minimal task where temporal **must** help, with a clean A/B.
