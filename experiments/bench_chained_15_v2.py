@@ -129,10 +129,11 @@ def anchor_penalty(anchor: OutputAnchor | None, arena, lam: float = ANCHOR_LAMBD
 
 # ── Substrate construction ───────────────────────────────────────
 
-def build_substrate(seed: int = 42, h_init: int = H_INIT):
+def build_substrate(seed: int = 42, h_init: int = H_INIT, interior_layers: int = 1):
     torch.manual_seed(seed)
     sub = construct(
-        base=seeded(IMAGE_DIM, N_GLOBAL_CLASSES, interior_cells=h_init),
+        base=seeded(IMAGE_DIM, N_GLOBAL_CLASSES,
+                    interior_cells=h_init, interior_layers=interior_layers),
         envelope=Envelope(max_parameter_bytes=PARAM_CAP_BYTES),
         dispatch_table=default_dispatch_table(),
         capacity=2048,
@@ -894,6 +895,8 @@ def main():
                         help="Gaussian noise sigma added to training inputs only (eval/replay unaffected) — upstream regularization probe")
     parser.add_argument("--h-init", type=int, default=H_INIT,
                         help=f"interior (H-space) cells at substrate construction (default {H_INIT})")
+    parser.add_argument("--interior-layers", type=int, default=1,
+                        help="number of stacked bipartite interior layers (1=current, 2+ adds compositional depth)")
     args = parser.parse_args()
 
     if args.smoke:
@@ -964,6 +967,8 @@ def main():
         flags.append(f"train-noise({args.train_input_noise})")
     if args.h_init != H_INIT:
         flags.append(f"h-init={args.h_init}")
+    if args.interior_layers != 1:
+        flags.append(f"interior-layers={args.interior_layers}")
     if h_router_kind != "qda":
         flags.append(f"h-router({h_router_kind})")
     flag_str = f" [{', '.join(flags)}]"
@@ -977,7 +982,7 @@ def main():
     bundle = DatasetBundle(["mnist", "fashion_mnist", "emnist_letters"])
 
     # Build substrate
-    sub = build_substrate(args.seed, h_init=args.h_init)
+    sub = build_substrate(args.seed, h_init=args.h_init, interior_layers=args.interior_layers)
     detectors = []
     if use_private_cells:
         detectors = add_task_detectors(sub, n_tasks=len(specs),
