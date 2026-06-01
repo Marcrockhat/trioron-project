@@ -119,7 +119,7 @@ def main():
 
     print(f"organism_v1: rung 1 — survive the world. seeds={args.seeds} "
           f"episodes={args.episodes} nonlinear={args.nonlinear}")
-    print("baselines (n=60): random≈15.1, reactive≈20.4  (organism must beat these)")
+    print("baselines (difficulty-reduced world, n=60): random≈27.9, reactive≈38.5")
 
     final = []
     for seed in range(args.seeds):
@@ -133,8 +133,8 @@ def main():
               f"late(last30)={statistics.mean(L[-30:]):.1f}  |  "
               f"GREEDY eval={gm:.1f} (max {max(greedy)})")
     m = statistics.mean(final); s = statistics.stdev(final) if len(final) > 1 else 0.0
-    verdict = "ALIVE (beats reactive)" if m > 20.4 else (
-        "beats random, not reactive" if m > 15.1 else "fails (≈random)")
+    verdict = "ALIVE (beats reactive)" if m > 38.5 else (
+        "beats random, not reactive" if m > 27.9 else "fails (≈random)")
     print(f"\n  === organism late survival: {m:.1f}±{s:.1f}  [{verdict}]")
     return 0
 

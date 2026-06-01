@@ -37,7 +37,7 @@ _DXY = {"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0)}
 
 
 class TileWorld:
-    def __init__(self, size=10, day_len=20, max_steps=300, seed=0):
+    def __init__(self, size=12, day_len=20, max_steps=300, seed=0):
         self.size = size
         self.day_len = day_len
         self.max_steps = max_steps
@@ -140,20 +140,24 @@ class TileWorld:
         if near_fire:
             self.temp = min(1.0, self.temp + 0.15)
             if int(self.grid[self.py, self.px]) == FIRE:
-                self.integrity = max(0.0, self.integrity - 0.1)   # too close burns
+                self.integrity = max(0.0, self.integrity - 0.08)   # too close burns
         else:
-            self.temp = max(0.0, self.temp - (0.03 if self.is_night else 0.015))
+            self.temp = max(0.0, self.temp - (0.015 if self.is_night else 0.008))
 
-        # metabolic decay
-        self.energy = max(0.0, self.energy - 0.02)
-        self.thirst = max(0.0, self.thirst - 0.025)
+        # metabolic decay (DIFFICULTY-REDUCED 2026-06-01: slower clocks give
+        # time to ACT, so survival rewards skillful seeking — but you still
+        # starve/dehydrate if you don't seek. Widens the skill band.)
+        self.energy = max(0.0, self.energy - 0.012)
+        self.thirst = max(0.0, self.thirst - 0.015)
 
-        # predator: roams; faster/aggressive at night; damages on contact
-        if self.is_night or (self.t % 2 == 0):
+        # predator: a MINOR nuisance (slow, light hit) — deliberately not the
+        # dominant killer, so the binding survival challenge is resource-seeking
+        # (a skill random can't fake), not a predator-luck lottery.
+        if self.t % 4 == 0:
             self.pred[0] = (self.pred[0] + (1 if self.px > self.pred[0] else -1)) % s
             self.pred[1] = (self.pred[1] + (1 if self.py > self.pred[1] else -1)) % s
         if self.pred[0] == self.px and self.pred[1] == self.py:
-            self.integrity = max(0.0, self.integrity - 0.4)
+            self.integrity = max(0.0, self.integrity - 0.1)
 
         self.t += 1
         # death: any drive depleted, or temperature out of the safe band
