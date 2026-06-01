@@ -2,8 +2,9 @@
 
 **Session date:** 2026-05-31 → 2026-06-01
 **Session number:** 011
-**Session title:** Temporal axis gate PASS → the comparison wall → quad-dendrite
-cracks it (linear 0/3 → quad 3/3); the sense→logic→symbol curriculum
+**Session title:** Temporal gate PASS → comparison wall → quad cracks it →
+ROOT FINDING: substrate was purely LINEAR → quad nonlinearity into core +
+satellites memory cell type
 
 > This file is **rewritten in full** every session. The previous
 > session's handoff is preserved in git history
@@ -31,12 +32,33 @@ Three results, in sequence:
    relation*, not memory, is the bottleneck for logic.
 
 3. **Quad-dendrite cracks it.** Comparison is an inner product (Σ sampleₖ·testₖ)
-   — a sum of input *products*. Linear+ReLU cells can't form products (the
-   parity wall); the dendrite quad σ(z)=z+z² expands to Σ wᵢwⱼ·aᵢaⱼ — all
-   pairwise products in one unit. Result: DMS goes from **linear 0/3 (chance)**
-   to **quad-dendrite 3/3 → 1.000**. The relational primitive that logic needs
-   is *already in the spec* (dendrite gene, §3.6) — it was just never
-   implemented (all shipped phenotypes are linear stubs).
+   — a sum of input *products*. The dendrite quad σ(z)=z+z² expands to
+   Σ wᵢwⱼ·aᵢaⱼ — all pairwise products in one unit. Result: DMS goes from
+   **0/3 (chance)** to **quad 3/3 → 1.000** (with grad clipping + RMS-norm of
+   the recurrent trace).
+
+4. **ROOT FINDING: the substrate was PURELY LINEAR.** `scheduler.forward`
+   applies NO activation; the linear phenotype is `y=b+Σw·a`; all phenotypes
+   were linear stubs. A stack of linear cells = one linear map — so
+   self-arrange depth was *mathematically vacuous*, comparison was
+   *unrepresentable*, and z² was the *first nonlinearity the substrate ever
+   had*. Even chained-15's 0.83 came from the external MLP router, not the
+   linear core. (See `substrate-was-purely-linear` memory.)
+
+5. **Fix landed in core (commit a56137a).** Real quad phenotype
+   (`trioron/phenotype/dendrite.py`, was a stub), registered, and
+   `seeded(nonlinear=)` puts the quad on interior triorons (output stays
+   linear). Quad preserves perception (0.992–0.995 vs linear 0.991), stable
+   with grad clip. Per Rocky's directives: "implement improvements in the
+   triorons themselves" (→ quad in core) and "set satellite if the change is
+   too massive" (→ memory to satellites). **Decision rule established: small
+   change → triorons core; massive change → satellites.**
+
+6. **Satellites v1** (`experiments/satellites_v1.py`) — a new cell type
+   alongside triorons (satellite-glia analogue, recurrent slot): intrinsic
+   MEMORY (leaky trace + BPTT, no Python harness), RESOURCE SENSING
+   (arena.pressure), resource-gated DIVISION. Delayed recall OFF 0.200 (chance)
+   → ON 0.996, memory living in graph cells.
 
 Conceptual throughline established with Rocky: reasoning ≠ eyesight (depth is
 for *fine* comparison, not coarse perception); emotion = *learned* predictive
@@ -117,8 +139,17 @@ composition, the cortex hallmarks don't appear (expected).
 
 - **Branch:** `v2.0-scaffold`. All work pushed.
 - **Commits this session:** `03d6d5a` (Axis 7 gate PASS), `0107a39` (structural
-  metrics + DMS comparison wall), `6a362f6` (quad-dendrite cracks it).
-  Session 010's were `5547ab2` (self-arrange + grounded world + Axis 7 design).
+  metrics + DMS comparison wall), `6a362f6` (quad-dendrite cracks it), `32a7a0a`
+  (handoff), `a56137a` (**core: real quad nonlinearity in triorons + satellites
+  v1**). Session 010's were `5547ab2`.
+- **CORE CHANGED this session:** `trioron/phenotype/dendrite.py` (real quad),
+  `phenotype/__init__.py` (registered), `bases/seeded.py` (`nonlinear=` option,
+  default False). First substrate change of the arc. `experiments/` benches +
+  chained-15 read `TRIORON_NONLINEAR=1` env to build quad triorons (grad clip
+  added to chained-15, gated on the flag so linear baseline is unchanged).
+- **RUNNING at handoff:** the full `nonlinear=True` suite (grounded + chained-15
+  smoke, linear vs quad) — `/tmp/run_nonlinear_suite.log`. Decides whether quad
+  becomes the substrate default.
 - **Pre-existing uncommitted, NOT touched (from session 005):**
   `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
   `trioron/viz/export.py`. Left as-is, as in 009/010.
@@ -159,16 +190,22 @@ composition, the cortex hallmarks don't appear (expected).
 
 ## Next-up tasks (priority order)
 
-1. **Re-measure structure (SOM) on the quad-DMS substrate** — now that it
-   learns the relation, does the cortex abstraction gradient finally emerge?
-   This closes Rocky's structural question on a task that demands composition.
-2. **Self-organized quad growth** — `promote_dendrite` under relational
-   frustration; test that the substrate grows quad cells when (and only when) a
-   rung needs comparison.
-3. **Staged mini-curriculum** — sense → consolidate → relation, the first
-   actually-taught sense→logic curriculum, with primitive growth per rung.
-4. **Spec review for §3.6** — fold the quad forward + normalization into the
-   spec, then implement a real non-stub `dendrite.py` in core.
+1. **Read `/tmp/run_nonlinear_suite.log`** (running at handoff). If quad
+   preserves/lifts chained-15 + grounded, **flip `nonlinear=True` to the seeded
+   default** (and decide whether grad clipping becomes standard). This makes the
+   substrate nonlinear by default — the big decision.
+2. **Promote satellites into core** as a real stateful phenotype (the
+   recurrent/mnemonic slot, not a stub) with a clean stateful-forward + reset
+   boundary; then self-organized satellite growth under temporal/memory demand.
+3. **Re-measure structure (SOM) on the quad substrate** — now that it can learn
+   relations, does the cortex abstraction gradient emerge? Closes Rocky's
+   structural question on a composition-demanding task.
+4. **Satellites v2** — modulation (gate trioron plasticity/gain), phase
+   (wake/dream) timescale.
+5. **Staged mini-curriculum** — sense → consolidate → relation, the first
+   actually-taught sense→logic curriculum, growing the right primitive per rung.
+6. **Spec review** — fold the quad phenotype (§3.6) + satellites (new §) +
+   "substrate needs a nonlinearity" into the spec; CI's 4 pre-existing failures.
 
 ## Pointers
 
@@ -181,9 +218,15 @@ composition, the cortex hallmarks don't appear (expected).
   precomputed `acts` for recurrent/sequence tasks.
 - **`experiments/analyze_self_arrange_structure.py`** — n=5 structural report.
 - **`docs/design/temporal_axis_v7.md`** — Axis 7 design (gate §7 marked PASS).
-- **`trioron/phenotype/__init__.py`** — the linear-stub registrations (all
-  phenotypes → linear). `trioron/core/epigenome.py:primary_phenotype` — returns
-  the *lowest* set gene (LINEAR bit must be cleared to express another).
+- **`trioron/phenotype/dendrite.py`** — the real quad σ(z)=z+z² (NEW; was a
+  stub). **`trioron/phenotype/__init__.py`** — DENDRITE now → quad; attention/
+  conv/recurrent still linear stubs. **`trioron/bases/seeded.py`** —
+  `nonlinear=` option (interior cells → quad). `epigenome.py:primary_phenotype`
+  returns the *lowest* set gene (clear LINEAR to express another).
+- **`experiments/satellites_v1.py`** — `SatelliteOp` (stateful memory + resource
+  sensing), `add_satellite`/`divide_satellite`, recurrent-slot dispatch.
+- **`/tmp/run_nonlinear_suite.log`** — the quad-vs-linear suite (running at
+  handoff). Re-run: `TRIORON_NONLINEAR=1 python3 experiments/<bench>.py ...`.
 - **spec §3.5** recurrent (within-pass), **§3.6** dendrite/quad, **§2.2**
   epigenome bits.
 
@@ -207,6 +250,10 @@ the right primitive per rung (depth, memory, quad).
 - `temporal-gate-pass` — Axis 7 PASS; recall works (substrate's own trace+BPTT).
 - `quad-dendrite-comparison-result` — comparison: linear 0/3, quad 3/3; z²=products;
   all phenotypes are linear stubs; needs smooth RMS-norm.
+- `substrate-was-purely-linear` — ROOT FINDING: no nonlinearity at all; deep
+  linear = one linear map; fixed by real quad phenotype + seeded(nonlinear=).
+- `satellites` — new cell type: intrinsic memory + resource sensing + division;
+  decision rule (small→triorons, massive→satellites).
 - (010) `self-arrange-depth-result`, `grounded-sense-valence-curriculum`,
   `temporal-axis-is-axis-7`.
 

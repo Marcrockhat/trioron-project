@@ -9,9 +9,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 from dataclasses import dataclass, field
+
+_NONLINEAR = os.environ.get("TRIORON_NONLINEAR", "0") == "1"
 
 import torch
 import torch.nn as nn
@@ -131,9 +134,12 @@ def anchor_penalty(anchor: OutputAnchor | None, arena, lam: float = ANCHOR_LAMBD
 
 def build_substrate(seed: int = 42, h_init: int = H_INIT, interior_layers: int = 1):
     torch.manual_seed(seed)
+    import os
+    nonlinear = os.environ.get("TRIORON_NONLINEAR", "0") == "1"
     sub = construct(
         base=seeded(IMAGE_DIM, N_GLOBAL_CLASSES,
-                    interior_cells=h_init, interior_layers=interior_layers),
+                    interior_cells=h_init, interior_layers=interior_layers,
+                    nonlinear=nonlinear),
         envelope=Envelope(max_parameter_bytes=PARAM_CAP_BYTES),
         dispatch_table=default_dispatch_table(),
         capacity=2048,
@@ -438,6 +444,8 @@ def train_one_task(
 
             scaled_loss = loss * m
             scaled_loss.backward()
+            if _NONLINEAR:  # quad z² needs grad clipping for stability
+                torch.nn.utils.clip_grad_norm_(sub.trainable_tensors(), 1.0)
             sub.zero_dormant_grads()
             credit.update_utility()
 
@@ -467,6 +475,8 @@ def train_one_task(
                     r_logits = sub(rx)
                     r_loss = torch.nn.functional.cross_entropy(r_logits, ry)
                     r_loss.backward()
+                    if _NONLINEAR:
+                        torch.nn.utils.clip_grad_norm_(sub.trainable_tensors(), 1.0)
                     sub.zero_dormant_grads()
                     opt.step()
                     opt.zero_grad()

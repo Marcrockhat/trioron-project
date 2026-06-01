@@ -36,6 +36,7 @@ Env / flags: see argparse in main(). Smoke: --smoke (tiny, ~1 min).
 from __future__ import annotations
 
 import argparse
+import os
 import statistics
 import sys
 import time
@@ -101,8 +102,10 @@ def make_dataset(n_groups: int, bits_per_group: int, n_distractor: int,
 def build_substrate(input_dim: int, n_classes: int, h_init: int,
                     cap_bytes: int, seed: int):
     torch.manual_seed(seed)
+    # TRIORON_NONLINEAR=1 makes interior triorons quad σ(z)=z+z² (suite A/B).
+    nonlinear = os.environ.get("TRIORON_NONLINEAR", "0") == "1"
     sub = construct(
-        base=seeded(input_dim, n_classes, interior_cells=h_init),
+        base=seeded(input_dim, n_classes, interior_cells=h_init, nonlinear=nonlinear),
         envelope=Envelope(max_parameter_bytes=cap_bytes),
         dispatch_table=default_dispatch_table(),
         capacity=2048,
