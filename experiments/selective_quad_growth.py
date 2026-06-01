@@ -30,6 +30,7 @@ import argparse
 import statistics
 import sys
 import time
+from collections import deque
 from pathlib import Path
 
 import torch
@@ -101,6 +102,10 @@ def run_arm(arm, task, n_out, *, k, h_init, cap, seed, epochs, batch, lr,
     frust = FrustrationDetector(FrustrationConfig())
     opt = torch.optim.Adam(sub.trainable_tensors(), lr=lr)
     grown = 0; frust_steps = 0; step = 0
+    recent = deque(maxlen=20)         # recent batch losses
+    prev_growth_loss = None           # recent-mean loss at the previous growth
+    escalated = False                 # adaptive: have we switched to quad?
+    MIN_LINEAR = 3; PLATEAU_EPS = 0.02; STUCK_LOSS = 0.4
     out_ids = torch.tensor([c for c in sub.arena.alive_ids().tolist()
                             if has_gene(int(sub.arena.epigenome[c].item()), OUTPUT)],
                            dtype=torch.int32)
@@ -120,6 +125,7 @@ def run_arm(arm, task, n_out, *, k, h_init, cap, seed, epochs, batch, lr,
             x, y = task(batch, protos, noise, g)
             logits = sub(x)
             loss = torch.nn.functional.cross_entropy(logits, y)
+            recent.append(loss.item())
             m = frust.step(loss.item())
             if frust.is_frustrated:
                 frust_steps += 1
@@ -134,14 +140,24 @@ def run_arm(arm, task, n_out, *, k, h_init, cap, seed, epochs, batch, lr,
                 ip = interior_parents()
                 if ip:
                     parent = ip[torch.randint(0, len(ip), (1,)).item()]
+                    # adaptive escalation: grow linear while linear growth keeps
+                    # REDUCING loss; once linear growth plateaus (loss not
+                    # improving despite added width) → that's relational
+                    # frustration linear can't fix → escalate to quad for good.
+                    cur = statistics.mean(recent) if recent else loss.item()
+                    # Escalate only when loss is STILL HIGH (stuck) AND not
+                    # improving — i.e. linear is failing, not "already solved
+                    # so no room to improve" (which a low loss would indicate).
+                    if (arm == "adaptive" and not escalated and grown >= MIN_LINEAR
+                            and prev_growth_loss is not None
+                            and cur > STUCK_LOSS
+                            and (prev_growth_loss - cur) < PLATEAU_EPS):
+                        escalated = True
+                    prev_growth_loss = cur
                     ev = divide(sub.arena, parent, GrowthConfig())
                     if ev:
-                        # quad-growth: always quad. adaptive: linear first, then
-                        # escalate to quad once frustration PERSISTS past
-                        # linear_first growths (= linear width didn't relieve it
-                        # ⇒ relational frustration).
                         make_quad = (arm == "quad-growth") or (
-                            arm == "adaptive" and grown >= linear_first)
+                            arm == "adaptive" and escalated)
                         if make_quad:
                             make_child_quad(sub.arena, ev.child_id)
                         wire_to_output(ev.child_id)
