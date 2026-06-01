@@ -60,6 +60,16 @@ Three results, in sequence:
    (arena.pressure), resource-gated DIVISION. Delayed recall OFF 0.200 (chance)
    → ON 0.996, memory living in graph cells.
 
+7. **Selective quad growth — DONE** (`experiments/selective_quad_growth.py`,
+   commit de5cf8f). The heterogeneous substrate the suite verdict demanded:
+   start all-linear, grow QUAD cells only under RELATIONAL frustration (loss
+   stuck-high >0.4 AND linear growth stopped reducing it). n=3 same-different:
+   adaptive 1.000 (~8 quad) vs linear-growth 0.507 (37 linear, chance); and on a
+   linear-separable task adaptive solves at 1.000 with **0 quad cells** (all
+   seeds) — clean selectivity. Bug fixed: divide() adds only input edges → grown
+   cells were dead-ends; added child→output wiring; don't rebuild optimizer on
+   growth (self-sustains frustration).
+
 Conceptual throughline established with Rocky: reasoning ≠ eyesight (depth is
 for *fine* comparison, not coarse perception); emotion = *learned* predictive
 valence (not innate; racism = same mechanism miscalibrated); the curriculum is
