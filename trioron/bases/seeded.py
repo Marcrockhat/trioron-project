@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import torch
 
 from trioron.core.epigenome import (
-    LINEAR, PERCEPTION, OUTPUT, CREDIT_ELIGIBLE, set_gene,
+    LINEAR, DENDRITE, PERCEPTION, OUTPUT, CREDIT_ELIGIBLE, set_gene,
 )
 
 if TYPE_CHECKING:
@@ -24,11 +24,18 @@ class Seeded:
     """
 
     def __init__(self, input_dim: int, initial_classes: int,
-                 interior_cells: int = 32, interior_layers: int = 1) -> None:
+                 interior_cells: int = 32, interior_layers: int = 1,
+                 nonlinear: bool = False) -> None:
         self.input_dim = input_dim
         self.initial_classes = initial_classes
         self.interior_cells = interior_cells
         self.interior_layers = max(1, interior_layers)
+        # nonlinear=True gives interior cells the quad (dendrite) phenotype
+        # σ(z)=z+z² instead of pure-linear — the substrate's only nonlinearity.
+        # Output cells stay linear (logits). Default False preserves the v1
+        # linear behaviour / CI numbers; flip per experiment, train with grad
+        # clipping (see trioron/phenotype/dendrite.py).
+        self.nonlinear = nonlinear
 
     def __call__(self, substrate: Substrate) -> None:
         a = substrate.arena
@@ -50,6 +57,8 @@ class Seeded:
             for idx, iid in enumerate(int_ids.tolist()):
                 epi = int(a.epigenome[iid].item())
                 epi = set_gene(epi, CREDIT_ELIGIBLE)
+                if self.nonlinear:
+                    epi = (epi & ~(1 << LINEAR)) | (1 << DENDRITE)
                 a.epigenome[iid] = epi
                 a.position[iid] = torch.tensor([
                     (layer_idx + 1) / (self.interior_layers + 1),
@@ -91,5 +100,7 @@ class Seeded:
 
 
 def seeded(input_dim: int, initial_classes: int,
-           interior_cells: int = 32, interior_layers: int = 1) -> Seeded:
-    return Seeded(input_dim, initial_classes, interior_cells, interior_layers)
+           interior_cells: int = 32, interior_layers: int = 1,
+           nonlinear: bool = False) -> Seeded:
+    return Seeded(input_dim, initial_classes, interior_cells, interior_layers,
+                  nonlinear=nonlinear)

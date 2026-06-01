@@ -7,6 +7,7 @@ from __future__ import annotations
 from trioron.core.epigenome import LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE
 from trioron.core.scheduler import ForwardFn
 from . import linear
+from . import dendrite
 
 _REGISTRY: dict[int, ForwardFn] = {}
 
@@ -25,4 +26,4 @@ register(LINEAR, linear.forward_batch)
 register(CONV, linear.forward_batch)
 register(ATTENTION, linear.forward_batch)
 register(RECURRENT, linear.forward_batch)
-register(DENDRITE, linear.forward_batch)
+register(DENDRITE, dendrite.forward_batch)   # real quad σ(z)=z+z², not a stub
