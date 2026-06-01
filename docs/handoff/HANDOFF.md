@@ -190,10 +190,16 @@ composition, the cortex hallmarks don't appear (expected).
 
 ## Next-up tasks (priority order)
 
-1. **Read `/tmp/run_nonlinear_suite.log`** (running at handoff). If quad
-   preserves/lifts chained-15 + grounded, **flip `nonlinear=True` to the seeded
-   default** (and decide whether grad clipping becomes standard). This makes the
-   substrate nonlinear by default — the big decision.
+1. **DONE — suite verdict: DO NOT flip `nonlinear=True` default.** Quad is
+   neutral on perception (grounded SYS 0.894→0.895) and essential for
+   comparison (DMS 0/3→3/3) but **REGRESSES chained-15 CL** (router-class
+   0.809→0.750, task-aware 0.960→0.849, −11pp — a forgetting signal; the CL
+   machinery (credit-freeze/manifold/router) is tuned for linear stats). So
+   quad stays **opt-in**. Implication: the substrate must be **heterogeneous** —
+   mostly linear, with quad cells GROWN only where relational computation is
+   needed → makes `promote_dendrite`-under-relational-frustration (task 2)
+   empirically required, not just elegant. (chained-15 here was smoke; a
+   full-epoch run would confirm magnitude.)
 2. **Promote satellites into core** as a real stateful phenotype (the
    recurrent/mnemonic slot, not a stub) with a clean stateful-forward + reset
    boundary; then self-organized satellite growth under temporal/memory demand.
