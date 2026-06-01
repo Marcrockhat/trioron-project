@@ -73,11 +73,25 @@ class TileWorld:
     def is_night(self):
         return (self.t // self.day_len) % 2 == 1
 
+    def _scent(self, tile):
+        """Normalized (dx,dy) toward the nearest cell of `tile` (toroidal),
+        scaled by closeness (stronger when near). (0,0) if none exist.
+        A distance sense — the organism must still learn to follow it."""
+        s = self.size
+        ys, xs = torch.where(self.grid == tile)
+        if xs.numel() == 0:
+            return torch.zeros(2)
+        dx = ((xs - self.px + s // 2) % s) - s // 2
+        dy = ((ys - self.py + s // 2) % s) - s // 2
+        d2 = dx * dx + dy * dy
+        i = int(torch.argmin(d2))
+        dist = max(1.0, float(d2[i]) ** 0.5)
+        return torch.tensor([float(dx[i]) / dist, float(dy[i]) / dist]) / dist
+
     # ── percept (state vector, no pixels) ─────────────────────────
     def percept(self):
-        """Local 3×3 neighbourhood encoded per-cell + interoception + phase.
-        Per cell: one-hot tile (6) + smell bit (1) = 7; 9 cells = 63.
-        Plus drives (4) + night flag (1) = 68-d."""
+        """Local 3×3 view (63) + scent gradients to food/water/fire (6) +
+        interoception drives (4) + night flag (1) = 74-d. No pixels."""
         s = self.size
         feats = []
         for dy in (-1, 0, 1):
@@ -88,9 +102,10 @@ class TileWorld:
                 oh[int(self.grid[y, x])] = 1.0
                 feats.append(torch.cat([oh, self.smell[y, x].view(1)]))
         local = torch.cat(feats)                       # 63
+        scent = torch.cat([self._scent(FOOD), self._scent(WATER), self._scent(FIRE)])
         intero = torch.tensor([self.energy, self.thirst, self.integrity, self.temp])
         phase = torch.tensor([1.0 if self.is_night else 0.0])
-        return torch.cat([local, intero, phase])       # 68
+        return torch.cat([local, scent, intero, phase])  # 74
 
     # ── dynamics ──────────────────────────────────────────────────
     def step(self, action_idx):
@@ -183,6 +198,13 @@ def run_reactive(seed, episodes=20):
                     if int(w.grid[(w.py + mv[1]) % s, (w.px + mv[0]) % s]) == tile:
                         return ACTIONS.index(ai)
                 return None
+            def toward(tile):  # move along the dominant axis of the scent
+                d = w._scent(tile)
+                if float(d.abs().sum()) == 0:
+                    return None
+                if abs(float(d[0])) >= abs(float(d[1])):
+                    return ACTIONS.index("E" if d[0] > 0 else "W")
+                return ACTIONS.index("S" if d[1] > 0 else "N")
             here = int(w.grid[w.py, w.px])
             pred_adj = abs((w.pred[0] - w.px)) <= 1 and abs((w.pred[1] - w.py)) <= 1
             a = None
@@ -190,20 +212,20 @@ def run_reactive(seed, episodes=20):
             if pred_adj and w.integrity < 0.8:
                 ax = -1 if w.pred[0] > w.px else 1
                 a = ACTIONS.index("E" if ax > 0 else "W")
-            # 2) warm up when cold (stand next to fire, not on it)
+            # 2) warm up when cold (head to the nearest fire)
             elif w.temp < 0.3:
-                a = find(FIRE)
+                a = toward(FIRE)
             # 3) drink / eat on the spot
             elif here == WATER and w.thirst < 0.7:
                 a = ACTIONS.index("consume")
             elif here in (FOOD, BERRY) and w.energy < 0.7:
                 a = ACTIONS.index("consume")
-            # 4) seek the most-needed resource in view
+            # 4) head to the most-needed resource (whole-map scent)
             if a is None:
                 if w.thirst <= w.energy and w.thirst < 0.6:
-                    a = find(WATER)
+                    a = toward(WATER)
                 elif w.energy < 0.6:
-                    a = find(FOOD) or find(BERRY)
+                    a = toward(FOOD)
             if a is None:
                 a = int(torch.randint(0, 4, (1,)))   # explore
             _, _, done, info = w.step(a)
