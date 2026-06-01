@@ -1,9 +1,9 @@
 # Trioron Handoff
 
-**Session date:** 2026-05-31
-**Session number:** 010
-**Session title:** Self-arrange depth shipped (emerges, doesn't lift) →
-pivot to grounded sense→valence world + Axis 7 (temporal) design
+**Session date:** 2026-05-31 → 2026-06-01
+**Session number:** 011
+**Session title:** Temporal axis gate PASS → the comparison wall → quad-dendrite
+cracks it (linear 0/3 → quad 3/3); the sense→logic→symbol curriculum
 
 > This file is **rewritten in full** every session. The previous
 > session's handoff is preserved in git history
@@ -13,241 +13,207 @@ pivot to grounded sense→valence world + Axis 7 (temporal) design
 
 ## Summary
 
-Implemented the **self-arranging substrate** (session 009's next-up #1):
-relaxed `divide()`'s rank policy so a new cell may draw edges from
-same-rank cells (`same_rank_edges`), and Kahn's BFS then promotes it to
-rank+1 — depth self-organizes through growth, no hand-crafting. Wired to a
-`--self-arrange` bench flag. **Depth provably emerges** (rank 5, 40 deep
-cells in probes) and is **cycle-safe by construction** (a freshly-divided
-cell is a sink, so any incoming edge is acyclic — no cycle check needed).
+This session resolved the central question of the depth/reasoning arc: **what
+operation is trioron missing for logic, and is it in the architecture?**
 
-**But depth does not lift accuracy on any learnable task tested (4 task
-families).** chained-15 smoke gave a marginal +1pp (router-class 0.8182 vs
-0.8080), but synthetic parity (unlearnable), teacher-student (width
-suffices), staircase (unlearnable), and a new grounded-world bench all
-show self-arrange ≈ flat width. The depth-favoring regime *coincides* with
-the SGD-unlearnable regime on this substrate — reproducing the project's
-prior `bench_2_0_single_task` "depth didn't win" finding three more times.
+Three results, in sequence:
 
-Session then **pivoted, at Rocky's direction**, from "does depth help" to
-the actual roadmap question: **can the substrate learn things that need
-composition — logic, then language.** Long design conversation produced:
-(1) the **sense → logic → symbol → language** curriculum made concrete
-("logic before language" / discover-fire framing); (2) **emotion = learned
-predictive valence** (not innate — racism is the same mechanism
-miscalibrated by biased experience); (3) a **grounded sense→valence world**
-bench; (4) a full **Axis 7 (Temporal / Working Memory) design proposal**.
+1. **Temporal axis (Axis 7) falsification gate — PASS.** Delayed grounded
+   recall: a memoryless substrate is pinned at chance; a substrate carrying its
+   own leaky interior trace (BPTT through the sequence) recovers the cue —
+   0.995→0.726 over 1→4 step hold, Δ +0.53 to +0.80, n=3. First mechanism in
+   the whole arc that *lifts* (depth never did).
 
-Built `experiments/bench_grounded_world.py`: ~16 sensory primitives →
-innate drive-consequence labels (the only hardwired valence), substrate
-learns to predict the consequence (= emergent "emotion"). **The loop works
-(iid 0.996)** but **compositional generalization is weak** (nourish-recall
-0.99 i.i.d. → 0.39 on a held-out cue) and **depth doesn't fix it**. Static
-depth is not the missing piece; *state over time* is the untested one —
-which is why the temporal axis is the next real lever.
+2. **The comparison wall.** A standardized structural-metrics suite + a fine
+   temporal task (delayed match-to-sample, DMS) revealed: the substrate
+   **recalls** perfectly (1.000) but **cannot learn a relation/comparison**
+   (frozen at chance, zero gradient). Same wall as depth — *composition/
+   relation*, not memory, is the bottleneck for logic.
+
+3. **Quad-dendrite cracks it.** Comparison is an inner product (Σ sampleₖ·testₖ)
+   — a sum of input *products*. Linear+ReLU cells can't form products (the
+   parity wall); the dendrite quad σ(z)=z+z² expands to Σ wᵢwⱼ·aᵢaⱼ — all
+   pairwise products in one unit. Result: DMS goes from **linear 0/3 (chance)**
+   to **quad-dendrite 3/3 → 1.000**. The relational primitive that logic needs
+   is *already in the spec* (dendrite gene, §3.6) — it was just never
+   implemented (all shipped phenotypes are linear stubs).
+
+Conceptual throughline established with Rocky: reasoning ≠ eyesight (depth is
+for *fine* comparison, not coarse perception); emotion = *learned* predictive
+valence (not innate; racism = same mechanism miscalibrated); the curriculum is
+**sense → logic → symbol → language**, taught bottom-up; and it has NOT been
+taught as a staged curriculum yet (each rung tested standalone).
 
 ## Headline numbers
 
-**chained-15 smoke (seed=42, 2ep), clean machinery, MLP class-router:**
-| Config | router-class full | task-aware |
-|---|---|---|
-| baseline (no self-arrange) | 0.8080 | 0.9603 |
-| `--self-arrange` | **0.8182** | 0.9599 |
+**Axis 7 gate (delayed recall, n=3), `bench_temporal_gate.py`:**
+| cue held | temporal-off | temporal-on | Δ |
+|---|---|---|---|
+| 1 step | 0.200 | 0.995±0.003 | +0.80 |
+| 2 steps | 0.200 | 0.957±0.011 | +0.76 |
+| 4 steps | 0.200 | 0.726±0.010 | +0.53 |
+PASS at every delay. off = exactly chance (memoryless can't recall).
 
-+1pp at half training budget — directional only, NOT confirmed at full n=3
-(that run was deferred when the pivot happened).
+**Comparison wall + quad fix (DMS K=4, n=3), `bench_quad_dendrite_dms.py`:**
+| phenotype | result |
+|---|---|
+| linear+ReLU | 0/3 — 0.445±0.13 (chance, flat gradient) |
+| quad-dendrite (z+z², RMS-norm trace) | **3/3 — 1.000±0.000** |
 
-**grounded-world bench, n=3 (60ep, h_init=8, grow 40@20, noise=0.1):**
-| Arm | iid | SYS | nourish-recall(SYS) | depth |
-|---|---|---|---|---|
-| no-growth | 0.996 | 0.894 | 0.388 ± 0.032 | rank 1 |
-| bipartite | 0.996 | 0.894 | 0.395 ± 0.040 | rank 1 |
-| self-arrange | 0.996 | 0.895 | 0.391 ± 0.037 | rank 5 |
-
-SYS = systematic (umami-cued) test; nourish-recall(SYS) is the real
-compositional metric (train cues nourishing with *sweet*, test with
-*umami*). All arms identical → depth irrelevant; substrate memorizes the
-surface cue.
+**Structural metrics (coarse grounded task, n=5), `analyze_self_arrange_structure.py`:**
+self-arrange grows real depth (eff_depth 5.6 vs 1.0, 274 i↔i edges, axon
+fan-out 14.6 vs 32, module silhouette 0.27 vs 0.10) but **no wiring modularity**
+(Newman r≈0.018≈chance — corrected an earlier crude n=1 guess) and **no
+abstraction gradient** (−0.18±0.19). On a coarse task that doesn't demand
+composition, the cortex hallmarks don't appear (expected).
 
 ## What was done
 
-### Self-arrange depth (the mechanism — SHIPPED, opt-in)
-- `trioron/lifecycle/grow.py`: added `GrowthConfig.same_rank_edges` (default
-  **False** — keeps CI/v1 behavior). When True, the edge-source mask uses
-  `a.rank <= child_rank` (vs `<`), and excludes the child id. Sink-safety
-  argument documented inline (no cycle check needed). 60-division probe:
-  baseline stays max_rank=1 (bipartite); self-arrange reaches rank 5 with
-  36 interior cells at rank>1.
-- `experiments/bench_chained_15_v2.py`: `--self-arrange` flag → threads a
-  `GrowthConfig` through `train_one_task` → `divide`. Added to the flags
-  log line.
-
-### Synthetic depth probes (all non-discriminating)
-- `experiments/bench_arena_hierarchical.py` (new): hierarchical parity /
-  teacher-student / staircase tasks, A/B no-growth / bipartite / self-arrange
-  with deterministic matched growth. **Mechanism confirmed** (depth emerges
-  under real training) but **no task discriminates** depth from width.
-  Fixed a missing `sub.prepare_training()` (substrate wasn't training).
-
-### Grounded sense→valence world (the pivot, NEW direction)
-- `experiments/bench_grounded_world.py` (new): the sense→logic curriculum
-  rung. Sensory schema (vision/touch/taste/smell, ~16 dims) → innate drive
-  consequence (nourishing/hydrating/painful/toxic/neutral) via conjunctive
-  grounded rules → substrate learns predictive valence ("emotion"). Reports
-  i.i.d. + **systematic compositional split** + per-class nourish-recall.
-
-### Axis 7 — Temporal / Working Memory (design proposal, NEW)
-- `docs/design/temporal_axis_v7.md` (new): full design. Two timescales —
-  within-pass recurrence (already specced §3.5, `recurrent` gene, never
-  exercised) + across-pass working memory (NEW gene bit 10 `mnemonic`,
-  leaky trace). Phase signal (wake/dream) as the clock. Temporal frustration
-  as the growth trigger (promote_recurrent / promote_mnemonic, analogue of
-  frustration→divide). Falsification gate (delayed grounded association).
-  Lifetime budget (cheapest axis by storage). **Corrects the
-  `temporal-cognition-gap` mis-numbering: temporal is Axis 7, NOT 6 — Axis 6
-  is `axis6_spawn`.**
+- **`experiments/bench_temporal_gate.py`** (new) — Axis 7 gate. Substrate carries
+  its own leaky interior trace `m=λm+(1-λ)h` (λ=0.6), fed back as input, BPTT.
+  `live_activations` is differentiable → real internal recurrence, not an echo.
+- **`experiments/structural_metrics.py`** (new) — standardized Substrate
+  Organization Metrics: population sparseness (Treves-Rolls), Newman categorical
+  assortativity, abstraction gradient (rank vs eta² Spearman), module silhouette
+  + morphometric census (cells/dendrites/lineage-clusters/axon fan-out/params).
+  All established measures; novelty is application to a grown substrate.
+- **`experiments/analyze_self_arrange_structure.py`** (new) — n=5 structural
+  report, bipartite vs self-arrange.
+- **`experiments/bench_fine_temporal.py`** (new) — DMS fine-comparison task;
+  revealed the comparison wall (recall 1.000 via same harness, compare frozen).
+- **`experiments/bench_quad_dendrite_dms.py`** (new) — implements the quad
+  forward σ(z)=z+z² via a custom dispatch table, sets dendrite phenotype on
+  interior cells, re-runs DMS. linear 0/3 → quad 3/3. Stability: gradient
+  clipping + smooth RMS-norm of the trace (hard clamp saturates → strands seeds).
 
 ## Key findings
 
-1. **Self-arrange depth emerges and is cycle-safe, but doesn't lift
-   learnable tasks.** A divided cell is a sink → relaxing the rank policy
-   can't create cycles. Depth grows (rank 5). But across 4 task families,
-   self-arrange ≈ flat width. *Why:* the depth-favoring regime is the
-   SGD-unlearnable regime (parity); everything learnable is width-sufficient
-   (teacher-student, grounded-world). This is intrinsic on this substrate,
-   reproducing `bench_2_0_single_task`'s "depth didn't win."
-2. **The two-substrate split.** chained-15 uses the **Arena** substrate
-   (`divide()`, ranks) where self-arrange lives. CIFAR / hierarchical /
-   absorption use **TrioronNetwork** (fixed layer-list MLP, `axis6_spawn`
-   for *width* growth). My depth change *cannot run* on the latter without a
-   port — Rocky correctly stopped that direction. The CIFAR "self-arrange"
-   arm is a *different* (width/spawn) mechanism.
-3. **Emotion = learned predictive valence, not innate.** Only the drives
-   (hunger/thirst/pain/temperature) are hardwired valence; emotion *emerges*
-   as the substrate learns percept→drive-consequence. Biased experience →
-   biased emotion (racism is the same mechanism). This makes the temporal
-   axis load-bearing: prediction is temporal credit assignment.
-4. **The grounded loop works but the substrate memorizes surface cues.**
-   iid 0.996, but nourish-recall collapses to 0.39 on a held-out cue. Static
-   depth doesn't help. The compositional gap is real.
-5. **My systematic split is arguably too hard** (holds out a *primitive*
-   cue entirely — "umami is edible" never seen in any context). The 0.39 is
-   partly an impossible-without-prior inference, not pure weak-composition.
-   Refine toward a SCAN-style split (all primitives seen, novel
-   *combinations* held out) next.
+1. **Memory works, comparison doesn't (on linear cells).** Recall 1.000;
+   relation frozen at chance. The logic bottleneck is the *operation*
+   (composition/comparison), not memory or depth-structure.
+2. **Comparison is a product; ReLU can't make products; z² can.** Inner
+   product / coincidence detection = pairwise input products. Single ReLU unit:
+   none. Single quad unit: all of them. Hence learnable with quad, flat-gradient
+   with linear. Same family as parity (XOR = a+b−2ab).
+3. **Quad-dendrite robustly solves comparison (3/3 → 1.000)** with smooth RMS
+   normalization of the recurrent trace. A *hard* clamp saturates to zero
+   gradient and strands seeds — the smooth norm is load-bearing.
+4. **ALL shipped phenotypes are linear stubs.**
+   `trioron/phenotype/__init__.py` registers attention/conv/recurrent/dendrite
+   → `linear.forward_batch`; `dendrite.py` is an empty docstring. The quad here
+   is the first non-linear phenotype exercised. (To make a cell dendrite: clear
+   LINEAR bit — bit 0, always set, and `primary_phenotype` returns the *lowest*
+   set gene — and set DENDRITE, then `refresh_phenotype`.)
+5. **Self-arrange depth is real but conv-distinct and (on coarse tasks) not
+   cortex-like.** Topological rank-layering, no weight-tying/gene (conv =
+   weight-tied lineage + spatial receptors). No abstraction gradient where the
+   task doesn't demand composition.
+6. **Right primitive per operation.** ReLU to sense, quad to compare. z² is not
+   "better" — it matches a multiplicative operation and hurts (instability)
+   where multiplication isn't needed. The substrate should *grow* quad cells on
+   relational rungs (frustration→grow-dendrite, like frustration→divide).
 
 ## State of the build
 
-- **Branch:** `v2.0-scaffold`
-- **Committed this session** (selectively — see Decisions): `grow.py`,
-  `bench_chained_15_v2.py`, `bench_arena_hierarchical.py`,
-  `bench_grounded_world.py`, `docs/design/temporal_axis_v7.md`, this handoff.
-- **Pre-existing uncommitted, NOT touched (carried from session 005):**
+- **Branch:** `v2.0-scaffold`. All work pushed.
+- **Commits this session:** `03d6d5a` (Axis 7 gate PASS), `0107a39` (structural
+  metrics + DMS comparison wall), `6a362f6` (quad-dendrite cracks it).
+  Session 010's were `5547ab2` (self-arrange + grounded world + Axis 7 design).
+- **Pre-existing uncommitted, NOT touched (from session 005):**
   `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
-  `trioron/viz/export.py`. Left as-is, as in session 009.
+  `trioron/viz/export.py`. Left as-is, as in 009/010.
 - **Untracked:** `.claude/`, `runs/` (gitignored).
-- **Pre-existing test failure (NOT mine):**
-  `tests/test_v2/test_lifecycle.py::TestGrowth::test_growth_trigger_logic`
-  — fails on clean HEAD too (threshold mismatch: `check_growth_trigger(1.5,
-  50)` returns True, test expects False). Flag for a future cleanup.
+- **Pre-existing test failure (NOT mine, flagged in 010):**
+  `test_lifecycle.py::TestGrowth::test_growth_trigger_logic`.
 
 ## Decisions made
 
-- **Ship self-arrange as opt-in (`same_rank_edges=False` default).** Keeps
-  CI/v1 tests intact; bench opts in via `--self-arrange`. Do NOT flip the
-  default until depth demonstrably helps something.
-- **Stop chasing synthetic depth discriminators.** 4 families failed; it's
-  intrinsic. Self-arrange stays available as a mechanism, not a headline.
-- **Pivot to the grounded sense→logic→symbol→language curriculum** as the
-  real track (Rocky's call). Depth and temporal are composition-in-space vs
-  composition-in-time — the two halves of reasoning.
-- **Emotion is learned, not hardcoded.** Schema hardcodes senses + drives +
-  survival disposition; emotion emerges.
-- **Committed the session's code + handoff and pushed**, per the project's
-  unconditional handoff rule (CLAUDE.md), surgically excluding the
-  session-005 carried files.
+- **Quad/relational primitive is the answer to "what's missing for logic."**
+  Confirmed empirically. The dendrite gene exists for it; it needs a real
+  (non-stub) non-linear forward in core — but only after spec review.
+- **Quad-dendrite code stays in `experiments/` for now** (custom dispatch),
+  pending a spec §3.6 review before a real `dendrite.py` forward lands in core.
+- **Temporal axis ships live at the gate level**; per-cell `mnemonic` gene in
+  core is still a follow-on.
+- **Walked back an over-claim mid-session** (smoke said quad=1.000; n=3 said
+  chance; diagnosed instability; RMS-norm fixed it to 3/3). Lesson re-logged:
+  do not headline from a single smoke seed.
 
 ## Open questions
 
-1. **Does a SCAN-style compositional split (novel combinations, all
-   primitives seen) discriminate depth — or even there does width suffice?**
-   The current split holds out a primitive entirely; refine it.
-2. **chained-15 full n=3 with `--self-arrange`** — still un-run. Worth the
-   3.5h to confirm/deny the +1pp smoke signal? (Low priority given depth's
-   track record, but it's the one real-data signal.)
-3. **Temporal axis falsification gate** — build the delayed grounded
-   association task; does mnemonic/recurrence beat the feed-forward baseline?
-   This is the decisive next experiment for the new direction.
-4. **Survival disposition (run/safe/normal) + active/embodied loop** —
-   deferred; the passive associative version is what's built. Agency pulls
-   temporal in immediately.
+1. **Make quad a real phenotype in core** (spec §3.6 `dendrite.py` forward +
+   the smooth-normalization story) — but the normalization currently lives in
+   the recurrent-trace wrapper, not the cell. Where does it belong?
+2. **Self-organized quad growth:** can frustration on a relational rung trigger
+   `promote_dendrite` (grow quad cells), the way frustration triggers `divide`?
+   This is the "teach the curriculum by growing the primitive" step.
+3. **Does the abstraction gradient appear on a task the substrate can now
+   learn?** DMS structural measurement was moot while DMS was unlearnable; with
+   quad it learns — re-measure SOM on the quad-DMS substrate (do deep quad cells
+   encode match/non-match?).
+4. **Staged curriculum:** sense → consolidate → relation, with quad growth on
+   the relational rung — the first genuinely *taught* curriculum.
+5. **Other stub phenotypes:** attention (Q·K is also native comparison) and
+   recurrent are linear stubs too. Attention may be an alternative relational
+   primitive worth comparing to quad.
 
 ## Next-up tasks (priority order)
 
-1. **Build the temporal axis falsification gate** (`docs/design/
-   temporal_axis_v7.md` §7): delayed grounded-association task on the Arena
-   substrate, mnemonic-on vs mnemonic-off. This is the decisive test for the
-   whole new direction and the natural continuation. Implement the
-   `mnemonic` gene (bit 10) + leaky trace + phase-aware forward first.
-2. **Refine the grounded-world compositional split** to SCAN-style
-   (all primitives seen in *some* context, novel combinations held out) so
-   "weak composition" isn't confounded with "unfair held-out primitive."
-3. **Review the Axis 7 design** (`docs/design/temporal_axis_v7.md`) with
-   Rocky; fold accepted parts into spec §3.7 + §9 partition before any
-   `trioron/` temporal code lands (spec-is-source-of-truth discipline).
-4. **(Optional) chained-15 full n=3 `--self-arrange`** if we want the depth
-   verdict on real data closed out.
+1. **Re-measure structure (SOM) on the quad-DMS substrate** — now that it
+   learns the relation, does the cortex abstraction gradient finally emerge?
+   This closes Rocky's structural question on a task that demands composition.
+2. **Self-organized quad growth** — `promote_dendrite` under relational
+   frustration; test that the substrate grows quad cells when (and only when) a
+   rung needs comparison.
+3. **Staged mini-curriculum** — sense → consolidate → relation, the first
+   actually-taught sense→logic curriculum, with primitive growth per rung.
+4. **Spec review for §3.6** — fold the quad forward + normalization into the
+   spec, then implement a real non-stub `dendrite.py` in core.
 
 ## Pointers
 
-- **`trioron/lifecycle/grow.py:93-117`** — the `same_rank_edges` policy +
-  sink-safety comment. The one-line lever.
-- **`experiments/bench_chained_15_v2.py`** — `--self-arrange` flag;
-  `growth_cfg` threaded through `train_one_task` (line ~390) → `divide`
-  (line ~493).
-- **`experiments/bench_grounded_world.py`** — the grounded world: `SENSES`,
-  `innate_consequence`, `make_world` (sweet→umami cue swap), `train_arm`,
-  `class_recall`. Run `--smoke` (~1 min) or default n=3 (~3 min).
-- **`experiments/bench_arena_hierarchical.py`** — synthetic depth probes
-  (parity/teacher-student/staircase); mechanism proof that depth emerges.
-- **`docs/design/temporal_axis_v7.md`** — Axis 7 full design.
-- **spec §3.5** (`recurrent` gene, line 873) — the within-pass temporal
-  primitive that already exists. **spec §2.2** — epigenome bits (bit 3
-  recurrent, bits 10-15 free; `mnemonic` proposed at bit 10). **spec line
-  3127** — the axis write-function list (confirms Axis 6 = spawn).
-- **Logs (uncommitted, /tmp):** `run_selfarrange_smoke_s42.log`,
-  `run_baseline_smoke_s42.log`, `run_grounded_world_n3.log`.
+- **`experiments/bench_quad_dendrite_dms.py`** — quad forward `make_quad_forward`
+  (σ=z+z²), `build` (custom dispatch + set dendrite phenotype), RMS-norm trace +
+  grad clip in `run`. linear 0/3 → quad 3/3.
+- **`experiments/bench_temporal_gate.py`** — Axis 7 gate (recall).
+- **`experiments/bench_fine_temporal.py`** — DMS; the comparison wall.
+- **`experiments/structural_metrics.py`** — SOM suite + morphometrics; accepts
+  precomputed `acts` for recurrent/sequence tasks.
+- **`experiments/analyze_self_arrange_structure.py`** — n=5 structural report.
+- **`docs/design/temporal_axis_v7.md`** — Axis 7 design (gate §7 marked PASS).
+- **`trioron/phenotype/__init__.py`** — the linear-stub registrations (all
+  phenotypes → linear). `trioron/core/epigenome.py:primary_phenotype` — returns
+  the *lowest* set gene (LINEAR bit must be cleared to express another).
+- **spec §3.5** recurrent (within-pass), **§3.6** dendrite/quad, **§2.2**
+  epigenome bits.
 
-## The conceptual through-line (read this to understand the pivot)
+## The conceptual through-line (read to understand the arc)
 
-Rocky reframed the whole session: depth-for-its-own-sake is the wrong
-target. The real question is whether trioron can do **logic and language** —
-and the honest answer is it shouldn't try to do them like an LLM (that's
-billions-of-params *coverage*, and it's Gemma's job). Trioron is the
-**grounded interface / inner voice** that represents the user's bounded,
-evolving intent — and *that* needs composition (depth in space) + memory
-(depth in time), at honest small scale. The curriculum is **sense → logic
-→ symbol → language**, bottom-up. We're at the **sense→logic** rung:
-grounded percepts → learned valence → compositional generalization. The
-baby-babble test ("understand a 'baaa' you've never heard") = compositional
-generalization = the grounded-world bench's systematic split. Pictographs
-(日+月=明) are the symbol rung above it. Language (frozen Gemma) is last.
+Reasoning isn't eyesight: depth/composition is for *fine* comparison (good-vs-bad
+human, wild-vs-domestic cat), not coarse perception — which is why depth never
+lifted coarse classification. The real cognitive stack is **sense → logic →
+symbol → language**, bottom-up. trioron is the grounded *interface/inner voice*
+(not an LLM-scale reasoner; Gemma does language). This session located the exact
+gap: it can **sense** and **remember** and **recall**, but the **relational
+operation** (compare/compose) — the substance of logic — was missing, because
+interior cells were linear and comparison is multiplicative. The quad-dendrite
+primitive (already in the spec, never implemented) supplies it. Emotion is
+*learned* predictive valence over innate drives. The curriculum has not been
+*taught* (each rung standalone); teaching = staged rungs + the substrate growing
+the right primitive per rung (depth, memory, quad).
 
 ## Memories saved this session (cross-PC persistent)
 
-- `self-arrange-depth-result` — depth emerges via `same_rank_edges`, is
-  cycle-safe (sink argument), but doesn't lift 4 learnable task families;
-  the depth-favoring⟺unlearnable tradeoff is intrinsic.
-- `grounded-sense-valence-curriculum` — the sense→logic→symbol→language
-  design; emotion=learned predictive valence; the grounded-world bench +
-  weak-composition result.
-- `temporal-axis-is-axis-7` — corrects `temporal-cognition-gap`: temporal =
-  Axis 7 (Axis 6 = spawn); design at `docs/design/temporal_axis_v7.md`.
+- `temporal-gate-pass` — Axis 7 PASS; recall works (substrate's own trace+BPTT).
+- `quad-dendrite-comparison-result` — comparison: linear 0/3, quad 3/3; z²=products;
+  all phenotypes are linear stubs; needs smooth RMS-norm.
+- (010) `self-arrange-depth-result`, `grounded-sense-valence-curriculum`,
+  `temporal-axis-is-axis-7`.
 
 ## Environment notes
 
-- Working dir: `/home/marcrockhat/trioron-project/`. Branch `v2.0-scaffold`.
-- Python `/usr/bin/python3` (3.10.12), torch 2.11.0+cu130. Linux WSL2, 12
-  cores, 7.4 GiB RAM. Use `python3`, `OMP_NUM_THREADS=8` solo.
-- grounded-world: ~3 min n=3. chained-15 smoke: ~8.5 min. Full-epoch n=3
-  chained-15: ~3.5h serial (RAM-bound, OOMs on 2 concurrent full runs).
+- Working dir `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`.
+- Python `/usr/bin/python3` 3.10.12, torch 2.11.0+cu130. WSL2, 12 cores,
+  7.4 GiB RAM. `python3`, `OMP_NUM_THREADS=8`. sklearn 1.7.2 / scipy 1.15.3 /
+  numpy 2.2.6 available (used by structural_metrics).
+- Bench timings: temporal gate / DMS ~30s per arm-seed; structural n=5 ~2 min.
