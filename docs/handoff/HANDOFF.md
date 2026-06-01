@@ -70,6 +70,15 @@ Three results, in sequence:
    cells were dead-ends; added child→output wiring; don't rebuild optimizer on
    growth (self-sustains frustration).
 
+8. **UNISON architecture — DONE** (`experiments/unison_v1.py`, commit ed0f460).
+   All three cell types in ONE substrate on a task needing all of them (full
+   DMS = memory + comparison): percept → interior(linear, sense) →
+   satellites(memory of sample, persist); at the test step quad cells read
+   [satellite memory ⊕ current interior] → products → match → output. n=3:
+   memory-only (satellites→output linear) 0.481 (recalls, can't compare) vs
+   **unison (satellites→quad←interior→output) 1.000±0.000**. Each cell type does
+   the operation it's suited for; neither alone suffices. The session's synthesis.
+
 Conceptual throughline established with Rocky: reasoning ≠ eyesight (depth is
 for *fine* comparison, not coarse perception); emotion = *learned* predictive
 valence (not innate; racism = same mechanism miscalibrated); the curriculum is
@@ -210,9 +219,11 @@ composition, the cortex hallmarks don't appear (expected).
    needed → makes `promote_dendrite`-under-relational-frustration (task 2)
    empirically required, not just elegant. (chained-15 here was smoke; a
    full-epoch run would confirm magnitude.)
-2. **Promote satellites into core** as a real stateful phenotype (the
-   recurrent/mnemonic slot, not a stub) with a clean stateful-forward + reset
-   boundary; then self-organized satellite growth under temporal/memory demand.
+2. **Promote satellites + quad into core** as real phenotypes (recurrent/
+   mnemonic slot for satellites — stateful-forward + reset boundary; quad is
+   already in core via dendrite). The unison architecture (ed0f460) is the
+   reference wiring. Then self-organized satellite growth under memory demand
+   (the satellite analogue of selective quad growth).
 3. **Re-measure structure (SOM) on the quad substrate** — now that it can learn
    relations, does the cortex abstraction gradient emerge? Closes Rocky's
    structural question on a composition-demanding task.
