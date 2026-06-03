@@ -14,6 +14,9 @@ OUTPUT: int = 6
 CREDIT_ELIGIBLE: int = 7
 RECYCLABLE: int = 8
 WEIGHT_TIED_LINEAGE: int = 9
+MIRROR: int = 10  # marker gene: cell fires on BOTH own-action and observed-action
+                  # (apprenticing substrate). NOT an expression gene — mirror cells
+                  # dispatch as LINEAR; the gene is for identity/credit-gating/lesion.
 
 EXPRESSION_GENES: tuple[int, ...] = (LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE)
 

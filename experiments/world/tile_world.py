@@ -37,7 +37,19 @@ _DXY = {"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0)}
 
 
 class TileWorld:
-    def __init__(self, size=12, day_len=20, max_steps=300, seed=0):
+    # Tunable physics (class-level so an experiment can soften them once without
+    # threading kwargs through every training helper). Defaults = the canonical
+    # difficulty-reduced world; do NOT change these — override per experiment,
+    # e.g. fire_taming sets WARM_RATE=0.04, TEMP_LOW=0.02, TEMP_HIGH=0.99.
+    WARM_RATE = 0.15      # temp gain/step when near fire (vs ~0.01 cooling)
+    TEMP_LOW = 0.05       # lethal cold threshold
+    TEMP_HIGH = 0.98      # lethal heat threshold
+
+    def __init__(self, size=12, day_len=20, max_steps=300, seed=0,
+                 warm_rate=None, temp_low=None, temp_high=None):
+        self.warm_rate = self.WARM_RATE if warm_rate is None else warm_rate
+        self.temp_low = self.TEMP_LOW if temp_low is None else temp_low
+        self.temp_high = self.TEMP_HIGH if temp_high is None else temp_high
         self.size = size
         self.day_len = day_len
         self.max_steps = max_steps
@@ -138,7 +150,7 @@ class TileWorld:
         near_fire = any(int(self.grid[(self.py + dy) % s, (self.px + dx) % s]) == FIRE
                         for dy in (-1, 0, 1) for dx in (-1, 0, 1))
         if near_fire:
-            self.temp = min(1.0, self.temp + 0.15)
+            self.temp = min(1.0, self.temp + self.warm_rate)
             if int(self.grid[self.py, self.px]) == FIRE:
                 self.integrity = max(0.0, self.integrity - 0.08)   # too close burns
         else:
@@ -162,7 +174,7 @@ class TileWorld:
         self.t += 1
         # death: any drive depleted, or temperature out of the safe band
         if (self.energy <= 0 or self.thirst <= 0 or self.integrity <= 0
-                or self.temp <= 0.05 or self.temp >= 0.98):
+                or self.temp <= self.temp_low or self.temp >= self.temp_high):
             self.alive = False
         done = (not self.alive) or self.t >= self.max_steps
         reward = self._drive_sum() - before
