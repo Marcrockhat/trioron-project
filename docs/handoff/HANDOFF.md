@@ -1,196 +1,178 @@
 # Trioron Handoff
 
-**Session date:** 2026-06-02 → 2026-06-03
-**Session number:** 013
-**Session title:** Mirror cells as a real cell type → emergent pyrophobia →
-fire-taming by apprenticeship (BC fails, DAgger works) → Adam's quest for
-immortality (multi-master apprenticeship, consolidation, the measurement wall)
+**Session date:** 2026-06-03
+**Session number:** 014
+**Session title:** Consolidation done right (anchor the base policy, not just the
+mirror readout) → the leak located & plugged with a low-noise probe → fire-economy
+probe (pyrophobia is a move-cost artifact, but cheap fire backfires)
 
 > Rewritten in full every session; previous handoffs in git history
-> (`git log docs/handoff/HANDOFF.md`). Session 012 (commit `4eac26c`) is the
-> embodied-organism arc this builds on (tile_world, Numa/Mima, apprenticing
-> verdict). Session 011 is the substrate work (quad, satellites, unison). Read
-> 012 first if new — this session completes its open item #1 (mirror cells).
+> (`git log docs/handoff/HANDOFF.md`). Session 013 (commit `a6fcab4`) is the
+> mirror-cells / fire-taming / Adam's-quest arc this builds on. This session
+> completes its open item #2 (consolidation done right) and #5/move-economy
+> diagnosis. Read 013 if new — esp. the measurement-wall note.
 
 ## Summary
 
-Picked up session 012's open item #1 — **wire mirror cells as a real cell type**
-(they were only a function-level cross-entropy proxy). That opened into a long,
-productive arc that ended at an honest measurement wall:
+Two clean results, both born from the same realisation: **you cannot validate a
+consolidation/retention mechanism on a metric with ±15 noise** (the wall session 013
+hit). The fix in both cases was a deterministic, controlled probe.
 
-1. **Mirror cells wired** as a real `MIRROR` gene/cell type (observation channel +
-   localized credit gating). Smoke passes.
-2. **Master-avatar mechanism** (Rocky's reframe): the obs channel is a *hole* that
-   lets a master *pilot the body* (teleoperation). Kept it as a feature + added an
-   internalization term so the skill also transfers to solo play.
-3. **n=3 mirror-cells verdict**: real cell type does NOT beat the loss-only proxy
-   on solo (teacher-quality-limited), but avatar-piloting works (41.1, best).
-4. **Autopsy + probe**: the organism dies of **temperature (cold), not the
-   predator**. It learned **emergent pyrophobia** — actively avoids fire (3.5×
-   less than random when cold) → freezes. Approach-avoidance resolved by phobia.
-5. **Fire is untamable at canonical physics** (+0.15 warm vs ~0.01 cool); even a
-   perfect-info oracle overheats. Parameterized `TileWorld` physics; tamed world
-   (warm 0.04, death band 0.02/0.99) makes fire learnable.
-6. **Fire-taming by apprenticeship (n=3, the clean result)**: BC apprentice FAILS
-   to internalize (distribution shift). **DAgger WORKS**: cold-deaths −37%,
-   fire-occupancy ↑ toward the oracle, survival +28%. Coaching on the student's
-   OWN states is the load-bearing difference.
-7. **The Quest** ("outlast your masters"): crowned **Adam** (seed 2). Sequential
-   DAgger apprenticeship. Chapter 2 (fire) clean: cold 26→14, occupancy 7.4→20.1,
-   death-cause flipped cold→thirst. Chapter 3 (water): **no forgetting but water
-   didn't take** — the 8 mirror cells are saturated by one skill.
-8. **Capacity sweep + consolidate-and-lock**: both **inconclusive — measurement
-   noise > effect size** at n=3. The tile-world is too noisy for quantitative
-   skill-retention deltas. The one clean-ish hint: even a *locked* skill erodes,
-   suggesting interference leaks through the unfrozen shared `interior→output`
-   base policy.
-9. **Side quests**: measured real NPC RAM (~158 KB/brain — RAM is NOT a
-   bottleneck); discussed RPG-NPC application (strong fit; emergent + teachable +
-   lineage; trioron "soul" + LLM "mouth").
+1. **Consolidation done right (the session spine, Rocky's pick).** Session 013
+   diagnosed the leak but left it unfixed: the quest's consolidate-and-lock froze
+   fire's MIRROR cells but left the shared `perception→interior→output` base policy
+   free. Every dagger chapter's TD loss reshapes that base (the `td_b/td_w` grads are
+   added back AFTER the mirror-gated imitation grads), so learning water drifted the
+   base and the "locked" fire skill eroded anyway. **FULL-LOCK** anchors the base: at
+   the fire→water boundary it freezes every edge whose BOTH endpoints predate water +
+   all old biases, leaving only the fresh water-mirror readout trainable. Water then
+   learns as a pure additive readout off a FROZEN representation.
+2. **The measurement fix.** Retention is now a FIXED cold-state battery scored by
+   deterministic greedy policy-agreement (no episode noise) — what makes the leak
+   falsifiable at small n. n=5 separated cleanly where 013's occupancy never could.
+3. **Fire-economy probe (Rocky's deferred move-cost hypothesis).** Confirmed that
+   pyrophobia is largely a trip-cost artifact AND surfaced a sharper finding: making
+   fire cheap/abundant *backfires* on survival; only a cold-gated shaping reward helps.
 
 ## Headline numbers
 
-**Mirror-cells teacher-student (n=3, weak teacher 39.8):**
-| arm | final solo | avatar-piloted |
-|---|---|---|
-| scratch | 40.0 | — |
-| loss-only proxy | 40.4 | — |
-| mirror-cells | 37.4 | **41.1** |
+**Consolidation — FULL-LOCK vs MIRROR-LOCK vs PLAIN (n=5, capacity-matched, only the
+lock differs).** Retention = greedy policy-agreement on a fixed cold-state battery
+(after-water vs after-fire policy). Water-acq = agreement-with-water-master on a fixed
+thirsty battery, pre→post water chapter:
 
-**Fire-taming (n=3, tamed-fire world; the clean win):**
-| | survival | cold-deaths | fire-occupancy |
+| arm | fire-retain | fire-comp f→w | water-acq pre→post |
 |---|---|---|---|
-| fire-oracle (teacher) | 83–90 | 0/40 | 28% |
-| scratch | 43.8 | 23.3/40 | 12.9% |
-| BC apprentice | — | 24.0/40 | 9.2% (FAIL) |
-| **DAgger apprentice** | **56.0** | **14.7/40** | **18.6%** |
-| DAgger avatar-piloted | — | — | 80.7 |
+| PLAIN | 0.145 ± 0.064 | 0.197→0.138 | 0.219→0.221 |
+| MIRROR-LOCK | 0.162 ± 0.097 | 0.197→0.190 | 0.219→0.232 |
+| **FULL-LOCK** | **0.398 ± 0.195** | 0.197→**0.211** | 0.219→**0.365** |
 
-**The Quest — Adam (seed 2):** baseline 49.6 → after-fire 55.1 → after-water 55.3.
-Masters: fire 90.3 / water 70.6 / food 71.7. **Bar to beat: 90.3.** Chapter 2
-fire clean (cold 26→14, occ 7.4→20.1, death flipped to thirst). Chapter 3 water
-flat (thirst 21→21, fire retained = no forgetting, but no acquisition).
+- **Leak confirmed & located:** MIRROR-LOCK (0.162) ≈ PLAIN (0.145) — freezing the
+  readout alone buys almost nothing; the base drifts underneath. FULL-LOCK = **2.7×
+  retention** (~2.7σ over PLAIN). The leak is the unfrozen `interior→output` base.
+- **Competence survives only under FULL-LOCK** (PLAIN erodes 0.197→0.138).
+- **Anchoring IMPROVED plasticity, didn't cost it:** only FULL-LOCK actually learns
+  water (Δ+0.146; all 5 seeds positive). Frozen representation + fresh additive
+  readout = a crisp gradient with no interference. **Two skills coexist, and the
+  second learns *better* because the first is anchored.** The "wise organism" result.
+- Caveats: high seed variance (FULL spans .066–.602; seed2 is a degenerate net across
+  ALL arms). Absolute competence stays low (~0.2 — this world is genuinely hard to
+  learn). Retention (self-consistency) is the load-bearing signal, not absolute skill.
 
-**Consolidate-and-lock (n=3, capacity-matched 16 cells):** INCONCLUSIVE. PLAIN
-fire-occ 12.4→10.7; LOCKED 12.0→12.7. Effect < between-seed spread (4.8–18.9%);
-occupancy and cold-death metrics CONTRADICT. Not a result.
+**Fire economy — solo TD scratch learner, no teacher (n=5, tamed-fire physics):**
 
-**NPC RAM (measured, inference mode):** right-sized (cap 256) = **158 KB resident**
-/ brain (matches the int8-compressed 157 KB). 1k NPCs ≈ 150 MB, 10k ≈ 1.5 GB.
-Training default (cap 2048) was 6× over-provisioned (~890 KB).
+| arm | survival | cold-deaths/40 | fire-occ% |
+|---|---|---|---|
+| baseline (4, plain) | 43.3 | 24.0 | 10.1 |
+| dense (12, plain) | 38.5 | **15.6** | **18.6** |
+| shape (4, shaped) | **47.4** | 19.4 | 12.7 |
+| both (12, shaped) | 42.7 | **14.2** | 19.6 |
+
+- **Move-economy confirmed:** both levers cut cold-deaths (−35%/−41%) and raise
+  fire-use (+84% density). Pyrophobia is largely a trip-cost artifact, not a ceiling.
+- **But more fire-use ≠ more survival:** DENSE fire maximizes fire-use yet HURTS
+  survival (38.5 < 43.3) — cold-death is traded for death-by-neglect elsewhere.
+- **Only the cold-gated shaping lifts survival** (47.4, +9%): its `temp<0.5` gate is a
+  satiety governor (pull when freezing, release when warm). Raw availability has no
+  governor → over-use. Reward must point at a resource only while its drive is unmet.
+- Caveat: cold-death/occupancy effects are large; survival deltas (~1σ, n=5) are
+  suggestive, not ironclad — n=10 would bank the survival claim.
 
 ## What was done (files)
 
-New (all `experiments/world/` unless noted):
-- **mirror_cells.py** — `MIRROR` cell type: observation channel (master action
-  one-hot) + mirror cells (interior efference + obs → output), `keep_only_mirror_grads`
-  (localized credit), master-avatar training (avatar CE + internalization CE),
-  lesion/obs helpers, `--smoke` (wiring proof) + `--verdict` (n=3).
-- **fire_taming.py** — fire oracle (tap-the-stove), tamed-fire physics override,
-  BC vs DAgger arms, `train_dagger_student`, avatar-pilot eval.
-- **quest.py** — masters (fire/water/food specialists) + `crown_protagonist`.
-- **quest_chapter.py** — resume-capable DAgger chapters (`dagger_resume`); Adam
-  accumulates skills in `runs/protagonist.pt`.
-- **quest_consolidate.py** — consolidate-and-lock (`consolidate` via
-  `edge_protected`, `grow_mirror`, `freeze_grads`); PLAIN vs LOCKED n=3.
-- **capacity_test.py** — mirror-cell count sweep (8/64/128).
-- **measure_npc_ram.py** — real runtime RAM per brain (tensor bytes + RSS delta).
-- **diagnose_death.py** — cause-of-death autopsy.
-- **probe_temp_conflict.py** — approach-avoidance / pyrophobia probe.
-- **render_organism.py** — world GIF + Cytoscape anatomy (MIRROR cells gold).
-- **render_fire_taming.py** — side-by-side solo vs avatar-piloted GIF.
+New:
+- **experiments/world/consolidate_base.py** — the consolidation experiment. Key parts:
+  `make_lock(sub, mode, …)` → per-batch grad-zeroing closure for `none`/`mirror`/`full`
+  (vectorized from `edge_src/edge_dst`, NOT positional `edge_protected` — that can
+  misalign across `compile()`, a latent bug in 013's quest lock); `dagger(...)` DAgger
+  loop taking a `lock` callback; `build_battery(master_fn, which=…)` fixed cold/thirsty
+  decision-state battery; `policy_on`, `run_arm`, 3-arm `main`. `--quick` smoke.
+- **experiments/world/fire_economy.py** — the 2×2 move-cost probe. `fire_potential(w)`
+  cold-gated potential; `train_solo_eco(..., fire_n, shaping)` solo TD with optional
+  potential-based shaping; `evaluate_eco(..., fire_n)`; 4-arm `main`. `--quick` smoke.
 
 Modified:
-- **trioron/core/epigenome.py** — added `MIRROR = 10` (marker gene, NOT an
-  expression gene; mirror cells dispatch as LINEAR).
-- **trioron/core/?** none else.
-- **experiments/world/tile_world.py** — parameterized physics as class attrs
-  (`WARM_RATE=0.15`, `TEMP_LOW=0.05`, `TEMP_HIGH=0.98`) + per-instance overrides.
-  **Defaults unchanged** — existing benches unaffected. fire_taming overrides to
-  warm 0.04 / band 0.02–0.99.
-- **render_organism.py** `train_solo(..., n_mirror=8)`; **mirror_cells.py**
-  `build_mirror(..., capacity=2048)`.
+- **experiments/world/tile_world.py** — added `FIRE_N` class attr (default `None`) +
+  per-instance `fire_n` __init__ param; `reset()` uses it. **Defaults unchanged**
+  (`None` → canonical `max(2, s//3)`). Same approved pattern as 013's WARM_RATE override.
+
+Commits this session: `41d220a` (consolidation), `b7f221f` (fire economy).
+
+**Pre-existing, STILL DO NOT TOUCH** (carried session-005 uncommitted files):
+`trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
+`trioron/viz/export.py`. Left modified-unstaged, as in 013.
 
 ## Key findings
 
-1. **Mirror cells work as a real cell type** (smoke: fires on observed action,
-   credit stays on mirror cells with zero leak, lesion-able). Localized-loss design.
-2. **The master-avatar "hole" is a feature, not a bug** (Rocky): the obs channel
-   is teleoperation — a master pilots the body to near-its-own competence (80.7).
-3. **Emergent pyrophobia**: nobody coded fear of fire; the value learner discovers
-   it from the burn penalty → avoids fire → freezes. The most "alive" result here.
-4. **BC fails, DAgger works** (the clean, defensible win): watching a master
-   (behavioural cloning) doesn't transfer a hard skill — distribution shift; the
-   student never practises its own mistakes. Coaching on the student's OWN states
-   (DAgger) does: −37% cold-deaths, fire-use up toward the oracle.
-5. **One skill saturates 8 mirror cells**; a second skill needs growth or
-   modularity, not cramming. BUT —
-6. **We hit a measurement wall.** The tile-world's death-counts swing ±15 (predator
-   luck, spawns); chasing 2–5pp skill-retention deltas at n=3 is hopeless. Capacity
-   sweep and consolidate-and-lock are both noise-dominated. Be honest: these are
-   QUALITATIVE demos, not quantitative results.
-7. **The quest pipeline never invoked Numa/Mima or any consolidation** (Rocky's
-   diagnosis) — it was raw SGD. Plus each specialist master is blind outside its
-   drive, so a later master actively un-teaches an earlier skill. The real missing
-   mechanism is consolidation/integration, and even locking mirror edges leaks
-   through the unfrozen shared `interior→output` base policy.
-8. **RAM is a non-issue** for the NPC application (~158 KB/brain). Real constraints:
-   compute-per-tick (solve by slow/staggered ticking + vectorization) and the
-   capacity-vs-skill-richness tradeoff.
+1. **The leak was the shared base policy, exactly as 013 guessed.** Freezing a skill's
+   readout cells is insufficient because the output cell sums readout + base, and TD
+   keeps moving the base. Anchor the base (old↔old edges + old biases) and the skill
+   holds.
+2. **Anchoring is not a plasticity tax — it's a plasticity *aid*.** A fresh readout off
+   a frozen representation learns the next skill more cleanly than a net fighting its
+   own TD interference. This is the modularity bet (frozen substrate + per-skill
+   readout) paying off, consistent with the absorption/branch line in memory.
+3. **Controlled probes beat episode metrics for mechanism validation.** A fixed
+   decision-state battery + deterministic policy-agreement removed the episode noise
+   that blocked 013. This is the general unlock for anything quantitative in the world.
+4. **Pyrophobia is substantially a move-cost artifact** (cheaper/closer fire → more
+   fire-use, fewer cold-deaths). But the naive fix (more fire) trades one death cause
+   for another and lowers survival.
+5. **Reward-design lesson:** in a multi-drive agent, the cure for a neglected drive is
+   a signal that points to its resource *only while the drive is unmet* (cold-gated
+   shaping), NOT cheaper access. Access without a satiety governor → over-commitment.
 
 ## Decisions made
 
-- Mirror cells = real `MIRROR` cell type, **localized-loss** design (credit gated
-  to mirror cells).
-- Master-avatar: **keep the obs hole** as teleoperation + add an internalization
-  term so the skill transfers to solo play.
-- **DAgger is the apprenticeship method** (BC is dead for hard skills).
-- **Sequential** apprenticeship, not council (council's boundary flip-flops confuse).
-- **Adam = seed 2** is the protagonist; persistent identity in `runs/protagonist.pt`.
-- Tamed-fire physics is **parameterized, defaults unchanged**.
-- **Paused** at the measurement wall — not worth burning hours forcing a number out
-  of a noisy metric.
+- **FULL-LOCK** (anchor the whole old↔old base + old biases) is the consolidation
+  mechanism; it is a HARD freeze. The graceful SOFT (EWC-style elastic) version was
+  considered and deferred — FULL-LOCK already keeps water-acq rising, so soft anchoring
+  is a refinement, not a rescue.
+- **Deterministic battery probe** is the retention metric going forward (occupancy
+  stays as a noisy deployment cross-check only).
+- Freeze grads from `edge_src/edge_dst` each batch (position-independent), NOT from
+  positional `edge_protected` — robust to `compile()` reordering.
+- `tile_world` fire count parameterized, **defaults unchanged**.
 
 ## Open questions / next-up
 
-1. **Lower-noise testbed** is the blocker for everything quantitative. Either a
-   controlled fire-probe metric (fixed cold-state battery, not whole-episode
-   occupancy) + n=8+, or a quieter world (less predator/spawn variance), or accept
-   the quest as a qualitative demo.
-2. **Consolidation done right**: freeze/anchor the **base `interior→output` policy**
-   too (manifold-anchoring — the substrate has it, we bypassed it), not just mirror
-   edges. The leak is there.
-3. **Actually invoke Numa/Mima** in the apprenticeship loop (validate a skill is
-   real → lock it → only then learn the next). Currently never used in the pipeline.
-4. **Master integration**: specialists are drive-blind; a later master un-teaches an
-   earlier skill. Need scoped masters or a council-with-context. Food chapter never run.
-5. **Strengthen the fire chapter** in sweeps (fresh-net DAgger only reached ~12%
-   occupancy vs Adam's warmed 20%) — can't measure retention of a barely-learned skill.
-6. **RPG-NPC pilot** (product direction): a teachable survival companion (emergent
-   quirk + learn-by-demonstration + persistent across save/load). The quest IS ~80%
-   of this. Lineage/culture version depends on solving the multi-skill problem.
+1. **Soft-anchoring (EWC) refinement** of FULL-LOCK: elastic L2 anchor on the base so
+   water can share it where it doesn't hurt fire — likely lifts BOTH retention and
+   water-acq further. The "wise" polish; FULL-LOCK is the hard-freeze bound to beat.
+2. **n=10 confirm of the fire-economy survival deltas** (currently ~1σ): bank the
+   "dense hurts, cold-gated shaping helps survival" claim, or fold it into a broader
+   reward-shaping study (gate ALL drives, not just temp).
+3. **Chain a 3rd skill** under FULL-LOCK (fire→water→food) to test whether the
+   modular freeze-and-grow scales past two skills, or whether the frozen base
+   eventually starves the representation new skills need.
+4. **Wire Numa/Mima** into the consolidation loop (validate a skill is real → lock it →
+   grow → learn next). Still never used in the pipeline; FULL-LOCK currently locks
+   unconditionally at the chapter boundary.
+5. **The degenerate-seed problem** (seed2 trains a bad net across all arms): training
+   fragility, not measurement noise. A reseed-on-collapse or a competence floor before
+   consolidating would tighten the means.
+6. **RPG-NPC pilot** (product direction, carried from 013): the consolidation result is
+   a real ingredient — a companion that keeps old skills while learning new ones.
 
 ## Pointers
 
-- **`experiments/world/`** — the whole arc.
-- **`runs/`** (LOCAL, uncommitted — gifs/.pt/.log): `protagonist.pt` (Adam, seed 2,
-  skills nominally `['fire','water']` though water didn't take), `mirror_organism.pt`
-  (probe organism, OLD harsh-world), `fire_taming_sidebyside.gif`,
-  `organism_world.gif`, `organism_anatomy.{html,png}`, `world_legend.png`, and the
-  `*_run*.log` / chapter logs.
-- **`~/project-aidos/`** — Numa/Mima origin (separate project, own memory dir).
-  The real Numa/Mima is richer than our held-out-retest proxy; read before wiring it.
+- **`experiments/world/`** — the whole organism arc.
+- **`runs/`** (LOCAL, uncommitted — logs/.pt/.gif): `consolidate_base_n5.log`,
+  `fire_economy_n5.log` (this session's results), plus 013's `protagonist.pt`,
+  `mirror_organism.pt`, gifs. runs/ is NOT gitignored but has always been treated as
+  local — headline numbers live in this handoff, not the logs.
+- Reproduce: `python3 experiments/world/consolidate_base.py --seeds 5` (~30 min);
+  `python3 experiments/world/fire_economy.py --seeds 5` (~25 min). Both have `--quick`.
+- **`~/project-aidos/`** — Numa/Mima origin (separate project, own memory dir). Read
+  before wiring Numa/Mima into the consolidation loop (open #4).
 
 ## Environment notes
 
 - `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12,
   torch 2.11.0+cu130, WSL2, 12 cores, 7.4 GiB. `python3`, `OMP_NUM_THREADS=8`.
-  matplotlib 3.10.9, imageio 2.37.3, networkx 3.4.2 available.
-- **Pre-existing, DO NOT TOUCH**: 3 session-005 carried uncommitted files —
-  `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
-  `trioron/viz/export.py`. (export.py is why the anatomy MIRROR colour is injected
-  into the generated HTML, not the source.)
-- Background runs are buffered to file unless launched with `python3 -u` /
-  `PYTHONUNBUFFERED=1` — use that for live progress (learned this session).
-- tile-world single-seed runs are HIGH variance (±15 on death counts) — n≥8 or a
-  controlled metric is required for any quantitative claim.
+- Long background runs: launch the python DIRECTLY under the harness (not via `nohup &`
+  inside a wrapper) so you get a completion notification instead of polling.
+- The deterministic battery probe is the template for any future quantitative claim in
+  this world — don't try to read sub-±15 effects off whole-episode survival/occupancy.
+- tile-world single-seed runs remain HIGH variance on survival/occupancy; cold-death
+  *counts* and the battery *agreement* are the lower-noise channels.
