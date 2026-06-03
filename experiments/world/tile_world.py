@@ -44,12 +44,14 @@ class TileWorld:
     WARM_RATE = 0.15      # temp gain/step when near fire (vs ~0.01 cooling)
     TEMP_LOW = 0.05       # lethal cold threshold
     TEMP_HIGH = 0.98      # lethal heat threshold
+    FIRE_N = None         # fire-tile count override; None = canonical max(2, s//3)
 
     def __init__(self, size=12, day_len=20, max_steps=300, seed=0,
-                 warm_rate=None, temp_low=None, temp_high=None):
+                 warm_rate=None, temp_low=None, temp_high=None, fire_n=None):
         self.warm_rate = self.WARM_RATE if warm_rate is None else warm_rate
         self.temp_low = self.TEMP_LOW if temp_low is None else temp_low
         self.temp_high = self.TEMP_HIGH if temp_high is None else temp_high
+        self.fire_n = (self.FIRE_N if fire_n is None else fire_n)
         self.size = size
         self.day_len = day_len
         self.max_steps = max_steps
@@ -66,7 +68,8 @@ class TileWorld:
                 x = int(torch.randint(0, s, (1,), generator=self.g))
                 y = int(torch.randint(0, s, (1,), generator=self.g))
                 self.grid[y, x] = tile
-        scatter(FOOD, s); scatter(WATER, s); scatter(FIRE, max(2, s // 3))
+        n_fire = max(2, s // 3) if self.fire_n is None else self.fire_n
+        scatter(FOOD, s); scatter(WATER, s); scatter(FIRE, n_fire)
         scatter(BERRY, s); scatter(POISON, s)
         # poison carries a hidden context bit that BERRY lacks (smell) — the
         # only signal distinguishing the look-alikes. stored per-cell.
