@@ -1,218 +1,172 @@
 # Trioron Handoff
 
-**Session date:** 2026-06-03 → 2026-06-04
-**Session number:** 014
-**Session title:** Consolidation done right (anchor the base) → fire-economy probe →
-"use trioron's own machinery, not hand-rolls" → native pipeline (replay) → z2 H-routing
-transfer reproduces the chained-15 pump → **restored the epigenetic lock λ (the namesake
-THIRD node variable) to v2 + wrote the anti-drift manual**
+**Session date:** 2026-06-04
+**Session number:** 015
+**Session title:** Finish the λ restoration — Fisher calibration → **Rocky's catch: the
+native λ driver is `|w·g|` saliency, NOT Fisher** → world n=5 verdict (soft λ complements
+the hard freeze) → arena survival (world-ceiling, not lock-discriminating) → **fixed the
+MEMORY.md overflow that was silently dropping memories** (the actual anti-drift fix) +
+rediscovered the forgotten selective-quad capability + manual/spec/API updates
 
-> Rewritten in full every session; prior handoffs in git history. Session 013
-> (`a6fcab4`) is the mirror-cells / fire-taming / Adam's-quest arc. This session
-> completes its open #2 (consolidation) and pivots to the unification: the world's
-> forgetting IS chained-15's full-softmax forgetting, and the fix is the manifold
-> machinery we already have. READ THIS, then the headline numbers.
+> Rewritten in full every session; prior handoffs in git history. Session 014
+> (`e3ed911`) restored λ to v2 core. This session calibrates it, **corrects its driver**,
+> validates it on the world, and — the meta-result — repairs the memory index that was
+> dropping the very features we keep forgetting.
 
 ## Summary
 
-Long, productive session with a clear narrative arc and one strong new result:
-
-1. **Consolidation done right** (Rocky's pick). Session 013 diagnosed the leak; I fixed
-   it. The quest's lock froze fire's MIRROR cells but left the shared
-   `perception→interior→output` base free, so water's TD drifted it and the "locked"
-   fire skill eroded. **FULL-LOCK** anchors the base (freeze every old↔old edge + old
-   biases at the boundary; water learns only on fresh mirror cells off a frozen rep).
-2. **The measurement fix**: a deterministic **cold/thirsty-state battery** scored by
-   policy-agreement — replaces ±15-noise occupancy. (Bug found & fixed: the masters'
-   *explore* uses the GLOBAL torch RNG, so the battery wasn't deterministic until
-   seeded — `torch.manual_seed` before `build_battery`.)
-3. **Fire-economy probe** (Rocky's move-cost hypothesis): pyrophobia is largely a
-   trip-cost artifact, BUT cheap fire backfires; only a cold-gated shaping reward
-   lifts survival.
-4. **The pivot** (Rocky: "use all the trioron advantages instead of re-inventing
-   wheels"). I had been about to hand-roll soft-EWC. Stopped. Audited the native
-   machinery, then wired it: **native_pipeline.py** (CreditTracker + ManifoldArchive
-   replay + dream_cycle + frustration→growth).
-5. **The unification** (Rocky): the world's forgetting is the *same* forgetting we beat
-   on chained-15 (unanchored shared head drifts to last task = the epigenetic-lock read).
-   The world is the *full-softmax* regime (no task selector). And the chained-15
-   full-softmax **pump came from a manifold MODIFICATION** — dual-manifold **H-space
-   routing** ("z2") + **full-covariance Mahalanobis** (0.55→0.69 storage-free / 0.76
-   oracle), NOT replay alone.
-6. **z2 transfer test** (a clean result): the core full-cov manifold **routes
-   fire-context vs water-context from the 32-d interior code**, reproducing the
-   chained-15 pump near-exactly (diagonal 0.640 → full-cov **0.707**, +0.067 vs
-   chained-15's +0.08). Routing transfers.
-7. **Restored the epigenetic lock λ** (the deepest thread — Rocky: "you keep forgetting
-   trioron has 3 params per node"). `tri·oron` = "three coupled state variables per
-   node" (w, λ, u); **v2.0 dropped λ (spec §8.6) and that IS the forgetting we fought
-   all session** (lam=0 unanchored drift). λ is a **per-node plasticity GATE** — default
-   driver Fisher (λ_i = ROW-SUM of incoming Fisher, +floor; NOT row-mean), but `set_lambda`
-   drives it from **reward / environment / attention** (the epigenetic generalization;
-   "λ becomes a literal environment sense"). Restored to v2 core + validated the EWC pull
-   bites. **Also wrote `docs/TRIORON_MANUAL.md` (anti-drift) + wired it into session start.**
+1. **λ Fisher calibration (open item 0a).** The restored λ pinned at `LAMBDA_FLOOR`
+   (dead/uniform) because **empirical Fisher (`g²`) vanishes at convergence** (g→0). Fix:
+   `fisher_loss` — sample the backward target from the model's softmax (the canonical
+   *model-distribution* Fisher). Verified live in `lambda_ewc_smoke.py`: λ off the floor,
+   real stability-plasticity trade (retention 0.229→0.488 at s=100).
+2. **Rocky's catch (the key turn): the native λ driver is `|w·g|`, not Fisher.** Trioron's
+   own importance signal everywhere — **KIBRA edge-tagging** (`dream.py`), the **utility
+   `u`**, the **pruner** — is `|weight·gradient|`. Fisher (`g²`) is the imported
+   academic-EWC outlier. `|w·g|` keeps the weight-magnitude factor, so it differentiates λ
+   at convergence **without** the washout, using plain labels. Probe: `|w·g|` gives 46/2048
+   nodes above floor (vs Fisher-true-label 0/2048) — as good as the model-dist band-aid,
+   simpler. Added `accumulate_saliency`; swapped it in as the world λ driver.
+3. **World validation (open item 0c), n=5 `consolidate_base.py`.** Verdict below: **hard
+   FULL-LOCK still wins raw retention + water acquisition; soft λ-WG uniquely *improves*
+   the old fire skill while learning water (the freeze holds it static).** Driver ranking
+   confirmed **`|w·g|` > Fisher > reward**. λ is a **complement** to credit-locking, not a
+   replacement — matching v2's design doctrine. **Arc CLOSED (Rocky's call).**
+4. **Arena survival (Rocky's question).** `wg_survival.py`: the WG organism survives
+   ~47/300 steps — **indistinguishable from FULL-LOCK (44) and PLAIN (50)**; survival is
+   the world's lethality ceiling, not the lock. FULL-LOCK has the tightest variance.
+5. **THE META-FIX (Rocky's real concern — "previous-you keeps forgetting features").**
+   Root-caused it: `MEMORY.md` was **38.4 KB vs a 24.4 KB limit**, so the index was
+   silently truncated and dropped entries — including `selective-quad-growth`. The
+   knowledge was saved correctly; the *index* lost it. **Compressed MEMORY.md to 24.2 KB**
+   (all 184 links verified resolving, 6 superseded handoff pointers dropped, 1 broken link
+   fixed). The dropped entries now load every session.
+6. **Rediscovered the forgotten capability.** `selective_quad_growth.py` (session 011)
+   already demonstrates **problem-driven phenotype selection**: under relational
+   frustration a dividing cell's child takes the **quad/dendrite** phenotype — ~8 quad on
+   the relational task (1.000), **ZERO** on a linear task (1.000). The substrate *does*
+   adapt architecture to the problem. Pinned in manual §2.5 so it stops being forgotten.
+7. **Manual / spec / API updated** to match reality (λ restored, `|w·g|` driver, §2.5
+   phenotype selection, spec §8.6 corrected, `epigenetic_lock` exported in the public API).
 
 ## Headline numbers
 
-**Consolidation — FULL-LOCK vs MIRROR-LOCK vs PLAIN (n=5, capacity-matched, only the
-lock differs).** Retain = policy-agreement on a fixed cold battery (after-water vs
-after-fire). `consolidate_base.py`, `runs/consolidate_base_n5.log`:
+**λ-EWC smoke (`lambda_ewc_smoke.py`, orthogonal-random = EWC's worst case).** Model-dist
+Fisher rescues the washout:
+
+| driver | task-A after B | λmax | nodes>floor |
+|---|---|---|---|
+| empirical Fisher (true label) | 0.346 | 1e-3 = floor (dead) | 0/2048 |
+| model-dist Fisher (`fisher_loss`) | 0.488 (s=100) | 1.3e-2 | 40/2048 |
+| **`|w·g|` saliency (plain labels)** | — | **1.1e-2** | **46/2048** |
+
+**World consolidation (`consolidate_base.py`, n=5, deterministic cold-battery agreement).**
+ONLY the lock differs across arms:
 
 | arm | fire-retain | fire-comp f→w | water-acq |
 |---|---|---|---|
-| PLAIN | 0.145 ± 0.064 | 0.197→0.138 | 0.219→0.221 |
-| MIRROR-LOCK | 0.162 ± 0.097 | 0.197→0.190 | 0.219→0.232 |
-| **FULL-LOCK** | **0.398 ± 0.195** | 0.197→0.211 | 0.219→**0.365** |
+| PLAIN | 0.141 ± 0.080 | 0.203→0.139 ▼ | 0.226→0.229 |
+| MIRROR-LOCK | 0.187 ± 0.146 | 0.203→0.249 | 0.226→0.220 |
+| **FULL-LOCK** | **0.376 ± 0.181** | 0.203→0.213 | 0.226→**0.344** |
+| **LAMBDA-WG** | 0.271 ± 0.207 | 0.203→**0.264** ▲ | 0.226→0.239 |
+| LAMBDA-REWARD | 0.226 ± 0.180 | 0.203→0.101 ▼ | 0.226→0.260 |
 
-Leak confirmed & located: MIRROR-LOCK≈PLAIN (freezing the readout alone buys nothing);
-anchoring the base = 2.7× retention AND water acquires *better* (no interference).
+FULL-LOCK wins retention + acquisition. LAMBDA-WG: best competence-through-water of any arm
+(0.264 — the freeze only holds at 0.213) and best soft arm. **σ huge (degenerate seeds) —
+FULL-vs-WG retention gap is within ~1σ, NOT σ-confident.** Leak ordering FULL>MIRROR>PLAIN
+reproduced. (An earlier n=5 with the Fisher/reward drivers — `consolidate_lambda_n5.log` —
+had Fisher 0.284 / reward 0.264; |w·g| beats reward on competence decisively.)
 
-**Fire economy — solo TD, no teacher (n=5).** `fire_economy.py`, `runs/fire_economy_n5.log`:
+**Arena survival (`wg_survival.py`, n=3 × 40 eps, out of 300 steps).**
 
-| arm | survival | cold-deaths | fire-occ% |
-|---|---|---|---|
-| baseline (4, plain) | 43.3 | 24.0 | 10.1 |
-| dense (12, plain) | 38.5 | 15.6 | 18.6 |
-| **shape (4, shaped)** | **47.4** | 19.4 | 12.7 |
-| both (12, shaped) | 42.7 | 14.2 | 19.6 |
-
-Move-economy confirmed (both levers cut cold-deaths, raise fire-use); but DENSE fire
-*hurts* survival (trades cold-death for neglect); only the **cold-gated** shaping lifts
-survival (+9%) — reward must point at a resource only while its drive is unmet.
-
-**Native pipeline (replay-only) — n=5, four arms.** `native_pipeline.py`,
-`runs/native_pipeline_n5.log`:
-
-| arm | fire-retain | fire-comp f→w | water-acq |
-|---|---|---|---|
-| PLAIN | 0.179 ± 0.147 | 0.215→0.174 ▼ | 0.218→0.237 |
-| FULL-LOCK | **0.391 ± 0.169** | 0.215→0.216 – | 0.218→0.350 |
-| NATIVE-free | 0.251 ± **0.056** | 0.215→**0.304** ▲ | 0.218→**0.351** |
-| NATIVE-gate | 0.203 ± 0.093 | 0.215→0.321 ▲ | 0.218→0.296 |
-
-Mixed/honest: FULL-LOCK wins raw self-consistency, BUT (a) native arms *improve* fire
-competence through water (replay reinforces; freeze only holds), (b) NATIVE-free ties
-water and is **3× more robust** (±0.056), (c) **ungated > gated** (don't mirror-gate the
-water master — it overwrites fire's mirror cells; answers Rocky's question). Self-
-consistency is biased toward freezing; on competence, native wins. Replay-only ≈ draw vs
-freeze — the missing lever is routing.
-
-**z2 H-routing transfer (n=5, chance 0.50).** `world_routing.py`, `runs/world_routing.log`:
-
-| router | accuracy | per-context recall |
+| arm | survival | per-seed |
 |---|---|---|
-| diagonal Gaussian | 0.640 ± 0.068 | fire 0.53 / water 0.74 (biased) |
-| **full-cov Mahalanobis** | **0.707 ± 0.021** | fire 0.70 / water 0.71 (balanced) |
+| LAMBDA-WG | 46.9 ± 9.2 | 48, 58, 35 |
+| FULL-LOCK | 44.2 ± **2.4** | 42, 48, 43 |
+| PLAIN | 49.7 ± 12.4 | 63, 52, 33 |
 
-**Routing transfers** (0.71 ≫ 0.50, from the *base* organism's interior code, no skill
-training). Full-cov **reproduces the chained-15 pump** (+0.067 ≈ +0.08), balances recall,
-and cuts variance 3×. The interior code is a usable task-selector. **This is the cleared
-next mechanism.**
+All within noise — survival = world lethality ceiling (deaths split across cold/overheat/
+thirst/integrity), not the consolidation lock. FULL-LOCK = tightest variance.
 
 ## What was done (files)
 
-New (all `experiments/world/`):
-- **consolidate_base.py** — FULL-LOCK base-anchoring (`make_lock`, vectorized from
-  edge_src/edge_dst to survive `compile()` reorders) + deterministic battery probe
-  (`build_battery`, `policy_on`, `run_arm`). Commit `41d220a`.
-- **fire_economy.py** — 2×2 move-cost probe (`fire_potential` cold-gated shaping,
-  `train_solo_eco`). Commit `b7f221f`.
-- **native_pipeline.py** — native CL machinery wired into fire→water: CreditTracker +
-  ManifoldArchive (z2 mixture, whole-net pseudo-replay) + dream_cycle + frustration→
-  divide. `imit_gated` flag (ungated default). Commit `11ff6a8`.
-- **world_routing.py** — z2 H-routing transfer test (reuses the IN-CORE full-cov
-  astrocyte; only the routing wrapper is new). Commit `11ff6a8`.
-- **lambda_ewc_smoke.py** — λ-EWC forgetting smoke. Commit `4e93099`.
+Committed `6b20113` (mid-session): λ `|w·g|` driver + API export + manual.
+- **trioron/learning/epigenetic_lock.py** — `accumulate_saliency` (|w·g| EMA, the native
+  driver) + `fisher_loss` (model-dist target). Shares `edge_fisher`/`bias_fisher` buffers;
+  rolls up via `refresh_lambda` (row-sum + floor).
+- **trioron/learning/__init__.py** — export the epigenetic_lock API (λ was the only
+  learning module missing from the public surface) — the "API needs updating" Rocky flagged.
+- **experiments/world/consolidate_base.py** — `setup_lambda_wg` / `setup_lambda_fisher` /
+  `setup_lambda_reward`; LAMBDA-WG + LAMBDA-REWARD arms; soft `ewc_penalty` in the
+  non-mirror-gated TD backward; `--ewc-strength`; `run_arm(keep_sub=)`.
+- **docs/TRIORON_MANUAL.md** — λ RESTORED + `|w·g|` driver (§1); §2.5 problem-driven
+  phenotype selection (NEW); §5/§8/§9 fixes.
 
-λ restoration (commit `4e93099`):
-- **trioron/core/arena.py** — `node_lambda` (per-node gate) + `edge_fisher`/`edge_anchor`
-  + `bias_fisher`/`bias_anchor`.
-- **trioron/learning/epigenetic_lock.py** — `accumulate_fisher`, `refresh_lambda`
-  (row-sum+floor), `set_lambda` (reward/env/attention drivers), `anchor`, `ewc_penalty`,
-  `modulated_scale`.
-- **docs/TRIORON_MANUAL.md** — NEW canonical anti-drift reference (read every session per
-  CLAUDE.md). §1 = the triparametric node (w, λ, u), λ = per-node general gate.
-
-Modified (committed):
-- **tile_world.py** — `FIRE_N` class attr + per-instance `fire_n` (defaults unchanged,
-  `None`→canonical `max(2,s//3)`). Commit `b7f221f`.
+Uncommitted at handoff time (commit with this handoff):
+- **paper/v3/spec.md §8.6** — corrected the stale "v2 drops per-weight Fisher" claim to
+  record the λ restoration + `|w·g|` driver + world verdict.
+- **experiments/world/wg_survival.py** — NEW arena-survival eval for the consolidated
+  organism (reuses `run_arm(keep_sub=True)` + `fire_taming.evaluate`).
+- **~/.claude/.../memory/MEMORY.md** — compressed 38.4 → 24.2 KB (NOT in repo; lives in
+  ~/.claude, does not sync — that's why this handoff exists).
 
 **Pre-existing, STILL DO NOT TOUCH**: `trioron/bases/developmental.py`,
 `trioron/lifecycle/developmental.py`, `trioron/viz/export.py` (carried session-005).
 
 ## Key findings
 
-1. **The leak is the shared base policy.** Freezing a skill's readout is useless; anchor
-   the base and it holds — and the next skill learns *better* (no TD interference).
-2. **The world's forgetting = chained-15's full-softmax forgetting** (unanchored shared
-   head drifts to the last task). The world has NO task selector, so it lives in the
-   full-softmax regime (chained-15 peak ~0.60), not task-aware (0.96).
-3. **The chained-15 pump was a MANIFOLD MODIFICATION, not replay**: dual-manifold
-   **H-space routing** (the "z2") + **full-cov Mahalanobis** (0.55→0.69/0.76). full-cov
-   is IN trioron core (`manifold.py`); the routing orchestration is bench-local only
-   (`bench_chained_15_v2.py`), never promoted.
-4. **Routing transfers to the world** (z2 test: 0.71 full-cov, +0.067 over diagonal).
-   The stable interior code separates contexts; full-cov balances + stabilizes. This is
-   the lever, validated.
-5. **Replay defends weights; routing picks the skill.** Replay-only native ties the
-   freeze; the win is **replay + routing**. Don't mirror-gate the water master (ungated
-   retains + acquires better).
-6. **Native machinery is more ROBUST** (3× tighter cross-seed variance) even where it
-   doesn't beat the hand-roll on the mean — matches the full-cov variance reduction.
-7. Battery determinism bug: masters' explore uses GLOBAL rng; seed before `build_battery`.
+1. **λ's native driver is `|w·g|`, not Fisher.** Fisher washes out at convergence; `|w·g|`
+   (the trioron-wide saliency dialect) does not. Don't reach for Fisher EWC on the
+   substrate — use saliency.
+2. **Soft λ complements, doesn't replace, hard credit-locking.** Freeze wins retention +
+   acquisition; soft λ's edge is *improving* a consolidated skill during new learning. Both
+   are legitimate; pick by whether you want a frozen skill or a still-improving one.
+3. **Survival is the world's ceiling, not the lock.** Consolidation benefit shows in skill
+   retention (battery), not whole-episode survival — many death modes the skill doesn't fix.
+4. **The forgetting mechanism was the MEMORY.md index overflow.** Memories were saved fine;
+   the index that surfaces them was truncated. Keep MEMORY.md under 24.4 KB — one short
+   line per entry, detail in the topic files.
+5. **Trioron already does problem-driven phenotype selection** (selective quad growth). Not
+   aspirational — validated n=3. The unbuilt part is generalizing the selector to pick
+   conv/attention/recurrent (and conv-by-emergence is separately *closed* on the flat
+   substrate — use a cortex upstream).
 
 ## Decisions made
 
-- **FULL-LOCK** = hard base-anchor; the deterministic battery is the retention metric.
-- **Pivot to native machinery** (Rocky): no hand-rolled EWC. Reuse `CreditTracker`,
-  `ManifoldArchive`, `dream_cycle`, full-cov astrocyte. Promote routing to core next.
-- **Don't mirror-gate** the water-master imitation (ungated default).
-- **z2 = the H-space ROUTING manifold + full-cov** (NOT mixture_k=2 — that was my wrong
-  first read). full-cov is the load-bearing modification.
+- **λ driver = `|w·g|` saliency** (default), Fisher available but deprecated-for-substrate.
+- **λ arc CLOSED** on the honest result (Rocky); spec §8.6 updated rather than chasing a
+  strength sweep on a noisy probe.
+- **MEMORY.md hard cap discipline**: ≤ 24.4 KB, terse one-liners, prune superseded handoffs.
 
-## Open questions / next-up (priority order)
+## Open questions / next-up
 
-0. **Finish the λ restoration** (the deepest fix — restores the namesake variable):
-   (a) **Fisher calibration** — empirical Fisher pins at the floor at perfect convergence;
-   use the model-distribution Fisher (sample labels from softmax) or estimate pre-convergence
-   so λ actually *differentiates* weights. (b) **Drive λ from survival-reward** via
-   `set_lambda` (the intrinsic-value path Rocky wants) — likely the real world lever, not
-   Fisher. (c) **World validation**: add a LAMBDA arm to `consolidate_base.py`
-   (fire/water share the base — exactly what λ should protect) head-to-head vs FULL-LOCK.
-   (d) **Update spec** §8.6/§2.1/§4 once validated (currently §8.6 says "v2 drops per-weight
-   Fisher" — λ restoration contradicts it).
-1. **Build replay + z2 router** (the cleared win): route the interior code to per-skill
-   readouts (fire-mirror vs water-mirror), full-cov. The two levers together should beat
-   the freeze on competence AND retention. This is THE next experiment.
-2. **Promote routing to trioron core** — `trioron.learning.route()` (or
-   `settle_via_manifold`) — so the dual-manifold H-routing stops being bench-local. The
-   proper "wire the modification into trioron."
-3. **n=10 confirm** of the fire-economy survival deltas (~1σ at n=5).
-4. **Soft (EWC) anchoring** of FULL-LOCK — deferred; lower priority than routing.
-5. The degenerate-seed problem (some seeds train a bad net across all arms) inflates
-   variance; a competence-floor-before-consolidate would tighten means.
+1. **Architecture vision (Rocky, this session): generalize problem-driven phenotype
+   selection** beyond quad — a divide-time selector that picks conv/attention/recurrent
+   from the problem's frustration signature. Its own arc; substrate's flat geometry is the
+   known obstacle for conv (`conv_by_emergence_null_result`).
+2. **(Deferred) λ sharpening** — competence-floor-before-consolidate + n=10 to make the
+   FULL-vs-WG gap σ-confident; a LAMBDA-WG strength sweep. Lower priority (arc closed).
+3. **Routing to core** (carried from s014 open #2): `trioron.learning.route()` — the
+   dual-manifold H-routing is still bench-local (`bench_chained_15_v2.py`).
+4. **Spec sweep** for other stale post-restoration claims (§2997, §3032 reference v2
+   dropping Fisher — §8.6 fixed, these two lines not yet).
 
 ## Pointers
 
-- `experiments/world/` — the whole arc. Reproduce: each bench has `--smoke`; full runs are
-  `--seeds 5` (~30–100 min; native arms are heavy with per-batch replay).
-- `runs/` (LOCAL, uncommitted): `consolidate_base_n5.log`, `fire_economy_n5.log`,
-  `native_pipeline_n5.log`, `world_routing.log` — this session's results.
-- **The chained-15 routing source to port from**: `experiments/bench_chained_15_v2.py`
-  (H-routing logic lines ~267–338; `--full-cov`, `--perc-mixture-k`). Commits `62aa57e`
-  (dual-manifold 0.55→0.68), `7e561e4` (full-cov 0.68→0.76), handoff `6d06993` (session 008).
-- Core full-cov manifold: `trioron/learning/manifold.py` (`full_cov`, `log_likelihood_full`,
-  `sample_full`). Routing has NO core home yet — that's open #2.
-- `~/project-aidos/` — Numa/Mima origin (separate project, own memory dir).
+- `experiments/world/` — `consolidate_base.py` (5-arm lock comparison + λ drivers),
+  `wg_survival.py` (arena survival), `lambda_ewc_smoke.py` (driver smoke). Each has
+  `--quick`/`--smoke`; full = `--seeds 5`. `runs/` (LOCAL): `consolidate_lambda_n5.log`
+  (Fisher/reward), `consolidate_lambda_wg_n5.log` (the WG verdict), `wg_survival_n3.log`.
+- λ module: `trioron/learning/epigenetic_lock.py` (now in `trioron.learning` public API).
+- `selective_quad_growth.py` + memory `selective-quad-growth` — problem-driven phenotype.
+- Manual §1 (λ + driver), §2.5 (phenotype selection). Spec §8.6 (corrected).
 
 ## Environment notes
 
-- `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12,
-  torch 2.11.0+cu130, WSL2, 12 cores, 7.4 GiB. `python3`, `OMP_NUM_THREADS=8`.
-- Long runs: launch python DIRECTLY under the harness (not `nohup &`) for completion
-  notification. DON'T wrap a foreground run in `timeout` while another heavy run shares
-  the cores — it gets killed (happened to the first routing run).
-- Battery/probe determinism requires `torch.manual_seed(...)` before `build_battery`
-  (masters' explore uses the global RNG).
-- The deterministic battery + (now) the z2 router are the low-noise instruments; do not
-  read sub-±15 effects off whole-episode survival/occupancy.
+- `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12, torch
+  2.11.0+cu130, WSL2, 12 cores, 7.4 GiB. `python3`, `OMP_NUM_THREADS=8`.
+- Benches are CPU/core-bound (~0.7 GB RAM each), not memory-bound; safe to run alongside
+  light host (Windows) tasks. n=5 consolidate ≈ 45 min; n=3 survival ≈ 15 min.
+- Survival is the noisy whole-episode metric (±9–12 across seeds); the deterministic
+  cold/thirsty battery is the low-noise instrument. Seed `torch.manual_seed` before any
+  battery/eval (masters' explore uses the global RNG).

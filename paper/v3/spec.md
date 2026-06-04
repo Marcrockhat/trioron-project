@@ -3118,10 +3118,25 @@ keeps the compat path honest as v2 evolves.
 
 A small set of v1 internals is explicitly not carried into v2:
 
-- **Per-weight Fisher accumulators.** v2 does not maintain
-  per-weight importance estimates. EWC competitor runs (`learning/
-  baselines/`) instantiate Fisher on demand for their own use; the
-  default path does not.
+- **Per-weight Fisher (`g^2`) accumulators.** v2 does not maintain
+  Fisher-style importance estimates on the default path; EWC competitor
+  runs (`learning/baselines/`) instantiate Fisher on demand for their own
+  use.
+
+  *Update (sessions 014–015): the per-node epigenetic lock $\lambda$ — the
+  namesake third node variable — was **restored** to the v2 core
+  (`arena.node_lambda`, `learning/epigenetic_lock.py`) as a **soft, optional
+  complement** to credit-based dormant locking (it does not replace it). It is
+  driven NOT by Fisher but by $|w \cdot g|$ **saliency** ($\lambda_i$ = row-sum
+  of incoming-edge $|w \cdot g|$, floored), the same importance family as KIBRA
+  edge-tagging and the utility $u$: empirical Fisher ($g^2$) collapses to the
+  floor at convergence ($g \to 0$), whereas $|w \cdot g|$ retains the
+  weight-magnitude factor and differentiates without washout. Validated
+  (n=5, shared-base world): hard credit-locking still wins raw retention and
+  new-skill acquisition, but soft $\lambda$ uniquely lets the shared base keep
+  **improving** the consolidated skill while learning the next one — the
+  stability–plasticity edge a hard freeze cannot give. The per-weight
+  importance buffers ride ship/wake in the arena.*
 - **The 6-axis API surface from v1.1.** Axes 1–6 were each their
   own write function in v1.1 (`set_input_source`, `archive_input`,
   `insert_layer`, `set_axonal_gain`, `grow_branch`, `axis6_spawn`).

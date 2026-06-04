@@ -317,7 +317,7 @@ def policy_on(sub, battery_perc):
 # One arm: solo base -> dagger fire -> [lock] -> grow -> dagger water
 # ----------------------------------------------------------------------
 def run_arm(mode, seed, *, solo_ep, fire_ep, water_ep, cold_bat, warm_bat,
-            thirst_bat, ewc_strength=0.0):
+            thirst_bat, ewc_strength=0.0, keep_sub=False):
     sub = train_solo(seed, solo_ep, n_mirror=8)
     sub = dagger(sub, fire_oracle, seed=seed, episodes=fire_ep)
 
@@ -352,8 +352,11 @@ def run_arm(mode, seed, *, solo_ep, fire_ep, water_ep, cold_bat, warm_bat,
     retain = (pi_water_cold == pi_fire_cold).float().mean().item()       # self-consistency
     comp_water = (pi_water_cold == cold_bat[1]).float().mean().item()    # vs fire master
     water_post = (policy_on(sub, thirst_bat[0]) == thirst_bat[1]).float().mean().item()
-    return dict(retain=retain, comp_fire=comp_fire, comp_water=comp_water,
-                water_pre=water_pre, water_post=water_post)
+    out = dict(retain=retain, comp_fire=comp_fire, comp_water=comp_water,
+               water_pre=water_pre, water_post=water_post)
+    if keep_sub:
+        out["_sub"] = sub
+    return out
 
 
 def main():

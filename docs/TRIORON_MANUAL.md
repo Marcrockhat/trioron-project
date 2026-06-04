@@ -90,9 +90,12 @@ the namesake three.
 - **v2.0 NOW (RESTORED, commit `4e93099`, session 014):** the triparametric node is whole
   again — `arena.node_lambda` + the `epigenetic_lock` module (API above). λ is live and the
   EWC pull bites. **Session 015 correction:** its driver is `|w·g|` saliency, not Fisher
-  (Fisher washes out at convergence). Spec §8.6 still says "v2 drops per-weight Fisher" and
-  now **contradicts the code** — fix the spec (a known open item).
-  *World head-to-head (soft λ vs hard FULL-LOCK freeze) was in progress at session 015.*
+  (Fisher washes out at convergence). Spec §8.6 was fixed to match (session 015).
+  **World verdict (n=5, `consolidate_base.py`):** hard credit-locking (FULL-LOCK) still
+  wins raw retention + new-skill acquisition; soft λ's distinct value is that it lets the
+  shared base keep *improving* the consolidated skill while learning the next (a freeze
+  holds it static). Driver ranking confirmed `|w·g|` > Fisher > reward. λ is a
+  **complement** to credit-locking, not a replacement.
 
 Per-cell **non-trainable** state also matters and is easy to forget (spec §2.1):
 - `engagement` = running activation rate → drives **credit-based locking** (active→dormant).
