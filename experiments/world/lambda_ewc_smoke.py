@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from experiments.world.mirror_cells import build_mirror, _solo, INPUT_DIM
 from experiments.world.tile_world import N_ACTION
 from trioron.learning.epigenetic_lock import (
-    accumulate_fisher, refresh_lambda, anchor, ewc_penalty,
+    accumulate_fisher, refresh_lambda, anchor, ewc_penalty, fisher_loss,
 )
 
 
@@ -57,14 +57,15 @@ def train_task(sub, X, Y, *, epochs, lr, ewc_strength=0.0, batch=64):
 
 def fisher_pass(sub, X, Y, batches=15, batch=64):
     """Estimate Fisher at the converged plateau (the canonical EWC protocol), roll up
-    to node_lambda, then snapshot the anchor."""
+    to node_lambda, then snapshot the anchor. Uses the MODEL-DISTRIBUTION target
+    (fisher_loss: y ~ softmax) — the true-label Fisher vanishes at convergence and pins
+    λ at the floor (Y is unused, kept for signature symmetry)."""
     a = sub.arena
-    ce = torch.nn.functional.cross_entropy
     g = torch.Generator().manual_seed(7)
     for _ in range(batches):
         idx = torch.randint(0, X.shape[0], (batch,), generator=g)
         a.bias.grad = None; a.edge_weight.grad = None
-        ce(sub(_solo(X[idx])), Y[idx]).backward()
+        fisher_loss(sub(_solo(X[idx]))).backward()          # model-dist Fisher target
         accumulate_fisher(a)
     refresh_lambda(a)                                       # λ_i = row-sum Fisher (+floor)
     anchor(a)

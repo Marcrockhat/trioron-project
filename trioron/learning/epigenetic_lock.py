@@ -34,6 +34,22 @@ DEFAULT_DECAY = 0.95     # Fisher EMA decay (blueprint α ∈ [0.95, 0.99])
 LAMBDA_FLOOR = 1e-3      # ε-floor so λ never silently zeros (commit 81d3785)
 
 
+def fisher_loss(logits: torch.Tensor) -> torch.Tensor:
+    """Canonical **model-distribution** Fisher target: sample y ~ softmax(logits) and
+    return CE(logits, y). Backprop of this is the TRUE Fisher diagonal in expectation.
+
+    Why not the true label? The empirical (true-label) Fisher VANISHES once the model is
+    correct and confident — at convergence CE(true) → 0, grad² → 0, every node's row-sum
+    falls below LAMBDA_FLOOR, and λ flattens to a uniform floor (no differentiation; the
+    exact washout that left λ dead — session 014/015). Sampling the target from the
+    model's own softmax keeps the borderline samples producing real gradients, so λ
+    differentiates stiff cells from plastic ones even at high confidence. Standard EWC
+    'true Fisher' protocol. Call under autograd; backward(), then accumulate_fisher()."""
+    with torch.no_grad():
+        y = torch.multinomial(torch.softmax(logits, dim=1), 1).squeeze(1)
+    return torch.nn.functional.cross_entropy(logits, y)
+
+
 @torch.no_grad()
 def accumulate_fisher(arena: Arena, decay: float = DEFAULT_DECAY) -> None:
     """Per-PARAM Fisher EMA: F ← α·F + (1−α)·grad². Call after backward(), before
@@ -44,6 +60,25 @@ def accumulate_fisher(arena: Arena, decay: float = DEFAULT_DECAY) -> None:
                                                  alpha=(1.0 - decay))
     if arena.bias.grad is not None:
         arena.bias_fisher.mul_(decay).add_(arena.bias.grad ** 2, alpha=(1.0 - decay))
+
+
+@torch.no_grad()
+def accumulate_saliency(arena: Arena, decay: float = DEFAULT_DECAY) -> None:
+    """Per-PARAM saliency EMA: S ← α·S + (1−α)·|w·g| — trioron's NATIVE importance
+    signal (KIBRA edge-tagging in dream.py, the utility `u`, and the pruner all use the
+    |·grad| family), as opposed to Fisher's grad². Two reasons it's the better λ driver
+    on the substrate: (1) it's trioron's own dialect, not imported academic EWC; (2) the
+    |w| factor keeps large settled weights important even as g→0 at convergence, so λ
+    does NOT collapse to the floor the way empirical Fisher does (a first-order Taylor/
+    OBD saliency). Shares the edge_fisher/bias_fisher importance buffers; roll up with
+    refresh_lambda(). Call after backward(), before step()."""
+    cur = arena.edge_cursor
+    if arena.edge_weight.grad is not None and cur > 0:
+        sal = arena.edge_weight[:cur].abs() * arena.edge_weight.grad[:cur].abs()
+        arena.edge_fisher[:cur].mul_(decay).add_(sal, alpha=(1.0 - decay))
+    if arena.bias.grad is not None:
+        sal_b = arena.bias.abs() * arena.bias.grad.abs()
+        arena.bias_fisher.mul_(decay).add_(sal_b, alpha=(1.0 - decay))
 
 
 @torch.no_grad()

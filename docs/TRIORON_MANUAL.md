@@ -9,7 +9,8 @@
 > or `file:line` so it can be re-verified, not trusted.
 >
 > Maintained by: rewrite/extend whenever a session re-derives a fundamental that
-> isn't here. Last verified: session 014 (2026-06-04).
+> isn't here. Last verified: session 015 (2026-06-04) — λ restored & its native
+> driver corrected to |w·g| (§1); problem-driven phenotype selection pinned (§2.5).
 
 ---
 
@@ -39,12 +40,30 @@ The three are NOT (weights, bias, gain). They are:
 | **epigenetic lock** | **`λ`** | **PER-NODE plasticity GATE** (`λ ∈ ℝⁿ`, one per cell). High λ stiffens the cell against drift; low λ = plastic. |
 | **utility** | `u` | per-node EMA contribution `sign(reward)·|act·grad|`; pruning + growth-trigger |
 
-**λ is a general gate, NOT just a Fisher buffer (paper §A.1, `legacy/node.py:919
-set_lambda`).** Its default driver is Fisher — but **`λ_i = Σ_j F_{W,i,j}` is the
-ROW-SUM of the cell's incoming Fisher, NOT the row-mean** (the mean divides Fisher below
-any usable floor at high fan-in → silent-zero EWC penalty; this exact bug was fixed in
-`81d3785`/`bba9420`). There is a **`LAMBDA_FLOOR`** (ε-floor) so λ never silently zeros.
-Update: `λ ← row_sum(EMA[(∂L/∂w)²])`, clamped to `≥ LAMBDA_FLOOR`.
+**λ is a general gate driven by an importance signal, NOT a fixed Fisher buffer (paper
+§A.1, `legacy/node.py:919 set_lambda`).** Whatever the signal, **`λ_i` is the ROW-SUM of
+the cell's incoming-edge importance, NOT the row-mean** (the mean divides below any usable
+floor at high fan-in → silent-zero EWC penalty; fixed in `81d3785`/`bba9420`). A
+**`LAMBDA_FLOOR`** (ε-floor) keeps λ from silently zeroing.
+
+**The driver: `|w·g|` saliency, NOT Fisher `g²` (corrected session 015 — the recurring
+mistake).** Trioron's *native* importance signal is `|weight · gradient|` — the same
+family used by **KIBRA edge-tagging** (`learning/dream.py kibra_tag`), the **utility `u`**,
+and the **pruner**. Fisher (`g²`) is the imported academic-EWC signal and it is the wrong
+default here: at convergence `g → 0`, so empirical Fisher collapses to the floor (λ goes
+uniform = dead — verified session 015). `|w·g|` keeps the **weight-magnitude** factor, so
+large settled weights stay important even as `g` shrinks (a first-order Taylor/OBD
+saliency) — it differentiates λ without the washout, using plain labels. (If Fisher is
+ever wanted, use the *model-distribution* target `fisher_loss` so it doesn't wash out.)
+
+**v2 API (`trioron/learning/epigenetic_lock.py`):** `accumulate_saliency` (|w·g| EMA, the
+default driver) / `accumulate_fisher` (g² EMA) → `refresh_lambda` (row-sum + floor →
+`arena.node_lambda`); `set_lambda(signal, mode)` to drive λ from reward/environment/
+attention directly; `anchor` (snapshot ŵ at a boundary); `ewc_penalty` (the soft pull, add
+`strength·penalty` to the loss); `modulated_scale` (optional `1/(1+λ)` grad scaling);
+`fisher_loss` (model-dist target). Storage rides ship/wake in the arena (`edge_fisher` —
+the importance EMA buffer, holds g² OR |w·g| by which accumulator you call —
+`edge_anchor`, `node_lambda`, `bias_fisher`, `bias_anchor`).
 
 **But Fisher is only ONE driver.** `set_lambda(signal, mode)` (`absolute`/`additive`/
 `multiplicative`) lets *any* signal gate plasticity — the **epigenetic** generalization
@@ -64,12 +83,16 @@ the namesake three.
 **Version status (the regression):**
 - **v1.1 / legacy** (`trioron/legacy/network.py`): full `(w, λ, u)` with `fisher_W`,
   `lam`, `W_anchor`, `ewc_penalty()`, `update_fisher_all()`.
-- **v2.0 default** (`trioron/core/`): **DROPPED λ** (spec §8.6: "v2 does not maintain
-  per-weight importance estimates"), replaced by cell-level credit-locking. **This is
-  the root of the catastrophic forgetting we keep fighting** — Rocky's
-  `epigenetic_lock_hypothesis` (lam=0 → unanchored drift → bias to last task).
-  **DECISION (session 014): restore per-weight λ to the v2 node — Fisher-filled, NOT a
-  valueless buffer.** Until done, v2's node is effectively bi-parametric (w, u)+bias.
+- **v2.0 as shipped** had **DROPPED λ** (spec §8.6: "v2 does not maintain per-weight
+  importance estimates"), relying on cell-level credit-locking alone. **That was the root
+  of the catastrophic forgetting we kept fighting** — Rocky's `epigenetic_lock_hypothesis`
+  (lam=0 → unanchored drift → bias to last task).
+- **v2.0 NOW (RESTORED, commit `4e93099`, session 014):** the triparametric node is whole
+  again — `arena.node_lambda` + the `epigenetic_lock` module (API above). λ is live and the
+  EWC pull bites. **Session 015 correction:** its driver is `|w·g|` saliency, not Fisher
+  (Fisher washes out at convergence). Spec §8.6 still says "v2 drops per-weight Fisher" and
+  now **contradicts the code** — fix the spec (a known open item).
+  *World head-to-head (soft λ vs hard FULL-LOCK freeze) was in progress at session 015.*
 
 Per-cell **non-trainable** state also matters and is easy to forget (spec §2.1):
 - `engagement` = running activation rate → drives **credit-based locking** (active→dormant).
@@ -106,6 +129,32 @@ once per expressed gene and **adds** contributions. The five shipped phenotypes 
 > (`trioron/core/epigenome.py`) — mirror cells dispatch as LINEAR; "mirror" is
 > connectivity + localized credit, not a new forward op. This is an experiment
 > extension into the reserved range, not part of the base spec.
+
+### 2.5 Phenotype IS chosen from the problem at the growth event (DO NOT FORGET)
+
+**The recurring mistake (made again session 015): reading "phenotype is never optimized
+by SGD" as "phenotype is never chosen from the problem."** Both are true and they are not
+the same thing. Phenotype is not a differentiable parameter — but the **lifecycle selects
+the child's gene at the division event, conditioned on the problem.** The substrate
+*does* adapt its architecture to the task; this is the `substrate_self_organizes_architecture`
+design intent, and it is **validated**, not aspirational:
+
+- **Selective quad growth** (`experiments/selective_quad_growth.py`, memory
+  `selective-quad-growth`, n=3): under *relational frustration* (loss stuck high AND
+  linear-width growth stopped helping), a dividing cell's child takes the **quad/dendrite**
+  phenotype. On the relational SAME-DIFFERENT task it grows **~8 quad cells → 1.000**; on a
+  **linearly-separable** task the *same* substrate grows **ZERO quad cells** (1.000) because
+  frustration resolves with linear width. The nonlinear primitive is spent **only where the
+  problem demands it**. (Linear-growth control: 0.507 — width alone can't do relational.)
+- The selection signal is **emergent frustration**, not a hand-set gene. This is the
+  general mechanism: the same divide-time logic could pick `conv` / `attention` / `recurrent`
+  given the right frustration discriminator — the unbuilt generalization, not an unbuilt
+  capability.
+
+**Known hard limit (don't over-claim):** the substrate is a **flat sparse edge list with no
+spatial locality** (`substrate_no_spatial_memory`), so `conv`-by-emergence is *closed* as a
+null result (`conv_by_emergence_null_result` — use a cortex upstream for vision). Selective
+**quad/dendrite** growth works; selective **conv** does not, on the bare substrate.
 
 ---
 
@@ -181,8 +230,12 @@ None of it auto-runs; the driver wires it.
    - **z2 = the second, H-space (interior-code) ROUTING manifold** — infers which task/
      context a query belongs to from the stable interior code, sidestepping head drift.
      Validated to transfer to the world (session 014: 0.71 full-cov routing).
-6. **EWC** (§4.6) — baseline only; per-weight Fisher is **not** in the v2 default
-   (instantiated on demand for competitor runs).
+6. **Epigenetic lock λ** (§4.6, the namesake, RESTORED session 014) —
+   `learning/epigenetic_lock.py`. The **soft** per-node anchor: drive λ from `|w·g|`
+   saliency (`accumulate_saliency`, native) or reward/env (`set_lambda`), `anchor` at a
+   boundary, add `strength·ewc_penalty(arena)` to the loss. Complements (does not replace)
+   the **hard** credit-based dormant locking. Fisher-`g²` EWC remains available but is the
+   washout-prone outlier — see §1.
 
 **Proven CL numbers (chained-15, n=10):** full-softmax **0.601** / domain 0.677 /
 task-aware **0.961** (manifold-grown, 30 KB). PackNet sat at 0.046 full. (paper §4.)
@@ -225,10 +278,11 @@ core).
 ## 8. Drift-corrections — things the assistant keeps getting wrong
 
 - ❌ "A node is weights + bias." → ✅ **Triparametric: (w, λ, u)** — weight, **epigenetic
-  lock λ (filled with Fisher state)**, utility. λ is the namesake; v2 dropped it and is
-  restoring it (§1). (Axonal-gain `routing_scale` and bias are real but NOT the three.)
-- ❌ "λ is a valueless buffer / there's nothing to hold." → ✅ **λ holds the Fisher
-  information** — importance/curvature. That IS its intrinsic value.
+  lock λ**, utility. λ is the namesake; v2 dropped it, **session 014 RESTORED it** (§1).
+  (Axonal-gain `routing_scale` and bias are real but NOT the three.)
+- ❌ "λ is filled with Fisher / a valueless buffer." → ✅ **λ holds an importance signal,
+  and the native one is `|w·g|` saliency, not Fisher `g²`** (Fisher washes out at
+  convergence — §1). That importance IS its intrinsic value.
 - ❌ "Trioron is just an MLP that grows." → ✅ Cells with **genes/phenotypes**, **credit
   locking**, **manifold replay**, **dream**, **grafting** — a continual-learning organism.
 - ❌ "There are no axes." → ✅ **Six axes** (input-source, archive-input, insert-layer,
@@ -254,7 +308,8 @@ core).
   full-fidelity recording).
 - **`paper/paper.tex`** — the integrated paper (chained-15 / manifold / archive numbers).
 - **Core:** `trioron/core/` (arena, scheduler, construct, epigenome, state).
-  **Learning:** `trioron/learning/` (credit, manifold, dream, frustration, rejuvenate).
+  **Learning:** `trioron/learning/` (credit, manifold, dream, frustration, rejuvenate,
+  **epigenetic_lock** — the restored λ).
   **Lifecycle:** `trioron/lifecycle/` (grow, graft, ship, wake, compact, saliency).
   **Legacy v1.1:** `trioron/legacy/` (triparametric node, EWC, axes API).
 - **Chained-15 routing to port:** `experiments/bench_chained_15_v2.py` (H-routing,

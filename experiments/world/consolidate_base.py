@@ -24,11 +24,19 @@ cold states (collected once from the fire master), scored by greedy policy-agree
 Deterministic given the trained net — no episode noise. That's what makes the leak
 falsifiable at small n.
 
-Three capacity-matched arms (all end at 16 mirror cells), differing ONLY in the lock:
-  PLAIN      : grow 8, water trains everything (16 mirror + base). Max forgetting.
-  MIRROR-LOCK: freeze fire's 8 mirror cells, grow 8, water trains fresh + base.
-               (the current quest_consolidate lock — the base leaks through.)
-  FULL-LOCK  : anchor base + fire mirror, grow 8, water trains ONLY the fresh 8.
+Five capacity-matched arms (all end at 16 mirror cells), differing ONLY in the lock:
+  PLAIN        : grow 8, water trains everything (16 mirror + base). Max forgetting.
+  MIRROR-LOCK  : freeze fire's 8 mirror cells, grow 8, water trains fresh + base.
+                 (the current quest_consolidate lock — the base leaks through.)
+  FULL-LOCK    : anchor base + fire mirror, grow 8, water trains ONLY the fresh 8 (HARD).
+  LAMBDA-FISHER: the namesake epigenetic lock λ, SOFT. Model-dist Fisher over the fire
+                 decision states → per-node λ → EWC pull toward the fire anchor.
+  LAMBDA-REWARD: λ driven by reward (activation of cells that handle fire correctly),
+                 not Fisher — λ as an environment/reward sense. SOFT EWC pull.
+
+Hard freeze (FULL) holds a skill STATIC; soft λ lets the shared base keep refining the
+old skill while learning the new one (competence can RISE, not just hold). The reward
+vs Fisher driver is the open question (HANDOFF 0b: reward likely the real world lever).
 
 Prediction if the leak is real:
   fire-retention  PLAIN < MIRROR-LOCK < FULL-LOCK  (MIRROR-LOCK still drops = the leak)
@@ -56,6 +64,10 @@ from experiments.world.mirror_cells import (
 from experiments.world.render_organism import train_solo
 from trioron.core.epigenome import (
     PERCEPTION, OUTPUT, CREDIT_ELIGIBLE, MIRROR, has_gene,
+)
+from trioron.learning.epigenetic_lock import (
+    accumulate_fisher, accumulate_saliency, refresh_lambda, anchor, ewc_penalty,
+    set_lambda, fisher_loss,
 )
 
 
@@ -139,9 +151,77 @@ def make_lock(sub, mode, *, fire_mirror_mask=None, old_mask=None):
 
 
 # ----------------------------------------------------------------------
+# The epigenetic lock λ — SOFT anchoring (the namesake third node variable).
+# Where make_lock zeros grads (hard freeze), λ adds a per-node-gated EWC pull
+# toward the fire-competent anchor. Two drivers, normalized to max=1 so a single
+# strength compares the PATTERN of protection (which cells), not its scale.
+# ----------------------------------------------------------------------
+@torch.no_grad()
+def _normalize_lambda(a):
+    """Scale λ so the stiffest cell = 1.0 (others ∈ (0,1]); makes ewc_strength
+    comparable across the Fisher and reward drivers."""
+    m = float(a.node_lambda.max())
+    if m > 0:
+        a.node_lambda.div_(m)
+
+
+def setup_lambda_fisher(sub, states, *, batches=15, batch=64, seed=7):
+    """Fisher driver: model-distribution Fisher over the fire decision states →
+    row-sum → λ. fisher_loss samples the target from softmax so λ doesn't wash out
+    at convergence (the calibration fix). Kept for reference; the swapped-in default
+    is the native |w·g| driver below."""
+    a = sub.arena
+    g = torch.Generator().manual_seed(seed)
+    n = states.shape[0]
+    for _ in range(batches):
+        idx = torch.randint(0, n, (batch,), generator=g)
+        a.bias.grad = None; a.edge_weight.grad = None
+        fisher_loss(sub(_solo(states[idx]))).backward()
+        accumulate_fisher(a)
+    refresh_lambda(a)
+    _normalize_lambda(a)
+
+
+def setup_lambda_wg(sub, states, acts, *, batches=15, batch=64, seed=7):
+    """|w·g| saliency driver — trioron's NATIVE importance signal (KIBRA / utility /
+    pruner dialect), not Fisher's grad². Rolls per-edge |w·g| over the oracle-labeled
+    fire decision states into node_lambda. The |w| factor keeps settled weights
+    important at convergence (no Fisher floor-collapse)."""
+    a = sub.arena
+    g = torch.Generator().manual_seed(seed)
+    n = states.shape[0]
+    ce = torch.nn.functional.cross_entropy
+    for _ in range(batches):
+        idx = torch.randint(0, n, (batch,), generator=g)
+        a.bias.grad = None; a.edge_weight.grad = None
+        ce(sub(_solo(states[idx])), acts[idx]).backward()      # oracle labels (KIBRA-style)
+        accumulate_saliency(a)
+    refresh_lambda(a)
+    _normalize_lambda(a)
+
+
+@torch.no_grad()
+def setup_lambda_reward(sub, states, oracle_acts):
+    """Reward driver: λ_i ∝ mean activation of cell i over the cold states the fire
+    policy handles CORRECTLY (agreement with the oracle = the survival reward proxy).
+    Protects the cells that implement the rewarded fire behavior — λ as an
+    'environment/reward sense', the intrinsic-value path (no Fisher pass)."""
+    a = sub.arena
+    logits = sub(_solo(states))
+    acts = sub.last_activations                         # [N, capacity], detached
+    correct = (logits.argmax(dim=1) == oracle_acts).float()
+    if float(correct.sum()) > 0:
+        sig = (acts.abs() * correct[:, None]).sum(0) / correct.sum()
+    else:
+        sig = acts.abs().mean(0)
+    set_lambda(a, sig, mode="absolute")
+    _normalize_lambda(a)
+
+
+# ----------------------------------------------------------------------
 # DAgger chapter (master labels student-visited states; lock applied per batch)
 # ----------------------------------------------------------------------
-def dagger(sub, master_fn, *, seed, episodes, lock=lambda s: None,
+def dagger(sub, master_fn, *, seed, episodes, lock=lambda s: None, ewc_strength=0.0,
            gamma=0.95, lr=2e-3, batch=64, imit_w=0.5, max_steps=300):
     opt = torch.optim.Adam(sub.trainable_tensors(), lr=lr)
     a = sub.arena
@@ -180,7 +260,10 @@ def dagger(sub, master_fn, *, seed, episodes, lock=lambda s: None,
                 with torch.no_grad():
                     tgt = br + gamma * sub(bp2).max(dim=1).values * (1 - bd)
                 opt.zero_grad()
-                torch.nn.functional.mse_loss(q, tgt).backward()
+                td_loss = torch.nn.functional.mse_loss(q, tgt)
+                if ewc_strength > 0:                       # soft λ-EWC pull (not mirror-gated)
+                    td_loss = td_loss + ewc_strength * ewc_penalty(a)
+                td_loss.backward()
                 td_b = a.bias.grad.clone(); td_w = a.edge_weight.grad.clone()
                 didx = torch.randint(0, len(demos), (batch,), generator=g)
                 ds = torch.stack([demos[i][0] for i in didx])
@@ -234,7 +317,7 @@ def policy_on(sub, battery_perc):
 # One arm: solo base -> dagger fire -> [lock] -> grow -> dagger water
 # ----------------------------------------------------------------------
 def run_arm(mode, seed, *, solo_ep, fire_ep, water_ep, cold_bat, warm_bat,
-            thirst_bat):
+            thirst_bat, ewc_strength=0.0):
     sub = train_solo(seed, solo_ep, n_mirror=8)
     sub = dagger(sub, fire_oracle, seed=seed, episodes=fire_ep)
 
@@ -246,9 +329,24 @@ def run_arm(mode, seed, *, solo_ep, fire_ep, water_ep, cold_bat, warm_bat,
     comp_fire = (pi_fire_cold == cold_bat[1]).float().mean().item()
     water_pre = (policy_on(sub, thirst_bat[0]) == thirst_bat[1]).float().mean().item()
 
+    # λ arms: set the per-node lock on the FIRE-competent net (before growth)
+    is_lambda = mode in ("lambda_fisher", "lambda_wg", "lambda_reward")
+    if mode == "lambda_fisher":
+        setup_lambda_fisher(sub, cold_bat[0])
+    elif mode == "lambda_wg":
+        setup_lambda_wg(sub, cold_bat[0], cold_bat[1])
+    elif mode == "lambda_reward":
+        setup_lambda_reward(sub, cold_bat[0], cold_bat[1])
+
     grow_mirror(sub, 8)                                   # fresh water capacity
-    lock = make_lock(sub, mode, fire_mirror_mask=fire_mirror_mask, old_mask=old_mask)
-    sub = dagger(sub, water_master, seed=seed, episodes=water_ep, lock=lock)
+    if is_lambda:
+        anchor(sub.arena)                                 # defend fire weights (fresh water cells: λ≈0)
+        lock, ewc = (lambda s: None), ewc_strength
+    else:
+        lock = make_lock(sub, mode, fire_mirror_mask=fire_mirror_mask, old_mask=old_mask)
+        ewc = 0.0
+    sub = dagger(sub, water_master, seed=seed, episodes=water_ep, lock=lock,
+                 ewc_strength=ewc)
 
     pi_water_cold = policy_on(sub, cold_bat[0])
     retain = (pi_water_cold == pi_fire_cold).float().mean().item()       # self-consistency
@@ -264,6 +362,8 @@ def main():
     ap.add_argument("--solo-ep", type=int, default=120)
     ap.add_argument("--fire-ep", type=int, default=150)
     ap.add_argument("--water-ep", type=int, default=150)
+    ap.add_argument("--ewc-strength", type=float, default=1.0,
+                    help="soft λ-EWC pull strength for the LAMBDA arms (λ normalized max=1)")
     ap.add_argument("--quick", action="store_true",
                     help="tiny budget to prove the pipeline runs end-to-end")
     args = ap.parse_args()
@@ -283,13 +383,17 @@ def main():
     seeds = list(range(args.seeds))
     arms = {}
     for mode, label in (("none", "PLAIN"), ("mirror", "MIRROR-LOCK"),
-                        ("full", "FULL-LOCK")):
-        _p(f"########## {label} (lock={mode}) ##########")
+                        ("full", "FULL-LOCK"),
+                        ("lambda_wg", "LAMBDA-WG"),
+                        ("lambda_reward", "LAMBDA-REWARD")):
+        tag = f"lock={mode}" + (f", ewc={args.ewc_strength:g}"
+                                if mode.startswith("lambda") else "")
+        _p(f"########## {label} ({tag}) ##########")
         rows = []
         for s in seeds:
             r = run_arm(mode, s, solo_ep=args.solo_ep, fire_ep=args.fire_ep,
                         water_ep=args.water_ep, cold_bat=cold_bat, warm_bat=warm_bat,
-                        thirst_bat=thirst_bat)
+                        thirst_bat=thirst_bat, ewc_strength=args.ewc_strength)
             rows.append(r)
             _p(f"  seed{s}: fire-retain {r['retain']:.3f}  "
                f"fire-comp(after-water) {r['comp_water']:.3f} "
@@ -312,7 +416,9 @@ def main():
            f"      | {mean(rows,'comp_fire'):.3f}->{mean(rows,'comp_water'):.3f}"
            f"   | {mean(rows,'water_pre'):.3f}->{mean(rows,'water_post'):.3f}")
     _p("\n  leak confirmed if  retain(FULL) > retain(MIRROR) > retain(PLAIN).")
-    _p("  wise win if FULL also keeps water-acq rising (else -> soft anchoring next).")
+    _p("  hard freeze (FULL) maximizes raw retention but holds fire competence STATIC;")
+    _p("  soft λ (LAMBDA-*) trades some retention to let water training IMPROVE fire")
+    _p("  competence (f->w rises). reward-driven λ vs Fisher-driven λ: which lever wins?")
     return 0
 
 
