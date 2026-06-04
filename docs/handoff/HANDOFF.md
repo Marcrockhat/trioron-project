@@ -1,178 +1,190 @@
 # Trioron Handoff
 
-**Session date:** 2026-06-03
+**Session date:** 2026-06-03 → 2026-06-04
 **Session number:** 014
-**Session title:** Consolidation done right (anchor the base policy, not just the
-mirror readout) → the leak located & plugged with a low-noise probe → fire-economy
-probe (pyrophobia is a move-cost artifact, but cheap fire backfires)
+**Session title:** Consolidation done right (anchor the base) → fire-economy probe →
+"use trioron's own machinery, not hand-rolls" → native pipeline (replay) → the z2
+H-routing transfer test reproduces the chained-15 full-accuracy pump in the world
 
-> Rewritten in full every session; previous handoffs in git history
-> (`git log docs/handoff/HANDOFF.md`). Session 013 (commit `a6fcab4`) is the
-> mirror-cells / fire-taming / Adam's-quest arc this builds on. This session
-> completes its open item #2 (consolidation done right) and #5/move-economy
-> diagnosis. Read 013 if new — esp. the measurement-wall note.
+> Rewritten in full every session; prior handoffs in git history. Session 013
+> (`a6fcab4`) is the mirror-cells / fire-taming / Adam's-quest arc. This session
+> completes its open #2 (consolidation) and pivots to the unification: the world's
+> forgetting IS chained-15's full-softmax forgetting, and the fix is the manifold
+> machinery we already have. READ THIS, then the headline numbers.
 
 ## Summary
 
-Two clean results, both born from the same realisation: **you cannot validate a
-consolidation/retention mechanism on a metric with ±15 noise** (the wall session 013
-hit). The fix in both cases was a deterministic, controlled probe.
+Long, productive session with a clear narrative arc and one strong new result:
 
-1. **Consolidation done right (the session spine, Rocky's pick).** Session 013
-   diagnosed the leak but left it unfixed: the quest's consolidate-and-lock froze
-   fire's MIRROR cells but left the shared `perception→interior→output` base policy
-   free. Every dagger chapter's TD loss reshapes that base (the `td_b/td_w` grads are
-   added back AFTER the mirror-gated imitation grads), so learning water drifted the
-   base and the "locked" fire skill eroded anyway. **FULL-LOCK** anchors the base: at
-   the fire→water boundary it freezes every edge whose BOTH endpoints predate water +
-   all old biases, leaving only the fresh water-mirror readout trainable. Water then
-   learns as a pure additive readout off a FROZEN representation.
-2. **The measurement fix.** Retention is now a FIXED cold-state battery scored by
-   deterministic greedy policy-agreement (no episode noise) — what makes the leak
-   falsifiable at small n. n=5 separated cleanly where 013's occupancy never could.
-3. **Fire-economy probe (Rocky's deferred move-cost hypothesis).** Confirmed that
-   pyrophobia is largely a trip-cost artifact AND surfaced a sharper finding: making
-   fire cheap/abundant *backfires* on survival; only a cold-gated shaping reward helps.
+1. **Consolidation done right** (Rocky's pick). Session 013 diagnosed the leak; I fixed
+   it. The quest's lock froze fire's MIRROR cells but left the shared
+   `perception→interior→output` base free, so water's TD drifted it and the "locked"
+   fire skill eroded. **FULL-LOCK** anchors the base (freeze every old↔old edge + old
+   biases at the boundary; water learns only on fresh mirror cells off a frozen rep).
+2. **The measurement fix**: a deterministic **cold/thirsty-state battery** scored by
+   policy-agreement — replaces ±15-noise occupancy. (Bug found & fixed: the masters'
+   *explore* uses the GLOBAL torch RNG, so the battery wasn't deterministic until
+   seeded — `torch.manual_seed` before `build_battery`.)
+3. **Fire-economy probe** (Rocky's move-cost hypothesis): pyrophobia is largely a
+   trip-cost artifact, BUT cheap fire backfires; only a cold-gated shaping reward
+   lifts survival.
+4. **The pivot** (Rocky: "use all the trioron advantages instead of re-inventing
+   wheels"). I had been about to hand-roll soft-EWC. Stopped. Audited the native
+   machinery, then wired it: **native_pipeline.py** (CreditTracker + ManifoldArchive
+   replay + dream_cycle + frustration→growth).
+5. **The unification** (Rocky): the world's forgetting is the *same* forgetting we beat
+   on chained-15 (unanchored shared head drifts to last task = the epigenetic-lock read).
+   The world is the *full-softmax* regime (no task selector). And the chained-15
+   full-softmax **pump came from a manifold MODIFICATION** — dual-manifold **H-space
+   routing** ("z2") + **full-covariance Mahalanobis** (0.55→0.69 storage-free / 0.76
+   oracle), NOT replay alone.
+6. **z2 transfer test** (the session's best result): the core full-cov manifold **routes
+   fire-context vs water-context from the 32-d interior code**, reproducing the
+   chained-15 pump near-exactly (diagonal 0.640 → full-cov **0.707**, +0.067 vs
+   chained-15's +0.08). Routing transfers. **This is the validated next mechanism.**
 
 ## Headline numbers
 
 **Consolidation — FULL-LOCK vs MIRROR-LOCK vs PLAIN (n=5, capacity-matched, only the
-lock differs).** Retention = greedy policy-agreement on a fixed cold-state battery
-(after-water vs after-fire policy). Water-acq = agreement-with-water-master on a fixed
-thirsty battery, pre→post water chapter:
+lock differs).** Retain = policy-agreement on a fixed cold battery (after-water vs
+after-fire). `consolidate_base.py`, `runs/consolidate_base_n5.log`:
 
-| arm | fire-retain | fire-comp f→w | water-acq pre→post |
+| arm | fire-retain | fire-comp f→w | water-acq |
 |---|---|---|---|
 | PLAIN | 0.145 ± 0.064 | 0.197→0.138 | 0.219→0.221 |
 | MIRROR-LOCK | 0.162 ± 0.097 | 0.197→0.190 | 0.219→0.232 |
-| **FULL-LOCK** | **0.398 ± 0.195** | 0.197→**0.211** | 0.219→**0.365** |
+| **FULL-LOCK** | **0.398 ± 0.195** | 0.197→0.211 | 0.219→**0.365** |
 
-- **Leak confirmed & located:** MIRROR-LOCK (0.162) ≈ PLAIN (0.145) — freezing the
-  readout alone buys almost nothing; the base drifts underneath. FULL-LOCK = **2.7×
-  retention** (~2.7σ over PLAIN). The leak is the unfrozen `interior→output` base.
-- **Competence survives only under FULL-LOCK** (PLAIN erodes 0.197→0.138).
-- **Anchoring IMPROVED plasticity, didn't cost it:** only FULL-LOCK actually learns
-  water (Δ+0.146; all 5 seeds positive). Frozen representation + fresh additive
-  readout = a crisp gradient with no interference. **Two skills coexist, and the
-  second learns *better* because the first is anchored.** The "wise organism" result.
-- Caveats: high seed variance (FULL spans .066–.602; seed2 is a degenerate net across
-  ALL arms). Absolute competence stays low (~0.2 — this world is genuinely hard to
-  learn). Retention (self-consistency) is the load-bearing signal, not absolute skill.
+Leak confirmed & located: MIRROR-LOCK≈PLAIN (freezing the readout alone buys nothing);
+anchoring the base = 2.7× retention AND water acquires *better* (no interference).
 
-**Fire economy — solo TD scratch learner, no teacher (n=5, tamed-fire physics):**
+**Fire economy — solo TD, no teacher (n=5).** `fire_economy.py`, `runs/fire_economy_n5.log`:
 
-| arm | survival | cold-deaths/40 | fire-occ% |
+| arm | survival | cold-deaths | fire-occ% |
 |---|---|---|---|
 | baseline (4, plain) | 43.3 | 24.0 | 10.1 |
-| dense (12, plain) | 38.5 | **15.6** | **18.6** |
-| shape (4, shaped) | **47.4** | 19.4 | 12.7 |
-| both (12, shaped) | 42.7 | **14.2** | 19.6 |
+| dense (12, plain) | 38.5 | 15.6 | 18.6 |
+| **shape (4, shaped)** | **47.4** | 19.4 | 12.7 |
+| both (12, shaped) | 42.7 | 14.2 | 19.6 |
 
-- **Move-economy confirmed:** both levers cut cold-deaths (−35%/−41%) and raise
-  fire-use (+84% density). Pyrophobia is largely a trip-cost artifact, not a ceiling.
-- **But more fire-use ≠ more survival:** DENSE fire maximizes fire-use yet HURTS
-  survival (38.5 < 43.3) — cold-death is traded for death-by-neglect elsewhere.
-- **Only the cold-gated shaping lifts survival** (47.4, +9%): its `temp<0.5` gate is a
-  satiety governor (pull when freezing, release when warm). Raw availability has no
-  governor → over-use. Reward must point at a resource only while its drive is unmet.
-- Caveat: cold-death/occupancy effects are large; survival deltas (~1σ, n=5) are
-  suggestive, not ironclad — n=10 would bank the survival claim.
+Move-economy confirmed (both levers cut cold-deaths, raise fire-use); but DENSE fire
+*hurts* survival (trades cold-death for neglect); only the **cold-gated** shaping lifts
+survival (+9%) — reward must point at a resource only while its drive is unmet.
+
+**Native pipeline (replay-only) — n=5, four arms.** `native_pipeline.py`,
+`runs/native_pipeline_n5.log`:
+
+| arm | fire-retain | fire-comp f→w | water-acq |
+|---|---|---|---|
+| PLAIN | 0.179 ± 0.147 | 0.215→0.174 ▼ | 0.218→0.237 |
+| FULL-LOCK | **0.391 ± 0.169** | 0.215→0.216 – | 0.218→0.350 |
+| NATIVE-free | 0.251 ± **0.056** | 0.215→**0.304** ▲ | 0.218→**0.351** |
+| NATIVE-gate | 0.203 ± 0.093 | 0.215→0.321 ▲ | 0.218→0.296 |
+
+Mixed/honest: FULL-LOCK wins raw self-consistency, BUT (a) native arms *improve* fire
+competence through water (replay reinforces; freeze only holds), (b) NATIVE-free ties
+water and is **3× more robust** (±0.056), (c) **ungated > gated** (don't mirror-gate the
+water master — it overwrites fire's mirror cells; answers Rocky's question). Self-
+consistency is biased toward freezing; on competence, native wins. Replay-only ≈ draw vs
+freeze — the missing lever is routing.
+
+**z2 H-routing transfer (n=5, chance 0.50).** `world_routing.py`, `runs/world_routing.log`:
+
+| router | accuracy | per-context recall |
+|---|---|---|
+| diagonal Gaussian | 0.640 ± 0.068 | fire 0.53 / water 0.74 (biased) |
+| **full-cov Mahalanobis** | **0.707 ± 0.021** | fire 0.70 / water 0.71 (balanced) |
+
+**Routing transfers** (0.71 ≫ 0.50, from the *base* organism's interior code, no skill
+training). Full-cov **reproduces the chained-15 pump** (+0.067 ≈ +0.08), balances recall,
+and cuts variance 3×. The interior code is a usable task-selector. **This is the cleared
+next mechanism.**
 
 ## What was done (files)
 
-New:
-- **experiments/world/consolidate_base.py** — the consolidation experiment. Key parts:
-  `make_lock(sub, mode, …)` → per-batch grad-zeroing closure for `none`/`mirror`/`full`
-  (vectorized from `edge_src/edge_dst`, NOT positional `edge_protected` — that can
-  misalign across `compile()`, a latent bug in 013's quest lock); `dagger(...)` DAgger
-  loop taking a `lock` callback; `build_battery(master_fn, which=…)` fixed cold/thirsty
-  decision-state battery; `policy_on`, `run_arm`, 3-arm `main`. `--quick` smoke.
-- **experiments/world/fire_economy.py** — the 2×2 move-cost probe. `fire_potential(w)`
-  cold-gated potential; `train_solo_eco(..., fire_n, shaping)` solo TD with optional
-  potential-based shaping; `evaluate_eco(..., fire_n)`; 4-arm `main`. `--quick` smoke.
+New (all `experiments/world/`):
+- **consolidate_base.py** — FULL-LOCK base-anchoring (`make_lock`, vectorized from
+  edge_src/edge_dst to survive `compile()` reorders) + deterministic battery probe
+  (`build_battery`, `policy_on`, `run_arm`). Commit `41d220a`.
+- **fire_economy.py** — 2×2 move-cost probe (`fire_potential` cold-gated shaping,
+  `train_solo_eco`). Commit `b7f221f`.
+- **native_pipeline.py** — native CL machinery wired into fire→water: CreditTracker +
+  ManifoldArchive (z2 mixture, whole-net pseudo-replay) + dream_cycle + frustration→
+  divide. `imit_gated` flag (ungated default). Commit `11ff6a8`.
+- **world_routing.py** — z2 H-routing transfer test (reuses the IN-CORE full-cov
+  astrocyte; only the routing wrapper is new). Commit `11ff6a8`.
 
-Modified:
-- **experiments/world/tile_world.py** — added `FIRE_N` class attr (default `None`) +
-  per-instance `fire_n` __init__ param; `reset()` uses it. **Defaults unchanged**
-  (`None` → canonical `max(2, s//3)`). Same approved pattern as 013's WARM_RATE override.
+Modified (committed):
+- **tile_world.py** — `FIRE_N` class attr + per-instance `fire_n` (defaults unchanged,
+  `None`→canonical `max(2,s//3)`). Commit `b7f221f`.
 
-Commits this session: `41d220a` (consolidation), `b7f221f` (fire economy).
-
-**Pre-existing, STILL DO NOT TOUCH** (carried session-005 uncommitted files):
-`trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
-`trioron/viz/export.py`. Left modified-unstaged, as in 013.
+**Pre-existing, STILL DO NOT TOUCH**: `trioron/bases/developmental.py`,
+`trioron/lifecycle/developmental.py`, `trioron/viz/export.py` (carried session-005).
 
 ## Key findings
 
-1. **The leak was the shared base policy, exactly as 013 guessed.** Freezing a skill's
-   readout cells is insufficient because the output cell sums readout + base, and TD
-   keeps moving the base. Anchor the base (old↔old edges + old biases) and the skill
-   holds.
-2. **Anchoring is not a plasticity tax — it's a plasticity *aid*.** A fresh readout off
-   a frozen representation learns the next skill more cleanly than a net fighting its
-   own TD interference. This is the modularity bet (frozen substrate + per-skill
-   readout) paying off, consistent with the absorption/branch line in memory.
-3. **Controlled probes beat episode metrics for mechanism validation.** A fixed
-   decision-state battery + deterministic policy-agreement removed the episode noise
-   that blocked 013. This is the general unlock for anything quantitative in the world.
-4. **Pyrophobia is substantially a move-cost artifact** (cheaper/closer fire → more
-   fire-use, fewer cold-deaths). But the naive fix (more fire) trades one death cause
-   for another and lowers survival.
-5. **Reward-design lesson:** in a multi-drive agent, the cure for a neglected drive is
-   a signal that points to its resource *only while the drive is unmet* (cold-gated
-   shaping), NOT cheaper access. Access without a satiety governor → over-commitment.
+1. **The leak is the shared base policy.** Freezing a skill's readout is useless; anchor
+   the base and it holds — and the next skill learns *better* (no TD interference).
+2. **The world's forgetting = chained-15's full-softmax forgetting** (unanchored shared
+   head drifts to the last task). The world has NO task selector, so it lives in the
+   full-softmax regime (chained-15 peak ~0.60), not task-aware (0.96).
+3. **The chained-15 pump was a MANIFOLD MODIFICATION, not replay**: dual-manifold
+   **H-space routing** (the "z2") + **full-cov Mahalanobis** (0.55→0.69/0.76). full-cov
+   is IN trioron core (`manifold.py`); the routing orchestration is bench-local only
+   (`bench_chained_15_v2.py`), never promoted.
+4. **Routing transfers to the world** (z2 test: 0.71 full-cov, +0.067 over diagonal).
+   The stable interior code separates contexts; full-cov balances + stabilizes. This is
+   the lever, validated.
+5. **Replay defends weights; routing picks the skill.** Replay-only native ties the
+   freeze; the win is **replay + routing**. Don't mirror-gate the water master (ungated
+   retains + acquires better).
+6. **Native machinery is more ROBUST** (3× tighter cross-seed variance) even where it
+   doesn't beat the hand-roll on the mean — matches the full-cov variance reduction.
+7. Battery determinism bug: masters' explore uses GLOBAL rng; seed before `build_battery`.
 
 ## Decisions made
 
-- **FULL-LOCK** (anchor the whole old↔old base + old biases) is the consolidation
-  mechanism; it is a HARD freeze. The graceful SOFT (EWC-style elastic) version was
-  considered and deferred — FULL-LOCK already keeps water-acq rising, so soft anchoring
-  is a refinement, not a rescue.
-- **Deterministic battery probe** is the retention metric going forward (occupancy
-  stays as a noisy deployment cross-check only).
-- Freeze grads from `edge_src/edge_dst` each batch (position-independent), NOT from
-  positional `edge_protected` — robust to `compile()` reordering.
-- `tile_world` fire count parameterized, **defaults unchanged**.
+- **FULL-LOCK** = hard base-anchor; the deterministic battery is the retention metric.
+- **Pivot to native machinery** (Rocky): no hand-rolled EWC. Reuse `CreditTracker`,
+  `ManifoldArchive`, `dream_cycle`, full-cov astrocyte. Promote routing to core next.
+- **Don't mirror-gate** the water-master imitation (ungated default).
+- **z2 = the H-space ROUTING manifold + full-cov** (NOT mixture_k=2 — that was my wrong
+  first read). full-cov is the load-bearing modification.
 
-## Open questions / next-up
+## Open questions / next-up (priority order)
 
-1. **Soft-anchoring (EWC) refinement** of FULL-LOCK: elastic L2 anchor on the base so
-   water can share it where it doesn't hurt fire — likely lifts BOTH retention and
-   water-acq further. The "wise" polish; FULL-LOCK is the hard-freeze bound to beat.
-2. **n=10 confirm of the fire-economy survival deltas** (currently ~1σ): bank the
-   "dense hurts, cold-gated shaping helps survival" claim, or fold it into a broader
-   reward-shaping study (gate ALL drives, not just temp).
-3. **Chain a 3rd skill** under FULL-LOCK (fire→water→food) to test whether the
-   modular freeze-and-grow scales past two skills, or whether the frozen base
-   eventually starves the representation new skills need.
-4. **Wire Numa/Mima** into the consolidation loop (validate a skill is real → lock it →
-   grow → learn next). Still never used in the pipeline; FULL-LOCK currently locks
-   unconditionally at the chapter boundary.
-5. **The degenerate-seed problem** (seed2 trains a bad net across all arms): training
-   fragility, not measurement noise. A reseed-on-collapse or a competence floor before
-   consolidating would tighten the means.
-6. **RPG-NPC pilot** (product direction, carried from 013): the consolidation result is
-   a real ingredient — a companion that keeps old skills while learning new ones.
+1. **Build replay + z2 router** (the cleared win): route the interior code to per-skill
+   readouts (fire-mirror vs water-mirror), full-cov. The two levers together should beat
+   the freeze on competence AND retention. This is THE next experiment.
+2. **Promote routing to trioron core** — `trioron.learning.route()` (or
+   `settle_via_manifold`) — so the dual-manifold H-routing stops being bench-local. The
+   proper "wire the modification into trioron."
+3. **n=10 confirm** of the fire-economy survival deltas (~1σ at n=5).
+4. **Soft (EWC) anchoring** of FULL-LOCK — deferred; lower priority than routing.
+5. The degenerate-seed problem (some seeds train a bad net across all arms) inflates
+   variance; a competence-floor-before-consolidate would tighten means.
 
 ## Pointers
 
-- **`experiments/world/`** — the whole organism arc.
-- **`runs/`** (LOCAL, uncommitted — logs/.pt/.gif): `consolidate_base_n5.log`,
-  `fire_economy_n5.log` (this session's results), plus 013's `protagonist.pt`,
-  `mirror_organism.pt`, gifs. runs/ is NOT gitignored but has always been treated as
-  local — headline numbers live in this handoff, not the logs.
-- Reproduce: `python3 experiments/world/consolidate_base.py --seeds 5` (~30 min);
-  `python3 experiments/world/fire_economy.py --seeds 5` (~25 min). Both have `--quick`.
-- **`~/project-aidos/`** — Numa/Mima origin (separate project, own memory dir). Read
-  before wiring Numa/Mima into the consolidation loop (open #4).
+- `experiments/world/` — the whole arc. Reproduce: each bench has `--smoke`; full runs are
+  `--seeds 5` (~30–100 min; native arms are heavy with per-batch replay).
+- `runs/` (LOCAL, uncommitted): `consolidate_base_n5.log`, `fire_economy_n5.log`,
+  `native_pipeline_n5.log`, `world_routing.log` — this session's results.
+- **The chained-15 routing source to port from**: `experiments/bench_chained_15_v2.py`
+  (H-routing logic lines ~267–338; `--full-cov`, `--perc-mixture-k`). Commits `62aa57e`
+  (dual-manifold 0.55→0.68), `7e561e4` (full-cov 0.68→0.76), handoff `6d06993` (session 008).
+- Core full-cov manifold: `trioron/learning/manifold.py` (`full_cov`, `log_likelihood_full`,
+  `sample_full`). Routing has NO core home yet — that's open #2.
+- `~/project-aidos/` — Numa/Mima origin (separate project, own memory dir).
 
 ## Environment notes
 
 - `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12,
   torch 2.11.0+cu130, WSL2, 12 cores, 7.4 GiB. `python3`, `OMP_NUM_THREADS=8`.
-- Long background runs: launch the python DIRECTLY under the harness (not via `nohup &`
-  inside a wrapper) so you get a completion notification instead of polling.
-- The deterministic battery probe is the template for any future quantitative claim in
-  this world — don't try to read sub-±15 effects off whole-episode survival/occupancy.
-- tile-world single-seed runs remain HIGH variance on survival/occupancy; cold-death
-  *counts* and the battery *agreement* are the lower-noise channels.
+- Long runs: launch python DIRECTLY under the harness (not `nohup &`) for completion
+  notification. DON'T wrap a foreground run in `timeout` while another heavy run shares
+  the cores — it gets killed (happened to the first routing run).
+- Battery/probe determinism requires `torch.manual_seed(...)` before `build_battery`
+  (masters' explore uses the global RNG).
+- The deterministic battery + (now) the z2 router are the low-noise instruments; do not
+  read sub-±15 effects off whole-episode survival/occupancy.
