@@ -43,13 +43,24 @@ content schema.
 ## The spec is the source of truth
 
 `paper/v3/spec.md` is the authoritative Trioron v2.0 architecture
-spec (9 sections, ~3100 lines). Any v2 question should be answerable
+spec (9 sections, ~3464 lines). Any v2 question should be answerable
 from the spec; if it isn't, that's a spec gap to discuss with the
 user before writing code.
 
 Section 9.14 has a cross-section index for fast lookup. Section 9
 has the directory partition. Section 6 has the binding performance
 contract (Phase 1 = 50K params, CPU, full-fidelity recording).
+
+## Read the manual at session start (anti-drift)
+
+`docs/TRIORON_MANUAL.md` is a concise canonical reference for the
+fundamentals — written because the assistant's memory of trioron's
+architecture drifts between sessions. **Read it at the start of every
+session, right after the handoff.** It pins the things most often
+forgotten: the **triparametric node** (weights, bias, axonal-gain),
+the **six optimization axes**, and the **continual-learning machinery**
+(credit locking + manifold replay + dream). It is subordinate to the
+spec — if they disagree, the spec wins and you fix the manual.
 
 ## Avoid v1's patch sprawl
 
