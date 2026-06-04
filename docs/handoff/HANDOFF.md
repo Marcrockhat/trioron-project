@@ -3,8 +3,9 @@
 **Session date:** 2026-06-03 → 2026-06-04
 **Session number:** 014
 **Session title:** Consolidation done right (anchor the base) → fire-economy probe →
-"use trioron's own machinery, not hand-rolls" → native pipeline (replay) → the z2
-H-routing transfer test reproduces the chained-15 full-accuracy pump in the world
+"use trioron's own machinery, not hand-rolls" → native pipeline (replay) → z2 H-routing
+transfer reproduces the chained-15 pump → **restored the epigenetic lock λ (the namesake
+THIRD node variable) to v2 + wrote the anti-drift manual**
 
 > Rewritten in full every session; prior handoffs in git history. Session 013
 > (`a6fcab4`) is the mirror-cells / fire-taming / Adam's-quest arc. This session
@@ -38,10 +39,18 @@ Long, productive session with a clear narrative arc and one strong new result:
    full-softmax **pump came from a manifold MODIFICATION** — dual-manifold **H-space
    routing** ("z2") + **full-covariance Mahalanobis** (0.55→0.69 storage-free / 0.76
    oracle), NOT replay alone.
-6. **z2 transfer test** (the session's best result): the core full-cov manifold **routes
+6. **z2 transfer test** (a clean result): the core full-cov manifold **routes
    fire-context vs water-context from the 32-d interior code**, reproducing the
    chained-15 pump near-exactly (diagonal 0.640 → full-cov **0.707**, +0.067 vs
-   chained-15's +0.08). Routing transfers. **This is the validated next mechanism.**
+   chained-15's +0.08). Routing transfers.
+7. **Restored the epigenetic lock λ** (the deepest thread — Rocky: "you keep forgetting
+   trioron has 3 params per node"). `tri·oron` = "three coupled state variables per
+   node" (w, λ, u); **v2.0 dropped λ (spec §8.6) and that IS the forgetting we fought
+   all session** (lam=0 unanchored drift). λ is a **per-node plasticity GATE** — default
+   driver Fisher (λ_i = ROW-SUM of incoming Fisher, +floor; NOT row-mean), but `set_lambda`
+   drives it from **reward / environment / attention** (the epigenetic generalization;
+   "λ becomes a literal environment sense"). Restored to v2 core + validated the EWC pull
+   bites. **Also wrote `docs/TRIORON_MANUAL.md` (anti-drift) + wired it into session start.**
 
 ## Headline numbers
 
@@ -113,6 +122,16 @@ New (all `experiments/world/`):
   divide. `imit_gated` flag (ungated default). Commit `11ff6a8`.
 - **world_routing.py** — z2 H-routing transfer test (reuses the IN-CORE full-cov
   astrocyte; only the routing wrapper is new). Commit `11ff6a8`.
+- **lambda_ewc_smoke.py** — λ-EWC forgetting smoke. Commit `4e93099`.
+
+λ restoration (commit `4e93099`):
+- **trioron/core/arena.py** — `node_lambda` (per-node gate) + `edge_fisher`/`edge_anchor`
+  + `bias_fisher`/`bias_anchor`.
+- **trioron/learning/epigenetic_lock.py** — `accumulate_fisher`, `refresh_lambda`
+  (row-sum+floor), `set_lambda` (reward/env/attention drivers), `anchor`, `ewc_penalty`,
+  `modulated_scale`.
+- **docs/TRIORON_MANUAL.md** — NEW canonical anti-drift reference (read every session per
+  CLAUDE.md). §1 = the triparametric node (w, λ, u), λ = per-node general gate.
 
 Modified (committed):
 - **tile_world.py** — `FIRE_N` class attr + per-instance `fire_n` (defaults unchanged,
@@ -153,6 +172,15 @@ Modified (committed):
 
 ## Open questions / next-up (priority order)
 
+0. **Finish the λ restoration** (the deepest fix — restores the namesake variable):
+   (a) **Fisher calibration** — empirical Fisher pins at the floor at perfect convergence;
+   use the model-distribution Fisher (sample labels from softmax) or estimate pre-convergence
+   so λ actually *differentiates* weights. (b) **Drive λ from survival-reward** via
+   `set_lambda` (the intrinsic-value path Rocky wants) — likely the real world lever, not
+   Fisher. (c) **World validation**: add a LAMBDA arm to `consolidate_base.py`
+   (fire/water share the base — exactly what λ should protect) head-to-head vs FULL-LOCK.
+   (d) **Update spec** §8.6/§2.1/§4 once validated (currently §8.6 says "v2 drops per-weight
+   Fisher" — λ restoration contradicts it).
 1. **Build replay + z2 router** (the cleared win): route the interior code to per-skill
    readouts (fire-mirror vs water-mirror), full-cov. The two levers together should beat
    the freeze on competence AND retention. This is THE next experiment.
