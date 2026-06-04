@@ -27,31 +27,49 @@ stress-tests, not the product. (spec §1; memory: `device_conscience_pattern`,
 
 ---
 
-## 1. The node is NOT just weights+bias — it is (v1.1) triparametric
+## 1. The node is triparametric — (w, λ, u) — and λ is the namesake (DO NOT FORGET)
 
-**This is the #1 thing to not forget.** A trioron node carries **three** per-cell
-parameter roles, not two:
+**This is THE thing the assistant keeps forgetting.** The name *tri·oron* = **"three
+coupled state variables per node"** (founding blueprint `trioron_blueprint.md:23-25`).
+The three are NOT (weights, bias, gain). They are:
 
 | param | symbol | role |
 |---|---|---|
-| incoming **weights** | `W` (`weights[fan_in, output_dim]`) | edge weights into the cell |
-| **bias** | `b` | per-output bias |
-| **axonal gain** | `u` (`routing_scale`) | per-cell output multiplier — the cell's "volume knob" |
+| core signal **weight** | `w` | learnable edge weight; gradient descent (per-edge) |
+| **epigenetic lock** | **`λ`** | **PER-NODE plasticity GATE** (`λ ∈ ℝⁿ`, one per cell). High λ stiffens the cell against drift; low λ = plastic. |
+| **utility** | `u` | per-node EMA contribution `sign(reward)·|act·grad|`; pruning + growth-trigger |
 
-The legacy/v1.1 forward is literally `F.linear(x, W * routing_scale.unsqueeze(1), b)`
-(`trioron/legacy/dreaming.py:602`). "**Routing starvation**" (a dream operation) drives
-a victim cell's `routing_scale → 0` to silence it without touching its weights
-(`legacy/dreaming.py:597-617`). So the node is **triparametric: (W, b, u)**.
+**λ is a general gate, NOT just a Fisher buffer (paper §A.1, `legacy/node.py:919
+set_lambda`).** Its default driver is Fisher — but **`λ_i = Σ_j F_{W,i,j}` is the
+ROW-SUM of the cell's incoming Fisher, NOT the row-mean** (the mean divides Fisher below
+any usable floor at high fan-in → silent-zero EWC penalty; this exact bug was fixed in
+`81d3785`/`bba9420`). There is a **`LAMBDA_FLOOR`** (ε-floor) so λ never silently zeros.
+Update: `λ ← row_sum(EMA[(∂L/∂w)²])`, clamped to `≥ LAMBDA_FLOOR`.
 
-**Version caveat (the subtle part that causes drift):**
-- **v1.1 / legacy** (`trioron/legacy/`): full triparametric node `(W, b, routing_scale)`.
-- **v2.0 default substrate** (`trioron/core/`): the arena carries **`bias` + `edge_weight`**
-  as the trainable tensors (`construct.py` `trainable_tensors()` returns
-  `[arena.bias, arena.edge_weight]`); **axonal-gain is not in the default v2 forward** —
-  it is **Axis 4**, reachable through the compat shim (§4 below). The world experiments
-  use the v2 core, so there `W, b` are the live params — but the *architecture* is
-  triparametric, and axonal-gain is a real lever we have used (routing starvation,
-  dream consolidation).
+**But Fisher is only ONE driver.** `set_lambda(signal, mode)` (`absolute`/`additive`/
+`multiplicative`) lets *any* signal gate plasticity — the **epigenetic** generalization
+(BDNF/methylation analogy): **reward** magnitude (protect high-reward cells), an
+**environment sense** (temperature/stress on an edge device — "λ becomes a literal
+environment sense"), **attention** masks, or hand-injected priors (freeze = large λ,
+wake = 0). **This is what gives λ intrinsic value** — driven by reward/environment it's
+the cell's response to experience, not a dead extrinsic statistic. *For the embodied
+organism, drive λ from survival-reward.*
+
+EWC penalty: `0.5·Σ_i λ_i·Σ_j (w_ij − w_anchor_ij)²` (per-node λ over that cell's edges).
+Optional modulated update (blueprint §3.2): scale grads by `1/(1+λ)`. The recurring
+mistake is to think "the node is weights+bias" and treat λ as absent — it is the
+*defining* variable. bias `b` and axonal-gain `routing_scale` are real params but NOT
+the namesake three.
+
+**Version status (the regression):**
+- **v1.1 / legacy** (`trioron/legacy/network.py`): full `(w, λ, u)` with `fisher_W`,
+  `lam`, `W_anchor`, `ewc_penalty()`, `update_fisher_all()`.
+- **v2.0 default** (`trioron/core/`): **DROPPED λ** (spec §8.6: "v2 does not maintain
+  per-weight importance estimates"), replaced by cell-level credit-locking. **This is
+  the root of the catastrophic forgetting we keep fighting** — Rocky's
+  `epigenetic_lock_hypothesis` (lam=0 → unanchored drift → bias to last task).
+  **DECISION (session 014): restore per-weight λ to the v2 node — Fisher-filled, NOT a
+  valueless buffer.** Until done, v2's node is effectively bi-parametric (w, u)+bias.
 
 Per-cell **non-trainable** state also matters and is easy to forget (spec §2.1):
 - `engagement` = running activation rate → drives **credit-based locking** (active→dormant).
@@ -123,7 +141,7 @@ line 103, §8.1 line 3125). Reach the v1.1 API through the compat shim.
 | **Axis 1** | `set_input_source` | input sources / long-range inputs | absence of a sequential-source convention |
 | **Axis 2** | `archive_input` | archived/dormant cells as inputs | dormant cells + `edge_protected` |
 | **Axis 3** | `insert_layer` | depth insertion | self-organized depth via division ranks |
-| **Axis 4** | `set_axonal_gain` | **per-cell output gain (`routing_scale`)** | the triparametric `u`; via shim |
+| **Axis 4** | `set_axonal_gain` | per-cell output gain (`routing_scale`) | via shim (a real param, but NOT one of the namesake (w, λ, u) three — see §1) |
 | **Axis 5** | `grow_branch` | **dendritic compartmentalization** | `dendrite` gene (bit 4) — ships LIVE |
 | **Axis 6** | `axis6_spawn` | credit-driven spawn | credit/`divide` lifecycle |
 
@@ -206,8 +224,11 @@ core).
 
 ## 8. Drift-corrections — things the assistant keeps getting wrong
 
-- ❌ "A node is weights + bias." → ✅ **Triparametric: weights, bias, axonal-gain
-  (`routing_scale`).** v2 default forward uses W,b; axonal-gain is Axis 4 / shim.
+- ❌ "A node is weights + bias." → ✅ **Triparametric: (w, λ, u)** — weight, **epigenetic
+  lock λ (filled with Fisher state)**, utility. λ is the namesake; v2 dropped it and is
+  restoring it (§1). (Axonal-gain `routing_scale` and bias are real but NOT the three.)
+- ❌ "λ is a valueless buffer / there's nothing to hold." → ✅ **λ holds the Fisher
+  information** — importance/curvature. That IS its intrinsic value.
 - ❌ "Trioron is just an MLP that grows." → ✅ Cells with **genes/phenotypes**, **credit
   locking**, **manifold replay**, **dream**, **grafting** — a continual-learning organism.
 - ❌ "There are no axes." → ✅ **Six axes** (input-source, archive-input, insert-layer,

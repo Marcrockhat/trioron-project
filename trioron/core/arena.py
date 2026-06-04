@@ -36,6 +36,15 @@ class Arena:
 
         # ── Per-cell SoA tensors (§2.1 / §2.4) ──────────────────
         self.bias = torch.zeros(cap, device=self.device)
+        # Epigenetic lock λ (the namesake third node variable, blueprint §3 / paper §A.1):
+        # a PER-NODE plasticity gate (one per cell). Default driver = row-sum of the cell's
+        # incoming Fisher, but settable from any signal (reward / environment / attention)
+        # via learning/epigenetic_lock.set_lambda. node_lambda gates both incoming edges and
+        # the bias; *_anchor hold the consolidated values it pulls toward; *_fisher are the
+        # per-param Fisher EMAs that roll up (row-sum) into node_lambda.
+        self.node_lambda = torch.zeros(cap, device=self.device)
+        self.bias_fisher = torch.zeros(cap, device=self.device)
+        self.bias_anchor = torch.zeros(cap, device=self.device)
         self.engagement = torch.zeros(cap, device=self.device)
         self.utility = torch.zeros(cap, device=self.device)
         self.position = torch.zeros(cap, 3, device=self.device)
@@ -62,6 +71,8 @@ class Arena:
         self.edge_src = torch.empty(ecap, dtype=torch.int32, device=self.device)
         self.edge_dst = torch.empty(ecap, dtype=torch.int32, device=self.device)
         self.edge_weight = torch.zeros(ecap, device=self.device)
+        self.edge_fisher = torch.zeros(ecap, device=self.device)   # per-edge Fisher EMA (rolls up to node_lambda)
+        self.edge_anchor = torch.zeros(ecap, device=self.device)   # consolidated w_anchor
         self.edge_cursor: int = 0
         self.edge_protected = torch.zeros(ecap, dtype=torch.bool, device=self.device)
 
