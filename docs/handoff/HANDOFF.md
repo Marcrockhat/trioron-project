@@ -1,205 +1,199 @@
 # Trioron Handoff
 
-**Session date:** 2026-06-04
-**Session number:** 015
-**Session title:** Finish the λ restoration — Fisher calibration → **Rocky's catch: the
-native λ driver is `|w·g|` saliency, NOT Fisher** → world n=5 verdict (soft λ complements
-the hard freeze) → arena survival (world-ceiling, not lock-discriminating) → **fixed the
-MEMORY.md overflow that was silently dropping memories** (the actual anti-drift fix) +
-rediscovered the forgotten selective-quad capability + manual/spec/API updates →
-**conclusive imitation-ceiling diagnosis: substrate & percept CLEARED; the survival cap is
-holistic imitation of partly-random masters → use the Pong Mode-E primitive-vocabulary +
-dream-loop recipe**
+**Session date:** 2026-06-05
+**Session number:** 016
+**Session title:** The Pong **Mode-E survival recipe**, built end-to-end on the
+**v2.0 core** (no legacy) — four clean primitive donors → vocabulary organism +
+**manifold router** → **frustration→dream self-improvement**. The integrated
+organism **outlasts every master** (72.5 → **92.1** > fire-master 87.4). Found &
+fixed a real perception gap on the way: the predator was invisible in the percept
+(EVADE unlearnable) → added a predator scent (percept 74→77-d) → EVADE 0.35→0.92.
 
-> Rewritten in full every session; prior handoffs in git history. Session 014
-> (`e3ed911`) restored λ to v2 core. This session calibrates it, **corrects its driver**,
-> validates it on the world, and — the meta-result — repairs the memory index that was
-> dropping the very features we keep forgetting.
+> Rewritten in full every session; prior handoffs in git history. Session 015
+> (`51b112e`) closed the λ arc and diagnosed the imitation ceiling, prescribing
+> exactly this recipe. This session **executes** it and validates it.
 
 ## Summary
 
-1. **λ Fisher calibration (open item 0a).** The restored λ pinned at `LAMBDA_FLOOR`
-   (dead/uniform) because **empirical Fisher (`g²`) vanishes at convergence** (g→0). Fix:
-   `fisher_loss` — sample the backward target from the model's softmax (the canonical
-   *model-distribution* Fisher). Verified live in `lambda_ewc_smoke.py`: λ off the floor,
-   real stability-plasticity trade (retention 0.229→0.488 at s=100).
-2. **Rocky's catch (the key turn): the native λ driver is `|w·g|`, not Fisher.** Trioron's
-   own importance signal everywhere — **KIBRA edge-tagging** (`dream.py`), the **utility
-   `u`**, the **pruner** — is `|weight·gradient|`. Fisher (`g²`) is the imported
-   academic-EWC outlier. `|w·g|` keeps the weight-magnitude factor, so it differentiates λ
-   at convergence **without** the washout, using plain labels. Probe: `|w·g|` gives 46/2048
-   nodes above floor (vs Fisher-true-label 0/2048) — as good as the model-dist band-aid,
-   simpler. Added `accumulate_saliency`; swapped it in as the world λ driver.
-3. **World validation (open item 0c), n=5 `consolidate_base.py`.** Verdict below: **hard
-   FULL-LOCK still wins raw retention + water acquisition; soft λ-WG uniquely *improves*
-   the old fire skill while learning water (the freeze holds it static).** Driver ranking
-   confirmed **`|w·g|` > Fisher > reward**. λ is a **complement** to credit-locking, not a
-   replacement — matching v2's design doctrine. **Arc CLOSED (Rocky's call).**
-4. **Arena survival (Rocky's question).** `wg_survival.py`: the WG organism survives
-   ~47/300 steps — **indistinguishable from FULL-LOCK (44) and PLAIN (50)**; survival is
-   the world's lethality ceiling, not the lock. FULL-LOCK has the tightest variance.
-5. **THE META-FIX (Rocky's real concern — "previous-you keeps forgetting features").**
-   Root-caused it: `MEMORY.md` was **38.4 KB vs a 24.4 KB limit**, so the index was
-   silently truncated and dropped entries — including `selective-quad-growth`. The
-   knowledge was saved correctly; the *index* lost it. **Compressed MEMORY.md to 24.2 KB**
-   (all 184 links verified resolving, 6 superseded handoff pointers dropped, 1 broken link
-   fixed). The dropped entries now load every session.
-6. **Rediscovered the forgotten capability.** `selective_quad_growth.py` (session 011)
-   already demonstrates **problem-driven phenotype selection**: under relational
-   frustration a dividing cell's child takes the **quad/dendrite** phenotype — ~8 quad on
-   the relational task (1.000), **ZERO** on a linear task (1.000). The substrate *does*
-   adapt architecture to the problem. Pinned in manual §2.5 so it stops being forgotten.
-7. **Manual / spec / API updated** to match reality (λ restored, `|w·g|` driver, §2.5
-   phenotype selection, spec §8.6 corrected, `epigenetic_lock` exported in the public API).
-8. **Conclusive imitation-ceiling diagnosis (Rocky: "test all of it then decide").** The
-   organism survives ~47/300 ≈ random while the masters survive 75-95. Built
-   `imitation_ceiling.py` (4-arm imitation-accuracy probe) + `det_teacher_confirm.py`
-   (toggles the masters' `torch.randint` fallback deterministic). Verdict, three
-   hypotheses: **(a) substrate too weak — FALSE** (trioron imitates at the MLP ceiling,
-   0.71-0.75 on the clean skill); **(b) percept hides the info — FALSE** (zero observability
-   gap, MLP-percept = MLP-full-state); **(c) teacher stochasticity + holistic imitation —
-   the cap** (deterministic teacher lifts trioron imitation fire 0.59→0.71, water
-   0.37→0.75, organism survival 44→51). The twist: the masters' randomness is *load-bearing*
-   (predator-evasion — deterministic masters survive far worse, 85→69 / 77→34). So pure
-   (Mode-B) imitation is capped at the teacher. **Decision: the Pong recipe** — clean
-   primitive donors (WARM/HYDRATE/FORAGE/**EVADE** = the missing primitive masquerading as
-   the masters' randomness) → absorb into a vocabulary organism → frustration→dream
-   self-improvement to exceed the teachers. **Substrate & perception are settled — stop
-   re-litigating them.** (memory `imitation-ceiling-diagnosis`.)
+1. **API reality check (Rocky's question "is the API updated to v2.0?").** No —
+   the package is **`__version__ = 1.1.0`**: commits `b8e6fff` (*rename v2.0 →
+   v1.1*) + `38acf74` (*move v1 into `trioron/legacy/`*) deliberately renamed and
+   relocated the high-level surface. The donor/absorb/extend API
+   (`build_donor`/`absorb`/`load_organism`/`extend`) exists and imports, but at
+   **`trioron.legacy.api`** — the Pong code's `from trioron.api import ...` path
+   is dead (only `hf_space_build/trioron/api.py` has it, an **untracked build
+   artifact**). **Rocky's directive: use v2.0 core, leave legacy out, wire what's
+   missing.** The world experiment stack is already pure v2-core
+   (`trioron.core`/`bases`/`phenotype`/`learning`), so the recipe was built there.
+
+2. **Phase 1 — four clean primitive donors (`experiments/world/primitives.py`).**
+   Each primitive = its master restricted to a decision **band**, imitated by a
+   v2.0 `build_mirror` substrate via supervised CE on `sub(_solo(percept))→action`
+   (the `imitation_ceiling` method, but the substrate is **persisted** as a donor
+   `(seed, bias, edge_weight)`). Masters: WARM=`fire_oracle`, HYDRATE=`water_master`,
+   FORAGE=`food_master`, **EVADE=new `evade_master`** (flee predator / off-hazard,
+   from the `run_reactive` rule). Collection runs masters under **natural
+   (stochastic) exploration** + the band — a deterministic master is too good and
+   camps the infinite WATER fountain (degenerate always-drink donor); the wander
+   creates drive stress, the band recovers the navigation skill.
+
+3. **THE perception fix (EVADE was unlearnable).** First build: EVADE fidelity
+   **0.354 ≈ chance (0.312)**. Root cause: the **predator is absent from the
+   percept** — `self.pred` is never written to the grid nor the 74-d percept, so
+   EVADE's flee-direction is uncorrelated with anything seen (a *perception* gap,
+   not substrate; consistent with s015). Corroboration: EVADE-donor took **zero**
+   integrity deaths (couldn't evade) while HYDRATE-donor took 6/20. **Fix (Rocky
+   approved): add a 3-d predator scent to `TileWorld.percept()`** (direction +
+   proximity), appended at the END so existing slicing `[63:69]/[69:73]/[73:74]`
+   is intact. **74→77-d. EVADE 0.354→0.917.** All four now learnable.
+
+4. **Phase 2 — vocabulary organism + manifold router (`vocabulary.py`).** The
+   router is the **new v2.0-core piece** the recipe needed (there is no
+   `trioron.learning.route`; routing was bench-local). Mechanism = the s014/world
+   z2 pattern: a per-primitive **full-cov `ManifoldArchive`** over the 14-d
+   interoceptive context slice `percept[63:77]`, route by argmax
+   `log_likelihood_full`. Routing label = **argmax-danger** (each state's single
+   most-urgent drive) so the manifolds are **disjoint and discriminative** —
+   overlapping critical bands gave 0.40 routing acc and degenerate routing; the
+   argmax-danger labels gave **0.74**. A hand-coded `ArbiterOrganism`
+   (argmax-danger, privileged) is the routing upper bound. **Survival n=40: 72.5
+   (manifold-route) vs 76.2 (arbiter) — the learned router captures 95% of the
+   arbitration**; beats every single donor (58.3) and 3/4 masters.
+
+5. **Phase 3 — frustration→dream self-improvement (`dream_loop.py`).** Deploy →
+   dominant death cause (`overheat`→WARM, `thirst`→HYDRATE, …) → collect the
+   organism's OWN failure frames in that primitive's band, **relabel with the
+   master** (DAgger correction), **dream**: fine-tune the donor on corrections
+   (oversampled) **interleaved with skill-demo replay** (anti-forget). Result
+   **72.5 → 92.1**, **exceeding the best master (fire 87.4)** — the integrated
+   organism (it carries EVADE, which no resource-master has) **outlasts its
+   teachers**. **One-shot rescue, NOT a monotone iterator** (oscillates
+   72.5→92.1→78.5→91.7) — sharpening WARM alone reshuffles residual failures;
+   matches the Pong `pong_dream_loop_multiseed` finding.
+
+6. **A mid-build fix the integration exposed.** Phase-2 first cut overheated 6/6:
+   the WARM band `temp<0.5` **omitted the leave-before-overheat decisions** (those
+   are at temp≥0.5 near fire). Widened to `temp<0.5 OR _near_fire` → donor learns
+   to leave; organism survival 52.8→68→72.5.
 
 ## Headline numbers
 
-**λ-EWC smoke (`lambda_ewc_smoke.py`, orthogonal-random = EWC's worst case).** Model-dist
-Fisher rescues the washout:
+**Phase 1 fidelity (n per primitive, 77-d percept, held-out imitation acc):**
 
-| driver | task-A after B | λmax | nodes>floor |
-|---|---|---|---|
-| empirical Fisher (true label) | 0.346 | 1e-3 = floor (dead) | 0/2048 |
-| model-dist Fisher (`fisher_loss`) | 0.488 (s=100) | 1.3e-2 | 40/2048 |
-| **`|w·g|` saliency (plain labels)** | — | **1.1e-2** | **46/2048** |
+| primitive | drive | n | chance | fidelity | lift | donor-solo survival |
+|---|---|---|---|---|---|---|
+| WARM | temperature | 900 | 0.478 | 0.889 | +0.411 | 38.8 |
+| HYDRATE | thirst | 900 | 0.261 | 0.533 | +0.272 | 37.8 |
+| FORAGE | energy | 481 | 0.247 | 0.753 | +0.505 | 59.7 |
+| EVADE | integrity | 236 | 0.312 | **0.917** | +0.604 | 45.6 |
 
-**World consolidation (`consolidate_base.py`, n=5, deterministic cold-battery agreement).**
-ONLY the lock differs across arms:
+(EVADE pre-fix = 0.354. HYDRATE 0.53 is honest — navigation is a balanced 5-way.)
 
-| arm | fire-retain | fire-comp f→w | water-acq |
-|---|---|---|---|
-| PLAIN | 0.141 ± 0.080 | 0.203→0.139 ▼ | 0.226→0.229 |
-| MIRROR-LOCK | 0.187 ± 0.146 | 0.203→0.249 | 0.226→0.220 |
-| **FULL-LOCK** | **0.376 ± 0.181** | 0.203→0.213 | 0.226→**0.344** |
-| **LAMBDA-WG** | 0.271 ± 0.207 | 0.203→**0.264** ▲ | 0.226→0.239 |
-| LAMBDA-REWARD | 0.226 ± 0.180 | 0.203→0.101 ▼ | 0.226→0.260 |
+**Phase 2 survival (n=40, steps alive, max 300):**
 
-FULL-LOCK wins retention + acquisition. LAMBDA-WG: best competence-through-water of any arm
-(0.264 — the freeze only holds at 0.213) and best soft arm. **σ huge (degenerate seeds) —
-FULL-vs-WG retention gap is within ~1σ, NOT σ-confident.** Leak ordering FULL>MIRROR>PLAIN
-reproduced. (An earlier n=5 with the Fisher/reward drivers — `consolidate_lambda_n5.log` —
-had Fisher 0.284 / reward 0.264; |w·g| beats reward on competence decisively.)
-
-**Arena survival (`wg_survival.py`, n=3 × 40 eps, out of 300 steps).**
-
-| arm | survival | per-seed |
+| organism | survival | note |
 |---|---|---|
-| LAMBDA-WG | 46.9 ± 9.2 | 48, 58, 35 |
-| FULL-LOCK | 44.2 ± **2.4** | 42, 48, 43 |
-| PLAIN | 49.7 ± 12.4 | 63, 52, 33 |
+| **VOCABULARY (manifold-route)** | **72.5** | beats all donors + 3/4 masters |
+| ARBITER (argmax-danger, upper bound) | 76.2 | learned router ≈ 95% of it |
+| best single donor (FORAGE) | 58.3 | +14.2 |
+| fire / water / food / evade master | 87.4 / 68.1 / 65.0 / 44.6 | |
+| floors random / reactive | 49.8 / 141.8 | reactive = headroom |
 
-All within noise — survival = world lethality ceiling (deaths split across cold/overheat/
-thirst/integrity), not the consolidation lock. FULL-LOCK = tightest variance.
+Routing acc 0.741 full-cov (chance 0.25). Dominant death: overheat 26/40.
+
+**Phase 3 dream trajectory (n=40):** `72.5 → 92.1 → 78.5 → 91.7`  (best **92.1**,
+lift **+19.6**, > fire-master 87.4). Overheat stays dominant (~22–28/40).
 
 ## What was done (files)
 
-Committed `6b20113` (mid-session): λ `|w·g|` driver + API export + manual.
-- **trioron/learning/epigenetic_lock.py** — `accumulate_saliency` (|w·g| EMA, the native
-  driver) + `fisher_loss` (model-dist target). Shares `edge_fisher`/`bias_fisher` buffers;
-  rolls up via `refresh_lambda` (row-sum + floor).
-- **trioron/learning/__init__.py** — export the epigenetic_lock API (λ was the only
-  learning module missing from the public surface) — the "API needs updating" Rocky flagged.
-- **experiments/world/consolidate_base.py** — `setup_lambda_wg` / `setup_lambda_fisher` /
-  `setup_lambda_reward`; LAMBDA-WG + LAMBDA-REWARD arms; soft `ewc_penalty` in the
-  non-mirror-gated TD backward; `--ewc-strength`; `run_arm(keep_sub=)`.
-- **docs/TRIORON_MANUAL.md** — λ RESTORED + `|w·g|` driver (§1); §2.5 problem-driven
-  phenotype selection (NEW); §5/§8/§9 fixes.
+Committed `0a1d16e` this session.
+- **NEW `experiments/world/primitives.py`** — Phase 1. `evade_master`, banded
+  `collect`, `train_donor`/`save_donor`/`load_donor` (rebuild via
+  `build_mirror(seed,n_mirror)` + load weights), `build_all`. `--smoke`.
+- **NEW `experiments/world/vocabulary.py`** — Phase 2. `danger`/`argmax_danger`,
+  `collect_router_states` (random rollouts, argmax-danger labels, `min_danger`),
+  `VocabularyRouter` (full-cov manifold), `VocabularyOrganism` (manifold-route),
+  `ArbiterOrganism` (upper bound). `--smoke`/`--diagonal`.
+- **NEW `experiments/world/dream_loop.py`** — Phase 3. `probe` (survival+causes),
+  `collect_failures` (DAgger relabel), `dream_correct` (corrections + skill
+  replay), `dream_loop`. `--smoke`/`--iters`.
+- **`experiments/world/tile_world.py`** — `_pred_scent` + percept **74→77**.
+- **`experiments/world/{organism_v1,organism_v2,population}.py`** — PERCEPT_DIM
+  **77**. **`mirror_cells.py`** — INPUT_DIM 80→**83** (comment).
+- `runs/` (LOCAL, not committed): `primitives_build.log`, `vocabulary_phase2.log`,
+  `dream_loop_phase3.log`, `runs/primitives/{WARM,HYDRATE,FORAGE,EVADE}.pt`.
 
-Uncommitted at handoff time (commit with this handoff):
-- **paper/v3/spec.md §8.6** — corrected the stale "v2 drops per-weight Fisher" claim to
-  record the λ restoration + `|w·g|` driver + world verdict.
-- **experiments/world/wg_survival.py** — NEW arena-survival eval for the consolidated
-  organism (reuses `run_arm(keep_sub=True)` + `fire_taming.evaluate`).
-- **~/.claude/.../memory/MEMORY.md** — compressed 38.4 → 24.2 KB (NOT in repo; lives in
-  ~/.claude, does not sync — that's why this handoff exists).
-
-Imitation-ceiling diagnosis (commit with this handoff):
-- **experiments/world/imitation_ceiling.py** — NEW. 4-arm imitation-accuracy probe
-  (chance / MLP-percept / MLP-full-state / trioron-substrate) → substrate & percept cleared.
-- **experiments/world/det_teacher_confirm.py** — NEW. Toggles the masters' random fallback
-  deterministic and re-measures imitation + survival → confirms teacher stochasticity is the cap.
-- **experiments/world/fire_taming.py / quest.py** — added `EXPLORE_DETERMINISTIC` flag
-  (default OFF; one shared global) + deterministic `_explore` fallback. consolidate_base unaffected.
-- `runs/` (LOCAL): `imitation_ceiling.log`, `det_teacher_confirm.log`.
-
-**Pre-existing, STILL DO NOT TOUCH**: `trioron/bases/developmental.py`,
-`trioron/lifecycle/developmental.py`, `trioron/viz/export.py` (carried session-005).
+**Pre-existing, STILL DO NOT TOUCH** (carried since s005): `trioron/bases/
+developmental.py`, `trioron/lifecycle/developmental.py`, `trioron/viz/export.py`.
 
 ## Key findings
 
-1. **λ's native driver is `|w·g|`, not Fisher.** Fisher washes out at convergence; `|w·g|`
-   (the trioron-wide saliency dialect) does not. Don't reach for Fisher EWC on the
-   substrate — use saliency.
-2. **Soft λ complements, doesn't replace, hard credit-locking.** Freeze wins retention +
-   acquisition; soft λ's edge is *improving* a consolidated skill during new learning. Both
-   are legitimate; pick by whether you want a frozen skill or a still-improving one.
-3. **Survival is the world's ceiling, not the lock.** Consolidation benefit shows in skill
-   retention (battery), not whole-episode survival — many death modes the skill doesn't fix.
-4. **The forgetting mechanism was the MEMORY.md index overflow.** Memories were saved fine;
-   the index that surfaces them was truncated. Keep MEMORY.md under 24.4 KB — one short
-   line per entry, detail in the topic files.
-5. **Trioron already does problem-driven phenotype selection** (selective quad growth). Not
-   aspirational — validated n=3. The unbuilt part is generalizing the selector to pick
-   conv/attention/recurrent (and conv-by-emergence is separately *closed* on the flat
-   substrate — use a cortex upstream).
+1. **The predator was invisible.** A whole drive (integrity/EVADE) had no percept
+   signal. Adding the predator scent is a clean "lift perception" win and the
+   reason EVADE now works. **The percept is 77-d now** — re-derive, don't assume 74.
+2. **Routing must be by argmax-URGENCY, not context-membership.** Overlapping
+   critical bands → manifolds non-separable (0.40). Disjoint argmax-danger labels
+   → 0.74 and a router that nearly matches the hand-coded arbiter.
+3. **The vocabulary organism outlasts its masters** (92.1 > 87.4) — the recipe's
+   thesis, validated. The edge is structural: no single blind spot (it has EVADE;
+   fire-master dies of the predator).
+4. **The dream loop is a one-shot rescue, not iterative.** +19.6 on iter 1, then
+   oscillates. Single-primitive sharpening reshuffles failures. (cf. Pong.)
+5. **Package is v1.1, docs say v2.0.** Naming gap is deliberate (rename commit),
+   not a bug. High-level api lives in `trioron.legacy.api`; core machinery in
+   `trioron.{core,learning,lifecycle,…}`. Build new world work on core.
 
 ## Decisions made
 
-- **λ driver = `|w·g|` saliency** (default), Fisher available but deprecated-for-substrate.
-- **λ arc CLOSED** on the honest result (Rocky); spec §8.6 updated rather than chasing a
-  strength sweep on a noisy probe.
-- **MEMORY.md hard cap discipline**: ≤ 24.4 KB, terse one-liners, prune superseded handoffs.
+- **Recipe built on v2.0 core, no legacy** (Rocky). World stack already pure-core.
+- **Predator scent added to the shared percept** (Rocky chose "add to percept"
+  over dropping EVADE or an EVADE-only percept).
+- **Router experiment-local first** (`vocabulary.VocabularyRouter`); promote to
+  `trioron.learning.route` once the policy stabilises (the open routing item).
+- **Dream loop does not overwrite the Phase-1 donors** (`save=False`); the clean
+  baseline is preserved.
 
 ## Open questions / next-up
 
-1. **THE next arc (now well-motivated by the imitation diagnosis): the Pong Mode-E recipe
-   for survival.** Stop holistic imitation. Build clean primitive donors —
-   WARM / HYDRATE / FORAGE / **EVADE** (the missing predator-evasion primitive) — each
-   individually learnable (proven ~0.75 fidelity); absorb into a vocabulary organism with a
-   router (`pong_vocabulary_organism` pattern); close the loop with frustration→dream
-   self-improvement to *exceed* the teachers (Pong −20→+1, Breakout above oracle). This is
-   the learn-to-*use* path, not learn-from.
-2. **Architecture vision (Rocky): generalize problem-driven phenotype selection** beyond
-   quad — a divide-time selector picking conv/attention/recurrent from the frustration
-   signature. Its own arc; flat substrate geometry blocks conv (`conv_by_emergence_null`).
-2. **(Deferred) λ sharpening** — competence-floor-before-consolidate + n=10 to make the
-   FULL-vs-WG gap σ-confident; a LAMBDA-WG strength sweep. Lower priority (arc closed).
-3. **Routing to core** (carried from s014 open #2): `trioron.learning.route()` — the
-   dual-manifold H-routing is still bench-local (`bench_chained_15_v2.py`).
-4. **Spec sweep** for other stale post-restoration claims (§2997, §3032 reference v2
-   dropping Fisher — §8.6 fixed, these two lines not yet).
+1. **Stabilise the dream loop (make the +19.6 stick).** It's one-shot+oscillating.
+   Try: keep-best-donor (stop-on-regression), **multi-primitive dreaming** (sharpen
+   whatever each iter's dominant cause implicates, not WARM-only), or a small
+   `corr_weight`/replay-balance sweep. Then **save the best vocabulary** as a
+   persisted organism.
+2. **Overheat is still the ceiling (~24/40).** WARM over-occupies fire (warm_rate
+   0.04 overshoots). Beyond donor-dreaming, consider **router hysteresis** (don't
+   re-route WARM the instant temp dips) — the reactive floor (141.8) shows the
+   arbitration itself has headroom.
+3. **Promote the router to core** — `trioron.learning.route()` (handoff open item
+   since s014). The argmax-danger-labelled full-cov manifold router is the
+   candidate; lift it out of `vocabulary.py` once #1 settles.
+4. **FORAGE is under-routed** (recall dipped to 0.10 in the n=40 run) — energy
+   danger is rarely the argmax (slow decay). May need per-drive danger calibration.
+5. **n≥3 seeds** for the headline 92.1 (single-seed eval set; survival σ ≈ ±9–12).
+6. **The 74→77 percept change shifts every world experiment's numbers.** Old 80-d
+   organisms (`protagonist.pt`, `mirror_organism.pt`) are now incompatible (83-d).
+   `consolidate_base`/`fire_taming`/`imitation_ceiling`/`wg_survival` still run but
+   their baselines moved — re-run before citing.
 
 ## Pointers
 
-- `experiments/world/` — `consolidate_base.py` (5-arm lock comparison + λ drivers),
-  `wg_survival.py` (arena survival), `lambda_ewc_smoke.py` (driver smoke). Each has
-  `--quick`/`--smoke`; full = `--seeds 5`. `runs/` (LOCAL): `consolidate_lambda_n5.log`
-  (Fisher/reward), `consolidate_lambda_wg_n5.log` (the WG verdict), `wg_survival_n3.log`.
-- λ module: `trioron/learning/epigenetic_lock.py` (now in `trioron.learning` public API).
-- `selective_quad_growth.py` + memory `selective-quad-growth` — problem-driven phenotype.
-- Manual §1 (λ + driver), §2.5 (phenotype selection). Spec §8.6 (corrected).
+- `experiments/world/primitives.py` (Phase 1) → `vocabulary.py` (Phase 2,
+  router) → `dream_loop.py` (Phase 3). Each has `--smoke`. Full:
+  `python3 -m experiments.world.vocabulary` (n=40 ≈ 4 min);
+  `python3 -m experiments.world.dream_loop --iters 3` (≈ 8 min).
+- Masters: `fire_taming.fire_oracle`, `quest.{water_master,food_master}`,
+  `primitives.evade_master`. Percept: `tile_world.percept()` (77-d), predator
+  scent `_pred_scent` at `[74:77]`.
+- Router math reused from `experiments/world/world_routing.py` +
+  `trioron.learning.manifold.ManifoldArchive.log_likelihood_full`.
+- Donors: `runs/primitives/{WARM,HYDRATE,FORAGE,EVADE}.pt` (LOCAL; seed=0,
+  n_mirror=8; reload with `primitives.load_donor`).
 
 ## Environment notes
 
-- `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12, torch
-  2.11.0+cu130, WSL2, 12 cores, 7.4 GiB. `python3`, `OMP_NUM_THREADS=8`.
-- Benches are CPU/core-bound (~0.7 GB RAM each), not memory-bound; safe to run alongside
-  light host (Windows) tasks. n=5 consolidate ≈ 45 min; n=3 survival ≈ 15 min.
-- Survival is the noisy whole-episode metric (±9–12 across seeds); the deterministic
-  cold/thirsty battery is the low-noise instrument. Seed `torch.manual_seed` before any
-  battery/eval (masters' explore uses the global RNG).
+- `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12,
+  torch 2.11.0+cu130, WSL2, 12 cores, 7.4 GiB. `python3`, `OMP_NUM_THREADS=8`.
+- World benches are CPU/core-bound, ~0.7 GB each. n=40 vocab ≈ 4 min; 3-iter
+  dream ≈ 8 min. Survival is the noisy whole-episode metric (±9–12 across seeds).
+- A stale second `claude` process (PID ~3057, ~1d19h) is idle and left running
+  (Rocky's call); harmless.
