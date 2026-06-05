@@ -60,6 +60,12 @@ dwarfs s016's one-shot dream-loop 92.1.
    now a single-direction nav skill. Born-quad was kept for safety (proven regime)
    but **linear should suffice** — the cheaper untested option.
 
+7. **Designed the next arc (no code yet) — reflex vs wisdom.** Rocky's point: the
+   primitives are *imitated*, not *discovered* — an organism should discover its own.
+   Specced a head-to-head of skill-acquisition drivers (imitation / curiosity /
+   reward / staged) on a common net-Numa axis, all decisions locked. See **NEXT ARC**
+   below — it is the priority for next session, above the moved (predator) ceiling.
+
 ## Headline numbers
 
 **Deployable vocabulary organism (n=40, manifold-route, full-cov):**
@@ -126,7 +132,45 @@ Committed this session (see git log).
 - **runs/primitives/WARM.pt overwritten** with seek-only; dual-role preserved at
   `WARM_dualrole_backup.pt`.
 
-## Open questions / next-up
+## NEXT ARC (designed this session, decisions LOCKED) — reflex vs wisdom
+
+Rocky's direction: the Mode-E primitives are **imitation of hand-coded masters** —
+trioron does NOT *discover* them, which an organism should. Build a head-to-head of
+how an organism ACQUIRES skills, on a **common axis = net Numa** (Numa−Mima via
+held-out dream re-test; `numa.py` `NumaLedger`) with **survival as the precondition
+gate**. Key distinction that emerged: **net Numa is a MEASUREMENT axis (world-model
+consolidation), orthogonal to the POLICY DRIVER**; the arms differ in the driver.
+
+| arm | policy driver | status |
+|---|---|---|
+| **A Reflex** | imitation (copy master) | reuse `vocabulary.py` organism |
+| **B Wisdom** | **curiosity / learning-progress** (act to maximise reducible predictive surprise — label-free AND reward-free) | NEW build |
+| **C Reward** | TD on world reward `r` (value head) | ~80% in `organism_v2.py` (its value head acts; pair head is a passenger) |
+| **D Synthesis** | reflex → consolidate+LOCK → grow wisdom on top | after A/B/C |
+
+**Sequence (Rocky):** A, then B, then build C, then — after A/B/C compared — D.
+
+**Locked decisions:** (1) common axis = net Numa, survival = gate. (2) Arm B driver =
+**curiosity/learning-progress** (NOT homeostasis — that's reward in disguise and would
+collapse B into C). (3) Reward arm C is IN (not deferred) — organism_v2's value head ≈
+C already. (4) Fairness: identical Numa head / 5 pairs / held-out re-test across all arms.
+
+**Open implementation wrinkle:** arm A is a COMPOSITE (5 donors + router) with nowhere
+to hang the pair head → train a small **observer pair-head on the states the imitation
+organism visits**; Numa then measures the learnability of that experience stream.
+
+**Why D is the headline, not a fallback (Rocky's reflex→wisdom framing):** animals fear
+fire (innate reflex) BEFORE mastering it (wisdom). Maps 1:1 onto trioron CL: imitation =
+reflex bootstrap; credit-lock + λ-anchor make it innate (protected from drift); Numa +
+dream/manifold replay grow wisdom WITHOUT catastrophically forgetting the reflex. D is
+the run that exercises the whole stack. Hypothesis: A high survival/low Numa; B builds
+Numa but starves (curiosity doesn't eat); C reward-acts; **D wins both axes.**
+
+Pointers: `numa.py` (pairs + ledger), `organism_v2.py` (value⊕pair heads, TD + Numa
+checkpoint — the C scaffold), `vocabulary.py` (the A organism). Memory:
+[[numa_mima_implemented]] (net Numa is the axis, survival is precondition).
+
+## Open questions / next-up (the moved ceiling — secondary to the arc above)
 
 1. **ATTACK THE PREDATOR (the new ceiling).** Integrity/EVADE is now the dominant
    death (19/40). The EVADE donor solo is weak (49.1) and evade-master only 44.6 —
