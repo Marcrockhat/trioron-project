@@ -155,11 +155,16 @@ developmental.py`, `trioron/lifecycle/developmental.py`, `trioron/viz/export.py`
 
 ## Open questions / next-up
 
-1. **Stabilise the dream loop (make the +19.6 stick).** It's one-shot+oscillating.
-   Try: keep-best-donor (stop-on-regression), **multi-primitive dreaming** (sharpen
-   whatever each iter's dominant cause implicates, not WARM-only), or a small
-   `corr_weight`/replay-balance sweep. Then **save the best vocabulary** as a
-   persisted organism.
+1. **Stabilise the dream loop (make the +19.6 stick).** **IMPLEMENTED, awaiting
+   n=40 validation** (`dream_loop.py`, commit after `5864790`): DAgger **aggregation**
+   (never discard corrections), **keep-best rollback** (revert any iter that
+   regresses beyond `accept_margin`), and **plateau escalation** (after a primitive
+   plateaus `plateau_patience` times, sharpen the next dominant cause's primitive).
+   Smoke confirms the machinery runs and rollback fires on regression. **NEXT: run
+   `python3 -m experiments.world.dream_loop --iters 6` (n=40) — does the curve go
+   monotone and hold/exceed 92?** If yes, `--save` the best vocabulary as a
+   persisted organism. If it plateaus below 92, tune `corr_weight`/replay balance
+   or widen escalation.
 2. **Overheat is still the ceiling (~24/40).** WARM over-occupies fire (warm_rate
    0.04 overshoots). Beyond donor-dreaming, consider **router hysteresis** (don't
    re-route WARM the instant temp dips) — the reactive floor (141.8) shows the

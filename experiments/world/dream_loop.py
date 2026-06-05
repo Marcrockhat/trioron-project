@@ -153,42 +153,93 @@ def dream_correct(donor, prim_name, corrections, *, replay_seeds=30,
 
 
 # ----------------------------------------------------------------------
-# The loop
+# Donor snapshot / restore — for keep-best rollback
 # ----------------------------------------------------------------------
-def dream_loop(*, iters=4, eval_seeds=40, router_seeds=120, fail_seeds=60,
-               window=20, save=False):
+def _snapshot(donor):
+    return (donor.arena.bias.detach().clone(),
+            donor.arena.edge_weight.detach().clone())
+
+
+def _restore(donor, snap):
+    with torch.no_grad():
+        donor.arena.bias.copy_(snap[0])
+        donor.arena.edge_weight.copy_(snap[1])
+
+
+def _ranked_causes(causes):
+    """Death causes with a mapped primitive, most-common first."""
+    return [(c, n) for c, n in causes.most_common() if c in DEATH_TO_PRIM]
+
+
+# ----------------------------------------------------------------------
+# The loop — DAgger aggregation + keep-best rollback + plateau escalation
+# ----------------------------------------------------------------------
+def dream_loop(*, iters=6, eval_seeds=40, router_seeds=120, fail_seeds=60,
+               window=20, accept_margin=2.0, plateau_patience=2, save=False):
     _ft.EXPLORE_DETERMINISTIC = False
     org, _ = build_vocabulary(router_seeds=router_seeds)
-    curve = []
 
-    surv0, causes0 = probe(org, seeds=eval_seeds)
-    curve.append(surv0)
-    _p(f"[iter 0] survival {surv0:.1f}   deaths {dict(causes0.most_common())}")
+    # per-primitive AGGREGATED correction buffers (DAgger: never discard) and a
+    # rejection counter that drives escalation to the next death cause.
+    agg = {name: ([], []) for name in PRIM_ORDER}
+    rejects = {name: 0 for name in PRIM_ORDER}
+
+    best_surv, causes = probe(org, seeds=eval_seeds)
+    best_snaps = {name: _snapshot(org.donors[name]) for name in PRIM_ORDER}
+    curve = [best_surv]
+    _p(f"[iter 0] survival {best_surv:.1f}   deaths {dict(causes.most_common())}")
 
     for it in range(1, iters + 1):
-        dom, _n = causes0.most_common(1)[0]
-        prim = DEATH_TO_PRIM.get(dom)
-        if prim is None:
-            _p(f"[iter {it}] dominant cause '{dom}' has no primitive — stop.")
+        # pick the dominant death cause whose primitive hasn't plateaued
+        cand = [(c, n) for c, n in _ranked_causes(causes)
+                if rejects[DEATH_TO_PRIM[c]] < plateau_patience]
+        if not cand:
+            _p(f"[iter {it}] every implicated primitive has plateaued — stop.")
             break
-        _p(f"[iter {it}] frustration: '{dom}' x{_n} -> sharpen {prim}")
+        dom, n = cand[0]
+        prim = DEATH_TO_PRIM[dom]
+        tag = "" if dom == _ranked_causes(causes)[0][0] else "  (escalated)"
+        _p(f"[iter {it}] frustration: '{dom}' x{n} -> sharpen {prim}{tag}")
+
         Pc, Yc = collect_failures(org, prim, cause=dom, seeds=fail_seeds,
                                   window=window)
         if Pc is None:
-            _p(f"           no '{dom}' failures captured — stop.")
-            break
-        _p(f"           collected {Pc.shape[0]} master-corrected failure frames")
-        dream_correct(org.donors[prim], prim, (Pc, Yc))
-        surv, causes0 = probe(org, seeds=eval_seeds)
-        curve.append(surv)
-        _p(f"           -> survival {surv:.1f}   deaths {dict(causes0.most_common())}")
+            _p(f"           no '{dom}' failures captured — skip.")
+            rejects[prim] += 1
+            continue
+        agg[prim][0].append(Pc); agg[prim][1].append(Yc)        # AGGREGATE
+        Pa = torch.cat(agg[prim][0], dim=0); Ya = torch.cat(agg[prim][1], dim=0)
+        _p(f"           +{Pc.shape[0]} frames -> {Pa.shape[0]} aggregated corrections")
 
+        snap = _snapshot(org.donors[prim])                       # for rollback
+        dream_correct(org.donors[prim], prim, (Pa, Ya))
+        surv, new_causes = probe(org, seeds=eval_seeds)
+
+        if surv >= best_surv - accept_margin:                    # ACCEPT
+            verdict = "accept"
+            if surv > best_surv:
+                best_surv = surv
+                best_snaps[prim] = _snapshot(org.donors[prim])
+            rejects[prim] = 0
+            causes = new_causes
+        else:                                                    # ROLLBACK
+            verdict = "reject->rollback"
+            _restore(org.donors[prim], snap)
+            rejects[prim] += 1
+            # causes unchanged: same state, may re-try (bigger buffer) or escalate
+        curve.append(surv)
+        _p(f"           -> survival {surv:.1f}  [{verdict}, best {best_surv:.1f}]  "
+           f"deaths {dict(new_causes.most_common())}")
+
+    # restore the best donor set seen
+    for name in PRIM_ORDER:
+        _restore(org.donors[name], best_snaps[name])
     if save:
-        for name in PRIM_ORDER:                 # persist the dreamed donors
-            d = org.donors[name]
-            save_donor(d, name, seed=0, n_mirror=8, acc=-1.0, chance=-1.0,
-                       drive=PRIMITIVES[name]["drive"])
-    return org, curve
+        for name in PRIM_ORDER:
+            save_donor(org.donors[name], name, seed=0, n_mirror=8,
+                       acc=-1.0, chance=-1.0, drive=PRIMITIVES[name]["drive"])
+    _p(f"\n[final] restored best donor set — survival {best_surv:.1f}")
+    return org, curve, best_surv
 
 
 def main():
@@ -198,18 +249,17 @@ def main():
     ap.add_argument("--eval-seeds", type=int, default=40)
     args = ap.parse_args()
     if args.smoke:
-        args.iters, args.eval_seeds = 1, 8
+        args.iters, args.eval_seeds = 2, 8
 
     _p("=== PHASE 3: frustration -> dream self-improvement (v2.0 core) ===")
-    _p("    deploy -> dominant death cause -> sharpen that primitive -> repeat\n")
-    org, curve = dream_loop(iters=args.iters, eval_seeds=args.eval_seeds,
-                            router_seeds=60 if args.smoke else 120,
-                            fail_seeds=20 if args.smoke else 60)
+    _p("    DAgger aggregation + keep-best rollback + plateau escalation\n")
+    org, curve, best = dream_loop(iters=args.iters, eval_seeds=args.eval_seeds,
+                                  router_seeds=60 if args.smoke else 120,
+                                  fail_seeds=20 if args.smoke else 60)
 
     _p(f"\n=== SURVIVAL TRAJECTORY ===")
     _p("    " + "  ->  ".join(f"{s:.1f}" for s in curve))
-    _p(f"    start {curve[0]:.1f}  best {max(curve):.1f}  "
-       f"lift {max(curve) - curve[0]:+.1f}")
+    _p(f"    start {curve[0]:.1f}  best {best:.1f}  lift {best - curve[0]:+.1f}")
     _p("    bars: best single donor 58.3 | fire-master 87.4 | reactive 141.8")
     return 0
 
