@@ -57,6 +57,20 @@ _OPP_ACT = {ACTIONS.index("N"): "S", ACTIONS.index("S"): "N",
 # ----------------------------------------------------------------------
 # The fire oracle — the master with the wisdom
 # ----------------------------------------------------------------------
+# Default-off switch (session 015): when True, the masters' random-explore fallback
+# becomes a DETERMINISTIC, learnable default (top up water, else rest). Used to confirm
+# that the imitation/survival ceiling is the TEACHER'S stochasticity — not the substrate
+# or the percept (both cleared by imitation_ceiling.py). consolidate_base unaffected.
+EXPLORE_DETERMINISTIC = False
+
+
+def _explore(w):
+    if EXPLORE_DETERMINISTIC:
+        t = _toward(w, WATER)
+        return t if t is not None else ACTIONS.index("rest")
+    return int(torch.randint(0, 4, (1,)))
+
+
 def _near_fire(w):
     s = w.size
     return any(int(w.grid[(w.py + dy) % s, (w.px + dx) % s]) == FIRE
@@ -110,7 +124,7 @@ def fire_oracle(w):
         t = _toward(w, FOOD)
         if t is not None:
             return t
-    return int(torch.randint(0, 4, (1,)))   # explore
+    return _explore(w)                        # random (default) or deterministic fallback
 
 
 # ----------------------------------------------------------------------

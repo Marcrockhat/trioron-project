@@ -6,7 +6,10 @@
 native λ driver is `|w·g|` saliency, NOT Fisher** → world n=5 verdict (soft λ complements
 the hard freeze) → arena survival (world-ceiling, not lock-discriminating) → **fixed the
 MEMORY.md overflow that was silently dropping memories** (the actual anti-drift fix) +
-rediscovered the forgotten selective-quad capability + manual/spec/API updates
+rediscovered the forgotten selective-quad capability + manual/spec/API updates →
+**conclusive imitation-ceiling diagnosis: substrate & percept CLEARED; the survival cap is
+holistic imitation of partly-random masters → use the Pong Mode-E primitive-vocabulary +
+dream-loop recipe**
 
 > Rewritten in full every session; prior handoffs in git history. Session 014
 > (`e3ed911`) restored λ to v2 core. This session calibrates it, **corrects its driver**,
@@ -48,6 +51,21 @@ rediscovered the forgotten selective-quad capability + manual/spec/API updates
    adapt architecture to the problem. Pinned in manual §2.5 so it stops being forgotten.
 7. **Manual / spec / API updated** to match reality (λ restored, `|w·g|` driver, §2.5
    phenotype selection, spec §8.6 corrected, `epigenetic_lock` exported in the public API).
+8. **Conclusive imitation-ceiling diagnosis (Rocky: "test all of it then decide").** The
+   organism survives ~47/300 ≈ random while the masters survive 75-95. Built
+   `imitation_ceiling.py` (4-arm imitation-accuracy probe) + `det_teacher_confirm.py`
+   (toggles the masters' `torch.randint` fallback deterministic). Verdict, three
+   hypotheses: **(a) substrate too weak — FALSE** (trioron imitates at the MLP ceiling,
+   0.71-0.75 on the clean skill); **(b) percept hides the info — FALSE** (zero observability
+   gap, MLP-percept = MLP-full-state); **(c) teacher stochasticity + holistic imitation —
+   the cap** (deterministic teacher lifts trioron imitation fire 0.59→0.71, water
+   0.37→0.75, organism survival 44→51). The twist: the masters' randomness is *load-bearing*
+   (predator-evasion — deterministic masters survive far worse, 85→69 / 77→34). So pure
+   (Mode-B) imitation is capped at the teacher. **Decision: the Pong recipe** — clean
+   primitive donors (WARM/HYDRATE/FORAGE/**EVADE** = the missing primitive masquerading as
+   the masters' randomness) → absorb into a vocabulary organism → frustration→dream
+   self-improvement to exceed the teachers. **Substrate & perception are settled — stop
+   re-litigating them.** (memory `imitation-ceiling-diagnosis`.)
 
 ## Headline numbers
 
@@ -110,6 +128,15 @@ Uncommitted at handoff time (commit with this handoff):
 - **~/.claude/.../memory/MEMORY.md** — compressed 38.4 → 24.2 KB (NOT in repo; lives in
   ~/.claude, does not sync — that's why this handoff exists).
 
+Imitation-ceiling diagnosis (commit with this handoff):
+- **experiments/world/imitation_ceiling.py** — NEW. 4-arm imitation-accuracy probe
+  (chance / MLP-percept / MLP-full-state / trioron-substrate) → substrate & percept cleared.
+- **experiments/world/det_teacher_confirm.py** — NEW. Toggles the masters' random fallback
+  deterministic and re-measures imitation + survival → confirms teacher stochasticity is the cap.
+- **experiments/world/fire_taming.py / quest.py** — added `EXPLORE_DETERMINISTIC` flag
+  (default OFF; one shared global) + deterministic `_explore` fallback. consolidate_base unaffected.
+- `runs/` (LOCAL): `imitation_ceiling.log`, `det_teacher_confirm.log`.
+
 **Pre-existing, STILL DO NOT TOUCH**: `trioron/bases/developmental.py`,
 `trioron/lifecycle/developmental.py`, `trioron/viz/export.py` (carried session-005).
 
@@ -140,10 +167,16 @@ Uncommitted at handoff time (commit with this handoff):
 
 ## Open questions / next-up
 
-1. **Architecture vision (Rocky, this session): generalize problem-driven phenotype
-   selection** beyond quad — a divide-time selector that picks conv/attention/recurrent
-   from the problem's frustration signature. Its own arc; substrate's flat geometry is the
-   known obstacle for conv (`conv_by_emergence_null_result`).
+1. **THE next arc (now well-motivated by the imitation diagnosis): the Pong Mode-E recipe
+   for survival.** Stop holistic imitation. Build clean primitive donors —
+   WARM / HYDRATE / FORAGE / **EVADE** (the missing predator-evasion primitive) — each
+   individually learnable (proven ~0.75 fidelity); absorb into a vocabulary organism with a
+   router (`pong_vocabulary_organism` pattern); close the loop with frustration→dream
+   self-improvement to *exceed* the teachers (Pong −20→+1, Breakout above oracle). This is
+   the learn-to-*use* path, not learn-from.
+2. **Architecture vision (Rocky): generalize problem-driven phenotype selection** beyond
+   quad — a divide-time selector picking conv/attention/recurrent from the frustration
+   signature. Its own arc; flat substrate geometry blocks conv (`conv_by_emergence_null`).
 2. **(Deferred) λ sharpening** — competence-floor-before-consolidate + n=10 to make the
    FULL-vs-WG gap σ-confident; a LAMBDA-WG strength sweep. Lower priority (arc closed).
 3. **Routing to core** (carried from s014 open #2): `trioron.learning.route()` — the

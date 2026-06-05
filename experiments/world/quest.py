@@ -22,6 +22,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 # importing fire_taming sets the tamed-fire physics + gives us the fire master
+import experiments.world.fire_taming as _ft       # shared EXPLORE_DETERMINISTIC flag
 from experiments.world.fire_taming import fire_oracle, evaluate, TileWorld
 from experiments.world.tile_world import (
     ACTIONS, WATER, FOOD, BERRY, FIRE,
@@ -55,6 +56,9 @@ def water_master(w):
             return t
     if here in (FOOD, BERRY) and w.energy < 0.7:   # cheap opportunistic bite
         return ACTIONS.index("consume")
+    if _ft.EXPLORE_DETERMINISTIC:                  # deterministic learnable fallback
+        t = _toward(w, WATER)
+        return t if t is not None else ACTIONS.index("rest")
     return int(torch.randint(0, 4, (1,)))
 
 
