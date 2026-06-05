@@ -52,7 +52,11 @@ from trioron.learning.manifold import ManifoldArchive      # noqa: E402
 
 # the homeostatic context slice of the 77-d percept (scent+drives+night+predator)
 CTX_LO, CTX_HI = 63, 77
-PRIM_ORDER = ["WARM", "HYDRATE", "FORAGE", "EVADE"]
+# s018 split: WARM (seek-fire-when-cold) and FLEE (cool-when-hot) are now separate
+# primitives, so the router's cold->WARM / hot->FLEE choice is explicit instead of
+# bundled into one dual-role donor that defaulted to seeking fire (the 26/40
+# overheat ceiling). Order must match primitives.PRIMITIVES keys.
+PRIM_ORDER = ["WARM", "FLEE", "HYDRATE", "FORAGE", "EVADE"]
 
 
 # Routing is an URGENCY arbitration: at each step, address the drive nearest to
@@ -66,12 +70,24 @@ def _pred_prox(w):
     return 1.0 / (1.0 + abs(dx) + abs(dy))         # 1 adjacent, ->0 far
 
 
+# Heat ramps EARLIER than its raw fraction-to-lethal: heating is fast (0.04/step)
+# and lethal-overshoot-prone, while cooling is slow (~0.008-0.015/step), so the
+# router must engage WARM (flee mode) well before temp is near-lethal or flee-lag
+# guarantees overshoot. HEAT_GAMMA<1 makes heat-danger CONVEX-early (concave in
+# temp): at gamma=0.5, temp 0.7 reads danger 0.64 instead of 0.41, so WARM wins
+# the argmax sooner. gamma=1.0 recovers the original linear ramp. (s018 probe.)
+HEAT_GAMMA = 1.0
+
+
 def danger(w):
     """Per-drive danger in [0,1+]; fraction of the way from safe to lethal."""
     cold = max(0.0, (0.5 - w.temp) / 0.48)         # lethal cold at temp~0.02
     heat = max(0.0, (w.temp - 0.5) / 0.49)         # lethal heat at temp~0.99
+    if HEAT_GAMMA != 1.0 and heat > 0.0:
+        heat = heat ** HEAT_GAMMA                  # earlier FLEE engagement
     return {
-        "WARM": max(cold, heat),
+        "WARM": cold,                              # too cold -> seek fire
+        "FLEE": heat,                              # too hot  -> leave fire
         "HYDRATE": 1.0 - w.thirst,                 # lethal at thirst 0
         "FORAGE": 1.0 - w.energy,                  # lethal at energy 0
         "EVADE": _pred_prox(w),                    # predator closing in
@@ -139,7 +155,7 @@ class VocabularyOrganism:
     def __init__(self, donors, router):
         self.donors = donors           # {name: substrate}
         self.router = router
-        self.route_hist = [0, 0, 0, 0]
+        self.route_hist = [0] * len(PRIM_ORDER)
 
     @torch.no_grad()
     def act(self, w, p):
@@ -156,7 +172,7 @@ class ArbiterOrganism:
 
     def __init__(self, donors):
         self.donors = donors
-        self.route_hist = [0, 0, 0, 0]
+        self.route_hist = [0] * len(PRIM_ORDER)
 
     @torch.no_grad()
     def act(self, w, p):

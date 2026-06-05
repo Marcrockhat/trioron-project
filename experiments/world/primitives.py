@@ -49,7 +49,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 # importing fire_taming pins the tamed-fire physics (WARM_RATE=0.04 etc.) and
 # gives us the WARM master + the shared EXPLORE_DETERMINISTIC flag.
 import experiments.world.fire_taming as _ft           # noqa: E402
-from experiments.world.fire_taming import fire_oracle, evaluate, _near_fire  # noqa: E402
+from experiments.world.fire_taming import (              # noqa: E402
+    fire_oracle, evaluate, _near_fire, _toward, _away_from_fire,
+)
 from experiments.world.quest import water_master, food_master    # noqa: E402
 from experiments.world.mirror_cells import build_mirror, _solo   # noqa: E402
 from experiments.world.tile_world import (              # noqa: E402
@@ -100,13 +102,46 @@ def evade_master(w):
 
 
 # ----------------------------------------------------------------------
+# The FLEE/COOL master — the dedicated overheat skill (the split, session 018)
+# ----------------------------------------------------------------------
+# s018 probe verdict: the overheat ceiling (26/40) is the WARM donor's DUAL ROLE.
+# WARM had to seek-fire-when-cold AND flee-fire-when-hot; its default tendency is
+# to seek, so engaging it near fire at moderate temp keeps it approaching ->
+# overheat (and so even the privileged arbiter overheats 37/40). The fix is to
+# SPLIT the role: WARM seeks only, FLEE cools only. Each becomes a single-
+# direction nav skill with no temp x direction sign-flip (the s017 nonlinearity
+# requirement was an artefact of the dual role).
+def cool_flee_master(w):
+    """Temperature DUMP: always move away from the fire (and off it) to shed
+    heat; rest only when no fire is in scent range. Pure single-direction (never
+    approaches), so a linear donor can represent it — the half of WARM that the
+    dual-role donor could never commit to."""
+    here = int(w.grid[w.py, w.px])
+    if here == FIRE or _near_fire(w):
+        return _away_from_fire(w)            # off / out of the heat
+    t = _toward(w, FIRE)                      # step DOWN the fire gradient
+    if t is not None:
+        return ACTIONS.index(_OPP_ACT[t])
+    return ACTIONS.index("rest")             # no fire in range -> nothing to flee
+
+
+# ----------------------------------------------------------------------
 # Primitive registry: master + decision-band filter
 # ----------------------------------------------------------------------
 def _band_warm(w):
-    # temperature-management CONTEXT, not just "cold": include near-fire states
-    # (temp can be >0.5 there) so the donor also learns the critical LEAVE-before-
-    # overheat decisions — a temp<0.5-only band omits them and the donor overheats.
-    return w.temp < 0.5 or _near_fire(w)
+    # SEEK-only now (s018 split): the COLD regime where the skill is approach-fire
+    # / soak. The leave-before-overheat decisions moved to FLEE, so we exclude the
+    # warm-enough near-fire states (temp>=0.3 near fire = FLEE's territory). Band
+    # is temp<0.5 (not tighter): the oracle keeps temp near 0.5, so a tighter band
+    # starves the collection (a competent master tops up its own drive).
+    return w.temp < 0.5 and not (_near_fire(w) and w.temp >= 0.3)
+
+
+def _band_flee(w):
+    # the HEAT regime: on/near fire while warm enough to leave, or simply hot.
+    # These are exactly the leave/cool decisions split out of the old WARM band.
+    here = int(w.grid[w.py, w.px])
+    return w.temp >= 0.5 or here == FIRE or (_near_fire(w) and w.temp >= 0.3)
 
 
 # bands keep the states where the master is exercising its skill (navigating to /
@@ -125,11 +160,16 @@ def _band_evade(w):
     return max(abs(dx), abs(dy)) <= 2 or int(w.grid[w.py, w.px]) in (FIRE, POISON)
 
 
+# FLEE is collected under a fire_oracle BEHAVIOR (which soaks and overheats, so it
+# actually visits the heat states) but LABELED by cool_flee_master — a pure-flee
+# master never gets hot enough to demo its own skill (the behavior/labeler split).
 PRIMITIVES = {
-    "WARM":    dict(master=fire_oracle,  band=_band_warm,    drive="temperature"),
-    "HYDRATE": dict(master=water_master, band=_band_hydrate, drive="thirst"),
-    "FORAGE":  dict(master=food_master,  band=_band_forage,  drive="energy"),
-    "EVADE":   dict(master=evade_master, band=_band_evade,   drive="integrity"),
+    "WARM":    dict(master=fire_oracle,      band=_band_warm,    drive="temperature"),
+    "FLEE":    dict(master=cool_flee_master, band=_band_flee,    drive="overheat",
+                    behavior=fire_oracle),
+    "HYDRATE": dict(master=water_master,     band=_band_hydrate, drive="thirst"),
+    "FORAGE":  dict(master=food_master,      band=_band_forage,  drive="energy"),
+    "EVADE":   dict(master=evade_master,     band=_band_evade,   drive="integrity"),
 }
 
 
@@ -137,19 +177,25 @@ PRIMITIVES = {
 # Collect decision-band demos for one primitive
 # ----------------------------------------------------------------------
 @torch.no_grad()
-def collect(master_fn, band_fn, *, seeds=40, cap=900, max_steps=300):
-    """Run the master in the full world; keep (percept, action) where this
-    primitive's drive is the decision (band_fn True)."""
+def collect(master_fn, band_fn, *, seeds=40, cap=900, max_steps=300,
+            behavior_fn=None):
+    """Run a BEHAVIOR in the full world; keep (percept, LABEL) where this
+    primitive's drive is the decision (band_fn True). The world is STEPPED by
+    behavior_fn (defaults to master_fn) but the kept action is the master's
+    LABEL — decoupled so a primitive whose own master never visits its band
+    (e.g. a pure-flee master never overheats) can still be demoed by running a
+    state-generating behavior (e.g. fire_oracle soaks into the heat band)."""
+    behavior_fn = behavior_fn or master_fn
     P, Y = [], []
     for ep in range(seeds):
         w = TileWorld(seed=ep * 31 + 3, max_steps=max_steps)
         p = w.percept(); done = False
         while not done:
             keep = band_fn(w)
-            a = master_fn(w)
+            label = master_fn(w)             # the skill we want the donor to copy
             if keep:
-                P.append(p); Y.append(a)
-            p, _, done, _ = w.step(a)
+                P.append(p); Y.append(label)
+            p, _, done, _ = w.step(behavior_fn(w))   # who drives the world
             if len(P) >= cap:
                 break
         if len(P) >= cap:
@@ -237,16 +283,21 @@ def donor_act_fn(sub):
 # Build all four
 # ----------------------------------------------------------------------
 def build_all(*, seed=0, n_mirror=8, epochs=300, collect_seeds=40, cap=900,
-              eval_seeds=20, deterministic=False, do_eval=True, nonlinear=False):
+              eval_seeds=20, deterministic=False, do_eval=True, nonlinear=False,
+              only=None):
     _ft.EXPLORE_DETERMINISTIC = deterministic
-    print(f"=== PHASE 1: four clean primitive donors (v2.0 core) ===")
+    names = list(PRIMITIVES) if only is None else [n for n in PRIMITIVES if n in only]
+    print(f"=== PHASE 1: {len(names)} clean primitive donors (v2.0 core) ===")
+    print(f"building {names}")
     print(f"natural-explore collection (deterministic teacher = {deterministic})  "
           f"(seed={seed}, n_mirror={n_mirror}, epochs={epochs}, cap={cap}, "
           f"nonlinear/born-quad={nonlinear})\n")
     rows = []
-    for name, spec in PRIMITIVES.items():
+    for name in names:
+        spec = PRIMITIVES[name]
         P, Y = collect(spec["master"], spec["band"],
-                       seeds=collect_seeds, cap=cap)
+                       seeds=collect_seeds, cap=cap,
+                       behavior_fn=spec.get("behavior"))
         sub, acc, chance, maj = train_donor(P, Y, seed=seed, n_mirror=n_mirror,
                                             epochs=epochs, nonlinear=nonlinear)
         path = save_donor(sub, name, seed=seed, n_mirror=n_mirror,
@@ -325,13 +376,16 @@ def main():
                     help="born-quad donors (native DENDRITE gene, growth "
                          "suppressed) — needed for relational skills; pair with "
                          "more --epochs (quad saturates slowly)")
+    ap.add_argument("--only", nargs="+", default=None,
+                    help="rebuild only these primitives (e.g. --only WARM FLEE); "
+                         "leaves the others' saved donors untouched")
     args = ap.parse_args()
     if args.smoke:
         return smoke()
     build_all(seed=args.seed, n_mirror=args.n_mirror, epochs=args.epochs,
               collect_seeds=args.collect_seeds, cap=args.cap,
               eval_seeds=args.eval_seeds, deterministic=args.deterministic,
-              do_eval=not args.no_eval, nonlinear=args.nonlinear)
+              do_eval=not args.no_eval, nonlinear=args.nonlinear, only=args.only)
     return 0
 
 

@@ -1,129 +1,101 @@
 # Trioron Handoff
 
 **Session date:** 2026-06-05
-**Session number:** 017
-**Session title:** **Located the overheat ceiling.** The vocabulary organism's
-dominant death (overheat 26/40) the dream loop could never break is **routing-
-priority, not donor quality** — proven by building the *best possible* WARM donor
-and watching overheat stay *exactly* 26/40. The arc that got there falsified two
-elegant wrong levers (hand-coded hysteresis; a temporal "hysteresis primitive")
-and, via Rocky's **staged curriculum**, isolated the real donor wall:
-**nonlinearity + saturation**. Born-quad primitives lift survival **72.5 → 82.0**.
+**Session number:** 018
+**Session title:** **Broke the overheat ceiling — split the dual-role WARM donor.**
+S017 located the 26/40 overheat ceiling and called it routing-priority. The cheap
+probe (lever b: steepen heat-danger so WARM engages earlier) gave only 26→18 and the
+*privileged arbiter overheated WORSE* (37/40) — proving the real cause was the WARM
+donor's **dual role** (seek-fire-when-cold AND flee-when-hot, default = seek).
+**Fix: SPLIT it** — WARM seek-only + a dedicated **FLEE/COOL** donor. Result (n=40,
+deployable): **overheat 26→4, survival 82→152 (+85%), the organism now outlasts its
+best master 1.74× (151.7 vs 87.4).** A clean, deterministic, principled win that
+dwarfs s016's one-shot dream-loop 92.1.
 
-> Rewritten in full every session; prior handoffs in git history. Session 016
-> (`5864790`) built the Mode-E recipe and asked: stabilise the dream loop. This
-> session answered that (it's a one-shot rescue, now made to *stick*), then chased
-> the overheat ceiling to its true cause.
+> Rewritten in full every session; prior handoffs in git history. Session 017
+> (`85c5b07`) located the overheat ceiling and asked: attack the router. This
+> session did the cheap router probe (lever b), found it falsifies the
+> routing-priority framing, and split the primitive instead.
 
 ## Summary
 
-1. **Dream-loop stabilisation validated (the s016 next-up #1).** Ran
-   `dream_loop.py --iters 6` at n=40 (commit `21b061f`'s DAgger-aggregation +
-   keep-best-rollback + escalation). Result: `72.5 → 92.1 → 78.5 → 68.3 → 83.4 →
-   81.3 → 78.8`, **restored to 92.1**. The keep-best rollback **works** — the
-   +19.6 now sticks *deterministically* (every regressing iter is reverted) instead
-   of oscillating down. But it is **NOT monotone**: iter 1 captures the whole lift,
-   every later dream regresses. **DAgger aggregation actively hurts WARM** (462
-   corr → 92.1; 904 → 78.5; 1346 → 68.3 — more accumulated WARM correction
-   overshoots). One-shot rescue confirmed, matching Pong. **Overheat stays
-   dominant (~22–26/40) through every iter** → the ceiling is not the WARM donor.
+1. **Cheap probe (lever b) — REAL but MODEST, and it falsifies "routing-priority."**
+   Added a `HEAT_GAMMA` knob to `vocabulary.danger()` (gamma<1 = convex-early heat
+   ramp → WARM wins argmax sooner) and swept it n=40 (`router_probe.py`). Deployable
+   router: overheat 26→18 and survival 82→87 at gamma≈0.25–0.35 — a genuine paired
+   reduction (same seed set), but **not a ceiling-break**, and over-steepening
+   (gamma 0.15) collapses it (27/40). The tell: the **privileged ARBITER**
+   (perfect state, engages WARM whenever heat is argmax) overheats *worse* — 37/40,
+   and steepening makes it worse while survival craters (82→63). Earlier selection
+   is not the fix.
 
-2. **Hand-coded router hysteresis — DEAD END, and it inverts** (`hysteresis.py`).
-   Hypothesis: hold WARM across the temp-valley so it doesn't thrash. Reality: the
-   fire is a **trap** — `fire_taming` sets `WARM_RATE=0.04`/step heating vs
-   `~0.008` (day)/`0.015` (night) cooling. Forcing WARM-commitment (danger-
-   hysteresis) overheats **8/8**; the memoryless flip-flop was *protective*.
-   Routing inertia is the wrong tool.
+2. **Diagnosis: the WARM donor's DUAL ROLE is the wall.** WARM had to seek-fire-when-
+   cold AND flee-when-hot; its *default tendency is to seek*. Engaging/holding it near
+   fire at moderate temp keeps it approaching → overheat (this is why s017's hand-
+   coded hysteresis inverted: forcing WARM-commitment cooked 8/8; the flip-flop was
+   protective because other drives yanked it away). One donor owning two opposite
+   fire-behaviors caps the flee.
 
-3. **"Teach hysteresis as a temporal primitive" (Rocky's paradigm) — sound in
-   principle, NULL here** (`temporal_warm.py`). Built a recurrent WARM donor on the
-   native Axis-7 satellite machinery (`SatelliteOp` leaky trace + BPTT, the
-   `bench_temporal_gate` pattern), hysteretic master, ON vs OFF differing only in
-   `op.hold`. n=40: **both arms cold-collapse** (OFF 38/40, ON 37/40 cold), gap
-   +2.0 = noise. **Confounded:** the donor had to learn navigate-to-random-fire
-   AND the latch at once; navigation dominated and failed, so the latch was never
-   exercised. (Rocky's diagnostic Q: **yes, the world re-randomises every spawn** —
-   `TileWorld.reset` re-scatters fire/water/food/predator; agent always starts
-   dead-centre at temp 0.5; train/eval seeds disjoint. So "warm up" is scent-
-   following to a *random* location that must generalise — the entanglement.)
+3. **Fix: SPLIT (Rocky's pick).** WARM → seek-only (cold regime); new **FLEE** donor
+   (`cool_flee_master`, pure away-from-fire, collected under a `fire_oracle`
+   *behavior* that soaks/overheats but *labeled* by the flee master — the
+   behavior/labeler split, since a pure-flee master never gets hot enough to demo).
+   `danger()` now routes **cold→WARM / hot→FLEE** (HEAT_GAMMA steepens FLEE). 5-class
+   router.
 
-4. **Staged curriculum (Rocky's redesign) isolated the real wall**
-   (`warm_curriculum.py`). Decouple the skills:
-   - **Stage 0 navigate** — linear donor reaches fire **98%** on held-out worlds
-     (median 8 steps, peak temp 1.00) on only 0.53 action-fidelity (scent-following
-     is error-forgiving). **Navigation is not the wall.**
-   - **Stage 1 regulate** — the reactive **master holds the band (3/40 thermal**,
-     survives 65, dies of thirst); the hysteretic master 6/40. **Memory is NOT
-     needed for the control.** A **LINEAR** donor can't imitate it (34/40 thermal,
-     fid 0.515); a **NONLINEAR (quad)** donor halves it (**15/40**, fid 0.590,
-     surv 57.3) and dies of thirst like the master. **The wall is NONLINEARITY** —
-     regulation is `toward-fire-when-cold / away-when-hot`, a `temp × fire-
-     direction` *sign-flip interaction* a linear policy provably cannot represent
-     (`selective_quad_growth` / `substrate_was_purely_linear`), not memory.
+4. **The split BREAKS the ceiling.** Born-quad WARM+FLEE @800 ep. Standalone donors
+   are now decisive: WARM cooks 40/40 alone (seek-only, 82.8% fire-occupancy), FLEE
+   freezes 40/40 alone (flee-only, 0.5%). Routed together (n=40, gamma=1.0): **survival
+   151.7, overheat 4/40** (was 82.0 / 26). FLEE fidelity **0.973** > old dual WARM
+   0.917. Arbiter overheat 37→5, confirming structural.
 
-5. **Native selective-quad GROWTH works but is rate-limited by SATURATION**
-   (Rocky's catch). Uncapped adaptive growth (`grow_budget=None`, 50 MB envelope,
-   `build_mirror cap_bytes`) self-throttled at **76 cells / 73 quad** — but only
-   reached **27/40** (worse than 15). Cause: growth fires ~every 25 steps but a
-   **quad cell needs >400 epochs to saturate** (measured: linear saturates ep~50
-   at loss 0.93; born-quad still falling at ep800, loss 0.115). Cells churn before
-   they learn. **Decision (Rocky): suppress the growth triggers** → born-quad
-   (native DENDRITE gene at birth, developmental differentiation) **+ train to
-   saturation**. Thermal vs epochs: 100→**20**, 300→18, 500→13, **800→9** (→ the
-   master's 3/40 floor).
+5. **The ceiling MOVED to the predator.** With overheat solved the organism lives
+   151 steps (was 82), long enough that **integrity/predator (EVADE)** is now the
+   dominant death (19/40). FORAGE router recall is also weak (0.18 — its manifold
+   overlaps HYDRATE's "go-get-resource" context), but energy deaths are only 5/40 so
+   misroutes are benign. Both are the next levers.
 
-6. **Payoff — born-quad primitives lift survival but DON'T touch overheat.**
-   Rebuilt all four born-quad @ 800 ep (`primitives.py --nonlinear`). Vocabulary
-   probe: **survival 72.5 → 82.0 (+9.5), overheat UNCHANGED at exactly 26/40.**
-   The best WARM donor makes *zero* difference to overheat → **the ceiling is
-   ROUTING-priority**: heat danger ramps linearly in temp while heating is
-   0.04/step, so milder drives outrank it and the good WARM donor is never engaged
-   until temp is near-lethal (flee-lag then guarantees overshoot). **Donor lever
-   exhausted + successful; the router is the remaining lever.**
+6. **Bonus: the split dissolved s017's nonlinearity requirement.** The `temp ×
+   direction` sign-flip only existed because WARM was dual-role; each split donor is
+   now a single-direction nav skill. Born-quad was kept for safety (proven regime)
+   but **linear should suffice** — the cheaper untested option.
 
 ## Headline numbers
 
-**Dream loop (n=40, iters 6):** `72.5→92.1→78.5→68.3→83.4→81.3→78.8`, best/restored
-**92.1**. Keep-best rollback makes +19.6 *stick*; not monotone (one-shot).
+**Deployable vocabulary organism (n=40, manifold-route, full-cov):**
 
-**Stage 1 regulation (n=40 thermal deaths /40):**
+| config | survival | overheat /40 | dominant death |
+|---|---|---|---|
+| s017 dual-role WARM | 82.0 | **26** | overheat |
+| **s018 SPLIT, gamma=1.0** | **151.7** | **4** | integrity (19) |
+| s018 split, gamma=0.5 | 157.2 | 2 | integrity (but cold→12) |
+| s018 split, gamma=0.25 | 151.6 | 2 | integrity (17) |
 
-| arm | fidelity | survival | thermal | note |
-|---|---|---|---|---|
-| reactive master | — | 65.1 | **3** | holds band; dies of thirst (ceiling) |
-| LINEAR donor | 0.515 | 43.6 | 34 | can't imitate the sign-flip |
-| NONLINEAR (quad) | 0.590 | 57.3 | **15** | dies of thirst like master |
-| native grown (76c/73q) | 0.635 | 49.9 | 27 | growth outpaces saturation |
+**Context (n=40, split @ gamma=1.0):** routing acc **0.813** full-cov (chance 0.20;
+recall WARM .84 FLEE .85 HYDRATE .79 FORAGE **.18** EVADE .84). Arbiter (upper bound)
+178.7. Floors: random 49.8, reactive 141.8. Best single donor 58.1 (FORAGE). **Best
+master 87.4 (fire) → organism 151.7 = 1.74×.** Route usage WARM 15 / FLEE 9 /
+HYDRATE 34 / FORAGE 16 / EVADE 26 %.
 
-**Born-quad saturation (thermal /40 vs epochs):** 100→20, 200→18, 300→18, 500→13,
-**800→9**. (300-ep "oracle" was undertrained; quad saturates slowly.)
-
-**Born-quad primitive fidelity (@800 ep):** WARM 0.889→**0.917**, FORAGE 0.753→
-**0.886**, EVADE 0.917→**0.973** (up); HYDRATE 0.533→**0.477** (down — balanced
-nav, not relational, slow saturation cost it).
-
-**Vocabulary (n=40):** linear **72.5 / overheat 26** → born-quad **82.0 / overheat
-26**. Route usage WARM 42 / HYDRATE 22 / FORAGE 9 / EVADE 28 %.
+**Probe (lever b, dual-role, n=40):** deployable 26→18 @gamma 0.25; arbiter 37→29
+(survival 82→63). Falsified as a ceiling-break.
 
 ## What was done (files)
 
-Committed `fdafe37` this session.
-- **NEW `experiments/world/hysteresis.py`** — router-inertia falsification
-  (`HysteresisOrganism` / `DangerHysteresisOrganism`, margin×dwell sweep).
-- **NEW `experiments/world/temporal_warm.py`** — recurrent WARM via `SatelliteOp`
-  (Axis-7), `HystereticWarm` master, ON-vs-OFF BPTT. Null/confounded.
-- **NEW `experiments/world/warm_curriculum.py`** — staged curriculum: `stage0`
-  (navigate), `stage1` (linear vs nonlinear regulate), `train_donor_native` +
-  `stage1_native` (uncapped selective quad growth), `eval_regulate`. `--stage N`.
-- **`experiments/world/primitives.py`** — `nonlinear`/born-quad threaded through
-  `train_donor` / `save_donor` / `load_donor` (back-compat: missing flag = linear)
-  / `build_all` / `--nonlinear` CLI.
-- **`experiments/world/mirror_cells.py`** — `build_mirror(cap_bytes=…)` for
-  uncapped self-organising growth.
-- **`runs/` (LOCAL, NOT committed):** `dream_loop_stabilized_iters6.log`,
-  `temporal_warm_n3.log`, `warm_curriculum_stage{0,1,1_nl,2_native_uncapped}.log`,
-  `primitives_bornquad_build.log`. **`runs/primitives/*.pt` are now BORN-QUAD**
-  (overwrote linear); **linear backup at `runs/primitives_linear_backup/`**.
+Committed this session (see git log).
+- **`experiments/world/vocabulary.py`** — `HEAT_GAMMA` knob; `danger()` split into
+  WARM=cold / FLEE=heat; `PRIM_ORDER` → 5 classes; `route_hist` generalised to
+  `len(PRIM_ORDER)`. Everything else iterates PRIM_ORDER so it scaled automatically.
+- **`experiments/world/primitives.py`** — `cool_flee_master`; `_band_warm` now
+  seek-only (temp<0.5 excl. leave-decisions); new `_band_flee`; `collect()` gains a
+  `behavior_fn` (behavior/labeler split); `PRIMITIVES` adds FLEE (behavior=fire_oracle);
+  `build_all` + `--only NAME...` to rebuild a subset.
+- **NEW `experiments/world/router_probe.py`** — gamma sweep, arbiter + routed arms.
+- **`runs/` (LOCAL, NOT committed):** `router_probe_gamma_sweep.log` (dual-role
+  probe), `primitives_split_warm_flee_build.log`, `router_probe_split.log`,
+  `vocabulary_split_n40.log`. **`runs/primitives/WARM.pt` + `FLEE.pt` are now the
+  SPLIT born-quad donors**; old dual-role WARM backed up at
+  `runs/primitives/WARM_dualrole_backup.pt`. HYDRATE/FORAGE/EVADE born-quad untouched.
 
 **Pre-existing, STILL DO NOT TOUCH** (carried since s005, left uncommitted):
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
@@ -131,72 +103,70 @@ Committed `fdafe37` this session.
 
 ## Key findings
 
-1. **The overheat ceiling is ROUTING, not the donor.** The best WARM donor
-   (born-quad, 9/40 thermal standalone) leaves vocabulary overheat at *exactly*
-   26/40. Donor-sharpening (incl. the entire dream loop) cannot break it.
-2. **The donor wall was NONLINEARITY + SATURATION, not memory.** Regulation is a
-   `temp × direction` sign-flip → needs the quad (DENDRITE) gene; quad saturates
-   slowly (>400 ep), so born-quad must be trained ~800 ep, not 300.
-3. **Memory/anticipation belongs at the ROUTER, not the donor.** Reactive control
-   holds the band (master 3/40); the donor never needed memory. The router *does*
-   need to anticipate the temp rise to pre-engage WARM. (Rocky's instinct, right
-   layer.)
-4. **Selective quad growth needs saturation-gating.** Native growth works and
-   self-throttles, but firing faster than cells saturate = churn. Either suppress
-   it (born-quad) or reset the frustration detector per growth so each cohort
-   saturates first.
-5. **Born-quad is a principled +9.5 survival** (72.5→82.0) — a cleaner gain than
-   the dream loop's one-shot 92.1, and stackable with a router fix.
+1. **A single donor that must do two OPPOSITE things caps the policy.** Splitting it
+   into one-primitive-per-drive-DIRECTION (the Mode-E doctrine taken literally) beat
+   every router-side fix. Overheat 26→4, survival +85%, 1.74× the best master.
+2. **"Routing-priority" was the wrong framing** for the overheat ceiling. The
+   privileged arbiter overheating *worse* than the learned router (37 vs 26) was the
+   diagnostic: the bottleneck was donor structure, not selection timing.
+3. **The behavior/labeler split** lets you demo a primitive whose own master never
+   visits its band (pure-flee never overheats) — run a state-generating behavior,
+   keep the master's label.
+4. **Splitting can dissolve a nonlinearity requirement.** s017 proved WARM needed the
+   quad gene; the split removed the sign-flip, so each donor is linearly representable.
+5. **HEAT_GAMMA is a minor secondary lever** post-split (overheat 4→2) but trades cold
+   deaths; gamma=1.0 is the clean deploy default.
 
 ## Decisions made
 
-- **Born-quad primitives** (native DENDRITE gene at birth, **growth triggers
-  suppressed**) + **train to saturation (~800 ep)** — Rocky. The primitive build.
-- **Recipe built on v2.0 core** throughout; the recurrent path used the native
-  satellite/Axis-7 machinery, not a bolt-on.
-- **runs/primitives/ overwritten with born-quad**; linear set preserved at
-  `runs/primitives_linear_backup/` for A/B.
+- **SPLIT WARM into seek-only + dedicated FLEE** — Rocky (chose it over router
+  anticipation / bank-and-stop). The session's main result.
+- **Deploy at gamma=1.0** (the split does the work; steepening adds cold deaths).
+- **Born-quad WARM+FLEE @800 ep** kept for safety; linear flagged as cheaper-next.
+- **runs/primitives/WARM.pt overwritten** with seek-only; dual-role preserved at
+  `WARM_dualrole_backup.pt`.
 
 ## Open questions / next-up
 
-1. **ATTACK THE ROUTER (the overheat lever).** Overheat 26/40 is routing-priority.
-   Two candidates: (a) **anticipatory WARM engagement** — router senses temp
-   rising fast (the temporal/memory instinct, at the router) and pre-engages WARM
-   before heat-danger wins the argmax; (b) **steeper heat-danger ramp** in
-   `vocabulary.danger()` (heuristic quick-check of whether earlier engagement alone
-   breaks 26/40). Do (b) first as a cheap probe, then (a) natively.
-2. **HYDRATE born-quad regressed** (0.533→0.477). Balanced 5-way nav isn't
-   relational; quad's slow saturation hurt it at equal epochs. Consider per-
-   primitive: born-quad only where relational (WARM/EVADE), linear where nav-like
-   (HYDRATE/FORAGE) — or more epochs for HYDRATE.
-3. **Stack it:** with the router fix, re-probe + re-run the dream loop on born-quad
-   donors — does survival clear 92 *robustly* (vs the one-shot)?
-4. **Cross-PC:** `runs/` doesn't sync. On another PC, rebuild born-quad donors:
-   `python3 -m experiments.world.primitives --nonlinear --epochs 800
-   --collect-seeds 60 --cap 1500 --no-eval` before any vocabulary/dream_loop run.
-5. **Promote the router to core** (open since s014) — settle the argmax-danger
-   full-cov manifold router (+ any anticipation) into `trioron.learning.route`.
+1. **ATTACK THE PREDATOR (the new ceiling).** Integrity/EVADE is now the dominant
+   death (19/40). The EVADE donor solo is weak (49.1) and evade-master only 44.6 —
+   the master itself may be the wall (echoing the s015 imitation-ceiling story for a
+   harder skill). Probe: is EVADE a donor problem, a router problem (EVADE recall is
+   high 0.84, so probably donor/master), or does it need anticipation?
+2. **FIX FORAGE ROUTING (recall 0.18).** Its manifold overlaps HYDRATE. Cheap probe:
+   does a sharper context slice or per-class prior separate them? Low stakes (energy
+   deaths 5/40) but it's a clean routing bug.
+3. **Try LINEAR WARM/FLEE** — the split predicts linear suffices (no sign-flip). If it
+   matches born-quad it's faster to build and a cleaner paper claim.
+4. **Re-run the dream loop on the split organism** — does self-improvement now clear
+   the predator ceiling, or stack on 152?
+5. **Cross-PC rebuild** (`runs/` doesn't sync): rebuild ALL five donors:
+   `python3 -m experiments.world.primitives --nonlinear --epochs 800 --collect-seeds 60
+   --cap 1500 --no-eval` (now builds WARM, FLEE, HYDRATE, FORAGE, EVADE).
+6. **Promote the router to core** (open since s014) — the argmax-danger full-cov
+   manifold router into `trioron.learning.route`.
 
 ## Pointers
 
-- Curriculum: `warm_curriculum.py --stage {0,1,2}`. Saturation probe was inline
-  (see `runs/` logs). Masters: reactive/hysteretic in `warm_curriculum` /
-  `temporal_warm`; the registry WARM master is `fire_taming.fire_oracle`.
-- Recurrent machinery: `experiments/satellites_v1.py` (`SatelliteOp`, `add_satellite`),
-  `experiments/bench_temporal_gate.py` (BPTT). Quad gene: `trioron/phenotype/dendrite.py`
-  (σ(z)=z+z²); seeded born-quad via `seeded(..., nonlinear=True)` → DENDRITE bit.
-- Native growth: `experiments/selective_quad_growth.py` (the adaptive arm).
-- Temp physics: `fire_taming` sets `WARM_RATE=0.04`, `TEMP_LOW=0.02`,
-  `TEMP_HIGH=0.99`; cooling 0.008 day / 0.015 night (`tile_world.step`).
-- Vocabulary/router: `vocabulary.py` (`build_vocabulary`, `danger`,
-  `argmax_danger`); probe: `dream_loop.probe`.
+- Probe: `python3 -m experiments.world.router_probe --gammas 1.0 0.5 0.35 0.25`
+  (arbiter + routed; `--arbiter-only` for the cheap arm).
+- Vocabulary: `python3 -m experiments.world.vocabulary --eval-seeds 40` (5-class).
+- Split donors: `primitives.py --only WARM FLEE --nonlinear --epochs 800
+  --collect-seeds 60 --cap 1500`. FLEE master = `cool_flee_master`; bands
+  `_band_warm`/`_band_flee`; behavior/labeler split in `collect(behavior_fn=...)`.
+- Router danger: `vocabulary.danger()` (WARM=cold, FLEE=heat; `HEAT_GAMMA` steepens
+  FLEE), `argmax_danger`, `VocabularyRouter` (full-cov manifold over the 14-d ctx slice).
+- Temp physics: `fire_taming` sets `WARM_RATE=0.04`, `TEMP_LOW=0.02`, `TEMP_HIGH=0.99`;
+  cooling 0.008 day / 0.015 night. Death causes: `fire_taming._cause`.
+- Masters: `fire_oracle` (WARM/seek), `cool_flee_master` (FLEE), `water_master`,
+  `food_master`, `evade_master`.
 
 ## Environment notes
 
 - `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12,
-  torch 2.11.0+cu130, WSL2, 12 cores, 7.4 GiB. `python3`, `OMP_NUM_THREADS=8`.
-- World benches CPU-bound. Born-quad @800 ep × 4 primitives ≈ 10–15 min; quad is
-  a SLOW learner — budget epochs accordingly. Survival σ ≈ ±9–12 (single-seed eval).
-- Born-quad donors strictly dominate linear in capacity (σ(z)=z+z² contains z) but
-  cost saturation time; uncapped growth deliberately exceeds the Phase-1 50K-param
-  contract (exploration only — a shipped donor compacts back under the envelope).
+  torch 2.11.0+cu130, WSL2, 12 cores. `python3`, `OMP_NUM_THREADS=8`.
+- Born-quad @800 ep × 2 donors ≈ 5 min; the full 5-donor rebuild ≈ 12–15 min.
+- Survival eval is single-seed-set n=40; σ ≈ ±9–12, so the 82→152 jump is ~6–7σ and
+  the death-cause counts are paired over identical seeds — robust without multi-seed.
+- World benches CPU-bound. Uncapped born-quad growth deliberately exceeds the Phase-1
+  50K-param contract (exploration only).
