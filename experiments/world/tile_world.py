@@ -103,10 +103,25 @@ class TileWorld:
         dist = max(1.0, float(d2[i]) ** 0.5)
         return torch.tensor([float(dx[i]) / dist, float(dy[i]) / dist]) / dist
 
+    def _pred_scent(self):
+        """Direction to the predator (toroidal, unit) + proximity. The threat
+        must be PERCEIVABLE to be evaded — before this the predator lived only in
+        self.pred (never in the grid, never in the percept), so EVADE was
+        unlearnable from the percept (action uncorrelated with anything seen).
+        Added for the Mode-E EVADE primitive (2026-06-05). Appended at the END so
+        existing percept slicing [63:69]/[69:73]/[73:74] is unchanged."""
+        s = self.size
+        dx = ((self.pred[0] - self.px + s // 2) % s) - s // 2
+        dy = ((self.pred[1] - self.py + s // 2) % s) - s // 2
+        dist = max(1.0, float(dx * dx + dy * dy) ** 0.5)
+        prox = 1.0 / (1.0 + abs(dx) + abs(dy))         # 1 when adjacent, →0 far
+        return torch.tensor([dx / dist, dy / dist, float(prox)])
+
     # ── percept (state vector, no pixels) ─────────────────────────
     def percept(self):
         """Local 3×3 view (63) + scent gradients to food/water/fire (6) +
-        interoception drives (4) + night flag (1) = 74-d. No pixels."""
+        interoception drives (4) + night flag (1) + predator scent (3) = 77-d.
+        No pixels."""
         s = self.size
         feats = []
         for dy in (-1, 0, 1):
@@ -120,7 +135,8 @@ class TileWorld:
         scent = torch.cat([self._scent(FOOD), self._scent(WATER), self._scent(FIRE)])
         intero = torch.tensor([self.energy, self.thirst, self.integrity, self.temp])
         phase = torch.tensor([1.0 if self.is_night else 0.0])
-        return torch.cat([local, scent, intero, phase])  # 74
+        pred = self._pred_scent()                      # 3 — the threat is now visible
+        return torch.cat([local, scent, intero, phase, pred])  # 77
 
     # ── dynamics ──────────────────────────────────────────────────
     def step(self, action_idx):

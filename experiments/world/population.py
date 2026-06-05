@@ -38,7 +38,7 @@ from trioron.bases import seeded
 from trioron.phenotype import default_dispatch_table
 from experiments.world.tile_world import TileWorld, N_ACTION
 
-PERCEPT_DIM = 74
+PERCEPT_DIM = 77
 
 
 def make_sub(seed):

@@ -34,7 +34,7 @@ from experiments.world.tile_world import (
     TileWorld, N_ACTION, run_random, run_reactive,
 )
 
-PERCEPT_DIM = 74   # matches TileWorld.percept() (with scent)
+PERCEPT_DIM = 77   # matches TileWorld.percept() (scent + predator scent)
 
 
 def build(seed, nonlinear=False):

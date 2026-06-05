@@ -33,7 +33,7 @@ from trioron.phenotype import default_dispatch_table
 from experiments.world.tile_world import TileWorld, N_ACTION
 from experiments.world.numa import contrast_targets, NumaLedger, N_PAIR
 
-PERCEPT_DIM = 74
+PERCEPT_DIM = 77
 N_OUT = N_ACTION + N_PAIR     # value head ⊕ pair-prediction head
 
 

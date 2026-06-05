@@ -53,7 +53,7 @@ from trioron.phenotype import default_dispatch_table
 from experiments.world.tile_world import TileWorld, N_ACTION
 from experiments.world.organism_v1 import PERCEPT_DIM
 
-# Input layout the mirror organism expects: [percepts(74) | obs_action(6)] = 80.
+# Input layout the mirror organism expects: [percepts(77) | obs_action(6)] = 83.
 OBS_DIM = N_ACTION
 INPUT_DIM = PERCEPT_DIM + OBS_DIM
 
