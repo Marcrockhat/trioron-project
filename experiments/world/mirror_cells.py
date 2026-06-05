@@ -90,12 +90,16 @@ def add_mirror_cell(arena, src_interior, src_obs, dst_out, seed_w=0.1):
     return cid
 
 
-def build_mirror(seed, *, n_mirror=8, nonlinear=False, capacity=2048):
-    """Organism with an observation channel + mirror cells over a seeded core."""
+def build_mirror(seed, *, n_mirror=8, nonlinear=False, capacity=2048,
+                 cap_bytes=400_000):
+    """Organism with an observation channel + mirror cells over a seeded core.
+
+    cap_bytes / capacity bound growth; raise both for uncapped self-organising
+    growth (bounded then only by the substrate's own frustration self-throttling)."""
     torch.manual_seed(seed)
     sub = construct(
         base=seeded(INPUT_DIM, N_ACTION, interior_cells=32, nonlinear=nonlinear),
-        envelope=Envelope(max_parameter_bytes=400_000),
+        envelope=Envelope(max_parameter_bytes=cap_bytes),
         dispatch_table=default_dispatch_table(), capacity=capacity, sparsity_k=0,
     )
     sub.compile()

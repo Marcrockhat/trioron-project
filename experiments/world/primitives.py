@@ -164,10 +164,16 @@ def collect(master_fn, band_fn, *, seeds=40, cap=900, max_steps=300):
 # ----------------------------------------------------------------------
 # Train + evaluate one primitive donor (v2.0 core substrate, supervised CE)
 # ----------------------------------------------------------------------
-def train_donor(P, Y, *, seed=0, n_mirror=8, epochs=300, lr=3e-3, batch=128):
+def train_donor(P, Y, *, seed=0, n_mirror=8, epochs=300, lr=3e-3, batch=128,
+                nonlinear=False):
     """Supervised imitation on the mirror substrate (same arm as
     imitation_ceiling.train_eval_substrate, but the substrate is RETURNED so it
-    can be persisted as a donor). 80/20 split -> (substrate, held-out accuracy)."""
+    can be persisted as a donor). 80/20 split -> (substrate, held-out accuracy).
+
+    nonlinear=True gives the interior cells the native quad (DENDRITE) gene at
+    birth — developmental differentiation, growth triggers suppressed — needed
+    for relational skills (e.g. WARM's temp x fire-direction interaction) that a
+    pure-linear donor cannot represent."""
     torch.manual_seed(seed)
     n = P.shape[0]
     perm = torch.randperm(n, generator=torch.Generator().manual_seed(0))
@@ -175,7 +181,7 @@ def train_donor(P, Y, *, seed=0, n_mirror=8, epochs=300, lr=3e-3, batch=128):
     tr, te = perm[:ntr], perm[ntr:]
     Ptr, Ytr, Pte, Yte = P[tr], Y[tr], P[te], Y[te]
 
-    sub = build_mirror(seed, n_mirror=n_mirror)
+    sub = build_mirror(seed, n_mirror=n_mirror, nonlinear=nonlinear)
     opt = torch.optim.Adam(sub.trainable_tensors(), lr=lr)
     ce = torch.nn.functional.cross_entropy
     ntr = Ptr.shape[0]
@@ -194,11 +200,12 @@ def train_donor(P, Y, *, seed=0, n_mirror=8, epochs=300, lr=3e-3, batch=128):
     return sub, acc, chance, maj
 
 
-def save_donor(sub, name, *, seed, n_mirror, acc, chance, drive):
+def save_donor(sub, name, *, seed, n_mirror, acc, chance, drive, nonlinear=False):
     PRIM_DIR.mkdir(parents=True, exist_ok=True)
     path = PRIM_DIR / f"{name}.pt"
     torch.save({
         "name": name, "drive": drive, "seed": seed, "n_mirror": n_mirror,
+        "nonlinear": nonlinear,
         "bias": sub.arena.bias.detach().clone(),
         "edge_weight": sub.arena.edge_weight.detach().clone(),
         "fidelity": acc, "chance": chance,
@@ -207,9 +214,11 @@ def save_donor(sub, name, *, seed, n_mirror, acc, chance, drive):
 
 
 def load_donor(path):
-    """Rebuild the substrate from (seed, n_mirror) and load its trained weights."""
+    """Rebuild the substrate from (seed, n_mirror, nonlinear) and load weights.
+    Older donors saved without the flag default to linear (back-compat)."""
     d = torch.load(path, weights_only=False)
-    sub = build_mirror(d["seed"], n_mirror=d["n_mirror"])
+    sub = build_mirror(d["seed"], n_mirror=d["n_mirror"],
+                       nonlinear=d.get("nonlinear", False))
     with torch.no_grad():
         sub.arena.bias.copy_(d["bias"])
         sub.arena.edge_weight.copy_(d["edge_weight"])
@@ -228,19 +237,21 @@ def donor_act_fn(sub):
 # Build all four
 # ----------------------------------------------------------------------
 def build_all(*, seed=0, n_mirror=8, epochs=300, collect_seeds=40, cap=900,
-              eval_seeds=20, deterministic=False, do_eval=True):
+              eval_seeds=20, deterministic=False, do_eval=True, nonlinear=False):
     _ft.EXPLORE_DETERMINISTIC = deterministic
     print(f"=== PHASE 1: four clean primitive donors (v2.0 core) ===")
     print(f"natural-explore collection (deterministic teacher = {deterministic})  "
-          f"(seed={seed}, n_mirror={n_mirror}, epochs={epochs}, cap={cap})\n")
+          f"(seed={seed}, n_mirror={n_mirror}, epochs={epochs}, cap={cap}, "
+          f"nonlinear/born-quad={nonlinear})\n")
     rows = []
     for name, spec in PRIMITIVES.items():
         P, Y = collect(spec["master"], spec["band"],
                        seeds=collect_seeds, cap=cap)
         sub, acc, chance, maj = train_donor(P, Y, seed=seed, n_mirror=n_mirror,
-                                            epochs=epochs)
+                                            epochs=epochs, nonlinear=nonlinear)
         path = save_donor(sub, name, seed=seed, n_mirror=n_mirror,
-                          acc=acc, chance=chance, drive=spec["drive"])
+                          acc=acc, chance=chance, drive=spec["drive"],
+                          nonlinear=nonlinear)
         surv = None
         if do_eval:
             surv, _, _ = evaluate(donor_act_fn(sub), f"{name}-donor",
@@ -310,13 +321,17 @@ def main():
     ap.add_argument("--deterministic", action="store_true",
                     help="collect under deterministic teachers (default: natural "
                          "stochastic explore — needed for navigation demos)")
+    ap.add_argument("--nonlinear", action="store_true",
+                    help="born-quad donors (native DENDRITE gene, growth "
+                         "suppressed) — needed for relational skills; pair with "
+                         "more --epochs (quad saturates slowly)")
     args = ap.parse_args()
     if args.smoke:
         return smoke()
     build_all(seed=args.seed, n_mirror=args.n_mirror, epochs=args.epochs,
               collect_seeds=args.collect_seeds, cap=args.cap,
               eval_seeds=args.eval_seeds, deterministic=args.deterministic,
-              do_eval=not args.no_eval)
+              do_eval=not args.no_eval, nonlinear=args.nonlinear)
     return 0
 
 
