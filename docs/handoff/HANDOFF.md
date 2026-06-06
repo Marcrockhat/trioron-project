@@ -1,216 +1,162 @@
 # Trioron Handoff
 
-**Session date:** 2026-06-05
-**Session number:** 018
-**Session title:** **Broke the overheat ceiling — split the dual-role WARM donor.**
-S017 located the 26/40 overheat ceiling and called it routing-priority. The cheap
-probe (lever b: steepen heat-danger so WARM engages earlier) gave only 26→18 and the
-*privileged arbiter overheated WORSE* (37/40) — proving the real cause was the WARM
-donor's **dual role** (seek-fire-when-cold AND flee-when-hot, default = seek).
-**Fix: SPLIT it** — WARM seek-only + a dedicated **FLEE/COOL** donor. Result (n=40,
-deployable): **overheat 26→4, survival 82→152 (+85%), the organism now outlasts its
-best master 1.74× (151.7 vs 87.4).** A clean, deterministic, principled win that
-dwarfs s016's one-shot dream-loop 92.1.
+**Session date:** 2026-06-06
+**Session number:** 019
+**Session title:** **Built the whole reflex-vs-wisdom arc (A→D) — D wins both axes.**
+S018 designed the arc (decisions locked) but wrote no code. This session built it end
+to end: a common, policy-agnostic **Numa harness** (`experiments/world/arc.py`) plus
+all four arms — **A Reflex** (imitation), **B Wisdom** (curiosity/learning-progress),
+**C Reward** (TD on world reward), **D Synthesis** (reflex→wisdom). Headline (n=200,
+density axis): **D is the only arm that is A-class on survival AND ≥B-class on learning
+at the same time** — the reflex→wisdom thesis confirmed, with honest single-seed
+caveats. Two mid-session fixes (Rocky-approved) made the comparison fair.
 
-> Rewritten in full every session; prior handoffs in git history. Session 017
-> (`85c5b07`) located the overheat ceiling and asked: attack the router. This
-> session did the cheap router probe (lever b), found it falsifies the
-> routing-priority framing, and split the primitive instead.
+> Rewritten in full every session; prior handoffs in git history. Session 018
+> (`c3ac808`) locked the arc design and asked for A→D. This session built and ran all
+> four arms and resolved the comparison.
 
 ## Summary
 
-1. **Cheap probe (lever b) — REAL but MODEST, and it falsifies "routing-priority."**
-   Added a `HEAT_GAMMA` knob to `vocabulary.danger()` (gamma<1 = convex-early heat
-   ramp → WARM wins argmax sooner) and swept it n=40 (`router_probe.py`). Deployable
-   router: overheat 26→18 and survival 82→87 at gamma≈0.25–0.35 — a genuine paired
-   reduction (same seed set), but **not a ceiling-break**, and over-steepening
-   (gamma 0.15) collapses it (27/40). The tell: the **privileged ARBITER**
-   (perfect state, engages WARM whenever heat is argmax) overheats *worse* — 37/40,
-   and steepening makes it worse while survival craters (82→63). Earlier selection
-   is not the fix.
+1. **Common Numa harness (`arc.py`).** One **external observer** — a small trioron
+   substrate with ONLY the 5-d contrastive-pair head — rides along an arm's life and
+   learns to predict next-step pairs from the states the arm's policy visits.
+   `NumaLedger` scores held-out (dream) loss-drops as **Numa**, train-only drops as
+   **Mima**. **Identical across all arms** (the fairness contract); only the POLICY
+   DRIVER differs. `run_arm(agent, …)` agent protocol: `.act` required; `.learn` /
+   `.start_episode` / `.diagnostics` optional. Survival uses fire_taming's `ep*7000+7`
+   seed set → directly comparable to s018's 151.7.
 
-2. **Diagnosis: the WARM donor's DUAL ROLE is the wall.** WARM had to seek-fire-when-
-   cold AND flee-when-hot; its *default tendency is to seek*. Engaging/holding it near
-   fire at moderate temp keeps it approaching → overheat (this is why s017's hand-
-   coded hysteresis inverted: forcing WARM-commitment cooked 8/8; the flip-flop was
-   protective because other drives yanked it away). One donor owning two opposite
-   fire-behaviors caps the flee.
+2. **Arm A (Reflex)** = the frozen s018 vocabulary organism (5 donors + manifold
+   router) as policy (`FrozenPolicy`). Reproduces s018 exactly (survival 151.7 @ n=40).
 
-3. **Fix: SPLIT (Rocky's pick).** WARM → seek-only (cold regime); new **FLEE** donor
-   (`cool_flee_master`, pure away-from-fire, collected under a `fire_oracle`
-   *behavior* that soaks/overheats but *labeled* by the flee master — the
-   behavior/labeler split, since a pure-flee master never gets hot enough to demo).
-   `danger()` now routes **cold→WARM / hot→FLEE** (HEAT_GAMMA steepens FLEE). 5-class
-   router.
+3. **Arms B & C = a shared `TDAgent`**, differing ONLY in reward source (clean
+   ablation). One driver substrate: value head (acts ε-greedy) + its OWN pair
+   world-model (separate from the neutral observer → Numa stays orthogonal to the
+   driver). **B** reward = normalized **learning-progress** `r_int = relu(err_before −
+   err_after)` (Rocky's pick over raw-novelty/ensemble — noisy-TV immune); **C** reward
+   = world reward `r` (organism_v2 scaffold), pair head a trained passenger.
 
-4. **The split BREAKS the ceiling.** Born-quad WARM+FLEE @800 ep. Standalone donors
-   are now decisive: WARM cooks 40/40 alone (seek-only, 82.8% fire-occupancy), FLEE
-   freezes 40/40 alone (flee-only, 0.5%). Routed together (n=40, gamma=1.0): **survival
-   151.7, overheat 4/40** (was 82.0 / 26). FLEE fidelity **0.973** > old dual WARM
-   0.917. Arbiter overheat 37→5, confirming structural.
+4. **Two fixes that made the comparison fair (Rocky-approved):**
+   - **Normalize `r_int`.** Raw Δerror is ~1e-3 — too weak to move the TD value head, so
+     arm B was acting ≈ randomly (survival = random floor). Normalizing by running scale
+     → O(1) (`r_int mean ≈ 1.0`) makes B a *real* curiosity agent.
+   - **Density axis.** Raw *total* net Numa is survival-confounded (a longer life feeds
+     the observer more experience → more Numa for free). Canonical axis is now **net
+     Numa DENSITY = net per 1k env steps**; survival stays the separate gate.
 
-5. **The ceiling MOVED to the predator.** With overheat solved the organism lives
-   151 steps (was 82), long enough that **integrity/predator (EVADE)** is now the
-   dominant death (19/40). FORAGE router recall is also weak (0.18 — its manifold
-   overlaps HYDRATE's "go-get-resource" context), but energy deaths are only 5/40 so
-   misroutes are benign. Both are the next levers.
+5. **Arm D (Synthesis) = D1 urgency-gated** (Rocky: "D1 now, D2 after").
+   `GatedReflexWisdom`: frozen reflex acts when `max danger ≥ θ` (=0.5) to SURVIVE;
+   curiosity `TDAgent` acts in the safe slack to LEARN, and learns **off-policy from
+   every transition** so its world-model stays complete. The reflex is a safety net.
 
-6. **Bonus: the split dissolved s017's nonlinearity requirement.** The `temp ×
-   direction` sign-flip only existed because WARM was dual-role; each split donor is
-   now a single-direction nav skill. Born-quad was kept for safety (proven regime)
-   but **linear should suffice** — the cheaper untested option.
-
-7. **Designed the next arc (no code yet) — reflex vs wisdom.** Rocky's point: the
-   primitives are *imitated*, not *discovered* — an organism should discover its own.
-   Specced a head-to-head of skill-acquisition drivers (imitation / curiosity /
-   reward / staged) on a common net-Numa axis, all decisions locked. See **NEXT ARC**
-   below — it is the priority for next session, above the moved (predator) ceiling.
+6. **Verdict — D wins the arc.** D is the only arm without a glaring weakness:
+   end-state survival (last30 **158.6**) ~A, while density (**+0.177**) edges the best
+   single arm. **The deeper finding:** naive curiosity (B) does NOT visit more-learnable
+   states per experience — it only consolidates **cleaner** (lower Mima). Pure extrinsic
+   reward (C) is the worst arm. No single arm but D wins both axes.
 
 ## Headline numbers
 
-**Deployable vocabulary organism (n=40, manifold-route, full-cov):**
+**ABCD, n=200, density axis, obs_seed=0** (single seed):
 
-| config | survival | overheat /40 | dominant death |
-|---|---|---|---|
-| s017 dual-role WARM | 82.0 | **26** | overheat |
-| **s018 SPLIT, gamma=1.0** | **151.7** | **4** | integrity (19) |
-| s018 split, gamma=0.5 | 157.2 | 2 | integrity (but cold→12) |
-| s018 split, gamma=0.25 | 151.6 | 2 | integrity (17) |
+| arm | survival (mean) | last30 | **net-Numa/1k** | Mima % | note |
+|---|---|---|---|---|---|
+| A Reflex | 168.8 | 170.6 | +0.171 | 48% | owns survival; learns no faster than passive |
+| B Wisdom | 45.7 | 38.7 | +0.172 | **42%** | cleanest learning, but starves (overheat 86/cold 80) |
+| C Reward | 58.0 | 55.6 | +0.103 | 64% | worst both; r_world near-flat −0.03 (signal-starved) |
+| **D Synth** | 132.9 | **158.6** | **+0.177** | 44% | **only arm A-class survival + best density** (gate 44/56) |
 
-**Context (n=40, split @ gamma=1.0):** routing acc **0.813** full-cov (chance 0.20;
-recall WARM .84 FLEE .85 HYDRATE .79 FORAGE **.18** EVADE .84). Arbiter (upper bound)
-178.7. Floors: random 49.8, reactive 141.8. Best single donor 58.1 (FORAGE). **Best
-master 87.4 (fire) → organism 151.7 = 1.74×.** Route usage WARM 15 / FLEE 9 /
-HYDRATE 34 / FORAGE 16 / EVADE 26 %.
-
-**Probe (lever b, dual-role, n=40):** deployable 26→18 @gamma 0.25; arbiter 37→29
-(survival 82→63). Falsified as a ceiling-break.
+**Caveats (do not over-claim):** density margin is slim and single-seed → robust claim
+is *"A-class survival AND B-class density at once"*, NOT *"D out-learns all"*. D's
+*mean* survival (132.9 < A 168.8) pays an early-wander death tax (untrained curiosity);
+last30 is the fair end-state.
 
 ## What was done (files)
 
-Committed this session (see git log).
-- **`experiments/world/vocabulary.py`** — `HEAT_GAMMA` knob; `danger()` split into
-  WARM=cold / FLEE=heat; `PRIM_ORDER` → 5 classes; `route_hist` generalised to
-  `len(PRIM_ORDER)`. Everything else iterates PRIM_ORDER so it scaled automatically.
-- **`experiments/world/primitives.py`** — `cool_flee_master`; `_band_warm` now
-  seek-only (temp<0.5 excl. leave-decisions); new `_band_flee`; `collect()` gains a
-  `behavior_fn` (behavior/labeler split); `PRIMITIVES` adds FLEE (behavior=fire_oracle);
-  `build_all` + `--only NAME...` to rebuild a subset.
-- **NEW `experiments/world/router_probe.py`** — gamma sweep, arbiter + routed arms.
-- **`runs/` (LOCAL, NOT committed):** `router_probe_gamma_sweep.log` (dual-role
-  probe), `primitives_split_warm_flee_build.log`, `router_probe_split.log`,
-  `vocabulary_split_n40.log`. **`runs/primitives/WARM.pt` + `FLEE.pt` are now the
-  SPLIT born-quad donors**; old dual-role WARM backed up at
-  `runs/primitives/WARM_dualrole_backup.pt`. HYDRATE/FORAGE/EVADE born-quad untouched.
+- **NEW `experiments/world/arc.py`** — the whole arc. `build_observer`, `run_arm`
+  (agent protocol, density reporting), `FrozenPolicy` (A), `TDAgent`
+  (reward_mode=curiosity|world → B/C; normalized `_norm_lp`), `GatedReflexWisdom` (D),
+  `arm_{a,b,c,d}_agent`, `--arm A|B|C|D|AB|ABC|ABCD`, `--theta`, `--smoke`.
+- Commits: `c27a27e` (harness + A), `0176c17` (B+C + density + r_int norm),
+  `82d65a1` (D).
+- **`runs/` (LOCAL, NOT committed):** `arc_armA_n40.log`, `arc_AB_n200.log` (pre-fix,
+  confounded), `arc_ABC_n200.log` (the A/B/C verdict), `arc_D_n200.log` (the D verdict).
 
-**Pre-existing, STILL DO NOT TOUCH** (carried since s005, left uncommitted):
+**Pre-existing, STILL DO NOT TOUCH** (carried since s005, uncommitted):
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
 `trioron/viz/export.py`.
 
 ## Key findings
 
-1. **A single donor that must do two OPPOSITE things caps the policy.** Splitting it
-   into one-primitive-per-drive-DIRECTION (the Mode-E doctrine taken literally) beat
-   every router-side fix. Overheat 26→4, survival +85%, 1.74× the best master.
-2. **"Routing-priority" was the wrong framing** for the overheat ceiling. The
-   privileged arbiter overheating *worse* than the learned router (37 vs 26) was the
-   diagnostic: the bottleneck was donor structure, not selection timing.
-3. **The behavior/labeler split** lets you demo a primitive whose own master never
-   visits its band (pure-flee never overheats) — run a state-generating behavior,
-   keep the master's label.
-4. **Splitting can dissolve a nonlinearity requirement.** s017 proved WARM needed the
-   quad gene; the split removed the sign-flip, so each donor is linearly representable.
-5. **HEAT_GAMMA is a minor secondary lever** post-split (overheat 4→2) but trades cold
-   deaths; gamma=1.0 is the clean deploy default.
+1. **Reflex→wisdom synthesis wins** the arc's both-axes test: bootstrap survival with an
+   innate reflex, grow wisdom in the slack it protects. D = A-class survival + best density.
+2. **Naive curiosity does NOT out-learn a reflex per experience** (B ties A on density).
+   Its only edge is *cleaner* consolidation (lower Mima). Tempers the curiosity thesis.
+3. **Pure extrinsic reward is the weakest learner here** (C: worst density, most Mima) —
+   partly signal-starvation (world reward near-flat).
+4. **Measurement hygiene mattered twice:** un-normalized `r_int` made B ≈ random;
+   raw-total Numa is survival-confounded. Both fixes flipped the apparent result.
 
 ## Decisions made
 
-- **SPLIT WARM into seek-only + dedicated FLEE** — Rocky (chose it over router
-  anticipation / bank-and-stop). The session's main result.
-- **Deploy at gamma=1.0** (the split does the work; steepening adds cold deaths).
-- **Born-quad WARM+FLEE @800 ep** kept for safety; linear flagged as cheaper-next.
-- **runs/primitives/WARM.pt overwritten** with seek-only; dual-role preserved at
-  `WARM_dualrole_backup.pt`.
+- **Arm B driver = normalized learning-progress** `relu(err_before−err_after)` (Rocky:
+  over raw-novelty / ensemble-disagreement).
+- **Canonical axis = net Numa DENSITY** (per 1k steps), survival = separate gate (Rocky).
+- **Normalize `r_int`** to O(1) so curiosity actually steers (Rocky, a deviation OK'd).
+- **Arm D = D1 urgency-gated now; D2 full-stack next** (Rocky).
+- **NEXT session leads with D2** (Rocky, over multi-seed-D1 / warm-start-D1).
 
-## NEXT ARC (designed this session, decisions LOCKED) — reflex vs wisdom
+## NEXT — build D2 (the full-CL-stack headline)
 
-Rocky's direction: the Mode-E primitives are **imitation of hand-coded masters** —
-trioron does NOT *discover* them, which an organism should. Build a head-to-head of
-how an organism ACQUIRES skills, on a **common axis = net Numa** (Numa−Mima via
-held-out dream re-test; `numa.py` `NumaLedger`) with **survival as the precondition
-gate**. Key distinction that emerged: **net Numa is a MEASUREMENT axis (world-model
-consolidation), orthogonal to the POLICY DRIVER**; the arms differ in the driver.
+D1 proved the thesis cheaply with a *composite* reflex + a *separate* curiosity net
+gated by urgency. **D2 makes it one organism and exercises the native machinery:**
 
-| arm | policy driver | status |
-|---|---|---|
-| **A Reflex** | imitation (copy master) | reuse `vocabulary.py` organism |
-| **B Wisdom** | **curiosity / learning-progress** (act to maximise reducible predictive surprise — label-free AND reward-free) | NEW build |
-| **C Reward** | TD on world reward `r` (value head) | ~80% in `organism_v2.py` (its value head acts; pair head is a passenger) |
-| **D Synthesis** | reflex → consolidate+LOCK → grow wisdom on top | after A/B/C |
+1. **Distill the 5-donor reflex into ONE trioron substrate** (a single policy net that
+   reproduces the vocabulary organism's actions — behavioural cloning of `org.act` over
+   visited states, or absorb the donors). This is the "nowhere to grow on top" wrinkle
+   from s018 resolved by collapsing the composite first.
+2. **Credit-lock + λ-anchor it** (`learning/credit.py` consolidate at a boundary;
+   `learning/epigenetic_lock.py` anchor + `|w·g|` saliency λ) → the reflex is *innate*,
+   drift-protected. (Manual §5; memory [[triparametric_node_lambda]].)
+3. **Grow curiosity capacity on top** (divide/grow under frustration; the new cells take
+   the learning-progress driver) WITHOUT catastrophically forgetting the locked reflex.
+4. **Manifold-replay / dream** (`learning/manifold.py`, `learning/dream.py`) so wisdom
+   consolidates without overwriting the reflex. Measure on the SAME density axis vs D1.
+   Win = D2 ≥ D1 on both axes while the reflex stays intact (survival never craters).
 
-**Sequence (Rocky):** A, then B, then build C, then — after A/B/C compared — D.
+**Deferred (offer to Rocky):** (a) **multi-seed D1 confirm** (n=3–5 × {A,B,D} @200ep) to
+turn the slim density margin into a σ-claim; (b) **warm-start / θ-anneal D1** to kill the
+early-wander death tax (mean survival → ~A).
 
-**Locked decisions:** (1) common axis = net Numa, survival = gate. (2) Arm B driver =
-**curiosity/learning-progress** (NOT homeostasis — that's reward in disguise and would
-collapse B into C). (3) Reward arm C is IN (not deferred) — organism_v2's value head ≈
-C already. (4) Fairness: identical Numa head / 5 pairs / held-out re-test across all arms.
+## Open questions / next-up (secondary — the moved s018 ceiling)
 
-**Open implementation wrinkle:** arm A is a COMPOSITE (5 donors + router) with nowhere
-to hang the pair head → train a small **observer pair-head on the states the imitation
-organism visits**; Numa then measures the learnability of that experience stream.
-
-**Why D is the headline, not a fallback (Rocky's reflex→wisdom framing):** animals fear
-fire (innate reflex) BEFORE mastering it (wisdom). Maps 1:1 onto trioron CL: imitation =
-reflex bootstrap; credit-lock + λ-anchor make it innate (protected from drift); Numa +
-dream/manifold replay grow wisdom WITHOUT catastrophically forgetting the reflex. D is
-the run that exercises the whole stack. Hypothesis: A high survival/low Numa; B builds
-Numa but starves (curiosity doesn't eat); C reward-acts; **D wins both axes.**
-
-Pointers: `numa.py` (pairs + ledger), `organism_v2.py` (value⊕pair heads, TD + Numa
-checkpoint — the C scaffold), `vocabulary.py` (the A organism). Memory:
-[[numa_mima_implemented]] (net Numa is the axis, survival is precondition).
-
-## Open questions / next-up (the moved ceiling — secondary to the arc above)
-
-1. **ATTACK THE PREDATOR (the new ceiling).** Integrity/EVADE is now the dominant
-   death (19/40). The EVADE donor solo is weak (49.1) and evade-master only 44.6 —
-   the master itself may be the wall (echoing the s015 imitation-ceiling story for a
-   harder skill). Probe: is EVADE a donor problem, a router problem (EVADE recall is
-   high 0.84, so probably donor/master), or does it need anticipation?
-2. **FIX FORAGE ROUTING (recall 0.18).** Its manifold overlaps HYDRATE. Cheap probe:
-   does a sharper context slice or per-class prior separate them? Low stakes (energy
-   deaths 5/40) but it's a clean routing bug.
-3. **Try LINEAR WARM/FLEE** — the split predicts linear suffices (no sign-flip). If it
-   matches born-quad it's faster to build and a cleaner paper claim.
-4. **Re-run the dream loop on the split organism** — does self-improvement now clear
-   the predator ceiling, or stack on 152?
-5. **Cross-PC rebuild** (`runs/` doesn't sync): rebuild ALL five donors:
-   `python3 -m experiments.world.primitives --nonlinear --epochs 800 --collect-seeds 60
-   --cap 1500 --no-eval` (now builds WARM, FLEE, HYDRATE, FORAGE, EVADE).
-6. **Promote the router to core** (open since s014) — the argmax-danger full-cov
-   manifold router into `trioron.learning.route`.
+1. **Predator/EVADE** is still the dominant death in the deployable reflex (integrity 19/40
+   @ s018; 84/200 here). The EVADE donor/master is weak (~44–49). Probe whether it's a
+   donor problem or needs anticipation. (s018 carry-over.)
+2. **FORAGE routing recall 0.18** (manifold overlaps HYDRATE). Cheap routing fix.
+3. **Linear WARM/FLEE** — the s018 split predicts linear suffices (no sign-flip).
+4. **Promote the router to core** (`trioron.learning.route`) — open since s014.
 
 ## Pointers
 
-- Probe: `python3 -m experiments.world.router_probe --gammas 1.0 0.5 0.35 0.25`
-  (arbiter + routed; `--arbiter-only` for the cheap arm).
-- Vocabulary: `python3 -m experiments.world.vocabulary --eval-seeds 40` (5-class).
-- Split donors: `primitives.py --only WARM FLEE --nonlinear --epochs 800
-  --collect-seeds 60 --cap 1500`. FLEE master = `cool_flee_master`; bands
-  `_band_warm`/`_band_flee`; behavior/labeler split in `collect(behavior_fn=...)`.
-- Router danger: `vocabulary.danger()` (WARM=cold, FLEE=heat; `HEAT_GAMMA` steepens
-  FLEE), `argmax_danger`, `VocabularyRouter` (full-cov manifold over the 14-d ctx slice).
-- Temp physics: `fire_taming` sets `WARM_RATE=0.04`, `TEMP_LOW=0.02`, `TEMP_HIGH=0.99`;
-  cooling 0.008 day / 0.015 night. Death causes: `fire_taming._cause`.
-- Masters: `fire_oracle` (WARM/seek), `cool_flee_master` (FLEE), `water_master`,
-  `food_master`, `evade_master`.
+- Arc: `python3 -m experiments.world.arc --arm ABCD --episodes 200` (full table);
+  `--arm D --theta 0.5`; `--smoke` for a fast sanity pass. Density axis = `net-Numa/1k`.
+- Numa: `experiments/world/numa.py` (`contrast_targets`, `NumaLedger`); driver scaffold
+  `experiments/world/organism_v2.py` (value⊕pair heads, TD + Numa). Reflex policy:
+  `experiments/world/vocabulary.py` (`build_vocabulary`, `danger`, `VocabularyOrganism`).
+- CL machinery for D2: `trioron/learning/{credit,epigenetic_lock,manifold,dream}.py`
+  (Manual §5; none auto-runs — the driver wires it).
+- World physics: importing `vocabulary`/`fire_taming` sets tamed temp on `TileWorld`
+  (`WARM_RATE=0.04`, `TEMP_LOW=0.02`, `TEMP_HIGH=0.99`). Death causes: `fire_taming._cause`.
+- Memory: [[reflex_wisdom_arc_build]] (this arc), [[reflex_vs_wisdom_arc]] (s018 design),
+  [[numa_mima_implemented]], [[overheat_ceiling_routing]] (s018 reflex), [[mode_e_recipe_result]].
 
 ## Environment notes
 
 - `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12,
   torch 2.11.0+cu130, WSL2, 12 cores. `python3`, `OMP_NUM_THREADS=8`.
-- Born-quad @800 ep × 2 donors ≈ 5 min; the full 5-donor rebuild ≈ 12–15 min.
-- Survival eval is single-seed-set n=40; σ ≈ ±9–12, so the 82→152 jump is ~6–7σ and
-  the death-cause counts are paired over identical seeds — robust without multi-seed.
-- World benches CPU-bound. Uncapped born-quad growth deliberately exceeds the Phase-1
-  50K-param contract (exploration only).
+- Arc n=200: arm A ≈ 3–4 min; learning arms (B/C/D) ≈ 4–6 min each; full ABCD ≈ 15 min.
+- Single-seed survival σ ≈ ±9–12 (s018). The ABCD density margins (0.171–0.177) are
+  WITHIN single-seed noise — treat D's density edge as suggestive, not σ-confirmed.
+- World benches CPU-bound; born-quad donors (the reflex) exceed the Phase-1 50K-param
+  contract (exploration only).
