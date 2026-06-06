@@ -77,28 +77,34 @@ def graft(
     new_ids = r_arena.alloc(len(d_non_perc))
     id_map: dict[int, int] = {}
 
-    for i, d_id in enumerate(d_non_perc):
-        r_id = int(new_ids[i].item())
-        id_map[d_id] = r_id
+    # A graft is a STRUCTURAL transplant, never a differentiable op. The donor's bias
+    # (and weights) carry ``requires_grad`` if the donor was trained; copying them into
+    # the recipient via in-place index-assign WITHOUT no_grad makes the recipient's bias
+    # a non-leaf tensor, which the optimizer then refuses ("can't optimize a non-leaf
+    # Tensor"). Detach under no_grad so recipient parameters stay optimizable leaves.
+    with torch.no_grad():
+        for i, d_id in enumerate(d_non_perc):
+            r_id = int(new_ids[i].item())
+            id_map[d_id] = r_id
 
-        r_arena.bias[r_id] = d_arena.bias[d_id].clone()
-        r_arena.engagement[r_id] = d_arena.engagement[d_id].clone()
-        r_arena.utility[r_id] = 0.0
-        r_arena.position[r_id] = d_arena.position[d_id].clone()
-        r_arena.epigenome[r_id] = d_arena.epigenome[d_id].clone()
-        r_arena.phenotype_cache[r_id] = d_arena.phenotype_cache[d_id].clone()
-        r_arena.rank[r_id] = d_arena.rank[d_id].clone()
-        r_arena.age[r_id] = d_arena.age[d_id].clone()
-        r_arena.output_dim[r_id] = d_arena.output_dim[d_id].clone()
-        r_arena.forward_inclusion[r_id] = True
+            r_arena.bias[r_id] = d_arena.bias[d_id].detach().clone()
+            r_arena.engagement[r_id] = d_arena.engagement[d_id].clone()
+            r_arena.utility[r_id] = 0.0
+            r_arena.position[r_id] = d_arena.position[d_id].clone()
+            r_arena.epigenome[r_id] = d_arena.epigenome[d_id].clone()
+            r_arena.phenotype_cache[r_id] = d_arena.phenotype_cache[d_id].clone()
+            r_arena.rank[r_id] = d_arena.rank[d_id].clone()
+            r_arena.age[r_id] = d_arena.age[d_id].clone()
+            r_arena.output_dim[r_id] = d_arena.output_dim[d_id].clone()
+            r_arena.forward_inclusion[r_id] = True
 
-        if freeze:
-            r_arena.state[r_id] = CellState.DORMANT
-        else:
-            r_arena.state[r_id] = CellState.ACTIVE
+            if freeze:
+                r_arena.state[r_id] = CellState.DORMANT
+            else:
+                r_arena.state[r_id] = CellState.ACTIVE
 
-        r_arena.lineage_root[r_id] = r_id
-        r_arena.parent[r_id] = -1
+            r_arena.lineage_root[r_id] = r_id
+            r_arena.parent[r_id] = -1
 
     full_remap = {**perc_remap, **id_map}
 

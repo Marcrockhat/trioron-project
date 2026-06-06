@@ -25,6 +25,9 @@ class GrowthConfig:
     new_edges: int = 12
     position_jitter: float = 0.047
     same_rank_edges: bool = False  # allow interior↔interior edges → self-organized depth
+    project_to_consumers: bool = True  # wire the child FORWARD to the parent's consumers
+    # (output head included) — without it the child is a permanent sink and grown
+    # capacity never reaches the logits (growth is structurally inert). See divide().
 
 
 @dataclass
@@ -34,6 +37,7 @@ class GrowthEvent:
     rank: int
     n_inherited_edges: int
     n_new_edges: int
+    n_forward_edges: int = 0
 
 
 def divide(
@@ -118,12 +122,32 @@ def divide(
         a.add_edges(new_src, new_dst)
         n_new = k
 
+    # Re-wire the child FORWARD so it projects to the parent's consumers (every cell the
+    # parent feeds, output head included). divide() otherwise wires only INCOMING edges,
+    # leaving the child a permanent sink — grown capacity that never reaches the logits,
+    # so growth is structurally inert (verified empirically: grown cells had fan-out 0,
+    # and uncapped growth to 672 cells gave no gain). Consumers sit at rank > parent.rank
+    # (DAG forward edges) and the child shares the parent's rank, so child→consumer is
+    # forward and cycle-safe. Fresh small weights = born connected but quiet; SGD grows
+    # the projection as the new feature earns it (no division perturbation spike).
+    n_fwd = 0
+    if cfg.project_to_consumers:
+        out_mask = a.edge_src[:a.edge_cursor] == pid
+        out_dst = a.edge_dst[:a.edge_cursor][out_mask]
+        if out_dst.numel() > 0:
+            out_dst = out_dst[a.rank[out_dst.long()] > child_rank].unique()  # strictly forward
+            if out_dst.numel() > 0:
+                fwd_src = torch.full((out_dst.numel(),), cid, dtype=torch.int32, device=a.device)
+                a.add_edges(fwd_src, out_dst.to(torch.int32))
+                n_fwd = int(out_dst.numel())
+
     return GrowthEvent(
         parent_id=pid,
         child_id=cid,
         rank=child_rank,
         n_inherited_edges=n_inherit,
         n_new_edges=n_new,
+        n_forward_edges=n_fwd,
     )
 
 
