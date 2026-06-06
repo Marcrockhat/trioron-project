@@ -278,10 +278,66 @@ def arm_c_agent(seed, *, episodes, nonlinear=False):
     return TDAgent(seed, episodes=episodes, reward_mode="world", nonlinear=nonlinear)
 
 
+# ----------------------------------------------------------------------
+# Arm D — Synthesis (reflex -> wisdom), the D1 urgency-gated first cut.
+#
+# The reflex->wisdom thesis (s018): an animal fears fire (innate reflex) BEFORE
+# mastering it (wisdom). Here the reflex is the FROZEN vocabulary organism (its
+# donors are already consolidated/locked — innate, drift-proof), and wisdom GROWS
+# on top as a separate curiosity driver that learns in the slack the reflex leaves.
+#
+# Gate by URGENCY: when the most pressing drive is dangerous (max danger >= θ) the
+# reflex acts to SURVIVE; otherwise the curiosity driver acts to LEARN. The reflex
+# is a safety net — curiosity may wander toward danger, but the reflex reclaims
+# control before it kills. The curiosity driver learns OFF-POLICY from EVERY
+# transition (reflex- or curiosity-controlled), so its world-model stays complete.
+#
+# Bet: D keeps ~A survival (reflex saves it) AND clears A's Numa density at B's
+# cleaner Mima (curiosity actively mines the safe slack). The only arm to win both.
+# (D2 — one substrate, credit-lock + λ-anchor + dream — is the next-session headline.)
+# ----------------------------------------------------------------------
+class GatedReflexWisdom:
+    def __init__(self, reflex, curiosity, *, theta=0.5):
+        self.reflex = reflex            # FrozenPolicy (vocabulary organism)
+        self.curio = curiosity          # TDAgent (curiosity)
+        self.theta = theta
+        self.reflex_acts = 0; self.curio_acts = 0
+
+    def start_episode(self):
+        self.curio.start_episode()
+
+    def act(self, w, p):
+        from experiments.world.vocabulary import danger
+        urgency = max(danger(w).values())
+        if urgency >= self.theta:
+            self.reflex_acts += 1
+            return self.reflex.act(w, p)
+        self.curio_acts += 1
+        return self.curio.act(w, p)
+
+    def learn(self, p, a, r, p2, done, pair_tgt):
+        self.curio.learn(p, a, r, p2, done, pair_tgt)   # off-policy: learn every step
+
+    def diagnostics(self):
+        tot = max(self.reflex_acts + self.curio_acts, 1)
+        return (f"gate θ={self.theta} reflex {100*self.reflex_acts/tot:.0f}%/"
+                f"curio {100*self.curio_acts/tot:.0f}%  {self.curio.diagnostics()}")
+
+
+def arm_d_agent(seed, *, episodes, theta=0.5, nonlinear=False,
+                router_seeds=120, per_prim_cap=1500):
+    reflex = arm_a_agent(router_seeds=router_seeds, per_prim_cap=per_prim_cap)
+    curio = TDAgent(seed, episodes=episodes, reward_mode="curiosity", nonlinear=nonlinear)
+    return GatedReflexWisdom(reflex, curio, theta=theta)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", default="A", choices=["A", "B", "C", "AB", "ABC"],
-                    help="AB/ABC = run arms at matched episodes; D lands later")
+    ap.add_argument("--arm", default="A",
+                    choices=["A", "B", "C", "D", "AB", "ABC", "ABCD"],
+                    help="multi-letter = run those arms at matched episodes")
+    ap.add_argument("--theta", type=float, default=0.5,
+                    help="arm-D urgency gate: reflex acts when max danger >= theta")
     ap.add_argument("--episodes", type=int, default=40)
     ap.add_argument("--router-seeds", type=int, default=120)
     ap.add_argument("--per-prim-cap", type=int, default=1500)
@@ -314,6 +370,13 @@ def main():
         return run_arm(agent, "C:Reward", episodes=args.episodes,
                        obs_seed=args.obs_seed, nonlinear=args.nonlinear)
 
+    def _run_d():
+        agent = arm_d_agent(args.driver_seed, episodes=args.episodes, theta=args.theta,
+                            nonlinear=args.nonlinear, router_seeds=args.router_seeds,
+                            per_prim_cap=args.per_prim_cap)
+        return run_arm(agent, "D:Synth", episodes=args.episodes,
+                       obs_seed=args.obs_seed, nonlinear=args.nonlinear)
+
     print("=== REFLEX-vs-WISDOM ARC — common Numa harness ===")
     print("axis: net Numa DENSITY (per 1k env steps); survival = gate (separate).")
     print(f"observer: 5-d pair head, identical across arms (obs_seed={args.obs_seed}, "
@@ -334,17 +397,24 @@ def main():
               f"driver_seed={args.driver_seed}).")
         _run_c()
         print("\n  Expected: reward-acts (survival up vs B); moderate Numa density.")
-    elif args.arm in ("AB", "ABC"):
-        arms = {"AB": "A (Reflex) vs B (Wisdom)",
-                "ABC": "A (Reflex) vs B (Wisdom) vs C (Reward)"}[args.arm]
-        print(f"Comparison: {arms} at matched episodes={args.episodes}, "
+    elif args.arm == "D":
+        print(f"Arm D (Synthesis): urgency-gated reflex+wisdom θ={args.theta} "
+              f"(episodes={args.episodes}, driver_seed={args.driver_seed}).")
+        _run_d()
+        print("\n  Bet: ~A survival (reflex saves it) AND > A Numa density at B's "
+              "cleaner Mima\n  — the only arm to win BOTH.")
+    elif args.arm in ("AB", "ABC", "ABCD"):
+        labels = {"AB": "A vs B", "ABC": "A vs B vs C", "ABCD": "A vs B vs C vs D"}
+        print(f"Comparison: {labels[args.arm]} at matched episodes={args.episodes}, "
               f"obs_seed={args.obs_seed}.\n")
         _run_a(); _run_b()
-        if args.arm == "ABC":
+        if args.arm in ("ABC", "ABCD"):
             _run_c()
+        if args.arm == "ABCD":
+            _run_d()
         print("\n  Read net-Numa/1k as the axis (survival-decoupled); survival is the "
-              "gate.\n  Arc hypothesis: no single arm wins BOTH — the opening D "
-              "(reflex->wisdom) must fill.")
+              "gate.\n  D wins the arc iff it clears BOTH: ~A survival AND ≥ A/B "
+              "density.")
     return 0
 
 
