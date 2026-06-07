@@ -109,9 +109,21 @@ findings, all captured in memory and below.
    **(β)** push the **taxonomy CL bench** — close the 0.847→0.909 gap (duck
    consolidation), and the dog operating-point via **cost-sensitive weighting** or the
    **emergent `dog|goat` label**. Ask Rocky which.
-2. **Port dream+dendrite to the native substrate** — use the real `dream_cycle`
-   (offline) instead of inline rehearsal, with interior dendrite cells (so credit-lock
-   has something to protect too). Validate 0.860 holds through the canonical path.
+2. **Wire SELECTIVE dendrite SPAWNING into the CL loop (the concrete next experiment).**
+   None of the s023 benches spawn dendrites the native way: `cl_incremental`/
+   `cl_weight_only` have no growth at all, and `cl_dream_dendrite`'s "dendrite" is a
+   **fixed, always-on, UNIFORM quad** MLP — which `selective_quad_growth.py`'s own
+   verdict says **regresses CL by −11pp**. So the 0.860 there is a uniform-quad result,
+   not a spawned dendrite, and that's likely why it traded dog for goat instead of
+   carving the boundary. The right experiment: reuse `selective_quad_growth.py`'s
+   **frustration-gated `divide()` → DENDRITE-child** mechanism (adaptive escalation:
+   grow linear while it reduces loss; once linear width plateaus → escalate to quad)
+   **inside the CL loop**, so the substrate spawns a quad cell *specifically at the
+   dog/goat frustration*, linear everywhere else. Then re-test dog/goat. Also: use the
+   real offline `dream_cycle` instead of inline rehearsal, and interior cells so
+   credit-lock has something to protect. Files: `selective_quad_growth.py`
+   (`make_child_quad`, the discriminator), `lifecycle/grow.py:divide` (+ the new
+   `divide_lambda_max` gate), `lifecycle/developmental.py` (stem/phenotype).
 3. **Viz: render the astrocyte memory shelf** — diamonds beside the outputs, unwired,
    dashed-linked to their head; and fix the layered layout into the real
    `trioron/viz/export.py` (currently force-directed/random — hides depth).
