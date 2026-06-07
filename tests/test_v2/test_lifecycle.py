@@ -71,6 +71,26 @@ class TestGrowth:
         assert check_growth_trigger(2.5, 60)
         assert not check_growth_trigger(2.5, 10)
 
+    def test_plasticity_gate_blocks_mature_cell(self):
+        # design §3.5: a matured (high-λ) cell loses divisibility. Gate OFF (default)
+        # divides any cell; gate ON refuses a parent whose λ exceeds the threshold while
+        # still dividing a plastic (low-λ) one.
+        sub = _make_substrate()
+        out_ids = sub.scheduler._plan.output_ids
+        parent = int(out_ids[0].item())
+        cfg = GrowthConfig(divide_lambda_max=1e-2)
+
+        # plastic parent (λ at default ~0) divides under the gate
+        sub.arena.node_lambda[parent] = 0.0
+        assert divide(sub.arena, parent, cfg) is not None
+
+        # matured parent (λ above threshold) is refused
+        other = int(out_ids[1].item())
+        sub.arena.node_lambda[other] = 1.0
+        assert divide(sub.arena, other, cfg) is None
+        # ...but the same mature cell divides with the gate OFF (legacy behavior preserved)
+        assert divide(sub.arena, other, GrowthConfig()) is not None
+
     def test_divide_and_forward(self):
         sub = _make_substrate()
         sub.prepare_training()

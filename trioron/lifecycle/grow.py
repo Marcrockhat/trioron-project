@@ -26,6 +26,13 @@ class GrowthConfig:
     position_jitter: float = 0.047
     same_rank_edges: bool = False  # allow interior↔interior edges → self-organized depth
     project_to_consumers: bool = True  # wire the child FORWARD to the parent's consumers
+    divide_lambda_max: float | None = None  # plasticity gate (design §3.5): a parent whose
+    # epigenetic-lock λ exceeds this has MATURED and may not divide — division is reserved
+    # for plastic germline/stem cells (low λ). None = gate OFF (legacy: any cell divides,
+    # incl. mature ones — the "clonal expansion of mature neurons" the progenitor–council
+    # redesign calls broken). The council/germline path sets this ON. NOTE: λ's scale is
+    # |w·g| saliency row-sums (problem-dependent), so this is an absolute knob — a robust
+    # relative/quantile form is the §6 open-knob follow-up if it proves brittle.
     # (output head included) — without it the child is a permanent sink and grown
     # capacity never reaches the logits (growth is structurally inert). See divide().
 
@@ -51,6 +58,14 @@ def divide(
     """
     cfg = cfg or GrowthConfig()
     a = arena
+
+    # Plasticity gate (design §3.5 — "mature neurons don't divide"). The per-node
+    # epigenetic lock λ IS the plasticity state (low λ = plastic, high λ = consolidated);
+    # a matured parent loses divisibility, so division stays stem/germline-only. Checked
+    # before the envelope so a mature parent is refused even when capacity is free.
+    if cfg.divide_lambda_max is not None:
+        if float(a.node_lambda[parent_id].item()) > cfg.divide_lambda_max:
+            return None
 
     if not a.allows_growth(add_cells=1, add_edges=cfg.new_edges + 1):
         return None
