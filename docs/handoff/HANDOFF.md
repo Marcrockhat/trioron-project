@@ -57,15 +57,21 @@ findings, all captured in memory and below.
 8. **dog gap shown irreducible.** Across every lever (storage form, exemplars,
    dendrite capacity, dream) dog stays ~0.52 vs its 0.682 Bayes recall. The overlap
    is **zero-sum** + CE picks a goat-favoring operating point. Only real levers: more
-   features or the emergent `dog|goat` label. On the simpler 6-species/weight-only
-   problem the machinery hits the ceiling **exactly** (0.837), so this is a property
-   of the harder regime, not the machinery.
+   features or the emergent `dog|goat` label. **CORRECTION (post-commit, n=512):** my
+   first "6-species/weight-only hits the ceiling exactly (0.837)" was an **n=128
+   artifact**. At n=512 it's **0.808 vs 0.840**, and dog sits **0.334 vs 0.482** — the
+   **linear substrate leaves dog's disjoint-band part unresolved** (Rocky's catch). A
+   quad/dendrite relocates the boundary (goat 0.91 / dog 0.26) but doesn't resolve both
+   — same zero-sum wall. KEY LIMITATION surfaced: **the CL harness wires NO growth** —
+   it's a fixed bipartite linear net, so trioron's actual mechanism (growing a dendrite
+   where the problem needs one) is UNTESTED. Next session should wire growth/division +
+   the dendrite phenotype into the CL loop.
 
 ## Headline numbers
 
 | bench | naive | machinery | ceiling | notes |
 |---|---:|---:|---:|---|
-| CL 6 species, 1 feat (weight) | 0.332 | **0.837** | 0.837 | **100% of ceiling** |
+| CL 6 species, 1 feat (weight, n=512) | — | 0.808 | 0.840 | 96%; dog **0.33** vs 0.48 unresolved (linear, no dendrite) |
 | CL 10 species, 4 feat | 0.200 | 0.847 | 0.909 | 93%; replay-only |
 | CL 10 species + dream+dendrite+mix(6) | — | **0.860** | 0.909 | best CL; goat calibrated |
 | dog per-class (any method) | — | ~0.52 | 0.682 | irreducible overlap |

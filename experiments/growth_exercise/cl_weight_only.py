@@ -65,7 +65,7 @@ def run(train, test, replay=True):
 
 def main():
     tr = make_animals(SPECIES6, n_per_class=128, seed=0, log=True)
-    te = make_animals(SPECIES6, n_per_class=128, seed=1, log=True)
+    te = make_animals(SPECIES6, n_per_class=512, seed=1, log=True)   # n=512: small-n inflates the score
     ceil = [seen_bayes(te, t + 1) for t in range(6)]
     naive = run(tr, te, replay=False)
     mach = run(tr, te, replay=True)
