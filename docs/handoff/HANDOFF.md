@@ -119,12 +119,30 @@ first next session; this handoff summarises.
 
 ## Open questions / next-up
 
-1. **Build order for the design** (`progenitor_council.md` §4 lists the
-   gaps). Natural first slice: **plasticity-gate `divide()`** (refuse
-   mature-cell division) — small, and it's the clearest correctness fix.
-   Then data-driven differentiation (council trial-vote) on the 6-class
-   disruptor as the probe (should grow a DENDRITE for dog, stay linear
-   elsewhere).
+1. **Build plan (manual-grounded at session end — START HERE).** Three
+   findings from the §-manual re-read that land on the design:
+   - **λ IS the plasticity gate.** Manual §1: `arena.node_lambda` (live
+     since s014, driven by `|w·g|` saliency) is the per-node plasticity
+     lock. "Mature neurons don't divide" = gate `divide()` on `λ <
+     threshold` — one line, reuses existing state, no new field.
+   - **Reuse `selective_quad_growth` plumbing, swap its discriminator.**
+     Manual §2.5: it already validates problem-driven phenotype (linear
+     vs quad, n=3) AND has the divide-time phenotype-setting plumbing —
+     but via **sequential escalation** (the approach Rocky rejected). The
+     council replaces that with the **parallel trial-vote**. Reuse the
+     plumbing, replace the mechanism.
+   - **FLAG: CONV is a closed null on the bare substrate**
+     (`conv_by_emergence_null_result`, manual §2.5) — no spatial
+     locality. CONV won't fire usefully until the progenitor's positional
+     sensor layer exists.
+
+   **Proposed order (PENDING Rocky's pick — do not start unprompted):**
+   (a) plasticity-gate `divide()` via λ threshold (small correctness
+   foundation), then (b) council trial-vote on the 6-class disruptor-dog
+   probe (should pick DENDRITE for dog, LINEAR elsewhere). **Council at 4
+   phenotypes, CONV deferred** until the retinal layer — proposed, not
+   decided. **Open decision for Rocky: start (a) or (b)? CONV deferred or
+   kept as a dormant fifth?**
 2. **Open knobs** (design §6): niche steepness γ; multiplicative vs
    subtractive resource tail; council vote integration window; retinal
    compression structure.
