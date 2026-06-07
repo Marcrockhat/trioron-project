@@ -57,6 +57,9 @@ class Seeded:
             for idx, iid in enumerate(int_ids.tolist()):
                 epi = int(a.epigenome[iid].item())
                 epi = set_gene(epi, CREDIT_ELIGIBLE)
+                # nonlinear: dendrite gene set here; the quad only engages once
+                # the fan-in is split into ≥2 branches, done after wiring below
+                # (spec §3.6: a K=1 dendrite is byte-identical to linear).
                 if self.nonlinear:
                     epi = (epi & ~(1 << LINEAR)) | (1 << DENDRITE)
                 a.epigenome[iid] = epi
@@ -97,6 +100,17 @@ class Seeded:
         src_io = last.repeat(self.initial_classes)
         dst_io = out_ids.repeat_interleave(self.interior_cells)
         a.add_edges(src_io, dst_io)
+
+        # nonlinear: engage the quad by splitting each interior cell's fan-in
+        # into two branches (spec §3.6 — quad needs K≥2). Second half → branch 1.
+        if self.nonlinear:
+            for int_ids in interior_layer_ids:
+                for iid in int_ids.tolist():
+                    srcs, _ = a.inputs_of(iid)
+                    if srcs.numel() >= 2:
+                        half = srcs.numel() // 2
+                        a.grow_branch(iid, srcs[half:])
+            a.refresh_all_phenotypes()
 
 
 def seeded(input_dim: int, initial_classes: int,

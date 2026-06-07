@@ -79,7 +79,7 @@ class Substrate:
 
     def trainable_tensors(self) -> list[torch.Tensor]:
         """Return tensors that should be passed to the optimizer."""
-        tensors = [self.arena.bias, self.arena.edge_weight]
+        tensors = [self.arena.bias, self.arena.edge_weight, self.arena.branch_alpha]
         if self.morphogen is not None:
             tensors.extend(self.morphogen.trainable_tensors())
         return tensors
@@ -88,6 +88,7 @@ class Substrate:
         """Enable gradients on weight tensors and compile."""
         self.arena.bias.requires_grad_(True)
         self.arena.edge_weight.requires_grad_(True)
+        self.arena.branch_alpha.requires_grad_(True)  # learned per-branch α (spec §3.6)
         if self.morphogen is not None:
             self.morphogen.prepare_training()
         self.compile()

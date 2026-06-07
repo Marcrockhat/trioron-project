@@ -4,11 +4,12 @@ from __future__ import annotations
 import torch
 
 from .envelope import Envelope
-from .epigenome import LINEAR, primary_phenotype
+from .epigenome import LINEAR, DENDRITE, primary_phenotype
 from .state import CellState
 
 _DEFAULT_CAPACITY: int = 4096
 _EDGE_FAN_FACTOR: int = 64
+_DEFAULT_BRANCH_CAP: int = 4  # B_max — per-cell dendritic branch budget (spec §3.6)
 
 
 class Arena:
@@ -26,6 +27,7 @@ class Arena:
         *,
         device: str | torch.device = "cpu",
         capacity: int | None = None,
+        branch_cap: int = _DEFAULT_BRANCH_CAP,
     ) -> None:
         self.envelope = envelope
         self.device = torch.device(device)
@@ -33,6 +35,7 @@ class Arena:
         cap = capacity or envelope.max_cells or _DEFAULT_CAPACITY
         self.capacity = cap
         self.cursor: int = 0
+        self.branch_cap = branch_cap  # B_max (spec §3.6)
 
         # ── Per-cell SoA tensors (§2.1 / §2.4) ──────────────────
         self.bias = torch.zeros(cap, device=self.device)
@@ -62,6 +65,16 @@ class Arena:
         # 1.0 = always lateral (builds width), 0.0 = always axial (builds depth)
         self.division_mode = torch.full((cap,), 0.8, device=self.device)
 
+        # ── Dendritic compartmentalization (Axis 5 / spec §3.6) ──
+        # n_branches: K per cell (1 = point neuron ≡ linear). branch_alpha:
+        # learned per-branch pooling weight α_{v,k}; column 0 initialized to 1
+        # so a fresh (K=1) cell pools its single branch at unit gain (affine →
+        # linear, the back-compat guarantee). edge_branch: which branch each
+        # incoming edge feeds (default 0). See grow_branch().
+        self.n_branches = torch.ones(cap, dtype=torch.int32, device=self.device)
+        self.branch_alpha = torch.zeros(cap, self.branch_cap, device=self.device)
+        self.branch_alpha[:, 0] = 1.0
+
         # Slot liveness (True if slot holds a cell — active or dormant)
         self.alive = torch.zeros(cap, dtype=torch.bool, device=self.device)
 
@@ -75,6 +88,7 @@ class Arena:
         self.edge_anchor = torch.zeros(ecap, device=self.device)   # consolidated w_anchor
         self.edge_cursor: int = 0
         self.edge_protected = torch.zeros(ecap, dtype=torch.bool, device=self.device)
+        self.edge_branch = torch.zeros(ecap, dtype=torch.int8, device=self.device)  # branch id per edge (spec §3.6)
 
         # Rank dirtiness flag (commitment 4: deferred recompute)
         self.rank_dirty: bool = False
@@ -133,6 +147,39 @@ class Arena:
 
     def fan_in(self, cell_id: int) -> int:
         return int((self.edge_dst[: self.edge_cursor] == cell_id).sum().item())
+
+    # ── Dendritic growth (Axis 5 / spec §3.6) ─────────────────────
+
+    def grow_branch(
+        self, cell_id: int, source_cells: torch.Tensor | list[int]
+    ) -> int:
+        """Split a new dendritic branch off *cell_id*'s fan-in.
+
+        The incoming edges from *source_cells* are reassigned to a fresh
+        branch; the cell's ``DENDRITE`` gene is expressed (LINEAR cleared so
+        it dispatches as a dendrite), ``n_branches`` is incremented and the
+        new branch's pooling weight ``α`` is initialized to 1. Returns the
+        new branch index. A K=1 cell stays linear-equivalent (spec §3.6); the
+        per-branch quad σ(z)=z+z² only engages once K ≥ 2.
+        """
+        k = int(self.n_branches[cell_id].item())
+        if k >= self.branch_cap:
+            raise RuntimeError(
+                f"branch budget B_max={self.branch_cap} reached for cell {cell_id}"
+            )
+        new_branch = k
+        srcs = torch.as_tensor(source_cells, dtype=torch.int32, device=self.device)
+        dst = self.edge_dst[: self.edge_cursor]
+        src = self.edge_src[: self.edge_cursor]
+        mask = (dst == cell_id) & torch.isin(src, srcs)
+        self.edge_branch[: self.edge_cursor][mask] = new_branch
+        self.n_branches[cell_id] = k + 1
+        with torch.no_grad():
+            self.branch_alpha[cell_id, new_branch] = 1.0
+        epi = int(self.epigenome[cell_id].item())
+        self.epigenome[cell_id] = (epi & ~(1 << LINEAR)) | (1 << DENDRITE)
+        self.refresh_phenotype(cell_id)
+        return new_branch
 
     # ── Phenotype cache ───────────────────────────────────────────
 

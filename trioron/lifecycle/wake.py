@@ -105,6 +105,13 @@ def _restore_arena(arena: Arena, saved: dict) -> None:
     if "division_mode" in saved:
         a.division_mode[:n] = saved["division_mode"].to(a.device)
     a.alive[:n] = saved["alive"].to(a.device)
+    # Dendritic compartmentalization (spec §3.6) — restore branch structure +
+    # learned α so a grown dendrite stays a dendrite across ship/wake.
+    if "n_branches" in saved:
+        a.n_branches[:n] = saved["n_branches"].to(a.device)
+        with torch.no_grad():
+            cols = min(a.branch_alpha.shape[1], saved["branch_alpha"].shape[1])
+            a.branch_alpha[:n, :cols] = saved["branch_alpha"][:, :cols].to(a.device)
 
     ec = saved["edge_cursor"]
     a.edge_cursor = ec
@@ -112,5 +119,7 @@ def _restore_arena(arena: Arena, saved: dict) -> None:
     a.edge_dst[:ec] = saved["edge_dst"].to(a.device)
     with torch.no_grad():
         a.edge_weight[:ec] = saved["edge_weight"].to(a.device)
+    if "edge_branch" in saved:
+        a.edge_branch[:ec] = saved["edge_branch"].to(a.device)
 
     a.rank_dirty = True

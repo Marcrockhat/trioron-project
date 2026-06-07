@@ -214,6 +214,9 @@ class Scheduler:
         if a.bias.grad is not None:
             a.bias.grad[dormant] = 0.0
 
+        if a.branch_alpha.grad is not None:
+            a.branch_alpha.grad[dormant] = 0.0
+
         if a.edge_weight.grad is not None and a.edge_cursor > 0:
             src = a.edge_src[: a.edge_cursor].long()
             dst = a.edge_dst[: a.edge_cursor].long()

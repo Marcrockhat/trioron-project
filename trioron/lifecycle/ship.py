@@ -84,9 +84,15 @@ def _serialize_arena(arena: Arena) -> dict[str, Any]:
         "forward_inclusion": a.forward_inclusion[:a.cursor].clone(),
         "division_mode": a.division_mode[:a.cursor].clone(),
         "alive": a.alive[:a.cursor].clone(),
+        # Dendritic compartmentalization (spec §3.6) — structural + learned, so
+        # it must round-trip or a grown dendrite silently reverts to linear.
+        "branch_cap": a.branch_cap,
+        "n_branches": a.n_branches[:a.cursor].clone(),
+        "branch_alpha": a.branch_alpha[:a.cursor].clone(),
         "edge_src": a.edge_src[:a.edge_cursor].clone(),
         "edge_dst": a.edge_dst[:a.edge_cursor].clone(),
         "edge_weight": a.edge_weight[:a.edge_cursor].clone(),
+        "edge_branch": a.edge_branch[:a.edge_cursor].clone(),
     }
 
 
