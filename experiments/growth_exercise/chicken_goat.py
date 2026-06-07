@@ -17,13 +17,57 @@ from dataclasses import dataclass
 
 import torch
 
-# Per-species body-weight priors (kg): (mean, std).  Realistic-ish adult weights.
-# chicken & cat overlap (both small); goat & cow are well-separated.
+_LOG2PI = math.log(2 * math.pi)
+
+
+@dataclass(frozen=True)
+class Normal:
+    """A per-class body-weight prior: Gaussian over kg."""
+    mean: float
+    std: float
+
+    def sample(self, n: int, g: torch.Generator) -> torch.Tensor:
+        return torch.randn(n, generator=g) * self.std + self.mean
+
+    def log_prob(self, kg: torch.Tensor) -> torch.Tensor:
+        z = (kg - self.mean) / self.std
+        return -0.5 * (z * z) - math.log(self.std) - 0.5 * _LOG2PI
+
+
+@dataclass(frozen=True)
+class Uniform:
+    """A flat prior over [lo, hi] kg -- a class with no characteristic weight.
+
+    Used for dog: breed weight spans chihuahua (~2 kg) to great dane (~85 kg)
+    with no single mode, so dog is an *element of disruption* -- it appears at
+    every weight from cat-size to goat-size, stealing the ambiguous middle and
+    pulling the weight-only Bayes ceiling down.  log_prob is the true uniform
+    likelihood (constant inside, -inf outside) so the ceiling stays honest.
+    """
+    lo: float
+    hi: float
+
+    def sample(self, n: int, g: torch.Generator) -> torch.Tensor:
+        return torch.rand(n, generator=g) * (self.hi - self.lo) + self.lo
+
+    def log_prob(self, kg: torch.Tensor) -> torch.Tensor:
+        inside = (kg >= self.lo) & (kg <= self.hi)
+        lp = torch.full_like(kg, float("-inf"))
+        lp[inside] = -math.log(self.hi - self.lo)
+        return lp
+
+
+# Per-species body-weight priors (kg).  Realistic-ish adult weights.
+# chicken & cat overlap (both small); goat & cow are well-separated.  dog is the
+# DISRUPTOR: a flat distribution from chihuahua to great dane that overlaps cat
+# below and goat above and owns the no-man's-land between them.
 SPECIES = {
-    "chicken": (2.5, 0.6),
-    "cat":     (4.5, 1.0),
-    "goat":    (50.0, 15.0),
-    "cow":     (500.0, 80.0),
+    "chicken": Normal(2.5, 0.6),
+    "cat":     Normal(4.5, 1.0),
+    "dog":     Uniform(2.0, 85.0),
+    "goat":    Normal(50.0, 15.0),
+    "cow":     Normal(500.0, 80.0),
+    "elephant": Normal(5000.0, 800.0),  # a decade above cow on the log axis: larger but cleanly separated
 }
 
 # Default 2-class problem, kept for the binary exercise.
@@ -74,8 +118,7 @@ def make_animals(
 
     kg_parts, y_parts = [], []
     for ci, name in enumerate(species):
-        mean, std = SPECIES[name]
-        w = (torch.randn(n_per_class, generator=g) * std + mean).clamp_min(0.1)
+        w = SPECIES[name].sample(n_per_class, g).clamp_min(0.1)
         kg_parts.append(w)
         y_parts.append(torch.full((n_per_class,), ci, dtype=torch.long))
 
@@ -100,16 +143,11 @@ def make_chicken_goat(n_per_class: int = 256, seed: int = 0) -> Animals:
 
 def bayes_accuracy(d: Animals) -> float:
     """Best achievable accuracy on this sample: assign each example to the class
-    whose TRUE generating Gaussian (in kg space) has highest likelihood, with
+    whose TRUE generating distribution (in kg space) has highest likelihood, with
     equal priors.  This is the information ceiling given weight as the only
     feature -- no classifier (grown or not) can beat it."""
-    log2pi = math.log(2 * math.pi)
-    # (N, C) log-likelihood under each species' true Gaussian.
-    logp = []
-    for name in d.names:
-        mean, std = SPECIES[name]
-        z = (d.kg - mean) / std
-        logp.append(-0.5 * (z * z) - math.log(std) - 0.5 * log2pi)
+    # (N, C) log-likelihood under each species' true generating distribution.
+    logp = [SPECIES[name].log_prob(d.kg) for name in d.names]
     logp = torch.stack(logp, dim=1)
     pred = logp.argmax(dim=1)
     return float((pred == d.y).float().mean())
