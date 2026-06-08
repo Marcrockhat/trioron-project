@@ -147,5 +147,7 @@ toy this matters less (variance is instant; saliency on a tiny set converges fas
   torch 2.11.0, torchvision 0.26.0, WSL2, 12 cores. `python3`, `OMP_NUM_THREADS=8`.
 - Version is single-sourced from `pyproject.toml` (`0.2.2`) via metadata; bump there +
   the fallback literal in `__init__.py` on release.
-- **NOT pushed yet** — push `progenitor-council` (and `v2.0-scaffold` if wanted) at the
-  start/end of next session. Heavy/long session (flagged per warn-on-context-pressure).
+- **Pushed** — `origin/progenitor-council` (session HEAD, tracking set) and
+  `origin/v2.0-scaffold` (carries `efe1f29` + `d46a99f`) are both up to date. Next
+  session: `git checkout progenitor-council` and read this file. Heavy/long session
+  (flagged per warn-on-context-pressure).
