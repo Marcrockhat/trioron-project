@@ -66,10 +66,10 @@ trioron = "trioron.legacy.cli:main"
 Repository = "https://github.com/marcrockhat/trioron-project"
 
 [tool.setuptools]
-# `experiments` is included so the `trioron` CLI can train donors using
-# the existing bench loop without forcing users to clone the repo.
-# Outputs/ and paper/ are explicitly excluded as they are reproduction
-# artifacts and writeup, not library code.
+# The donor/bench modules the CLI needs now live inside the package
+# (trioron.legacy.donorkit) so the wheel is self-contained — no dependency on
+# the top-level experiments/ research dir (now archived). Outputs/ and paper/
+# remain excluded as reproduction artifacts / writeup, not library code.
 packages = [
   "trioron",
   "trioron.core",
@@ -87,7 +87,7 @@ packages = [
   "trioron.legacy.bridge.encoders",
   "trioron.legacy.senses",
   "trioron.legacy.composition",
-  "experiments",
+  "trioron.legacy.donorkit",
 ]
 
 [tool.setuptools.package-data]

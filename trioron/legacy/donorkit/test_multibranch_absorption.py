@@ -22,15 +22,14 @@ import argparse
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import torch
 
-from experiments.datasets import (
+from trioron.legacy.donorkit.datasets import (
     DatasetBundle, build_task_views, chained_15_specs, DEFAULT_DATA_ROOT,
 )
-from experiments.train_donor import SPLIT_BLOCKS
-from trioron.multibranch import Branch, MultiBranchOrganism
+from trioron.legacy.donorkit.train_donor import SPLIT_BLOCKS
+from trioron.legacy.multibranch import Branch, MultiBranchOrganism
 
 
 def task_aware_accuracy(

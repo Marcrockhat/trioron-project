@@ -178,7 +178,7 @@ def cmd_train(args: argparse.Namespace) -> int:
         print("error: provide either --donor <split> or "
               "--from-py path:fn", file=sys.stderr)
         return 2
-    from experiments import train_donor as td
+    from trioron.legacy.donorkit import train_donor as td
     if args.donor not in td.SPLIT_BLOCKS:
         print(f"error: unknown donor split '{args.donor}'. "
               f"choices: {sorted(td.SPLIT_BLOCKS)}",
@@ -331,7 +331,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
         ``trioron.api.TaskData`` whose ``X_test``/``y_test`` fields are
         used as the held-out evaluation set.
     """
-    from experiments.test_multibranch_absorption import (
+    from trioron.legacy.donorkit.test_multibranch_absorption import (
         evaluate as eval_views_,
     )
     org = _load_organism(args.organism)
@@ -355,7 +355,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
             print("error: loader must return a non-empty list of "
                   "trioron.api.TaskData objects", file=sys.stderr)
             return 2
-        from experiments.datasets import TaskDataView
+        from trioron.legacy.donorkit.datasets import TaskDataView
         eval_views = []
         for t in tasks:
             eval_views.append(TaskDataView(
@@ -366,10 +366,10 @@ def cmd_eval(args: argparse.Namespace) -> int:
                 global_classes=list(t.classes),
             ))
     else:
-        from experiments.datasets import (
+        from trioron.legacy.donorkit.datasets import (
             DatasetBundle, build_task_views, DEFAULT_DATA_ROOT,
         )
-        from experiments.train_donor import SPLIT_BLOCKS
+        from trioron.legacy.donorkit.train_donor import SPLIT_BLOCKS
         bundle_dataset_names = []
         union_specs = []
         for b in org.branches:

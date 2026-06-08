@@ -221,7 +221,7 @@ def _apply_config_to_bench(cfg: TrioronConfig) -> None:
     restore them afterward via :func:`_snapshot_bench` /
     :func:`_restore_bench`.
     """
-    from experiments import bench_chained_15task as bench
+    from trioron.legacy.donorkit import bench_chained_15task as bench
     # Manifold replay must be on so the donor accumulates its archive.
     bench.MANIFOLD_REPLAY_ENABLED = True
     bench.HIPPOCAMPAL_ENABLED = False
@@ -260,7 +260,7 @@ def _apply_config_to_bench(cfg: TrioronConfig) -> None:
 def _snapshot_bench() -> Dict[str, Any]:
     """Capture the bench's mutable knobs so we can restore them
     after a build_donor / extend call."""
-    from experiments import bench_chained_15task as bench
+    from trioron.legacy.donorkit import bench_chained_15task as bench
     keys = [
         "MANIFOLD_REPLAY_ENABLED", "HIPPOCAMPAL_ENABLED",
         "HIPPOCAMPAL_SYNTHETIC", "REHEARSAL_ENABLED", "LWF_ENABLED",
@@ -277,7 +277,7 @@ def _snapshot_bench() -> Dict[str, Any]:
 
 
 def _restore_bench(snapshot: Dict[str, Any]) -> None:
-    from experiments import bench_chained_15task as bench
+    from trioron.legacy.donorkit import bench_chained_15task as bench
     for k, v in snapshot.items():
         setattr(bench, k, v)
 
@@ -290,7 +290,7 @@ def _restore_bench(snapshot: Dict[str, Any]) -> None:
 def _to_views(tasks: Sequence[TaskData]) -> Tuple[list, list, list]:
     """Convert user-supplied TaskData into the (train_views, eval_views,
     task_class_lists) triple the bench's run_arm consumes."""
-    from experiments.datasets import TaskDataView
+    from trioron.legacy.donorkit.datasets import TaskDataView
     train_views = []
     eval_views = []
     task_class_lists = []
@@ -377,7 +377,7 @@ def build_donor(
         # going through ARM_DEFINITIONS, since cap_bytes is the most
         # commonly-tuned knob and we don't want users to learn the
         # arm registry.
-        from experiments import bench_chained_15task as bench
+        from trioron.legacy.donorkit import bench_chained_15task as bench
         if cfg.cap_bytes is not None and cfg.cap_bytes > 0:
             bench.ARM_DEFINITIONS[arm]["cap_bytes"] = int(cfg.cap_bytes)
         else:
@@ -844,7 +844,7 @@ def extend(
     Returns:
         Path to the extended donor checkpoint.
     """
-    from experiments import bench_chained_15task as bench
+    from trioron.legacy.donorkit import bench_chained_15task as bench
 
     payload = torch.load(str(donor_path), map_location="cpu", weights_only=False)
     payload_kind = payload.get("kind")
@@ -996,8 +996,8 @@ def _hydrate_donor(payload: Dict[str, Any], arm: str):
     freeze L1 + head: the extension training pass must update them.
     L0 freeze follows the arm's `freeze_l0` setting.
     """
-    from experiments import bench_chained_15task as bench
-    from experiments.datasets import ManifoldBuffer
+    from trioron.legacy.donorkit import bench_chained_15task as bench
+    from trioron.legacy.donorkit.datasets import ManifoldBuffer
     from trioron.legacy.network import TrioronNetwork
 
     n_nodes = list(payload["n_nodes_per_layer"])
@@ -1054,8 +1054,8 @@ def evaluate(
         task_aware_mean: mean task-aware accuracy across tasks
         full_union_mean: mean full-union accuracy across tasks
     """
-    from experiments.test_multibranch_absorption import evaluate as eval_views_
-    from experiments.datasets import TaskDataView
+    from trioron.legacy.donorkit.test_multibranch_absorption import evaluate as eval_views_
+    from trioron.legacy.donorkit.datasets import TaskDataView
     org = load_organism(organism_path)
     views = []
     for t in eval_tasks:

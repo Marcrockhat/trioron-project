@@ -21,12 +21,11 @@ import argparse
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import torch
 
-from experiments import bench_chained_15task as bench
-from experiments.datasets import (
+from trioron.legacy.donorkit import bench_chained_15task as bench
+from trioron.legacy.donorkit.datasets import (
     DatasetBundle, build_task_views, chained_15_specs,
     chained_extension_specs,
 )

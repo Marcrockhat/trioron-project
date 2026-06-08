@@ -80,4 +80,12 @@ __all__ = [
     "update_credit",
     "apply_credit_mask",
 ]
-__version__ = "1.1.0"
+# Single source of truth = pyproject.toml (exposed via installed metadata).
+# Fallback is only hit when running from raw source with no install present;
+# keep it in sync with pyproject's version on release.
+try:
+    from importlib.metadata import version as _pkg_version, PackageNotFoundError
+
+    __version__ = _pkg_version("trioron")
+except PackageNotFoundError:  # pragma: no cover - raw source / not installed
+    __version__ = "0.2.2"

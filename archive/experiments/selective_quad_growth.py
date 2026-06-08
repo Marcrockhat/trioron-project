@@ -79,9 +79,17 @@ def category_task(b, protos, noise, gen):
 # Substrate + selective quad growth
 # ----------------------------------------------------------------------
 def make_child_quad(arena, cid):
-    epi = int(arena.epigenome[cid].item())
-    arena.epigenome[cid] = (epi & ~(1 << LINEAR)) | (1 << DENDRITE)
-    arena.refresh_phenotype(cid)
+    # spec §3.6: the quad engages only with K≥2 branches, so split the child's
+    # inherited fan-in into two branches (grow_branch sets the DENDRITE gene and
+    # clears LINEAR). A bare gene flip is now linear (K=1) — by design.
+    srcs, _ = arena.inputs_of(cid)
+    if srcs.numel() >= 2:
+        half = srcs.numel() // 2
+        arena.grow_branch(cid, srcs[half:])
+    else:
+        epi = int(arena.epigenome[cid].item())
+        arena.epigenome[cid] = (epi & ~(1 << LINEAR)) | (1 << DENDRITE)
+        arena.refresh_phenotype(cid)
 
 
 def count_quad(sub):

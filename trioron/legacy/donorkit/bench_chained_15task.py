@@ -76,18 +76,17 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from trioron.network import TrioronNetwork
-from trioron.packnet import PackNetController
-from trioron.hat import HATController
-from trioron.classification import (
+from trioron.legacy.network import TrioronNetwork
+from trioron.legacy.packnet import PackNetController
+from trioron.legacy.hat import HATController
+from trioron.legacy.classification import (
     accuracy,
     extend_output_head,
     masked_cross_entropy,
     summarize,
 )
-from trioron.dreaming import (
+from trioron.legacy.dreaming import (
     PurgeEvent,
     MergeEvent,
     apoptosis_decay,
@@ -96,7 +95,7 @@ from trioron.dreaming import (
     purge,
 )
 
-from experiments.datasets import (
+from trioron.legacy.donorkit.datasets import (
     DEFAULT_DATA_ROOT,
     BrainstemBuffer,
     DatasetBundle,
@@ -1473,7 +1472,7 @@ def fire_insert_layer_event(
     new layer goes BELOW the old growth target). Caller must rebuild
     the optimizer and update its local target tracker.
     """
-    from trioron.growth_direction import (
+    from trioron.legacy.growth_direction import (
         features_at_growth_point,
         from_activation_residuals,
     )
@@ -4411,7 +4410,7 @@ def run_arm(
                 "factored_l0 requires freeze_l0 arms; subspace factor is "
                 "only valid for frozen L0."
             )
-        from trioron.composition import factor_l0_in_place, PROTOCOL_SEED
+        from trioron.legacy.composition import factor_l0_in_place, PROTOCOL_SEED
         protocol_seed = (
             factored_l0_protocol_seed
             if factored_l0_protocol_seed is not None
@@ -4484,7 +4483,7 @@ def run_arm(
             and infancy_view is not None
             and cfg.get("packnet_mode") is None
             and cfg.get("hat_mode") is None):
-        from trioron.growth_direction import (
+        from trioron.legacy.growth_direction import (
             features_at_growth_point,
             from_activation_residuals,
         )
@@ -5011,7 +5010,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     # enabled. Aligns allow_grow_node / allow_grow_branch /
     # allow_insert_layer + re_apply_after_donor_load across all gates.
     if ANY_AXIS_ENABLED:
-        from trioron.profile import TrioronProfile, REASONING
+        from trioron.legacy.profile import TrioronProfile, REASONING
         TrioronProfile.set_active(REASONING)
         axis_states = " ".join(
             f"Axis{n}={'on' if e else 'off'}"
