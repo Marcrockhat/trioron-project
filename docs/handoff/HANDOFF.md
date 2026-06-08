@@ -1,154 +1,151 @@
 # Trioron Handoff
 
-**Session date:** 2026-06-07
-**Session number:** 023
-**Session title:** **Taxonomy continual-learning bench built & validated — manifold
-replay is the workhorse, the dog/goat overlap shown irreducible; memory
-mechanisms (manifold vs dendrite) untangled; λ-plasticity gate on `divide()`
-shipped (default off).**
-
-Started from s022's progenitor–council design but Rocky steered the session into a
-deep, experiment-driven exploration of trioron's **memory / continual-learning
-machinery**, using the weight-only animals probe as a sandbox and growing it into a
-proper taxonomy CL bench. The council build (s022 step b) was **not** started; step
-(a) — the λ-gate — was. Net output: a validated CL bench + several real mechanism
-findings, all captured in memory and below.
+**Session date:** 2026-06-08
+**Session number:** 024
+**Session title:** **Hard pivot to a from-scratch, supervised progenitor–council
+rebuild. Package made self-contained + experiments archived; new `progenitor-council`
+branch; clean-room input-layer *genesis* built and validated (Steps 1–2b).**
 
 ## Summary (the arc)
 
-1. **λ-plasticity gate on `divide()`** (step a from s022). `grow.py` gained
-   `GrowthConfig.divide_lambda_max`: a parent whose epigenetic-lock λ exceeds it has
-   *matured* and won't divide (division → stem/germline-only). **Default `None`
-   (off)** — the council path turns it on; old growth paths unchanged. Test
-   `test_plasticity_gate_blocks_mature_cell` passes (the 2 carried failures remain).
-
-2. **Manual-grounded clarification of the dog disruptor.** Native retrieval probe
-   (`retrieval_probe.py`): `StreamingMixture` K=4 prototypes hits the weight-only
-   6-class ceiling (0.843); a single Gaussian underfits dog. Linear readout caps at
-   0.78 because dog needs **disjoint** bands (it's flanked by cat below, goat above).
-
-3. **Emergent-label experiment (B)** (`emergent_labels.py`). Naming the overlap
-   (`dog|goat`) is output-side growth; output- and input-growth are complementary.
-   Linear-on-emergent 0.92, +nonlinearity 0.985. Honest "100%" = honest coverage,
-   not beating the Bayes overlap.
-
-4. **10-species taxonomy dataset** (`taxonomy.py`), lean-4 features (weight, height,
-   body_cover, lays_eggs). Naive-Bayes ceiling exact & cheap. Cumulative ceiling:
-   weight 0.736 → +height 0.873 → +cover 0.909. (Bayes-compute scaling: closed-form
-   to ~thousands of features; the wall is leaving the synthetic regime, not the CPU.)
-
-5. **Class-incremental CL bench** (`cl_incremental.py`, 1 species/task). Native
-   machinery turns naive **0.20** → **0.85** (97% of joint-achievable). **Mechanism
-   ablation (tested, after Rocky caught an overclaim):** *manifold replay does ALL
-   the work* (replay-only 0.854); *credit-lock is idle* (bipartite net → only heads
-   lockable, no interior to protect); *λ-EWC HURTS* (over-anchors). Three distinct
-   mechanisms: replay=manifold, credit-lock=`CreditTracker`, λ=`epigenetic_lock`.
-
-6. **Generative beats discriminative memory.** Hard-exemplar / boundary replay is
-   *harmful* (dog → 0): rehearse the **prototype**, not the contested zone. Validates
-   the manifold's generative design.
-
-7. **Two-mechanism architecture** (Rocky's correction): **manifold/astrocyte** =
-   generative photographic memory (unwired memory shelf); **dendrite** = discriminative
-   boundary judgment, consolidated **during dreaming** (the only moment overlapping
-   classes co-exist via replay). `cl_dream_dendrite.py`: dream is load-bearing
-   (no-dream collapses to 0.10); **dendrite+dream+mix(6) = 0.860 = best CL result**.
-
-8. **dog gap shown irreducible.** Across every lever (storage form, exemplars,
-   dendrite capacity, dream) dog stays ~0.52 vs its 0.682 Bayes recall. The overlap
-   is **zero-sum** + CE picks a goat-favoring operating point. Only real levers: more
-   features or the emergent `dog|goat` label. **CORRECTION (post-commit, n=512):** my
-   first "6-species/weight-only hits the ceiling exactly (0.837)" was an **n=128
-   artifact**. At n=512 it's **0.808 vs 0.840**, and dog sits **0.334 vs 0.482** — the
-   **linear substrate leaves dog's disjoint-band part unresolved** (Rocky's catch). A
-   quad/dendrite relocates the boundary (goat 0.91 / dog 0.26) but doesn't resolve both
-   — same zero-sum wall. KEY LIMITATION surfaced: **the CL harness wires NO growth** —
-   it's a fixed bipartite linear net, so trioron's actual mechanism (growing a dendrite
-   where the problem needs one) is UNTESTED. Next session should wire growth/division +
-   the dendrite phenotype into the CL loop.
-
-## Headline numbers
-
-| bench | naive | machinery | ceiling | notes |
-|---|---:|---:|---:|---|
-| CL 6 species, 1 feat (weight, n=512) | — | 0.808 | 0.840 | 96%; dog **0.33** vs 0.48 unresolved (linear, no dendrite) |
-| CL 10 species, 4 feat | 0.200 | 0.847 | 0.909 | 93%; replay-only |
-| CL 10 species + dream+dendrite+mix(6) | — | **0.860** | 0.909 | best CL; goat calibrated |
-| dog per-class (any method) | — | ~0.52 | 0.682 | irreducible overlap |
+The session opened on a dendrite build-conflict and resolved it (spec §3.6 branch
+dendrite, commit `efe1f29`), but Rocky then **reset the whole approach**. His
+verdict: the v2 experimentation produced too much slop/drift under-supervised, and
+he wants to **rebuild the progenitor–council architecture from scratch, one step at
+a time, fully supervised — watching the actual nodes and edges grow, patching the
+structure one fix at a time.** The animal-taxonomy weight problem is the sandbox.
+The rest of the session executed that: a packaging cleanup to get a clean base, a
+new branch, and the first clean-room steps (the input layer). **Three commits this
+session, all on the new branch's lineage.**
 
 ## State of the build
 
-- Branch `v2.0-scaffold`. **Committed this session** (new files + handoff):
-  `experiments/growth_exercise/{retrieval_probe,viz_demo,taxonomy,cl_incremental,emergent_labels,cl_dream_dendrite,cl_weight_only}.py`,
-  `trioron/lifecycle/grow.py` (λ-gate), `tests/test_v2/test_lifecycle.py` (gate test).
-- **Fixes set as defaults** (per Rocky, to be improved next session):
-  `cl_incremental.run` → `replay=True, EWC_STRENGTH=0` (validated workhorse);
-  `cl_dream_dendrite.run` → `dendrite+dream+mix(6)` (best CL).
-- **DO NOT COMMIT / leave alone** (carried since s005): `trioron/bases/developmental.py`,
-  `trioron/lifecycle/developmental.py`, `trioron/viz/export.py` (your in-flight viz/stem
-  edits). `runs/`, `.claude/` untracked.
-- **Council build (s022 step b) NOT started** — still pending.
+- **Branch `progenitor-council`** (off `v2.0-scaffold` @ `d46a99f`, NOT off `main`
+  — `main` is the flat v1.1 layout with **no v2 substrate at all**: no Arena,
+  epigenome, divide, core/. The progenitor–council design needs those, so it must
+  branch off scaffold).
+- **Commits (this session):**
+  1. `efe1f29` — v2 dendrite phenotype → spec §3.6 (branch partition + per-branch
+     quad + learned α; K=1≡linear). On `v2.0-scaffold`. *Largely superseded by the
+     pivot, but it's a correct substrate fix and the tests pass.*
+  2. `d46a99f` — **packaging cleanup**: version single-sourced from metadata
+     (`__init__` was stale `1.1.0`, now reads pyproject `0.2.2`); the 4 donor/bench
+     modules the legacy API+CLI need relocated `experiments/` → `trioron/legacy/donorkit/`;
+     **all of `experiments/` archived → `archive/experiments/`** (not shipped); donor
+     path **un-broken** (it was dead in this layout — stale flat imports + a sys.path
+     hack shadowing stdlib `profile`).
+  3. `b2e90c8` — **clean-room input-layer genesis** in `progenitor/` (Steps 1–2b).
+- **The published API is the v1.1 *legacy* surface** (`trioron/__init__.py` re-exports
+  only `trioron.legacy.*`; CLI = `trioron.legacy.cli:main`). The v2 substrate and the
+  clean room are NOT in the public API → the rebuild is automatically API-safe.
+- **DO NOT COMMIT / carried since s005:** `trioron/bases/developmental.py`,
+  `trioron/lifecycle/developmental.py`, `trioron/viz/export.py` (Rocky's in-flight
+  stem/viz edits — the design doc's §4 germline primitives live here). `runs/`,
+  `.claude/` untracked.
+
+## THE DESIGN — progenitor input-layer genesis (capture this; it's not in any doc)
+
+Emerged this session in conversation; extends `docs/design/progenitor_council.md`
+§3.2/§3.6. The progenitor's job is **input-layer genesis**, and it works like this:
+
+1. **Universal oversized intake.** The progenitor accepts a fixed, oversized
+   aperture (the 1.5 Mi = 1,572,864 ceiling, §3.2) regardless of the data's true
+   dimensionality. Every problem enters through the same wide aperture.
+2. **Position-tagged chunks.** It chunks the aperture into candidate **sensor cells**,
+   each given a **position** from a **seeded-Gaussian field = the *spatial S***. Same
+   seed → identical positions across organisms → graft/absorption-aligned by
+   construction. This is the position-layer analog of the **R·S weight handshake**
+   (`W=R·S`, shared subspace S + per-organism rotation R, lossless cross-seed graft —
+   see memory `l0_subspace_factor_trump_card`); positions **compose with** R·S, they
+   don't replace it. Gaussian → center-dense/foveated (retinal). A 1-D sensor is just
+   **one input node** (lowest resolution); finer resolutions are added later by CL.
+3. **APOPTOSIS FIRST (the key ordering, Rocky's correction).** A signal diluted
+   1/1.5 M IS noise — you can't detect it by pooling. So **variance apoptosis fires
+   first**: it's a *statistic* (no training), so it mass-recycles every empty
+   (zero-variance) cell immediately and cheaply, removing the diluting "solvent." Only
+   the small variance-bearing survivor set goes to the council.
+4. **Saliency second.** The council judges survivors by `u = |w·g|` (the **third
+   triparametric node param**): a chunk with variance but no *learning* (doesn't
+   reduce loss) is recycled; high-`u` chunks feed back to the progenitor and are
+   **cloned into a branch** routed to the council.
+5. **Converge + disconnect.** For 1-D weight this collapses to **one node** = the
+   input layer. The progenitor then **disconnects** (steps back, stays plastic —
+   germline, never frozen). **CL:** upgraded data spawns a *new* input layer, **linked**
+   to the prior ones to provide multi-resolution.
+
+**Cost / depth:** collapsing 1.5 Mi to 1 by recursive division is `ceil(log_b N)` —
+**21 binary, 5 via the council's 20-way (5 phenotypes × 4)**; total ≈ depth × patience.
+But apoptosis-first means the cheap variance pass does the bulk cull, so the expensive
+(training) saliency runs on only a handful of cells.
+
+**Open design knob — patience / judge-timing.** Don't judge saliency on step 1 (a
+slow-to-learn feature would be wrongly recycled). The council owns "keep judging until
+the balance topples to a stable verdict" (§3.6 stop signal). In the apoptosis-first
+toy this matters less (variance is instant; saliency on a tiny set converges fast).
 
 ## Decisions made (the why)
 
-- **EWC off by default** — tested: it monotonically hurts on the small shared net;
-  hard credit-lock + replay are the levers (matches the manual).
-- **Generative > discriminative memory** — tested: boundary exemplars erase the class
-  anchor; the manifold should store prototypes.
-- **dog is not a memory/capacity problem** — it's the Bayes overlap + CE operating
-  point; stop chasing it with storage tricks.
-- **Lean-4 features, class-incremental 1-at-a-time** — Rocky's picks for the first
-  small-batch CL test.
-- **torch proxy for the dream/dendrite test** — faithful because the input-space
-  manifold = a per-class Gaussian; native-substrate port deferred.
+- **Branch off scaffold, not main** — main has no v2 substrate; the design needs it.
+- **Relocate donor/bench into the package** (Option B) over leaving them in `experiments/` —
+  makes the wheel self-contained; surfaced + fixed pre-existing donor-path breakage.
+- **Apoptosis-first ordering** — kills the 1/N dilution problem; the naive
+  hierarchical "re-train a pooler per partition and read `|w·g|`" FAILED (kept 51/64
+  cols: diluted signal vanishes at coarse levels, `u` not comparable across re-trained
+  levels). Deleted; replaced by variance-first.
+- **Seeded-Gaussian positions = spatial S**, composing with R·S (not replacing it).
 
-## Open questions / next-up
+## Clean room — `progenitor/` (Steps 1–2b, all validated)
 
-1. **Pick the thread.** Two live paths: **(α)** continue s022's **council build**
-   (step b: trial-vote differentiation on disruptor-dog, λ-gate now exists); or
-   **(β)** push the **taxonomy CL bench** — close the 0.847→0.909 gap (duck
-   consolidation), and the dog operating-point via **cost-sensitive weighting** or the
-   **emergent `dog|goat` label**. Ask Rocky which.
-2. **Wire SELECTIVE dendrite SPAWNING into the CL loop (the concrete next experiment).**
-   None of the s023 benches spawn dendrites the native way: `cl_incremental`/
-   `cl_weight_only` have no growth at all, and `cl_dream_dendrite`'s "dendrite" is a
-   **fixed, always-on, UNIFORM quad** MLP — which `selective_quad_growth.py`'s own
-   verdict says **regresses CL by −11pp**. So the 0.860 there is a uniform-quad result,
-   not a spawned dendrite, and that's likely why it traded dog for goat instead of
-   carving the boundary. The right experiment: reuse `selective_quad_growth.py`'s
-   **frustration-gated `divide()` → DENDRITE-child** mechanism (adaptive escalation:
-   grow linear while it reduces loss; once linear width plateaus → escalate to quad)
-   **inside the CL loop**, so the substrate spawns a quad cell *specifically at the
-   dog/goat frustration*, linear everywhere else. Then re-test dog/goat. Also: use the
-   real offline `dream_cycle` instead of inline rehearsal, and interior cells so
-   credit-lock has something to protect. Files: `selective_quad_growth.py`
-   (`make_child_quad`, the discriminator), `lifecycle/grow.py:divide` (+ the new
-   `divide_lambda_max` gate), `lifecycle/developmental.py` (stem/phenotype).
-3. **Viz: render the astrocyte memory shelf** — diamonds beside the outputs, unwired,
-   dashed-linked to their head; and fix the layered layout into the real
-   `trioron/viz/export.py` (currently force-directed/random — hides depth).
-4. **Multi-seed** everything (current CL/dream numbers are single-seed).
-5. **Carried:** 2 pre-existing `test_lifecycle` failures; s020 growth audit.
+- `data.py` — self-contained 6-animal weight testbed (dog = `Uniform(2,85)` disruptor;
+  weight-only Bayes ≈ 0.84/0.85). No dependency on the archived experiments.
+- `positions.py` — seeded-Gaussian sensor positions (the spatial-S handshake).
+- `step1_baseline.py` — the floor: 1 perception → 6 linear outputs, every node/edge
+  printed. Overall 0.807; **dog collapses to 0.324** (vs 0.482 Bayes) — the gap the
+  council must fix.
+- `step2_genesis.py` — flat genesis loop: oversized aperture → variance gate (empties)
+  + saliency `|w·g|` gate (no-learning noise) → 1 node.
+- `step2b_apoptosis.py` — **the canonical version**: variance apoptosis FIRST (mass,
+  no training) → saliency on the concentrated few. 256 → 250 culled → 6 → 1. Converges.
+
+## Open questions / next-up (priority order)
+
+1. **Input-layer tail (small):** amplify the surviving sensor → a branch; the
+   progenitor **disconnect**. Both near-trivial at 1 node; can fold into Step 3.
+2. **Step 3 — the standing 5×4 council + trial-vote differentiation** (§3.3–3.4): the
+   council that grows a **DENDRITE for dog** (and stays linear elsewhere), which is
+   what closes the 0.324→0.482 dog gap. This is the real differentiation mechanism.
+3. **Position-handshake under growth (deferred this session):** same seed aligns
+   *birth* positions, but independent growth/recycle diverges the draw order. Needs a
+   basis-level invariant (the R·S analog) not per-index seed equality.
+4. **CL multi-resolution linking (deferred):** upgraded data → new linked input layer.
+5. **Carried:** 2–4 pre-existing `test_v2` failures (handoff s023 said 2; it's 4 —
+   verified pre-existing by stashing); the s020 growth audit.
+
+## Decisions/results from the (now-superseded) dendrite thread
+
+- `efe1f29` made the v2 dendrite spec-§3.6-correct (branch-partitioned quad). Validated
+  on the rings task + `selective_quad_growth` (1.000 relational, 0 quad on linear).
+- BUT the native **selective-dendrite CL bench was a wash** (n=3): linear floor already
+  ~0.877 (96% of Bayes), quad trades duck for goat, dog gap stays ~0.58. The
+  `cl_selective_dendrite` bench got archived with the rest. Lesson that drove the pivot:
+  the taxonomy CL had no headroom; the real test regime is the weight-only disjoint band.
 
 ## Pointers
 
-- **Datasets:** `taxonomy.py` (10-species, 4-feat, `bayes_accuracy`), `chicken_goat.py`
-  (weight-only `SPECIES`).
-- **CL benches:** `cl_incremental.py` (ablation harness), `cl_weight_only.py`
-  (6/1 comparison), `cl_dream_dendrite.py` (dream + dendrite).
-- **Probes:** `retrieval_probe.py` (StreamingMixture on dog), `emergent_labels.py`
-  (output-growth), `viz_demo.py` (layered render → `runs/viz_demo.html`).
-- **λ-gate:** `trioron/lifecycle/grow.py:divide` (`divide_lambda_max`).
-- **Machinery:** `learning/{manifold,credit,epigenetic_lock,dream}.py`. Astrocytes =
-  `forward_inclusion=False` (spec §2.11). Manual §4–5.
-- **Memory (s023):** [[cl_replay_workhorse]], [[generative_beats_discriminative_memory]],
-  [[manifold_astrocyte_dendrite_split]], [[dream_dendrite_validated]],
-  [[dog_gap_irreducible]], [[taxonomy_cl_dataset]].
-- **Still open from s022:** `docs/design/progenitor_council.md` (council build).
+- **Design (the only reference for the rebuild):** `docs/design/progenitor_council.md`
+  (+ the genesis spec above). Deliberately ignoring `MEMORY.md` / `paper/v3/spec.md`
+  during the rebuild to avoid the doc-overload drift that derailed earlier.
+- **Clean room:** `progenitor/` (run `python3 -m progenitor.step2b_apoptosis`).
+- **Substrate primitives the design uses:** `trioron/core/{arena,epigenome}.py`,
+  `trioron/lifecycle/{grow,developmental}.py`, `trioron/bases/developmental.py`.
+- **Handshake:** memory `l0_subspace_factor_trump_card` (R·S), `foreign_donor_pool_vs_seed`.
+- **Archived experiments:** `archive/experiments/` (not shipped; not maintained).
 
 ## Environment notes
 
-- `/home/marcrockhat/trioron-project/`, branch `v2.0-scaffold`. Python 3.10.12,
-  torch 2.11.0+cu130, WSL2, 12 cores. `python3`, `OMP_NUM_THREADS=8`.
-- Exercise/CL runs are fast (seconds–~2 min). All s023 CL numbers are **single-seed**.
-- Heavy session (long, many experiments) — flagged per the warn-on-context-pressure rule.
+- `/home/marcrockhat/trioron-project/`, branch `progenitor-council`. Python 3.10.12,
+  torch 2.11.0, torchvision 0.26.0, WSL2, 12 cores. `python3`, `OMP_NUM_THREADS=8`.
+- Version is single-sourced from `pyproject.toml` (`0.2.2`) via metadata; bump there +
+  the fallback literal in `__init__.py` on release.
+- **NOT pushed yet** — push `progenitor-council` (and `v2.0-scaffold` if wanted) at the
+  start/end of next session. Heavy/long session (flagged per warn-on-context-pressure).
