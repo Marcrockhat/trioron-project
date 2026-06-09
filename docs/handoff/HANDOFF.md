@@ -99,14 +99,40 @@ taxonomy the dendrite's quad models feature interactions a linear re-route canno
 it separates with >1 input dim. Tokens/spatial/temporal are still required for
 attention/conv/recurrent specifically.
 
+## Also this session — genesis wired in front of the council, + convergence check
+
+Rocky: "wire the genesis in front of the council, stick with the design." Done.
+`experiments/progenitor/genesis.py` (+ `run_taxonomy_genesis.py`), commit **`e8473bb`**.
+The perception layer is now GROWN, not hand-allocated (design §3.2/§3.6):
+
+- Aperture of **64** candidate sensors (7 real features planted + 5 noise + 52 empty).
+- **Phase 1 apoptosis** (variance, NO training): 52 empties recycled in one pass → 12 survive.
+- **Phase 2 saliency** `u=|w·g|` (200-step probe): keeps the **7 real**, recycles all 5 noise.
+- → input layer GROWN to 7 cells; the SAME council decision runs on the survivors and
+  reproduces the hand-allocated result **identically** (0.896 → dendrite soma → dog
+  0.566→0.695, 38 cells/395 edges).
+- **Fix vs step2b:** the 0.10-of-max saliency threshold (calibrated for ONE planted
+  feature) recycled the weak categorical one-hots (kept 3/7); lowered to **0.01-of-max**
+  (noise sits at ~0 saliency, well below any real feature) → recovers all 7 exactly.
+
+**Convergence (Rocky's 600-step question):** the standing council hits **0.889 by step
+50** and plateaus ~0.896 by **step ~150**; TRAIN_STEPS=600 is conservative headroom
+(300→600 buys +0.003, noise-level). Safe to cut to ~200 if speed matters; left at 600
+to preserve the committed canonical numbers — **knob, Rocky's call.** The real time cost
+is the decision's aim-ramp (SOMA_STEPS=800 × ~7 aims × trials), not the council train.
+
 ## Open questions / next-up (priority order)
 
-1. **Promote to `trioron/progenitor/` + multi-locus.** The mechanism is validated on
-   both testbeds; migrate it into the shipping subpackage. While doing so, generalize
-   the single-locus decision to re-pick the most-frustrated cell each round (the
-   taxonomy flagged chicken AND dog; the loop only addressed dog) — the council should
-   work down the frustrated set until overall stops improving globally.
-2. **attention/conv/recurrent differentiation** still needs the multi-data-TYPE phase
+1. **Promote to `trioron/progenitor/` + multi-locus.** The mechanism (genesis + council
+   decision) is validated on both testbeds; migrate it into the shipping subpackage. While
+   doing so, generalize the single-locus decision to re-pick the most-frustrated cell each
+   round (the taxonomy flagged chicken AND dog; the loop only addressed dog) — work down
+   the frustrated set until overall stops improving globally.
+2. **One-arena genesis.** Genesis currently runs in its own aperture probe and hands the
+   surviving columns to `build_council`; faithful to the design's stage sequence but not
+   yet one living arena. In-arena apoptosis (recycle aperture cells + rewire to council)
+   is the tighter integration if wanted.
+3. **attention/conv/recurrent differentiation** still needs the multi-data-TYPE phase
    (tokens / spatial / temporal) — only the dendrite separates on tabular features.
 2. **Promote to `trioron/progenitor/`.** The mechanism (snapshot/restore in-vivo
    trial, frustration locus, ramped-aim commit, overall-peak comprehension gate) is
