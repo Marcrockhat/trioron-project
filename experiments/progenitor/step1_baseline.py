@@ -9,7 +9,7 @@ the Bayes ceiling.
 Expected (design doc §5): overall ~0.79, with dog the casualty — a linear readout
 cannot carve dog's disjoint band. That gap is the thing the council exists to fix.
 
-Run: python3 -m progenitor.step1_baseline
+Run: python3 -m experiments.progenitor.step1_baseline
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from trioron.core.epigenome import (
 )
 from trioron.phenotype import default_dispatch_table
 
-from progenitor.data import make_data, bayes_accuracy, bayes_per_class
+from .data import make_data, bayes_accuracy, bayes_per_class
 
 _PHENO_NAME = {0: "linear", 1: "attention", 2: "conv", 3: "recurrent", 4: "dendrite"}
 

@@ -75,6 +75,13 @@ class Arena:
         self.branch_alpha = torch.zeros(cap, self.branch_cap, device=self.device)
         self.branch_alpha[:, 0] = 1.0
 
+        # ── Recurrent unroll depth (Axis 7 / spec §3.5) ──
+        # k_unroll: per-cell K (1 = no unrolling). The recurrent phenotype unrolls
+        # a cell's self/lateral (back-)edges this many steps per forward pass; a
+        # recurrent cell with NO back-edge is linear-identical regardless of K.
+        # Capped at 8 (spec §1, point 4 — serial-depth bound).
+        self.k_unroll = torch.ones(cap, dtype=torch.int32, device=self.device)
+
         # Slot liveness (True if slot holds a cell — active or dormant)
         self.alive = torch.zeros(cap, dtype=torch.bool, device=self.device)
 

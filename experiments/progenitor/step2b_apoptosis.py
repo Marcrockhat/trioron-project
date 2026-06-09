@@ -17,7 +17,7 @@ Toy: a mostly-empty aperture (the realistic case) — one weight column, a few n
 columns, the rest empty. Apoptosis kills the empty bulk in one pass; saliency
 finishes on the handful that remain.
 
-Run: python3 -m progenitor.step2b_apoptosis
+Run: python3 -m experiments.progenitor.step2b_apoptosis
 """
 from __future__ import annotations
 
@@ -28,8 +28,8 @@ from trioron.core import Envelope, construct
 from trioron.core.epigenome import PERCEPTION, OUTPUT, set_gene
 from trioron.phenotype import default_dispatch_table
 
-from progenitor.data import make_data, bayes_accuracy
-from progenitor.positions import sensor_positions
+from .data import make_data, bayes_accuracy
+from .positions import sensor_positions
 
 APERTURE_N = 256         # oversized intake (toy stand-in for 1.5 Mi)
 WEIGHT_COL = 37          # the one informative column

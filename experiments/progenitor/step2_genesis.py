@@ -17,7 +17,7 @@ noise + empty chunks recycled.
 (The proxy council here is the linear readout; the standing 5×4 council is Step 3.
 Amplify-into-branch and the progenitor disconnect are the tail of this thread.)
 
-Run: python3 -m progenitor.step2_genesis
+Run: python3 -m experiments.progenitor.step2_genesis
 """
 from __future__ import annotations
 
@@ -28,8 +28,8 @@ from trioron.core import Envelope, construct
 from trioron.core.epigenome import PERCEPTION, OUTPUT, set_gene
 from trioron.phenotype import default_dispatch_table
 
-from progenitor.data import make_data, bayes_accuracy
-from progenitor.positions import sensor_positions
+from .data import make_data, bayes_accuracy
+from .positions import sensor_positions
 
 APERTURE_SEED = 0xC0FFEE      # the shared spatial-S seed (handshake basis)
 N_NOISE = 4                   # noise chunks: variance present, NO learning

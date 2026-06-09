@@ -74,6 +74,7 @@ packages = [
   "trioron",
   "trioron.core",
   "trioron.phenotype",
+  "trioron.progenitor",
   "trioron.bases",
   "trioron.learning",
   "trioron.learning.baselines",

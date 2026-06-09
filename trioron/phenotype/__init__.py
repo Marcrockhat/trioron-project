@@ -8,6 +8,9 @@ from trioron.core.epigenome import LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE
 from trioron.core.scheduler import ForwardFn
 from . import linear
 from . import dendrite
+from . import recurrent
+from . import attention
+from . import conv
 
 _REGISTRY: dict[int, ForwardFn] = {}
 
@@ -23,7 +26,7 @@ def default_dispatch_table() -> dict[int, ForwardFn]:
 
 
 register(LINEAR, linear.forward_batch)
-register(CONV, linear.forward_batch)
-register(ATTENTION, linear.forward_batch)
-register(RECURRENT, linear.forward_batch)
+register(CONV, conv.forward_batch)           # real lineage weight-tying; reduces to linear at own-root
+register(ATTENTION, attention.forward_batch) # real SDPA over fan-in; reduces to linear at 1 token
+register(RECURRENT, recurrent.forward_batch) # real self/lateral unroll; reduces to linear w/o back-edge
 register(DENDRITE, dendrite.forward_batch)   # real quad σ(z)=z+z², not a stub
