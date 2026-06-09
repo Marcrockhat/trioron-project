@@ -284,23 +284,33 @@ def commit_with_ramp(sub, winner, ci, base, train_d, test_d, names):
 def main() -> None:
     train_d = make_data(seed=0, n_per_class=256)
     test_d = make_data(seed=1, n_per_class=512)
+    run_decision(train_d, test_d, bayes_per_class(test_d),
+                 n_in=1, n_out=6, bayes_overall=0.840)
+
+
+def run_decision(train_d, test_d, bpc, *, n_in, n_out, bayes_overall):
+    """The in-place council decision, dataset-agnostic. Same living-organism loop for
+    the 6-animal 1-feature probe and the 10-species 4-feature taxonomy — only the
+    council's I/O width changes."""
     names = test_d.names
-    bpc = bayes_per_class(test_d)
+    w = max(8, max(len(n) for n in names))
 
     # 1. The standing council learns end-to-end. Seed BEFORE construction so the
     #    council's edge init (and thus its trained basin) is deterministic.
     torch.manual_seed(0)
-    sub = build_council()
+    sub = build_council(n_in=n_in, n_out=n_out)
     train(sub, train_d, TRAIN_STEPS)
     base = measure(sub, test_d, names)
     base_recall, base_resid, base_overall = base
+    init_recall, init_overall = list(base_recall), base_overall   # standing-council snapshot
 
-    print("Step 3c — the council decides IN PLACE (one living organism)\n")
+    print("Step 3c — the council decides IN PLACE (one living organism)")
+    print(f"  ({len(names)} classes, {n_in}-d input, council 5×4 germline)\n")
     print("  1. standing council trained end-to-end:")
-    print(f"     {'class':>8} {'recall':>7} {'bayes':>6} {'resid':>7}")
+    print(f"     {'class':>{w}} {'recall':>7} {'bayes':>6} {'resid':>7}")
     for c, n in enumerate(names):
-        print(f"     {n:>8} {base_recall[c]:>7.3f} {bpc[c]:>6.3f} {base_resid[c]:>7.3f}")
-    print(f"     OVERALL recall {base_overall:.3f}  bayes 0.840")
+        print(f"     {n:>{w}} {base_recall[c]:>7.3f} {bpc[c]:>6.3f} {base_resid[c]:>7.3f}")
+    print(f"     OVERALL recall {base_overall:.3f}  bayes {bayes_overall:.3f}")
 
     # 2. Local frustration → spawn locus (the data chooses dog).
     cands, thresh = frustrated_cells(base_resid)
@@ -315,13 +325,13 @@ def main() -> None:
     print(f"\n  3. trial-vote — each phenotype divides a soma daughter aimed at "
           f"'{names[ci]}' (aim {PROBE_AIM:g}), in vivo:")
     results, winner = trial_vote(sub, ci, base, train_d, test_d, names)
-    print(f"     {'phenotype':>9} {names[ci]+'↑':>9} {'overall':>7}  gate")
+    print(f"     {'phenotype':>9} {names[ci]+'↑':>{w}} {'overall':>7}  gate")
     for ph in PHENOTYPES:
         if ph not in results:
             continue
         m, accept = results[ph]
         flag = "  ← winner" if ph == winner else ""
-        print(f"     {_PHENO_NAME[ph]:>9} {m[0][ci]:>9.3f} {m[2]:>7.3f}  "
+        print(f"     {_PHENO_NAME[ph]:>9} {m[0][ci]:>{w}.3f} {m[2]:>7.3f}  "
               f"{'OK' if accept else 'veto'}{flag}")
     print(f"     → the data picks {_PHENO_NAME[winner].upper()} "
           f"(best gated relief — not a privileged phenotype)")
@@ -362,12 +372,15 @@ def main() -> None:
 
     # 5. Report what grew.
     final_recall, _, final_overall = measure(sub, test_d, names)
+    a = sub.arena
     print(f"\n  5. decision complete — committed {committed} {_PHENO_NAME[winner]} soma "
           f"(council stands, germline).")
-    print(f"     {'class':>8} {'after':>7} {'bayes':>6}")
+    print(f"     final substrate: {a.cursor} cells, {a.edge_cursor} edges")
+    print(f"     {'class':>{w}} {'before':>7} {'after':>7} {'bayes':>6}")
     for c, n in enumerate(names):
-        print(f"     {n:>8} {final_recall[c]:>7.3f} {bpc[c]:>6.3f}")
-    print(f"     OVERALL after {final_overall:.3f}  bayes 0.840")
+        print(f"     {n:>{w}} {init_recall[c]:>7.3f} {final_recall[c]:>7.3f} {bpc[c]:>6.3f}")
+    print(f"     {'OVERALL':>{w}} {init_overall:>7.3f} {final_overall:>7.3f} {bayes_overall:>6.3f}")
+    return sub, committed, winner
 
 
 if __name__ == "__main__":
