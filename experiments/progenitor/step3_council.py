@@ -63,7 +63,7 @@ _PHENO_NAME = {LINEAR: "linear", ATTENTION: "attention", CONV: "conv",
 SEED = 0xC0FFEE
 
 
-def build_council(n_in: int = 1, n_out: int = 6):
+def build_council(n_in: int = 1, n_out: int = 6, capacity: int | None = None):
     """Hand-wire the standing council:  perception → 20 council cells → outputs.
 
     Every council cell is a *trial daughter* of one phenotype, fed by the
@@ -125,8 +125,11 @@ def build_council(n_in: int = 1, n_out: int = 6):
         base.council = council
         base.outs = outs.tolist()
 
+    # capacity = perception + 20 council + outputs + headroom for soma growth.
+    n_council = len(PHENOTYPES) * CELLS_PER_PHENOTYPE
+    cap = capacity if capacity is not None else n_in + n_council + n_out + 128
     sub = construct(base=base, envelope=Envelope(),
-                    dispatch_table=default_dispatch_table(), capacity=64)
+                    dispatch_table=default_dispatch_table(), capacity=cap)
     sub.perc = base.perc
     sub.council = base.council
     sub.outs = base.outs
