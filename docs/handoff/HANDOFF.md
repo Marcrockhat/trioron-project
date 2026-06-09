@@ -36,12 +36,15 @@ existing connected organism, no offline simulation, no hand-wired answer. It wor
 
 ## State of the build
 
-- **Branch `progenitor-council`.** New commit: **`cb09468`**
-  (`feat(progenitor): council decides type AND count IN PLACE on one organism`).
+- **Branch `progenitor-council`.** New commits: **`cb09468`** (in-place decision),
+  **`ae421b8`** (taxonomy run + dataset-agnostic `run_decision` refactor).
 - **Committed (experiment, does not ship):**
   - `experiments/progenitor/step3c_council_decides.py` — the in-place decision. ONE
     substrate; snapshot/restore rollback; trial-vote; ramped-aim commit loop;
-    comprehension gate. Run: `python3 -m experiments.progenitor.step3c_council_decides`.
+    comprehension gate; `run_decision(...)` is dataset-agnostic. Run:
+    `python3 -m experiments.progenitor.step3c_council_decides`.
+  - `experiments/progenitor/data_taxonomy.py` — clean-room 10-species/4-feature
+    taxonomy (incl. turtle). `experiments/progenitor/run_taxonomy.py` — the runner.
 - **Deleted (superseded, were untracked):** `step3c_spawn.py`, `bounded_dendrite.py`
   — the offline per-phenotype simulation + bounded-σ experiment. Both replaced.
 - **DO-NOT-COMMIT / carried since s005 (verified excluded from `cb09468`):**
@@ -76,15 +79,35 @@ existing connected organism, no offline simulation, no hand-wired answer. It wor
 5. **Reproducibility:** seed BEFORE `build_council` — the council's edge init (hence
    its trained basin) is otherwise non-deterministic and dog lands anywhere 0.41–0.52.
 
+## Also this session — taxonomy run (turtle dataset), and a corrected claim
+
+Ran the SAME decision loop on the **10-species / 4-feature taxonomy** (s023 dataset,
+brought clean-room into `experiments/progenitor/data_taxonomy.py` + `run_taxonomy.py`;
+`main` refactored into a dataset-agnostic `run_decision`). Commit **`ae421b8`**.
+
+- Standing council overall 0.896 (Bayes 0.911); frustration flags **chicken+dog**,
+  locus = dog (worst, 0.566 vs Bayes 0.682).
+- **Trial-vote: DENDRITE WINS outright** (dog relief 0.674 vs ~0.63 for the linear
+  family) — the first genuine phenotype differentiation.
+- Commits **1 dendrite soma** (aim 1.6) → dog 0.566→**0.695** (≈ Bayes 0.682), overall
+  0.896→**0.901**, gave back duck+goat toward Bayes. Final substrate **38 cells / 395
+  edges**, count emergent.
+
+**Corrects the s025/s026 claim that the multi-data-TYPE phase is needed to break the
+vote tie.** Only multi-FEATURE is needed: on 1-D all 5 phenotypes tie, but on the 7-d
+taxonomy the dendrite's quad models feature interactions a linear re-route cannot, so
+it separates with >1 input dim. Tokens/spatial/temporal are still required for
+attention/conv/recurrent specifically.
+
 ## Open questions / next-up (priority order)
 
-1. **Multi-data-type phase (the real phenotype differentiator).** The trial-vote is a
-   genuine 5-way TIE on a 1-D static scalar — attention/conv/recurrent reduce to linear
-   without multi-token / spatial / temporal structure, and dendrite ties because the
-   council already supplies curvature. Mixing data types is what makes the vote
-   *select* a non-linear phenotype on its own. This is the build that proves the
-   council's selection mechanism, not just its plumbing. (Rocky's s025 sequencing:
-   cement 1-D + CL first — done — THEN mix types.)
+1. **Promote to `trioron/progenitor/` + multi-locus.** The mechanism is validated on
+   both testbeds; migrate it into the shipping subpackage. While doing so, generalize
+   the single-locus decision to re-pick the most-frustrated cell each round (the
+   taxonomy flagged chicken AND dog; the loop only addressed dog) — the council should
+   work down the frustrated set until overall stops improving globally.
+2. **attention/conv/recurrent differentiation** still needs the multi-data-TYPE phase
+   (tokens / spatial / temporal) — only the dendrite separates on tabular features.
 2. **Promote to `trioron/progenitor/`.** The mechanism (snapshot/restore in-vivo
    trial, frustration locus, ramped-aim commit, overall-peak comprehension gate) is
    validated; migrate it into the shipping subpackage once (1) exercises it on a real
