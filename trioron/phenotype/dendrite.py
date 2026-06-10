@@ -5,21 +5,23 @@ stack of linear cells is mathematically a single linear map — no depth or
 composition gain, and relational operations (comparison, XOR, products) are
 unrepresentable. The dendrite phenotype (Axis 5) partitions a cell's fan-in into
 ``K`` branches; each branch computes a *local* linear combine over its input
-partition, passes it through a per-branch nonlinearity (default ``quad``,
-σ(z) = z + z² — the NMDA-style supralinear activation from v1.1), and the branch
+partition, passes it through a per-branch nonlinearity (default ``gcos``,
+σ(z) = z·cos z — the Growing Cosine Unit, an oscillatory activation), and the branch
 outputs are pooled at the soma with learned per-branch weights α:
 
     y_v = b_v + Σ_k α_{v,k} · σ( Σ_{u ∈ B_k(v)} w_{vu}·a_u )
 
-The per-branch ``z²`` term yields all pairwise products *within a branch* — the
-multiplicative primitive that makes coincidence detection / comparison learnable
-where a linear cell cannot (DMS / quad-dendrite result, 2026-06-01). Because the
+The ``z·cos z`` term is non-monotonic and periodic, so a single branch can carve
+*multiple* decision boundaries (a lone GCU unit solves XOR) — well suited to the
+multimodal class regions of the capacity-hard taxonomy, where a class occupies
+several disjoint modes. At small ``z`` (init std 0.01) ``cos z ≈ 1`` so σ(z) ≈ z:
+the unit starts near-linear and grows curvature as weights grow. Because the
 partition is per-branch, different branches can specialize to *disjoint* regions
 of the fan-in — exactly what a disjoint-band decision boundary needs.
 
 **K = 1 is byte-identical to linear** (spec §3.6 back-compat guarantee): with a
-single branch the quad term is suppressed and α₀ = 1, so y = b + Σ w·a. The quad
-nonlinearity engages only once a second branch is grown (``arena.grow_branch``).
+single branch the GCU term is suppressed and α₀ = 1, so y = b + Σ w·a. The
+oscillatory nonlinearity engages only once a second branch is grown (``arena.grow_branch``).
 This is the heterogeneous-substrate design: cells stay linear (sensing + CL
 stability) and grow branches *only* where relational frustration demands it
 (``selective_quad_growth`` verdict: a uniform always-on quad regresses CL −11pp).
@@ -44,7 +46,7 @@ def forward_batch(
     """Branch-partitioned quad combine for all dendrite cells in *bucket*.
 
     y_v = b_v + Σ_k α_{v,k} · σ(z_{v,k}),  z_{v,k} = Σ_{u∈B_k(v)} w_{vu}·a_u,
-    σ(z) = z + z²  (suppressed to σ(z) = z for K=1 cells → linear-equivalent).
+    σ(z) = z·cos z  (GCU; suppressed to σ(z) = z for K=1 cells → linear-equivalent).
     """
     cells = bucket.cell_ids.long()
     n_cells = cells.numel()
@@ -76,7 +78,7 @@ def forward_batch(
             dst_local[kmask].unsqueeze(0).expand(batch, -1),
             weighted[:, kmask],
         )
-        sigma = zk + is_multi * zk * zk          # σ(z)=z+z² (K≥2) or z (K=1)
+        sigma = zk + is_multi * (zk * torch.cos(zk) - zk)   # σ(z)=z·cos z (GCU, K≥2) or z (K=1)
         out = out + alpha[:, k].unsqueeze(0) * sigma
 
     return out

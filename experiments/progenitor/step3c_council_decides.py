@@ -46,15 +46,29 @@ import torch
 import torch.nn.functional as F
 
 from trioron.core.epigenome import DENDRITE
-from trioron.lifecycle.grow import divide
+from trioron.lifecycle.grow import divide, GrowthConfig
+
+# Depth-enabled growth (s027): same_rank_edges lets a child draw from same-rank cells;
+# recompute_ranks then promotes it to rank+1, so the substrate self-organises DEPTH
+# instead of staying a bipartite 12→hidden→32 MLP. Off-by-default in GrowthConfig kept
+# every spawned cell at rank 1 (audit: flat single hidden layer, all-to-all readout,
+# inherit+new edge collisions). This config is what commit_soma divides with.
+_GROW_CFG = GrowthConfig(same_rank_edges=True)
 
 from .data import make_data, bayes_per_class
 from .step3_council import build_council, PHENOTYPES, _PHENO_NAME
 
 SPAWN_K = 1.0        # relative recruitment: residual > mean + K·std → frustrated
 NOISE = 0.01         # tolerance band for "relieved" / overall regression
-TRAIN_STEPS = 600    # standing-council training
-SOMA_STEPS = 800     # per-soma training burst (trial or commit)
+TRAIN_STEPS = 600    # standing-council training (the base fit)
+# Deciding structure (which phenotype, how many) is a cheap SCREEN, not a fit: a short
+# probe is enough to see which phenotype has the most impact — it need not converge or
+# plateau (Rocky, s026). The expensive training happens ONCE at the end over the whole
+# network including the chosen spawned cells. So per-trial steps are small; only the
+# final pass is long. (Old code ran ~800 steps × 5 phenotypes × ~7 aims = thousands of
+# throwaway steps that the final whole-network train subsumes anyway.)
+DECIDE_STEPS = 50    # per-trial probe (vote + aim ramp) — screen only, never converge
+FINAL_STEPS = 600    # the single full-network train over council + committed soma
 PROBE_AIM = 1.3      # the aim at which phenotypes are compared in the trial-vote
 AIM_LEVELS = [1.1, 1.2, 1.3, 1.4, 1.6, 1.8, 2.0]   # ramp; gate picks the ceiling
 MAX_COMMITS = 6      # safety cap on the count (never the design count)
@@ -155,6 +169,26 @@ def train_soma(sub, d, steps, cid, ci, aim):
         opt.step()
 
 
+def train_full(sub, d, steps, ci, aim):
+    """The single expensive pass: train the WHOLE network — council germline +
+    every committed soma + the readout — end-to-end, with the frustrated class *ci*
+    up-weighted by *aim*. This is where the weights are actually fit; the per-trial
+    probes only DECIDED the structure (which phenotype, how many). The up-weight is
+    retained here because plain CE relaxes the frustrated (low-density) class back to
+    its CE optimum — the spawned capacity only pays off if the loss keeps aiming at it."""
+    a = sub.arena
+    sub.prepare_training()
+    opt = torch.optim.Adam(sub.trainable_tensors(), lr=LR)
+    w = torch.ones(len(sub.outs), device=a.device)
+    if ci is not None:
+        w[ci] = aim
+    for _ in range(steps):
+        opt.zero_grad()
+        F.cross_entropy(sub(d.x), d.y, weight=w).backward()
+        torch.nn.utils.clip_grad_norm_(sub.trainable_tensors(), 1.0)
+        opt.step()
+
+
 def measure(sub, d, names):
     sub.compile()
     with torch.no_grad():
@@ -189,7 +223,7 @@ def commit_soma(sub, phenotype):
     """
     a = sub.arena
     parent = sub.council[phenotype][0]
-    ev = divide(a, parent)
+    ev = divide(a, parent, _GROW_CFG)
     if ev is None:
         return None
     cid = ev.child_id
@@ -241,7 +275,7 @@ def trial_vote(sub, ci, base, train_d, test_d, names):
         cid = commit_soma(sub, ph)
         if cid is None:
             restore(sub, snap); continue
-        train_soma(sub, train_d, SOMA_STEPS, cid, ci, PROBE_AIM)
+        train_soma(sub, train_d, DECIDE_STEPS, cid, ci, PROBE_AIM)
         m = measure(sub, test_d, names)
         accept, *_ = comprehension_gate(m, base, ci, names)
         results[ph] = (m, accept)
@@ -264,7 +298,7 @@ def commit_with_ramp(sub, winner, ci, base, train_d, test_d, names):
     post = snapshot(sub.arena)                 # soma exists, untrained
     best = None
     for aim in AIM_LEVELS:
-        train_soma(sub, train_d, SOMA_STEPS, cid, ci, aim)
+        train_soma(sub, train_d, DECIDE_STEPS, cid, ci, aim)
         m = measure(sub, test_d, names)
         accept, *_ = comprehension_gate(m, base, ci, names)
         # Comprehension = best NET accuracy (overall), not most dog recall: "relieve
@@ -277,7 +311,7 @@ def commit_with_ramp(sub, winner, ci, base, train_d, test_d, names):
     if best is None:
         return cid, None, None                 # soma can only over-claim
     aim, m = best
-    train_soma(sub, train_d, SOMA_STEPS, cid, ci, aim)   # apply the chosen aim for real
+    train_soma(sub, train_d, DECIDE_STEPS, cid, ci, aim)   # place the soma for the next gate; the final full train refines it
     return cid, aim, m
 
 
@@ -342,9 +376,11 @@ def run_decision(train_d, test_d, bpc, *, n_in, n_out, bayes_overall):
     #    returns IS the §3.6 stop signal. (Local frustration can't be the stop here: dog
     #    is inherently uncertain — Uniform — so its residual stays the field's highest
     #    even at the Bayes optimum, and the relative threshold never clears.)
-    print(f"\n  4. commit loop ({_PHENO_NAME[winner]} soma; stop = overall stops improving):")
+    print(f"\n  4. commit loop ({_PHENO_NAME[winner]} soma, {DECIDE_STEPS}-step screens; "
+          f"stop = overall stops improving):")
     committed = 0
     best_overall = base_overall
+    last_aim = PROBE_AIM
     while committed < MAX_COMMITS:
         snap = snapshot(sub.arena)
         cid, aim, m = commit_with_ramp(sub, winner, ci, base, train_d, test_d, names)
@@ -366,14 +402,22 @@ def run_decision(train_d, test_d, bpc, *, n_in, n_out, bayes_overall):
         base = m
         base_recall, base_resid, base_overall = base
         best_overall = base_overall
+        last_aim = aim
         print(f"     +soma#{committed} (cell {cid}, aim {aim:g}): {names[ci]}→"
               f"{base_recall[ci]:.3f}  overall {base_overall:.3f}  "
               f"gave-back={regressed or 'none'}  → COMMIT ✓")
 
-    # 5. Report what grew.
+    # 5. The single expensive pass: train the WHOLE network with the chosen structure.
+    #    Everything above only SCREENED the structure with cheap probes; here the
+    #    weights are actually fit, council + all committed soma together.
+    print(f"\n  5. final train — whole network ({committed} soma + council), "
+          f"{FINAL_STEPS} steps, '{names[ci]}' aim {last_aim:g}:")
+    train_full(sub, train_d, FINAL_STEPS, ci if committed else None, last_aim)
+
+    # 6. Report what grew.
     final_recall, _, final_overall = measure(sub, test_d, names)
     a = sub.arena
-    print(f"\n  5. decision complete — committed {committed} {_PHENO_NAME[winner]} soma "
+    print(f"\n  6. decision complete — committed {committed} {_PHENO_NAME[winner]} soma "
           f"(council stands, germline).")
     print(f"     final substrate: {a.cursor} cells, {a.edge_cursor} edges")
     print(f"     {'class':>{w}} {'before':>7} {'after':>7} {'bayes':>6}")

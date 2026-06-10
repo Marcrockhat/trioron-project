@@ -189,3 +189,72 @@ is the differentiation probe:
   subtractive (hard-cut mature layers to 0).
 - Council vote integration window (how much data topples the balance).
 - Exact retinal-compression ratio / structure in the progenitor.
+
+## 7. Branch-id locality architecture (s027 — supersedes council/divide growth)
+
+The council/`divide()` growth tangled on the capacity-hard taxonomy: every
+soma divided from one shared parent and `project_to_consumers` wired each
+child to all of the parent's consumers, so later somata wired into earlier
+ones — a rank-12 sibling pile-up from 29 cells (audit: 112 later-sibling
+back-wires; longest path = 11 somata in series, not composition), plus an
+all-to-all hidden→output readout that dilutes every weight. `same_rank_edges`
+broke the bipartite lock but only produced the tangle; it gave no controlled
+*width*. The `divide()` symmetric/axial flag is cosmetic (position only — the
+edge policy never reads it).
+
+**The replacement is a 2-D sheet of shallow thin columns**, addressed by a
+**hard `branch_id`** (`[x,y]`) and a **`layer`** (depth):
+
+- **Thin chain:** exactly one cell per `(branch_id, layer)`. Width = number of
+  branches; depth = column height, **bounded shallow** (cortex-like — scale
+  lives in width, not depth).
+- **Two independent axes per growth event** (separate, not coupled):
+  - *Orientation*: **lateral** = mint a fresh `branch_id`, a new cell at layer 1
+    reading all perception (parallel feature / new column); **axial** = inherit
+    the `branch_id`, `layer+1`, drawing only from the column's own current top.
+  - *Phenotype*: linear / dendrite(GCU) / attention / … (how it combines). The
+    deep-linear-collapse physics (substrate has no ambient nonlinearity) makes a
+    linear *axial* cell vacuous, so meaningful depth requires a nonlinear
+    phenotype — the physics biases the grid, it does not gate it.
+- **Readout reads TOPS only:** each branch's top cell feeds the outputs; when a
+  column deepens, its output edges are **re-pointed** (`edge_src` rewritten in
+  place) from the old top to the new — sparse, no all-to-all dilution, no edge
+  removal needed.
+
+**Frustration splits `[F_lateral, F_depth]`, measured PER BRANCH (locality):**
+
+- `F_lateral[branch]` = an *unread input direction* (local effective rank below
+  local input dim). It **saturates cleanly** when the basis is complete — width
+  stops minting redundant branches on its own (this also kills the inherit/new
+  edge-dup bug, which was a symptom of the tiny rank-0 pool).
+- `F_depth[branch]` = the residual that *survives* width — by definition
+  non-linear in the local features. Because the depth trigger is **per-branch**,
+  it is **not starved by global width competition** — the documented fix for
+  *"depth never fires"* (the recurring failure across prior experiments).
+
+**Loop:** Phase 1 widen until `F_lateral` saturates → Phase 2 deepen the
+most-frustrated column with a nonlinear phenotype until `F_depth` saturates.
+Saturate-then-deepen, locally.
+
+**First result** (`step5_branch.py` / `run_branch.py`, GCU dendrite, hard
+taxonomy, seed 0): width saturates on its own at **13 branches** (0.077→0.409 ≈
+the linear ceiling); **DEPTH FIRES** and helps (**+0.068**, 0.409→0.478). No
+tangle (max depth 5, one column, all composition branch-local). Validates the
+mechanisms; absolute accuracy (0.478 vs council ~0.78) is low because **Phase 2
+concentrated all depth in ONE column** — post-convergence `|w·g|` is a weak
+depth-target (every converged top reads ~0, the selector tie-breaks to branch 0,
+then its fresh GCU cell dominates). **Next:** spread depth across columns with a
+residual / which-class-still-wrong depth-target signal instead of raw `|w·g|`.
+
+### Still open / known caveats (s027)
+
+- `trioron/phenotype/dendrite.py` is now **GCU `σ(z)=z·cos z` GLOBALLY** (Rocky's
+  call) — tests asserting `z+z²` will fail; a future cleanup is per-cell/config
+  selection rather than a global swap.
+- Branch architecture lives at experiment level (`step5_branch.py`); it does NOT
+  use the package `divide()` (which still tangles). Promotion into
+  `trioron/progenitor/` waits until depth-spread + readout are validated.
+- The epigenetic lock λ and per-cell utility `u` are still **unwired** in the
+  growth path (`arena.utility` reads all-zero; no `accumulate_saliency`). The
+  prune arm and the normalized-λ lock (log-domain, per-weight self-ratio) are
+  designed but unbuilt.

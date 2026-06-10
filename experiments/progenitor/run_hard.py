@@ -13,15 +13,15 @@ import torch
 
 from .data_hard import make_split, bayes_accuracy
 from .step3_council import build_council
-from .step4_grow import grow_council
+from .step4_grow import grow_council_frustration
 
 
 def main() -> None:
     tr, te = make_split()                       # canonical hard config (K=32, D=12, M=3)
-    print("Step 4 — single-process growth on the capacity-hard taxonomy\n")
+    print("Step 4 — multi-phenotype frustration loop on the capacity-hard taxonomy\n")
     torch.manual_seed(0)
     sub = build_council(n_in=tr.x.shape[1], n_out=len(te.names))
-    grow_council(sub, tr, te, te.names, bayes_accuracy(te))   # warms up + grows in ONE process
+    grow_council_frustration(sub, tr, te, te.names, bayes_accuracy(te))   # escalates phenotype on stall
 
 
 if __name__ == "__main__":

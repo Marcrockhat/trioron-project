@@ -41,6 +41,11 @@ GROW_TRAIN = 120      # steps of continued training after each growth event
 MAX_SOMA = 32         # safety cap on the count
 PLATEAU_EPS = 0.004   # stop growing when a growth event no longer raises overall by this
 
+# ── frustration-loop dials (s027) ──
+GAP_TOL = 0.010       # frustration is "cleared" when overall is within this of Bayes
+REWARD_GAIN = 2.0     # reward a phenotype's score per unit of accuracy it earns
+PENALTY = 0.050       # penalty subtracted from a phenotype's score when its batch stalls
+
 
 def _cohort_saliency(sub, train_d, cohort):
     """Per-cohort-cell saliency u=Σ|w·g| over its edges — the substrate's native
@@ -120,3 +125,89 @@ def grow_council(sub, train_d, test_d, names, bayes_overall):
     print(f"  overall {base:.3f} → {final:.3f}  (Bayes {bayes_overall:.3f}; "
           f"closed {final - base:.3f} of {bayes_overall - base:.3f} gap)")
     return n_soma, winner, final
+
+
+def grow_council_frustration(sub, train_d, test_d, names, bayes_overall):
+    """Multi-phenotype frustration loop (Rocky, s027).
+
+    ``grow_council`` commits to ONE phenotype from a single vote and stops when that
+    phenotype plateaus — it cannot recover from a wrong pick (the GCU run exposed this:
+    the thin-margin vote flipped to ATTENTION, attention stalled, and the loop gave up
+    with the gap wide open). This version treats a stall as *unrelieved frustration*:
+
+      • each phenotype carries a REWARD SCORE, seeded from cohort saliency;
+      • spawn a batch of the best-scoring phenotype into the live net;
+      • if overall rises → REWARD that phenotype (keep investing in what works);
+      • if it stalls → PENALISE that phenotype, EXHAUST it, and re-select the next-best
+        type (spawn a DIFFERENT cell when the current one stops earning);
+      • stop only when the gap to Bayes clears, every phenotype is exhausted, or the
+        soma cap is hit — not when the *first* phenotype plateaus.
+    """
+    sub.prepare_training()
+    opt = torch.optim.Adam(sub.trainable_tensors(), lr=LR)
+
+    def step():
+        opt.zero_grad()
+        F.cross_entropy(sub(train_d.x), train_d.y).backward()
+        opt.step()
+
+    def acc():
+        return measure(sub, test_d, names)[2]
+
+    # ── warm up the standing council ──
+    for _ in range(WARMUP):
+        step()
+    base = acc()
+    print(f"  standing council: overall {base:.3f}  "
+          f"(Bayes {bayes_overall:.3f}, gap {bayes_overall - base:.3f})\n")
+
+    # ── spawn the trial cohort; probe; seed per-phenotype reward from saliency ──
+    cohort = {ph: commit_soma(sub, ph) for ph in PHENOTYPES}
+    sub.compile()
+    for _ in range(PROBE):
+        step()
+    reward = _cohort_saliency(sub, train_d, cohort)        # initial preference = |w·g| usage
+    ustr = " ".join(f"{_PHENO_NAME[p][:4]}={reward[p]:.3f}" for p in
+                    sorted(reward, key=lambda p: -reward[p]))
+    print(f"  cohort competed in-training; initial reward |w·g| [{ustr}]\n")
+
+    n_soma = len(cohort)
+    best = acc()
+    exhausted: set[int] = set()
+    grown = {ph: 0 for ph in PHENOTYPES}
+
+    # ── frustration loop: spawn until the gap clears or every type is exhausted ──
+    while (n_soma < MAX_SOMA and (bayes_overall - best) > GAP_TOL
+           and len(exhausted) < len(reward)):
+        live = [p for p in reward if p not in exhausted]
+        winner = max(live, key=lambda p: reward[p])
+
+        for _ in range(GROW_BATCH):
+            commit_soma(sub, winner); n_soma += 1
+        grown[winner] += GROW_BATCH
+        sub.compile()
+        for _ in range(GROW_TRAIN):
+            step()
+        m = acc()
+        delta = m - best
+
+        if delta > PLATEAU_EPS:
+            reward[winner] += REWARD_GAIN * delta
+            best = m
+            tag = f"reward +{REWARD_GAIN * delta:.3f}; keep growing it"
+        else:
+            reward[winner] -= PENALTY
+            exhausted.add(winner)
+            tag = f"penalty -{PENALTY:.3f} → exhaust; escalate phenotype"
+
+        print(f"  +{GROW_BATCH} {_PHENO_NAME[winner]:>9} (soma {n_soma}) "
+              f"→ overall {m:.3f}  Δ{delta:+.3f}  [{tag}]")
+
+    final = acc()
+    why = ("gap cleared" if (bayes_overall - best) <= GAP_TOL else
+           "soma cap" if n_soma >= MAX_SOMA else "all phenotypes exhausted")
+    mix = ", ".join(f"{grown[p]} {_PHENO_NAME[p]}" for p in PHENOTYPES if grown[p]) or "none"
+    print(f"\n  grown mix: cohort 5 + [{mix}]   (stopped: {why})")
+    print(f"  overall {base:.3f} → {final:.3f}  (Bayes {bayes_overall:.3f}; "
+          f"closed {final - base:.3f} of {bayes_overall - base:.3f} gap)")
+    return n_soma, grown, final

@@ -37,7 +37,11 @@ VAR_EPS = 1e-4       # below this variance a cell is "empty" → apoptose
 # sits at ~0 saliency, far below any real feature, so a small fraction cleanly
 # separates real from noise. (0.10 kept only 3 of 7 taxonomy features; 0.01 recovers all 7.)
 SAL_FRAC = 0.01
-SAL_STEPS = 200      # probe-train length for the saliency stage
+# Saliency separates real features from noise by ~10 steps (noise weights collapse
+# fast, and the real-vs-noise saliency gap is large); 21 clears that floor with
+# margin. 200 was ~10× overkill — genesis only needs to DECIDE which sensors are real,
+# not converge a classifier (verified: 5 steps keeps noise, ≥10 recovers all 7).
+SAL_STEPS = 21       # probe-train length for the saliency stage
 SEED = 0xC0FFEE
 
 
