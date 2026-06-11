@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable
 import torch
 
 from .epigenome import PERCEPTION, OUTPUT, RECEPTOR, has_gene
-from .receptor import N_QUANTA, quantize
+from .receptor import N_QUANTA, quantize_frame
 from .state import CellState
 
 if TYPE_CHECKING:
@@ -73,8 +73,10 @@ class Scheduler:
         self._last_activations: torch.Tensor | None = None
         # Pocket values q from the most recent forward's receptor injection
         # ([batch, n_receptors], plan.receptor_ids order) — the PCLL controller
-        # reads these to deposit with the mask rule (spec §10.3).
+        # reads these to deposit with the mask rule (spec §10.3). The frame is
+        # the per-sample (lo, hi) of the continuous gain frame (§10.5).
         self._last_receptor_q: torch.Tensor | None = None
+        self._last_receptor_frame: tuple | None = None
         self.sparsity_k = sparsity_k
 
     def set_dispatch_table(self, table: dict[int, ForwardFn]) -> None:
@@ -219,8 +221,11 @@ class Scheduler:
             disc = levels >= 2
             q = torch.empty_like(xr)
             cont = ~disc
+            self._last_receptor_frame = None
             if bool(cont.any()):
-                q[:, cont] = quantize(xr[:, cont])
+                q[:, cont], lo, hi = quantize_frame(xr[:, cont])
+                # per-sample gain frames — the PCLL frame registry (§10.5)
+                self._last_receptor_frame = (lo.detach(), hi.detach())
             if bool(disc.any()):
                 k = levels[disc].to(xr.dtype)
                 q[:, disc] = N_QUANTA * (2 * xr[:, disc] + 1) / (2 * k)

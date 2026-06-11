@@ -238,12 +238,12 @@ class PerceptionGenesis:
         kept = [c for c in range(len(ids)) if verdicts[c].kind != "starved"]
 
         sub.compile()   # receptor set changed (starved withdrawn)
-        codec = _build_codec(levels_sorted)
         # handover: the controller attaches in this program's place, with the
         # stress router over the germline's book (spec §10.6)
         from .stress import StressRouter
         self.router = StressRouter(self.germline)
-        self.controller = PCLLController(sub, codec=codec, stress=self.router)
+        self.controller = PCLLController(sub, codec_levels=levels_sorted,
+                                         stress=self.router)
 
         # NATAL REPLAY (s030): discard the distorted pre-census deposits and
         # replay the buffered period through the FINAL receptor configuration
@@ -272,26 +272,6 @@ class PerceptionGenesis:
             kept=kept, importance=importance,
             event=natal.event, class_name=natal.class_name,
         )
-
-
-def _build_codec(levels_sorted: Dict[int, List[float]]) -> Optional[Callable]:
-    """Raw level values → level indices for discrete columns (the
-    scheduler's labeled-line contract). Bucketize on midpoints so the
-    mapping is robust to float jitter."""
-    if not levels_sorted:
-        return None
-    bounds = {
-        c: torch.tensor([(lv[j] + lv[j + 1]) / 2 for j in range(len(lv) - 1)])
-        for c, lv in levels_sorted.items()
-    }
-
-    def codec(x: torch.Tensor) -> torch.Tensor:
-        x = x.clone()
-        for c, b in bounds.items():
-            x[:, c] = torch.bucketize(x[:, c].contiguous(), b).to(x.dtype)
-        return x
-
-    return codec
 
 
 def germline_base(substrate) -> None:

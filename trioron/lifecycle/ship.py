@@ -46,6 +46,13 @@ def ship(
 
     state["arena"] = _serialize_arena(a)
 
+    # PCLL learned world (spec §10.5 / D10e): signatures with frame stamps,
+    # read state, codec levels, stress book — restored via
+    # PCLLController.load_state_dict on the woken substrate.
+    pcll = getattr(substrate, "_pcll", None)
+    if pcll is not None and hasattr(pcll, "state_dict"):
+        state["pcll"] = pcll.state_dict()
+
     if quantize_dormant:
         state["arena"]["quantized_dormant"] = _quantize_dormant_weights(a)
 

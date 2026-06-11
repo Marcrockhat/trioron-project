@@ -39,6 +39,16 @@ def quantize(x: torch.Tensor) -> torch.Tensor:
     return torch.round(N_QUANTA * (x - lo) / span)
 
 
+def quantize_frame(x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """quantize() that also returns the per-sample gain frame (lo, hi) —
+    the PCLL frame registry reads these (spec §10.5 translation layer)."""
+    lo = torch.minimum(x.amin(dim=-1, keepdim=True), x.new_zeros(1))
+    hi = x.amax(dim=-1, keepdim=True)
+    span = (hi - lo).clamp_min(1e-9)
+    q = torch.round(N_QUANTA * (x - lo) / span)
+    return q, lo.squeeze(-1), hi.squeeze(-1)
+
+
 def phase(x: torch.Tensor) -> torch.Tensor:
     """Receptor phase θ ∈ [0, 2π]: the partition mapped onto the full
     period (2π/1000 per quantum). q = 1000 → 2π = one full period."""

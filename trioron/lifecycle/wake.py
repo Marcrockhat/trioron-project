@@ -61,6 +61,10 @@ def wake(
     if "optimizer_state" in state:
         substrate._optimizer_state = state["optimizer_state"]
 
+    if "pcll" in state:
+        # restore via: PCLLController(substrate).load_state_dict(substrate._pcll_state)
+        substrate._pcll_state = state["pcll"]
+
     return substrate
 
 
