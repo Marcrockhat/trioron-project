@@ -211,7 +211,8 @@ The epigenome is a 16-bit mask. Reserved gene assignments:
 | 9 | `weight_tied_lineage` | cell shares its weight tensor with lineage siblings |
 | 10 | reserved | (claimed experimentally by `MIRROR`, not part of the base spec) |
 | 11 | `receptor` | PCLL phase injection (§10.2): co-expressed with `perception`; the scheduler writes the cell's activation as the receptor phase θ instead of the raw input value. Marker gene, not an expression gene — receptor cells skip dispatch like all perception cells. |
-| 12–15 | reserved | future genes (modulatory, neuromodulator, etc.) |
+| 12 | `tanh` | bounded-saturation expression gene (§3.10): y = tanh(b + Σ w·a). Added s030; holds a council seat group like every expression gene. |
+| 13–15 | reserved | future genes (modulatory, neuromodulator, etc.) |
 
 The phenotype dispatcher (`core/scheduler.py`) reads the epigenome and
 selects the cell's primary phenotype for batched dispatch. When
@@ -997,9 +998,10 @@ composition rule).
 
 ### 3.9 Honest Limits
 
-The phenotype set ships with five entries because each maps to a
+The phenotype set ships with six entries because each maps to a
 recognized architectural family (linear → MLP, attention → transformer,
-conv → CNN, recurrent → RNN, dendrite → multi-compartment neuron). The
+conv → CNN, recurrent → RNN, dendrite → multi-compartment neuron,
+tanh → bounded-saturation MLP; tanh added s030, §3.10). The
 claim is *not* that v2.0 reaches state-of-the-art on any of these
 families' home benchmarks. The claim is:
 
@@ -1015,6 +1017,21 @@ The substrate does not yet match purpose-built architectures on any
 single family. Section 4 documents the learning machinery that drives
 expression, and Section 5 the selection pressure that decides which
 phenotypes survive.
+
+### 3.10 Tanh
+
+Added s030 (numbered after §3.9 to keep prior references stable). Gene
+bit 12; expression gene, so it joins `EXPRESSION_GENES`, the dispatch
+table, and the council (one 4-cell seat group, §10.6).
+
+    y_v = tanh( b_v + Σ_{u∈inputs(v)} w_{vu} · a_u )
+
+The bounded-saturation primitive the palette lacked: `linear` is
+unbounded-affine, `dendrite` (z+z²) is unbounded-expansive — the GCU
+detonation (s028) showed what unbounded expansive nonlinearity does in
+depth. Tanh composes safely in depth (|y| ≤ 1 regardless of fan-in) and
+gives the council a saturating option where the problem wants soft
+clipping rather than curvature. Reduces to ~linear for |z| ≪ 1.
 
 ---
 
@@ -3232,6 +3249,7 @@ trioron/
 | `recurrent.py` | Self-edges, fixed-depth unroll (cap 8) | 3.5 |
 | `dendrite.py` | Branch partition, quad nonlinearity, soma pooling | 3.6 |
 | `composite.py` | Multi-gene composition rules, additive accumulation pass | 3.7 |
+| `tanh.py` | Bounded-saturation affine (added s030) | 3.10 |
 
 ### 9.4 `bases/` — Modular Construction Recipes
 
@@ -3428,6 +3446,7 @@ to its defining section and primary implementation file:
 | Conv | 3.4 | `phenotype/conv.py` |
 | Recurrent | 3.5 | `phenotype/recurrent.py` |
 | Dendrite | 3.6 | `phenotype/dendrite.py` |
+| Tanh | 3.10 | `phenotype/tanh.py` |
 | Credit-based locking | 4.1 | `learning/credit.py` |
 | Frustration | 4.2 | `learning/frustration.py` |
 | Dream cycle | 4.3 | `learning/dream.py` |
@@ -3573,7 +3592,11 @@ developmental program (progenitor + attached council replace the genesis
 pre-pass; council judges importance from deposit evidence, progenitor is
 the sole spawner) and the stress drivers (empty → grow sensation,
 ambiguity → grow discrimination, routed through the conserved council
-vote economy with habituation ×0.5 / floor 0.2).
+vote economy with habituation ×0.5 / floor 0.2). The council seats one
+4-cell group per expression gene (6 × 4 = 24 with tanh, §3.10). The
+NATAL REPLAY rule (s030): period 1's buffered observations are replayed
+through the final receptor configuration at the first sitting and
+learned as a normal period — no class is lost to organ-building.
 
 ---
 

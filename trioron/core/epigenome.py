@@ -21,8 +21,11 @@ RECEPTOR: int = 11  # PCLL phase injection (spec §10.2): co-expressed with PERC
                     # the scheduler injects the receptor phase θ = 2π·q/1000 instead of
                     # the raw input value. Marker gene, not an expression gene —
                     # receptor cells skip dispatch like all perception cells.
+TANH: int = 12      # bounded-saturation expression gene (spec §3.10, s030):
+                    # y = tanh(b + Σ w·a). Composes safely in depth (|y| ≤ 1) —
+                    # the bounded counterpart to the unbounded dendrite quad.
 
-EXPRESSION_GENES: tuple[int, ...] = (LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE)
+EXPRESSION_GENES: tuple[int, ...] = (LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE, TANH)
 
 
 # ── Bit helpers (work on scalars and tensors) ─────────────────────

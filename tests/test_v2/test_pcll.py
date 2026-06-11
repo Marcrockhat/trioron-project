@@ -155,6 +155,9 @@ class TestPerceptionGenesis:
         assert sitting.discrete == {1: 2}
         kinds = {c: v.kind for c, v in sitting.verdicts.items()}
         assert kinds[2] == "continuous" and kinds[3] == "continuous"
+        # natal replay: the period-1 class is LEARNED at the sitting (s030)
+        assert sitting.event == "birth" and sitting.class_name is not None
+        assert len(pg.controller.learner.classes) == 1
         # starved column: receptor withdrawn, cell dormant, mapping intact
         from trioron.core.epigenome import RECEPTOR, has_gene
         a = sub.arena
@@ -184,7 +187,9 @@ class TestPerceptionGenesis:
             report = sub.end_task()
             for r in report.retired:
                 retired_at[cols[r]] = p
-        assert retired_at == {3: RETIRE_PATIENCE}  # noise out after exactly 3
+        # the natal replay (s030) is the first testimony, so the noise column
+        # retires after RETIRE_PATIENCE-1 further periods — 3 testimonies total
+        assert retired_at == {3: RETIRE_PATIENCE - 1}
         kept = {cols[i] for i in range(len(cols)) if ctrl.read_mask[i]}
         assert kept == {1, 2}
         # shadow semantics: retired receptor keeps its gene and deposits
@@ -196,13 +201,14 @@ class TestPerceptionGenesis:
         assert a.lockin_n[noise_cell].item() > 0
 
     def test_germline_never_forward_and_votes_conserved(self):
+        from trioron.core.epigenome import EXPRESSION_GENES
         sub, pg, _, _ = self._grow()
         g = pg.germline
         a = sub.arena
         germ = [g.progenitor_id] + [c for ids in g.council_ids.values() for c in ids]
-        assert len(germ) == 21
+        assert len(germ) == 1 + 4 * len(EXPRESSION_GENES)  # 25 with tanh (s030)
         assert not a.forward_inclusion[torch.tensor(germ)].any()
-        assert abs(sum(g.votes.values()) - 20.0) < 1e-9
+        assert abs(sum(g.votes.values()) - 4.0 * len(EXPRESSION_GENES)) < 1e-9
         for cid in pg.perception_ids.tolist():
             assert int(a.parent[cid].item()) == g.progenitor_id
 

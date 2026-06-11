@@ -4,13 +4,14 @@ See spec §3.1.  New phenotypes register here via :func:`register`.
 """
 from __future__ import annotations
 
-from trioron.core.epigenome import LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE
+from trioron.core.epigenome import LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE, TANH
 from trioron.core.scheduler import ForwardFn
 from . import linear
 from . import dendrite
 from . import recurrent
 from . import attention
 from . import conv
+from . import tanh
 
 _REGISTRY: dict[int, ForwardFn] = {}
 
@@ -30,3 +31,4 @@ register(CONV, conv.forward_batch)           # real lineage weight-tying; reduce
 register(ATTENTION, attention.forward_batch) # real SDPA over fan-in; reduces to linear at 1 token
 register(RECURRENT, recurrent.forward_batch) # real self/lateral unroll; reduces to linear w/o back-edge
 register(DENDRITE, dendrite.forward_batch)   # real quad σ(z)=z+z², not a stub
+register(TANH, tanh.forward_batch)           # bounded saturation; ~linear for |z|≪1 (spec §3.10)

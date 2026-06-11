@@ -27,7 +27,8 @@ Gate asserts (PASS required before I3):
   - every noise column retires by habituation; no real column ever does;
   - final read set == the 7 real columns == the genesis baseline kept-set
     (kept-set quality ≥ genesis, with zero gradient probes);
-  - the germline (progenitor + 20 council cells) stays active, never locks;
+  - the natal period's class is LEARNED at the first sitting (natal replay);
+  - the germline (progenitor + council) stays active, never locks;
   - no gradients: no optimizer exists, edge_weight.grad is None, 0 edges.
 
 Run: python3 -m experiments.progenitor.run_i2_genesis   (from project root)
@@ -80,18 +81,29 @@ def run_seed(seed: int) -> None:
     assert all(k == 2 for k in sitting.discrete.values()), "non-binary k"
     cont = {c for c, v in sitting.verdicts.items() if v.kind == "continuous"}
     assert cont == (realset - binary_cols) | noiseset, "continuous verdicts wrong"
+    assert sitting.event == "birth", "natal period was not learned"
 
     ctrl = pg.controller
     plan_cols = sub.scheduler._plan.receptor_cols.tolist()  # receptor idx → aperture col
     retired_at: dict[int, int] = {}
+    absorbed: dict[str, list[str]] = {sitting.class_name: [tr.names[0]]}
     for c in range(1, n_out):
         ctrl.observe(per_class[c])
         report = sub.end_task()
+        assert report.event != "empty", f"species period {c} read empty"
+        absorbed.setdefault(report.class_name, []).append(tr.names[c])
         for r in report.retired:
             retired_at[plan_cols[r]] = c + 1   # organism period number
 
     kept = {plan_cols[i] for i in range(len(plan_cols)) if ctrl.read_mask[i]}
 
+    # every species period is assigned to a learned class — none lost (the
+    # natal replay covers species 0). Species with genuinely overlapping
+    # schedules may MERGE under the unsupervised fit (chicken+duck, dog+goat
+    # — the known FRUSTRATED pairs): that is the I3 ambiguity-stress /
+    # grow-discrimination case, reported here, not failed.
+    assert sum(len(v) for v in absorbed.values()) == n_out
+    merged = {k: v for k, v in absorbed.items() if len(v) > 1}
     assert kept == realset, f"kept {sorted(kept)} != real {sorted(realset)}"
     assert set(retired_at) == noiseset, (
         f"retired {sorted(retired_at)} != noise {sorted(noiseset)}")
@@ -103,16 +115,20 @@ def run_seed(seed: int) -> None:
     germ = [g.progenitor_id] + [c for ids in g.council_ids.values() for c in ids]
     assert all(int(a.state[c].item()) == CellState.ACTIVE for c in germ), \
         "germline cell locked/dormant"
-    assert abs(sum(g.votes.values()) - 20.0) < 1e-9, "vote economy not conserved"
+    assert abs(sum(g.votes.values()) - float(len(g.votes))) < 1e-9, \
+        "vote economy not conserved"
 
     # zero gradients anywhere
     assert a.edge_weight.grad is None and a.edge_cursor == 0
 
     top = [f"col{c}:{m:.1f}" for c, m in sitting.importance[:4]]
+    merge_note = "; ".join(f"{'+'.join(v)}" for v in merged.values()) or "none"
     print(f"seed={seed}: starved {len(sitting.starved)} empties at the first "
-          f"sitting; discrete k=2 on {sorted(sitting.discrete)}; noise retired "
-          f"at periods {sorted(set(retired_at.values()))}; kept == real == "
-          f"genesis-kept ({sorted(kept)}); importance top: {', '.join(top)}")
+          f"sitting; discrete k=2 on {sorted(sitting.discrete)}; natal "
+          f"{sitting.event}; noise retired at periods "
+          f"{sorted(set(retired_at.values()))}; kept == real == genesis-kept "
+          f"({sorted(kept)}); {len(ctrl.learner.classes)} classes "
+          f"(merges → I3: {merge_note}); importance top: {', '.join(top)}")
 
 
 def main() -> None:

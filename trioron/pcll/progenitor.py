@@ -19,7 +19,14 @@ the progenitor spawns, and structure grows live from data.
              quantisation stays history-free — the history informs only
              the spawn-time structural decision (phenotype chosen from
              the problem at the growth event, manual §2.5).
-  boundary — the council's FIRST SITTING (Substrate.end_task()):
+  boundary — the council's FIRST SITTING (Substrate.end_task()), ending
+             with the NATAL REPLAY (s030, Rocky): period-1 observations
+             are buffered and, once the verdicts are committed, replayed
+             through the FINAL receptor configuration (labeled lines,
+             post-starve frame, codec) and learned as a normal period —
+             the class that streams while the organ is being built is
+             NOT lost. The distorted pre-census deposits are discarded.
+             The sitting:
              - STARVE: census-constant columns (empty/dead sensors).
                The receptor gene is WITHDRAWN (the cell stays PERCEPTION
                and goes dormant, so input-column mapping is preserved)
@@ -61,10 +68,11 @@ from trioron.core.epigenome import (
 from trioron.core.state import CellState
 
 from .controller import PCLLController
-from .lockin import LockInView, deposit
+from .lockin import LockInView, deposit, reset
 
 K_DISCRETE = 8           # D7: ≤ this many distinct values → discrete labeled lines
-COUNCIL_PER_PHENOTYPE = 4  # 5 phenotypes × 4 = 20, even → split vote = "undecided"
+COUNCIL_PER_PHENOTYPE = 4  # one 4-cell group per expression gene (6×4=24 with tanh),
+                           # even multiplicity → a split vote is a real "undecided"
 
 
 class Germline:
@@ -88,9 +96,9 @@ class Germline:
                 a.refresh_phenotype(cid)
             self.council_ids[p] = ids.tolist()
 
-        # Conserved vote economy (Σ = 20): per-cell credibility, the I3
-        # routing currency. Seeded uniform; the first sitting's importance
-        # ranking is recorded alongside for the perception group.
+        # Conserved vote economy (Σ = 4 × n_phenotypes): per-cell credibility,
+        # the I3 routing currency. Seeded uniform; the first sitting's
+        # importance ranking is recorded alongside for the perception group.
         self.votes: Dict[int, float] = {
             cid: 1.0 for ids in self.council_ids.values() for cid in ids
         }
@@ -128,7 +136,8 @@ class FirstSittingReport:
     discrete: Dict[int, int] = field(default_factory=dict)   # column → k
     kept: List[int] = field(default_factory=list)            # surviving receptor columns
     importance: List[tuple] = field(default_factory=list)    # (column, margin) desc
-    event: str = "first_sitting"
+    event: str = "empty"                    # natal-replay learning event
+    class_name: Optional[str] = None        # the natal period's learned class
 
 
 class PerceptionGenesis:
@@ -141,6 +150,7 @@ class PerceptionGenesis:
         self.germline = Germline(substrate)
         self.perception_ids: Optional[torch.Tensor] = None
         self._distinct: List[Optional[set]] = []   # None = overflowed → continuous
+        self._buffer: List[torch.Tensor] = []      # period-1 obs, for natal replay
         self.controller: Optional[PCLLController] = None
         substrate.attach_pcll(self)
 
@@ -149,6 +159,7 @@ class PerceptionGenesis:
     def feed(self, x: torch.Tensor) -> None:
         assert self.controller is None, "period 1 is over — use .controller.observe"
         sub = self.substrate
+        self._buffer.append(x)
         if self.perception_ids is None:
             # tick 1: spawn from the first sample, perceive it raw
             self.perception_ids = self.germline.spawn_perception(x.shape[1])
@@ -183,7 +194,6 @@ class PerceptionGenesis:
         ids = self.perception_ids
         assert ids is not None, "first sitting before any data"
 
-        margins = LockInView(a, ids).margin()
         verdicts: Dict[int, ColumnVerdict] = {}
         starved: List[int] = []
         discrete: Dict[int, int] = {}
@@ -202,26 +212,45 @@ class PerceptionGenesis:
             elif seen is not None and 2 <= len(seen) <= K_DISCRETE:
                 k = len(seen)
                 a.receptor_levels[cid] = k
-                verdicts[c] = ColumnVerdict("discrete", k, float(margins[c]))
+                verdicts[c] = ColumnVerdict("discrete", k)
                 discrete[c] = k
                 levels_sorted[c] = sorted(seen)
             else:
-                verdicts[c] = ColumnVerdict("continuous", 0, float(margins[c]))
+                verdicts[c] = ColumnVerdict("continuous")
 
         kept = [c for c in range(len(ids)) if verdicts[c].kind != "starved"]
+
+        sub.compile()   # receptor set changed (starved withdrawn)
+        codec = _build_codec(levels_sorted)
+        # handover: the controller attaches in this program's place
+        self.controller = PCLLController(sub, codec=codec)
+
+        # NATAL REPLAY (s030): discard the distorted pre-census deposits and
+        # replay the buffered period through the FINAL receptor configuration
+        # (labeled lines, post-starve frame, codec) — period 1 is then learned
+        # as a normal period; no class is lost to organ-building.
+        reset(a, self.controller.receptor_ids)
+        x_all = torch.cat(self._buffer, dim=0)
+        self._buffer = []
+        self.controller.observe(x_all)
+
+        # importance from the CLEAN replayed evidence (receptor cols only)
+        plan_cols = sub.scheduler._plan.receptor_cols.tolist()
+        margins = LockInView(a, self.controller.receptor_ids).margin()
+        for i, c in enumerate(plan_cols):
+            verdicts[c].evidence = float(margins[i])
         importance = sorted(
             ((c, verdicts[c].evidence) for c in kept),
             key=lambda t: t[1], reverse=True,
         )
         self.germline.perception_importance = importance
 
-        sub.compile()   # receptor set changed (starved withdrawn)
-        codec = _build_codec(levels_sorted)
-        # handover: the controller attaches in this program's place
-        self.controller = PCLLController(sub, codec=codec)
+        # the natal period's own meeting: learn it, count it, reset for period 2
+        natal = self.controller.period_boundary()
         return FirstSittingReport(
             period=1, verdicts=verdicts, starved=starved, discrete=discrete,
             kept=kept, importance=importance,
+            event=natal.event, class_name=natal.class_name,
         )
 
 

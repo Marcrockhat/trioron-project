@@ -72,14 +72,16 @@ capital is being consumed by learning*; "dispose" = **consolidate**, not
   M (~80:1, the retina's order).
 
 ### 3.3 Council
-- **5 phenotypes × 4 cells = 20**, even multiplicity so a split vote is
-  a legitimate "undecided" the data must topple (not a deadlock to
-  break). **Never pruned** — it's the standing decision organ, reused
-  across decisions.
+- **One 4-cell group per expression gene**, even multiplicity so a split
+  vote is a legitimate "undecided" the data must topple (not a deadlock
+  to break). **Never pruned** — it's the standing decision organ, reused
+  across decisions. Originally 5 phenotypes × 4 = 20; **s030 (Rocky):
+  TANH added as a sixth expression gene → 6 × 4 = 24.**
 - Phenotypes are the existing `EXPRESSION_GENES`
-  (`epigenome.py:21`): **LINEAR, DENDRITE, CONV, ATTENTION, RECURRENT** —
-  mapping to tabular / relational-curvature / image-localized /
-  routing / temporal. The palette is already in the gene layout.
+  (`epigenome.py:21`): **LINEAR, DENDRITE, CONV, ATTENTION, RECURRENT,
+  TANH (s030)** — mapping to tabular / relational-curvature /
+  image-localized / routing / temporal / bounded-saturation. The palette
+  is in the gene layout (tanh = bit 12, spec §3.10).
 
 ### 3.4 Differentiation = trial-vote (data decides, not position)
 - Progenitor spawns a cohort of trial daughters, one per phenotype.
