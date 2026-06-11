@@ -26,8 +26,18 @@ Per boundary meeting:
 
 Templates are buffer means recomputed each boundary (the probe's
 semantics): accuracy lives in the structure — which buffers exist —
-not in slowly-annealed weights. Settlement stays global-status in M2;
-per-class attribution is M3 [D13].
+not in slowly-annealed weights.
+
+Settlement is per-class [D13]: each committed division is bound to the
+boundary's DISCRIMINATION decision as a subject (child_a, child_b,
+split dim, acceptance floor). At the next boundary — after fresh
+stream members have been assigned — the division settles success iff
+BOTH children still cohere on the split dim above the floor it was
+accepted at: the membership that arrives after the growth exists is
+the testimony (the D9 spirit). A noise slice scatters its members and
+falls below the floor; the period's global status (which exponential
+discovery keeps FRUSTRATED for unrelated classes) pays and drains
+nothing.
 """
 from __future__ import annotations
 
@@ -42,7 +52,7 @@ from trioron.core.receptor import N_QUANTA
 from trioron.core.state import CellState
 
 from .controller import MeetingReport, PCLLController
-from .division import BUF, CLASS_CAP, try_divide
+from .division import BUF, CLASS_CAP, GAIN_D, NULL_SPLIT, try_divide
 from .lockin import LockInView, deposit, matched_k, reset
 from .resolve import EMPTY, FRUSTRATED, RESOLVED
 from .signature import LearnedClass
@@ -161,12 +171,14 @@ class MixedStreamController:
                   else FRUSTRATED if candidates else RESOLVED)
         grow = None
         if self.stress is not None:
-            self.stress.settle(status)
+            self.stress.settle(status, testify=self._division_testimony())
             grow = self.stress.decide(status)
 
         n_div = 0
         if candidates and (grow == DISCRIMINATION or self.stress is None):
-            n_div = self._execute(arena, candidates)
+            n_div, records = self._execute(arena, candidates)
+            if self.stress is not None:
+                self.stress.attach_subjects(records)
 
         return self._report(arena, "match", None, status, grow, n_div)
 
@@ -197,20 +209,24 @@ class MixedStreamController:
             if len(zk):
                 self.bufs[k] = torch.cat([self.bufs[k], zk])[-BUF:]
 
-    def _execute(self, arena, candidates) -> int:
+    def _execute(self, arena, candidates):
         """The progenitor commits the council's divisions: parent retires,
-        two siblings are born (new buffers, new astrocyte rows, lineage)."""
+        two siblings are born (new buffers, new astrocyte rows, lineage).
+        Returns (count, settlement subjects [D13]) — one subject per
+        division: (child_a, child_b, split dim, acceptance floor)."""
         divided = {k for k, _ in candidates}
         verdict = dict(candidates)
-        new_classes, new_bufs = [], []
+        new_classes, new_bufs, records = [], [], []
         for k, (c, b) in enumerate(zip(self.classes, self.bufs)):
             if k not in divided:
                 new_classes.append(c)
                 new_bufs.append(b)
                 continue
-            side, _ = verdict[k]
+            side, d = verdict[k]
+            floor = max(float(b.mean(0).abs()[d]) + GAIN_D, NULL_SPLIT)
             if c.cell_id >= 0:
                 arena.state[c.cell_id] = CellState.DORMANT   # retire parent
+            names = []
             for child_side in (~side, side):
                 self._births += 1
                 child = LearnedClass(f"u{self._births}",
@@ -220,8 +236,30 @@ class MixedStreamController:
                 new_classes.append(child)
                 new_bufs.append(b[child_side])
                 self._lineage[child.name] = c.cell_id
+                names.append(child.name)
+            records.append((names[0], names[1], d, floor))
         self.classes, self.bufs = new_classes, new_bufs
-        return len(divided)
+        return len(divided), records
+
+    def _division_testimony(self):
+        """[D13] Verdict for a pending division (child_a, child_b, dim,
+        floor): its class's stress cleared iff BOTH children's buffers still
+        cohere on the split dim above the acceptance floor, under the
+        membership assigned since the division existed. Called BEFORE this
+        boundary's divisions execute, so last boundary's children are
+        always present."""
+        by_name = {c.name: i for i, c in enumerate(self.classes)}
+
+        def testify(subject):
+            a, b, d, floor = subject
+            ia, ib = by_name.get(a), by_name.get(b)
+            if ia is None or ib is None:
+                return None
+            r_a = float(self.bufs[ia][:, d].mean().abs())
+            r_b = float(self.bufs[ib][:, d].mean().abs())
+            return min(r_a, r_b) > floor
+
+        return testify
 
     def _refresh(self, arena) -> None:
         """Templates from buffers (the probe's semantics) + astrocyte sync:

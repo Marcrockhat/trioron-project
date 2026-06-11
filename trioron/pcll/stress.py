@@ -31,15 +31,32 @@ Habituation tames the void (design §8): the empty drive decays
 moment a growth finds signal. Below DRIVE_FLOOR the organism settles
 into ACCEPTED-EMPTY — empty stays a valid terminal answer; growth stops.
 
-Settlement: a growth decision is settled at the NEXT boundary — success
-= the stress it answered is gone (empty → something clears the floor;
-ambiguity → resolved). The router holds the pending driver; the meeting
-calls settle() then decide(). A decision implies the progenitor acts
-before the next boundary.
+Settlement [D13]: a growth decision carries the CLASS it answered and
+is settled against THAT class's stress, never the period's global
+status. The s031 false-credit confound: "is the stress gone at the next
+boundary?" pays a growth whenever the WORLD changes underneath it (a
+new class arrives → RESOLVED → credit), which drained sensation to its
+floor and inflated every phenotype group to a flat 4.500 while no
+growth ever executed. Each pending entry is (driver, subject):
+
+  subject None     — global-status predicate (sensation growths keep
+                     the s030 semantics: EMPTY is the period's stress,
+                     not a class's — something clears the floor =
+                     success).
+  subject present  — settles ONLY on the subject's own testimony, via
+                     the caller's testify(subject) verdict: True/False
+                     settles, None defers to a later boundary (the
+                     world talking about something else is not
+                     evidence about this growth; silence pays nobody).
+
+Vote transfers keep step4 semantics unchanged (equal share per seat,
+per-seat floors, Σ=28 conserved) — only the success predicate moved.
+The meeting calls settle() then decide(); a consumer that executes
+growths binds them to the decision via attach_subjects().
 """
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .resolve import EMPTY, FRUSTRATED, RESOLVED
 
@@ -79,7 +96,12 @@ class StressRouter:
             cid for ids in germline.council_ids.values() for cid in ids
         ]
         self.empty_drive = 1.0
-        self.pending: Optional[str] = None
+        # Pending settlements [D13]: (driver, subject). Subject is opaque
+        # to the router — the consumer that grew supplies the testimony.
+        self.pending: List[Tuple[str, Any]] = []
+        # Audit log: (driver, subject, success) per settled decision —
+        # the book saturates at its floors; this keeps the full signal.
+        self.settlements: List[Tuple[str, Any, bool]] = []
 
     # ── readouts ──────────────────────────────────────────────────
 
@@ -102,20 +124,36 @@ class StressRouter:
 
     # ── the meeting hooks ─────────────────────────────────────────
 
-    def settle(self, status: str) -> Optional[bool]:
-        """Settle the pending growth against this period's status. Returns
-        the outcome (None if nothing was pending)."""
-        if self.pending is None:
-            return None
-        group, self.pending = self.pending, None
-        success = (status != EMPTY if group == SENSATION
-                   else status == RESOLVED)
-        self._report(group, success)
-        return success
+    def settle(self, status: str,
+               testify: Optional[Callable[[Any], Optional[bool]]] = None
+               ) -> List[bool]:
+        """Settle pending growths [D13]. Subject-less entries settle against
+        the period's global status (the s030 sensation semantics).
+        Subject-bearing entries settle ONLY on the subject's own testimony:
+        testify(subject) → True/False settles, None defers the entry to a
+        later boundary. Returns the outcomes settled this call."""
+        held: List[Tuple[str, Any]] = []
+        out: List[bool] = []
+        for group, subject in self.pending:
+            if subject is None:
+                success = (status != EMPTY if group == SENSATION
+                           else status == RESOLVED)
+            else:
+                verdict = testify(subject) if testify is not None else None
+                if verdict is None:
+                    held.append((group, subject))
+                    continue
+                success = bool(verdict)
+            self._report(group, success)
+            self.settlements.append((group, subject, success))
+            out.append(success)
+        self.pending = held
+        return out
 
-    def decide(self, status: str) -> Optional[str]:
+    def decide(self, status: str, subject: Any = None) -> Optional[str]:
         """Which driver grows this boundary; None = no growth (resolved, or
-        accepted-empty after habituation). Sets the pending settlement."""
+        accepted-empty after habituation). Queues the pending settlement,
+        carrying the class the growth answers when the caller knows it."""
         if status == RESOLVED:
             return None
         if status == EMPTY:
@@ -123,8 +161,18 @@ class StressRouter:
         else:
             group = DISCRIMINATION
         if group is not None:
-            self.pending = group
+            self.pending.append((group, subject))
         return group
+
+    def attach_subjects(self, subjects: List[Any]) -> None:
+        """Bind executed growths to the boundary's decision [D13]: the
+        (driver, None) entry decide() just queued fans out to one pending
+        per subject answered — a division answers ONE class; a boundary may
+        commit several."""
+        if not subjects or not self.pending or self.pending[-1][1] is not None:
+            return
+        group, _ = self.pending[-1]
+        self.pending[-1:] = [(group, s) for s in subjects]
 
     def _report(self, group: str, success: bool) -> None:
         votes = self.germline.votes

@@ -40,7 +40,7 @@ from trioron.core.construct import Substrate
 from trioron.core.state import CellState
 
 from .lockin import LockInView, deposit, reset
-from .resolve import EMPTY, RESOLVED, Resolution, Resolver
+from .resolve import EMPTY, FRUSTRATED, RESOLVED, Resolution, Resolver
 from .signature import ScheduleLearner
 
 _CEILING = 5.04  # = FrustrationConfig ceiling (learning/frustration.py)
@@ -186,8 +186,21 @@ class PCLLController:
 
         grow = None
         if self.stress is not None:
-            self.stress.settle(status)   # outcome of last boundary's growth
-            grow = self.stress.decide(status)
+            # Per-class settlement [D13]: a pending growth's subject class
+            # testifies only when THIS period is about it (the organism's
+            # best read — the resolution winner). Resolved → its margin
+            # cleared (success); still blurred while it leads (failure).
+            # Any other period defers: the world changing is not evidence
+            # about the growth.
+            def testify(subject):
+                if resolution is None or resolution.winner != subject:
+                    return None
+                return status == RESOLVED
+
+            self.stress.settle(status, testify=testify)
+            subject = (resolution.winner if status == FRUSTRATED
+                       and resolution is not None else None)
+            grow = self.stress.decide(status, subject=subject)
 
         retired = self._habituate(arena, full, event)
         self.frustration.update(resolution, event)
@@ -331,7 +344,7 @@ class PCLLController:
             state["stress"] = {
                 "votes": dict(self.stress.germline.votes),
                 "empty_drive": self.stress.empty_drive,
-                "pending": self.stress.pending,
+                "pending": [list(p) for p in self.stress.pending],
             }
         return state
 
@@ -363,7 +376,12 @@ class PCLLController:
         if self.stress is not None and "stress" in state:
             self.stress.germline.votes.update(state["stress"]["votes"])
             self.stress.empty_drive = state["stress"]["empty_drive"]
-            self.stress.pending = state["stress"]["pending"]
+            pend = state["stress"]["pending"]
+            if pend is None:                       # pre-D13 single slot
+                pend = []
+            elif isinstance(pend, str):
+                pend = [(pend, None)]
+            self.stress.pending = [tuple(p) for p in pend]
 
 
 def _build_codec(levels_sorted: dict) -> Optional[Callable]:

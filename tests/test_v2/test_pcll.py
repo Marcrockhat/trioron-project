@@ -236,25 +236,66 @@ class TestStress:
         _, _, router, _, _ = self._organism()
         assert router.decide(RESOLVED) is None
         assert router.decide(FRUSTRATED) == DISCRIMINATION
-        router.pending = None
+        router.pending = []
         assert router.decide(EMPTY) == SENSATION
         router.empty_drive = DRIVE_FLOOR / 2
-        router.pending = None
+        router.pending = []
         assert router.decide(EMPTY) is None    # accepted-empty
 
     def test_settle_moves_votes_conserved_and_drive(self):
         from trioron.pcll import EMPTY, RESOLVED, SENSATION
         _, germ, router, _, _ = self._organism()
         total = sum(germ.votes.values())
-        router.pending = SENSATION
+        router.pending = [(SENSATION, None)]
         router.settle(EMPTY)                   # fruitless → sensation pays
         assert abs(sum(germ.votes.values()) - total) < 1e-9
         assert router.group_votes(SENSATION) == 3.0
         assert router.empty_drive == 0.5
-        router.pending = SENSATION
+        router.pending = [(SENSATION, None)]
         router.settle(RESOLVED)                # justified → re-sensitised, repaid
         assert router.empty_drive == 1.0
         assert abs(sum(germ.votes.values()) - total) < 1e-9
+
+    def test_per_class_settlement_defers_without_testimony(self):
+        # [D13] the false-credit confound: a period about ANOTHER class
+        # settles nothing — the world changing is not evidence
+        from trioron.pcll import DISCRIMINATION, FRUSTRATED, RESOLVED
+        _, germ, router, _, _ = self._organism()
+        before = dict(germ.votes)
+        assert router.decide(FRUSTRATED, subject="u7") == DISCRIMINATION
+        out = router.settle(RESOLVED, testify=lambda s: None)
+        assert out == [] and router.pending == [(DISCRIMINATION, "u7")]
+        assert germ.votes == before            # no votes moved
+        assert router.settlements == []
+
+    def test_per_class_settlement_pays_on_subject_testimony(self):
+        from trioron.pcll import (DISCRIMINATION, FRUSTRATED, RESOLVED,
+                                  SENSATION)
+        _, germ, router, _, _ = self._organism()
+        total = sum(germ.votes.values())
+        router.decide(FRUSTRATED, subject="u7")
+        out = router.settle(RESOLVED, testify=lambda s: s == "u7")
+        assert out == [True] and router.pending == []
+        assert router.settlements == [(DISCRIMINATION, "u7", True)]
+        assert router.group_votes(SENSATION) == 3.0   # discrimination earned
+        assert abs(sum(germ.votes.values()) - total) < 1e-9
+        router.decide(FRUSTRATED, subject="u9")
+        out = router.settle(FRUSTRATED, testify=lambda s: False)
+        assert out == [False]                  # failure repays
+        assert abs(router.group_votes(SENSATION) - 4.0) < 1e-9
+        assert abs(sum(germ.votes.values()) - total) < 1e-9
+
+    def test_attach_subjects_fans_out(self):
+        from trioron.pcll import DISCRIMINATION, FRUSTRATED
+        _, _, router, _, _ = self._organism()
+        router.decide(FRUSTRATED)              # subject unknown at decide time
+        router.attach_subjects(["a", "b", "c"])
+        assert router.pending == [(DISCRIMINATION, "a"),
+                                  (DISCRIMINATION, "b"),
+                                  (DISCRIMINATION, "c")]
+        # a subject-bearing tail is never clobbered
+        router.attach_subjects(["d"])
+        assert len(router.pending) == 3
 
     def test_meeting_emits_grow_decision(self):
         from trioron.pcll import SENSATION
@@ -265,7 +306,7 @@ class TestStress:
         ctrl.observe(noise)
         report = sub.end_task()
         assert report.status == "empty" and report.grow == SENSATION
-        assert router.pending == SENSATION
+        assert router.pending == [(SENSATION, None)]
 
     def test_refresh_receptors_remaps_learner_by_cell_id(self):
         sub, germ, _, ctrl, rng = self._organism()
