@@ -1,0 +1,179 @@
+# Mixed-Stream Growth — division, composers, the structural contract (design, s032)
+
+> Status: **DESIGN FOR DISCUSSION — nothing here is built.** Companion to
+> `pcll_substrate_integration.md` (D1–D10, the s030 integration this extends)
+> and `receptor_period_frustration.md` (the PCLL method). Implements Rocky's
+> s031 regime decision (mixed stream; division IS class discovery) and the
+> s032 corrections (genome-constrained composers; growth must be
+> arena-countable). Decisions flagged **[D11]–[D16]**, continuing the register.
+
+---
+
+## 0. Why this doc exists — the trust criterion (Rocky, s032)
+
+The rebuild's aim: **a network that changes its own topology and depth to
+adapt to the problem, and learns continually with less forgetting.** The five
+experimental features (progenitor/genesis, council/votes, frustration gate,
+PCLL, manifold adapter) all serve that aim — and the test of each is
+structural: **cell, edge, and rank counts must move when the organism learns.**
+
+The s032 census of the integrated I5 organism, after learning all 32
+capacity-hard classes:
+
+```
+cells: 69/192   computing (fwd=True): 12   bookkeeping: 57
+edges: 0        ranks: {0}                 classes: 32
+```
+
+Twelve computing cells fixed at tick 1, zero edges, zero depth. Every growth
+event to date allocated a bookkeeping row. The validated growth results
+(division 1→75 classes at 0.711 one-shot; composer spawn loop) live in
+standalone probes only. This design wires them into the substrate under a
+contract that makes the census numbers move — or fails its gates.
+
+Current feature status this design must repair:
+
+| feature | status |
+|---|---|
+| progenitor + genesis | wired; only ever spawns perception tissue |
+| council + votes | wired; decide() signals have NO consumer; settlement pays false credit |
+| frustration gate | wired; period-level only — blind to sample-level mode blur |
+| PCLL | wired, working (zero forgetting); grows templates, not tissue |
+| manifold adapter for PCLL | **does not exist** |
+
+---
+
+## 1. The structural contract  **[D11]**
+
+Every growth decision maps to a declared arena-structure delta, asserted by
+gates:
+
+| event | arena delta |
+|---|---|
+| division (class discovery) | parent astrocyte row → 2 sibling astrocyte rows, parent lineage recorded (`arena.parent`); bookkeeping by design — classes are memory, not tissue |
+| composer spawn | **+1 computing cell** (`forward_inclusion=True`, epigenome = the winning expression gene), **+2 edges** from its source perception cells, **rank = max(src rank)+1** — depth is earned, never asserted |
+| receptor attach (sensation) | existing perception cell flips ACTIVE + RECEPTOR |
+| composer prune (PATIENCE) | cell retired, its edges masked, bet repaid to the book |
+
+**Census instrument:** a `census(arena)` readout — cells by kind
+(computing/progenitor/council/astrocyte), edges, ranks present, classes —
+emitted in every `MeetingReport` and printed at every growth event. Gate
+runners assert structural deltas (before/after counts), not accuracy alone.
+This is standing instrumentation, not a probe.
+
+## 2. Genesis births ONE world-class; division is the consumer  **[D12]**
+
+Mixed-stream regime (Rocky, s031): no class periods, no labels, no
+boundaries. The stream arrives shuffled; a period is W=1000 stream samples
+(distinct from N_QUANTA=1000 pocket resolution).
+
+- **Genesis:** the first period births one blurred world-class (one
+  signature, one astrocyte). All early FRUSTRATED stress is mode blur — and
+  that is now the *intended* discovery signal, not noise.
+- **The consumer:** `StressRouter.decide(FRUSTRATED)` — today emitted and
+  dropped (s031 diag: 14 signals, no consumer) — routes to the progenitor,
+  who **divides** the attributed class: partition its rolling buffer
+  (circular 2-means on the best per-dim split), spawn sibling signatures +
+  astrocytes, retire the parent row.
+- Probe-validated mechanics carried in: split acceptance is **per-dim**
+  (a global mean gain can never fire, ~gain/12); the best child must beat
+  `max(parent+GAIN_D, NULL_SPLIT=0.72)` (the 2/π noise-slicing null);
+  **per-class rolling buffers**, never window members (windows starve once
+  classes multiply); MIN_CHILD=25 recurrence floor; growth self-arrests on
+  the gain criterion (probe: 0 divisions p12–16 with no cap).
+- Expected census trajectory (the M2 gate): astrocyte rows 1 → ~60–76 on the
+  32-truth stream, one-shot ≥ 0.65 (probe: 0.711 vs 0.386 class-sequential).
+
+## 3. Per-class settlement attribution  **[D13]**
+
+The false-credit confound (s031 diag): settlement judges "is the stress gone
+at the next boundary?" globally, so the book paid SENSATION to its floor and
+left every phenotype group flat at 4.500 while the world changed underneath.
+
+Fix: a pending growth decision carries the **class it answered**
+(`pending = (driver, class_name)`). Settlement succeeds iff *that class's*
+stress cleared — its buffer coherence recovered (division) or its resolution
+margin cleared the floor (sensation) — not iff the period status improved.
+Vote transfers keep step4 semantics (equal share, floors, Σ=28 conserved);
+only the success predicate changes.
+
+## 4. The composer arm — overproduction over the GENOME  **[D14]**
+
+The s032 principle: a council seated by expression genes cannot vote for a
+function with no gene bit; a spawn nothing can express is not a growth event.
+The small fixed genome is a regularizer — an unbounded function family always
+finds structure in selection-biased buffers (the probe's seed-0 junk spawns).
+
+- **Candidate set = expressible genes with a scalar composition form over a
+  receptor dim pair (c_i, c_j):**
+  - LINEAR: w₀c_i + w₁c_j, wirings sum/diff
+  - TANH: tanh(2.5·(w₀c_i + w₁c_j)) — bounded, anti-detonation (spec §3.10)
+  - DENDRITE: two branches, one input each, quad σ(z)=z+z² → c_i²+c_j²
+    (the Phase-6 ring form)
+  - ATTENTION / CONV / RECURRENT: **deferred** — no scalar form on receptor
+    dims; their composer semantics is an open design question, recorded here
+    so it is decided, not improvised.
+- **Importance-gated wiring** (failure-mode-4 fix, part 1): candidate dim
+  pairs draw only from `Germline.perception_importance` — noise columns have
+  no lock-in margin in any class and never enter a trial.
+- **Future-deposit settlement** (part 2): the trial selects on the buffer
+  (permutation-null-corrected gain, split-half confirm — failure modes 1–3
+  fixes carry over), but the spawn is **settled only by deposits that arrive
+  after it exists** (D9 next-boundary semantics). Membership-induced
+  confabulation cannot survive: the selecting buffer never pays the bet.
+- **Causal quantization** (replaces the probe's non-causal batch min-max):
+  every candidate form above is **bounded by construction** on pocket inputs
+  (linear/tanh ⊂ [−1,1]; dendritic quad ⊂ [0,0.5]), so each composed dim
+  carries a **fixed static frame** known at spawn time — one sample
+  quantizes alone, the frame registry (D10d) stamps it like any other dim.
+- **Spawn = real tissue** per §1: the new cell computes its composition in
+  the forward path each tick and deposits into its own lock-in row like any
+  receptor. Settlement success transfers one vote to the winning gene's
+  council group (`winner_phenotype()` finally gains its consumer); PATIENCE
+  failure retires the cell and repays the bet.
+- Growth ladder (decided s031): frustrated → divide (cheap) → division
+  can't clear → composer trial → spawn winner gene; void → receptor attach.
+
+## 5. The manifold adapter for PCLL  **[D15]**
+
+Feature 5 of the rebuild, currently absent. Reuse
+`trioron/learning/manifold.py` (`ManifoldAstrocyte`: per-class μ/σ sketch,
+`sample()`, `log_likelihood()`) over **pocket space** (code_dim = number of
+read dims):
+
+- **Update:** at each boundary, the meeting feeds the period's per-class
+  member pockets to that class's sketch (streaming μ/σ — the signature
+  already holds first moments; the sketch adds spread).
+- **Consumers, in priority order:**
+  1. **Post-quiescence annealing** (handoff NEXT 5): after divisions
+     self-arrest, `sample()` synthesizes deposits that re-anneal templates —
+     fixes the slow late decay seen in the freeze run (~0.75 plateau).
+  2. **σ-weighted readout** (handoff NEXT 3): `log_likelihood()` replaces the
+     raw equal-weight matched filter — the measured ~0.62→0.99 half of the
+     Bayes-ceiling gap (target 0.993, Rocky s031).
+  3. **Replay guard for grown tissue:** when composer cells (and any future
+     gradient training) reshape the read space, spec-§4.5 replay from the
+     sketches protects PCLL-discovered classes — the "less forgetful" half
+     of the rebuild aim, wired to the PCLL path for the first time.
+
+## 6. Build phases + gates (each falsifiable, census-asserted)
+
+| phase | build | gate (PASS required before next) |
+|---|---|---|
+| **M1** | census instrument + structural fields in `MeetingReport` | I5 rerun byte-identical on accuracy; census reports baseline 12 computing / 0 edges / ranks {0} (the documented starting point) |
+| **M2** | world-class genesis + division consumer (mixed stream) | `run_mixed_division` reproduced THROUGH the substrate: ≥29/32 truths, one-shot ≥0.65, self-arrest with no cap; astrocytes 1→60–76; every decide() consumed |
+| **M3** | per-class settlement attribution | i5_diag false-credit scenario: phenotype groups differentiate (no longer flat 4.500); Σ=28 conserved |
+| **M4** | composer arm (genome-constrained) | relational testbed through the substrate: beats division-only (>0.595), A/B and E/F separated; census delta: computing cells +k, edges +2k, max rank ≥1; **zero noise-pair spawns across seeds** (failure-mode-4 gate) |
+| **M5** | manifold adapter | annealing recovers the freeze-decay; σ-readout closes measured gap toward 0.99 on clean classes with raw arm reported alongside (s029 comparability); ship/wake round-trips sketches |
+| **M6** | spec §10 amendment + promotion | spec-first rule (D6); manual updated |
+
+## 7. Decision register (continues D1–D10)
+
+| # | decision | status |
+|---|---|---|
+| D11 | structural contract: every growth event has a declared, gate-asserted arena delta; standing census in MeetingReport | proposed |
+| D12 | mixed-stream genesis births ONE world-class; decide(FRUSTRATED) consumed by progenitor division (per-dim acceptance, NULL_SPLIT floor, rolling buffers) | regime decided s031; wiring proposed |
+| D13 | settlement carries the answered class; success = that class's stress cleared, not global period status | proposed |
+| D14 | composer candidates = LINEAR/TANH/DENDRITE-quad only (scalar-composable genes); ATTENTION/CONV/RECURRENT deferred explicitly; importance-gated wiring + future-deposit settlement; fixed static frames (causal quantization); spawn = real cell + 2 edges + rank>0 | proposed |
+| D15 | manifold adapter = `ManifoldAstrocyte` sketches over pocket space; consumers = annealing, σ-readout, replay guard | proposed |
+| D16 | prune semantics: PATIENCE failure hard-retires the composer cell (edges masked, bet repaid); soft-apoptosis recoverable latch deferred until a probe shows re-spawn churn | proposed |
