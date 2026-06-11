@@ -9,6 +9,7 @@ from .epigenome import (
 )
 from .envelope import Envelope
 from .arena import Arena
+from .census import Census, census
 from .cell import Cell
 from .lineage import Lineage
 from .graph import CellGraph

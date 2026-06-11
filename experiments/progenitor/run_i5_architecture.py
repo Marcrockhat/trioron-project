@@ -32,7 +32,7 @@ from typing import Dict
 
 import torch
 
-from trioron.core import construct
+from trioron.core import census, construct
 from trioron.pcll import PerceptionGenesis, germline_base
 from trioron.pcll.signature import translate
 
@@ -145,9 +145,17 @@ def run_seed(seed: int) -> None:
     assert acc >= 0.35, f"one-shot {acc:.3f} below the s029 floor"
     assert acc_dead >= 0.25, f"dead-{K_DEAD} {acc_dead:.3f} below grace floor"
 
+    # M1 structural baseline [D11]: the documented pre-growth anatomy.
+    # 12 perception cells fixed at tick 1, zero edges, zero depth — the
+    # numbers M2/M4 must move. Tighten/replace when growth lands.
+    c = census(sub.arena)
+    assert c.computing == 12 and c.edges == 0 and c.depth == 0, str(c)
+    assert c.astrocytes == n_classes, str(c)
+
     print(f"seed={seed}: {n_classes} classes, purity 1.0, epoch-2 32/32 "
           f"(zero forgetting); one-shot {acc:.3f} ({len(clean)} clean classes); "
           f"dead-{K_DEAD} {acc_dead:.3f}; votes conserved; no gradients")
+    print(f"  {c}")
 
 
 def main() -> None:

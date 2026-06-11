@@ -27,6 +27,14 @@ TANH: int = 12      # bounded-saturation expression gene (spec §3.10, s030):
 
 EXPRESSION_GENES: tuple[int, ...] = (LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE, TANH)
 
+GENE_NAMES: dict[int, str] = {
+    LINEAR: "linear", ATTENTION: "attention", CONV: "conv",
+    RECURRENT: "recurrent", DENDRITE: "dendrite", PERCEPTION: "perception",
+    OUTPUT: "output", CREDIT_ELIGIBLE: "credit_eligible",
+    RECYCLABLE: "recyclable", WEIGHT_TIED_LINEAGE: "weight_tied_lineage",
+    MIRROR: "mirror", RECEPTOR: "receptor", TANH: "tanh",
+}
+
 
 # ── Bit helpers (work on scalars and tensors) ─────────────────────
 

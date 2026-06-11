@@ -35,6 +35,7 @@ from typing import Callable, List, Optional
 
 import torch
 
+from trioron.core.census import Census, census
 from trioron.core.construct import Substrate
 from trioron.core.state import CellState
 
@@ -63,6 +64,7 @@ class MeetingReport:
     n_read: int = 0                   # read-set size after this meeting
     status: str = ""                  # the period's exclusive status (spec §10.4)
     grow: Optional[str] = None        # stress driver decision (spec §10.6) or None
+    census: Optional[Census] = None   # structural anatomy after this meeting [D11]
 
 
 class PCLLResolution:
@@ -194,7 +196,8 @@ class PCLLController:
         return MeetingReport(self.periods, resolution, event, name,
                              retired=retired,
                              n_read=int(self.read_mask.sum()),
-                             status=status, grow=grow)
+                             status=status, grow=grow,
+                             census=census(arena))
 
     def _sync_astrocytes(self, arena) -> None:
         """Each learned class is backed by an astrocyte arena cell
