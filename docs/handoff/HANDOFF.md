@@ -78,8 +78,16 @@ modes; target set = the Bayes ceiling (0.993 on clean classes).**
    match; the probe's "quad" is really the DENDRITE gene's branch
    nonlinearity σ(z)=z+z² (legitimate only in its `dendritic` wiring form);
    gcos/sinc/tan are probe inventions with **no consumer seat in the real
-   vote book**. Therefore: (a) the mechanism loop (trial → permutation-null →
-   split-half → spawn → settle → prune) is de-risked, but (b) the
+   vote book**. Rocky's sharper framing: a council whose seats ARE the
+   expression genes cannot vote for a function with no gene bit — a spawn
+   nothing can express is not a growth event. **Overproduction is over the
+   GENOME, not over arbitrary functions** (manual §2.5: phenotype chosen
+   from the problem at the growth event). The small fixed gene set is a
+   regularizer; an unbounded function family always finds structure in
+   selection-biased buffers — part of why seed 0 spawned 6 junk dims
+   (failure mode 4's open door). Therefore: (a) the mechanism loop (trial →
+   permutation-null → split-half → spawn → settle → prune) is de-risked,
+   but (b) the
    "book finally differentiates" claim does NOT transfer to the 28-vote book,
    and (c) integration must decide what an attention/conv/recurrent composer
    candidate even is — or restrict trials to the scalar-composable genes
