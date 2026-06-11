@@ -208,9 +208,89 @@ class TestPerceptionGenesis:
         germ = [g.progenitor_id] + [c for ids in g.council_ids.values() for c in ids]
         assert len(germ) == 1 + 4 * len(EXPRESSION_GENES)  # 25 with tanh (s030)
         assert not a.forward_inclusion[torch.tensor(germ)].any()
-        assert abs(sum(g.votes.values()) - 4.0 * len(EXPRESSION_GENES)) < 1e-9
+        # one book: 4 council seats per gene + 4 progenitor-held perception seats
+        assert abs(sum(g.votes.values()) - (4.0 * len(EXPRESSION_GENES) + 4.0)) < 1e-9
+        assert len(g.perception_seats) == 4
         for cid in pg.perception_ids.tolist():
             assert int(a.parent[cid].item()) == g.progenitor_id
+
+
+class TestStress:
+    """Stress drivers + vote economy on the germline book (spec §10.6)."""
+
+    def _organism(self, **kw):
+        import random
+        from trioron.pcll import Germline, PCLLController, StressRouter, germline_base
+        sub = construct(germline_base, capacity=64)
+        germ = Germline(sub)
+        ids = germ.spawn_perception(F + 1)
+        germ.equip_receptors(ids)
+        sub.compile()
+        router = StressRouter(germ)
+        ctrl = PCLLController(sub, stress=router, **kw)
+        return sub, germ, router, ctrl, random.Random(0)
+
+    def test_decide_routing_and_habituation_floor(self):
+        from trioron.pcll import (DISCRIMINATION, DRIVE_FLOOR, EMPTY, FRUSTRATED,
+                                  RESOLVED, SENSATION)
+        _, _, router, _, _ = self._organism()
+        assert router.decide(RESOLVED) is None
+        assert router.decide(FRUSTRATED) == DISCRIMINATION
+        router.pending = None
+        assert router.decide(EMPTY) == SENSATION
+        router.empty_drive = DRIVE_FLOOR / 2
+        router.pending = None
+        assert router.decide(EMPTY) is None    # accepted-empty
+
+    def test_settle_moves_votes_conserved_and_drive(self):
+        from trioron.pcll import EMPTY, RESOLVED, SENSATION
+        _, germ, router, _, _ = self._organism()
+        total = sum(germ.votes.values())
+        router.pending = SENSATION
+        router.settle(EMPTY)                   # fruitless → sensation pays
+        assert abs(sum(germ.votes.values()) - total) < 1e-9
+        assert router.group_votes(SENSATION) == 3.0
+        assert router.empty_drive == 0.5
+        router.pending = SENSATION
+        router.settle(RESOLVED)                # justified → re-sensitised, repaid
+        assert router.empty_drive == 1.0
+        assert abs(sum(germ.votes.values()) - total) < 1e-9
+
+    def test_meeting_emits_grow_decision(self):
+        from trioron.pcll import SENSATION
+        sub, _, router, ctrl, rng = self._organism()
+        noise = torch.tensor(
+            [[rng.randint(0, N_QUANTA) for _ in range(F)] + [float(N_QUANTA)]
+             for _ in range(300)], dtype=torch.float32)
+        ctrl.observe(noise)
+        report = sub.end_task()
+        assert report.status == "empty" and report.grow == SENSATION
+        assert router.pending == SENSATION
+
+    def test_refresh_receptors_remaps_learner_by_cell_id(self):
+        sub, germ, _, ctrl, rng = self._organism()
+        # learn one class, then attach a new receptor and verify remap
+        ctrl.observe(_period(CLASS_A, rng))
+        sub.end_task()
+        cls = ctrl.learner.classes[0]
+        active_by_cell = {int(ctrl.receptor_ids[i]): bool(cls.active[i])
+                          for i in range(len(ctrl.receptor_ids))}
+        new = germ.spawn_perception(1)
+        germ.equip_receptors(new)
+        ctrl.refresh_receptors()
+        assert ctrl.learner.F == F + 2
+        for i, cid in enumerate(ctrl.receptor_ids.tolist()):
+            want = active_by_cell.get(cid, False)  # new receptor: inactive
+            assert bool(cls.active[i]) == want
+        assert ctrl.read_mask.all() and int(ctrl._streak.sum()) == 0
+
+    def test_winner_phenotype_is_expression_gene(self):
+        from trioron.core.epigenome import EXPRESSION_GENES
+        _, germ, router, _, _ = self._organism()
+        p = router.winner_phenotype()
+        assert p in EXPRESSION_GENES
+        germ.votes[germ.council_ids[EXPRESSION_GENES[2]][0]] += 1.0
+        assert router.winner_phenotype() == EXPRESSION_GENES[2]
 
 
 class TestShipWake:

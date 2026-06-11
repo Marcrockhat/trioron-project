@@ -61,6 +61,8 @@ class MeetingReport:
     class_name: Optional[str]         # learner's class for this period
     retired: List[int] = field(default_factory=list)  # receptor cols retired now
     n_read: int = 0                   # read-set size after this meeting
+    status: str = ""                  # the period's exclusive status (spec §10.4)
+    grow: Optional[str] = None        # stress driver decision (spec §10.6) or None
 
 
 class PCLLResolution:
@@ -92,13 +94,22 @@ class PCLLResolution:
 class PCLLController:
     def __init__(self, substrate: Substrate,
                  k_abs: float = 3.0, k_gap: float = 3.0, *,
-                 codec: Optional[Callable] = None) -> None:
+                 codec: Optional[Callable] = None,
+                 stress=None,
+                 resolver_templates: Optional[dict] = None) -> None:
         self.substrate = substrate
         self.k_abs = k_abs
         self.k_gap = k_gap
         # Discrete-column translation (raw level values → level indices,
         # spec §10.2) — built by the period-1 census (progenitor.py).
         self.codec = codec
+        # Stress router over the germline book (spec §10.6); None = no routing.
+        self.stress = stress
+        # Known-world mode: resolve against these templates instead of the
+        # learner's (a provided world model / the stress-gate scaffolding).
+        # Restriction to the read set happens via the masked view, so full
+        # templates compose with recruit() naturally.
+        self.resolver_templates = resolver_templates
         # Single source of truth for receptor identity/order: the compiled
         # dispatch plan (construct() compiles before we get here).
         self.receptor_ids = substrate.scheduler._plan.receptor_ids
@@ -136,10 +147,17 @@ class PCLLController:
         full = LockInView(arena, self.receptor_ids)
         read = LockInView(arena, self.receptor_ids, mask=self.read_mask)
 
-        templates = self.learner.templates()
+        templates = (self.resolver_templates if self.resolver_templates
+                     is not None else self.learner.templates())
         resolution = (Resolver(templates).resolve(read, self.k_abs, self.k_gap)
                       if templates else None)
         event, name = self.learner.observe(read)
+        status = self._status(resolution, event)
+
+        grow = None
+        if self.stress is not None:
+            self.stress.settle(status)   # outcome of last boundary's growth
+            grow = self.stress.decide(status)
 
         retired = self._habituate(arena, full, event)
         self.frustration.update(resolution, event)
@@ -147,7 +165,21 @@ class PCLLController:
         self.periods += 1
         return MeetingReport(self.periods, resolution, event, name,
                              retired=retired,
-                             n_read=int(self.read_mask.sum()))
+                             n_read=int(self.read_mask.sum()),
+                             status=status, grow=grow)
+
+    def _status(self, resolution: Optional[Resolution], event: str) -> str:
+        """The period's exclusive status (spec §10.4). In learned-world mode a
+        BIRTH is comprehension, not stress — a new class that explains the
+        stream resolves the period (the s029 disruptor semantics). In
+        known-world mode (resolver_templates) the resolution speaks alone."""
+        if event == "empty":
+            return EMPTY
+        if self.resolver_templates is not None and resolution is not None:
+            return resolution.status
+        if event == "birth" or resolution is None:
+            return RESOLVED
+        return resolution.status
 
     def _habituate(self, arena, full: LockInView, event: str) -> List[int]:
         """Streak-based retirement of read receptors that stay incoherent
@@ -176,3 +208,45 @@ class PCLLController:
         for cid in self.receptor_ids[retire].tolist():
             arena.state[cid] = CellState.DORMANT
         return retire.nonzero(as_tuple=False).squeeze(-1).tolist()
+
+    # ── growth actions (spec §10.6) ───────────────────────────────
+
+    def recruit(self, col: int) -> None:
+        """Discrimination growth: bring a sensed-but-unread receptor into the
+        READ set (the s029 recruit-on-ambiguity mechanic). Its habituation
+        streak restarts."""
+        self.read_mask[col] = True
+        self._streak[col] = 0
+        cid = int(self.receptor_ids[col].item())
+        self.substrate.arena.state[cid] = CellState.ACTIVE
+
+    def refresh_receptors(self) -> None:
+        """Re-pull the receptor set after the progenitor attaches/withdraws
+        receptors (compile first). Learner classes and habituation state are
+        remapped by CELL ID; new receptors enter unread-history (read=True,
+        streak 0) and pad every learned class as inactive — structurally zero
+        interference (spec §10.5)."""
+        self.substrate.compile()
+        plan = self.substrate.scheduler._plan
+        new_ids = plan.receptor_ids
+        old_pos = {int(c): i for i, c in enumerate(self.receptor_ids.tolist())}
+        n = int(new_ids.numel())
+
+        read = torch.ones(n, dtype=torch.bool)
+        streak = torch.zeros(n, dtype=torch.int32)
+        for j, c in enumerate(new_ids.tolist()):
+            if c in old_pos:
+                read[j] = self.read_mask[old_pos[c]]
+                streak[j] = self._streak[old_pos[c]]
+        for cls in self.learner.classes:
+            T = torch.zeros(n, dtype=torch.complex64)
+            act = torch.zeros(n, dtype=torch.bool)
+            for j, c in enumerate(new_ids.tolist()):
+                if c in old_pos:
+                    T[j] = cls.T[old_pos[c]]
+                    act[j] = cls.active[old_pos[c]]
+            cls.T, cls.active = T, act
+        self.learner.F = n
+        self.receptor_ids = new_ids
+        self.read_mask = read
+        self._streak = streak

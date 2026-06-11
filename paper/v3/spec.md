@@ -3485,8 +3485,8 @@ package dependencies) because the scheduler performs the injection and
 | `resolve.py` | matched-filter per-class evidence, Gaussian floors, RESOLVED/FRUSTRATED/EMPTY trichotomy, graded ranking | 10.4 |
 | `signature.py` | unsupervised signature registry: coherence gate, tangential χ² fit, running-mean update / birth | 10.5 |
 | `controller.py` | the period loop: observe → deposit; boundary meeting (resolve → learn → reset); `PCLLResolution` frustration adapter | 10.4 |
-| `stress.py` | (staged, integration phase I3) empty/ambiguity stress drivers, habituation, council vote routing | 10.6 |
-| `progenitor.py` | (staged, integration phase I2) period-1 perception generation: council-judged, progenitor-executed spawn | 10.6 |
+| `stress.py` | empty/ambiguity stress drivers, habituation, conserved council vote routing (settle/decide) | 10.6 |
+| `progenitor.py` | germline (progenitor + council + vote book) and period-1 perception generation: census, first sitting, natal replay, handover | 10.6 |
 
 ---
 
@@ -3585,18 +3585,43 @@ mean, no-fit births a new class. New classes are new accumulators —
 storage is staged to migrate onto `ManifoldArchive` astrocytes
 (code_dim = 2F; integration phase I4).
 
-### 10.6 Staged extensions (normative once built)
+### 10.6 The developmental program and the stress drivers
 
-Integration phases I2/I3 (see the integration design): the period-1
-developmental program (progenitor + attached council replace the genesis
-pre-pass; council judges importance from deposit evidence, progenitor is
-the sole spawner) and the stress drivers (empty → grow sensation,
-ambiguity → grow discrimination, routed through the conserved council
-vote economy with habituation ×0.5 / floor 0.2). The council seats one
-4-cell group per expression gene (6 × 4 = 24 with tanh, §3.10). The
+**Germline.** The organism is born as one unit: the progenitor + her
+attached council, never frozen, never pruned. The council seats one
+4-cell group per expression gene (6 × 4 = 24 with tanh, §3.10); the
+vote book additionally holds 4 perception seats kept by the progenitor
+(the sensation side's ledger — receptors are voted ON, they do not
+vote). One conserved book, Σ = 28, two readouts: between-phenotype
+ranking (the growth loops' winner) and sensation-vs-discrimination
+credibility (the stress economy).
+
+**Period 1** (perception generation): tick-1 spawn (one PERCEPTION cell
+per column, progenitor-parented), tick-2 receptor equip, distinct-value
+census. The first sitting starves census-constant columns (receptor
+withdrawn — under signed data a constant is not at the q = 0 floor),
+assigns discrete labeled lines + the codec, seeds the importance
+ranking from deposit evidence, and hands over to the controller. The
 NATAL REPLAY rule (s030): period 1's buffered observations are replayed
-through the final receptor configuration at the first sitting and
-learned as a normal period — no class is lost to organ-building.
+through the final receptor configuration and learned as a normal
+period — no class is lost to organ-building.
+
+**Stress drivers.** Status is exclusive per period, so the mapping is
+direct and votes never arbitrate between drivers: EMPTY → grow
+SENSATION (the progenitor attaches/re-equips a receptor; candidate
+priority = shadow evidence); FRUSTRATED → grow DISCRIMINATION (recruit
+a sensed-but-unread receptor into the read set; in the gradient path,
+spawn the winning composer phenotype); RESOLVED → no growth. A growth
+decision is SETTLED at the next boundary (success = the stress it
+answered is gone): success transfers VOTE_PER_EVENT from the other side
+to the grower, failure the reverse, per-seat floors, Σ conserved.
+Habituation tames the void: the empty drive decays ×0.5 per fruitless
+sensory growth (floor 0.2 → accepted-empty, a valid terminal answer)
+and resets to 1 when growth finds signal. The 4-seat perception side can
+pay exactly 3 whole votes before its floor — aligned with the 3-growth
+habituation walk by construction. In learned-world mode a BIRTH is
+comprehension, not stress (a new class that explains the stream
+resolves the period — the disruptor semantics).
 
 ---
 

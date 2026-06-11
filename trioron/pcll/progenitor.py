@@ -96,12 +96,20 @@ class Germline:
                 a.refresh_phenotype(cid)
             self.council_ids[p] = ids.tolist()
 
-        # Conserved vote economy (Σ = 4 × n_phenotypes): per-cell credibility,
-        # the I3 routing currency. Seeded uniform; the first sitting's
-        # importance ranking is recorded alongside for the perception group.
-        self.votes: Dict[int, float] = {
+        # Conserved vote economy — ONE book, two readouts (spec §10.6):
+        # 4 council cells per expression gene (the composer/discrimination
+        # side, step4_grow's between-phenotype ranking) + PERCEPTION_SEATS
+        # bookkeeping seats held by the progenitor (the sensation side —
+        # decision D4: receptors are voted ON, they do not vote). Σ conserved.
+        self.votes: Dict = {
             cid: 1.0 for ids in self.council_ids.values() for cid in ids
         }
+        self.perception_seats: List[str] = []
+        from .stress import PERCEPTION_SEATS
+        for i in range(PERCEPTION_SEATS):
+            seat = f"perception:{i}"
+            self.perception_seats.append(seat)
+            self.votes[seat] = 1.0
         self.perception_importance: List[tuple] = []
 
     def spawn_perception(self, n_cols: int) -> torch.Tensor:
@@ -119,6 +127,15 @@ class Germline:
         a = self.substrate.arena
         for cid in cell_ids.tolist():
             a.epigenome[cid] = set_gene(int(a.epigenome[cid].item()), RECEPTOR)
+
+    def attach_receptor(self, cell_id: int) -> None:
+        """Sensation growth (spec §10.6): reach toward the world by equipping
+        RECEPTOR on a perception cell that has none — a never-equipped
+        candidate or a starved/withdrawn one (reversible by design). The
+        caller recompiles via controller.refresh_receptors()."""
+        a = self.substrate.arena
+        a.epigenome[cell_id] = set_gene(int(a.epigenome[cell_id].item()), RECEPTOR)
+        a.state[cell_id] = CellState.ACTIVE
 
 
 @dataclass
@@ -222,8 +239,11 @@ class PerceptionGenesis:
 
         sub.compile()   # receptor set changed (starved withdrawn)
         codec = _build_codec(levels_sorted)
-        # handover: the controller attaches in this program's place
-        self.controller = PCLLController(sub, codec=codec)
+        # handover: the controller attaches in this program's place, with the
+        # stress router over the germline's book (spec §10.6)
+        from .stress import StressRouter
+        self.router = StressRouter(self.germline)
+        self.controller = PCLLController(sub, codec=codec, stress=self.router)
 
         # NATAL REPLAY (s030): discard the distorted pre-census deposits and
         # replay the buffered period through the FINAL receptor configuration

@@ -27,6 +27,13 @@ from .progenitor import (
 from .receptor import N_QUANTA, phase, quantize, theta_discrete
 from .resolve import EMPTY, FRUSTRATED, RESOLVED, Resolution, Resolver, template
 from .signature import LearnedClass, ScheduleLearner
+from .stress import (
+    DISCRIMINATION,
+    DRIVE_FLOOR,
+    HABITUATION_DECAY,
+    SENSATION,
+    StressRouter,
+)
 
 __all__ = [
     "RETIRE_PATIENCE", "MeetingReport", "PCLLController", "PCLLResolution",
@@ -36,4 +43,6 @@ __all__ = [
     "N_QUANTA", "phase", "quantize", "theta_discrete",
     "EMPTY", "FRUSTRATED", "RESOLVED", "Resolution", "Resolver", "template",
     "LearnedClass", "ScheduleLearner",
+    "DISCRIMINATION", "DRIVE_FLOOR", "HABITUATION_DECAY", "SENSATION",
+    "StressRouter",
 ]

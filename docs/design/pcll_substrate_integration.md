@@ -274,7 +274,9 @@ integration; they slot in after I1 (birth logic) and the boundary machinery
 | D4 | perception vote group = live receptor population, progenitor spawns for it | recommended |
 | D5 | signature store = astrocyte (code_dim=2F); verify engagement reuse is safe | recommended, one check open |
 | D6 | `trioron/pcll/` + spec §10 + gene-table entry before promotion | recommended (spec-first rule) |
-| D7 | discreteness via distinct-value census in period 1, K_DISCRETE=8 | **NEW — needs sign-off** |
+| D7 | discreteness via distinct-value census in period 1, K_DISCRETE=8 | approved s030; built (I2) |
+| D8 | sensation side = 4 perception seats held by the progenitor (Σ=28; 4 seats × floor ¼ ⇒ exactly 3 payable votes = the habituation walk) | built (I3); flagged to Rocky |
+| D9 | growth decisions auto-SETTLE at the next boundary (success = the stress answered is gone); a decision implies the progenitor acts before the next boundary | built (I3); flagged to Rocky |
 | — | genesis batch pre-pass replaced by progenitor period-1 | **DECIDED (Rocky, s030)** |
 | — | council votes at period boundaries (not per tick) | **DECIDED (Rocky, s030)** |
 | — | tick-2 "bias" = receptor adaptation (range/structure estimate) | **DECIDED (Rocky, s030)** |
