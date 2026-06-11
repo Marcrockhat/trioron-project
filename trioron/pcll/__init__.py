@@ -15,15 +15,24 @@ attaches it; thereafter Substrate.end_task() runs the boundary meeting):
         controller.observe(batch)
     report = substrate.end_task()   # MeetingReport
 """
-from .controller import MeetingReport, PCLLController, PCLLResolution
+from .controller import RETIRE_PATIENCE, MeetingReport, PCLLController, PCLLResolution
 from .lockin import LockInView, TrigBank, deposit, evidence_mask, matched_k, reset
+from .progenitor import (
+    K_DISCRETE,
+    FirstSittingReport,
+    Germline,
+    PerceptionGenesis,
+    germline_base,
+)
 from .receptor import N_QUANTA, phase, quantize, theta_discrete
 from .resolve import EMPTY, FRUSTRATED, RESOLVED, Resolution, Resolver, template
 from .signature import LearnedClass, ScheduleLearner
 
 __all__ = [
-    "MeetingReport", "PCLLController", "PCLLResolution",
+    "RETIRE_PATIENCE", "MeetingReport", "PCLLController", "PCLLResolution",
     "LockInView", "TrigBank", "deposit", "evidence_mask", "matched_k", "reset",
+    "K_DISCRETE", "FirstSittingReport", "Germline", "PerceptionGenesis",
+    "germline_base",
     "N_QUANTA", "phase", "quantize", "theta_discrete",
     "EMPTY", "FRUSTRATED", "RESOLVED", "Resolution", "Resolver", "template",
     "LearnedClass", "ScheduleLearner",

@@ -123,6 +123,90 @@ class TestBoundaryMeeting:
         assert sub.end_task() is None
 
 
+class TestPerceptionGenesis:
+    """Period-1 developmental program (spec §10.6, integration phase I2)."""
+
+    @staticmethod
+    def _period(rng, n=300, col3="noise"):
+        import random as _r
+        rows = []
+        for _ in range(n):
+            rows.append([
+                0.0,                                   # col0: dead → starve
+                1.0 if rng.random() < 0.9 else 0.0,    # col1: binary → k=2
+                4.0 + rng.random(),                    # col2: narrow → coherent
+                rng.random() * 10.0,                   # col3: broad → incoherent
+            ])
+        return torch.tensor(rows)
+
+    def _grow(self):
+        import random
+        from trioron.pcll import PerceptionGenesis, germline_base
+        rng = random.Random(0)
+        sub = construct(germline_base, capacity=64)
+        pg = PerceptionGenesis(sub)
+        pg.feed(self._period(rng))
+        sitting = sub.end_task()
+        return sub, pg, sitting, rng
+
+    def test_first_sitting_verdicts(self):
+        sub, pg, sitting, _ = self._grow()
+        assert sitting.starved == [0]
+        assert sitting.discrete == {1: 2}
+        kinds = {c: v.kind for c, v in sitting.verdicts.items()}
+        assert kinds[2] == "continuous" and kinds[3] == "continuous"
+        # starved column: receptor withdrawn, cell dormant, mapping intact
+        from trioron.core.epigenome import RECEPTOR, has_gene
+        a = sub.arena
+        cid = int(pg.perception_ids[0].item())
+        assert not has_gene(int(a.epigenome[cid].item()), RECEPTOR)
+        assert int(a.state[cid].item()) == 1  # CellState.DORMANT
+        assert sub.scheduler._plan.perception_ids.numel() == 4  # mapping holds
+        assert sub.scheduler._plan.receptor_ids.numel() == 3
+
+    def test_handover_and_codec_labeled_lines(self):
+        sub, pg, _, rng = self._grow()
+        assert sub._pcll is pg.controller  # controller attached in pg's place
+        pg.controller.observe(self._period(rng, n=8))
+        q = sub.scheduler._last_receptor_q
+        cols = sub.scheduler._plan.receptor_cols.tolist()
+        b = cols.index(1)  # the binary column's receptor index
+        assert set(q[:, b].tolist()) <= {250.0, 750.0}  # k=2 labeled lines
+
+    def test_habituation_retires_noise_keeps_real(self):
+        from trioron.pcll import RETIRE_PATIENCE
+        sub, pg, _, rng = self._grow()
+        ctrl = pg.controller
+        cols = sub.scheduler._plan.receptor_cols.tolist()
+        retired_at = {}
+        for p in range(1, RETIRE_PATIENCE + 2):
+            ctrl.observe(self._period(rng))
+            report = sub.end_task()
+            for r in report.retired:
+                retired_at[cols[r]] = p
+        assert retired_at == {3: RETIRE_PATIENCE}  # noise out after exactly 3
+        kept = {cols[i] for i in range(len(cols)) if ctrl.read_mask[i]}
+        assert kept == {1, 2}
+        # shadow semantics: retired receptor keeps its gene and deposits
+        from trioron.core.epigenome import RECEPTOR, has_gene
+        a = sub.arena
+        noise_cell = int(sub.scheduler._plan.receptor_ids[cols.index(3)].item())
+        assert has_gene(int(a.epigenome[noise_cell].item()), RECEPTOR)
+        ctrl.observe(self._period(rng, n=50))
+        assert a.lockin_n[noise_cell].item() > 0
+
+    def test_germline_never_forward_and_votes_conserved(self):
+        sub, pg, _, _ = self._grow()
+        g = pg.germline
+        a = sub.arena
+        germ = [g.progenitor_id] + [c for ids in g.council_ids.values() for c in ids]
+        assert len(germ) == 21
+        assert not a.forward_inclusion[torch.tensor(germ)].any()
+        assert abs(sum(g.votes.values()) - 20.0) < 1e-9
+        for cid in pg.perception_ids.tolist():
+            assert int(a.parent[cid].item()) == g.progenitor_id
+
+
 class TestShipWake:
     def test_lockin_state_round_trips(self, tmp_path):
         sub, controller = _organism()

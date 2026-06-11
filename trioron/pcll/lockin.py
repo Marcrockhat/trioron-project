@@ -93,13 +93,25 @@ def reset(arena: Arena, receptor_ids: torch.Tensor) -> None:
 
 class LockInView:
     """Snapshot of the arena lock-in rows with the read API the resolver
-    and signature learner consume (.re/.im/.n + the √n statistics)."""
+    and signature learner consume (.re/.im/.n + the √n statistics).
 
-    def __init__(self, arena: Arena, receptor_ids: torch.Tensor) -> None:
+    `mask` (optional, bool per receptor) restricts the READ set: columns
+    outside it are zeroed — sensed but not read (shadow accumulators keep
+    depositing in the arena; only this view is masked). Spec §10.5 / the
+    s029 recruit-on-ambiguity mechanics."""
+
+    def __init__(self, arena: Arena, receptor_ids: torch.Tensor,
+                 mask: torch.Tensor | None = None) -> None:
         ids = receptor_ids.long()
         self.re = arena.lockin_re[ids]
         self.im = arena.lockin_im[ids]
         self.n = arena.lockin_n[ids]
+        if mask is not None:
+            keep = mask.to(torch.bool)
+            zero = torch.zeros_like(self.re)
+            self.re = torch.where(keep, self.re, zero)
+            self.im = torch.where(keep, self.im, zero)
+            self.n = torch.where(keep, self.n, zero)
 
     def amplitude(self) -> torch.Tensor:
         return torch.sqrt(self.re**2 + self.im**2)

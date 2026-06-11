@@ -30,18 +30,27 @@ consumers see the same dynamic range.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Callable, List, Optional
 
 import torch
 
 from trioron.core.construct import Substrate
+from trioron.core.state import CellState
 
 from .lockin import LockInView, deposit, reset
 from .resolve import EMPTY, RESOLVED, Resolution, Resolver
 from .signature import ScheduleLearner
 
 _CEILING = 5.04  # = FrustrationConfig ceiling (learning/frustration.py)
+
+# Habituation patience (design §8 / integration §3): a READ receptor that is
+# incoherent for this many consecutive signal-bearing periods retires to
+# shadow (dormant, still depositing, no longer read). Mirrors the stress.py
+# true-void → accepted-empty after exactly 3. Empty periods do NOT advance
+# streaks — a period with nothing in the stream says nothing about channel
+# quality (deprivation is the organism's stress, not the channels').
+RETIRE_PATIENCE = 3
 
 
 @dataclass
@@ -50,6 +59,8 @@ class MeetingReport:
     resolution: Optional[Resolution]  # None until the first class is born
     event: str                        # 'empty' | 'match' | 'birth'
     class_name: Optional[str]         # learner's class for this period
+    retired: List[int] = field(default_factory=list)  # receptor cols retired now
+    n_read: int = 0                   # read-set size after this meeting
 
 
 class PCLLResolution:
@@ -80,10 +91,14 @@ class PCLLResolution:
 
 class PCLLController:
     def __init__(self, substrate: Substrate,
-                 k_abs: float = 3.0, k_gap: float = 3.0) -> None:
+                 k_abs: float = 3.0, k_gap: float = 3.0, *,
+                 codec: Optional[Callable] = None) -> None:
         self.substrate = substrate
         self.k_abs = k_abs
         self.k_gap = k_gap
+        # Discrete-column translation (raw level values → level indices,
+        # spec §10.2) — built by the period-1 census (progenitor.py).
+        self.codec = codec
         # Single source of truth for receptor identity/order: the compiled
         # dispatch plan (construct() compiles before we get here).
         self.receptor_ids = substrate.scheduler._plan.receptor_ids
@@ -92,9 +107,14 @@ class PCLLController:
                 "substrate has no RECEPTOR cells — set the RECEPTOR gene "
                 "(with PERCEPTION) on the input cells and compile first"
             )
-        self.learner = ScheduleLearner(int(self.receptor_ids.numel()))
+        n = int(self.receptor_ids.numel())
+        self.learner = ScheduleLearner(n)
         self.frustration = PCLLResolution(k_gap)
         self.periods = 0
+        # Read set + habituation streaks (design §8). Retired receptors stay
+        # in the plan and keep depositing (shadows); they leave the READ set.
+        self.read_mask = torch.ones(n, dtype=torch.bool)
+        self._streak = torch.zeros(n, dtype=torch.int32)
         substrate.attach_pcll(self)
 
     # ── streaming ─────────────────────────────────────────────────
@@ -102,6 +122,8 @@ class PCLLController:
     def observe(self, x: torch.Tensor) -> torch.Tensor:
         """One batch of observations through the substrate forward path;
         deposits the receptor pockets into the arena lock-in rows."""
+        if self.codec is not None:
+            x = self.codec(x)
         y = self.substrate.forward(x)
         q = self.substrate.scheduler._last_receptor_q
         deposit(self.substrate.arena, self.receptor_ids, q)
@@ -111,14 +133,46 @@ class PCLLController:
 
     def period_boundary(self) -> MeetingReport:
         arena = self.substrate.arena
-        view = LockInView(arena, self.receptor_ids)
+        full = LockInView(arena, self.receptor_ids)
+        read = LockInView(arena, self.receptor_ids, mask=self.read_mask)
 
         templates = self.learner.templates()
-        resolution = (Resolver(templates).resolve(view, self.k_abs, self.k_gap)
+        resolution = (Resolver(templates).resolve(read, self.k_abs, self.k_gap)
                       if templates else None)
-        event, name = self.learner.observe(view)
+        event, name = self.learner.observe(read)
 
+        retired = self._habituate(arena, full, event)
         self.frustration.update(resolution, event)
         reset(arena, self.receptor_ids)
         self.periods += 1
-        return MeetingReport(self.periods, resolution, event, name)
+        return MeetingReport(self.periods, resolution, event, name,
+                             retired=retired,
+                             n_read=int(self.read_mask.sum()))
+
+    def _habituate(self, arena, full: LockInView, event: str) -> List[int]:
+        """Streak-based retirement of read receptors that stay incoherent
+        across signal-bearing periods (the per-channel threshold is matched
+        to the channel's null: K=4 for binary labeled lines, else K=3)."""
+        if event == "empty":
+            return []
+        levels = arena.receptor_levels[self.receptor_ids.long()]
+        k_col = torch.where(levels == 2,
+                            torch.full_like(full.n, 4.0),
+                            torch.full_like(full.n, 3.0))
+        coherent = full.margin() > k_col
+        # A channel testifies only with n ≥ K² deposits: |A| ≤ n bounds the
+        # margin at √n, so below K² deposits coherence is UNREACHABLE and the
+        # period carries no testimony either way (e.g. a column that spent the
+        # period saturated as the sample's gain reference). Streaks hold.
+        testified = full.n >= k_col**2
+        self._streak = torch.where(
+            ~testified, self._streak,
+            torch.where(coherent, torch.zeros_like(self._streak),
+                        self._streak + 1))
+        retire = self.read_mask & (self._streak >= RETIRE_PATIENCE)
+        if not bool(retire.any()):
+            return []
+        self.read_mask &= ~retire
+        for cid in self.receptor_ids[retire].tolist():
+            arena.state[cid] = CellState.DORMANT
+        return retire.nonzero(as_tuple=False).squeeze(-1).tolist()
