@@ -113,6 +113,19 @@ boundary commits the structural choice. Per-cell metadata: one new int tensor
 with columns, no mixing before lock-in. If a perception NN stack ever sits
 upstream, it must be partitioned per sensor group — out of scope, standing rule.
 
+**Working resolution / retinal compression (s022 §3.2) — staged, unbuilt.**
+The progenitor's aperture ceiling is the 1.5 Mi working resolution
+(1,572,864 = 1536×1024); everything past her sizes to it. Below the ceiling
+(every current testbed) the period-1 spawn is 1:1 with the input width — no
+compression, which is what I2 builds. At sensor fields ABOVE it (full vision,
+~100 MP) the progenitor must compress ~80:1 first; that stage interacts with
+the partitioning rule — a dense global projection would be the NN-front-end
+failure mode at scale, so compression must be LOCAL (the s022 center-surround
+positional sensor cells as per-region partition units, receptors per
+compressed channel). Implementation debts known at that scale: the census is
+a Python set per column (fine at 64, not at 1.5 M); lock-in tensors are fine
+(~18 MB). Slot this after I5 — it needs a wide-input testbed to gate against.
+
 ---
 
 ## 2. Lock-in accumulator → per-cell state  **[D2]**
