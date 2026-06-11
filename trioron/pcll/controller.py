@@ -65,6 +65,7 @@ class MeetingReport:
     status: str = ""                  # the period's exclusive status (spec §10.4)
     grow: Optional[str] = None        # stress driver decision (spec §10.6) or None
     census: Optional[Census] = None   # structural anatomy after this meeting [D11]
+    divisions: int = 0                # class divisions committed this meeting [D12]
 
 
 class PCLLResolution:

@@ -16,7 +16,9 @@ attaches it; thereafter Substrate.end_task() runs the boundary meeting):
     report = substrate.end_task()   # MeetingReport
 """
 from .controller import RETIRE_PATIENCE, MeetingReport, PCLLController, PCLLResolution
+from .division import circ_2means, try_divide
 from .lockin import LockInView, TrigBank, deposit, evidence_mask, matched_k, reset
+from .mixed import MixedStreamController
 from .progenitor import (
     K_DISCRETE,
     FirstSittingReport,
@@ -37,6 +39,7 @@ from .stress import (
 
 __all__ = [
     "RETIRE_PATIENCE", "MeetingReport", "PCLLController", "PCLLResolution",
+    "circ_2means", "try_divide", "MixedStreamController",
     "LockInView", "TrigBank", "deposit", "evidence_mask", "matched_k", "reset",
     "K_DISCRETE", "FirstSittingReport", "Germline", "PerceptionGenesis",
     "germline_base",
