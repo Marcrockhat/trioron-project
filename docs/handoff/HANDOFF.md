@@ -1,165 +1,148 @@
 # Trioron Handoff
 
 **Session date:** 2026-06-11
-**Session number:** 029
-**Session title:** **The receptor/period/frustration architecture (s028 design) built
-END-TO-END and every gate PASSES — feed sweep, trig lock-in, one-cycle resolution,
-two-driver stress growth with habituation, and UNSUPERVISED schedule discovery. Stress
-test: the discovery loop CONVERGES through a frozen deterministic NN (32/32 classes,
-purity ≥0.97) — but a dense front-end forfeits incomplete-input grace. NEXT: integrate
-into the trioron substrate proper (Rocky's directive).**
+**Session number:** 030
+**Session title:** **PCLL integrated into the substrate END-TO-END (I1–I5 all
+gated PASS): RECEPTOR gene + lock-in arena state, germline (progenitor+council)
+period-1 genesis with NATAL REPLAY, stress drivers on the conserved vote book,
+dynamic-perception manifold (per-dim counts, shadows, frame translation), TANH
+phenotype + council seats — and the ARCHITECTURE TEST matches the s029
+standalone numbers with zero gradients anywhere.**
 
 ---
 
-## The method is named: PCLL — Phase-Coherent Lock-in Learning (Trioron)
-
-Rocky named it (s029). Magnitude → **phase-coded** into 1000 quanta → swept over a
-period → **coherently integrated** (lock-in detection: real class ∝N, empty noise
-∝√N) → **matched-filter** readout (`resolve.py`). The streaming, single-pass,
-label-free alternative to gradient-trained depth. Use "PCLL" in all future docs.
-
 ## READ THIS FIRST
 
-1. `docs/design/receptor_period_frustration.md` — the s028 design **+ new §11**
-   (build-time corrections, all Rocky-approved) and updated §10 (carrier RESOLVED:
-   one carrier = the sweep phase).
-2. The five module docstrings in `experiments/progenitor/` — `lockin.py`,
-   `resolve.py`, `stress.py`, `schedule_learn.py`, `feed.py` — each carries its full
-   rationale. They are the spec of record for this layer until promoted.
+1. `docs/design/pcll_substrate_integration.md` — the integration design,
+   decision register **D1–D10** (all approved/built; D8/D9/D10 carry Rocky
+   flags + rationale).
+2. `paper/v3/spec.md` **§10** (the normative PCLL substrate contract, built
+   this session: §10.1–10.6) + §9.15 (`trioron/pcll/` partition) + §2.2 gene
+   table (RECEPTOR bit 11, TANH bit 12) + §3.10 (tanh phenotype).
+3. `docs/design/receptor_period_frustration.md` — the PCLL method spec (s028/9).
 
-## The arc (commits, in order)
+## The arc (commits, in order, all pushed on `progenitor-council`)
 
-All on `progenitor-council`, all committed + pushed:
+1. **`39a0ff6`** — spec-first: §10 contract, RECEPTOR gene, §9.15 partition,
+   integration design doc (D1–D7 approved by Rocky).
+2. **`e291f70`** — **I1**: RECEPTOR injection in the scheduler (continuous
+   quantizer + discrete labeled lines; per-sample gain frame over continuous
+   receptor cols only), `lockin_re/im/n` + `receptor_levels` arena tensors
+   (ship/wake round-trip), `attach_pcll` + `end_task` boundary meeting,
+   `trioron/pcll/` (lockin/resolve/signature/controller/receptor),
+   `PCLLResolution` frustration adapter. **Gate: exact parity with
+   run_schedule_learning through the Substrate forward path** (5 seeds,
+   births 1/9/17, alignment ≥0.999, zero structural forgetting). NB: pocket-
+   valued test data needs an explicit gain-reference sentinel column (=1000).
+3. **`c1c7dbb`** — **I2**: `progenitor.py` — Germline (progenitor + council,
+   forward-invisible, never locks) + PerceptionGenesis (tick-1 spawn / tick-2
+   receptor equip / distinct-value census K_DISCRETE=8 / first sitting:
+   STARVE census-constant cols by WITHDRAWING the receptor gene — a constant
+   is NOT at the q=0 floor under signed data; discrete verdicts + codec;
+   handover). Habituation retirement (RETIRE_PATIENCE=3; empty periods carry
+   no testimony; n≥K² testimony floor — below it coherence is unreachable).
+   **Gate: kept-set == genesis gradient-probe baseline, zero gradients,
+   3 seeds.**
+4. **`1a70e7f`** — **natal replay** (Rocky: bug — period-1 class was lost):
+   period-1 obs buffered, replayed through the FINAL receptor config at the
+   first sitting, learned as a normal period (data_hard 32/32, was 31).
+   **TANH** expression gene bit 12 (§3.10), bounded |y|≤1, council seats it
+   automatically (6×4=24). 10-species note: chicken+duck and dog+goat MERGE
+   under the unsupervised fit (the known overlap pairs) — every period
+   assigned, splitting them = mixture-aware birth (NEXT).
+5. **`77427d0`** — **I3**: `stress.py` — StressRouter over the germline's ONE
+   book: 24 composer seats + 4 progenitor-held perception seats (D8, Σ=28;
+   4 seats × floor ¼ = exactly 3 payable votes = the habituation walk).
+   decide() on the exclusive status; settle() at the next boundary (D9).
+   Controller: status mapping (birth = comprehension), resolver_templates
+   known-world mode, recruit(), refresh_receptors() (cell-id remap).
+   **Gate: all three stress.py scenarios on the substrate council** (hidden
+   signal ≤2 attaches; true-void → accepted-empty after exactly 3, perception
+   side paid to floor; ambiguity → recruit f3 → RESOLVED gap≈42).
+6. **`70115e1`** — **I4** (D10, from Rocky's two discussion points: stored
+   manifold stats must adjust when perception changes; quanta coordinates
+   need a translation layer): per-dim counts m_f; SHADOW accumulation as
+   default extension (recruit() promotes instantly; auto-promotion at
+   PROMOTE_PATIENCE=3 READ matches); FRAME STAMPS + read-time closed-form
+   translation (q'=a·q+b on the UNWRAPPED pocket coordinate — torch.angle's
+   principal value scaled the wrong lift past q=500, found+fixed; R'=R^(a²);
+   discrete lines frame-free); codec_levels (serializable); astrocyte cell
+   per class; controller state_dict; ship() embeds the PCLL world, wake()
+   exposes `_pcll_state`. **Gate (run_i4_dynamic): frame shift survived 9/9
+   with 0 spurious births vs 3 in the no-translation control; col4 becomes
+   the new gain reference (never deposits) and each class's OLD reference dim
+   is RELEASED + auto-promotes; shadow recruit aligns ≥0.999 zero-relearning,
+   gap 52.7→62.2; ship→wake round-trip.**
+7. **`f6ed9e8`** — **I5 ARCHITECTURE TEST PASS** (run_i5_architecture, the
+   full developmental stack on data_hard, 3 seeds): 32 classes purity 1.0,
+   epoch-2 32/32 zero forgetting, **one-shot 0.384–0.387 (s029 raw arm
+   0.38–0.41), dead-3 0.300–0.321 (s029 0.30–0.31)**, votes conserved, NO
+   gradients anywhere. Eval mirrors s029 single_shot exactly (clean classes
+   only — disruptors excluded by construction; raw-evidence argmax; fixed
+   dead set) + per-sample frame translation.
 
-1. **`78b969f`** — feed sweep (class-as-range-schedule, chicken/dog reproduced exactly,
-   `test_feed.py`) + trig/lock-in + label-free de-risk **PASS**: coherent margin ~31.6
-   vs empty <2.6 at K=3, 5 seeds, zero overlap. Two corrections found in the math and
-   verified: quadrature must be zero-mean (cos,sin) — E[sinc]≈0.226 would grow noise
-   ∝0.23N; saturated/silent receptors are reference not evidence (pinned-max DC = 1/F,
-   measured 0.275). Flat input → deposits nothing → EMPTY (deprivation semantics free).
-2. **`7a0d572`** — discrete/binary labeled lines: `theta_discrete` q=1000·(2j+1)/(2k)
-   (zero-mean roots-of-unity placement; rejected (j+1)/(k+1) has 1/k DC, measured
-   false-coherent at margin 16) + `matched_k` (binary antipodal → 1-D null → K=4).
-   De-risk extended to k∈{2,3,5}: all PASS.
-3. **`39d8f21`** — items 4+5. `resolve.py`: matched-filter per-class evidence
-   E=ΣRe(A·conj(T)), exact Gaussian nulls → parameter-free absolute + top-vs-second
-   gap floors; graded ranking output. 200/200 on chicken/dog/mix/noise (pure RESOLVED
-   gap≈8, mix FRUSTRATED gap≈0, noise EMPTY). `stress.py`: §7 table routes status →
-   driver; conserved vote economy (step4_grow semantics) as driver credibility;
-   habituation ×0.5/fruitless, floor 0.2. Scenarios: hidden-signal found ≤2 attaches;
-   true-void → accepted-empty after exactly 3; ambiguity → recruit sensed-but-unread
-   feature → RESOLVED gap 42.
-4. **`e117521`** — **unsupervised schedule learning** (`schedule_learn.py`). A learned
-   class IS a running-mean signature (arg=range center, |T|=width) feeding Resolver
-   directly. Coherence gate (noise can never birth) → χ² goodness-of-fit → match
-   updates running mean / no-fit births a new accumulator (structural zero
-   interference). **Fit-null geometry correction:** narrow-arc deposits vary
-   TANGENTIALLY → null is χ²(df≈F) not isotropic; first run split classes (5 births).
-   Wilson–Hilferty quantile at K_FIT=4. Tests (5 seeds): 3 classes born pure among
-   noise, alignment 0.99999, learned-template Resolver 6/6; sequential blocks → births
-   at 1/9/17, final mixed block 100% (**zero forgetting, structural**).
-5. **`7f2aad9`** — **NN-front-end stress test** (`run_stress_nn.py`) on the
-   capacity-hard taxonomy (data_hard: 32c×3m, ~5 disruptors, Bayes 0.937),
-   class-periods S=500, genesis → discovery → eval. **Rocky's question answered: YES,
-   converges through a frozen random 12→24→16 tanh MLP** — 32 classes, 27/27 clean
-   coverage, purity 0.97–1.00, all seeds, ≈ raw-features control.
+## Decisions made (sign-off Rocky, s030)
 
-## Stress-test findings (the numbers)
-
-| arm | converged | classes | purity | 1-shot | dead-3-sensors |
-|---|---|---|---|---|---|
-| raw ×3 seeds | yes | 32–34 | 1.000 | 0.38–0.41 | **0.30–0.31** |
-| nn ×3 seeds | yes | 32 | 0.97–1.00 | 0.38–0.40 | **0.10** |
-| nn-mode ×2 | yes | **96** | ~1.0 | **0.61–0.62** | 0.12–0.15 |
-
-- **Incomplete input:** raw/partitioned degrades gracefully (dead channel = masked =
-  no evidence); dense NN collapses (mixing turns absent evidence into corrupted
-  evidence everywhere). Rocky's genesis-partitioning argument, quantified → if a
-  perception stack sits upstream, PARTITION it (per-sensor-group subnets).
-- **Recruit-on-ambiguity:** discovery reading top-6 units (30 classes, purity 0.918,
-  1-shot 0.224) → re-add dropped units one at a time, templates extended from SHADOW
-  signatures (sensed-but-not-read) → monotone 0.224→0.377 = exactly the full-16
-  reading, **zero relearning**.
-- **Disruptors are NOT empty unsupervised** — each born as its own wide (fit-tolerant)
-  class. Differs from the supervised frustration-gate retire; arguably more correct.
-- **Unimodal templates blur multimodal classes** (1-shot 0.38 class-level vs 0.62
-  mode-level) → mixture-aware birth is the next mechanism lever.
-
-## Honest caveats (Rocky: "too amazing")
-
-The conditions are friendly and the purity-1.0 numbers are real but PERIOD-LEVEL:
-- A period = 500 observations of ONE class with the boundary GIVEN. Period
-  segmentation (unknown boundaries, drifting/mixed streams) is unbuilt and is where
-  this gets hard.
-- 1-shot numbers (0.38/0.62) are NOT comparable to the supervised council 0.775 —
-  unsupervised templates, single observation, matched filter only.
-- The fit/floor statistics assume iid draws within a period; real streams correlate.
-
-## Decisions made (sign-off Rocky)
-
-- Carrier = the sweep phase, single (design §10 resolved).
-- Quadrature = zero-mean (cos,sin); gcos/sinc/tan remain post-perception units.
-- q=0/1000 are reference, not evidence (mask rule).
-- Discrete features bypass the receptor; midpoint labeled lines; matched K (4 binary).
-- Votes = driver credibility/within-group prioritisation (status exclusivity means
-  cross-driver arbitration never arises per period); §7 table routes directly.
-- Habituation constants 0.5/0.2 (≈NOGAIN_PATIENCE shape; resolution itself stays
-  parameter-free).
-
-## Open questions / NEXT (priority order)
-
-**Rocky's directive: integrate this into triorons.** The standalone layer works; it
-must become substrate machinery. Sketch (discuss before building):
-
-1. **Receptor + trig units → perception-side phenotypes** (epigenome genes; receptor
-   is per-sample/stateless, trig bank reads its phase). Genesis partitioning maps onto
-   the existing `genesis.py` apoptosis→saliency stages.
-2. **Lock-in accumulator → per-cell state, period boundary → end_task/dream boundary**
-   (the design's circadian point: period end = consolidation point). Resolution
-   margins replace/feed `FrustrationDetector` for the progenitor loops.
-3. **Stress drivers → council vote economy** (`step4_grow.py`) — empty-stress biases
-   perception spawns, ambiguity-stress composer spawns; habituation as retire pattern.
-4. **Learned signatures ↔ manifold archive** — a signature is a tiny per-class sketch
-   (complex F-vector ≈ astrocyte material); shadow accumulators = recruit-without-
-   relearn. Natural fit with ManifoldArchive/astrocytes (spec §4.5, §2.11).
-5. **Mixture-aware birth** (split a class when its own deposits stop fitting) — the
-   1-shot 0.38→0.62 lever.
-6. **Period segmentation** — unknown boundaries; likely the real frontier.
-7. **Componential-semantics output** (Rocky named the term) — the readable graded output
-   is a SIGNED relational descriptor ("goat-ish chicken, not pig"), not just the unsigned
-   typicality ranking `resolve.py` has. Componential semantics = ± distinctive features
-   vs neighbours (Saussurean valeur), computed as **vector arithmetic over signature
-   space** (T_chicken − T_duck = discriminating direction). Signatures are already
-   vectors → small build on `resolve.py`. See design §10. Context: per-species one-shot
-   on the 10-animal set (`run_taxonomy10_oneshot.py`, commit after `595cda8`) is 0.82
-   overall; the two failures (dog disruptor 0.12, chicken≈duck 0.32) show top-two margins
-   +0.03/+0.07 = the FRUSTRATED band — argmax scoring forces a one-hot where the system
-   honestly says "ambiguous, grow a discriminator", so per-species argmax UNDERSTATES it.
+- Developmental flow: period 1 = perception generation (council attached to
+  the progenitor from tick 1 — "the council judges, the progenitor spawns");
+  council votes AT period boundaries; genesis.py batch pre-pass REPLACED.
+- Tick-2 "bias" = receptor adaptation; overproduce-then-prune confirmed
+  (12-d hard taxonomy → 12 kept; 64-aperture → 7 kept, verified).
+- Natal replay (no class lost to organ-building); TANH as 6th expression
+  gene with council seats; D8/D9/D10 (see design doc register).
+- Aperture SIZING is built+validated (step2/2b/genesis lineage, now
+  gradient-free); what remains unbuilt is DENSE-FIELD compression to the
+  1.5 Mi working resolution (every slot variance-bearing → local pooling,
+  never dense-global) — staged post-I5, needs a wide-input testbed.
 
 ## State of the build
 
-- Branch `progenitor-council`, all work committed AND pushed through `7f2aad9` + this
-  handoff. **DO-NOT-COMMIT carries (still excluded, verified):**
+- Branch `progenitor-council`, everything committed AND pushed through
+  `f6ed9e8` + this handoff. **DO-NOT-COMMIT carries (still excluded):**
   `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
   `trioron/viz/export.py`; `.claude/`, `runs/` untracked.
-- New live modules (`experiments/progenitor/`): `feed.py` (+`test_feed.py`),
-  `lockin.py`, `resolve.py`, `stress.py`, `schedule_learn.py`; runners
-  `run_lockin_derisk.py`, `run_resolution.py`, `run_stress_growth.py`,
-  `run_schedule_learning.py`, `run_stress_nn.py`. All runners print PASS and run in
-  seconds on CPU (`python3`, from `experiments/progenitor/`).
-- The s028 branch/GCU growth path remains superseded; do not reinvest.
+- New package: `trioron/pcll/` (receptor, lockin, resolve, signature,
+  controller, stress, progenitor). Core touched: epigenome (bits 11/12),
+  arena (lockin tensors), scheduler (injection + frame stash), construct
+  (attach_pcll/end_task), receptor.py (new), ship/wake (pcll block),
+  phenotype/tanh.py (new).
+- Gate runners (all PASS, seconds-fast, CPU): `run_i1_substrate.py`,
+  `run_i2_genesis.py` (-m), `run_i3_stress.py` (-m), `run_i4_dynamic.py`
+  (-m), `run_i5_architecture.py` (-m). Standalone s029 runners untouched
+  and still PASS.
+- Tests: 25 PCLL/tanh tests in `tests/test_v2/` (test_pcll.py,
+  test_phenotype_tanh.py). Suite: **70 passed + 4 PRE-EXISTING failures**
+  (test_learning credit ×2, test_lifecycle growth-trigger + dream-lock) —
+  verified identical at clean HEAD BEFORE this session's code; not ours.
+  Worth a bisect someday.
+
+## Open questions / NEXT (priority order)
+
+1. **Mixture-aware birth** (handoff-NEXT item 5; now the top lever): split a
+   class when its own deposits stop fitting — the chicken+duck / dog+goat
+   splitter, and the 1-shot 0.38→0.62 (mode-level) lever. Slots cleanly into
+   signature.py (per-dim m and shadows already in place).
+2. **Period segmentation** (unknown boundaries — the real frontier).
+3. **Componential semantics** (signed relational readout over signature
+   space; design §10 of the method doc).
+4. **Dense-field compression** to the 1.5 Mi working resolution (local
+   pooling per the partitioning rule; census scaling debt: Python set per
+   column).
+5. The 4 pre-existing test_v2 failures (bisect).
+6. Composer-phenotype spawns from FRUSTRATED stress (the gradient-path arm
+   of I3's economy — winner_phenotype() is recorded but nothing spawns yet).
 
 ## Pointers
 
-- Design + corrections: `docs/design/receptor_period_frustration.md` (§11 new).
-- The s028 diagnostics (GCU detonation, capacity wall, 96-modes): unchanged, see
-  s028 handoff in git history (`fe8a3fa`).
-- Spec §4.2 FrustrationDetector — the integration point for resolution margins.
-- Vote economy semantics: `step4_grow.py` (`_vote_transfer`, mirrored in `stress.py`).
+- Integration: `docs/design/pcll_substrate_integration.md` (D-register).
+- Contract: spec §10; partition §9.15; cross-index rows at §9.14 end.
+- Method: `docs/design/receptor_period_frustration.md` (+§11 corrections).
+- Vote semantics: `trioron/pcll/stress.py` mirrors `step4_grow.py`.
 
 ## Environment notes
 
-- `/home/marcrockhat/trioron-project/`, branch `progenitor-council`. Python 3.10.12
-  (NB: no nested same-quote f-strings), torch 2.11.0, WSL2, 12 cores, **`python3`**,
-  `OMP_NUM_THREADS=8`. All new runners are seconds-fast; no backgrounding needed.
-- Session was build-heavy but everything is committed, pushed, and green; safe break.
+- `/home/marcrockhat/trioron-project/`, branch `progenitor-council`,
+  Python 3.10.12 (no nested same-quote f-strings), torch 2.11.0, WSL2,
+  `python3`, `OMP_NUM_THREADS=8`. All runners seconds-fast on CPU.
+- Session was very build-heavy (I1–I5 in one sitting); everything is
+  committed, pushed, and green; safe break.
