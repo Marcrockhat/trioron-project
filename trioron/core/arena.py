@@ -75,6 +75,19 @@ class Arena:
         self.branch_alpha = torch.zeros(cap, self.branch_cap, device=self.device)
         self.branch_alpha[:, 0] = 1.0
 
+        # ── PCLL lock-in state (spec §10.3) ──
+        # Non-trainable, driver-updated, SGD-invisible — same lifecycle standing
+        # as engagement/utility, outside the parameter envelope. Meaningful only
+        # on RECEPTOR cells (zero elsewhere, like branch_alpha on non-dendrites).
+        # re/im = Σ(cos θ, sin θ) over the current period (zero-mean quadrature);
+        # n = mask-aware deposit count (q ∈ {0,1000} are reference, not evidence).
+        self.lockin_re = torch.zeros(cap, device=self.device)
+        self.lockin_im = torch.zeros(cap, device=self.device)
+        self.lockin_n = torch.zeros(cap, device=self.device)
+        # 0 = continuous (adaptive quantizer); k ≥ 2 = k-level discrete feature
+        # on fixed labeled lines q = 1000·(2j+1)/(2k) (spec §10.2).
+        self.receptor_levels = torch.zeros(cap, dtype=torch.int32, device=self.device)
+
         # ── Recurrent unroll depth (Axis 7 / spec §3.5) ──
         # k_unroll: per-cell K (1 = no unrolling). The recurrent phenotype unrolls
         # a cell's self/lateral (back-)edges this many steps per forward pass; a

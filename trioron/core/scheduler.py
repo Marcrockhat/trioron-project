@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Callable
 
 import torch
 
-from .epigenome import PERCEPTION, OUTPUT, has_gene
+from .epigenome import PERCEPTION, OUTPUT, RECEPTOR, has_gene
+from .receptor import N_QUANTA, quantize
 from .state import CellState
 
 if TYPE_CHECKING:
@@ -39,6 +40,15 @@ class DispatchPlan:
     output_ids: torch.Tensor = field(
         default_factory=lambda: torch.tensor([], dtype=torch.int32)
     )
+    # RECEPTOR cells (spec §10.2): the subset of perception cells injected as
+    # phase. receptor_cols indexes their input columns (positions within the
+    # first n_perc columns of x, in perception_ids order).
+    receptor_ids: torch.Tensor = field(
+        default_factory=lambda: torch.tensor([], dtype=torch.int32)
+    )
+    receptor_cols: torch.Tensor = field(
+        default_factory=lambda: torch.tensor([], dtype=torch.long)
+    )
 
 
 class Scheduler:
@@ -61,6 +71,10 @@ class Scheduler:
         self._dispatch: dict[int, ForwardFn] = dispatch_table or {}
         self._plan = DispatchPlan()
         self._last_activations: torch.Tensor | None = None
+        # Pocket values q from the most recent forward's receptor injection
+        # ([batch, n_receptors], plan.receptor_ids order) — the PCLL controller
+        # reads these to deposit with the mask rule (spec §10.3).
+        self._last_receptor_q: torch.Tensor | None = None
         self.sparsity_k = sparsity_k
 
     def set_dispatch_table(self, table: dict[int, ForwardFn]) -> None:
@@ -90,13 +104,21 @@ class Scheduler:
         perception_ids = cell_ids[is_perception]
         dispatch_ids = cell_ids[~is_perception]
 
+        # RECEPTOR cells (spec §10.2): perception cells injected as phase.
+        perc_epis = a.epigenome[perception_ids.long()]
+        is_receptor = has_gene(perc_epis, RECEPTOR).bool()
+        receptor_ids = perception_ids[is_receptor]
+        receptor_cols = is_receptor.nonzero(as_tuple=False).squeeze(-1).long()
+
         # Output cells
         is_output = has_gene(epis, OUTPUT).bool()
         output_ids = cell_ids[is_output]
 
         # Group dispatch_ids by (rank, phenotype)
         if dispatch_ids.numel() == 0:
-            self._plan = DispatchPlan([], perception_ids, output_ids)
+            self._plan = DispatchPlan(
+                [], perception_ids, output_ids, receptor_ids, receptor_cols
+            )
             return
 
         d_ranks = a.rank[dispatch_ids.long()]
@@ -157,7 +179,9 @@ class Scheduler:
         interior_ids = cell_ids[is_interior]
         output_rank = int(a.rank[output_ids.long()].max().item()) if output_ids.numel() > 0 else 999
 
-        self._plan = DispatchPlan(buckets, perception_ids, output_ids)
+        self._plan = DispatchPlan(
+            buckets, perception_ids, output_ids, receptor_ids, receptor_cols
+        )
         self._plan.interior_ids = interior_ids
         self._plan.output_rank = output_rank
 
@@ -181,6 +205,27 @@ class Scheduler:
         n_perc = plan.perception_ids.numel()
         if n_perc > 0:
             act[:, plan.perception_ids.long()] = x[:, :n_perc]
+
+        # RECEPTOR injection (spec §10.2): overwrite receptor cells' activations
+        # with the phase θ = 2π·q/1000. Continuous receptors share one per-sample
+        # gain frame (lo/hi over the continuous receptor columns only — discrete
+        # values are symbolic and must not win the sample max); discrete receptors
+        # (receptor_levels = k ≥ 2) sit on fixed labeled lines q = 1000·(2j+1)/(2k),
+        # where the column value IS the level index j (the period-1 census, spec
+        # §10.6, is what guarantees this). Non-differentiable by construction.
+        if plan.receptor_ids.numel() > 0:
+            xr = x[:, plan.receptor_cols]
+            levels = a.receptor_levels[plan.receptor_ids.long()]
+            disc = levels >= 2
+            q = torch.empty_like(xr)
+            cont = ~disc
+            if bool(cont.any()):
+                q[:, cont] = quantize(xr[:, cont])
+            if bool(disc.any()):
+                k = levels[disc].to(xr.dtype)
+                q[:, disc] = N_QUANTA * (2 * xr[:, disc] + 1) / (2 * k)
+            act[:, plan.receptor_ids.long()] = 2 * torch.pi * q / N_QUANTA
+            self._last_receptor_q = q.detach()
 
         # Dispatch each bucket
         for bucket in plan.buckets:

@@ -113,6 +113,12 @@ def _restore_arena(arena: Arena, saved: dict) -> None:
             cols = min(a.branch_alpha.shape[1], saved["branch_alpha"].shape[1])
             a.branch_alpha[:n, :cols] = saved["branch_alpha"][:, :cols].to(a.device)
 
+    if "receptor_levels" in saved:  # PCLL (spec §10.3)
+        a.receptor_levels[:n] = saved["receptor_levels"].to(a.device)
+        a.lockin_re[:n] = saved["lockin_re"].to(a.device)
+        a.lockin_im[:n] = saved["lockin_im"].to(a.device)
+        a.lockin_n[:n] = saved["lockin_n"].to(a.device)
+
     ec = saved["edge_cursor"]
     a.edge_cursor = ec
     a.edge_src[:ec] = saved["edge_src"].to(a.device)

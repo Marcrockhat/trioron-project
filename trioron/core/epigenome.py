@@ -17,6 +17,10 @@ WEIGHT_TIED_LINEAGE: int = 9
 MIRROR: int = 10  # marker gene: cell fires on BOTH own-action and observed-action
                   # (apprenticing substrate). NOT an expression gene — mirror cells
                   # dispatch as LINEAR; the gene is for identity/credit-gating/lesion.
+RECEPTOR: int = 11  # PCLL phase injection (spec §10.2): co-expressed with PERCEPTION;
+                    # the scheduler injects the receptor phase θ = 2π·q/1000 instead of
+                    # the raw input value. Marker gene, not an expression gene —
+                    # receptor cells skip dispatch like all perception cells.
 
 EXPRESSION_GENES: tuple[int, ...] = (LINEAR, ATTENTION, CONV, RECURRENT, DENDRITE)
 

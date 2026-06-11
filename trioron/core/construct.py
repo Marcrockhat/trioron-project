@@ -48,6 +48,7 @@ class Substrate:
         self.lineage = Lineage(arena)
         self.scheduler = Scheduler(arena, dispatch_table, sparsity_k=sparsity_k)
         self.morphogen = None  # set by developmental base if used
+        self._pcll = None  # PCLL controller (spec §10.4) — set via attach_pcll
 
     # ── Forward ───────────────────────────────────────────────────
 
@@ -69,11 +70,22 @@ class Substrate:
         self.graph.recompute_ranks()
         self.scheduler.compile()
 
-    def end_task(self) -> None:
-        """Call after each task to update envelope stagnation and
-        mark ranks for recomputation."""
+    def attach_pcll(self, controller) -> None:
+        """Wire a PCLL controller (spec §10.4): end_task() then runs its
+        boundary meeting. Attaching is the driver's one wiring step — core
+        stays free of learning-machinery imports (the no-built-in-hooks
+        contract); once attached, the period boundary is automatic."""
+        self._pcll = controller
+
+    def end_task(self):
+        """Call after each task to update envelope stagnation and mark
+        ranks for recomputation. When a PCLL controller is attached, runs
+        its period-boundary meeting first (spec §10.4: period end = the
+        consolidation point) and returns its MeetingReport, else None."""
+        report = self._pcll.period_boundary() if self._pcll is not None else None
         self.envelope.end_task(self.arena.n_cells)
         self.arena.rank_dirty = True
+        return report
 
     # ── Training helpers ──────────────────────────────────────────
 

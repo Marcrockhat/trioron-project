@@ -89,6 +89,13 @@ def _serialize_arena(arena: Arena) -> dict[str, Any]:
         "branch_cap": a.branch_cap,
         "n_branches": a.n_branches[:a.cursor].clone(),
         "branch_alpha": a.branch_alpha[:a.cursor].clone(),
+        # PCLL (spec §10.3) — receptor_levels is structural (a discrete receptor
+        # silently reverting to continuous corrupts deposits); lockin_* round-trip
+        # so a mid-period ship resumes its period instead of losing it.
+        "receptor_levels": a.receptor_levels[:a.cursor].clone(),
+        "lockin_re": a.lockin_re[:a.cursor].clone(),
+        "lockin_im": a.lockin_im[:a.cursor].clone(),
+        "lockin_n": a.lockin_n[:a.cursor].clone(),
         "edge_src": a.edge_src[:a.edge_cursor].clone(),
         "edge_dst": a.edge_dst[:a.edge_cursor].clone(),
         "edge_weight": a.edge_weight[:a.edge_cursor].clone(),
