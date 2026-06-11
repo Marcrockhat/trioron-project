@@ -1,6 +1,6 @@
 # Mixed-Stream Growth — division, composers, the structural contract (design, s032)
 
-> Status: **DESIGN FOR DISCUSSION — nothing here is built.** Companion to
+> Status: **APPROVED (Rocky, s032) — D11–D16 all approved; building in M-phase order.** Companion to
 > `pcll_substrate_integration.md` (D1–D10, the s030 integration this extends)
 > and `receptor_period_frustration.md` (the PCLL method). Implements Rocky's
 > s031 regime decision (mixed stream; division IS class discovery) and the
@@ -160,7 +160,7 @@ read dims):
 
 | phase | build | gate (PASS required before next) |
 |---|---|---|
-| **M1** | census instrument + structural fields in `MeetingReport` | I5 rerun byte-identical on accuracy; census reports baseline 12 computing / 0 edges / ranks {0} (the documented starting point) |
+| **M1** | census instrument + structural fields in `MeetingReport` | **PASS (s032, 5fbf5b3)** — accuracy identical (0.387/0.386/0.384); baseline 12 computing / 0 edges / depth 0 asserted, all seeds |
 | **M2** | world-class genesis + division consumer (mixed stream) | `run_mixed_division` reproduced THROUGH the substrate: ≥29/32 truths, one-shot ≥0.65, self-arrest with no cap; astrocytes 1→60–76; every decide() consumed |
 | **M3** | per-class settlement attribution | i5_diag false-credit scenario: phenotype groups differentiate (no longer flat 4.500); Σ=28 conserved |
 | **M4** | composer arm (genome-constrained) | relational testbed through the substrate: beats division-only (>0.595), A/B and E/F separated; census delta: computing cells +k, edges +2k, max rank ≥1; **zero noise-pair spawns across seeds** (failure-mode-4 gate) |
@@ -171,9 +171,9 @@ read dims):
 
 | # | decision | status |
 |---|---|---|
-| D11 | structural contract: every growth event has a declared, gate-asserted arena delta; standing census in MeetingReport | proposed |
-| D12 | mixed-stream genesis births ONE world-class; decide(FRUSTRATED) consumed by progenitor division (per-dim acceptance, NULL_SPLIT floor, rolling buffers) | regime decided s031; wiring proposed |
-| D13 | settlement carries the answered class; success = that class's stress cleared, not global period status | proposed |
-| D14 | composer candidates = LINEAR/TANH/DENDRITE-quad only (scalar-composable genes); ATTENTION/CONV/RECURRENT deferred explicitly; importance-gated wiring + future-deposit settlement; fixed static frames (causal quantization); spawn = real cell + 2 edges + rank>0 | proposed |
-| D15 | manifold adapter = `ManifoldAstrocyte` sketches over pocket space; consumers = annealing, σ-readout, replay guard | proposed |
-| D16 | prune semantics: PATIENCE failure hard-retires the composer cell (edges masked, bet repaid); soft-apoptosis recoverable latch deferred until a probe shows re-spawn churn | proposed |
+| D11 | structural contract: every growth event has a declared, gate-asserted arena delta; standing census in MeetingReport | approved (Rocky, s032) |
+| D12 | mixed-stream genesis births ONE world-class; decide(FRUSTRATED) consumed by progenitor division (per-dim acceptance, NULL_SPLIT floor, rolling buffers) | regime decided s031; wiring approved (Rocky, s032) |
+| D13 | settlement carries the answered class; success = that class's stress cleared, not global period status | approved (Rocky, s032) |
+| D14 | composer candidates = LINEAR/TANH/DENDRITE-quad only (scalar-composable genes); ATTENTION/CONV/RECURRENT deferred explicitly; importance-gated wiring + future-deposit settlement; fixed static frames (causal quantization); spawn = real cell + 2 edges + rank>0 | approved (Rocky, s032) |
+| D15 | manifold adapter = `ManifoldAstrocyte` sketches over pocket space; consumers = annealing, σ-readout, replay guard | approved (Rocky, s032) |
+| D16 | prune semantics: PATIENCE failure hard-retires the composer cell (edges masked, bet repaid); soft-apoptosis recoverable latch deferred until a probe shows re-spawn churn | approved (Rocky, s032) |
