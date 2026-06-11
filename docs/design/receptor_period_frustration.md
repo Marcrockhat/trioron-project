@@ -245,11 +245,45 @@ lock-in over one period; show coherent windows clear the √N floor and empty on
 
 ## 10. Open questions for the build
 
-- **Lock-in carrier:** is there one carrier frequency, or per-class/per-feature carriers
-  the receptor must lock onto? (§4 assumes the phase-as-value encoding is itself the
-  carrier; confirm with Rocky on first build.)
+- **Lock-in carrier:** RESOLVED (Rocky, s029) — ONE carrier, the sweep phase itself;
+  class identity emerges from which quanta features slice, not per-class carriers.
 - **Frustration-on-empty residual:** habituation handles bounding, but do we also test the
   *residual* for leftover structure to prioritise *where* to grow a receptor? (Deferred —
   habituation may make it unnecessary.)
 - **GCU/RMS-norm:** if any oscillator ever does sit in depth, RMS-norm its pre-activation
   (grad clipping won't help — the blow-up is forward, weights stay small).
+- **Mixture semantics (s029):** a RECURRING mixture stream fails fit vs both constituents
+  and is born as its own class. Legitimate (a recurring pattern is discoverable) or to be
+  decomposed? Related: unimodal templates blur multimodal classes (1-shot 0.38 vs 0.62
+  with per-mode periods) — mixture-aware birth (split a class when its own deposits stop
+  fitting) is the proposed mechanism.
+- **One-sided feature activity:** a feature coherent in the stream but unknown to a class
+  (or vice versa) should auto-reject in the fit; not yet handled.
+
+---
+
+## 11. Build-time corrections (s029 — all verified, see module docstrings)
+
+The architecture was built end-to-end in s029 (`feed.py`, `lockin.py`, `resolve.py`,
+`stress.py`, `schedule_learn.py` + runners, all in `experiments/progenitor/`). Four
+corrections to this design surfaced from the math/experiments — Rocky signed off:
+
+1. **Quadrature = (cos θ, sin θ), NOT (gcos, sinc)** — the √N floor needs zero-mean
+   carriers; E[sinc] = Si(2π)/2π ≈ 0.226 would grow noise at 0.23·N. gcos/sinc/tan
+   stay as the post-perception units; the accumulator integrates the zero-mean pair.
+2. **Saturated (q=1000) and silent (q=0) receptors are reference, not evidence** — the
+   pinned max is a 1/F DC that makes uniform noise read coherent (measured 0.275 ≈ 1/4).
+   Bonus: flat input deposits nothing → reads EMPTY (the §6 deprivation semantics free).
+3. **Discrete/binary features bypass the receptor** (no gain to adapt) and sit at
+   labeled lines q = 1000·(2j+1)/(2k) — zero-mean over levels so the floor holds;
+   binary's antipodal deposits give a 1-D null → matched threshold K=4 (else 3).
+4. **The fit-test null is tangential (χ², df≈active features), not isotropic** — narrow-
+   arc deposits vary along the arc; the isotropic null split true classes. Criterion via
+   Wilson–Hilferty quantile at K_FIT=4.
+
+Headline validations: label-free coherent-vs-empty separation PASS (margins ~31.6 vs
+<2.6); resolution trichotomy 200/200; stress scenarios (hidden-signal / true-void /
+ambiguity-recruit) all PASS; unsupervised discovery 3/3 classes pure + zero structural
+forgetting; **the loop CONVERGES through a frozen deterministic NN** (32/32 classes,
+purity ≥0.97, all seeds) — but a dense front-end forfeits incomplete-input grace
+(dead-3-sensors: raw 0.40→0.30 vs NN 0.38→0.10) → partition the perception stack.
