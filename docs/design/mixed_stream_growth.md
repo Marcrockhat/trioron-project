@@ -161,7 +161,7 @@ read dims):
 | phase | build | gate (PASS required before next) |
 |---|---|---|
 | **M1** | census instrument + structural fields in `MeetingReport` | **PASS (s032, 5fbf5b3)** — accuracy identical (0.387/0.386/0.384); baseline 12 computing / 0 edges / depth 0 asserted, all seeds |
-| **M2** | world-class genesis + division consumer (mixed stream) | `run_mixed_division` reproduced THROUGH the substrate: ≥29/32 truths, one-shot ≥0.65, self-arrest with no cap; astrocytes 1→60–76; every decide() consumed |
+| **M2** | world-class genesis + division consumer (mixed stream) | **PASS (s032, a0031f6)** — one-shot 0.760 (probe 0.711), 31–32/32 truths, every decide() consumed, astrocytes 1→75–84. Two corrections: pockets translated to a canonical EXTREMES frame (D10 affine, frozen at genesis) before division — mean-frame clamping or no frame at all divides forever; self-arrest = RATE COLLAPSE (≤5% in tail, 2-epoch verified) bounded by the world's true mode count (data_hard = 32×3 = 96 modes), not absolute-zero windows |
 | **M3** | per-class settlement attribution | i5_diag false-credit scenario: phenotype groups differentiate (no longer flat 4.500); Σ=28 conserved |
 | **M4** | composer arm (genome-constrained) | relational testbed through the substrate: beats division-only (>0.595), A/B and E/F separated; census delta: computing cells +k, edges +2k, max rank ≥1; **zero noise-pair spawns across seeds** (failure-mode-4 gate) |
 | **M5** | manifold adapter | annealing recovers the freeze-decay; σ-readout closes measured gap toward 0.99 on clean classes with raw arm reported alongside (s029 comparability); ship/wake round-trips sketches |
