@@ -1,5 +1,13 @@
-# Receptor / period / frustration / empty-class architecture (s028)
+# PCLL — Phase-Coherent Lock-in Learning (Trioron)
 
+> **The method is named PCLL: Phase-Coherent Lock-in Learning by Trioron**
+> (Rocky, s029). Magnitude is **phase-coded** into 1000 quanta, swept over a
+> period, and **coherently integrated** (lock-in detection) so a real class grows
+> ∝N while empty noise random-walks ∝√N; the per-class readout is a **matched
+> filter**. This is the streaming, single-pass, label-free alternative to
+> gradient-trained hidden depth. (File name kept as-is for git history; this
+> document IS the PCLL spec.)
+>
 > Design captured from the s028 session (2026-06-11). This is the **forward
 > direction** — it supersedes the branch/GCU growth experiments (which hit a hard
 > wall: capacity-limited *and* numerically unstable; see §1). Almost all of this

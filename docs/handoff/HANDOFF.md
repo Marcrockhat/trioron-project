@@ -11,6 +11,13 @@ into the trioron substrate proper (Rocky's directive).**
 
 ---
 
+## The method is named: PCLL — Phase-Coherent Lock-in Learning (Trioron)
+
+Rocky named it (s029). Magnitude → **phase-coded** into 1000 quanta → swept over a
+period → **coherently integrated** (lock-in detection: real class ∝N, empty noise
+∝√N) → **matched-filter** readout (`resolve.py`). The streaming, single-pass,
+label-free alternative to gradient-trained depth. Use "PCLL" in all future docs.
+
 ## READ THIS FIRST
 
 1. `docs/design/receptor_period_frustration.md` — the s028 design **+ new §11**
