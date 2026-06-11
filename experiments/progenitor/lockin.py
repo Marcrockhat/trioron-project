@@ -29,8 +29,32 @@ Two corrections found at build time (s029), both load-bearing:
    neither is a measurement. evidence_mask() excludes both. Bonus: a flat input
    (all features equal → all saturated) deposits nothing → reads EMPTY, which is
    exactly the sensory-deprivation semantics of design §6.
+
+Discrete / binary features (Rocky, s029): under (2) a pure binary sample maps
+every feature to a reference pocket and deposits nothing. Discrete features
+therefore BYPASS the adaptive receptor — they have no gain or contrast to adapt
+(a binary 1 is symbolic, not a magnitude, and must not win the sample max) — and
+are fixed labeled lines at the midpoints of k equal bins:
+
+    q_j = 1000·(2j+1)/(2k)        (binary: 0 → 250, 1 → 750)
+
+Midpoints, not 1000·(j+1)/(k+1): the levels are then the k-th roots of unity
+rotated by π/k, so Σ e^{iθ_j} = 0 — a feature flapping uniformly across its
+levels random-walks at √N and the floor holds. The (j+1)/(k+1) spacing sums to
+−1 → a 1/k DC per noisy feature (binary: 0.5·N — measured, false-coherent at
+margin ~16). Always interior → discrete evidence always deposits.
+
+Null-statistics footnote: zero mean with two unit phasors forces ANTIPODAL
+placement, so a binary channel's noise is a 1-D random walk — floor still √N but
+the null tail is |N(0,1)| (P>3 ≈ 0.27%), not 2-D Rayleigh (P>3 ≈ 0.01%). The
+matched threshold is K≈4 for k=2; K=3 everywhere else (matched_k()). Unordered
+categoricals k>3 get an arbitrary circular adjacency (midpoints is still the
+max-separation choice); a high-k ORDINAL wraps (level 0 and k−1 become circle
+neighbors) — once k is large, feed it through the adaptive receptor as continuous.
 """
 from __future__ import annotations
+
+import math
 
 import torch
 
@@ -59,6 +83,22 @@ class TrigBank:
 
     def __call__(self, theta: torch.Tensor) -> torch.Tensor:
         return torch.stack([gcos(theta), sinc(theta), tan_ramp(theta)], dim=-1)
+
+
+# --- discrete labeled lines (module doc, discrete section)
+
+def theta_discrete(level: torch.Tensor, k: int) -> torch.Tensor:
+    """Fixed phase for level j ∈ {0..k−1} of a k-level discrete feature:
+    θ_j = (2j+1)·π/k, i.e. q_j = 1000·(2j+1)/(2k). Zero-mean over levels,
+    always interior, maximal pairwise separation (binary → ±i)."""
+    return math.pi * (2 * level + 1) / k
+
+
+def matched_k(k_levels: int | None = None) -> float:
+    """Margin threshold matched to the channel's null statistics: binary deposits
+    are antipodal → 1-D Gaussian null (heavier tail) → K=4; continuous and k≥3
+    discrete span the plane → 2-D Rayleigh → K=3. Same false-alarm rate."""
+    return 4.0 if k_levels == 2 else 3.0
 
 
 # --- lock-in accumulator
