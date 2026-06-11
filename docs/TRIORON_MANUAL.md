@@ -125,8 +125,13 @@ A 16-bit mask per cell. Phenotype is a **structural** decision made by the lifec
 | 10–15 | reserved | future genes |
 
 Multiple expression genes co-fire (e.g. `attention|conv`): the scheduler runs the cell
-once per expressed gene and **adds** contributions. The five shipped phenotypes are
-**linear / attention / conv / recurrent / dendrite** (spec §3.2–3.6).
+once per expressed gene and **adds** contributions. The six shipped phenotypes are
+**linear / attention / conv / recurrent / dendrite / tanh** (spec §3.2–3.6, §3.10;
+tanh added s030 — bounded |y|≤1, the anti-detonation counterpart to the quad).
+Marker genes (not expression): PERCEPTION, OUTPUT, …, MIRROR (10, experimental),
+**RECEPTOR (11, s030)** — PCLL phase injection, and **PCLL itself is spec §10**:
+the gradient-free streaming layer (lock-in + matched filter + signatures) living
+in `trioron/pcll/`, wired via `PCLLController` / `substrate.attach_pcll`.
 
 > **Experiment note:** the embodied-organism arc added `MIRROR = 10` as a marker gene
 > (`trioron/core/epigenome.py`) — mirror cells dispatch as LINEAR; "mirror" is
