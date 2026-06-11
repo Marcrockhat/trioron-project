@@ -113,18 +113,25 @@ boundary commits the structural choice. Per-cell metadata: one new int tensor
 with columns, no mixing before lock-in. If a perception NN stack ever sits
 upstream, it must be partitioned per sensor group — out of scope, standing rule.
 
-**Working resolution / retinal compression (s022 §3.2) — staged, unbuilt.**
+**Working resolution / aperture adaptation (s022 §3.2) — what is built vs not.**
 The progenitor's aperture ceiling is the 1.5 Mi working resolution
-(1,572,864 = 1536×1024); everything past her sizes to it. Below the ceiling
-(every current testbed) the period-1 spawn is 1:1 with the input width — no
-compression, which is what I2 builds. At sensor fields ABOVE it (full vision,
-~100 MP) the progenitor must compress ~80:1 first; that stage interacts with
-the partitioning rule — a dense global projection would be the NN-front-end
-failure mode at scale, so compression must be LOCAL (the s022 center-surround
-positional sensor cells as per-region partition units, receptors per
-compressed channel). Implementation debts known at that scale: the census is
-a Python set per column (fine at 64, not at 1.5 M); lock-in tensors are fine
-(~18 MB). Slot this after I5 — it needs a wide-input testbed to gate against.
+(1,572,864 = 1536×1024); everything past her sizes to it. **Adaptive
+perception SIZING is built and validated** (Rocky, s030 correction): the
+oversized-aperture → converge-to-the-real-features loop succeeded in
+`step2_genesis` (single feature recovered from the aperture stand-in),
+`step2b_apoptosis` (apoptosis-FIRST ordering — a signal diluted 1-of-1.5M IS
+noise, so the empty bulk dies by variance in one pass before saliency runs),
+and `genesis.py` (64 → exactly 7). I2 preserves that capability gradient-free
+(zero-variance → census-constant starve; |w·g| saliency → coherence +
+habituation), and `positions.py` carries the foveated position tagging.
+What remains UNBUILT is **dense-field compression**: input where every slot
+carries variance (real vision, ~100 MP), where selection can't reduce anything
+and the ~80:1 reduction must come from LOCAL pooling — per the partitioning
+rule, never a dense global projection (the NN-front-end failure mode at
+scale); the s022 center-surround positional cells are the intended per-region
+units. Implementation debts at that scale: the census is a Python set per
+column (fine at 64, not at 1.5 M); lock-in tensors are fine (~18 MB). Slot
+after I5 — it needs a dense wide-input testbed to gate against.
 
 ---
 
