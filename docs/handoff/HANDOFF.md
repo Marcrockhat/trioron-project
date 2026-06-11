@@ -118,6 +118,16 @@ must become substrate machinery. Sketch (discuss before building):
 5. **Mixture-aware birth** (split a class when its own deposits stop fitting) — the
    1-shot 0.38→0.62 lever.
 6. **Period segmentation** — unknown boundaries; likely the real frontier.
+7. **Componential-semantics output** (Rocky named the term) — the readable graded output
+   is a SIGNED relational descriptor ("goat-ish chicken, not pig"), not just the unsigned
+   typicality ranking `resolve.py` has. Componential semantics = ± distinctive features
+   vs neighbours (Saussurean valeur), computed as **vector arithmetic over signature
+   space** (T_chicken − T_duck = discriminating direction). Signatures are already
+   vectors → small build on `resolve.py`. See design §10. Context: per-species one-shot
+   on the 10-animal set (`run_taxonomy10_oneshot.py`, commit after `595cda8`) is 0.82
+   overall; the two failures (dog disruptor 0.12, chicken≈duck 0.32) show top-two margins
+   +0.03/+0.07 = the FRUSTRATED band — argmax scoring forces a one-hot where the system
+   honestly says "ambiguous, grow a discriminator", so per-species argmax UNDERSTATES it.
 
 ## State of the build
 

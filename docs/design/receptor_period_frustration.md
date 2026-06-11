@@ -259,6 +259,15 @@ lock-in over one period; show coherent windows clear the √N floor and empty on
   fitting) is the proposed mechanism.
 - **One-sided feature activity:** a feature coherent in the stream but unknown to a class
   (or vice versa) should auto-reject in the fit; not yet handled.
+- **Componential-semantics output (s029, Rocky named it):** the graded output should be
+  not just a ranking (unsigned typicality, "duck-ish, almost chicken") but a *signed,
+  relational* descriptor against neighbours — "goat-ish chicken, not pig". The term is
+  **componential semantics**: a class is described by ± distinctive features relative to
+  its neighbours (Saussurean *valeur* / componential analysis), computed as **vector
+  arithmetic over the signature space** (T_chicken − T_duck = the discriminating
+  direction; "−goat", "not pig" = signed projections onto neighbour differences). The
+  raw material already exists — learned signatures are vectors and `resolve.py` has the
+  ranking; what's unbuilt is the signed neighbour-difference readout. UNBUILT.
 
 ---
 
