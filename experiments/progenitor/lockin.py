@@ -127,6 +127,13 @@ class LockIn:
         self.im += m * torch.sin(theta)
         self.n += m
 
+    def absorb(self, theta: torch.Tensor, mask: torch.Tensor | None = None) -> None:
+        """Batch-equivalent of step() over a (T, F) stream chunk — same sums."""
+        m = torch.ones_like(theta) if mask is None else mask.to(theta.dtype)
+        self.re += (m * torch.cos(theta)).sum(0)
+        self.im += (m * torch.sin(theta)).sum(0)
+        self.n += m.sum(0)
+
     def amplitude(self) -> torch.Tensor:
         return torch.sqrt(self.re**2 + self.im**2)
 
