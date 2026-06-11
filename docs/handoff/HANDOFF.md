@@ -69,9 +69,27 @@ modes; target set = the Bayes ceiling (0.993 on clean classes).**
    **Mechanism loop validated:** frustration → trial (overproduce one candidate
    per phenotype × wiring over dim pairs) → spawn best → settle (division-uses-
    dim transfers a vote to the phenotype group, step4 semantics) → prune on
-   PATIENCE. Correct relation dims spawn (linear/tanh/quad(0,1)); the book
-   finally differentiates (quad/tanh ~7.0 vs 2.2). NOT yet a perf win (0.561
-   vs 0.595) — seed 0 wires noise pairs. **Four failure modes, in depth order:**
+   PATIENCE. NOT yet a perf win (0.561 vs 0.595) — seed 0 wires noise pairs.
+
+   **CORRECTION (s031, caught by Rocky):** the probe's candidate set
+   {linear, quad, tanh, gcos, sinc, tan} is NOT the genome. The real
+   expression genes are **LINEAR / ATTENTION / CONV / RECURRENT / DENDRITE /
+   TANH** (`epigenome.py:28` — the council's 24 seats). Only linear and tanh
+   match; the probe's "quad" is really the DENDRITE gene's branch
+   nonlinearity σ(z)=z+z² (legitimate only in its `dendritic` wiring form);
+   gcos/sinc/tan are probe inventions with **no consumer seat in the real
+   vote book**. Therefore: (a) the mechanism loop (trial → permutation-null →
+   split-half → spawn → settle → prune) is de-risked, but (b) the
+   "book finally differentiates" claim does NOT transfer to the 28-vote book,
+   and (c) integration must decide what an attention/conv/recurrent composer
+   candidate even is — or restrict trials to the scalar-composable genes
+   (linear, tanh, dendrite-quad). Also: `apply_dim` min-max normalizes over
+   the BATCH — non-causal; a real spawned dim must emit a value the
+   per-sample contrast quantizer (spec §10.2) can handle alone, which
+   interacts with failure mode 2 below. Spawn log lacks the wiring field
+   (sum/diff/dendritic indistinguishable in `runs/composer_growth.out`).
+
+   **Four failure modes, in depth order:**
    1. NULL-SPLIT floor (fixed): halving any continuous dim yields 2/π=0.64
       coherence; division must beat the noise-slicing null (0.72) or the
       organism tiles instead of frustrating (s021's trigger lesson again).
@@ -127,6 +145,9 @@ modes; target set = the Bayes ceiling (0.993 on clean classes).**
 2. Failure mode 4 in the probe: prove importance-gating + future-settlement
    kills the noise spawns and the composer arm beats division-only on the
    relational testbed (rings need the dendritic quad wiring c_i²+c_j²).
+   **Redo with the real gene set first** (see CORRECTION above): candidates
+   restricted to linear/tanh/dendrite-quad, vote book keyed to the six real
+   genes, spawn log records wiring, composed dims per-sample-quantizable.
 3. Coherence/σ-weighted readout (raw filter → likelihood-style) — the other
    half of the Bayes gap; keep the raw arm reported alongside (s029
    comparability).
