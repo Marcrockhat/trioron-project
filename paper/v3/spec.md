@@ -209,7 +209,9 @@ The epigenome is a 16-bit mask. Reserved gene assignments:
 | 7 | `credit_eligible` | engagement-based credit can lock this cell (active → dormant) |
 | 8 | `recyclable` | cell's arena slot may be reclaimed under extreme envelope pressure |
 | 9 | `weight_tied_lineage` | cell shares its weight tensor with lineage siblings |
-| 10–15 | reserved | future genes (modulatory, neuromodulator, etc.) |
+| 10 | reserved | (claimed experimentally by `MIRROR`, not part of the base spec) |
+| 11 | `receptor` | PCLL phase injection (§10.2): co-expressed with `perception`; the scheduler writes the cell's activation as the receptor phase θ instead of the raw input value. Marker gene, not an expression gene — receptor cells skip dispatch like all perception cells. |
+| 12–15 | reserved | future genes (modulatory, neuromodulator, etc.) |
 
 The phenotype dispatcher (`core/scheduler.py`) reads the epigenome and
 selects the cell's primary phenotype for batched dispatch. When
@@ -3196,6 +3198,7 @@ trioron/
 ├── phenotype/                 # how genes express into operations
 ├── bases/                     # modular construction recipes
 ├── learning/                  # credit, frustration, dream, manifold
+├── pcll/                      # Phase-Coherent Lock-in Learning (§10, partition §9.15)
 ├── lifecycle/                 # growth, evolution, ship, graft, compact
 ├── viz/                       # recorder, detector, viewer, exporter
 ├── evolution/                 # multi-substrate controller (opt-in)
@@ -3443,6 +3446,134 @@ to its defining section and primary implementation file:
 | Detector | 7.2 | `viz/detect.py` |
 | Viewer | 7.3 | `viz/render/` |
 | v1 compat | 8 | `compat/` |
+| RECEPTOR gene + phase injection | 10.2 | `core/epigenome.py` + `core/receptor.py` |
+| Lock-in accumulator state | 10.3 | `core/arena.py` |
+| PCLL resolution + boundary meeting | 10.4 | `pcll/controller.py` |
+| PCLL signatures / discovery | 10.5 | `pcll/signature.py` |
+
+### 9.15 `pcll/` — Phase-Coherent Lock-in Learning
+
+Added after the original v2.0 partition (s030); the contract is §10. The
+receptor *injection math* lives in `core/receptor.py` (pure-torch, no
+package dependencies) because the scheduler performs the injection and
+`core/` must not import `pcll/`; the package re-exports it.
+
+| file | responsibility | spec section |
+|---|---|---|
+| `__init__.py` | public PCLL surface (controller, resolver, learner re-exports) | 10 |
+| `receptor.py` | re-export of `core/receptor.py` quantizer + labeled-line placement for discrete features | 10.2 |
+| `lockin.py` | deposit into arena lock-in tensors, evidence mask, trig units, matched-K thresholds | 10.3 |
+| `resolve.py` | matched-filter per-class evidence, Gaussian floors, RESOLVED/FRUSTRATED/EMPTY trichotomy, graded ranking | 10.4 |
+| `signature.py` | unsupervised signature registry: coherence gate, tangential χ² fit, running-mean update / birth | 10.5 |
+| `controller.py` | the period loop: observe → deposit; boundary meeting (resolve → learn → reset); `PCLLResolution` frustration adapter | 10.4 |
+| `stress.py` | (staged, integration phase I3) empty/ambiguity stress drivers, habituation, council vote routing | 10.6 |
+| `progenitor.py` | (staged, integration phase I2) period-1 perception generation: council-judged, progenitor-executed spawn | 10.6 |
+
+---
+
+## 10. Phase-Coherent Lock-in Learning (PCLL)
+
+> Added s030. The full method rationale, build-time corrections, and
+> experimental validation live in `docs/design/receptor_period_frustration.md`
+> (the PCLL spec of record) and
+> `docs/design/pcll_substrate_integration.md` (the integration design,
+> decision register D1–D7). This section is the *normative substrate
+> contract* only — what the core guarantees, so the rest of the spec can
+> rely on it. PCLL is gradient-free: nothing in this section touches the
+> optimizer, the loss, or `trainable_tensors()`.
+
+### 10.1 Overview
+
+PCLL is the streaming, single-pass, label-free alternative to
+gradient-trained depth. Input magnitudes are **phase-coded** (1000 quanta
+per period), **coherently integrated** over a period by per-receptor
+lock-in accumulators (a real class accumulates amplitude ∝N, noise ∝√N),
+and read out by a **matched filter** with parameter-free Gaussian floors.
+The period boundary is the consolidation point ("circadian"): resolution,
+unsupervised signature learning, and growth-stress routing all happen at
+the boundary meeting, never mid-period.
+
+### 10.2 RECEPTOR gene and phase injection
+
+- Gene bit 11 (`receptor`), **co-expressed with `perception` (bit 5)**.
+  A receptor cell is a perception cell whose injected activation is the
+  phase, not the raw value:
+
+  ```
+  lo = min(0, sample.min over receptor columns)
+  hi = sample.max over receptor columns
+  q  = round(1000 · (v − lo) / (hi − lo))      # pocket ∈ [0, 1000]
+  θ  = 2π · q / 1000                            # the injected activation
+  ```
+
+- The normalisation is **per-sample over the receptor columns only**
+  (gain-adaptive, history-free, scale-invariant). Non-receptor perception
+  cells continue to receive raw values; symbolic/discrete inputs must not
+  win the sample max.
+- Discrete features (per-cell `receptor_levels = k > 0`) bypass the
+  adaptive quantizer and sit at fixed labeled lines
+  q = 1000·(2j+1)/(2k) (zero-mean over levels). The level census that
+  assigns `k` is part of the period-1 developmental program (§10.6).
+- The injection is performed by the scheduler (`core/scheduler.py`); the
+  quantizer math lives in `core/receptor.py`. The injected θ is
+  non-differentiable by construction (an input transform, not a learned op).
+
+### 10.3 Lock-in state (arena tensors)
+
+Three per-cell **non-trainable** tensors, lifecycle-identical to
+`engagement`/`utility` (driver-updated, SGD-invisible, **outside the
+parameter envelope**), plus the receptor metadata:
+
+| tensor | meaning |
+|---|---|
+| `lockin_re` | Σ cos θ over the current period |
+| `lockin_im` | Σ sin θ over the current period |
+| `lockin_n` | deposits this period (mask-aware count) |
+| `receptor_levels` | 0 = continuous; k ≥ 2 = k-level discrete labeled lines |
+
+**Mask rule (normative):** q = 0 (silent, the true-zero floor) and
+q = 1000 (saturated, the gain reference) are *reference, not evidence* —
+they deposit nothing. Corollary: a flat input deposits nothing and reads
+EMPTY (deprivation semantics). The quadrature pair is (cos θ, sin θ) —
+zero-mean carriers are load-bearing for the √N floor.
+
+### 10.4 Resolution and the boundary meeting
+
+Per-class evidence is the matched filter E_c = Σ_f Re(A_f · conj(T_cf))
+with exact Gaussian nulls; both resolution tests are parameter-free
+√-statistics. Status trichotomy: **EMPTY** (nothing clears K·σ),
+**FRUSTRATED** (evidence clears the floor, top-two gap inside its noise
+band), **RESOLVED** (top class clearly leads). Output is always the
+graded margin ranking, never a one-hot.
+
+The **boundary meeting** runs at `Substrate.end_task()` when a PCLL
+controller is attached (`substrate.attach_pcll(controller)` — attaching
+is the driver's wiring step, preserving the rule that no learning
+machinery is hard-wired into core): resolve → signature learn → route
+stress → reset accumulators. The controller exposes a `PCLLResolution`
+adapter with the `FrustrationDetector` consumer interface
+(`.is_frustrated`, `.multiplier`) so growth loops are agnostic to which
+detector drives them.
+
+### 10.5 Signatures (unsupervised discovery)
+
+A learned class is a running-mean complex signature T ∈ ℂ^F
+(arg = range center, |T| = width). Discovery per period: coherence gate
+(noise can never birth) → tangential χ² goodness-of-fit (df ≈ active
+features, Wilson–Hilferty at K_FIT = 4) → match updates the running
+mean, no-fit births a new class. New classes are new accumulators —
+**zero structural interference** with what is already learned. Signature
+storage is staged to migrate onto `ManifoldArchive` astrocytes
+(code_dim = 2F; integration phase I4).
+
+### 10.6 Staged extensions (normative once built)
+
+Integration phases I2/I3 (see the integration design): the period-1
+developmental program (progenitor + attached council replace the genesis
+pre-pass; council judges importance from deposit evidence, progenitor is
+the sole spawner) and the stress drivers (empty → grow sensation,
+ambiguity → grow discrimination, routed through the conserved council
+vote economy with habituation ×0.5 / floor 0.2).
 
 ---
 
