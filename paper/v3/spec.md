@@ -2,7 +2,10 @@
 
 **Status:** draft, sections 1–2
 **Author:** Marcelinus R. Hatorangan (with Chloe)
-**Date:** 2026-05-24
+**Date:** 2026-05-24 (amended 2026-06-12, s033: §10.6 settlement
+correction [D13]; §10.7–10.10 added — mixed-stream regime [D12],
+composer arm [D14/D16/D17], manifold adapter [D15], structural census
+[D11]; §2.9 dispatch default; §9.14/9.15 partition updates)
 **Supersedes:** `trioron_2_0.md`, `trioron_blueprint.md` (kept for v1 reference)
 
 This spec is the source of truth for Trioron v2.0. It defines a cell-to-cell
@@ -3469,6 +3472,11 @@ to its defining section and primary implementation file:
 | Lock-in accumulator state | 10.3 | `core/arena.py` |
 | PCLL resolution + boundary meeting | 10.4 | `pcll/controller.py` |
 | PCLL signatures / discovery | 10.5 | `pcll/signature.py` |
+| Stress drivers + per-class settlement | 10.6 | `pcll/stress.py` |
+| Mixed-stream regime + division | 10.7 | `pcll/mixed.py` + `pcll/division.py` |
+| Composer arm + family trials | 10.8 | `pcll/composer.py` (+ `pcll/mixed.py` orchestration) |
+| PCLL manifold adapter | 10.9 | `pcll/manifold.py` |
+| Structural census | 10.10 | `core/census.py` |
 
 ### 9.15 `pcll/` — Phase-Coherent Lock-in Learning
 
@@ -3485,8 +3493,12 @@ package dependencies) because the scheduler performs the injection and
 | `resolve.py` | matched-filter per-class evidence, Gaussian floors, RESOLVED/FRUSTRATED/EMPTY trichotomy, graded ranking | 10.4 |
 | `signature.py` | unsupervised signature registry: coherence gate, tangential χ² fit, running-mean update / birth | 10.5 |
 | `controller.py` | the period loop: observe → deposit; boundary meeting (resolve → learn → reset); `PCLLResolution` frustration adapter | 10.4 |
-| `stress.py` | empty/ambiguity stress drivers, habituation, conserved council vote routing (settle/decide) | 10.6 |
+| `stress.py` | empty/ambiguity stress drivers, habituation, conserved council vote routing; per-class settlement (settle/decide/attach_subjects), gene-targeted composer transfers | 10.6, 10.8 |
 | `progenitor.py` | germline (progenitor + council + vote book) and period-1 perception generation: census, first sitting, natal replay, handover | 10.6 |
+| `division.py` | split-vs-keep judgment: worst-dim (or multi-try) circular 2-means, per-dim acceptance, noise-slicing null | 10.7 |
+| `mixed.py` | the mixed-stream boundary meeting: membership, canonical frame, judgment, trials orchestration, execution, annealing, freeze, state_dict | 10.7–10.9 |
+| `composer.py` | genome candidate set + affine-folded spawns, residual-incoherence trial statistic, importance gating, prune, ComposerPending | 10.8 |
+| `manifold.py` | per-class pocket-space μ/σ sketches on class astrocyte rows: annealing, σ-readout, replay, persistence | 10.9 |
 
 ---
 
@@ -3594,7 +3606,9 @@ vote book additionally holds 4 perception seats kept by the progenitor
 (the sensation side's ledger — receptors are voted ON, they do not
 vote). One conserved book, Σ = 28, two readouts: between-phenotype
 ranking (the growth loops' winner) and sensation-vs-discrimination
-credibility (the stress economy).
+credibility (the stress economy). Composer-spawn settlements (§10.8)
+transfer within the council, gene group vs the other gene groups — the
+between-phenotype readout's writer.
 
 **Period 1** (perception generation): tick-1 spawn (one PERCEPTION cell
 per column, progenitor-parented), tick-2 receptor equip, distinct-value
@@ -3610,11 +3624,22 @@ period — no class is lost to organ-building.
 direct and votes never arbitrate between drivers: EMPTY → grow
 SENSATION (the progenitor attaches/re-equips a receptor; candidate
 priority = shadow evidence); FRUSTRATED → grow DISCRIMINATION (recruit
-a sensed-but-unread receptor into the read set; in the gradient path,
-spawn the winning composer phenotype); RESOLVED → no growth. A growth
-decision is SETTLED at the next boundary (success = the stress it
-answered is gone): success transfers VOTE_PER_EVENT from the other side
-to the grower, failure the reverse, per-seat floors, Σ conserved.
+a sensed-but-unread receptor into the read set; in the mixed-stream
+regime, divide the attributed class or spawn a composer cell, §10.7–8);
+RESOLVED → no growth.
+
+**Settlement is per-class [D13] (s033 amendment; supersedes the s030
+global predicate).** A growth decision carries the CLASS it answered
+(`pending = (driver, subject)`) and settles ONLY on that class's own
+testimony — never the period's global status, which pays a growth
+whenever the WORLD changes underneath it (the s031 false-credit
+confound: a new class arriving reads RESOLVED and credits a growth
+that did nothing). Subject-less entries (sensation) keep the global
+predicate — EMPTY is the period's stress, not a class's. An entry
+whose subject gives no testimony this boundary DEFERS: silence pays
+nobody. Success transfers VOTE_PER_EVENT from the other side to the
+grower, failure the reverse, per-seat floors, Σ conserved; only the
+success predicate changed.
 Habituation tames the void: the empty drive decays ×0.5 per fruitless
 sensory growth (floor 0.2 → accepted-empty, a valid terminal answer)
 and resets to 1 when growth finds signal. The 4-seat perception side can
@@ -3622,6 +3647,171 @@ pay exactly 3 whole votes before its floor — aligned with the 3-growth
 habituation walk by construction. In learned-world mode a BIRTH is
 comprehension, not stress (a new class that explains the stream
 resolves the period — the disruptor semantics).
+
+### 10.7 The mixed-stream regime and division-as-discovery [D12]
+
+The deployment regime (decided s031): the stream arrives shuffled — no
+labels, no class periods, no boundaries. A period is a WINDOW of stream
+samples (W = 1000 by convention; distinct from the N_QUANTA = 1000
+pocket resolution). `MixedStreamController` (`pcll/mixed.py`) owns the
+boundary meeting from period 2; period 1 stays `PerceptionGenesis`.
+
+- **Genesis births ONE world-class** — a single blurred signature
+  explaining everything. Early FRUSTRATED stress is mode blur, and that
+  is the *intended* discovery signal.
+- **Division is the discrimination consumer.** A FRUSTRATED decision
+  routes to the progenitor, who divides the attributed class: the
+  buffer's least-coherent dim, circular 2-means, accepted iff BOTH
+  children have ≥ MIN_CHILD = 25 members and beat
+  max(parent + GAIN_D, NULL_SPLIT = 0.72) — the 2/π noise-slicing
+  null. Parent astrocyte retires (lineage kept via `arena.parent`);
+  two sibling classes are born. Division grows BOOKKEEPING rows by
+  design — classes are memory, not tissue (§10.10).
+- **Per-class ROLLING buffers** (BUF = 400), never window members
+  (windows starve once classes multiply). Membership is the matched
+  filter against buffer-mean templates, recomputed each boundary —
+  accuracy lives in the structure, not in annealed weights.
+- **The canonical frame.** Per-sample contrast pockets are translated
+  into ONE canonical frame before membership and division (the
+  per-sample affine, exact inverse of the quantizer's map); the frame
+  is the running EXTREMES frozen at the genesis boundary. Raw
+  per-sample pockets make every dim look multimodal (frame motion ≠
+  mode structure) and a MEAN frame clamps real values to pocket edges —
+  both divide forever (s032 corrections, on record).
+- **Self-arrest = RATE COLLAPSE** bounded by the world's true mode
+  count, not absolute-zero windows (division discovers MODES; the
+  purity map bundles them into truths).
+- **`divide_tries`** (s033): dims judged per division, ascending
+  coherence; default 1 (worst-dim). Worlds with pure-noise dims need
+  more — the worst dim is then always noise, rejected at the null
+  floor, and division never fires.
+- **`freeze`** (s033): deployment mode — no divisions, no trials;
+  membership, deposits, sketch updates and annealing continue.
+- The controller's full state (classes, buffers, lineage, composer
+  specs, sketches, codec, vote book) serializes via `state_dict()` and
+  rides `lifecycle/ship`'s `_pcll` hook — ship → wake reproduces the
+  readout exactly.
+
+### 10.8 The composer arm — growth of real tissue [D14, D16, D17]
+
+The discrimination growth path that earns computing cells, edges and
+depth (`pcll/composer.py`). **Overproduction is over the GENOME**: a
+council seated by expression genes cannot vote for a function with no
+gene bit; the small fixed genome is a regularizer. Candidates over a
+receptor dim pair (c_i, c_j), c = q/N_QUANTA − ½:
+
+- LINEAR: w₀c_i + w₁c_j (sum/diff), static frame [−1, 1]
+- TANH: tanh(2.5(w₀c_i + w₁c_j)) (sum/diff), static frame [−1, 1]
+- DENDRITE: c_i² + c_j² — two branches, one input each, static frame
+  [0, ½]. The phenotype computes this EXACTLY: with edge weight
+  w = −1/(2π) over the phase activation a = 2π(c+½), the branch quad
+  σ(z) = z + z² gives σ(−(c+½)) = c² − ¼ (the tied linear term cancels
+  analytically); soma bias ½. LINEAR/TANH fold affinely (edge w/2π,
+  bias −Σw/2). Spawn-time weights are part of the growth event
+  (phenotype chosen FROM the problem, §2.2 discipline).
+- ATTENTION / CONV / RECURRENT: deferred — no scalar form on receptor
+  dims; an open design decision, recorded so it is decided, not
+  improvised.
+
+**Trial machinery** (all probe-measured, s033):
+
+- Statistic: the residual-incoherence ratio (1 − null)/(1 − carve) >
+  NULL_RATIO = 2 — R saturates near 1 and manifold marginals are
+  clumpy, so R-unit gain is blind (a 0.995 relation over a 0.935 null
+  reads as 0.06). Noise pairs measure 1.0–1.2, tanh relations 2.5–2.9,
+  dendrite on ring pools 13–22. Permutation null ×3 (shuffle col j
+  against col i: marginals survive, the relation dies); selection on
+  one half of the buffer, confirm on the held-out half.
+- Importance-gated wiring: only dims on which ANY judgable-size
+  (≥ MIN_MEMBERS) class buffer coheres (R > 0.9) enter a trial — noise
+  has no lock-in margin in any class; smaller buffers confabulate
+  (membership selection bias reaches importance too).
+- Division and composition COMPETE at the sitting: the spawn wins only
+  when its carve beats the best division's (a strict division-first
+  ladder starves the composer — relational buffers fragment forever on
+  legitimate micro-modes).
+- **Family trials [D17]:** division fragments continuous manifolds into
+  raw-separable arcs before any relational buffer reaches trial size,
+  so relational wholes REFORM for the trial only: pools of current
+  buffers under a retired division ancestor within FAMILY_DEGREE = 3
+  generations of a live buffer (measured: plateau at degrees 3–5,
+  near-root pools degrade; tree depth ~7), deepest pool first, one
+  family spawn per boundary. The composer is thereby the
+  anti-fragmentation mechanism; a merge CONSUMER (collapse a family
+  the composed dim explains) remains future work.
+
+**Spawn = real tissue (§10.10 contract):** +1 computing cell
+(epigenome = the winning expression gene), +2 edges from the source
+receptor cells, rank EARNED from topology at compile() — depth is
+never asserted. The cell computes its composition in the forward path
+each tick; its activation quantizes through the spec's FIXED static
+frame (causal — every genome form is bounded by construction) and
+deposits into its own lock-in row like any receptor. Composer SOURCES
+must be canonical (static per-sample frames, e.g. a sentinel
+gain-reference column); composing over frame-moving receptors awaits
+canonical injection (deferred, on record).
+
+**Settlement is future-deposit** (D9 ∘ D13): the spawn settles ONLY on
+members that arrive after it exists — the trial statistic recomputed
+on ≥ FRESH_MIN virgin members of the proposing lineage (fresh stores
+follow divided lineages). Success pays the winning GENE's council
+group (within-council transfer); failure repays. PATIENCE failure
+hard-retires the cell [D16]: out of the forward path, edges masked
+(weights zeroed), state DORMANT; the composed column leaves every
+buffer.
+
+### 10.9 The manifold adapter [D15]
+
+The PCLL expression of §4.5 (`pcll/manifold.py`): per-class μ/σ
+sketches (`learning/manifold.ManifoldAstrocyte`) over POCKET space,
+each riding the class's OWN astrocyte row. Fed the period's REAL
+member pockets at every boundary — the sketch holds the full deposit
+history where the rolling buffer holds only the last BUF members; that
+asymmetry is what the consumers buy. Sketches follow divisions
+(children rebuild from their split buffers) and width changes
+(composer spawn/prune → rebuild from buffers; history beyond the
+buffer is traded for consistency, recorded).
+
+Consumers: (1) **post-quiescence annealing** — synthesized deposits
+displace the OLDEST buffer members, re-anchoring templates against
+membership-pollution drift (synthetic members never feed the sketches
+back); (2) **σ-likelihood readout** — diagonal Gaussian with a
+pocket-grain σ floor (= 2 quanta); (3) **replay** pseudo-deposits for
+gradient training over grown tissue, and persistence through
+ship/wake.
+
+Measured honesty (s033, the M5 gate record): the σ-readout adds
++0.012 over the raw filter on the post-division organism — the s031
+estimate that σ-weighting closes the raw→Bayes half of the gap is
+FALSIFIED (fragments are already tight; full covariance is within
+noise; the residual gap is fragmentation/mapping ambiguity — routing,
+not readout). The s031 freeze-decay also does not reproduce under the
+corrected controller; annealing's measured value accrues during
+discovery. The machinery remains the lifetime-horizon guard.
+
+### 10.10 The structural contract and the census [D11]
+
+Every growth decision maps to a DECLARED arena-structure delta,
+asserted by gates:
+
+| event | arena delta |
+|---|---|
+| division | parent astrocyte row → 2 sibling rows, lineage in `arena.parent` (bookkeeping by design) |
+| composer spawn | +1 computing cell, +2 edges, rank = max(src)+1 (earned at compile) |
+| receptor attach | existing perception cell flips ACTIVE + RECEPTOR |
+| composer prune | cell retired, edges masked, bet repaid |
+
+The census (`core/census.py`) is STANDING instrumentation, not a
+probe: cells partitioned computing / germline / astrocyte from arena
+fields alone, edges, ranks (depth over computing cells only), per-gene
+counts — carried in every `MeetingReport`, with `delta()` for gate
+assertions. The trust criterion: cell, edge and rank counts must MOVE
+when the organism learns.
+
+`construct()` defaults to the REAL phenotype dispatch table (s033): an
+empty dispatch silently skips every computing cell the organism grows
+— the "growth was inert" failure class. Receptor-only organisms are
+unaffected (receptors are injected, not dispatched).
 
 ---
 

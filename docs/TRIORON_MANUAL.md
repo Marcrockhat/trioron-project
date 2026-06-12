@@ -9,8 +9,9 @@
 > or `file:line` so it can be re-verified, not trusted.
 >
 > Maintained by: rewrite/extend whenever a session re-derives a fundamental that
-> isn't here. Last verified: session 015 (2026-06-04) — λ restored & its native
-> driver corrected to |w·g| (§1); problem-driven phenotype selection pinned (§2.5).
+> isn't here. Last verified: session 033 (2026-06-12) — PCLL §10.6–10.10
+> amendment mirrored (§2: mixed stream, per-class settlement, composer arm,
+> manifold adapter, census); dispatch-table + σ-readout drift traps added (§8).
 
 ---
 
@@ -132,6 +133,21 @@ Marker genes (not expression): PERCEPTION, OUTPUT, …, MIRROR (10, experimental
 **RECEPTOR (11, s030)** — PCLL phase injection, and **PCLL itself is spec §10**:
 the gradient-free streaming layer (lock-in + matched filter + signatures) living
 in `trioron/pcll/`, wired via `PCLLController` / `substrate.attach_pcll`.
+
+**PCLL grew up in s032–s033 (spec §10.6–10.10, all gated M1–M5):** the
+deployment regime is the MIXED STREAM (`MixedStreamController`, §10.7 —
+genesis births ONE world-class; division-by-frustration IS class
+discovery; canonical EXTREMES frame; self-arrest = rate collapse);
+settlement is PER-CLASS (§10.6 [D13] — a growth settles only on its own
+class's testimony; no-testimony DEFERS); the **composer arm grows REAL
+tissue** (§10.8 [D14/D16/D17] — genome-only candidates, the dendrite
+computes c_i²+c_j² EXACTLY via edge w = −1/(2π) and σ(z)=z+z²;
+residual-incoherence ratio trials; FAMILY trials over lineage-sibling
+pools, degree 3; future-deposit settlement; spawn = +1 computing cell,
++2 edges, EARNED rank); the **manifold adapter** (§10.9 [D15]) rides
+class astrocyte rows (annealing / σ-readout / replay / full ship-wake).
+The census (§10.10 [D11]) is standing instrumentation: growth must MOVE
+cell/edge/rank counts or it's bookkeeping.
 
 > **Experiment note:** the embodied-organism arc added `MIRROR = 10` as a marker gene
 > (`trioron/core/epigenome.py`) — mirror cells dispatch as LINEAR; "mirror" is
@@ -303,6 +319,17 @@ core).
 - ❌ "The substrate is layered." → ✅ Flat sparse edge list; no native forward-from-layer.
 - ❌ "Pruner uses strict §3.2 |a·g|." → ✅ Default pruner is `max(act_grad, act_var)`
   (memory `pruner_combined_mode_deviation`).
+- ❌ "Growth ran but accuracy didn't move — the mechanism must be wrong." →
+  ✅ **Check the dispatch table first.** `construct()` once defaulted to an
+  EMPTY dispatch — every grown computing cell silently skipped in forward
+  (s020's inert-growth bug, refound s033 by the first composer spawn). It
+  now defaults to the real phenotype table (spec §10.10); a custom
+  `dispatch_table={}` reintroduces the trap.
+- ❌ "σ/likelihood weighting will close the readout gap to Bayes." →
+  ✅ FALSIFIED on the post-division organism (s033, M5 gate): fragments
+  are tight, diagonal σ gives +0.012, full-cov is noise. The residual gap
+  is fragmentation/mapping ambiguity — ROUTING (merge consumer / routing
+  layer), not readout math.
 - ⚠️ The world/RL experiments run **raw Adam over `trainable_tensors()` and bypass** the
   credit/manifold/dream machinery — that bypass is *the* recurring source of "world
   forgetting." Wire the native machinery in.
