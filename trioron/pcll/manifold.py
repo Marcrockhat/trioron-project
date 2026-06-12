@@ -72,6 +72,25 @@ class PCLLManifold:
     def retire(self, name: str) -> None:
         self.sketches.pop(name, None)
 
+    def merge(self, keep: str, drop: str) -> None:
+        """Pool two sketches EXACTLY (parallel-axis Welford combine) —
+        the merged class keeps both fragments' full deposit histories;
+        no information is lost to the merge [D18]."""
+        a, b = self.sketches.get(keep), self.sketches.pop(drop, None)
+        if a is None or b is None or a.code_dim != b.code_dim:
+            return
+        n1, n2 = a._n, b._n
+        if n2 == 0:
+            return
+        if n1 == 0:
+            a._n, a._mean, a._m2 = b._n, b._mean, b._m2
+            return
+        delta = b._mean - a._mean
+        n = n1 + n2
+        a._mean = a._mean + delta * (n2 / n)
+        a._m2 = a._m2 + b._m2 + delta * delta * (n1 * n2 / n)
+        a._n = n
+
     def update(self, name: str, q: torch.Tensor) -> None:
         """Feed a class's REAL window members (canonical pockets [n, W])
         — synthetic deposits never update the sketch."""

@@ -55,7 +55,7 @@ from . import composer as comp
 from .controller import MeetingReport, PCLLController
 from .manifold import PCLLManifold
 from .division import (BUF, CLASS_CAP, GAIN_D, MIN_CHILD, MIN_MEMBERS,
-                       NULL_SPLIT, try_divide)
+                       NULL_SPLIT, template_sim, try_divide, try_merge)
 from .lockin import LockInView, deposit, matched_k, reset
 from .resolve import EMPTY, FRUSTRATED, RESOLVED
 from .signature import LearnedClass
@@ -73,7 +73,8 @@ class MixedStreamController:
                  stress=None, adopt: Optional[PCLLController] = None,
                  composer: bool = False,
                  divide_tries: int = 1,
-                 manifold: bool = False) -> None:
+                 manifold: bool = False,
+                 merge: bool = False) -> None:
         # divide_tries: dims judged per division (ascending coherence).
         # The default 1 is the M2 worst-dim semantics (byte-identical).
         # Worlds with pure-noise dims need > 1 — the worst dim is then
@@ -140,6 +141,12 @@ class MixedStreamController:
         # deposits, sketch updates and annealing continue (the s031
         # freeze-decay scenario, M5 gate)
         self.freeze = False
+        # ── merge consumer [D18] ──────────────────────────────────
+        # The inverse judgment: lineage-local fragment pairs whose UNION
+        # fails the split-vs-keep criterion are duplicates the matched
+        # filter split across two templates — collapse them. Structure
+        # maintenance (council judgment), not growth: no vote transfer.
+        self.merge = merge
         substrate.attach_pcll(self)
 
     def _new_node(self, name: str, parent_name: Optional[str]) -> None:
@@ -271,11 +278,19 @@ class MixedStreamController:
         # prune AFTER execute: this boundary's division verdicts carry
         # side masks + dim indices over the pre-prune buffer width
         n_pruned = self._prune_composers()
+        # merge consumer [D18]: structure maintenance, no vote transfer.
+        # Re-merging a freshly split pair is impossible by construction:
+        # their union IS the parent that just passed try_divide, so
+        # try_merge rejects it — the inverted criterion is self-consistent.
+        n_merge = 0
+        if self.merge and not self.freeze:
+            n_merge = self._merges(arena, tries)
         if n_div == 0 and n_spawn == 0:
             self._anneal()                         # post-quiescence [D15]
 
         return self._report(arena, "match", None, status, grow, n_div,
-                            spawns=n_spawn, pruned=n_pruned)
+                            spawns=n_spawn, pruned=n_pruned,
+                            merges=n_merge)
 
     # ── the steps ─────────────────────────────────────────────────
 
@@ -483,6 +498,75 @@ class MixedStreamController:
         self._to_prune = []
         return n
 
+    # ── the merge consumer [D18] ──────────────────────────────────
+
+    def _merges(self, arena, tries: int) -> int:
+        """Collapse duplicate fragments: candidate pairs are
+        LINEAGE-LOCAL (a shared ancestor within FAMILY_DEGREE of both —
+        duplicates come from division), pre-filtered by template cosine
+        (freshly-split children cohere at different phases on their
+        split dim → cannot immediately re-merge: built-in hysteresis),
+        judged by the INVERTED split-vs-keep law (try_merge: the union
+        fails every acceptance floor → one class). Greedy disjoint
+        merges, most-similar first. The survivor keeps both deposit
+        histories: union buffer + exact pooled sketch."""
+        pools: dict = {}
+        for k, c in enumerate(self.classes):
+            nid = self._node.get(c.name)
+            if nid is None:
+                continue
+            a, deg = self._parent_node.get(nid), 1
+            while a is not None and deg <= comp.FAMILY_DEGREE:
+                pools.setdefault(a, set()).add(k)
+                a, deg = self._parent_node.get(a), deg + 1
+        pairs = set()
+        for idxs in pools.values():
+            ordered = sorted(idxs)
+            for i in ordered:
+                for j in ordered:
+                    if i < j:
+                        pairs.add((i, j))
+        scored = []
+        for i, j in pairs:
+            if len(self.bufs[i]) >= MIN_CHILD and \
+                    len(self.bufs[j]) >= MIN_CHILD:
+                s = template_sim(self.bufs[i], self.bufs[j])
+                if s >= 0.0:
+                    scored.append((s, i, j))
+        scored.sort(reverse=True)
+
+        used, merged_pairs = set(), []
+        for s, i, j in scored:
+            if i in used or j in used:
+                continue
+            if try_merge(self.bufs[i], self.bufs[j], tries=tries):
+                merged_pairs.append((i, j))
+                used.update((i, j))
+
+        if not merged_pairs:
+            return 0
+        drop = set()
+        for i, j in merged_pairs:
+            keep_k, drop_k = i, j                  # survivor = elder class
+            ck, cd = self.classes[keep_k], self.classes[drop_k]
+            self.bufs[keep_k] = torch.cat(
+                [self.bufs[keep_k], self.bufs[drop_k]])[-BUF:]
+            if cd.cell_id >= 0:                    # retire the dropped row
+                arena.state[cd.cell_id] = CellState.DORMANT
+                if ck.cell_id >= 0:
+                    arena.parent[cd.cell_id] = ck.cell_id
+            if self.manifold is not None:          # pooled histories
+                self.manifold.merge(ck.name, cd.name)
+            for p in self._watch:                  # lineages follow
+                if cd.name in p.lineage:
+                    p.lineage.discard(cd.name)
+                    p.lineage.add(ck.name)
+            drop.add(drop_k)
+        self.classes = [c for k, c in enumerate(self.classes)
+                        if k not in drop]
+        self.bufs = [b for k, b in enumerate(self.bufs) if k not in drop]
+        return len(merged_pairs)
+
     # ── the manifold adapter's consumers [D15] ────────────────────
 
     def _anneal(self) -> None:
@@ -668,7 +752,8 @@ class MixedStreamController:
                 arena.engagement[c.cell_id] = float(len(b))
 
     def _report(self, arena, event, name, status, grow, n_div, *,
-                spawns: int = 0, pruned: int = 0) -> MeetingReport:
+                spawns: int = 0, pruned: int = 0,
+                merges: int = 0) -> MeetingReport:
         self._refresh(arena)
         reset(arena, self.receptor_ids)
         if self.composer_cells:
@@ -678,7 +763,7 @@ class MixedStreamController:
                              n_read=int(self.read_mask.sum()),
                              status=status, grow=grow,
                              divisions=n_div, census=census(arena),
-                             spawns=spawns, pruned=pruned)
+                             spawns=spawns, pruned=pruned, merges=merges)
 
     # ── readouts ──────────────────────────────────────────────────
 

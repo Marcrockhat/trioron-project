@@ -68,3 +68,66 @@ def test_circ_2means_handles_wraparound():
     side = circ_2means(2 * math.pi * q / 1000)
     agree = (side[:100].float().mean() - side[100:].float().mean()).abs()
     assert agree > 0.9
+
+
+# ── the merge consumer [D18] ──────────────────────────────────────
+
+def test_merge_collapses_duplicates():
+    from trioron.pcll.division import try_merge
+    # two fragments of the SAME mode, split by membership accident
+    g = torch.Generator().manual_seed(5)
+    qa = torch.stack([300 + torch.randn(120, generator=g) * 12,
+                      600 + torch.randn(120, generator=g) * 12], 1)
+    qb = torch.stack([302 + torch.randn(110, generator=g) * 12,
+                      598 + torch.randn(110, generator=g) * 12], 1)
+    assert try_merge(_phasors2(qa), _phasors2(qb), tries=4)
+
+
+def test_merge_refuses_distinct_modes():
+    from trioron.pcll.division import try_merge
+    g = torch.Generator().manual_seed(6)
+    qa = torch.stack([250 + torch.randn(120, generator=g) * 12,
+                      500 + torch.randn(120, generator=g) * 12], 1)
+    qb = torch.stack([700 + torch.randn(120, generator=g) * 12,
+                      500 + torch.randn(120, generator=g) * 12], 1)
+    assert not try_merge(_phasors2(qa), _phasors2(qb), tries=4)
+
+
+def test_merge_refuses_fresh_split_children():
+    # the self-consistency guard: children of an accepted division have
+    # a bimodal union (the parent) — try_merge must reject by its own law
+    from trioron.pcll.division import try_merge
+    g = torch.Generator().manual_seed(7)
+    q = torch.stack([torch.cat([250 + torch.randn(100, generator=g) * 12,
+                                700 + torch.randn(100, generator=g) * 12]),
+                     500 + torch.randn(200, generator=g) * 12], 1)
+    Z = _phasors2(q)
+    verdict = try_divide(Z, tries=2)
+    assert verdict is not None
+    side, _ = verdict
+    assert not try_merge(Z[~side], Z[side], tries=4)
+
+
+def test_sketch_merge_is_exact():
+    from trioron.core import construct
+    from trioron.pcll import germline_base
+    from trioron.pcll.manifold import PCLLManifold
+    sub = construct(germline_base, capacity=16)
+    m = PCLLManifold(sub.arena)
+    g = torch.Generator().manual_seed(8)
+    qa = 400 + 20 * torch.randn(130, 3, generator=g)
+    qb = 420 + 25 * torch.randn(90, 3, generator=g)
+    m.adopt("a", -1, 3)
+    m.update("a", qa)
+    m.adopt("b", -1, 3)
+    m.update("b", qb)
+    m.merge("a", "b")
+    pooled = torch.cat([qa, qb])
+    a = m.sketches["a"]
+    assert "b" not in m.sketches and a._n == 220
+    assert torch.allclose(a.mu, pooled.mean(0), atol=1e-3)
+    assert torch.allclose(a.sigma, pooled.std(0), atol=1e-2)
+
+
+def _phasors2(q):
+    return torch.exp(1j * 2 * math.pi * q / 1000)

@@ -68,6 +68,7 @@ class MeetingReport:
     divisions: int = 0                # class divisions committed this meeting [D12]
     spawns: int = 0                   # composer cells spawned this meeting [D14]
     pruned: int = 0                   # composer cells hard-retired [D16]
+    merges: int = 0                   # duplicate fragments collapsed [D18]
 
 
 class PCLLResolution:
