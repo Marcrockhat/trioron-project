@@ -2,10 +2,10 @@
 
 **Session date:** 2026-06-12
 **Session number:** 033
-**Session title:** **M3-M6 ALL PASS + D18 merge consumer BUILT — and the
-remaining-gap hunt closed with a surprise: NO duplicates exist; the gap
-is the MODEL CLASS (kNN on our own pockets = 0.99 ≈ Bayes). D19 proposed:
-exemplar/mixture readout. WAITING on Rocky.**
+**Session title:** **M3-M6 + D18 + D20 ALL DONE. The gap hunt's final
+verdict: self-labeling. D20 triplet (margin membership + consolidation +
+gate) ships: 0.818→0.854. D19 refuted at step 0. Sentinel quantum-derived;
+M4 re-gated 0.729. OPEN RULING: member_margin default (+0.051 on M2).**
 
 ---
 
@@ -110,36 +110,43 @@ exemplar/mixture readout. WAITING on Rocky.**
   gene groups only differentiate via composer settlements; the
   fragmentation/merge lever for the remaining 0.83→0.99 gap.
 
-## D18 merge consumer (s033, Rocky's instruction) — BUILT; the gap RENAMED
+## The gap hunt (D18 → D19 → D20), the session's second arc
 
-The merge consumer exists and is honest: a TWO-SAMPLE duplicate test
-(template cosine ≥ 0.8; per-dim standardized circular gap < 0.5 on
-EVERY dim; balanced-union try_divide veto), lineage-local pairs,
-survivor keeps both histories (union buffer + EXACT pooled sketch).
-Flag `merge=` on MixedStreamController, default OFF; everything
-byte-identical with it off. 104 tests + same 4 carries.
-
-**Three falsifications en route (recorded in division.py + D18 row):**
-inverted-try_divide alone is too permissive (−0.147); naive
-cat()[-BUF:] unions are degenerate (−0.265, the first-gate failure);
-and the fragmentation-gap hypothesis itself — **data_hard has NO
-duplicate fragments** (min standardized gap ~1.0σ over 1722 similar
-pairs; the honest merge fires ZERO times).
-
-**The 0.82→0.99 gap, fully decomposed by measurement:**
-duplicates 0.000 · template pollution +0.037 (oracle) · max→mixture
-readout ~0 · encoding ~0.003 (**kNN on our own canonical pockets =
-0.990-0.994 ≈ raw-space Bayes — the contrast encoding loses
-NOTHING**) · **the model class ~0.14**. Phasor-mean templates +
-diagonal sketches are too coarse for the mode geometry the pockets
-retain; the buffers already store the exemplars that prove it.
-
-**D19 (proposed, needs Rocky):** exemplar/mixture readout —
-`StreamingMixture` (K diag sub-clusters per class, already in
-`learning/manifold.py`) over pocket space as the compact native form
-of what kNN demonstrates; or buffer-exemplar evidence directly
-(hippocampus-style, storage-heavy). This is THE remaining accuracy
-lever on data_hard.
+1. **D18 merge consumer BUILT** (two-sample duplicate test + balanced-
+   union try_divide veto; survivor keeps both histories). Honest result:
+   **fires ZERO times — data_hard has NO duplicate fragments** (min gap
+   ~1.0σ over 1722 similar pairs). Three falsifications recorded incl.
+   the inverted-try_divide form (−0.147) and the degenerate cat()[-BUF:]
+   union (−0.265).
+2. **D19 (mixture readout) REFUTED at step 0**: K-mixtures flat-to-worse;
+   kNN over the organism's OWN members+labels ≡ raw filter to 3 decimals.
+   My "model class ~0.14" attribution was a CONFOUND (ground-truth kNN
+   measured label quality). kNN on our pockets with TRUE labels = 0.99 ≈
+   Bayes — encoding lossless; **the gap is SELF-LABELING.**
+3. **D20 BUILT + GATED as a TRIPLET** (`run_d20_membership.py`):
+   (a) consolidate — EM round per quiescent boundary (the dream shape);
+   (b) gate_k — per-sample margin floor ("belongs to nothing": refused
+   samples deposit but don't buffer); (c) classify(x, k_reject) — the
+   reject output (k=4: 100% clean coverage, 63.8% disruptor spray
+   refused — Rocky's no-reject concern, confirmed at 47-58% of impurity
+   and answered). **Factorial (8 arms): NO piece lifts alone; the
+   triplet = 0.818→0.854** (+0.037, purity .715→.743, classes 91→79).
+   Freeze-streaming holds the plateau. Flags default-off everywhere;
+   M2/M4/M5 byte-identical.
+4. **OPEN RULING (Rocky):** `member_margin` — ranking membership by E/σ
+   (resolve.py's own semantics) was found by accident as a silent
+   default change worth **+0.051 on the M2 gate alone** (0.760→0.811);
+   reverted to opt-in for byte-identity. Decide: make it the default
+   (re-record M2 baseline) or keep opt-in. Also still queued:
+   divide_tries=4 default; mixed.py split (~900 lines now — the flag
+   zoo wants profiles); dendrite settlement threshold.
+5. Also this arc: supervised tanh-MLP baseline on data_hard (H=64:
+   0.965; H=256: 0.983 vs Bayes 0.993 — Rocky's recollection confirmed;
+   our organism ≈ a supervised H=16 net, label-free single-pass);
+   sentinel band QUANTUM-DERIVED (F_MAX·(1+[1.0,1.2]/N_QUANTA), Rocky's
+   catch — no hardcoded decimals; M4 re-gated stronger: 0.729 > 0.620,
+   gain +0.637); prune-remap bug fixed (pending division records on a
+   pruned composer's dim dissolve; others shift).
 
 ## Open questions / NEXT (priority order)
 
