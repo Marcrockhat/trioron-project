@@ -2,9 +2,11 @@
 
 **Session date:** 2026-06-12
 **Session number:** 033
-**Session title:** **M3 per-class settlement attribution [D13] GATE PASS —
-false credit dead (deferral: silence pays nobody), division drain fixed
-(settle against your OWN children, success 0.92). NEXT = M4 composer arm.**
+**Session title:** **M3 [D13] GATE PASS (false credit dead; drain fixed). M4
+pre-probe DONE: genome redo of the relational testbed — ratio statistic +
+FAMILY TRIALS [D17 proposed] beat division-only 0.701 vs 0.607, zero noise
+spawns. WAITING on Rocky: design-doc §4b amendments before M4 substrate
+integration.**
 
 ---
 
@@ -93,24 +95,63 @@ transfers one vote to the WINNING GENE's council group
 - Census live in every MeetingReport; `router.settlements` +
   `router.pending` are the new settlement readouts.
 
+## M4 pre-probe (s033, commit `92c26fd`) — DONE, sign-off needed
+
+The handoff-ordered testbed redo with the REAL gene set
+(`run_composer_genome.py`). Headline: the §4 mechanism transfers through
+the genome — **0.701 vs division-only 0.607**, A .50→.68, B .34→.52,
+E .28→.47, **zero noise-pair spawns in every run**, future-deposit
+settlement prunes bad spawns on virgin members, books differentiate.
+
+Key technical results:
+- **The dendrite gene expresses the pure ring form EXACTLY**: 2 branches,
+  one input each, edge weight w = −1/(2π) over phase a = 2π(c+½) gives
+  σ(−(c+½)) = c²−¼ — the tied linear term cancels analytically. Soma
+  bias ½ → y = c_i²+c_j². LINEAR/TANH affine-fold likewise. The genome
+  is not a compromise; spawn-time weights are part of the growth event.
+- **Four §4 corrections surfaced, recorded as design doc §4b — PENDING
+  Rocky's approval (D-register matters, spec-first rule):**
+  1. trial statistic = residual-incoherence ratio (1−null)/(1−carve) >
+     2 (R-unit gain is blind on clumpy ring marginals);
+  2. **[D17 proposed] FAMILY TRIALS** — division legitimately fragments
+     manifolds into raw-separable arcs before any relational buffer
+     reaches trial size (the s031 "no raw dim separates E|F" premise is
+     false for fragments); trial unions of lineage siblings
+     (reunified-E ratio 21.4 vs control unions 1.2-1.5). The composer
+     becomes the anti-fragmentation mechanism = the probe-level answer
+     to the s031 NEXT-4 merge carry;
+  3. importance gating = any-class buffer coherence (≥ MIN_MEMBERS
+     buffers, R > 0.9) — genesis margin ranks but an absolute cut
+     starves pairs; small buffers confabulate (failure mode 4);
+  4. division/composition COMPETE at the sitting (strict ladder starves
+     the composer); PATIENCE settlement judges on available virgin data.
+- Absolute A/B/E/F numbers are capped by fragmentation + the raw
+  equal-weight readout (M5 σ-readout territory). The substrate gate
+  should anchor on THESE baselines, not s031's non-genome 0.595/0.561.
+
 ## Open questions / NEXT (priority order)
 
-1. **M4 — composer arm [D14+D16]** (design doc §4): genome-constrained
-   candidates (LINEAR sum/diff, TANH bounded, DENDRITE-quad c_i²+c_j²);
-   importance-gated wiring (pairs only from
-   `Germline.perception_importance`); **future-deposit settlement** (the
-   spawn is settled only by deposits arriving after it exists — now
-   buildable directly on M3's subject/testify machinery: the spawn's
-   subject = its own lock-in row evidence); fixed static frames (causal
-   quantization — every candidate form is bounded by construction); spawn =
-   real cell + 2 edges + rank = max(src)+1. Settlement success transfers
-   one vote to the winning gene's group (the M3 limitation note above).
-   PATIENCE failure hard-retires the cell, edges masked, bet repaid [D16].
-   Gate: relational testbed through the substrate beats division-only
-   (>0.595); census delta computing+k / edges+2k / max rank ≥ 1; **zero
-   noise-pair spawns across seeds** (failure-mode-4 kill). Redo the
-   relational testbed with the REAL gene set first (s031 probe used a
-   non-genome phenotype set — its vote-book claim does not transfer).
+1. **Rocky sign-off on design doc §4b** (the four amendments incl. D17
+   family trials). Then **M4 substrate integration**: composer spawn =
+   real cell + 2 edges + rank = max(src)+1 (compile() recomputes ranks
+   from topology — depth is earned); spawn deposits into its own
+   lock-in row with a FIXED static frame (LINEAR/TANH [−1,1], DENDRITE
+   [0,½]); settlement via M3's subject/testify machinery with
+   gene-targeted vote transfers (winner gene's council group vs the
+   other council seats, step4 semantics — the M3 saturation note);
+   PATIENCE failure hard-retires (forward_inclusion=False, edges
+   zeroed) [D16]. Gate: testbed through the substrate beats
+   division-only; census delta computing+k / edges+2·spawns / max rank
+   ≥ 1; zero noise-pair spawns. NOTE the frame caveat: composer sources
+   must be canonical — the testbed needs the I3-style SENTINEL
+   gain-reference column so per-sample frames are static and the
+   forward-path phases ARE canonical; composing over frame-moving
+   receptors needs canonical injection (defer, record).
+   New module `trioron/pcll/composer.py`; mixed.py grows buffer-side
+   back-fill (composed dims computable from buffered pockets at spawn);
+   division try_divide needs multi-dim tries (probe's DIV_TRIES=4,
+   parameterized — division-only path keeps tries=1 so M2 stays
+   byte-identical).
 2. **M5 — manifold adapter [D15]**: `ManifoldAstrocyte` sketches over
    pocket space; annealing (freeze-decay fix), σ-weighted readout (the
    0.62→0.99 half of the Bayes-ceiling 0.993 target), replay guard for
