@@ -74,7 +74,10 @@ class MixedStreamController:
                  composer: bool = False,
                  divide_tries: int = 1,
                  manifold: bool = False,
-                 merge: bool = False) -> None:
+                 merge: bool = False,
+                 consolidate: bool = False,
+                 gate_k: float = 0.0,
+                 member_margin: bool = False) -> None:
         # divide_tries: dims judged per division (ascending coherence).
         # The default 1 is the M2 worst-dim semantics (byte-identical).
         # Worlds with pure-noise dims need > 1 — the worst dim is then
@@ -147,6 +150,28 @@ class MixedStreamController:
         # filter split across two templates — collapse them. Structure
         # maintenance (council judgment), not growth: no vote transfer.
         self.merge = merge
+        # ── membership quality [D20] ──────────────────────────────
+        # (a) consolidate: one EM round per quiescent boundary — pool
+        #     all buffered members, reassign by current templates,
+        #     regroup. Streaming membership is one-pass greedy (early
+        #     members were labeled by immature templates and never
+        #     revisited); letting the assignment settle recovers most
+        #     of the measured headroom (probe: 0.82 → ~0.89 at the
+        #     fixed point). The dream-cycle shape in PCLL space.
+        # (b) gate_k: per-sample margin floor at membership — a window
+        #     sample whose best margin E/σ < gate_k joins NO buffer
+        #     ("belongs to nothing I know"); it still deposits to the
+        #     lock-in rows (refusal is about buffers, not evidence).
+        #     Probe: margins are large (refusal 0% to K=3); K=4 purges
+        #     hard but starves rare buffers — gate gently.
+        # (c) member_margin: rank membership by the resolver's margin
+        #     E/σ instead of raw E — the resolve.py semantics applied
+        #     to assignment. Found by accident (s033), measured
+        #     load-bearing; default False so M2 stays byte-identical
+        #     until Rocky rules on the default.
+        self.consolidate = consolidate
+        self.gate_k = gate_k
+        self.member_margin = member_margin
         substrate.attach_pcll(self)
 
     def _new_node(self, name: str, parent_name: Optional[str]) -> None:
@@ -285,8 +310,10 @@ class MixedStreamController:
         n_merge = 0
         if self.merge and not self.freeze:
             n_merge = self._merges(arena, tries)
-        if n_div == 0 and n_spawn == 0:
-            self._anneal()                         # post-quiescence [D15]
+        if n_div == 0 and n_spawn == 0:            # post-quiescence
+            if self.consolidate:
+                self._consolidate()                # settle membership [D20a]
+            self._anneal()                         # then re-anchor [D15]
 
         return self._report(arena, "match", None, status, grow, n_div,
                             spawns=n_spawn, pruned=n_pruned,
@@ -309,13 +336,32 @@ class MixedStreamController:
         self._refresh(arena)
         return "birth", world.name
 
+    def _margins(self, Z: torch.Tensor):
+        """Per-row (raw-E best class, that class's margin) — the
+        matched-filter argmax (the M2 membership semantics, kept
+        byte-identical) plus the resolver's exact per-observation null
+        for the chosen class: σ_c = √(Σ|T_c|²/2), margin = E/σ.
+        NOTE (s033, for Rocky): argmaxing E/σ INSTEAD of raw E (the
+        resolver's own ranking) measured +0.051 on the M2 gate — a
+        candidate default change, not taken silently."""
+        T = torch.stack([b.mean(0) for b in self.bufs])
+        E = (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1)
+        sig = ((T.abs() ** 2).sum(-1) / 2).sqrt().clamp_min(1e-9)
+        best = (E / sig).argmax(1) if self.member_margin else E.argmax(1)
+        marg = (E / sig).gather(1, best.unsqueeze(1)).squeeze(1)
+        return best, marg
+
     def _assign(self, Z: torch.Tensor) -> Optional[torch.Tensor]:
         """Matched-filter membership against buffer-mean templates.
-        Returns the per-row class index (the fresh-store feed needs it)."""
+        Returns the per-row class index (−1 = refused by the margin
+        gate [D20b]: the sample belongs to nothing known well enough
+        to teach a buffer; its lock-in deposit already happened)."""
         if not len(Z):
             return None
-        T = torch.stack([b.mean(0) for b in self.bufs])
-        member = (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1).argmax(1)
+        member, marg = self._margins(Z)
+        if self.gate_k > 0:
+            member = torch.where(marg >= self.gate_k, member,
+                                 torch.full_like(member, -1))
         for k in range(len(self.bufs)):
             zk = Z[member == k]
             if len(zk):
@@ -585,6 +631,70 @@ class MixedStreamController:
         self.bufs = [b for k, b in enumerate(self.bufs) if k not in drop]
         return len(merged_pairs)
 
+    # ── membership consolidation [D20a] ───────────────────────────
+
+    def _consolidate(self) -> int:
+        """One EM round (the dream-cycle shape in PCLL space): pool
+        every buffered member, reassign against the CURRENT templates,
+        regroup the buffers. Streaming membership is one-pass greedy —
+        early members were labeled by immature templates and never
+        revisited; one settle-round per quiescent boundary converges
+        across boundaries (probe: +0.07 at the fixed point). The
+        margin gate, when set, applies here too — consolidation is
+        where old pollution gets purged, not just refused. Classes
+        whose buffers empty out RETIRE (consolidation revealed they
+        explain nothing). Returns members moved."""
+        if len(self.bufs) < 2:
+            return 0
+        sizes = torch.tensor([len(b) for b in self.bufs])
+        M = torch.cat(self.bufs)
+        member, marg = self._margins(M)
+        if self.gate_k > 0:
+            member = torch.where(marg >= self.gate_k, member,
+                                 torch.full_like(member, -1))
+        home = torch.repeat_interleave(
+            torch.arange(len(self.bufs)), sizes)
+        moved = int((member != home).sum())
+        if moved == 0:
+            return 0
+        new_bufs, dead = [], []
+        for k in range(len(self.bufs)):
+            rows = M[member == k]
+            new_bufs.append(rows[-BUF:])
+            if len(rows) < 5:          # a husk, not a rare mode — small
+                dead.append(k)         # young fragments stay (MIN_CHILD
+        self.bufs = new_bufs           # guards their judgments anyway)
+        if dead:
+            self._retire_classes(dead)
+        self._rebuild_sketches()       # membership changed everywhere
+        return moved
+
+    def _retire_classes(self, idxs: List[int]) -> None:
+        """Drop classes consolidation emptied: astrocyte row DORMANT,
+        sketch retired, pending settlements naming them dissolved
+        (their evidence basis is gone — votes unmoved), composer
+        lineages drop the name. The lineage forest keeps the node (a
+        dead leaf — history, not structure)."""
+        arena = self.substrate.arena
+        gone = {self.classes[k].name for k in idxs}
+        for k in idxs:
+            c = self.classes[k]
+            if c.cell_id >= 0:
+                arena.state[c.cell_id] = CellState.DORMANT
+            if self.manifold is not None:
+                self.manifold.retire(c.name)
+        for p in self._watch:
+            p.lineage -= gone
+        if self.stress is not None:
+            self.stress.pending = [
+                (g, s) for g, s in self.stress.pending
+                if not (isinstance(s, tuple) and len(s) == 4
+                        and (s[0] in gone or s[1] in gone))]
+        drop = set(idxs)
+        self.classes = [c for k, c in enumerate(self.classes)
+                        if k not in drop]
+        self.bufs = [b for k, b in enumerate(self.bufs) if k not in drop]
+
     # ── the manifold adapter's consumers [D15] ────────────────────
 
     def _anneal(self) -> None:
@@ -788,6 +898,21 @@ class MixedStreamController:
     def templates(self) -> torch.Tensor:
         """[C, F] buffer-mean templates (matched-filter readout)."""
         return torch.stack([b.mean(0) for b in self.bufs])
+
+    def classify(self, x: torch.Tensor, k_reject: Optional[float] = None):
+        """Deployment readout [D20c]: (class index, margin) per sample,
+        with the explicit "belongs to nothing I know" option — index −1
+        where the best margin under the per-observation null falls
+        below k_reject. An organism that cannot say "unknown"
+        confabulates on nonsense (the disruptor measurement: 47-58% of
+        buffer impurity was force-routed spray)."""
+        q = self.pockets_of(x)
+        Z = torch.exp(1j * 2 * math.pi * q / N_QUANTA)
+        best, marg = self._margins(Z)
+        if k_reject is not None:
+            best = torch.where(marg >= k_reject, best,
+                               torch.full_like(best, -1))
+        return best, marg
 
     def pockets_of(self, x: torch.Tensor) -> torch.Tensor:
         """Per-sample canonical-frame pockets through the substrate path —

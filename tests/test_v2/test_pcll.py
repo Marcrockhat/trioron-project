@@ -353,3 +353,65 @@ class TestShipWake:
             woken.scheduler._plan.receptor_ids,
             sub.scheduler._plan.receptor_ids,
         )
+
+
+class TestD20Membership:
+    """[D20] the margin gate, consolidation, and the reject readout."""
+
+    def _mixed(self, **kw):
+        import math
+        from trioron.pcll import (Germline, MixedStreamController,
+                                  StressRouter, germline_base)
+        sub = construct(germline_base, capacity=64)
+        germ = Germline(sub)
+        ids = germ.spawn_perception(4)
+        germ.equip_receptors(ids)
+        sub.compile()
+        m = MixedStreamController(sub, stress=StressRouter(germ), **kw)
+        # two well-separated classes, by hand
+        g = torch.Generator().manual_seed(0)
+        qa = 250 + 12 * torch.randn(120, 4, generator=g)
+        qb = 700 + 12 * torch.randn(120, 4, generator=g)
+        z = lambda q: torch.exp(1j * 2 * math.pi * q / 1000)
+        m.classes = [type(m)._dummy_class("u1"), type(m)._dummy_class("u2")] \
+            if hasattr(type(m), "_dummy_class") else None
+        from trioron.pcll.signature import LearnedClass
+        mk = lambda n: LearnedClass(n, torch.zeros(4, dtype=torch.complex64),
+                                    torch.zeros(4),
+                                    torch.ones(4, dtype=torch.bool))
+        m.classes = [mk("u1"), mk("u2")]
+        m.bufs = [z(qa), z(qb)]
+        m._new_node("u1", None)
+        m._new_node("u2", None)
+        return m, z
+
+    def test_gate_refuses_low_margin(self):
+        # gate_k scaled to the 4-dim fixture: a coherent sample's margin
+        # is ≈ Σ|T|/σ ≈ 4/√2 ≈ 2.8 (the 12-dim world sits at 4-6)
+        m, z = self._mixed(gate_k=2.0)
+        g = torch.Generator().manual_seed(1)
+        sure = z(250 + 5 * torch.randn(10, 4, generator=g))
+        junk = z(torch.rand(10, 4, generator=g) * 1000)
+        member = m._assign(torch.cat([sure, junk]))
+        assert (member[:10] == 0).all()
+        assert (member[10:] == -1).float().mean() > 0.5
+
+    def test_consolidate_moves_misplaced_members(self):
+        import math
+        m, z = self._mixed(consolidate=True, member_margin=True)
+        g = torch.Generator().manual_seed(2)
+        stray = z(250 + 5 * torch.randn(30, 4, generator=g))
+        m.bufs[1] = torch.cat([m.bufs[1], stray])   # pollute class 2
+        moved = m._consolidate()
+        assert moved >= 30                          # strays went home
+
+    def test_classify_reject_option(self):
+        m, z = self._mixed()
+        g = torch.Generator().manual_seed(3)
+        x_known = 0.25 + 0.005 * torch.randn(10, 4, generator=g)
+        x_junk = torch.rand(10, 4, generator=g)
+        # classify drives the real forward path: feed raw x
+        pred_k, marg_k = m.classify(x_known, k_reject=None)
+        assert marg_k.shape == (10,)
+        pred_j, marg_j = m.classify(x_junk, k_reject=float(marg_k.min()))
+        assert (pred_j == -1).any() or marg_j.min() >= marg_k.min()
