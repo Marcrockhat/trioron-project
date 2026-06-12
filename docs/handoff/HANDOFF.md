@@ -82,6 +82,27 @@ Gate battery (`run_label_taps.py`, all PASS):
   scale). Tap-primary 0.53 vs majority-map 0.829; relational sets
   LOSE to strict; P/R ≤ 0.09/0.30 at any coverage. Species-grain
   carriers cannot name mode-grain classes.
+- **D. (class x label) counts (Rocky-approved increment, s034b):**
+  naming at the grain the organism discovered. data_hard relational
+  0.909@100% / 0.894@20% coverage (strict 0.829, oracle 0.957);
+  count-majority primary 0.826 ~= the eval-side map 0.829 — **the
+  self-label map is organism-internal**: deployment naming needs no
+  eval harness. Corrections: restart-at-zero left tail-born division
+  children permanently unnamed (taxonomy rel-cnt 0.583) -> children
+  inherit parent counts by buffer-side fraction (0.911; data_hard
+  0.926->0.909, the estimator smears across mode-separating splits —
+  exact repair = per-member label tags, deferred); residual oracle
+  gap = deposit-time staleness (one-pass annotation vs final-template
+  membership).
+
+**Bayes context (Rocky's question):** NOT the limit. Single-label:
+0.829 vs clean Bayes 0.993 — the law-1 self-labeling gap, untouched
+by design (annotation is write-only; label-supervised consolidation
+is the deferred lever to push it). Set-metric: 0.909 vs its own
+oracle 0.957. On the taxonomy the set metric EXCEEDS single-label
+Bayes (0.948 > 0.917): the discovered blend class + set credit
+sidesteps the chicken/duck confusion every single-label namer must
+eat — Rocky's "allow such new class" insight, quantified.
 
 Tests: 107 passed + the SAME 4 carries (no new failures).
 
@@ -94,13 +115,13 @@ Tests: 107 passed + the SAME 4 carries (no new failures).
 | M4 composer | 0.729 > 0.620 | |
 | M5 manifold | 0.836 end, −0.013 decay | |
 | D20 membership | triplet | reject 65.6%@100% |
-| D22 label taps | A exact; C 0.948=oracle@5%; B limit recorded | NEW |
+| D22 label taps | A exact; C 0.948=oracle@5%; B limit recorded; D counts 0.909, internal map 0.826 | NEW |
 | tests | 107 + same 4 carries | |
 
 ## State of the build
 
-- Branch `progenitor-council`, committed through `6a0f200`
-  (componential probe `8d363b2`, handoff `7f88609`, D22 `6a0f200`),
+- Branch `progenitor-council`, committed through `8f89414`
+  (probe `8d363b2`, D22 `6a0f200`, D22b counts `8f89414`),
   pushed after this rewrite.
 - **DO-NOT-COMMIT carries (unchanged):** `trioron/bases/developmental.py`,
   `trioron/lifecycle/developmental.py`, `trioron/viz/export.py`;
@@ -109,20 +130,20 @@ Tests: 107 passed + the SAME 4 carries (no new failures).
 
 ## Open questions / NEXT (priority order)
 
-1. **(class × label) counts — the D22 next increment (needs Rocky):**
-   at the boundary, membership and labels align; counting labels per
-   class (still write-only annotation) captures the data_hard 0.957
-   oracle directly and beats mode-smearing — naming at the grain the
-   organism actually discovered. Small build (the boundary already
-   has both vectors in hand).
-2. **The killed session's tasks, if still wanted:** M1–M6 check +
+1. **Label-supervised consolidation (deferred escalation, needs
+   Rocky):** the lever on the single-label 0.829 -> Bayes 0.993 gap —
+   labels move members / place boundaries at the quiescent boundary.
+   First place labels would TOUCH learning; deserves its own gate.
+2. **Per-member label tags (deferred):** tags moving with buffers
+   through division/merge/consolidation — exact composition, removes
+   deposit-time staleness + inheritance smearing (~0.05 set-metric).
+3. **The killed session's tasks, if still wanted:** M1–M6 check +
    bench-15 (chained-15) trials.
-3. **D21 nursery (proposed, needs Rocky).** Doubly motivated now
+4. **D21 nursery (proposed, needs Rocky).** Doubly motivated now
    (refused/unknown matter is where labels would help most).
-4. **mixed.py split + constructor profiles.**
-5. Deferred escalations: label-supervised consolidation (the law-1
-   boundary-placement lever); label-pressured division (recommend
-   against — perceptual-taxonomy ruling). Carried: dendrite
+5. **mixed.py split + constructor profiles.**
+6. Label-pressured division (recommend against —
+   perceptual-taxonomy ruling). Carried: dendrite
    settlement threshold; composer semantics doc §4; PCLL-path
    compaction (tap bank adds vocab × dims complex — joins the
    lifetime-memory concern); buffer drop-at-freeze; external
