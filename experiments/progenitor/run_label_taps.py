@@ -47,11 +47,31 @@ MEASURED VERDICT (s034 first cut):
    mean over them — washed out (the disruptor-invisibility physics at
    the species scale). Tap-primary naming 0.53 vs majority-map 0.829;
    relational sets LOSE to strict; P/R <= 0.09/0.30 at any coverage.
-   Species-grain carriers cannot name mode-grain classes. The next
-   increment is finer annotation: count labels per (class x label) at
-   the boundary where membership and labels align — still write-only
-   — which captures the 0.957 oracle directly (deferred, needs
-   Rocky).
+   Species-grain carriers cannot name mode-grain classes.
+ * D ((class x label) counts, Rocky-approved increment): naming at
+   the grain the organism discovered — beats mode-smearing where the
+   carriers could not. data_hard relational 0.909 at 100% coverage
+   (0.894 at 20%) vs strict 0.829 / oracle 0.957; count-majority
+   primary 0.826 ~= the eval-side majority map 0.829 — THE SELF-LABEL
+   MAP IS NOW ORGANISM-INTERNAL (deployment names need no eval
+   harness). Two measured corrections: (1) restart-at-zero left
+   tail-born division children permanently unnamed (taxonomy:
+   4 final-boundary children, rel-cnt 0.583) -> children INHERIT
+   parent counts by buffer-side fraction (taxonomy 0.911; data_hard
+   trades 0.926 -> 0.909 — the estimator smears labels across
+   mode-separating splits; exact repair = per-member label tags
+   moving with buffers, deferred). (2) The residual oracle gap is
+   DEPOSIT-TIME STALENESS: counts annotate one-pass membership as it
+   happened; the oracle reads final-template membership.
+ * BAYES CONTEXT (Rocky's question, s034): not the limit. Each metric
+   vs its own ceiling — single-label: 0.829 vs clean Bayes 0.993 (the
+   law-1 self-labeling gap; annotation is write-only by design and
+   cannot move it — label-supervised consolidation is the deferred
+   lever); set-metric: 0.909 vs its own oracle 0.957. On the taxonomy
+   the set metric EXCEEDS single-label Bayes (0.948 > 0.917):
+   allowing the discovered blend class + set credit sidesteps the
+   chicken/duck confusion every single-label namer must eat — Rocky's
+   "allow such new class" insight, quantified.
 
 Run: python3 -m experiments.progenitor.run_label_taps
 """
@@ -211,6 +231,82 @@ def gate_b() -> None:
               f"{bp:.2f}/{br:.2f}   {mp:.2f}/{mr:.2f}")
 
 
+def count_sets(mixed, names):
+    """Label sets + primary from the (class x label) counts."""
+    idx = {n: i for i, n in enumerate(names)}
+    sets, prim = [], []
+    for k in range(len(mixed.classes)):
+        comp = (mixed.label_taps.composition_of(mixed.classes[k].name)
+                if mixed.label_taps else {})
+        s = {idx[l] for l, f in comp.items() if f >= MIX_TH}
+        p = idx[max(comp, key=comp.get)] if comp else -1
+        if p >= 0:
+            s |= {p}
+        sets.append(s)
+        prim.append(p)
+    return sets, torch.tensor(prim)
+
+
+def gate_d() -> None:
+    print("\n── D. (class x label) counts under the coverage sweep "
+          f"(data_hard, {SEEDS} seeds) ──")
+    # the clean-Bayes ceiling this eval is bounded by (single-label,
+    # true generative mixture, clean species only)
+    from .data_hard import HardTaxon, bayes_accuracy
+    spec = make_spec()
+    tr, norm = sample(spec, n_per_class=S_PERIOD, seed=0)
+    te, _ = sample(spec, n_per_class=N_TEST, seed=100, norm=norm)
+    clean = [c for c in range(len(te.names)) if float(spec.std[c]) <= 0.3]
+    keep = torch.isin(te.y, torch.tensor(clean))
+    bayes = bayes_accuracy(
+        HardTaxon(te.x[keep], te.x_raw[keep], te.y[keep], spec, te.names))
+    print(f"  clean Bayes ceiling (single-label) {bayes:.3f}")
+    print(f"  {'cov':>5s} {'strict':>6s} {'cnt-1ry':>7s} "
+          f"{'rel-cnt':>7s} {'oracle':>6s}   cnt P/R")
+    last = {}
+    for cov in COVERAGES:
+        accs = dict(strict=[], prim=[], cnt=[], orac=[])
+        cpr = [0, 0, 0]
+        for seed in range(SEEDS):
+            mixed, (Xs, ys), (Xt, yt), names = grow_labeled(seed, cov)
+            C = len(names)
+            T, counts = composition(mixed, Xs, ys, C)
+            truth_of = counts.argmax(1)
+            pred = predict(mixed, T, Xt)
+            osets = oracle_sets(counts)
+            csets, cprim = count_sets(mixed, names)
+            accs["strict"].append(
+                float((truth_of[pred] == yt).float().mean()))
+            accs["prim"].append(float((cprim[pred] == yt).float().mean()))
+            accs["cnt"].append(rel_acc(pred, yt, csets))
+            accs["orac"].append(rel_acc(pred, yt, osets))
+            d = pr_vs_oracle(csets, osets, truth_of)
+            for i in range(3):
+                cpr[i] += d[i]
+        m = {k: sum(v) / len(v) for k, v in accs.items()}
+        cp = cpr[0] / max(1, cpr[0] + cpr[1])
+        cr = cpr[0] / max(1, cpr[0] + cpr[2])
+        print(f"  {cov:>5.0%} {m['strict']:>6.3f} {m['prim']:>7.3f} "
+              f"{m['cnt']:>7.3f} {m['orac']:>6.3f}   {cp:.2f}/{cr:.2f}")
+        last = m
+    # the gate: at full coverage the counts must recover the bulk of
+    # the oracle's composition headroom and the count-majority must
+    # match the eval-side majority map (the map becomes
+    # ORGANISM-INTERNAL). The residual oracle gap (~0.03, measured) is
+    # DEPOSIT-TIME STALENESS: counts annotate one-pass membership as
+    # it happened (immature classes; division children restart empty),
+    # while the oracle reads final-template membership over the whole
+    # stream. Closing it needs per-member label tags moving with
+    # buffers through division/merge/consolidation — a heavier
+    # integration, deferred.
+    assert last["cnt"] >= last["orac"] - 0.05, (
+        f"count sets {last['cnt']:.3f} miss the oracle {last['orac']:.3f}")
+    assert last["prim"] >= last["strict"] - 0.02, (
+        f"count-majority naming {last['prim']:.3f} below the "
+        f"eval-side map {last['strict']:.3f}")
+    print("  GATE D PASS")
+
+
 def gate_c(coverage: float = 0.05, seed: int = 0) -> None:
     print(f"\n── C. taxonomy descriptors at {coverage:.0%} coverage ──")
     torch.manual_seed(seed)
@@ -242,10 +338,14 @@ def gate_c(coverage: float = 0.05, seed: int = 0) -> None:
     bsets, msets, prim, raw = name_sets(mixed, T, names)
     rel_b = rel_acc(pred, te.y, bsets)
     rel_m = rel_acc(pred, te.y, msets)
+    csets, _ = count_sets(mixed, names)
+    rel_c = rel_acc(pred, te.y, csets)
     oracle = rel_acc(pred, te.y, oracle_sets(counts))
+    from .data_taxonomy import bayes_accuracy
     print(f"  {len(T)} classes; strict {strict:.3f} -> "
-          f"rel-beta {rel_b:.3f} / rel-mix {rel_m:.3f} "
-          f"(oracle {oracle:.3f}); "
+          f"rel-beta {rel_b:.3f} / rel-mix {rel_m:.3f} / "
+          f"rel-cnt {rel_c:.3f} (oracle {oracle:.3f}, "
+          f"Bayes single-label {bayes_accuracy(te):.3f}); "
           f"{int(mask.sum())} labeled rows of {len(ys)}")
     # the gate: member-mix recovers the composition headroom, and at
     # full coverage the blends are NAMED (beta modifiers fire)
@@ -280,6 +380,7 @@ def gate_c(coverage: float = 0.05, seed: int = 0) -> None:
 def main() -> None:
     gate_a()
     gate_b()
+    gate_d()
     gate_c(0.05)
     gate_c(1.00)
 

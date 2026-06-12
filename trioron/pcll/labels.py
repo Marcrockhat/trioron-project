@@ -53,6 +53,15 @@ class LabelTapBank:
         self.vocab: Dict[str, int] = {}
         self.taps = torch.zeros(0, n_dims, dtype=torch.complex64)
         self.counts = torch.zeros(0)
+        # (class x label) counts [s034 increment, Rocky-approved]:
+        # at the boundary, membership and labels align — counting
+        # labels per CLASS names classes at the grain the organism
+        # actually discovered (beats mode-smearing: no prototype
+        # averaging is involved). Keyed by class NAME (survives
+        # reindexing); division children start EMPTY (counts are
+        # deposit-time annotations, not per-member tags); merges pool
+        # exactly; retired names drop. Still write-only annotation.
+        self.class_counts: Dict[str, Dict[str, float]] = {}
 
     def _row(self, label: str) -> int:
         if label not in self.vocab:
@@ -163,14 +172,67 @@ class LabelTapBank:
             out[names[i]] = float(((best == i) & ~unknown).float().mean())
         return out
 
+    # ── (class x label) counts ────────────────────────────────────
+
+    def count_members(self, class_names: Sequence[Optional[str]],
+                      labels: Sequence[Optional[str]]) -> None:
+        """Per-row: the class the row was just assigned to (None =
+        refused / unassigned) x its label (None = unlabeled)."""
+        for cname, lab in zip(class_names, labels):
+            if cname is None or lab is None:
+                continue
+            d = self.class_counts.setdefault(cname, {})
+            d[lab] = d.get(lab, 0.0) + 1.0
+
+    def divide_counts(self, parent: str, child_a: str, child_b: str,
+                      frac_a: float) -> None:
+        """Children inherit the parent's counts proportionally to the
+        buffer-member split (an ESTIMATOR: exact only when labels are
+        uniform across the split sides — when the split separates the
+        label populations, both children keep the blend's labels until
+        fresh counts dominate; the alternative, restart-at-zero, left
+        tail-born classes permanently unnamed — measured on the
+        taxonomy: 4 final-boundary children, 0 counts, rel-cnt 0.583)."""
+        src = self.class_counts.pop(parent, None)
+        if not src:
+            return
+        for child, f in ((child_a, frac_a), (child_b, 1.0 - frac_a)):
+            if f <= 0:
+                continue
+            d = self.class_counts.setdefault(child, {})
+            for lab, n in src.items():
+                d[lab] = d.get(lab, 0.0) + n * f
+
+    def merge_counts(self, keep: str, drop: str) -> None:
+        """Survivor pools the dropped class's counts (exact)."""
+        src = self.class_counts.pop(drop, None)
+        if src:
+            d = self.class_counts.setdefault(keep, {})
+            for lab, n in src.items():
+                d[lab] = d.get(lab, 0.0) + n
+
+    def retire_counts(self, name: str) -> None:
+        self.class_counts.pop(name, None)
+
+    def composition_of(self, name: str) -> Dict[str, float]:
+        """Normalized label fractions for a class — its measured
+        composition under the annotation it received."""
+        d = self.class_counts.get(name, {})
+        tot = sum(d.values())
+        return {lab: n / tot for lab, n in d.items()} if tot > 0 else {}
+
     # ── persistence (rides MixedStreamController.state_dict) ──────
 
     def state_dict(self) -> dict:
         return {"n_dims": self.n_dims, "vocab": dict(self.vocab),
-                "taps": self.taps.clone(), "counts": self.counts.clone()}
+                "taps": self.taps.clone(), "counts": self.counts.clone(),
+                "class_counts": {k: dict(v)
+                                 for k, v in self.class_counts.items()}}
 
     def load_state_dict(self, state: dict) -> None:
         self.n_dims = state["n_dims"]
         self.vocab = dict(state["vocab"])
         self.taps = state["taps"].clone()
         self.counts = state["counts"].clone()
+        self.class_counts = {k: dict(v) for k, v in
+                             state.get("class_counts", {}).items()}

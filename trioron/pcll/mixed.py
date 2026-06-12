@@ -308,6 +308,14 @@ class MixedStreamController:
             return self._report(arena, event, name, status, None, 0)
 
         member = self._assign(Z)                   # members → rolling buffers
+        # (class x label) counts [s034]: membership and labels are
+        # aligned here — annotate the class each labeled row joined
+        # (refused rows skip). Write-only, like the taps above.
+        if self.label_taps is not None and member is not None \
+                and any(l is not None for l in window_labels):
+            self.label_taps.count_members(
+                [self.classes[int(m)].name if m >= 0 else None
+                 for m in member], window_labels)
         self._feed_fresh(q, member)                # future deposits [D9]
         if self.manifold is not None and member is not None:
             for k, c in enumerate(self.classes):   # sketches eat REAL members
@@ -714,6 +722,8 @@ class MixedStreamController:
                     arena.parent[cd.cell_id] = ck.cell_id
             if self.manifold is not None:          # pooled histories
                 self.manifold.merge(ck.name, cd.name)
+            if self.label_taps is not None:        # counts pool exactly
+                self.label_taps.merge_counts(ck.name, cd.name)
             for p in self._watch:                  # lineages follow
                 if cd.name in p.lineage:
                     p.lineage.discard(cd.name)
@@ -782,6 +792,8 @@ class MixedStreamController:
                 arena.state[c.cell_id] = CellState.DORMANT
             if self.manifold is not None:
                 self.manifold.retire(c.name)
+            if self.label_taps is not None:
+                self.label_taps.retire_counts(c.name)
         for p in self._watch:
             p.lineage -= gone
         if self.stress is not None:
@@ -937,6 +949,10 @@ class MixedStreamController:
                 for child_name, child_buf in zip(names, (b[~side], b[side])):
                     self.manifold.rebuild(child_name, c.cell_id,
                                           self._recover_q(child_buf))
+            if self.label_taps is not None:      # counts follow the split
+                self.label_taps.divide_counts(
+                    c.name, names[0], names[1],
+                    float((~side).sum()) / max(1, len(side)))
             records.append((names[0], names[1], d, floor))
         self.classes, self.bufs = new_classes, new_bufs
         return len(divided), records
