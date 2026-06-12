@@ -57,15 +57,34 @@ S_TEST = 200
 SEEDS = 3
 
 
+F_MAX = 1.0   # the testbed's feature ceiling (make_data clamps to [0, 1])
+
+
+def sentinel(n: int, g: torch.Generator) -> torch.Tensor:
+    """The gain-reference column, derived in QUANTUM units (Rocky,
+    s033 — no hardcoded decimals; the first band [0.999, 1.001]
+    straddled the feature range and a near-ceiling feature could
+    displace the sentinel as the sample max).
+
+    Band = F_MAX·(1 + [1.0, 1.2]/N_QUANTA): one quantum above the
+    feature ceiling, so (a) the sentinel is ALWAYS the sample max
+    (static frame), (b) a feature at exactly F_MAX quantizes to pocket
+    N_QUANTA−1 — evidence, not the masked q=N_QUANTA reference —
+    and (c) the 0.2-quantum jitter keeps the column census-distinct
+    (a constant is starved) while moving the frame sub-quantum."""
+    from trioron.core.receptor import N_QUANTA
+    lo = F_MAX * (1.0 + 1.0 / N_QUANTA)
+    return lo + F_MAX * (0.2 / N_QUANTA) * torch.rand(n, 1, generator=g)
+
+
 def data(seed: int):
     """The probe's relational world + the sentinel gain-reference
-    column (non-constant so the first-sitting census keeps it)."""
+    column (quantum-derived band, see sentinel())."""
     X, y = make_data(S_TRAIN, seed)
     Xt, yt = make_data(S_TEST, 100 + seed)
     g = torch.Generator().manual_seed(7000 + seed)
-    sent = lambda n: 0.999 + 0.002 * torch.rand(n, 1, generator=g)
-    return (torch.cat([X, sent(len(X))], 1), y,
-            torch.cat([Xt, sent(len(Xt))], 1), yt)
+    return (torch.cat([X, sentinel(len(X), g)], 1), y,
+            torch.cat([Xt, sentinel(len(Xt), g)], 1), yt)
 
 
 def run_seed(seed: int, composer: bool):

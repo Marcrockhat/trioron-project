@@ -493,6 +493,24 @@ class MixedStreamController:
             col = len(self.receptor_ids) + k
             self.bufs = [torch.cat([b[:, :col], b[:, col + 1:]], dim=1)
                          for b in self.bufs]
+            # pending DIVISION records carry (a, b, dim, floor): a record
+            # whose split dim was this column loses its evidence basis —
+            # the bet DISSOLVES (no settlement, votes unmoved); records
+            # right of the column shift left or they would silently
+            # testify on the wrong dim (found s033: a division split on
+            # a composed dim, then its composer was pruned)
+            if self.stress is not None:
+                kept = []
+                for group, subject in self.stress.pending:
+                    if (isinstance(subject, tuple) and len(subject) == 4
+                            and isinstance(subject[2], int)):
+                        a_, b_, d_, f_ = subject
+                        if d_ == col:
+                            continue               # basis gone — dissolve
+                        if d_ > col:
+                            subject = (a_, b_, d_ - 1, f_)
+                    kept.append((group, subject))
+                self.stress.pending = kept
         if self._to_prune:
             self._rebuild_sketches()               # pocket space narrowed
         self._to_prune = []
