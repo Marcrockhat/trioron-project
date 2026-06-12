@@ -275,7 +275,18 @@ lock-in over one period; show coherent windows clear the √N floor and empty on
   arithmetic over the signature space** (T_chicken − T_duck = the discriminating
   direction; "−goat", "not pig" = signed projections onto neighbour differences). The
   raw material already exists — learned signatures are vectors and `resolve.py` has the
-  ranking; what's unbuilt is the signed neighbour-difference readout. UNBUILT.
+  ranking; what's unbuilt is the signed neighbour-difference readout.
+  **BUILT + LARGELY FALSIFIED s034** (`run_componential.py`, full verdict in its
+  docstring): the relational *classes* exist unsupervised (taxonomy chicken-duck
+  0.49/0.48, goat-dog 0.61/0.39; data_hard 14-16 true blends/seed) and allowing them
+  is worth +0.13/+0.16 accuracy under composition-true scoring (0.829→0.957 hard,
+  0.785→0.943 taxonomy) — but NO label-free readout recovers the names: signed
+  projection 0.00 precision (prototype self-contamination), mixture decomposition
+  0.00 (incoherent pollution averages to zero phasor — invisible in template space),
+  buffer crossmatch 0.02 (consolidation already moved everything the matched filter
+  could see). A buffer's blend identity is LABEL INFORMATION (the s033 self-labeling
+  law in semantic form); the lever is a label source (reward/valence) or constituents
+  already separated in the vocabulary.
 
 ---
 
