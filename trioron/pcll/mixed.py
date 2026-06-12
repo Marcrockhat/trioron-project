@@ -56,6 +56,7 @@ from .controller import MeetingReport, PCLLController
 from .manifold import PCLLManifold
 from .division import (BUF, CLASS_CAP, GAIN_D, MIN_CHILD, MIN_MEMBERS,
                        NULL_SPLIT, template_sim, try_divide, try_merge)
+from .labels import LabelTapBank
 from .lockin import LockInView, deposit, matched_k, reset
 from .resolve import EMPTY, FRUSTRATED, RESOLVED
 from .signature import LearnedClass
@@ -195,6 +196,10 @@ class MixedStreamController:
         self.gate_k = gate_k          # None = adaptive (see _gate_floor)
         self.member_margin = member_margin
         self._settled = 0             # consecutive growth-free boundaries
+        # ── annotation carrier [s034] ─────────────────────────────
+        # Labels as reference carriers (labels.py): born lazily on the
+        # first labeled observe() row; write-only from learning's side.
+        self.label_taps: Optional[LabelTapBank] = None
         substrate.attach_pcll(self)
 
     def _new_node(self, name: str, parent_name: Optional[str]) -> None:
@@ -207,12 +212,21 @@ class MixedStreamController:
 
     # ── streaming ─────────────────────────────────────────────────
 
-    def observe(self, x: torch.Tensor) -> torch.Tensor:
+    def observe(self, x: torch.Tensor, labels=None) -> torch.Tensor:
         """One batch through the substrate forward path; keeps the
         per-sample pockets + frames for the boundary's membership step.
         Spawned composer cells computed their composition IN the forward
         pass — their activations quantize through each spec's fixed
-        static frame and deposit into their own lock-in rows [D14]."""
+        static frame and deposit into their own lock-in rows [D14].
+
+        `labels` (optional, sparse): per-row label string or None —
+        the annotation carrier [s034]. Labeled rows deposit into the
+        learning channel IDENTICALLY to unlabeled ones (above); the
+        label additionally routes the row's value-phasor into the
+        LabelTapBank at the boundary. Write-only from learning's side
+        — nothing downstream of this line reads the bank."""
+        if labels is not None and len(labels) != x.shape[0]:
+            raise ValueError("labels must align with the batch rows")
         if self.codec is not None:
             x = self.codec(x)
         y = self.substrate.forward(x)
@@ -230,7 +244,8 @@ class MixedStreamController:
         self._window.append((q.clone(),
                              None if frame is None
                              else (frame[0].clone(), frame[1].clone()),
-                             qc))
+                             qc,
+                             list(labels) if labels is not None else None))
         if frame is not None and not self._frozen:
             self._flo = min(self._flo, float(frame[0].min()))
             self._fhi = max(self._fhi, float(frame[1].max()))
@@ -264,10 +279,23 @@ class MixedStreamController:
             q = torch.cat([
                 (self._canonical(qi, fi) if qc is None
                  else torch.cat([self._canonical(qi, fi), qc], dim=1))
-                for qi, fi, qc in self._window])
+                for qi, fi, qc, _ in self._window])
+            window_labels: List = []
+            for qi, _, _, labs in self._window:
+                window_labels.extend(labs if labs is not None
+                                     else [None] * qi.shape[0])
         else:
             q = torch.empty(0, len(self.receptor_ids) + len(self.specs))
+            window_labels = []
         self._window = []
+        # annotation carrier [s034]: labeled rows demodulate into the
+        # tap bank — after canonicalization (taps live in the same
+        # canonical pocket space as templates), before anything that
+        # learns. The bank is lazily born on the first labeled row.
+        if any(l is not None for l in window_labels):
+            if self.label_taps is None:
+                self.label_taps = LabelTapBank(len(self.receptor_ids))
+            self.label_taps.deposit(q, window_labels)
         Z = torch.exp(1j * 2 * math.pi * q / N_QUANTA)
 
         if not self.bufs:                          # genesis: the world-blur
@@ -822,6 +850,8 @@ class MixedStreamController:
         }
         if self.manifold is not None:
             state["manifold"] = self.manifold.state_dict()
+        if self.label_taps is not None:
+            state["label_taps"] = self.label_taps.state_dict()
         if self.stress is not None:
             state["stress"] = {
                 "votes": dict(self.stress.germline.votes),
@@ -859,6 +889,9 @@ class MixedStreamController:
         self.codec = _build_codec(self.codec_levels)
         if self.manifold is not None and "manifold" in state:
             self.manifold.load_state_dict(state["manifold"])
+        if "label_taps" in state:
+            self.label_taps = LabelTapBank(state["label_taps"]["n_dims"])
+            self.label_taps.load_state_dict(state["label_taps"])
         if self.stress is not None and "stress" in state:
             self.stress.germline.votes.update(state["stress"]["votes"])
             self.stress.empty_drive = state["stress"]["empty_drive"]

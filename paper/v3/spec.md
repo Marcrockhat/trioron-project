@@ -3498,6 +3498,7 @@ package dependencies) because the scheduler performs the injection and
 | `division.py` | split-vs-keep judgment: worst-dim (or multi-try) circular 2-means, per-dim acceptance, noise-slicing null | 10.7 |
 | `mixed.py` | the mixed-stream boundary meeting: membership, canonical frame, judgment, trials orchestration, execution, annealing, freeze, state_dict | 10.7–10.9 |
 | `composer.py` | genome candidate set + affine-folded spawns, residual-incoherence trial statistic, importance gating, prune, ComposerPending | 10.8 |
+| `labels.py` | label tap bank: labels as reference carriers — per-label demodulation taps over receptor pockets (write-only from learning's side; naming/mixture readout) | s034 first cut; spec § pending gates |
 | `manifold.py` | per-class pocket-space μ/σ sketches on class astrocyte rows: annealing, σ-readout, replay, persistence | 10.9 |
 
 ---
