@@ -159,6 +159,17 @@ they need Rocky's sign-off as D-register entries before M4 integration.
    deferred under-division/sibling-merge carry (s031 NEXT 4). A merge
    CONSUMER (collapse a family the composed dim explains) remains
    future work.
+   **Relation scope (Rocky, s033): the pool walk is BOUNDED to
+   FAMILY_DEGREE generations** — family trials follow the active
+   fragmentation frontier; unbounded ancestor pools re-test near-root
+   mixtures every sitting (cost + multiple-comparisons surface). Swept
+   at 8 seeds: degree-1 0.676±.067, degree-2 0.698±.067, **degree-3
+   0.736±.031**, unbounded 0.726±.048 (division-only 0.606±.030). The
+   bound must cover the depth a manifold fragments to before its
+   family pool reaches trial size — rings go ~3 generations here, so
+   1-2 degrees leaves ring signal on the table; degree 3 matches
+   unbounded at lower variance and stays frontier-local.
+   FAMILY_DEGREE = 3.
 3. **Importance = any-class buffer coherence** (sharpens D14's
    "importance-gated wiring"). The genesis margin RANKS informative
    dims above noise (2.8-3.8 vs 0.7-2.2) but an absolute K=3 cut

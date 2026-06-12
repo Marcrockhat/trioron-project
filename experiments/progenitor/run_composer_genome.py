@@ -93,6 +93,18 @@ PATIENCE = 3           # sittings for a spawn to gather its virgin verdict
 FRESH_MIN = 60         # virgin members needed before the verdict
 MAX_SPAWNED = 6
 DIV_TRIES = 4
+FAMILY_DEGREE = 3      # pool only ancestors within this many generations of
+                       # a live buffer (Rocky, s033: bound the relation
+                       # scope): family trials follow the active
+                       # fragmentation frontier — unbounded ancestor pools
+                       # re-test near-root mixtures every sitting (cost +
+                       # multiple-comparisons surface). Swept at 8 seeds:
+                       # d1 0.676±.067, d2 0.698±.067, d3 0.736±.031,
+                       # unbounded 0.726±.048 (division-only 0.606±.030) —
+                       # the bound must cover the depth a manifold
+                       # fragments to before its family pool reaches trial
+                       # size; rings go ~3 generations here. d3 matches
+                       # unbounded at lower variance.
 IMPORTANCE_K = 3.0     # genesis lock-in margin (reported ranking seed)
 IMPORTANCE_R = 0.9     # any-class buffer coherence a dim needs to be wired
 NAMES = ["A:diag", "B:anti", "C:blob1", "D:blob2", "E:ring.40", "F:ring.22"]
@@ -323,10 +335,10 @@ def run_seed(seed: int, composers: bool):
         if composers and len(dims) + len(pending) < MAX_SPAWNED:
             pools: dict = {}
             for i, nid in enumerate(node_of):
-                a = parent.get(nid)
-                while a is not None:
+                a, deg = parent.get(nid), 1
+                while a is not None and deg <= FAMILY_DEGREE:
                     pools.setdefault(a, set()).add(i)
-                    a = parent.get(a)
+                    a, deg = parent.get(a), deg + 1
             found = None
             for a in sorted(pools, key=lambda n: -depth[n]):
                 idxs = pools[a]
