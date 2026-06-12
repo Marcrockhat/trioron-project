@@ -133,13 +133,22 @@ M4 re-gated 0.729. OPEN RULING: member_margin default (+0.051 on M2).**
    triplet = 0.818→0.854** (+0.037, purity .715→.743, classes 91→79).
    Freeze-streaming holds the plateau. Flags default-off everywhere;
    M2/M4/M5 byte-identical.
-4. **OPEN RULING (Rocky):** `member_margin` — ranking membership by E/σ
-   (resolve.py's own semantics) was found by accident as a silent
-   default change worth **+0.051 on the M2 gate alone** (0.760→0.811);
-   reverted to opt-in for byte-identity. Decide: make it the default
-   (re-record M2 baseline) or keep opt-in. Also still queued:
-   divide_tries=4 default; mixed.py split (~900 lines now — the flag
-   zoo wants profiles); dendrite settlement threshold.
+4. **RULING TAKEN (s033b): defaults ON, M2 re-recorded 0.760→0.829.**
+   The ruling survived FOUR falsifications into its coherent form —
+   **quiescence deferral** (credulous while growing, skeptical once
+   settled): (i) bare margin+tries4 over-fragments (103>96 modes);
+   (ii) absolute gate_k is dimension-unsafe → adaptive GATE_FRAC·√(2W);
+   (iii) always-on gating kills relational discovery (testbed →0.53);
+   (iv) trust-gating starves rare-truth discovery (28/32) — refused
+   members can never seed a class; division feeds on buffers. Full
+   record in design doc D20 row + spec §10.7. **D21 proposed: the
+   NURSERY** (refused members → unlabeled divisible buffer; "belongs
+   to nothing I know YET" becomes a birthplace). Final battery: M2
+   0.829 / M3 0.924 (pinned to its validated config) / M4 0.729 /
+   M5 0.836 / D20 re-pinned (structure + reject curve at non-inferior
+   acc); 107 tests + same 4 carries. Still queued: mixed.py split
+   (~950 lines, flag zoo wants profiles); dendrite settlement
+   threshold; D21.
 5. Also this arc: supervised tanh-MLP baseline on data_hard (H=64:
    0.965; H=256: 0.983 vs Bayes 0.993 — Rocky's recollection confirmed;
    our organism ≈ a supervised H=16 net, label-free single-pass);
