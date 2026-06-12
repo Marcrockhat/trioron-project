@@ -134,6 +134,56 @@ finds structure in selection-biased buffers (the probe's seed-0 junk spawns).
 - Growth ladder (decided s031): frustrated → divide (cheap) → division
   can't clear → composer trial → spawn winner gene; void → receptor attach.
 
+## 4b. Probe amendments to the composer arm (s033 — **PENDING approval**)
+
+The genome redo of the relational testbed (`run_composer_genome.py`,
+handoff s033 NEXT 1) validated the §4 mechanism and surfaced four
+corrections, each probe-measured. None is built into the substrate yet;
+they need Rocky's sign-off as D-register entries before M4 integration.
+
+1. **Trial statistic = residual-incoherence ratio** (amends D14's
+   "permutation-null-corrected gain"). R saturates near 1 and ring
+   marginals are clumpy (cos²φ piles at extremes): null carve 0.93 vs
+   relation 0.995 = "gain" 0.06, invisible in R units. Score
+   `(1−null)/(1−carve) > NULL_RATIO=2`: noise pairs 1.0-1.2, tanh
+   relations 2.5-2.9, dendrite on ring pools 13-22.
+2. **[D17 proposed] Family trials** — per-buffer trials can NEVER
+   discover manifold relations: division legitimately fragments
+   continuous manifolds into raw-separable arcs (the s031 premise "no
+   raw dim separates E|F" is false for fragments), so no confounded
+   buffer of trial size ever exists. Repair: trial over unions of
+   LINEAGE SIBLINGS (current buffers under a retired division ancestor,
+   deepest pool first, one spawn per sitting). Reunified-E ratio 21.4
+   vs control unions 1.2-1.5. The composer thereby doubles as the
+   anti-fragmentation mechanism — the probe-level answer to the
+   deferred under-division/sibling-merge carry (s031 NEXT 4). A merge
+   CONSUMER (collapse a family the composed dim explains) remains
+   future work.
+3. **Importance = any-class buffer coherence** (sharpens D14's
+   "importance-gated wiring"). The genesis margin RANKS informative
+   dims above noise (2.8-3.8 vs 0.7-2.2) but an absolute K=3 cut
+   starves trials (one dim clears → no pairs). The design's own words
+   pick the gate: "noise columns have no lock-in margin IN ANY CLASS" —
+   wire dims on which any judgable-size (≥ MIN_MEMBERS) class buffer
+   coheres at R > 0.9. Smaller buffers confabulate noise coherence
+   (failure mode 4 reaches importance too).
+4. **Division and composition COMPETE at the sitting** (the ladder's
+   "division can't clear", read locally): a strict division-first
+   ladder starves the composer (relational buffers fragment forever on
+   legitimate micro-modes). The spawn wins iff its carve beats the best
+   division's (the s031 probe's validated loop). Also: PATIENCE
+   settlement judges on the virgin data available (≥ 2·MIN_CHILD)
+   rather than auto-failing a near-full store.
+
+Probe result with all four (3 seeds, 8 windows): genome-composer 0.701
+vs division-only 0.607; A .50→.68, B .34→.52, E .28→.47; spawns 3-4 per
+seed, future-deposit prunes 0-2, **zero noise-pair spawns**; books
+differentiate (linear/tanh/dendrite earn on their own spawns). The
+absolute A/B/E/F numbers are capped by fragmentation + the raw
+equal-weight readout (M5's σ-readout territory) — the M4 substrate gate
+should be set against THESE measured baselines, not the s031 non-genome
+probe's 0.595/0.561.
+
 ## 5. The manifold adapter for PCLL  **[D15]**
 
 Feature 5 of the rebuild, currently absent. Reuse
