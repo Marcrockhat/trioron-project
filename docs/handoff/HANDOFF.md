@@ -2,10 +2,10 @@
 
 **Session date:** 2026-06-12
 **Session number:** 033
-**Session title:** **M3+M4+M5 ALL GATE PASS — the five-feature rebuild is
-structurally complete: real tissue (depth 0→1), per-class settlement,
-manifold adapter with full ship/wake. Two M5 falsifications on record
-(σ-gap claim; freeze-decay). NEXT = M6 spec §10 amendment + manual.**
+**Session title:** **M3+M4+M5+M6 ALL PASS — the rebuild is complete and
+SPEC'D (§10.6-10.10 amended, manual updated). Full stack on data_hard:
+raw 0.818 / σ 0.825 (M2 was 0.760). Architecture review artifact ready
+(`run_review.py`). Rocky reviewing the architecture next.**
 
 ---
 
@@ -87,15 +87,34 @@ manifold adapter with full ship/wake. Two M5 falsifications on record
   `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
   `trioron/viz/export.py`; `.claude/`, `runs/` untracked.
 
+## M6 DONE (s033) + the architecture review
+
+- **M6 PASS:** spec amended (header bump 2026-06-12) — §10.6 per-class
+  settlement correction, NEW §10.7-10.10 (mixed regime / composer arm /
+  manifold adapter / census + dispatch default); §9.14/9.15 partition
+  rows. Manual: PCLL growth section + 2 new drift-corrections
+  (empty-dispatch trap; σ-readout falsification). mixed.py split
+  deferred (own pass).
+- **Full-stack data_hard** (`run_review.py`: composer+manifold+tries=4):
+  raw 0.818 / σ-readout 0.825 mean (M2 baseline 0.760; Bayes 0.993).
+  Anatomy: 12 receptors rank 0, ZERO edges/tissue (genome regularizer
+  correctly quiet on the axis-separable world), 77-101 classes (lineage
+  depth max 8), 77 sketches = 7.2 KiB. Testbed panel: 8 computing cells
+  in 2 rank strata, 6 edges with the EXACT folded weights (1/2π =
+  0.159; 2.5/2π = 0.398), 3 spawned cells (linear sum, linear diff,
+  tanh diff on (f0,f1)).
+- **Rocky is reviewing the architecture** — discussion points queued:
+  no OUTPUT cells anywhere in the PCLL path (readout is
+  template/sketch-side; the OUTPUT gene is unused); sensation side at
+  its floor in both books (one-way drain — only EMPTY worlds repay it);
+  gene groups only differentiate via composer settlements; the
+  fragmentation/merge lever for the remaining 0.83→0.99 gap.
+
 ## Open questions / NEXT (priority order)
 
-1. **M6 — spec §10 amendment + manual update** (spec-first rule D6):
-   amend spec §10 with the mixed-stream regime (D12), per-class
-   settlement (D13), the composer arm + family trials (D14/D16/D17 +
-   §4b), the manifold adapter (D15), census (D11), `divide_tries`, the
-   construct() dispatch default, `mixed.freeze`, ship/wake of mixed
-   state. Update `docs/TRIORON_MANUAL.md` PCLL section (it predates all
-   of M1–M5). Include the mixed.py split (above) if Rocky agrees.
+1. **Architecture review outcomes (Rocky)** — then likely: the merge
+   consumer (D17's unbuilt half = the Bayes-gap lever), mixed.py split,
+   divide_tries default, dendrite settlement threshold.
 2. **Small decisions for Rocky:** divide_tries=4 as the M2/default
    (+0.051 on data_hard)? Merge CONSUMER for families (collapse
    fragments a composed dim explains — D17's unbuilt half; now also the
