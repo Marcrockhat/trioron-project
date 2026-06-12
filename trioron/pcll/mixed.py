@@ -53,6 +53,7 @@ from trioron.core.state import CellState
 
 from . import composer as comp
 from .controller import MeetingReport, PCLLController
+from .manifold import PCLLManifold
 from .division import (BUF, CLASS_CAP, GAIN_D, MIN_CHILD, MIN_MEMBERS,
                        NULL_SPLIT, try_divide)
 from .lockin import LockInView, deposit, matched_k, reset
@@ -71,7 +72,8 @@ class MixedStreamController:
     def __init__(self, substrate: Substrate, *,
                  stress=None, adopt: Optional[PCLLController] = None,
                  composer: bool = False,
-                 divide_tries: int = 1) -> None:
+                 divide_tries: int = 1,
+                 manifold: bool = False) -> None:
         # divide_tries: dims judged per division (ascending coherence).
         # The default 1 is the M2 worst-dim semantics (byte-identical).
         # Worlds with pure-noise dims need > 1 — the worst dim is then
@@ -87,6 +89,7 @@ class MixedStreamController:
         # Adopt the period-1 controller's world: codec, read set, the natal
         # world-class (already astrocyte-backed) — one organism, one history.
         self.codec = adopt.codec if adopt is not None else None
+        self.codec_levels = adopt.codec_levels if adopt is not None else {}
         self.read_mask = (adopt.read_mask.clone() if adopt is not None
                           else torch.ones(n, dtype=torch.bool))
         self._world: Optional[LearnedClass] = (
@@ -126,6 +129,17 @@ class MixedStreamController:
         self._parent_node: dict = {}   # node id → parent node id | None
         self._depth: dict = {}
         self._next_node = 0
+        # ── manifold adapter [D15] ────────────────────────────────
+        # Per-class μ/σ sketches over pocket space, riding the class
+        # astrocyte rows. Consumers: post-quiescence annealing (buffer
+        # re-anchor), σ-likelihood readout (the gate runner composes it
+        # from pockets_of + manifold.log_likelihood), replay/ship-wake.
+        self.manifold: Optional[PCLLManifold] = (
+            PCLLManifold(substrate.arena) if manifold else None)
+        # freeze: deployment mode — no divisions, no trials; membership,
+        # deposits, sketch updates and annealing continue (the s031
+        # freeze-decay scenario, M5 gate)
+        self.freeze = False
         substrate.attach_pcll(self)
 
     def _new_node(self, name: str, parent_name: Optional[str]) -> None:
@@ -212,17 +226,27 @@ class MixedStreamController:
 
         member = self._assign(Z)                   # members → rolling buffers
         self._feed_fresh(q, member)                # future deposits [D9]
+        if self.manifold is not None and member is not None:
+            for k, c in enumerate(self.classes):   # sketches eat REAL members
+                rows = q[member == k]
+                if not len(rows):
+                    continue
+                if c.name not in self.manifold.sketches:
+                    self.manifold.adopt(c.name, c.cell_id, q.shape[1])
+                self.manifold.update(c.name, rows)
 
         candidates = []                            # the council's judgment
         tries = max(self.divide_tries, DIV_TRIES if self.composer else 1)
-        for k, b in enumerate(self.bufs):
-            if len(self.bufs) + len(candidates) >= CLASS_CAP:
-                break                              # envelope guard, at commit
-            verdict = try_divide(b, tries=tries)
-            if verdict is not None:
-                candidates.append((k, verdict))
+        if not self.freeze:
+            for k, b in enumerate(self.bufs):
+                if len(self.bufs) + len(candidates) >= CLASS_CAP:
+                    break                          # envelope guard, at commit
+                verdict = try_divide(b, tries=tries)
+                if verdict is not None:
+                    candidates.append((k, verdict))
 
-        spawns = self._trials(dict(candidates)) if self.composer else []
+        spawns = (self._trials(dict(candidates))
+                  if self.composer and not self.freeze else [])
 
         status = (EMPTY if empty
                   else FRUSTRATED if (candidates or spawns) else RESOLVED)
@@ -247,6 +271,8 @@ class MixedStreamController:
         # prune AFTER execute: this boundary's division verdicts carry
         # side masks + dim indices over the pre-prune buffer width
         n_pruned = self._prune_composers()
+        if n_div == 0 and n_spawn == 0:
+            self._anneal()                         # post-quiescence [D15]
 
         return self._report(arena, "match", None, status, grow, n_div,
                             spawns=n_spawn, pruned=n_pruned)
@@ -406,6 +432,7 @@ class MixedStreamController:
             spec, cid, dim=F + len(self.specs) - 1,
             fresh=torch.empty(0, F), lineage=set(lineage))
         self._watch.append(pend)
+        self._rebuild_sketches()                   # pocket space widened
         return pend
 
     def _testimony(self):
@@ -451,8 +478,110 @@ class MixedStreamController:
             col = len(self.receptor_ids) + k
             self.bufs = [torch.cat([b[:, :col], b[:, col + 1:]], dim=1)
                          for b in self.bufs]
+        if self._to_prune:
+            self._rebuild_sketches()               # pocket space narrowed
         self._to_prune = []
         return n
+
+    # ── the manifold adapter's consumers [D15] ────────────────────
+
+    def _anneal(self) -> None:
+        """Post-quiescence annealing: synthesize sketch deposits into
+        each rolling buffer, displacing the OLDEST members — the buffer
+        (and hence the buffer-mean template) re-anchors to the class's
+        full deposit history instead of drifting with membership
+        pollution (the s031 freeze-decay). Synthetic members never feed
+        the sketches back (update uses window members only)."""
+        if self.manifold is None:
+            return
+        for k, c in enumerate(self.classes):
+            z = self.manifold.anneal_phasors(c.name)
+            if z is None or z.shape[1] != self.bufs[k].shape[1]:
+                continue
+            b = self.bufs[k]
+            keep = b[max(0, len(b) + len(z) - BUF):]
+            self.bufs[k] = torch.cat([z, keep])
+
+    def _rebuild_sketches(self) -> None:
+        """Width changed (composer spawn/prune reshaped pocket space):
+        re-derive every sketch from its class's rolling buffer — history
+        beyond the buffer is traded for consistency (recorded in the
+        adapter's module docstring)."""
+        if self.manifold is None:
+            return
+        for k, c in enumerate(self.classes):
+            self.manifold.rebuild(c.name, c.cell_id,
+                                  self._recover_q(self.bufs[k]))
+
+    # ── persistence (ship/wake rides substrate._pcll via state_dict) ─
+
+    def state_dict(self) -> dict:
+        """The learned world: classes, buffers, lineage, composer specs,
+        manifold sketches, the frame registry, the vote book. Pending
+        settlements are carried as-is (torch.save pickles the records);
+        ship at a quiescent boundary is the intended use."""
+        state = {
+            "classes": [{"name": c.name, "cell_id": c.cell_id}
+                        for c in self.classes],
+            "bufs": [b.clone() for b in self.bufs],
+            "births": self._births,
+            "lineage": dict(self._lineage),
+            "nodes": (dict(self._node), dict(self._parent_node),
+                      dict(self._depth), self._next_node),
+            "frame": (self._flo, self._fhi, self._frozen),
+            "read_mask": self.read_mask.clone(),
+            "periods": self.periods,
+            "specs": [(s.gene, s.i, s.j, s.w) for s in self.specs],
+            "composer_cells": list(self.composer_cells),
+            "watch": list(self._watch),
+            "trial_seed": self._trial_seed,
+            "codec_levels": self.codec_levels,
+        }
+        if self.manifold is not None:
+            state["manifold"] = self.manifold.state_dict()
+        if self.stress is not None:
+            state["stress"] = {
+                "votes": dict(self.stress.germline.votes),
+                "empty_drive": self.stress.empty_drive,
+                "pending": list(self.stress.pending),
+            }
+        return state
+
+    def load_state_dict(self, state: dict) -> None:
+        from .signature import LearnedClass
+        n = len(self.receptor_ids)
+        self.classes = [
+            LearnedClass(s["name"], torch.zeros(n, dtype=torch.complex64),
+                         torch.zeros(n), torch.ones(n, dtype=torch.bool),
+                         cell_id=s["cell_id"])
+            for s in state["classes"]]
+        self.bufs = [b.clone() for b in state["bufs"]]
+        self._births = state["births"]
+        self._lineage = dict(state["lineage"])
+        (self._node, self._parent_node,
+         self._depth, self._next_node) = (dict(state["nodes"][0]),
+                                          dict(state["nodes"][1]),
+                                          dict(state["nodes"][2]),
+                                          state["nodes"][3])
+        self._flo, self._fhi, self._frozen = state["frame"]
+        self.read_mask = state["read_mask"].clone()
+        self.periods = state["periods"]
+        self.specs = [comp.ComposerSpec(g, i, j, w)
+                      for g, i, j, w in state["specs"]]
+        self.composer_cells = list(state["composer_cells"])
+        self._watch = list(state["watch"])
+        self._trial_seed = state["trial_seed"]
+        from .controller import _build_codec
+        self.codec_levels = state.get("codec_levels", {})
+        self.codec = _build_codec(self.codec_levels)
+        if self.manifold is not None and "manifold" in state:
+            self.manifold.load_state_dict(state["manifold"])
+        if self.stress is not None and "stress" in state:
+            self.stress.germline.votes.update(state["stress"]["votes"])
+            self.stress.empty_drive = state["stress"]["empty_drive"]
+            self.stress.pending = [tuple(p) if isinstance(p, (list, tuple))
+                                   else p for p in state["stress"]["pending"]]
+        self._refresh(self.substrate.arena)
 
     def _execute(self, arena, candidates):
         """The progenitor commits the council's divisions: parent retires,
@@ -487,6 +616,11 @@ class MixedStreamController:
                 if c.name in p.lineage:
                     p.lineage.discard(c.name)
                     p.lineage.update(names)
+            if self.manifold is not None:        # sketches follow too [D15]
+                self.manifold.retire(c.name)
+                for child_name, child_buf in zip(names, (b[~side], b[side])):
+                    self.manifold.rebuild(child_name, c.cell_id,
+                                          self._recover_q(child_buf))
             records.append((names[0], names[1], d, floor))
         self.classes, self.bufs = new_classes, new_bufs
         return len(divided), records
