@@ -160,6 +160,14 @@ def construct(
     """
     if envelope is None:
         envelope = Envelope()
+    if dispatch_table is None:
+        # Default to the real phenotype table: an empty dispatch silently
+        # skips every computing cell the organism grows (the s020
+        # "growth was inert" failure class — found again by M4's first
+        # composer spawn, s033). Receptor-only organisms are unaffected
+        # (receptors are injected, not dispatched).
+        from trioron.phenotype import default_dispatch_table
+        dispatch_table = default_dispatch_table()
     arena = Arena(envelope, device=device, capacity=capacity)
     substrate = Substrate(arena, dispatch_table, sparsity_k=sparsity_k)
     base(substrate)

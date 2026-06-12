@@ -66,6 +66,8 @@ class MeetingReport:
     grow: Optional[str] = None        # stress driver decision (spec §10.6) or None
     census: Optional[Census] = None   # structural anatomy after this meeting [D11]
     divisions: int = 0                # class divisions committed this meeting [D12]
+    spawns: int = 0                   # composer cells spawned this meeting [D14]
+    pruned: int = 0                   # composer cells hard-retired [D16]
 
 
 class PCLLResolution:

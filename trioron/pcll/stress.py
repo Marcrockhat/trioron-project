@@ -144,7 +144,11 @@ class StressRouter:
                     held.append((group, subject))
                     continue
                 success = bool(verdict)
-            self._report(group, success)
+            gene = getattr(subject, "gene", None)
+            if gene is not None:
+                self._report_gene(gene, success)   # composer spawn [D14]
+            else:
+                self._report(group, success)
             self.settlements.append((group, subject, success))
             out.append(success)
         self.pending = held
@@ -173,6 +177,21 @@ class StressRouter:
             return
         group, _ = self.pending[-1]
         self.pending[-1:] = [(group, s) for s in subjects]
+
+    def _report_gene(self, gene: int, success: bool) -> None:
+        """Composer-spawn settlement [D14]: the winning gene's council
+        group earns (or repays) within the discrimination side — the
+        step4_grow economy, at last with its consumer. Success pulls one
+        vote equally from the OTHER gene groups; failure bleeds the
+        gene's group back. Per-seat floors keep every group ≥
+        GROUP_VOTE_FLOOR; Σ=28 conserved."""
+        votes = self.germline.votes
+        mine = list(self.germline.council_ids[gene])
+        others = [c for g, ids in self.germline.council_ids.items()
+                  if g != gene for c in ids]
+        src, dst = (others, mine) if success else (mine, others)
+        _vote_transfer(votes, src, dst, VOTE_PER_EVENT,
+                       GROUP_VOTE_FLOOR / len(mine))
 
     def _report(self, group: str, success: bool) -> None:
         votes = self.germline.votes

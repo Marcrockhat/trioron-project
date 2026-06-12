@@ -51,21 +51,35 @@ from trioron.core.construct import Substrate
 from trioron.core.receptor import N_QUANTA
 from trioron.core.state import CellState
 
+from . import composer as comp
 from .controller import MeetingReport, PCLLController
-from .division import BUF, CLASS_CAP, GAIN_D, NULL_SPLIT, try_divide
+from .division import (BUF, CLASS_CAP, GAIN_D, MIN_CHILD, MIN_MEMBERS,
+                       NULL_SPLIT, try_divide)
 from .lockin import LockInView, deposit, matched_k, reset
 from .resolve import EMPTY, FRUSTRATED, RESOLVED
 from .signature import LearnedClass
 from .stress import DISCRIMINATION
+
+DIV_TRIES = 4   # dims judged per division when the composer arm is on
+                # (§4b item 4; the division-only path keeps the M2
+                # worst-dim semantics, tries=1)
 
 
 class MixedStreamController:
     """Attach after period 1; owns the boundary meeting for periods 2+."""
 
     def __init__(self, substrate: Substrate, *,
-                 stress=None, adopt: Optional[PCLLController] = None) -> None:
+                 stress=None, adopt: Optional[PCLLController] = None,
+                 composer: bool = False,
+                 divide_tries: int = 1) -> None:
+        # divide_tries: dims judged per division (ascending coherence).
+        # The default 1 is the M2 worst-dim semantics (byte-identical).
+        # Worlds with pure-noise dims need > 1 — the worst dim is then
+        # ALWAYS noise (rejected by the NULL_SPLIT floor) and division
+        # never fires (M4 gate finding, s033).
         self.substrate = substrate
         self.stress = stress
+        self.divide_tries = divide_tries
         self.receptor_ids = substrate.scheduler._plan.receptor_ids
         if self.receptor_ids.numel() == 0:
             raise ValueError("substrate has no RECEPTOR cells")
@@ -97,23 +111,57 @@ class MixedStreamController:
         self._flo = float("inf")       # running min of per-sample lo
         self._fhi = float("-inf")      # running max of per-sample hi
         self._frozen = False
+        # ── composer arm [D14+§4b] ────────────────────────────────
+        if composer and stress is None:
+            raise ValueError("the composer arm settles through the "
+                             "stress economy — pass a StressRouter")
+        self.composer = composer
+        self.specs: List[comp.ComposerSpec] = []   # live composed dims
+        self.composer_cells: List[int] = []        # arena cells, specs order
+        self._watch: List[comp.ComposerPending] = []   # unsettled spawns
+        self._to_prune: List[comp.ComposerPending] = []
+        self._trial_seed = 0
+        # lineage forest over class names (family pools, FAMILY_DEGREE)
+        self._node: dict = {}          # class name → node id
+        self._parent_node: dict = {}   # node id → parent node id | None
+        self._depth: dict = {}
+        self._next_node = 0
         substrate.attach_pcll(self)
+
+    def _new_node(self, name: str, parent_name: Optional[str]) -> None:
+        nid = self._next_node
+        self._next_node += 1
+        par = self._node.get(parent_name) if parent_name else None
+        self._node[name] = nid
+        self._parent_node[nid] = par
+        self._depth[nid] = 0 if par is None else self._depth[par] + 1
 
     # ── streaming ─────────────────────────────────────────────────
 
     def observe(self, x: torch.Tensor) -> torch.Tensor:
         """One batch through the substrate forward path; keeps the
-        per-sample pockets + frames for the boundary's membership step."""
+        per-sample pockets + frames for the boundary's membership step.
+        Spawned composer cells computed their composition IN the forward
+        pass — their activations quantize through each spec's fixed
+        static frame and deposit into their own lock-in rows [D14]."""
         if self.codec is not None:
             x = self.codec(x)
         y = self.substrate.forward(x)
         sched = self.substrate.scheduler
         q = sched._last_receptor_q
         deposit(self.substrate.arena, self.receptor_ids, q)
+        qc = None
+        if self.composer_cells:
+            act = sched._last_activations[:, self.composer_cells]
+            qc = torch.stack([self.specs[k].quantize(act[:, k])
+                              for k in range(len(self.specs))], dim=1)
+            deposit(self.substrate.arena,
+                    torch.tensor(self.composer_cells), qc)
         frame = sched._last_receptor_frame
         self._window.append((q.clone(),
                              None if frame is None
-                             else (frame[0].clone(), frame[1].clone())))
+                             else (frame[0].clone(), frame[1].clone()),
+                             qc))
         if frame is not None and not self._frozen:
             self._flo = min(self._flo, float(frame[0].min()))
             self._fhi = max(self._fhi, float(frame[1].max()))
@@ -143,8 +191,13 @@ class MixedStreamController:
         arena = self.substrate.arena
         read = LockInView(arena, self.receptor_ids, mask=self.read_mask)
         empty = not bool((read.margin() > matched_k()).any())
-        q = (torch.cat([self._canonical(qi, fi) for qi, fi in self._window])
-             if self._window else torch.empty(0, len(self.receptor_ids)))
+        if self._window:
+            q = torch.cat([
+                (self._canonical(qi, fi) if qc is None
+                 else torch.cat([self._canonical(qi, fi), qc], dim=1))
+                for qi, fi, qc in self._window])
+        else:
+            q = torch.empty(0, len(self.receptor_ids) + len(self.specs))
         self._window = []
         Z = torch.exp(1j * 2 * math.pi * q / N_QUANTA)
 
@@ -157,30 +210,46 @@ class MixedStreamController:
                 self.stress.decide(status)
             return self._report(arena, event, name, status, None, 0)
 
-        self._assign(Z)                            # members → rolling buffers
+        member = self._assign(Z)                   # members → rolling buffers
+        self._feed_fresh(q, member)                # future deposits [D9]
 
         candidates = []                            # the council's judgment
+        tries = max(self.divide_tries, DIV_TRIES if self.composer else 1)
         for k, b in enumerate(self.bufs):
             if len(self.bufs) + len(candidates) >= CLASS_CAP:
                 break                              # envelope guard, at commit
-            verdict = try_divide(b)
+            verdict = try_divide(b, tries=tries)
             if verdict is not None:
                 candidates.append((k, verdict))
 
+        spawns = self._trials(dict(candidates)) if self.composer else []
+
         status = (EMPTY if empty
-                  else FRUSTRATED if candidates else RESOLVED)
+                  else FRUSTRATED if (candidates or spawns) else RESOLVED)
         grow = None
+        for p in self._watch:
+            p.age += 1
         if self.stress is not None:
-            self.stress.settle(status, testify=self._division_testimony())
+            self.stress.settle(status, testify=self._testimony())
             grow = self.stress.decide(status)
 
-        n_div = 0
-        if candidates and (grow == DISCRIMINATION or self.stress is None):
-            n_div, records = self._execute(arena, candidates)
+        n_div, n_spawn = 0, 0
+        if grow == DISCRIMINATION or self.stress is None:
+            won = {k for k, _, _ in spawns}        # composer beat division
+            candidates = [(k, v) for k, v in candidates if k not in won]
+            records = []
+            if candidates:
+                n_div, records = self._execute(arena, candidates)
+            records += [self._spawn(spec, names) for _, spec, names in spawns]
+            n_spawn = len(spawns)
             if self.stress is not None:
                 self.stress.attach_subjects(records)
+        # prune AFTER execute: this boundary's division verdicts carry
+        # side masks + dim indices over the pre-prune buffer width
+        n_pruned = self._prune_composers()
 
-        return self._report(arena, "match", None, status, grow, n_div)
+        return self._report(arena, "match", None, status, grow, n_div,
+                            spawns=n_spawn, pruned=n_pruned)
 
     # ── the steps ─────────────────────────────────────────────────
 
@@ -195,19 +264,195 @@ class MixedStreamController:
                                  self.read_mask.clone())
         self.classes = [world]
         self.bufs = [Z[-BUF:]]
+        self._new_node(world.name, None)
         self._refresh(arena)
         return "birth", world.name
 
-    def _assign(self, Z: torch.Tensor) -> None:
-        """Matched-filter membership against buffer-mean templates."""
+    def _assign(self, Z: torch.Tensor) -> Optional[torch.Tensor]:
+        """Matched-filter membership against buffer-mean templates.
+        Returns the per-row class index (the fresh-store feed needs it)."""
         if not len(Z):
-            return
+            return None
         T = torch.stack([b.mean(0) for b in self.bufs])
         member = (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1).argmax(1)
         for k in range(len(self.bufs)):
             zk = Z[member == k]
             if len(zk):
                 self.bufs[k] = torch.cat([self.bufs[k], zk])[-BUF:]
+        return member
+
+    # ── the composer arm [D14+§4b] ────────────────────────────────
+
+    def _feed_fresh(self, q: torch.Tensor, member) -> None:
+        """Future deposits [D9]: window members assigned to a pending
+        spawn's lineage extend its virgin store (receptor pockets only —
+        the trial statistic recomputes the composition itself)."""
+        if not self._watch or member is None:
+            return
+        F = len(self.receptor_ids)
+        for p in self._watch:
+            idxs = [k for k, c in enumerate(self.classes)
+                    if c.name in p.lineage]
+            if not idxs:
+                continue
+            m = torch.isin(member, torch.tensor(idxs))
+            if bool(m.any()):
+                grew = torch.cat([p.fresh, q[m][:, :F]])
+                p.fresh = grew[-2 * comp.FRESH_MIN:]
+
+    def _recover_q(self, Zcols: torch.Tensor) -> torch.Tensor:
+        """Receptor pockets back from buffered phasors (exact: canonical
+        q ∈ [1, 999] → angle is injective on the circle)."""
+        return (torch.angle(Zcols) / (2 * math.pi) * N_QUANTA) % N_QUANTA
+
+    def _wired(self) -> List[int]:
+        """Importance-gated wiring [D14/§4b]: receptor dims on which ANY
+        judgable-size class buffer coheres — noise columns never enter a
+        trial; small selected buffers confabulate (failure mode 4)."""
+        wired = []
+        for d in range(len(self.receptor_ids)):
+            if any(len(b) >= MIN_MEMBERS
+                   and float(b[:, d].mean().abs()) > comp.IMPORTANCE_R
+                   for b in self.bufs):
+                wired.append(d)
+        return wired
+
+    def _div_r(self, b: torch.Tensor, verdict) -> float:
+        side, d = verdict
+        return max(float(b[~side, d].mean().abs()),
+                   float(b[side, d].mean().abs()))
+
+    def _trials(self, div_verdicts: dict) -> List:
+        """The council's overproduction (§4b): per-buffer trials COMPETE
+        with division (the spawn must carve better than the best split);
+        then ONE family trial over lineage-sibling pools within
+        FAMILY_DEGREE generations (deepest pool first) — division
+        fragments manifolds into raw-separable arcs before any
+        relational buffer reaches trial size, so relational wholes
+        reform for the trial only. Returns [(buffer idx | -1, spec,
+        lineage names)]."""
+        spawns: List = []
+        room = comp.MAX_SPAWNED - len(self.specs)
+        if room <= 0:
+            return spawns
+        wired = self._wired()
+        if len(wired) < 2:
+            return spawns
+        taken = set(self.specs)
+        F = len(self.receptor_ids)
+
+        for k, b in enumerate(self.bufs):          # per-buffer, vs division
+            if len(spawns) >= room:
+                break
+            if len(b) < 4 * MIN_CHILD or \
+                    float(b.mean(0).abs().mean()) >= comp.TRIGGER_R:
+                continue
+            self._trial_seed += 1
+            spec, r, _ = comp.best_candidate(
+                self._recover_q(b[:, :F]), wired, taken, self._trial_seed)
+            if spec is None:
+                continue
+            dv = div_verdicts.get(k)
+            if dv is not None and self._div_r(b, dv) >= r:
+                continue                           # division explains better
+            taken.add(spec)
+            spawns.append((k, spec, {self.classes[k].name}))
+
+        if len(spawns) < room:                     # ≤1 family spawn/boundary
+            pools: dict = {}
+            for k, c in enumerate(self.classes):
+                nid = self._node.get(c.name)
+                if nid is None:
+                    continue
+                a, deg = self._parent_node.get(nid), 1
+                while a is not None and deg <= comp.FAMILY_DEGREE:
+                    pools.setdefault(a, set()).add(k)
+                    a, deg = self._parent_node.get(a), deg + 1
+            for a in sorted(pools, key=lambda n: -self._depth[n]):
+                idxs = pools[a]
+                if len(idxs) < 2:
+                    continue
+                pool = torch.cat([self.bufs[k] for k in idxs])[-BUF:]
+                if len(pool) < 4 * MIN_CHILD or \
+                        float(pool.mean(0).abs().mean()) >= comp.TRIGGER_R:
+                    continue
+                self._trial_seed += 1
+                spec, _, _ = comp.best_candidate(
+                    self._recover_q(pool[:, :F]), wired, taken,
+                    self._trial_seed)
+                if spec is not None:
+                    spawns.append(
+                        (-1, spec, {self.classes[k].name for k in idxs}))
+                    break
+        return spawns
+
+    def _spawn(self, spec: comp.ComposerSpec, lineage) -> comp.ComposerPending:
+        """Commit a winning candidate as real tissue [D11] and register
+        its composed dim: buffers back-fill the new column from their own
+        receptor pockets (the composition is a pure function of them);
+        the stream's column comes from the forward path."""
+        F = len(self.receptor_ids)
+        src = (int(self.receptor_ids[spec.i]), int(self.receptor_ids[spec.j]))
+        parent = (self.stress.germline.progenitor_id
+                  if self.stress is not None else -1)
+        cid = comp.spawn(self.substrate, spec, src, parent=parent)
+        self.specs.append(spec)
+        self.composer_cells.append(cid)
+        for k, b in enumerate(self.bufs):          # back-fill history
+            qc = spec.pockets(self._recover_q(b[:, :F]))
+            zc = torch.exp(1j * 2 * math.pi * qc / N_QUANTA)
+            self.bufs[k] = torch.cat([b, zc.unsqueeze(1)], dim=1)
+        pend = comp.ComposerPending(
+            spec, cid, dim=F + len(self.specs) - 1,
+            fresh=torch.empty(0, F), lineage=set(lineage))
+        self._watch.append(pend)
+        return pend
+
+    def _testimony(self):
+        """Combined settlement testimony [D13]: division records settle
+        against their children's split-dim coherence (M3); composer
+        spawns settle on their virgin store — the §4b trial statistic
+        recomputed on members that arrived AFTER the spawn existed.
+        Failures queue the hard prune [D16]."""
+        divide_testify = self._division_testimony()
+
+        def testify(subject):
+            if not isinstance(subject, comp.ComposerPending):
+                return divide_testify(subject)
+            p = subject
+            ready = (len(p.fresh) >= comp.FRESH_MIN or
+                     (p.age > comp.PATIENCE
+                      and len(p.fresh) >= 2 * MIN_CHILD))
+            if ready:
+                g = torch.Generator().manual_seed(50_000 + p.cell_id)
+                _, ratio = comp.trial_ratio(p.fresh, p.spec, g)
+                ok = ratio > comp.NULL_RATIO
+                self._watch.remove(p)
+                if not ok:
+                    self._to_prune.append(p)
+                return ok
+            if p.age > comp.PATIENCE:              # nobody deposited
+                self._watch.remove(p)
+                self._to_prune.append(p)
+                return False
+            return None
+
+        return testify
+
+    def _prune_composers(self) -> int:
+        """PATIENCE failures hard-retire [D16]: cell out of the forward
+        path, edges masked, the composed column leaves every buffer."""
+        n = len(self._to_prune)
+        for p in self._to_prune:
+            k = self.specs.index(p.spec)
+            comp.prune(self.substrate, p.cell_id)
+            del self.specs[k]
+            del self.composer_cells[k]
+            col = len(self.receptor_ids) + k
+            self.bufs = [torch.cat([b[:, :col], b[:, col + 1:]], dim=1)
+                         for b in self.bufs]
+        self._to_prune = []
+        return n
 
     def _execute(self, arena, candidates):
         """The progenitor commits the council's divisions: parent retires,
@@ -236,7 +481,12 @@ class MixedStreamController:
                 new_classes.append(child)
                 new_bufs.append(b[child_side])
                 self._lineage[child.name] = c.cell_id
+                self._new_node(child.name, c.name)
                 names.append(child.name)
+            for p in self._watch:                # fresh follows the children
+                if c.name in p.lineage:
+                    p.lineage.discard(c.name)
+                    p.lineage.update(names)
             records.append((names[0], names[1], d, floor))
         self.classes, self.bufs = new_classes, new_bufs
         return len(divided), records
@@ -283,14 +533,18 @@ class MixedStreamController:
             if c.cell_id >= 0:
                 arena.engagement[c.cell_id] = float(len(b))
 
-    def _report(self, arena, event, name, status, grow, n_div) -> MeetingReport:
+    def _report(self, arena, event, name, status, grow, n_div, *,
+                spawns: int = 0, pruned: int = 0) -> MeetingReport:
         self._refresh(arena)
         reset(arena, self.receptor_ids)
+        if self.composer_cells:
+            reset(arena, torch.tensor(self.composer_cells))
         self.periods += 1
         return MeetingReport(self.periods, None, event, name,
                              n_read=int(self.read_mask.sum()),
                              status=status, grow=grow,
-                             divisions=n_div, census=census(arena))
+                             divisions=n_div, census=census(arena),
+                             spawns=spawns, pruned=pruned)
 
     # ── readouts ──────────────────────────────────────────────────
 
@@ -301,10 +555,17 @@ class MixedStreamController:
     def pockets_of(self, x: torch.Tensor) -> torch.Tensor:
         """Per-sample canonical-frame pockets through the substrate path —
         no deposits, no window, frame registry untouched (frozen-world
-        eval)."""
+        eval). Composed dims read from the spawned cells' forward-path
+        activations through their static frames."""
         if self.codec is not None:
             x = self.codec(x)
         self.substrate.forward(x)
         sched = self.substrate.scheduler
-        return self._canonical(sched._last_receptor_q,
-                               sched._last_receptor_frame)
+        qr = self._canonical(sched._last_receptor_q,
+                             sched._last_receptor_frame)
+        if not self.composer_cells:
+            return qr
+        act = sched._last_activations[:, self.composer_cells]
+        qc = torch.stack([self.specs[k].quantize(act[:, k])
+                          for k in range(len(self.specs))], dim=1)
+        return torch.cat([qr, qc], dim=1)

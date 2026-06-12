@@ -55,20 +55,30 @@ def circ_2means(phi: torch.Tensor, iters: int = 10) -> torch.Tensor:
     return side == 1
 
 
-def try_divide(Z: torch.Tensor) -> Optional[Tuple[torch.Tensor, int]]:
+def try_divide(Z: torch.Tensor,
+               tries: int = 1) -> Optional[Tuple[torch.Tensor, int]]:
     """The split-vs-keep judgment on one class's buffered phasors
     [n, F]. Returns (side mask, split dim) when the division is
-    accepted, None when the buffer should stay whole."""
+    accepted, None when the buffer should stay whole.
+
+    `tries` (composer arm, design §4b item 4): how many dims to judge,
+    ascending coherence. The default 1 is the M2 worst-dim semantics
+    (byte-identical); the composer-enabled controller passes
+    DIV_TRIES=4 (the probe's loop) so spawned relational dims — rarely
+    the argmin — can be divided on. The BEST accepted split among the
+    tried dims wins (max child coherence)."""
     if len(Z) < MIN_MEMBERS:
         return None
     R = Z.mean(0).abs()
-    d = int(R.argmin())
-    side = circ_2means(torch.angle(Z[:, d]))
-    n_b = int(side.sum())
-    if min(len(Z) - n_b, n_b) < MIN_CHILD:
-        return None
-    r_a = float(Z[~side, d].mean().abs())
-    r_b = float(Z[side, d].mean().abs())
-    if min(r_a, r_b) > max(float(R[d]) + GAIN_D, NULL_SPLIT):
-        return side, d
-    return None
+    best, best_r = None, 0.0
+    for d in torch.argsort(R)[:tries].tolist():
+        side = circ_2means(torch.angle(Z[:, d]))
+        n_b = int(side.sum())
+        if min(len(Z) - n_b, n_b) < MIN_CHILD:
+            continue
+        r_a = float(Z[~side, d].mean().abs())
+        r_b = float(Z[side, d].mean().abs())
+        if min(r_a, r_b) > max(float(R[d]) + GAIN_D, NULL_SPLIT) \
+                and max(r_a, r_b) > best_r:
+            best, best_r = (side, d), max(r_a, r_b)
+    return best
