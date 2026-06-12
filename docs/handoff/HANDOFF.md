@@ -2,10 +2,10 @@
 
 **Session date:** 2026-06-12
 **Session number:** 033
-**Session title:** **M3+M4+M5+M6 ALL PASS — the rebuild is complete and
-SPEC'D (§10.6-10.10 amended, manual updated). Full stack on data_hard:
-raw 0.818 / σ 0.825 (M2 was 0.760). Architecture review artifact ready
-(`run_review.py`). Rocky reviewing the architecture next.**
+**Session title:** **M3-M6 ALL PASS + D18 merge consumer BUILT — and the
+remaining-gap hunt closed with a surprise: NO duplicates exist; the gap
+is the MODEL CLASS (kNN on our own pockets = 0.99 ≈ Bayes). D19 proposed:
+exemplar/mixture readout. WAITING on Rocky.**
 
 ---
 
@@ -110,11 +110,42 @@ raw 0.818 / σ 0.825 (M2 was 0.760). Architecture review artifact ready
   gene groups only differentiate via composer settlements; the
   fragmentation/merge lever for the remaining 0.83→0.99 gap.
 
+## D18 merge consumer (s033, Rocky's instruction) — BUILT; the gap RENAMED
+
+The merge consumer exists and is honest: a TWO-SAMPLE duplicate test
+(template cosine ≥ 0.8; per-dim standardized circular gap < 0.5 on
+EVERY dim; balanced-union try_divide veto), lineage-local pairs,
+survivor keeps both histories (union buffer + EXACT pooled sketch).
+Flag `merge=` on MixedStreamController, default OFF; everything
+byte-identical with it off. 104 tests + same 4 carries.
+
+**Three falsifications en route (recorded in division.py + D18 row):**
+inverted-try_divide alone is too permissive (−0.147); naive
+cat()[-BUF:] unions are degenerate (−0.265, the first-gate failure);
+and the fragmentation-gap hypothesis itself — **data_hard has NO
+duplicate fragments** (min standardized gap ~1.0σ over 1722 similar
+pairs; the honest merge fires ZERO times).
+
+**The 0.82→0.99 gap, fully decomposed by measurement:**
+duplicates 0.000 · template pollution +0.037 (oracle) · max→mixture
+readout ~0 · encoding ~0.003 (**kNN on our own canonical pockets =
+0.990-0.994 ≈ raw-space Bayes — the contrast encoding loses
+NOTHING**) · **the model class ~0.14**. Phasor-mean templates +
+diagonal sketches are too coarse for the mode geometry the pockets
+retain; the buffers already store the exemplars that prove it.
+
+**D19 (proposed, needs Rocky):** exemplar/mixture readout —
+`StreamingMixture` (K diag sub-clusters per class, already in
+`learning/manifold.py`) over pocket space as the compact native form
+of what kNN demonstrates; or buffer-exemplar evidence directly
+(hippocampus-style, storage-heavy). This is THE remaining accuracy
+lever on data_hard.
+
 ## Open questions / NEXT (priority order)
 
-1. **Architecture review outcomes (Rocky)** — then likely: the merge
-   consumer (D17's unbuilt half = the Bayes-gap lever), mixed.py split,
-   divide_tries default, dendrite settlement threshold.
+1. **Rocky: D19 decision** (exemplar/mixture readout — the measured
+   ~0.14 lever). Then: mixed.py split (~770 lines now), divide_tries
+   default, dendrite settlement threshold.
 2. **Small decisions for Rocky:** divide_tries=4 as the M2/default
    (+0.051 on data_hard)? Merge CONSUMER for families (collapse
    fragments a composed dim explains — D17's unbuilt half; now also the
