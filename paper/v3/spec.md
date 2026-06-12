@@ -3682,9 +3682,23 @@ boundary meeting from period 2; period 1 stays `PerceptionGenesis`.
   count, not absolute-zero windows (division discovers MODES; the
   purity map bundles them into truths).
 - **`divide_tries`** (s033): dims judged per division, ascending
-  coherence; default 1 (worst-dim). Worlds with pure-noise dims need
-  more — the worst dim is then always noise, rejected at the null
-  floor, and division never fires.
+  coherence; **default 4** (Rocky's ruling, s033b — worst-dim-only
+  never fires on worlds with pure-noise dims and under-discovers
+  everywhere; tries=1 reproduces the original M2 record).
+- **Membership-quality defaults [D20]** (s033b): membership ranks by
+  the resolver's margin E/σ; a per-sample margin gate (adaptive floor
+  GATE_FRAC·√(2W) — absolute thresholds are dimension-unsafe) refuses
+  low-margin members from buffers (they still deposit to lock-in); one
+  consolidation (EM) round per quiescent boundary re-settles old
+  members. ALL of it under **quiescence deferral**: the statistics
+  presume the read space represents the classes, which is FALSE during
+  relational discovery and for undiscovered rare truths (refusal
+  starves division's own food) — so the organism is credulous while
+  growing and skeptical once settled (SETTLE_STREAK growth-free
+  boundaries; per-class TRUST_R within the skeptical phase). The
+  proposed completion is the NURSERY [D21]: refused members accumulate
+  in an unlabeled divisible buffer, making "belongs to nothing I know
+  YET" a birthplace instead of a void.
 - **`freeze`** (s033): deployment mode — no divisions, no trials;
   membership, deposits, sketch updates and annealing continue.
 - The controller's full state (classes, buffers, lineage, composer

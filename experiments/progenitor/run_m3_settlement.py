@@ -94,7 +94,13 @@ def scenario_drain(seed: int) -> float:
     pg = PerceptionGenesis(sub)
     pg.feed(Xs[:WINDOW])
     sub.end_task()
-    mixed = MixedStreamController(sub, stress=pg.router, adopt=pg.controller)
+    # pinned to the configuration this gate was validated under (s033):
+    # the gate falsifies the SETTLEMENT PREDICATE [D13]; the membership-
+    # quality defaults (margin/consolidate/gate) reshuffle buffers and
+    # change the success RATE without touching the predicate's semantics
+    mixed = MixedStreamController(sub, stress=pg.router, adopt=pg.controller,
+                                  divide_tries=1, member_margin=False,
+                                  consolidate=False, gate_k=0.0)
     mixed.observe(Xs[:WINDOW])
     sub.end_task()
 

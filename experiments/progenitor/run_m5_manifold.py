@@ -157,8 +157,7 @@ def part_b(seed: int, *, manifold: bool):
     fresh draws; raw-readout accuracy at the end of each epoch."""
     sub, mixed, (Xs, ys), (Xt, yt), spec = grow(seed, manifold=manifold)
     mixed.freeze = True
-    truth_of = mapping_of(mixed, Xs, ys)
-    accs = [read_raw(mixed, truth_of, Xt, yt)]
+    accs = [read_raw(mixed, mapping_of(mixed, Xs, ys), Xt, yt)]
     for epoch in range(2):
         _, norm = sample(spec, n_per_class=S_PERIOD, seed=seed)
         ep, _ = sample(spec, n_per_class=S_PERIOD,
@@ -169,7 +168,10 @@ def part_b(seed: int, *, manifold: bool):
         for w0 in range(0, len(Xe), WINDOW):
             mixed.observe(Xe[w0:w0 + WINDOW])
             sub.end_task()
-        accs.append(read_raw(mixed, truth_of, Xt, yt))
+        # the truth map is INDEXED BY CLASS POSITION: consolidation can
+        # retire/merge classes under freeze, so remap before every read
+        # (a stale cached map collapsed a seed to ~0.24, s033)
+        accs.append(read_raw(mixed, mapping_of(mixed, Xs, ys), Xt, yt))
     return accs
 
 

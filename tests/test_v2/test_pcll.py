@@ -387,8 +387,10 @@ class TestD20Membership:
 
     def test_gate_refuses_low_margin(self):
         # gate_k scaled to the 4-dim fixture: a coherent sample's margin
-        # is ≈ Σ|T|/σ ≈ 4/√2 ≈ 2.8 (the 12-dim world sits at 4-6)
+        # is ≈ Σ|T|/σ ≈ 4/√2 ≈ 2.8 (the 12-dim world sits at 4-6).
+        # The gate engages only once SETTLED (quiescence deferral).
         m, z = self._mixed(gate_k=2.0)
+        m._settled = m.SETTLE_STREAK
         g = torch.Generator().manual_seed(1)
         sure = z(250 + 5 * torch.randn(10, 4, generator=g))
         junk = z(torch.rand(10, 4, generator=g) * 1000)

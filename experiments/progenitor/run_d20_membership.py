@@ -117,8 +117,17 @@ def main() -> None:
               f"(per seed: {' '.join(f'{a:.3f}' for a in accs)})")
 
     base, full = results["baseline"][0], results["D20-full"][0]
-    assert full > base + 0.02, (
-        f"D20 triplet lift {full - base:+.3f} below floor")
+    # re-pinned under the FINAL quiescence-deferred semantics (s033):
+    # the in-discovery accuracy lift belonged to always-on gating, which
+    # broke relational discovery (testbed 0.53) and rare-truth coverage
+    # (28/32) — both M-gate contract violations. Under deferral the
+    # triplet's deliverables are STRUCTURE (purity up, classes down,
+    # boundedness) at non-inferior accuracy, plus the reject readout.
+    assert full >= base - 0.01, (
+        f"D20 triplet hurts accuracy {full - base:+.3f}")
+    assert results["D20-full"][1] > results["baseline"][1], "no purity gain"
+    assert results["D20-full"][2] < results["baseline"][2], (
+        "no class-count reduction")
 
     # ── (c) the reject readout: nonsense vs clean ─────────────────
     mixed, truth_of, te, clean = keep_last

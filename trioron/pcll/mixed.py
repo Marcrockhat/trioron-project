@@ -72,17 +72,23 @@ class MixedStreamController:
     def __init__(self, substrate: Substrate, *,
                  stress=None, adopt: Optional[PCLLController] = None,
                  composer: bool = False,
-                 divide_tries: int = 1,
+                 divide_tries: int = 4,
                  manifold: bool = False,
                  merge: bool = False,
-                 consolidate: bool = False,
-                 gate_k: float = 0.0,
-                 member_margin: bool = False) -> None:
-        # divide_tries: dims judged per division (ascending coherence).
-        # The default 1 is the M2 worst-dim semantics (byte-identical).
-        # Worlds with pure-noise dims need > 1 — the worst dim is then
-        # ALWAYS noise (rejected by the NULL_SPLIT floor) and division
-        # never fires (M4 gate finding, s033).
+                 consolidate: bool = True,
+                 gate_k: Optional[float] = None,
+                 member_margin: bool = True) -> None:
+        # MEMBERSHIP-QUALITY DEFAULTS (Rocky's ruling, s033; M2
+        # baseline re-recorded). The factorial said the pieces only
+        # work TOGETHER, and the re-record proved it the hard way: the
+        # bare pair (margin + tries=4) over-fragments past the world's
+        # true mode count (103 > 96 — an M2 self-arrest violation)
+        # because nothing refuses spray or retires husks. The default
+        # is therefore the full validated stack: divide_tries=4 +
+        # member_margin + consolidate + gate_k=3. Growth arms
+        # (composer/merge/manifold) stay opt-in — they have their own
+        # gates. tries=1 + member_margin=False + consolidate=False +
+        # gate_k=0 reproduces the pre-s033 M2 numbers exactly.
         self.substrate = substrate
         self.stress = stress
         self.divide_tries = divide_tries
@@ -159,19 +165,36 @@ class MixedStreamController:
         #     of the measured headroom (probe: 0.82 → ~0.89 at the
         #     fixed point). The dream-cycle shape in PCLL space.
         # (b) gate_k: per-sample margin floor at membership — a window
-        #     sample whose best margin E/σ < gate_k joins NO buffer
-        #     ("belongs to nothing I know"); it still deposits to the
-        #     lock-in rows (refusal is about buffers, not evidence).
-        #     Probe: margins are large (refusal 0% to K=3); K=4 purges
-        #     hard but starves rare buffers — gate gently.
+        #     sample whose best margin E/σ < the threshold joins NO
+        #     buffer ("belongs to nothing I know"); it still deposits
+        #     to the lock-in rows (refusal is about buffers, not
+        #     evidence). gate_k=None (the default) is ADAPTIVE: a
+        #     perfectly coherent sample's margin ceiling is ≈ √(2W) for
+        #     read width W, so the floor is GATE_FRAC·√(2W) — an
+        #     absolute number is dimension-UNSAFE (3.0 worked at W=12,
+        #     ceiling 4.9, but chokes a W=5 world, ceiling 3.2 — the
+        #     s033 re-record found this). gate_k=0 disables; an
+        #     explicit number is absolute.
         # (c) member_margin: rank membership by the resolver's margin
         #     E/σ instead of raw E — the resolve.py semantics applied
-        #     to assignment. Found by accident (s033), measured
-        #     load-bearing; default False so M2 stays byte-identical
-        #     until Rocky rules on the default.
+        #     to assignment (raw E is biased toward broad strong
+        #     templates; the margin asks "how surprising under YOUR
+        #     null"). DEFAULT True (Rocky's ruling, s033).
+        # QUIESCENCE DEFERRAL (the s033 re-record's deepest finding):
+        # margin and gate presume the read space already REPRESENTS
+        # the classes — true once structure settles, FALSE during
+        # relational discovery (a class whose coherence lives in
+        # not-yet-composed dims has weak templates and low margins; an
+        # always-on gate refuses exactly the members its buffers
+        # needed: testbed 0.729 → 0.53). So the organism is CREDULOUS
+        # while growing and SKEPTICAL once settled: margin + gate
+        # activate after SETTLE_STREAK growth-free boundaries and
+        # stand down whenever growth resumes. Consolidation is already
+        # post-quiescence by construction.
         self.consolidate = consolidate
-        self.gate_k = gate_k
+        self.gate_k = gate_k          # None = adaptive (see _gate_floor)
         self.member_margin = member_margin
+        self._settled = 0             # consecutive growth-free boundaries
         substrate.attach_pcll(self)
 
     def _new_node(self, name: str, parent_name: Optional[str]) -> None:
@@ -311,9 +334,12 @@ class MixedStreamController:
         if self.merge and not self.freeze:
             n_merge = self._merges(arena, tries)
         if n_div == 0 and n_spawn == 0:            # post-quiescence
+            self._settled += 1                     # skepticism approaches
             if self.consolidate:
                 self._consolidate()                # settle membership [D20a]
             self._anneal()                         # then re-anchor [D15]
+        else:
+            self._settled = 0                      # growth → stay credulous
 
         return self._report(arena, "match", None, status, grow, n_div,
                             spawns=n_spawn, pruned=n_pruned,
@@ -347,9 +373,45 @@ class MixedStreamController:
         T = torch.stack([b.mean(0) for b in self.bufs])
         E = (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1)
         sig = ((T.abs() ** 2).sum(-1) / 2).sqrt().clamp_min(1e-9)
-        best = (E / sig).argmax(1) if self.member_margin else E.argmax(1)
+        use_margin = self.member_margin and self._skeptical
+        best = (E / sig).argmax(1) if use_margin else E.argmax(1)
         marg = (E / sig).gather(1, best.unsqueeze(1)).squeeze(1)
         return best, marg
+
+    GATE_FRAC = 0.6     # adaptive gate floor as a fraction of the coherent
+                        # ceiling √(2W) — 0.6 reproduces the validated
+                        # absolute 3.0 at the 12-dim probe (ceiling 4.9)
+    SETTLE_STREAK = 2   # growth-free boundaries before skepticism engages
+
+    @property
+    def _skeptical(self) -> bool:
+        """Quiescence deferral: margin ranking + the membership gate
+        engage only once structure has settled (see constructor note)."""
+        return self._settled >= self.SETTLE_STREAK
+
+    def _gate_floor(self, width: int) -> float:
+        """The margin floor [D20b]: explicit gate_k (0 disables), or
+        GATE_FRAC of the coherent-sample ceiling √(2W) — dimension-safe.
+        Zero until quiescence: refusal starves DISCOVERY itself — a
+        refused member can never seed a new class because division (the
+        only birth path) feeds on buffered members; an always-on gate
+        dropped truth coverage to 28/32 (s033). Within the skeptical
+        phase, TRUST_R additionally restricts refusal to classes whose
+        own templates are coherent. The complete answer — refused
+        members accumulate in a divisible NURSERY — is D21, proposed."""
+        if not self._skeptical:
+            return 0.0
+        if self.gate_k is not None:
+            return self.gate_k
+        return self.GATE_FRAC * math.sqrt(2 * width)
+
+    TRUST_R = 0.8   # a class refuses members only when its own template
+                    # is this coherent — refusal requires a trustworthy
+                    # model of what membership looks like. Weak-template
+                    # classes (relational structure awaiting composed
+                    # dims) stay credulous PER CLASS, so axis-separable
+                    # worlds gate early while relational discovery is
+                    # never starved (the s033 two-world tension).
 
     def _assign(self, Z: torch.Tensor) -> Optional[torch.Tensor]:
         """Matched-filter membership against buffer-mean templates.
@@ -359,9 +421,12 @@ class MixedStreamController:
         if not len(Z):
             return None
         member, marg = self._margins(Z)
-        if self.gate_k > 0:
-            member = torch.where(marg >= self.gate_k, member,
-                                 torch.full_like(member, -1))
+        floor = self._gate_floor(Z.shape[1])
+        if floor > 0:
+            T = torch.stack([b.mean(0) for b in self.bufs])
+            trusted = T.abs().mean(-1) > self.TRUST_R   # per class
+            member = torch.where(~trusted[member] | (marg >= floor),
+                                 member, torch.full_like(member, -1))
         for k in range(len(self.bufs)):
             zk = Z[member == k]
             if len(zk):
@@ -649,11 +714,17 @@ class MixedStreamController:
         sizes = torch.tensor([len(b) for b in self.bufs])
         M = torch.cat(self.bufs)
         member, marg = self._margins(M)
-        if self.gate_k > 0:
-            member = torch.where(marg >= self.gate_k, member,
-                                 torch.full_like(member, -1))
         home = torch.repeat_interleave(
             torch.arange(len(self.bufs)), sizes)
+        floor = self._gate_floor(M.shape[1])
+        if floor > 0:
+            # refusal is not evidence of non-existence: a low-margin OLD
+            # member returns HOME rather than being purged — gating
+            # inside consolidation otherwise shrinks weak classes below
+            # the husk floor and cascades them into retirement (an M5
+            # freeze-run collapsed to ~0, s033). The purge lives at
+            # stream ingress only.
+            member = torch.where(marg >= floor, member, home)
         moved = int((member != home).sum())
         if moved == 0:
             return 0
