@@ -424,6 +424,22 @@ class MixedStreamController:
         self._refresh(arena)
         return "birth", world.name
 
+    @staticmethod
+    def _evidence(Z: torch.Tensor, T: torch.Tensor) -> torch.Tensor:
+        """Matched-filter evidence E[i,k] = Σ_f Re(Z[i,f]·T̄[k,f]),
+        row-chunked: BIT-IDENTICAL to the full broadcast (each (i,k)
+        sum is over F in the same order; chunking only partitions
+        rows) with bounded peak memory — the full intermediate at
+        image scale (51k pooled members × 128 classes × 128 dims,
+        complex64) is ~6.7 GB and killed WSL2 headroom [s034]."""
+        rows = max(1, int(25_000_000 / max(1, T.shape[0] * T.shape[1])))
+        if len(Z) <= rows:
+            return (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1)
+        return torch.cat([
+            (Z[i:i + rows].unsqueeze(1) * T.conj().unsqueeze(0))
+            .real.sum(-1)
+            for i in range(0, len(Z), rows)])
+
     def _margins(self, Z: torch.Tensor):
         """Per-row (raw-E best class, that class's margin) — the
         matched-filter argmax (the M2 membership semantics, kept
@@ -433,7 +449,7 @@ class MixedStreamController:
         resolver's own ranking) measured +0.051 on the M2 gate — a
         candidate default change, not taken silently."""
         T = torch.stack([b.mean(0) for b in self.bufs])
-        E = (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1)
+        E = self._evidence(Z, T)
         sig = ((T.abs() ** 2).sum(-1) / 2).sqrt().clamp_min(1e-9)
         use_margin = self.member_margin and self._skeptical
         best = (E / sig).argmax(1) if use_margin else E.argmax(1)
@@ -566,7 +582,7 @@ class MixedStreamController:
             if len(lab) >= LabelTapBank.LABEL_TRUST_N:
                 frac[k] = torch.bincount(lab, minlength=V).float() / len(lab)
         T = torch.stack([b.mean(0) for b in self.bufs])
-        E = (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1)
+        E = self._evidence(Z, T)
         sig = ((T.abs() ** 2).sum(-1) / 2).sqrt().clamp_min(1e-9)
         S = E / sig if (self.member_margin and self._skeptical) else E
         member = member.clone()

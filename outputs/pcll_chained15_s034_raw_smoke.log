@@ -1,0 +1,25 @@
+PCLL organism on chained-15 — single pass, no gradients, labels at 100% (D22 defaults), manifold=on, window=1000, seeds=1
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+  [task  1/15 mnist_0_1] classes=4 t=3s
+  [task  2/15 mnist_2_3] classes=84 t=9s
+  [task  3/15 mnist_4_5] classes=111 t=30s
+  [task  4/15 mnist_6_7] classes=128 t=57s
+  [task  5/15 mnist_8_9] classes=128 t=100s
+  [task  6/15 fashion_mnist_0_1] classes=128 t=172s
+  [task  7/15 fashion_mnist_2_3] classes=128 t=266s
+  [task  8/15 fashion_mnist_4_5] classes=128 t=377s
+  [task  9/15 fashion_mnist_6_7] classes=128 t=496s
+  [task 10/15 fashion_mnist_8_9] classes=128 t=625s
+  [task 11/15 emnist_letters_0_1] classes=128 t=738s
+  [task 12/15 emnist_letters_2_3] classes=128 t=842s
+  [task 13/15 emnist_letters_4_5] classes=128 t=940s
+  [task 14/15 emnist_letters_6_7] classes=128 t=1042s
+  [task 15/15 emnist_letters_8_9] classes=128 t=1143s
+  per-task: 0.46 0.49 0.64 0.48 0.51 0.83 0.68 0.88 0.82 0.98 0.50 0.00 0.50 0.00 0.50
+[seed 0] task_aware=0.552  full=0.172  classes=128 (0 unnamed)  elapsed=1148s
+exit=0
