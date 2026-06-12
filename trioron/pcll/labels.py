@@ -221,6 +221,25 @@ class LabelTapBank:
         tot = sum(d.values())
         return {lab: n / tot for lab, n in d.items()} if tot > 0 else {}
 
+    LABEL_TRUST_N = 3      # labeled deposits before a class's majority
+                           # is trusted for SUPERVISED routing (1-2
+                           # labels confabulate a majority)
+    LABEL_TRUST_FRAC = 0.6  # ...and the majority must DOMINATE: a thin
+                            # majority on a polluted class locks in the
+                            # polluter's label and self-fulfils
+                            # (measured, s034b: 5% coverage strict
+                            # 0.829 -> 0.806 without this)
+
+    def majority_of(self, name: str) -> Optional[str]:
+        """The class's trusted majority label, or None while immature
+        or contested."""
+        d = self.class_counts.get(name, {})
+        tot = sum(d.values())
+        if tot < self.LABEL_TRUST_N:
+            return None
+        lab = max(d, key=d.get)
+        return lab if d[lab] / tot >= self.LABEL_TRUST_FRAC else None
+
     # ── persistence (rides MixedStreamController.state_dict) ──────
 
     def state_dict(self) -> dict:

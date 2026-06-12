@@ -72,6 +72,24 @@ MEASURED VERDICT (s034 first cut):
    allowing the discovered blend class + set credit sidesteps the
    chicken/duck confusion every single-label namer must eat — Rocky's
    "allow such new class" insight, quantified.
+ * E (label-supervised consolidation, s034c, Rocky-approved DEFAULT):
+   the law-1 lever, engaged. Per-member label tags ride the buffers
+   (division/merge/consolidation/annealing); a labeled row EVACUATES
+   a class when its label holds < SUPERVISE_FRAC of the class's
+   tagged members, moving to its label's best mature home — at
+   ingress and inside the EM round. Single-label strict on data_hard:
+   0.829 -> 0.957 at 100% coverage (= the former set-metric oracle,
+   now honest single-label; Bayes 0.993), 0.873 at 20%, baseline
+   +-0.007 at 1-5%; purity 0.740 -> 0.813; classes 91 <= the 96-mode
+   bound; internal naming = strict (0.957). THREE FALSIFIED RULES on
+   the way (all measured): move-from-immature classes lets one
+   early-matured class vacuum its label across all modes (naming
+   0.752 -> 0.299); rescuing REFUSED rows force-feeds spray past the
+   D20 gate (strict -0.023 at 5%); ledger-based majorities are
+   staleness-capped at ~0.45-0.59 fractions (zero mature classes) —
+   routing majorities must come from buffer TAGS. Genuine blends
+   (taxonomy chicken-duck at 0.48/0.49) are correctly LEFT INTACT:
+   their members are nobody's minority.
 
 Run: python3 -m experiments.progenitor.run_label_taps
 """
@@ -95,9 +113,12 @@ MIX_TH = 0.20      # composition fraction to count as a blend partner
 BETA_TH = 0.20
 
 
-def grow_labeled(seed: int, coverage: Optional[float]):
+def grow_labeled(seed: int, coverage: Optional[float],
+                 supervise: bool = False):
     """The M2 default-stack protocol with the annotation carrier.
-    coverage=None -> labels argument omitted entirely (gate A arm 1)."""
+    coverage=None -> labels argument omitted entirely (gate A arm 1).
+    supervise -> label_supervise (s034b; the controller default is ON,
+    arms pass it explicitly so each gate states its configuration)."""
     torch.manual_seed(seed)
     spec = make_spec()
     tr, norm = sample(spec, n_per_class=S_PERIOD, seed=seed)
@@ -116,7 +137,8 @@ def grow_labeled(seed: int, coverage: Optional[float]):
     sub = construct(germline_base, capacity=512)
     pg = PerceptionGenesis(sub)
     pg.feed(Xs[:WINDOW]); sub.end_task()
-    mixed = MixedStreamController(sub, stress=pg.router, adopt=pg.controller)
+    mixed = MixedStreamController(sub, stress=pg.router, adopt=pg.controller,
+                                  label_supervise=supervise)
 
     def lab_slice(a, b):
         return None if labs is None else labs[a:b]
@@ -175,9 +197,13 @@ def pr_vs_oracle(label_sets, osets, truth_of):
 
 
 def gate_a() -> None:
-    print("── A. non-disturbance: labels OFF vs 100% coverage, seed 0 ──")
+    """Non-disturbance, redefined for s034b: ANNOTATION (supervise off)
+    must be bit-identical to labels-off; SUPERVISION (default ON) is
+    the deliberate, gated touch and must not regress strict accuracy."""
+    print("── A. non-disturbance: OFF vs annotate-only vs supervised, "
+          "seed 0, 100% coverage ──")
     m0, _, (Xt, yt), _ = grow_labeled(0, None)
-    m1, (Xs, ys), _, names = grow_labeled(0, 1.0)
+    m1, (Xs, ys), _, names = grow_labeled(0, 1.0, supervise=False)
     T0, T1 = m0.templates(), m1.templates()
     assert len(m0.classes) == len(m1.classes), "class count diverged"
     assert T0.shape == T1.shape and bool(torch.equal(T0, T1)), \
@@ -188,9 +214,18 @@ def gate_a() -> None:
     a1 = float((truth0[predict(m1, T1, Xt)] == yt).float().mean())
     assert a0 == a1, (a0, a1)
     n_lab = int(m1.label_taps.counts.sum())
-    print(f"  {len(m0.classes)} classes, templates BIT-IDENTICAL, "
-          f"clean acc {a0:.3f} == {a1:.3f} "
-          f"({n_lab} labeled deposits absorbed)\n  GATE A PASS")
+    print(f"  annotate-only: {len(m0.classes)} classes, templates "
+          f"BIT-IDENTICAL, clean acc {a0:.3f} == {a1:.3f} "
+          f"({n_lab} labeled deposits absorbed)")
+    ms, (Xs2, ys2), (Xt2, yt2), names2 = grow_labeled(0, 1.0,
+                                                      supervise=True)
+    Ts = ms.templates()
+    truth_s = composition(ms, Xs2, ys2, C)[1].argmax(1)
+    a2 = float((truth_s[predict(ms, Ts, Xt2)] == yt2).float().mean())
+    print(f"  supervised:    {len(ms.classes)} classes, clean acc "
+          f"{a2:.3f} (vs {a0:.3f} unsupervised)")
+    assert a2 >= a0 - 0.01, f"supervision regressed accuracy {a0}->{a2}"
+    print("  GATE A PASS")
 
 
 def gate_b() -> None:
@@ -307,6 +342,53 @@ def gate_d() -> None:
     print("  GATE D PASS")
 
 
+def gate_e() -> None:
+    """Label-supervised consolidation [s034b]: the single-label
+    (strict) accuracy is THE metric — the law-1 gap supervision was
+    built to attack (annotation alone cannot move it by design)."""
+    print("\n── E. label-supervised consolidation (data_hard, "
+          f"{SEEDS} seeds; clean Bayes 0.993) ──")
+    print(f"  {'cov':>5s} {'strict':>6s} {'cnt-1ry':>7s} "
+          f"{'rel-cnt':>7s} {'oracle':>6s} {'purity':>6s} {'cls':>4s}")
+    base_strict = None
+    rows = {}
+    for cov in (0.0,) + COVERAGES:
+        accs = dict(strict=[], prim=[], cnt=[], orac=[], pur=[], ncl=[])
+        for seed in range(SEEDS):
+            mixed, (Xs, ys), (Xt, yt), names = grow_labeled(
+                seed, cov, supervise=True)
+            C = len(names)
+            T, counts = composition(mixed, Xs, ys, C)
+            truth_of = counts.argmax(1)
+            pred = predict(mixed, T, Xt)
+            csets, cprim = count_sets(mixed, names)
+            accs["strict"].append(
+                float((truth_of[pred] == yt).float().mean()))
+            accs["prim"].append(float((cprim[pred] == yt).float().mean()))
+            accs["cnt"].append(rel_acc(pred, yt, csets))
+            accs["orac"].append(rel_acc(pred, yt, oracle_sets(counts)))
+            tot = counts.sum(1).clamp_min(1)
+            pur = (counts.max(1).values / tot)[counts.sum(1) > 0]
+            accs["pur"].append(float(pur.mean()))
+            accs["ncl"].append(len(mixed.classes))
+        m = {k: sum(v) / len(v) for k, v in accs.items()}
+        rows[cov] = m
+        if cov == 0.0:
+            base_strict = m["strict"]
+        print(f"  {cov:>5.0%} {m['strict']:>6.3f} {m['prim']:>7.3f} "
+              f"{m['cnt']:>7.3f} {m['orac']:>6.3f} {m['pur']:>6.3f} "
+              f"{m['ncl']:>4.0f}")
+    # the gate: 0% coverage reproduces the unsupervised baseline; full
+    # coverage must lift the single-label metric the annotation arms
+    # could not touch
+    assert abs(base_strict - 0.829) < 0.02, (
+        f"0% arm drifted from the M2 baseline: {base_strict:.3f}")
+    assert rows[1.0]["strict"] > base_strict, (
+        f"supervision does not lift strict accuracy "
+        f"({rows[1.0]['strict']:.3f} vs {base_strict:.3f})")
+    print("  GATE E PASS")
+
+
 def gate_c(coverage: float = 0.05, seed: int = 0) -> None:
     print(f"\n── C. taxonomy descriptors at {coverage:.0%} coverage ──")
     torch.manual_seed(seed)
@@ -381,6 +463,7 @@ def main() -> None:
     gate_a()
     gate_b()
     gate_d()
+    gate_e()
     gate_c(0.05)
     gate_c(1.00)
 

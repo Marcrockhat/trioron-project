@@ -78,7 +78,8 @@ class MixedStreamController:
                  merge: bool = False,
                  consolidate: bool = True,
                  gate_k: Optional[float] = None,
-                 member_margin: bool = True) -> None:
+                 member_margin: bool = True,
+                 label_supervise: bool = True) -> None:
         # MEMBERSHIP-QUALITY DEFAULTS (Rocky's ruling, s033; M2
         # baseline re-recorded). The factorial said the pieces only
         # work TOGETHER, and the re-record proved it the hard way: the
@@ -200,6 +201,20 @@ class MixedStreamController:
         # Labels as reference carriers (labels.py): born lazily on the
         # first labeled observe() row; write-only from learning's side.
         self.label_taps: Optional[LabelTapBank] = None
+        # ── label-supervised consolidation [s034b, DEFAULT ON] ────
+        # The first deliberate label->learning touch (Rocky's ruling):
+        # a LABELED member routes to the best-matched class whose
+        # TRUSTED majority label matches its own — at ingress and
+        # inside consolidation — overriding the matched filter and the
+        # margin gate (a label is EVIDENCE, not a statistic, so
+        # quiescence deferral does not apply; the maturity floor
+        # LABEL_TRUST_N guards cold majorities instead). Members carry
+        # per-member label tags (self.tags, parallel to self.bufs)
+        # through division/merge/consolidation/annealing. With no
+        # labels supplied everything reduces to the pre-s034b path
+        # exactly (gate A).
+        self.label_supervise = label_supervise
+        self.tags: List[torch.Tensor] = []        # per-class member tags
         substrate.attach_pcll(self)
 
     def _new_node(self, name: str, parent_name: Optional[str]) -> None:
@@ -296,18 +311,25 @@ class MixedStreamController:
             if self.label_taps is None:
                 self.label_taps = LabelTapBank(len(self.receptor_ids))
             self.label_taps.deposit(q, window_labels)
+        # per-row label tags (vocab indices; -1 = unlabeled) — the
+        # deposit above registered any new labels in the vocab
+        tag_row = torch.full((len(q),), -1, dtype=torch.long)
+        if self.label_taps is not None:
+            for i, lab in enumerate(window_labels):
+                if lab is not None:
+                    tag_row[i] = self.label_taps.vocab.get(lab, -1)
         Z = torch.exp(1j * 2 * math.pi * q / N_QUANTA)
 
         if not self.bufs:                          # genesis: the world-blur
             self._frozen = True                    # world extremes = the frame
-            event, name = self._genesis(arena, Z)
+            event, name = self._genesis(arena, Z, tag_row)
             status = EMPTY if empty else RESOLVED  # birth = comprehension
             if self.stress is not None:
                 self.stress.settle(status)
                 self.stress.decide(status)
             return self._report(arena, event, name, status, None, 0)
 
-        member = self._assign(Z)                   # members → rolling buffers
+        member = self._assign(Z, tag_row)          # members → rolling buffers
         # (class x label) counts [s034]: membership and labels are
         # aligned here — annotate the class each labeled row joined
         # (refused rows skip). Write-only, like the taps above.
@@ -383,7 +405,8 @@ class MixedStreamController:
 
     # ── the steps ─────────────────────────────────────────────────
 
-    def _genesis(self, arena, Z: torch.Tensor):
+    def _genesis(self, arena, Z: torch.Tensor,
+                 tags: Optional[torch.Tensor] = None):
         """Birth (or adopt) the one blurred world-class."""
         if self._world is not None:
             world = self._world
@@ -394,6 +417,9 @@ class MixedStreamController:
                                  self.read_mask.clone())
         self.classes = [world]
         self.bufs = [Z[-BUF:]]
+        self.tags = [tags[-len(self.bufs[0]):].clone() if tags is not None
+                     else torch.full((len(self.bufs[0]),), -1,
+                                     dtype=torch.long)]
         self._new_node(world.name, None)
         self._refresh(arena)
         return "birth", world.name
@@ -441,6 +467,15 @@ class MixedStreamController:
             return self.gate_k
         return self.GATE_FRAC * math.sqrt(2 * width)
 
+    SUPERVISE_FRAC = 0.4   # a labeled row evacuates its class when its
+                           # label holds less than this fraction of the
+                           # class's tagged members. Swept on the E
+                           # gate (data_hard, 3 seeds, 100%-coverage
+                           # strict): 0.2 -> 0.895, 0.3 -> 0.921,
+                           # 0.4 -> 0.957 (peak), 0.5 -> 0.950 (starts
+                           # evacuating genuine blend members); the 5%
+                           # arm stays at baseline +-0.007 throughout
+
     TRUST_R = 0.8   # a class refuses members only when its own template
                     # is this coherent — refusal requires a trustworthy
                     # model of what membership looks like. Weak-template
@@ -449,13 +484,18 @@ class MixedStreamController:
                     # worlds gate early while relational discovery is
                     # never starved (the s033 two-world tension).
 
-    def _assign(self, Z: torch.Tensor) -> Optional[torch.Tensor]:
+    def _assign(self, Z: torch.Tensor,
+                tags: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
         """Matched-filter membership against buffer-mean templates.
         Returns the per-row class index (−1 = refused by the margin
         gate [D20b]: the sample belongs to nothing known well enough
-        to teach a buffer; its lock-in deposit already happened)."""
+        to teach a buffer; its lock-in deposit already happened).
+        Labeled rows are then SUPERVISED [s034b]: routed to the best
+        class whose trusted majority matches their label — overriding
+        the filter verdict AND the gate (a label is evidence)."""
         if not len(Z):
             return None
+        self._sync_tags()
         member, marg = self._margins(Z)
         floor = self._gate_floor(Z.shape[1])
         if floor > 0:
@@ -463,10 +503,96 @@ class MixedStreamController:
             trusted = T.abs().mean(-1) > self.TRUST_R   # per class
             member = torch.where(~trusted[member] | (marg >= floor),
                                  member, torch.full_like(member, -1))
+        member = self._supervise(Z, member, tags)
+        if tags is None:
+            tags = torch.full((len(Z),), -1, dtype=torch.long)
         for k in range(len(self.bufs)):
-            zk = Z[member == k]
-            if len(zk):
-                self.bufs[k] = torch.cat([self.bufs[k], zk])[-BUF:]
+            m = member == k
+            if bool(m.any()):
+                self.bufs[k] = torch.cat([self.bufs[k], Z[m]])[-BUF:]
+                self.tags[k] = torch.cat([self.tags[k], tags[m]])[-BUF:]
+        return member
+
+    def _sync_tags(self) -> None:
+        """Tags lazily mirror the buffers: tests and probes build
+        `bufs` directly — any class whose tag tensor is missing or
+        misaligned gets an all-unlabeled (−1) one."""
+        self.tags = [
+            (self.tags[k] if k < len(self.tags)
+             and len(self.tags[k]) == len(b)
+             else torch.full((len(b),), -1, dtype=torch.long))
+            for k, b in enumerate(self.bufs)]
+
+    def _majorities(self) -> torch.Tensor:
+        """Per-class trusted majority label for ROUTING, as a vocab
+        index (−1 = immature or contested). Read from the CURRENT
+        BUFFER TAGS, not the lifetime ledger: the ledger carries
+        deposit-time staleness + division-inheritance smearing, which
+        caps its majority fractions at ~0.45-0.59 on data_hard — below
+        any sane dominance floor (measured, s034b: ledger majorities
+        gave ZERO mature classes at 100% coverage). Tags are exact and
+        buffer-resident; the ledger remains the NAMING readout."""
+        out = []
+        for t in self.tags:
+            lab = t[t >= 0]
+            if len(lab) < LabelTapBank.LABEL_TRUST_N:
+                out.append(-1)
+                continue
+            vals, cnts = lab.unique(return_counts=True)
+            i = int(cnts.argmax())
+            frac = float(cnts[i]) / float(len(lab))
+            out.append(int(vals[i])
+                       if frac >= LabelTapBank.LABEL_TRUST_FRAC else -1)
+        return torch.tensor(out, dtype=torch.long)
+
+    def _supervise(self, Z: torch.Tensor, member: torch.Tensor,
+                   tags: Optional[torch.Tensor]) -> torch.Tensor:
+        """[s034b] Labeled rows whose current class disagrees with
+        their label move to the best-matched class whose trusted
+        majority MATCHES it (ranking semantics of _margins). Rows
+        whose label has no mature home anywhere keep their filter
+        verdict — supervision never invents classes (division does)."""
+        if (not self.label_supervise or self.label_taps is None
+                or tags is None or not bool((tags >= 0).any())):
+            return member
+        maj = self._majorities()
+        # per-class tag composition: frac[k, v] of class k's TAGGED
+        # members carrying label v (rows with < TRUST_N tags count as
+        # immature — nothing evacuates from them)
+        V = len(self.label_taps.vocab)
+        frac = torch.full((len(self.bufs), V), -1.0)
+        for k, tk in enumerate(self.tags):
+            lab = tk[tk >= 0]
+            if len(lab) >= LabelTapBank.LABEL_TRUST_N:
+                frac[k] = torch.bincount(lab, minlength=V).float() / len(lab)
+        T = torch.stack([b.mean(0) for b in self.bufs])
+        E = (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1)
+        sig = ((T.abs() ** 2).sum(-1) / 2).sqrt().clamp_min(1e-9)
+        S = E / sig if (self.member_margin and self._skeptical) else E
+        member = member.clone()
+        for t in tags[tags >= 0].unique().tolist():
+            cand = (maj == t).nonzero().squeeze(1)
+            if not len(cand):
+                continue
+            rows = (tags == t).nonzero().squeeze(1)
+            cur = member[rows]
+            # move on MINORITY: the row's label is a measured minority
+            # (< SUPERVISE_FRAC) of its class's tagged members — it is
+            # pollution there by its own evidence. Genuine blend
+            # members (label fractions ~0.4-0.5) STAY (division
+            # resolves blends, not routing); rows in IMMATURE classes
+            # stay and mature them (moving those let one early-matured
+            # class vacuum its label across all modes: naming
+            # 0.752 -> 0.299, s034b); REFUSED rows stay refused
+            # (rescuing them force-fed spray past the D20 gate:
+            # strict 0.829 -> 0.806, s034b)
+            own = torch.where(
+                cur >= 0,
+                frac[cur.clamp_min(0), t],
+                torch.full((len(cur),), -1.0))
+            need = rows[(own >= 0) & (own < self.SUPERVISE_FRAC)]
+            if len(need):
+                member[need] = cand[S[need][:, cand].argmax(1)]
         return member
 
     # ── the composer arm [D14+§4b] ────────────────────────────────
@@ -691,6 +817,7 @@ class MixedStreamController:
                 for j in ordered:
                     if i < j:
                         pairs.add((i, j))
+        self._sync_tags()
         scored = []
         for i, j in pairs:
             if len(self.bufs[i]) >= MIN_CHILD and \
@@ -716,6 +843,8 @@ class MixedStreamController:
             ck, cd = self.classes[keep_k], self.classes[drop_k]
             self.bufs[keep_k] = torch.cat(
                 [self.bufs[keep_k], self.bufs[drop_k]])[-BUF:]
+            self.tags[keep_k] = torch.cat(
+                [self.tags[keep_k], self.tags[drop_k]])[-BUF:]
             if cd.cell_id >= 0:                    # retire the dropped row
                 arena.state[cd.cell_id] = CellState.DORMANT
                 if ck.cell_id >= 0:
@@ -732,6 +861,7 @@ class MixedStreamController:
         self.classes = [c for k, c in enumerate(self.classes)
                         if k not in drop]
         self.bufs = [b for k, b in enumerate(self.bufs) if k not in drop]
+        self.tags = [t for k, t in enumerate(self.tags) if k not in drop]
         return len(merged_pairs)
 
     # ── membership consolidation [D20a] ───────────────────────────
@@ -749,8 +879,10 @@ class MixedStreamController:
         explain nothing). Returns members moved."""
         if len(self.bufs) < 2:
             return 0
+        self._sync_tags()
         sizes = torch.tensor([len(b) for b in self.bufs])
         M = torch.cat(self.bufs)
+        tagM = torch.cat(self.tags)
         member, marg = self._margins(M)
         home = torch.repeat_interleave(
             torch.arange(len(self.bufs)), sizes)
@@ -763,16 +895,24 @@ class MixedStreamController:
             # freeze-run collapsed to ~0, s033). The purge lives at
             # stream ingress only.
             member = torch.where(marg >= floor, member, home)
+        # label supervision inside the EM round [s034b]: tagged members
+        # whose class majority disagrees with their label move to their
+        # label's best-matched home — old pollution is RELABELED, not
+        # just refused (the boundary-placement lever on law 1)
+        member = self._supervise(M, member, tagM)
         moved = int((member != home).sum())
         if moved == 0:
             return 0
-        new_bufs, dead = [], []
+        new_bufs, new_tags, dead = [], [], []
         for k in range(len(self.bufs)):
-            rows = M[member == k]
+            m = member == k
+            rows = M[m]
             new_bufs.append(rows[-BUF:])
+            new_tags.append(tagM[m][-BUF:])
             if len(rows) < 5:          # a husk, not a rare mode — small
                 dead.append(k)         # young fragments stay (MIN_CHILD
         self.bufs = new_bufs           # guards their judgments anyway)
+        self.tags = new_tags
         if dead:
             self._retire_classes(dead)
         self._rebuild_sketches()       # membership changed everywhere
@@ -805,6 +945,7 @@ class MixedStreamController:
         self.classes = [c for k, c in enumerate(self.classes)
                         if k not in drop]
         self.bufs = [b for k, b in enumerate(self.bufs) if k not in drop]
+        self.tags = [t for k, t in enumerate(self.tags) if k not in drop]
 
     # ── the manifold adapter's consumers [D15] ────────────────────
 
@@ -817,13 +958,17 @@ class MixedStreamController:
         the sketches back (update uses window members only)."""
         if self.manifold is None:
             return
+        self._sync_tags()
         for k, c in enumerate(self.classes):
             z = self.manifold.anneal_phasors(c.name)
             if z is None or z.shape[1] != self.bufs[k].shape[1]:
                 continue
             b = self.bufs[k]
-            keep = b[max(0, len(b) + len(z) - BUF):]
-            self.bufs[k] = torch.cat([z, keep])
+            start = max(0, len(b) + len(z) - BUF)
+            self.bufs[k] = torch.cat([z, b[start:]])
+            self.tags[k] = torch.cat(          # synthetics are unlabeled
+                [torch.full((len(z),), -1, dtype=torch.long),
+                 self.tags[k][start:]])
 
     def _rebuild_sketches(self) -> None:
         """Width changed (composer spawn/prune reshaped pocket space):
@@ -847,6 +992,7 @@ class MixedStreamController:
             "classes": [{"name": c.name, "cell_id": c.cell_id}
                         for c in self.classes],
             "bufs": [b.clone() for b in self.bufs],
+            "tags": [t.clone() for t in self.tags],
             "births": self._births,
             "lineage": dict(self._lineage),
             "nodes": (dict(self._node), dict(self._parent_node),
@@ -881,6 +1027,10 @@ class MixedStreamController:
                          cell_id=s["cell_id"])
             for s in state["classes"]]
         self.bufs = [b.clone() for b in state["bufs"]]
+        self.tags = ([t.clone() for t in state["tags"]]
+                     if "tags" in state else
+                     [torch.full((len(b),), -1, dtype=torch.long)
+                      for b in self.bufs])
         self._births = state["births"]
         self._lineage = dict(state["lineage"])
         (self._node, self._parent_node,
@@ -918,11 +1068,13 @@ class MixedStreamController:
         division: (child_a, child_b, split dim, acceptance floor)."""
         divided = {k for k, _ in candidates}
         verdict = dict(candidates)
-        new_classes, new_bufs, records = [], [], []
+        self._sync_tags()
+        new_classes, new_bufs, new_tags, records = [], [], [], []
         for k, (c, b) in enumerate(zip(self.classes, self.bufs)):
             if k not in divided:
                 new_classes.append(c)
                 new_bufs.append(b)
+                new_tags.append(self.tags[k])
                 continue
             side, d = verdict[k]
             floor = max(float(b.mean(0).abs()[d]) + GAIN_D, NULL_SPLIT)
@@ -937,6 +1089,7 @@ class MixedStreamController:
                                      c.active.clone())
                 new_classes.append(child)
                 new_bufs.append(b[child_side])
+                new_tags.append(self.tags[k][child_side])
                 self._lineage[child.name] = c.cell_id
                 self._new_node(child.name, c.name)
                 names.append(child.name)
@@ -954,7 +1107,7 @@ class MixedStreamController:
                     c.name, names[0], names[1],
                     float((~side).sum()) / max(1, len(side)))
             records.append((names[0], names[1], d, floor))
-        self.classes, self.bufs = new_classes, new_bufs
+        self.classes, self.bufs, self.tags = new_classes, new_bufs, new_tags
         return len(divided), records
 
     def _division_testimony(self):
