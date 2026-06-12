@@ -414,6 +414,9 @@ def run_seed(seed: int, composers: bool):
             survivors.append(p)
         pending = survivors
 
+    # lineage-depth readout (Rocky s033: how deep does the tree go?)
+    run_seed.last_depths = sorted(depth[n] for n in node_of)
+
     # ── readout ──
     T = torch.stack([phasors(b, dims).mean(0) for b in raw_bufs])
     Z_all = phasors(Xs, dims)
