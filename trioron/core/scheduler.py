@@ -42,13 +42,27 @@ class DispatchPlan:
     )
     # RECEPTOR cells (spec §10.2): the subset of perception cells injected as
     # phase. receptor_cols indexes their input columns (positions within the
-    # first n_perc columns of x, in perception_ids order).
+    # first n_perc columns of x, in column_ids order). receptor_ids holds the
+    # FULL injected set: 1:1 column receptors first, then pooled region
+    # sensors (retinal compression, design §3.2/§3.6) — downstream consumers
+    # (lock-in, controller, division) see one flat receptor order.
     receptor_ids: torch.Tensor = field(
         default_factory=lambda: torch.tensor([], dtype=torch.int32)
     )
     receptor_cols: torch.Tensor = field(
         default_factory=lambda: torch.tensor([], dtype=torch.long)
     )
+    # Perception cells that take the 1:1 input write (world columns in spawn
+    # order). Equals perception_ids until the first pooled sensor exists.
+    column_ids: torch.Tensor = field(
+        default_factory=lambda: torch.tensor([], dtype=torch.int32)
+    )
+    # Pooled region sensors + their sparse aperture matrix
+    # [n_pooled, world_dim]: pooled values = x @ pool_mat.T.
+    pooled_ids: torch.Tensor = field(
+        default_factory=lambda: torch.tensor([], dtype=torch.int32)
+    )
+    pool_mat: torch.Tensor | None = None
 
 
 class Scheduler:
@@ -106,11 +120,46 @@ class Scheduler:
         perception_ids = cell_ids[is_perception]
         dispatch_ids = cell_ids[~is_perception]
 
+        # Pooled region sensors (retinal compression): perception cells with
+        # a pooling aperture read Σw·x[cols], not a spawn-order column —
+        # split them out of the 1:1 column mapping.
+        if a.pool_dst.numel() > 0:
+            pooled_mask = torch.isin(
+                perception_ids.long(), a.pool_dst.unique()
+            )
+        else:
+            pooled_mask = torch.zeros(
+                perception_ids.numel(), dtype=torch.bool, device=a.device
+            )
+        column_ids = perception_ids[~pooled_mask]
+
         # RECEPTOR cells (spec §10.2): perception cells injected as phase.
-        perc_epis = a.epigenome[perception_ids.long()]
-        is_receptor = has_gene(perc_epis, RECEPTOR).bool()
-        receptor_ids = perception_ids[is_receptor]
+        col_epis = a.epigenome[column_ids.long()]
+        is_receptor = has_gene(col_epis, RECEPTOR).bool()
+        receptor_ids = column_ids[is_receptor]
         receptor_cols = is_receptor.nonzero(as_tuple=False).squeeze(-1).long()
+
+        # Pooled sensors join the injected receptor set AFTER the 1:1
+        # columns (flat receptor order = columns then regions, both in
+        # spawn order — deterministic).
+        pooled_all = perception_ids[pooled_mask]
+        pooled_epis = a.epigenome[pooled_all.long()]
+        pooled_ids = pooled_all[has_gene(pooled_epis, RECEPTOR).bool()]
+        pool_mat = None
+        if pooled_ids.numel() > 0:
+            keep = torch.isin(a.pool_dst, pooled_ids.long())
+            row_of = {int(c): i for i, c in enumerate(pooled_ids.tolist())}
+            rows = torch.tensor(
+                [row_of[int(d)] for d in a.pool_dst[keep].tolist()],
+                dtype=torch.long, device=a.device,
+            )
+            world_dim = int(a.pool_src[keep].max().item()) + 1
+            pool_mat = torch.sparse_coo_tensor(
+                torch.stack([rows, a.pool_src[keep]]),
+                a.pool_w[keep],
+                (int(pooled_ids.numel()), world_dim),
+            ).coalesce()
+            receptor_ids = torch.cat([receptor_ids, pooled_ids])
 
         # Output cells
         is_output = has_gene(epis, OUTPUT).bool()
@@ -119,7 +168,8 @@ class Scheduler:
         # Group dispatch_ids by (rank, phenotype)
         if dispatch_ids.numel() == 0:
             self._plan = DispatchPlan(
-                [], perception_ids, output_ids, receptor_ids, receptor_cols
+                [], perception_ids, output_ids, receptor_ids, receptor_cols,
+                column_ids, pooled_ids, pool_mat,
             )
             return
 
@@ -182,7 +232,8 @@ class Scheduler:
         output_rank = int(a.rank[output_ids.long()].max().item()) if output_ids.numel() > 0 else 999
 
         self._plan = DispatchPlan(
-            buckets, perception_ids, output_ids, receptor_ids, receptor_cols
+            buckets, perception_ids, output_ids, receptor_ids, receptor_cols,
+            column_ids, pooled_ids, pool_mat,
         )
         self._plan.interior_ids = interior_ids
         self._plan.output_rank = output_rank
@@ -203,10 +254,11 @@ class Scheduler:
         batch = x.shape[0]
         act = torch.zeros(batch, a.capacity, device=x.device)
 
-        # Write input into perception cells
-        n_perc = plan.perception_ids.numel()
+        # Write input into perception cells (1:1 column cells only — pooled
+        # region sensors are filled by the receptor injection below)
+        n_perc = plan.column_ids.numel()
         if n_perc > 0:
-            act[:, plan.perception_ids.long()] = x[:, :n_perc]
+            act[:, plan.column_ids.long()] = x[:, :n_perc]
 
         # RECEPTOR injection (spec §10.2): overwrite receptor cells' activations
         # with the phase θ = 2π·q/1000. Continuous receptors share one per-sample
@@ -217,6 +269,14 @@ class Scheduler:
         # §10.6, is what guarantees this). Non-differentiable by construction.
         if plan.receptor_ids.numel() > 0:
             xr = x[:, plan.receptor_cols]
+            if plan.pooled_ids.numel() > 0:
+                # Region sensors: pooled values Σw·x[cols] join the frame
+                # after the 1:1 columns (a weighted mean of member pixels
+                # lies inside the sample's own range, so it never distorts
+                # the per-sample gain frame).
+                wd = plan.pool_mat.shape[1]
+                xpool = torch.sparse.mm(plan.pool_mat, x[:, :wd].t()).t()
+                xr = torch.cat([xr, xpool], dim=1)
             levels = a.receptor_levels[plan.receptor_ids.long()]
             disc = levels >= 2
             q = torch.empty_like(xr)

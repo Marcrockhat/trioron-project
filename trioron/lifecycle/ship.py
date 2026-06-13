@@ -103,6 +103,11 @@ def _serialize_arena(arena: Arena) -> dict[str, Any]:
         "lockin_re": a.lockin_re[:a.cursor].clone(),
         "lockin_im": a.lockin_im[:a.cursor].clone(),
         "lockin_n": a.lockin_n[:a.cursor].clone(),
+        # Receptor pooling apertures (retinal compression) — structural: a
+        # region sensor without its pool silently reads garbage columns.
+        "pool_src": a.pool_src.clone(),
+        "pool_dst": a.pool_dst.clone(),
+        "pool_w": a.pool_w.clone(),
         "edge_src": a.edge_src[:a.edge_cursor].clone(),
         "edge_dst": a.edge_dst[:a.edge_cursor].clone(),
         "edge_weight": a.edge_weight[:a.edge_cursor].clone(),

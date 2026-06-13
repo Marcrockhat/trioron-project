@@ -11,12 +11,23 @@ the forward path each tick and deposits into its own lock-in row like
 any receptor, under a FIXED static frame known at spawn (causal
 quantization: every genome form is bounded by construction).
 
-The genome candidate set (ATTENTION/CONV/RECURRENT deferred — no
-scalar form on receptor dims):
+The genome candidate set (ATTENTION/RECURRENT deferred — no scalar
+form on receptor dims; no token axis / no time axis on a static
+image stream):
 
   LINEAR   : w₀c_i + w₁c_j, wirings sum/diff            frame [−1, 1]
   TANH     : tanh(2.5(w₀c_i + w₁c_j)), sum/diff         frame [−1, 1]
   DENDRITE : c_i² + c_j² — two branches, one input each frame [0, ½]
+  CONV     : s036 — not an independent candidate but a PROMOTION of a
+             LINEAR winner on a touching positional sensor pair: when
+             the same kernel independently clears the trial at ≥
+             CONV_REUSE_MIN other same-offset positions (conv_reuse),
+             the spawn becomes a weight-tied LINEAGE over all hit
+             positions (spawn_conv; conv phenotype, spec §3.4).
+             Convolution is earned by spatial reuse, decided by data —
+             possible at all only because the retina (retina.py)
+             imposes positions. No geometry → no touching pairs → the
+             arm is silent.
 
 over pocket values c = q/N_QUANTA − ½. The spawn folds each form into
 the REAL phenotype forward over phase activations a = 2π(c+½):
@@ -49,7 +60,7 @@ from typing import List, Optional, Set, Tuple
 
 import torch
 
-from trioron.core.epigenome import DENDRITE, LINEAR, TANH
+from trioron.core.epigenome import CONV, DENDRITE, LINEAR, TANH
 from trioron.core.receptor import N_QUANTA
 from trioron.core.state import CellState
 
@@ -64,8 +75,14 @@ FAMILY_DEGREE = 3      # lineage-pool walk bound (Rocky s033; 8-seed sweep:
                        # plateau at 3-5, near-root pools degrade results)
 PATIENCE = 3           # boundaries for a spawn to gather its virgin verdict
 FRESH_MIN = 60         # virgin members for the early verdict
-MAX_SPAWNED = 6        # envelope guard on live+pending composer cells
-GENE_OF = {"linear": LINEAR, "tanh": TANH, "dendrite": DENDRITE}
+MAX_SPAWNED = 6        # envelope guard on live+pending composer DECISIONS
+                       # (a conv lineage = one decision; its siblings are
+                       # bounded by the substrate envelope, not this)
+CONV_REUSE_MIN = 2     # positions a kernel must independently carve at to
+                       # earn weight sharing — the smallest count at which
+                       # "shared" is distinguishable from "private"
+GENE_OF = {"linear": LINEAR, "tanh": TANH, "dendrite": DENDRITE,
+           "conv": CONV}
 
 
 @dataclass(frozen=True)
@@ -79,7 +96,9 @@ class ComposerSpec:
 
     def value(self, ci: torch.Tensor, cj: torch.Tensor) -> torch.Tensor:
         """The composition over pocket values c ∈ [−½, ½] — EXACTLY what
-        the spawned phenotype computes in the forward path."""
+        the spawned phenotype computes in the forward path. 'conv' is the
+        LINEAR kernel form: the conv gene changes how the weights are
+        OWNED (lineage-tied across positions, spec §3.4), not the math."""
         if self.gene == "dendrite":
             return ci * ci + cj * cj
         z = self.w[0] * ci + self.w[1] * cj
@@ -172,6 +191,30 @@ def best_candidate(q: torch.Tensor, wired: List[int],
     return best, best_r, best_ratio
 
 
+def conv_reuse(q: torch.Tensor, spec: ComposerSpec,
+               offset_pairs: List[Tuple[int, int]],
+               seed: int) -> List[Tuple[int, int]]:
+    """Convolution is EARNED BY SPATIAL REUSE (council CONV arm): given
+    a winning LINEAR kernel on a touching sensor pair, return the other
+    same-offset pairs where the SAME kernel independently clears the
+    full trial (carve + permutation null + split-half). Weight sharing
+    is justified only where the data re-carves — positions where the
+    feature never appears are simply not in the lineage."""
+    g = torch.Generator().manual_seed(seed)
+    half = len(q) // 2
+    q1, q2 = q[:half], q[half:]
+    hits: List[Tuple[int, int]] = []
+    for i2, j2 in offset_pairs:
+        s2 = ComposerSpec(spec.gene, i2, j2, spec.w)
+        _, ratio1 = trial_ratio(q1, s2, g)
+        if ratio1 <= NULL_RATIO:
+            continue
+        _, ratio2 = trial_ratio(q2, s2, g)
+        if ratio2 > NULL_RATIO:
+            hits.append((i2, j2))
+    return hits
+
+
 # ── spawn / prune — the structural contract [D11] ─────────────────
 
 def spawn(substrate, spec: ComposerSpec,
@@ -204,6 +247,38 @@ def spawn(substrate, spec: ComposerSpec,
     if parent >= 0:
         a.parent[cid] = parent               # the progenitor spawned it
     substrate.compile()                      # rank recomputed from topology
+    return cid
+
+
+def spawn_conv(substrate, spec: ComposerSpec,
+               src_cells: Tuple[int, int], parent: int = -1,
+               root: int = -1) -> int:
+    """One cell of a conv LINEAGE: the affine fold is identical to the
+    LINEAR spawn (edge w/2π, bias −Σw/2 over phase activations), but the
+    cell carries the CONV gene and, for siblings, lineage_root = the
+    kernel holder — the conv phenotype reads each edge's weight from the
+    root at the same tap (spec §3.4), so the kernel is owned ONCE.
+    Sibling edges still hold a copy of the kernel values: in the
+    gradient-free PCLL regime the tie is structural/accounting (shared
+    parameters at deploy), and if the root is ever pruned the conv op's
+    off-bucket fallback makes each sibling read its own (identical)
+    copy — the lineage degrades gracefully to private cells."""
+    a = substrate.arena
+    cid = int(a.alloc(1).item())
+    s = 1.0 / (2 * math.pi)
+    w0, w1 = spec.w
+    src = torch.tensor(src_cells, dtype=torch.int32)
+    dst = torch.tensor([cid, cid], dtype=torch.int32)
+    a.add_edges(src, dst, torch.tensor([w0 * s, w1 * s]))
+    with torch.no_grad():
+        a.bias[cid] = -(w0 + w1) / 2
+    a.epigenome[cid] = 1 << CONV
+    a.refresh_phenotype(cid)
+    if parent >= 0:
+        a.parent[cid] = parent
+    if root >= 0:
+        a.lineage_root[cid] = root
+    substrate.compile()
     return cid
 
 

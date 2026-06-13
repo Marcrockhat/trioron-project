@@ -1,61 +1,51 @@
-"""PCLL organism on bench-15 (chained-15) — FIRST CONTACT (s034).
+"""PCLL organism on bench-15 (chained-15) — s036 REBUILD.
 
-No historical record exists: the PCLL trioron has never run on
-chained-15 (the "class-sequential filter 0.386" line in run_m2_mixed
-is a data_hard contrast number, not a bench-15 record). This harness
-is the first.
+s034 ran first contact with four design divergences from the
+progenitor-council architecture (s035 audit; Rocky's correction,
+s036): no positional substrate / no retinal compression, the bare
+CLASS_CAP=128, the council's discrimination arm (composer) never
+enabled, and CONV unreachable. This rebuild closes them with the
+substrate machinery shipped in s036:
 
-Protocol differences vs the legacy gradient arms (deliberate — they
-ARE the PCLL claims):
+  * BODY GEOMETRY — input_shape=(28, 28) declares the retina; genesis
+    imposes (x, y, scale) positions on every perception cell.
+  * RETINAL COMPRESSION — at the first sitting, constant columns
+    starve (census, as before) and adjacent redundant columns MERGE
+    into pooled region sensors with imposed positions (retina.py;
+    merge floor 1 − GAIN_D, evidence floor MIN_MEMBERS — derived from
+    division's own law, no new constants). Downstream machinery reads
+    the compressed positional set.
+  * COUNCIL ON — composer=True: the discrimination arm trials
+    LINEAR/TANH/DENDRITE genome candidates and pays the winning gene's
+    council group. CONV is live as promotion-by-spatial-reuse: a
+    LINEAR winner on a touching sensor pair that independently
+    re-carves at ≥2 same-offset positions spawns a weight-tied conv
+    lineage (composer.conv_reuse / spawn_conv).
+  * CAP ARMS — Rocky's s036 ruling: bench BOTH class_cap=128 (the
+    historical backstop) and uncapped (PCLL15_CAP=0), since 128 was
+    never derived.
 
-  * SINGLE PASS — each task's training set streams through once in
-    WINDOW-sample periods (the legacy arms get 8 gradient epochs).
-  * ZERO GRADIENTS in the substrate — membership, division, council
-    judgment, the membership-quality stack, label supervision.
-  * LABELS via the D22 annotation carrier at 100% coverage (the
-    legacy arms are fully supervised through CE, so this is parity,
-    not an advantage): taps + (class x label) counts + supervised
-    routing — all defaults.
-  * CLASS-SEQUENTIAL stream — tasks arrive in bench order, classes
-    within a task shuffled. The mixed-stream regime's hard case.
+PROTOCOL (single-pass honest, Rocky's s036 ruling): one gradient-free
+streaming pass per task, labels via the D22 carrier at 100% coverage,
+class-sequential task order. Reported alongside the legacy gradient
+stack (0.958/0.551, 8 epochs/task, ~8K params) WITH the budget
+difference stated — the architecture fix is what makes the comparison
+fair, not compute matching. Do not quote the pair as compute-matched.
 
-Perception (Rocky's correction, s034): the GENESIS PROTOCOL faces the
-raw world — 784 pixels straight into PerceptionGenesis (constant
-border sensors starve and withdraw, the census types each column, the
-read set is GROWN). That is the default arm (PCLL15_SENSE=raw). The
-no-spatial-memory findings that argued for a projection were measured
-on the GRADIENT substrate, never on PCLL matched filtering — raw-first
-is the unmeasured honest experiment. PCLL15_SENSE=lcn keeps the
-legacy-parity arm (frozen 16x8 retinotopic Gaussian-mask projection
-784 -> 128, LINEAR — the relu's mass-spike at 0 made every dim read
-as a divisible mode and division tiled to CLASS_CAP in one task;
-measured). NOTE: the lcn arm also tiles to cap by task 2 — the
-projection mixes class modes into every dim; recorded, not hidden.
+Readout is organism-internal end to end (class x label count
+majority; task-aware = argmax restricted to the task's labels' own
+classes). Eval on held-out test only.
 
-Readout is ORGANISM-INTERNAL end to end: classes are named by their
-(class x label) count majority; full = argmax over all templates ->
-name; task-aware = argmax restricted to the classes named with that
-task's global labels (the bench's task-aware semantics).
-
-Eval on the held-out test split only (never streamed, never labeled).
-
-FIRST-CONTACT VERDICT (s034, seed 0, raw arm, defaults):
-task_aware 0.552, full 0.172, 128 classes (vs legacy gradient stack
-0.958 / 0.551 with 8 epochs/task). Per-task: MNIST (first block)
-eroded to ~0.5; Fashion (middle) held 0.68-0.98; EMNIST letters
-(last) 0.50/0.00/0.50/0.00/0.50 — two tasks' labels own NO classes.
-Read through the design principle (substrate adapts to input AND
-resources): genesis handled raw pixels (the projection arms TILED to
-cap inside 1-2 tasks; raw built sane early structure, 4 classes after
-task 1) and the organism self-managed at the envelope (husk
-retirement freed SOME room for late tasks) — but the allocation
-policy under cap pressure starves late arrivals and erodes the
-oldest tenants. That allocation law — who yields when the envelope
-is full — is the measured open problem; no harness knob fixes it.
+s034 first-contact record (raw arm, pre-rebuild, seed 0):
+task_aware 0.552 / full 0.172 / 128 classes (tiled to cap). The lcn
+projection arms tiled to cap inside 1-2 tasks (kept for parity:
+PCLL15_SENSE=lcn, no geometry, disfavored).
 
 Run: python3 -m experiments.progenitor.run_pcll_chained15
 Env: PCLL15_SEEDS (default 1), PCLL15_MANIFOLD (default 1),
-     PCLL15_WINDOW (default 1000), PCLL15_SENSE (raw|lcn).
+     PCLL15_WINDOW (default 1000), PCLL15_SENSE (raw|lcn),
+     PCLL15_CAP (default 128; 0 = uncapped),
+     PCLL15_COMPOSER (default 1).
 """
 from __future__ import annotations
 
@@ -65,6 +55,7 @@ import time
 from typing import List, Optional
 
 import torch
+import torch.nn.functional as F
 
 from trioron.core import construct
 from trioron.core.receptor import N_QUANTA
@@ -83,15 +74,42 @@ WINDOW = int(os.environ.get("PCLL15_WINDOW", "1000"))
 SEEDS = int(os.environ.get("PCLL15_SEEDS", "1"))
 MANIFOLD = os.environ.get("PCLL15_MANIFOLD", "1") == "1"
 SENSE = os.environ.get("PCLL15_SENSE", "raw")
+CAP = int(os.environ.get("PCLL15_CAP", "128"))          # 0 = uncapped
+COMPOSER = os.environ.get("PCLL15_COMPOSER", "1") == "1"
+N_TASKS = int(os.environ.get("PCLL15_TASKS", "15"))     # smoke subsetting
+FRAC = float(os.environ.get("PCLL15_FRAC", "1.0"))      # per-task subsample
+                                                        # (Rocky s036: fewer
+                                                        # samples = fewer
+                                                        # meetings = less tiling)
 L0_WIDTH, LCN_SIGMA = 128, 0.10
+CONV_C, CONV_K, CONV_POOL = 12, 5, 4   # fixed-conv benchmark geometry
+SHAPE = (28, 28) if SENSE == "raw" else None   # body geometry (raw only)
 
 
 def make_sense(seed: int):
-    """raw: identity — genesis faces the world (default). lcn: the
-    legacy-parity frozen retinotopic projection (linear; see module
-    docstring for the measured relu/tiling record)."""
+    """raw: identity — genesis faces the world (default). conv: a FIXED
+    (random, gradient-free) convolution + ReLU + avg-pool spatial
+    feature transform — the s036 control (Rocky): bolt a simple conv
+    in FRONT of the phasor module to test whether the matched-filter
+    classification works on convolved features. If it does, the phasor
+    machinery is sound and the only gap is that conv doesn't FORM
+    natively (cell spawning). The conv is a fixed sensory transform
+    (like the legacy LCN but convolutional), no training, no gradients
+    — it stays inside PCLL's gradient-free claim. lcn: legacy-parity
+    frozen retinotopic projection (disfavored — tiles to cap)."""
     if SENSE == "raw":
         return lambda x: x
+    if SENSE == "conv":
+        g = torch.Generator().manual_seed(20_000 + seed)
+        W = torch.randn(CONV_C, 1, CONV_K, CONV_K, generator=g)
+        W = W / W.flatten(1).norm(dim=1).view(CONV_C, 1, 1, 1)  # unit kernels
+
+        def conv_sense(x: torch.Tensor) -> torch.Tensor:
+            img = x.view(-1, 1, 28, 28)
+            f = F.relu(F.conv2d(img, W, padding=CONV_K // 2))   # [N,C,28,28]
+            f = F.avg_pool2d(f, CONV_POOL)                      # [N,C,7,7]
+            return f.flatten(1)                                 # [N, C*49]
+        return conv_sense
     g = torch.Generator().manual_seed(10_000 + seed)
     W = torch.randn(784, L0_WIDTH, generator=g) / math.sqrt(784.0)
     W = W * build_lcn_mask(784, L0_WIDTH, LCN_SIGMA).t()
@@ -122,37 +140,59 @@ def evidence(mixed, sense, X: torch.Tensor) -> torch.Tensor:
 def run_seed(seed: int):
     bundle = DatasetBundle(["mnist", "fashion_mnist", "emnist_letters"],
                            root=DATA_ROOT, n_holdout_per_dataset=0)
-    specs = chained_15_specs()
+    specs = chained_15_specs()[:N_TASKS]
     train_views = build_task_views(bundle, specs, split="train")
     eval_views = build_task_views(bundle, specs, split="test")
     sense = make_sense(seed)
 
     torch.manual_seed(seed)
     sub = construct(germline_base,
-                    capacity=1024 if SENSE == "raw" else 512)
-    pg = PerceptionGenesis(sub)
-    mixed: Optional[MixedStreamController] = None
+                    capacity=512 if SENSE == "lcn" else 8192)
+    pg = PerceptionGenesis(sub, input_shape=SHAPE)
     t0 = time.time()
 
+    # GENESIS on a MIXED period (Rocky, s036): pass ALL data types in one
+    # genesis period so the progenitor grows CORRECT perceptions for the
+    # whole heterogeneous stream — not starving columns that are dead in
+    # task 1 (MNIST 0/1) but carry signal in Fashion / EMNIST. Re-genesis
+    # is only needed when input DIMENSIONS change (they don't here: every
+    # task is 784); perception then keeps adapting via ongoing sensation
+    # growth as the stream continues. This window is PERCEPTION PRIMING
+    # only (unlabeled, drawn from the union); the LABELLED continual stream
+    # below is the real v0.2.2 sequential order, unchanged.
+    g0 = torch.Generator().manual_seed(seed)
+    pool = torch.cat([v.images for v in train_views])
+    gidx = torch.randperm(len(pool), generator=g0)[:WINDOW]
+    genesis_window = sense(pool[gidx])
+    pg.feed(genesis_window)
+    rep = sub.end_task()
+    n_rec = int(sub.scheduler._plan.receptor_ids.numel())
+    print(f"  [genesis/mixed] starved={len(rep.starved)} "
+          f"merged={len(rep.merged)}->{len(rep.regions)} regions  "
+          f"receptors {genesis_window.shape[1]}->{n_rec}", flush=True)
+    mixed = MixedStreamController(
+        sub, stress=pg.router, adopt=pg.controller,
+        manifold=MANIFOLD, composer=COMPOSER,
+        class_cap=CAP if CAP > 0 else None)
+
+    # the real continual stream — v0.2.2 task order, labelled, one pass
     for ti, view in enumerate(train_views):
         g = torch.Generator().manual_seed(100 * seed + ti)
         order = torch.randperm(len(view.labels_global), generator=g)
+        if FRAC < 1.0:                       # subsample the task stream
+            order = order[:max(1, int(FRAC * len(order)))]
         X = view.images[order]
         y = view.labels_global[order]
         labs = [f"g{int(v):02d}" for v in y]
         for w0 in range(0, len(X), WINDOW):
             xw = sense(X[w0:w0 + WINDOW])
             lw = labs[w0:w0 + WINDOW]
-            if mixed is None:
-                pg.feed(xw)
-                sub.end_task()
-                mixed = MixedStreamController(
-                    sub, stress=pg.router, adopt=pg.controller,
-                    manifold=MANIFOLD)
             mixed.observe(xw, labels=lw)
             sub.end_task()
+        n_conv = sum(1 for s in mixed.specs if s.gene == "conv")
         print(f"  [task {ti + 1:>2d}/15 {view.name}] "
               f"classes={len(mixed.classes)} "
+              f"spawned={len(mixed.specs)} (conv {n_conv}) "
               f"t={time.time() - t0:.0f}s", flush=True)
 
     name = names_of(mixed)
@@ -189,9 +229,12 @@ def run_seed(seed: int):
 
 
 def main() -> None:
-    print(f"PCLL organism on chained-15 — single pass, no gradients, "
-          f"labels at 100% (D22 defaults), manifold={'on' if MANIFOLD else 'off'}, "
-          f"window={WINDOW}, seeds={SEEDS}")
+    print(f"PCLL organism on chained-15 (s036 rebuild) — single pass, "
+          f"no gradients, labels 100% (D22), manifold="
+          f"{'on' if MANIFOLD else 'off'}, composer="
+          f"{'on' if COMPOSER else 'off'}, "
+          f"cap={CAP if CAP > 0 else 'UNCAPPED'}, "
+          f"sense={SENSE}, window={WINDOW}, seeds={SEEDS}")
     tas, fulls = [], []
     for seed in range(SEEDS):
         ta, full, _ = run_seed(seed)

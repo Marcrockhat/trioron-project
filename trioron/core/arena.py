@@ -88,6 +88,16 @@ class Arena:
         # on fixed labeled lines q = 1000·(2j+1)/(2k) (spec §10.2).
         self.receptor_levels = torch.zeros(cap, dtype=torch.int32, device=self.device)
 
+        # ── Receptor pooling apertures (retinal compression, design §3.2/§3.6) ──
+        # A pooled receptor reads a weighted SET of world columns instead of a
+        # 1:1 spawn-order column: value = Σ_k w_k·x[:, col_k]. Region sensors
+        # own their member pixels through these. Edge-style COO triplets,
+        # written once at the first sitting; empty by default so the
+        # scheduler's 1:1 path is untouched until the first add_pool().
+        self.pool_src = torch.zeros(0, dtype=torch.long, device=self.device)
+        self.pool_dst = torch.zeros(0, dtype=torch.long, device=self.device)
+        self.pool_w = torch.zeros(0, device=self.device)
+
         # ── Recurrent unroll depth (Axis 7 / spec §3.5) ──
         # k_unroll: per-cell K (1 = no unrolling). The recurrent phenotype unrolls
         # a cell's self/lateral (back-)edges this many steps per forward pass; a
@@ -167,6 +177,25 @@ class Arena:
 
     def fan_in(self, cell_id: int) -> int:
         return int((self.edge_dst[: self.edge_cursor] == cell_id).sum().item())
+
+    def add_pool(
+        self,
+        cell_id: int,
+        cols: torch.Tensor | list[int],
+        weights: torch.Tensor | None = None,
+    ) -> None:
+        """Attach a pooling aperture to *cell_id* (a region sensor): its
+        receptor value becomes Σ w·x[:, cols] instead of a 1:1 spawn-order
+        column. Default weights = uniform mean over the member columns."""
+        cols = torch.as_tensor(cols, dtype=torch.long, device=self.device)
+        if weights is None:
+            weights = torch.full((cols.numel(),), 1.0 / cols.numel(),
+                                 device=self.device)
+        dst = torch.full((cols.numel(),), cell_id, dtype=torch.long,
+                         device=self.device)
+        self.pool_src = torch.cat([self.pool_src, cols])
+        self.pool_dst = torch.cat([self.pool_dst, dst])
+        self.pool_w = torch.cat([self.pool_w, weights])
 
     # ── Dendritic growth (Axis 5 / spec §3.6) ─────────────────────
 

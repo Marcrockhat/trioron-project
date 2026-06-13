@@ -122,6 +122,10 @@ def _restore_arena(arena: Arena, saved: dict) -> None:
         a.lockin_re[:n] = saved["lockin_re"].to(a.device)
         a.lockin_im[:n] = saved["lockin_im"].to(a.device)
         a.lockin_n[:n] = saved["lockin_n"].to(a.device)
+    if "pool_src" in saved:  # retinal-compression apertures (structural)
+        a.pool_src = saved["pool_src"].to(a.device)
+        a.pool_dst = saved["pool_dst"].to(a.device)
+        a.pool_w = saved["pool_w"].to(a.device)
 
     ec = saved["edge_cursor"]
     a.edge_cursor = ec

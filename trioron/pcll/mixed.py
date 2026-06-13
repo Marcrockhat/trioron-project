@@ -79,7 +79,8 @@ class MixedStreamController:
                  consolidate: bool = True,
                  gate_k: Optional[float] = None,
                  member_margin: bool = True,
-                 label_supervise: bool = True) -> None:
+                 label_supervise: bool = True,
+                 class_cap: Optional[int] = CLASS_CAP) -> None:
         # MEMBERSHIP-QUALITY DEFAULTS (Rocky's ruling, s033; M2
         # baseline re-recorded). The factorial said the pieces only
         # work TOGETHER, and the re-record proved it the hard way: the
@@ -94,6 +95,11 @@ class MixedStreamController:
         self.substrate = substrate
         self.stress = stress
         self.divide_tries = divide_tries
+        # Live-class envelope guard. Division self-arrests on its own
+        # criterion; the cap is a backstop. None/0 = uncapped — the
+        # s036 ruling is to bench BOTH arms (capped vs uncapped) since
+        # the 128 was never derived (s035 audit Q4).
+        self.class_cap = class_cap if class_cap else None
         self.receptor_ids = substrate.scheduler._plan.receptor_ids
         if self.receptor_ids.numel() == 0:
             raise ValueError("substrate has no RECEPTOR cells")
@@ -352,7 +358,8 @@ class MixedStreamController:
         tries = max(self.divide_tries, DIV_TRIES if self.composer else 1)
         if not self.freeze:
             for k, b in enumerate(self.bufs):
-                if len(self.bufs) + len(candidates) >= CLASS_CAP:
+                if self.class_cap is not None and \
+                        len(self.bufs) + len(candidates) >= self.class_cap:
                     break                          # envelope guard, at commit
                 verdict = try_divide(b, tries=tries)
                 if verdict is not None:
@@ -372,12 +379,13 @@ class MixedStreamController:
 
         n_div, n_spawn = 0, 0
         if grow == DISCRIMINATION or self.stress is None:
-            won = {k for k, _, _ in spawns}        # composer beat division
+            won = {s[0] for s in spawns}           # composer beat division
             candidates = [(k, v) for k, v in candidates if k not in won]
             records = []
             if candidates:
                 n_div, records = self._execute(arena, candidates)
-            records += [self._spawn(spec, names) for _, spec, names in spawns]
+            for _, spec, names, pairs in spawns:
+                records += self._spawn(spec, names, pairs)
             n_spawn = len(spawns)
             if self.stress is not None:
                 self.stress.attach_subjects(records)
@@ -647,6 +655,67 @@ class MixedStreamController:
                 wired.append(d)
         return wired
 
+    def _spatial_pairs(self):
+        """Touching positional sensor pairs by direction, from the
+        retina's imposed positions (position = (x, y, scale); scale > 0
+        marks a positional sensor — design §3.2/§3.6). Chebyshev
+        touching: max(|dx|,|dy|) ≤ scale_i + scale_j. No geometry → no
+        positional sensors → empty, and the CONV arm stays silent."""
+        pos = self.substrate.arena.position[self.receptor_ids.long()]
+        ok = (pos[:, 2] > 0).nonzero(as_tuple=False).squeeze(-1)
+        dir_of, by_dir = {}, {"h": [], "v": []}
+        if ok.numel() < 2:
+            return dir_of, by_dir
+        P = pos[ok]
+        dx = P[:, 0].unsqueeze(0) - P[:, 0].unsqueeze(1)   # [n, n] j−i
+        dy = P[:, 1].unsqueeze(0) - P[:, 1].unsqueeze(1)
+        reach = P[:, 2].unsqueeze(0) + P[:, 2].unsqueeze(1)
+        touch = (torch.maximum(dx.abs(), dy.abs()) <= reach) \
+            & ((dx.abs() + dy.abs()) > 0)
+        touch = torch.triu(touch, diagonal=1)
+        for a_i, b_i in touch.nonzero(as_tuple=False).tolist():
+            i, j = int(ok[a_i]), int(ok[b_i])
+            d = "h" if abs(float(dx[a_i, b_i])) >= abs(float(dy[a_i, b_i])) \
+                else "v"
+            dir_of[(i, j)] = d
+            by_dir[d].append((i, j))
+        return dir_of, by_dir
+
+    def _promote_conv(self, q: torch.Tensor, spec: comp.ComposerSpec,
+                      taken) -> List:
+        """Conv-by-reuse (council CONV arm, s036): a LINEAR winner on a
+        touching sensor pair whose kernel independently re-carves at ≥
+        CONV_REUSE_MIN other same-offset positions is convolution
+        discovered from data — the spawn becomes a weight-tied lineage.
+        Anything else stays a private cell."""
+        if spec.gene != "linear":
+            return []
+        dir_of, by_dir = self._spatial_pairs()
+        d = dir_of.get((spec.i, spec.j))
+        if d is None:
+            return []
+        others = [p for p in by_dir[d]
+                  if p != (spec.i, spec.j)
+                  and comp.ComposerSpec("conv", p[0], p[1], spec.w)
+                  not in taken]
+        if not others:
+            return []
+        self._trial_seed += 1
+        hits = comp.conv_reuse(q, spec, others, self._trial_seed)
+        return hits if len(hits) >= comp.CONV_REUSE_MIN else []
+
+    def _live_decisions(self) -> int:
+        """Spawn decisions standing against MAX_SPAWNED: every private
+        cell counts; a conv lineage counts once through its root (a
+        sibling reads the root's kernel — it is coverage, not a new
+        decision). Pruned cells left specs, so room frees as before."""
+        a = self.substrate.arena
+        n = 0
+        for s, cid in zip(self.specs, self.composer_cells):
+            if s.gene != "conv" or int(a.lineage_root[cid]) < 0:
+                n += 1
+        return n
+
     def _div_r(self, b: torch.Tensor, verdict) -> float:
         side, d = verdict
         return max(float(b[~side, d].mean().abs()),
@@ -662,13 +731,16 @@ class MixedStreamController:
         reform for the trial only. Returns [(buffer idx | -1, spec,
         lineage names)]."""
         spawns: List = []
-        room = comp.MAX_SPAWNED - len(self.specs)
+        room = comp.MAX_SPAWNED - self._live_decisions()
         if room <= 0:
             return spawns
         wired = self._wired()
         if len(wired) < 2:
             return spawns
         taken = set(self.specs)
+        # a spawned conv lineage must not re-win as private linear cells
+        taken |= {comp.ComposerSpec("linear", s.i, s.j, s.w)
+                  for s in self.specs if s.gene == "conv"}
         F = len(self.receptor_ids)
 
         for k, b in enumerate(self.bufs):          # per-buffer, vs division
@@ -678,15 +750,19 @@ class MixedStreamController:
                     float(b.mean(0).abs().mean()) >= comp.TRIGGER_R:
                 continue
             self._trial_seed += 1
+            qb = self._recover_q(b[:, :F])
             spec, r, _ = comp.best_candidate(
-                self._recover_q(b[:, :F]), wired, taken, self._trial_seed)
+                qb, wired, taken, self._trial_seed)
             if spec is None:
                 continue
             dv = div_verdicts.get(k)
             if dv is not None and self._div_r(b, dv) >= r:
                 continue                           # division explains better
             taken.add(spec)
-            spawns.append((k, spec, {self.classes[k].name}))
+            pairs = self._promote_conv(qb, spec, taken)
+            for p_ in pairs:
+                taken.add(comp.ComposerSpec("conv", p_[0], p_[1], spec.w))
+            spawns.append((k, spec, {self.classes[k].name}, pairs))
 
         if len(spawns) < room:                     # ≤1 family spawn/boundary
             pools: dict = {}
@@ -707,25 +783,59 @@ class MixedStreamController:
                         float(pool.mean(0).abs().mean()) >= comp.TRIGGER_R:
                     continue
                 self._trial_seed += 1
+                qp = self._recover_q(pool[:, :F])
                 spec, _, _ = comp.best_candidate(
-                    self._recover_q(pool[:, :F]), wired, taken,
-                    self._trial_seed)
+                    qp, wired, taken, self._trial_seed)
                 if spec is not None:
+                    pairs = self._promote_conv(qp, spec, taken)
                     spawns.append(
-                        (-1, spec, {self.classes[k].name for k in idxs}))
+                        (-1, spec, {self.classes[k].name for k in idxs},
+                         pairs))
                     break
         return spawns
 
-    def _spawn(self, spec: comp.ComposerSpec, lineage) -> comp.ComposerPending:
-        """Commit a winning candidate as real tissue [D11] and register
-        its composed dim: buffers back-fill the new column from their own
-        receptor pockets (the composition is a pure function of them);
-        the stream's column comes from the forward path."""
-        F = len(self.receptor_ids)
-        src = (int(self.receptor_ids[spec.i]), int(self.receptor_ids[spec.j]))
+    def _spawn(self, spec: comp.ComposerSpec, lineage,
+               conv_pairs=()) -> List[comp.ComposerPending]:
+        """Commit a winning candidate as real tissue [D11]. One spawn
+        decision → one private cell, OR (conv promotion, s036) a
+        weight-tied CONV lineage: the root holds the kernel and one
+        sibling per reused position reads it through lineage_root
+        (spec §3.4). Sibling count is bounded by the substrate ENVELOPE
+        (a.allows_growth), not a constant. Every member registers its
+        own composed dim and settles/prunes independently [D13/D16] —
+        positions where the feature stops recurring retire alone."""
         parent = (self.stress.germline.progenitor_id
                   if self.stress is not None else -1)
-        cid = comp.spawn(self.substrate, spec, src, parent=parent)
+        if not conv_pairs:
+            src = (int(self.receptor_ids[spec.i]),
+                   int(self.receptor_ids[spec.j]))
+            cid = comp.spawn(self.substrate, spec, src, parent=parent)
+            return [self._register(spec, cid, lineage)]
+        a = self.substrate.arena
+        root_spec = comp.ComposerSpec("conv", spec.i, spec.j, spec.w)
+        src = (int(self.receptor_ids[root_spec.i]),
+               int(self.receptor_ids[root_spec.j]))
+        root = comp.spawn_conv(self.substrate, root_spec, src, parent=parent)
+        out = [self._register(root_spec, root, lineage)]
+        for i2, j2 in conv_pairs:
+            if not a.allows_growth(add_cells=1, add_edges=2):
+                break                  # the envelope bounds the map
+            s2 = comp.ComposerSpec("conv", i2, j2, spec.w)
+            if s2 in self.specs:
+                continue
+            src2 = (int(self.receptor_ids[i2]), int(self.receptor_ids[j2]))
+            cid2 = comp.spawn_conv(self.substrate, s2, src2,
+                                   parent=parent, root=root)
+            out.append(self._register(s2, cid2, lineage))
+        return out
+
+    def _register(self, spec: comp.ComposerSpec, cid: int,
+                  lineage) -> comp.ComposerPending:
+        """Register one spawned cell's composed dim: buffers back-fill
+        the new column from their own receptor pockets (the composition
+        is a pure function of them); the stream's column comes from the
+        forward path."""
+        F = len(self.receptor_ids)
         self.specs.append(spec)
         self.composer_cells.append(cid)
         for k, b in enumerate(self.bufs):          # back-fill history

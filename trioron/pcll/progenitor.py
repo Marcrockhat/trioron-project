@@ -69,6 +69,7 @@ from trioron.core.state import CellState
 
 from .controller import PCLLController
 from .lockin import LockInView, deposit, reset
+from .retina import (RegionSensor, first_sitting_compress, grid_positions)
 
 K_DISCRETE = 8           # D7: ≤ this many distinct values → discrete labeled lines
 COUNCIL_PER_PHENOTYPE = 4  # one 4-cell group per expression gene (6×4=24 with tanh),
@@ -155,6 +156,10 @@ class FirstSittingReport:
     importance: List[tuple] = field(default_factory=list)    # (column, margin) desc
     event: str = "empty"                    # natal-replay learning event
     class_name: Optional[str] = None        # the natal period's learned class
+    # retinal compression (design §3.2/§3.6): spawned region sensors and
+    # the member columns they absorbed (column → sensor cell id)
+    regions: List[RegionSensor] = field(default_factory=list)
+    merged: Dict[int, int] = field(default_factory=dict)
 
 
 class PerceptionGenesis:
@@ -162,13 +167,18 @@ class PerceptionGenesis:
     observations; Substrate.end_task() runs the first sitting, which
     commits the verdicts and hands over to a PCLLController."""
 
-    def __init__(self, substrate: Substrate) -> None:
+    def __init__(self, substrate: Substrate,
+                 input_shape: Optional[tuple] = None) -> None:
         self.substrate = substrate
         self.germline = Germline(substrate)
         self.perception_ids: Optional[torch.Tensor] = None
         self._distinct: List[Optional[set]] = []   # None = overflowed → continuous
         self._buffer: List[torch.Tensor] = []      # period-1 obs, for natal replay
         self.controller: Optional[PCLLController] = None
+        # Body geometry (design §3.2): (H, W) declares the sensor sheet's
+        # adjacency — the retina the world projects onto. None = flat
+        # feature vector, no adjacency, no merge pass (status quo).
+        self.input_shape = input_shape
         substrate.attach_pcll(self)
 
     # ── period-1 streaming ────────────────────────────────────────
@@ -180,6 +190,13 @@ class PerceptionGenesis:
         if self.perception_ids is None:
             # tick 1: spawn from the first sample, perceive it raw
             self.perception_ids = self.germline.spawn_perception(x.shape[1])
+            if self.input_shape is not None:
+                H, W = self.input_shape
+                assert H * W == x.shape[1], \
+                    f"body geometry {H}x{W} != world dim {x.shape[1]}"
+                cols = torch.arange(x.shape[1], dtype=torch.long)
+                sub.arena.position[self.perception_ids.long()] = \
+                    grid_positions(cols, (H, W))
             self._distinct = [set() for _ in range(x.shape[1])]
             sub.compile()
             sub.forward(x[:1])
@@ -237,7 +254,21 @@ class PerceptionGenesis:
 
         kept = [c for c in range(len(ids)) if verdicts[c].kind != "starved"]
 
-        sub.compile()   # receptor set changed (starved withdrawn)
+        # Retinal compression (design §3.2/§3.6): adjacent redundant
+        # continuous columns merge into pooled region sensors with imposed
+        # positions; members withdraw to dormant husks (the starve
+        # treatment, so column mapping is preserved). No-op without a
+        # declared body geometry.
+        regions: List[RegionSensor] = []
+        merged: Dict[int, int] = {}
+        if self.input_shape is not None:
+            eligible = [c for c in kept if verdicts[c].kind == "continuous"]
+            regions = first_sitting_compress(
+                self.germline, self._buffer, eligible, ids, self.input_shape)
+            merged = {c: r.cell_id for r in regions for c in r.members}
+            kept = [c for c in kept if c not in merged]
+
+        sub.compile()   # receptor set changed (starved withdrawn / merged)
         # handover: the controller attaches in this program's place, with the
         # stress router over the germline's book (spec §10.6)
         from .stress import StressRouter
@@ -254,11 +285,14 @@ class PerceptionGenesis:
         self._buffer = []
         self.controller.observe(x_all)
 
-        # importance from the CLEAN replayed evidence (receptor cols only)
+        # importance from the CLEAN replayed evidence (1:1 receptor cols
+        # first; pooled region sensors carry their own margin tail)
         plan_cols = sub.scheduler._plan.receptor_cols.tolist()
         margins = LockInView(a, self.controller.receptor_ids).margin()
         for i, c in enumerate(plan_cols):
             verdicts[c].evidence = float(margins[i])
+        for k, r in enumerate(regions):
+            r.evidence = float(margins[len(plan_cols) + k])
         importance = sorted(
             ((c, verdicts[c].evidence) for c in kept),
             key=lambda t: t[1], reverse=True,
@@ -271,6 +305,7 @@ class PerceptionGenesis:
             period=1, verdicts=verdicts, starved=starved, discrete=discrete,
             kept=kept, importance=importance,
             event=natal.event, class_name=natal.class_name,
+            regions=regions, merged=merged,
         )
 
 
