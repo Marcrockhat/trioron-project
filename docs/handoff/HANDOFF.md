@@ -3,20 +3,24 @@
 **Session date:** 2026-06-14
 **Session number:** 038
 **Session title:** **Gabor front-end PROVEN through the full streaming
-organism — and the new keystone is the oracle↔organism gap.** s037
-predicted the converged perception design (complex quadrature Gabor bank,
-energy channel) from oracle proxies only. s038 WIRED it into the real
-chained-15 runner (`PCLL15_SENSE=gabor`) and ran the full 15-task
-streaming organism — council + division + readout, no shortcuts. Result
-(seed 0, FRAC=1.0): **task-aware 0.690 / full 0.304**, beating the s034
-raw baseline **0.552 / 0.172** on BOTH metrics (+25% task-aware, **+77%
-full**). The hypothesis HOLDS: the Gabor oracle advantage survives the
-division machinery. BUT Rocky is **not satisfied — accuracy is still too
-low**, and the diagnosis is sharp: the organism (full 0.304) sits FAR
-below its OWN oracle ceiling (energy 0.553). That ~0.25 gap is the new
-target. It is NOT the feature space (Gabor is good); it is the
-**council/division/readout**: the organism tiled to cap=128 on task 1 and
-the name-majority readout maps 128 fragments → 30 true classes lossily.
+organism; RFF-on-energy NULL — both point at the division/readout machinery
+as the keystone, not perception.** s037 predicted the converged perception
+design (complex quadrature Gabor bank, energy channel) from oracle proxies
+only. s038 WIRED it into the real chained-15 runner (`PCLL15_SENSE=gabor`)
+and ran the full 15-task streaming organism. Result (seed 0, FRAC=1.0):
+**task-aware 0.690 / full 0.304**, beating the s034 raw baseline **0.552 /
+0.172** on BOTH metrics (+25% / **+77%**). The hypothesis HOLDS. Then Gemma
+proposed holographic wave-vectors Ψ(r)=sin(2π·W·r+b) (Random Fourier
+Features); wired as `PCLL15_SENSE=rff` ON the Gabor energy (to keep
+invariance) → **NULL: the organism collapses to 1 class** (division never
+fires), robust across bandwidth. Mechanism: `try_divide` needs a
+per-dimension BIMODAL feature to discover a class; RFF's dense random
+projection mixes every input into every dim → no dim is bimodal → no
+class discovery. So Gabor OVER-segments (128) and RFF UNDER-segments (1) —
+**the two failure modes of the same division machinery.** Rocky is **not
+satisfied — accuracy is still too low** (organism full 0.304 ≪ its OWN
+oracle ceiling 0.553). That ~0.25 gap is the keystone, and BOTH s038
+results confirm it is the **division + readout**, NOT the features.
 
 ---
 
@@ -37,11 +41,19 @@ the name-majority readout maps 128 fragments → 30 true classes lossily.
    still too low.** Full 0.304 vs the legacy gradient stack's 0.551 and vs
    the organism's own oracle ceiling 0.553. The gap is council/division +
    readout, NOT perception. See "The new keystone" below.
-4. **What ships this session:** ONE arm added to
-   `experiments/progenitor/run_pcll_chained15.py` (`PCLL15_SENSE=gabor`) +
-   the run log `outputs/pcll_chained15_s038_gabor_full.log` + this handoff.
-   No package code touched; gate battery untouched (green from s036, not
-   re-run).
+4. **What ships this session:** TWO arms added to
+   `experiments/progenitor/run_pcll_chained15.py` (`PCLL15_SENSE=gabor`,
+   `PCLL15_SENSE=rff`) + a reflect-pad correctness fix to the gabor base +
+   run logs (`..._s038_gabor_full.log`, `..._s038_rff_smoke.log`) + this
+   handoff. No package code touched; gate battery untouched (green from
+   s036, not re-run).
+   - **Reflect-pad fix:** the gabor base now `F.pad(..., mode="reflect")`
+     before conv (was `F.conv2d` default ZERO pad). Zero-pad broke the
+     background-swap invariance at the image border; reflect-pad makes it
+     bit-exact (5.9e-08). Does NOT change the committed gabor 0.690/0.304
+     — chained-15 borders are zero, so reflect-of-zero = zero-pad on the
+     actual (non-inverted) data; the fix only restores the INVERTED-test
+     invariance property (Rocky's binding criterion).
 5. **DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM):**
    `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
    `trioron/viz/export.py`; `.claude/`, `runs/` untracked. NOT staged this
@@ -70,6 +82,37 @@ transform (inside PCLL's gradient-free claim, like conv/lcn):
   polarity-sensitive (inverted-test 0.000) AND is an angle the per-sample
   min/max quantizer would double-wrap. **Faithful phase needs direct
   phasor injection (`exp(iθ)`) — a pipeline change, deferred to NEXT.**
+
+## The RFF null (Gemma's holographic wave-vectors) — and why it matters
+
+`Ψ(r) = sin(2π·W·r + b)` = Random Fourier Features. Wired as
+`PCLL15_SENSE=rff` ON the Gabor energy (NOT raw pixels — plain RFF on
+pixels is shift/polarity fragile like a global FFT; energy keeps the
+invariance, verified bit-exact through the projection). W = random
+wave-vectors, b = random phase, r̂ = per-sample L2-normalized energy,
+RFF_DIM=512, RFF_BANDWIDTH (σ_W) tunable.
+
+**Result: NULL — organism collapses to 1 class, division never fires.**
+Robust across bandwidth (smoke 0.5/1/2/4 and full-density 0.25/2.0, all
+classes=1, ta≈0.26 full≈0.27 = degenerate single-class).
+
+**Why (the instructive part):** `division.try_divide` (`division.py:81`)
+accepts a class split only when some feature dim is BIMODAL across samples
+— both children must cohere above `NULL_SPLIT=0.72` (a uniform/noise dim
+splits to 2/π=0.64 and is rejected, the anti-noise-tiling guard). Class
+discovery REQUIRES per-dimension structure. RFF's dense random projection
+mixes every input into every output dim, so each dim is smooth-unimodal
+(low bw, no split needed) or uniform-noise (high bw, split rejected) —
+never cleanly bimodal. No bandwidth fixes this; it is structural. The
+feature space is fine; it is incompatible with frustration-division.
+
+**The takeaway:** Gabor energy has per-dim on/off structure → division
+OVER-fires (128 fragments). RFF erases per-dim structure → division
+NEVER fires (1 class). Two failure modes, ONE machinery. This is the
+strongest evidence yet that the keystone is the division/readout, not
+perception. Salvage ideas (unpursued, lower priority than the readout):
+block-local W so RFF preserves some per-dim structure; or CONCAT
+gabor-energy + RFF so division keeps the structured dims to split on.
 
 ---
 
@@ -151,9 +194,10 @@ This is the same gap the manifold machinery exists to close
 
 ## State of the build
 
-- Branch `progenitor-council`. This session's commit adds the `gabor` arm
-  to `run_pcll_chained15.py` + `outputs/pcll_chained15_s038_gabor_full.log`
-  + this handoff. No package code changed; gate battery untouched.
+- Branch `progenitor-council`. This session's commits add the `gabor` +
+  `rff` arms to `run_pcll_chained15.py` (+ reflect-pad fix to the gabor
+  base) + `outputs/pcll_chained15_s038_{gabor_full,rff_smoke}.log` + this
+  handoff. No package code changed; gate battery untouched.
 - `developmental.py` ×2 + `viz/export.py` carries deliberately NOT staged
   (s034 carry, unchanged).
 - Run cost: full 15-task gabor organism ~2343s (~39 min) seed 0, CPU,

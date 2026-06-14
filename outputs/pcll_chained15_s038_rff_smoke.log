@@ -1,0 +1,24 @@
+RFF-on-Gabor-energy null (s038, Gemma's holographic wave-vector idea)
+Psi(r) = sin(2*pi*W*r + b),  r = Gabor energy (kept for invariance)
+PCLL15_SENSE=rff, RFF_DIM=512, reflect-pad gabor base (bit-exact invariant 5.9e-08)
+
+Bandwidth sweep, 2-task smoke (FRAC=0.1, WINDOW=500):
+  RFF_BANDWIDTH=0.5  classes=1  ta=0.253 full=0.248
+  RFF_BANDWIDTH=1.0  classes=1  ta=0.253 full=0.248
+  RFF_BANDWIDTH=2.0  classes=1  ta=0.253 full=0.248
+  RFF_BANDWIDTH=4.0  classes=1  ta=0.253 full=0.248
+
+Full sample density, 2 tasks (FRAC=1.0):
+  RFF_BANDWIDTH=0.25 classes=1 (spawned 2,1 tissue cells) ta=0.268 full=0.273
+  RFF_BANDWIDTH=2.0  classes=1 (spawned 0) ta=0.268 full=0.273
+
+VERDICT: NULL. Division-by-frustration (try_divide, division.py:81) accepts a
+split only when a feature dim is BIMODAL across samples (both children cohere
+> NULL_SPLIT=0.72; a uniform dim splits to 2/pi=0.64 and is rejected). RFF's
+dense random projection sin(2pi*W*r+b) mixes all inputs into every output dim,
+so each dim is smooth-unimodal (low bw) or uniform-noise (high bw) -- never
+cleanly bimodal -> no dim passes the split test -> class discovery never fires
+-> organism collapses to 1 class. Robust across bandwidth. The feature space is
+fine; it is structurally incompatible with frustration-division class discovery.
+Contrast: Gabor energy has per-dim on/off structure -> division OVER-fires (128).
+Both are failure modes of the same division machinery (the s038 keystone).

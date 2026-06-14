@@ -43,7 +43,8 @@ PCLL15_SENSE=lcn, no geometry, disfavored).
 
 Run: python3 -m experiments.progenitor.run_pcll_chained15
 Env: PCLL15_SEEDS (default 1), PCLL15_MANIFOLD (default 1),
-     PCLL15_WINDOW (default 1000), PCLL15_SENSE (raw|gabor|conv|lcn),
+     PCLL15_WINDOW (default 1000), PCLL15_SENSE (raw|gabor|rff|conv|lcn),
+     RFF_DIM (default 512), RFF_BANDWIDTH (default 0.25),
      PCLL15_CAP (default 128; 0 = uncapped),
      PCLL15_COMPOSER (default 1).
 """
@@ -96,6 +97,18 @@ CONV_C, CONV_K, CONV_POOL = 12, 5, 4   # fixed-conv benchmark geometry
 GABOR_LAMBDAS = (4.0, 8.0)             # low/mid scales (high freq = noise)
 GABOR_THETAS = (0.0, math.pi / 4, math.pi / 2, 3 * math.pi / 4)
 GABOR_K, GABOR_POOL = 11, 4            # ksize fits σ=0.5·λ_max=4; pool 4px
+# Random Fourier Features ON the Gabor energy (Gemma's holographic
+# wave-vector idea, Rocky s038): Ψ(r) = sin(2π·W·r + b). r = Gabor energy
+# (kept so the front-end stays background-swap invariant — plain RFF on raw
+# pixels would be shift/polarity fragile, like a global FFT). W = random
+# wave-vectors (each row a plane-wave k); b = random phase offset. This is
+# the projection-THEN-wrap that we never combined: lcn projected without
+# wrapping, the receptor wraps without projecting. Per-sample L2-normalize
+# r first so the pre-sine argument has a controlled scale (r̂·W ~ N(0,σ_W)),
+# σ_W = RFF_BANDWIDTH sets the sine frequency (small = smooth, less likely
+# to over-fragment). sin is bounded [−1,1] → the receptor quantizes natively.
+RFF_DIM = int(os.environ.get("RFF_DIM", "512"))
+RFF_BANDWIDTH = float(os.environ.get("RFF_BANDWIDTH", "0.25"))
 SHAPE = (28, 28) if SENSE == "raw" else None   # body geometry (raw only)
 
 
@@ -126,6 +139,27 @@ def _gabor_quadrature_bank() -> tuple[torch.Tensor, torch.Tensor]:
             torch.stack(odd).unsqueeze(1))
 
 
+def _build_gabor_sense():
+    """The converged Gabor energy front-end (s037) as a reusable closure —
+    no learned weights, no gradients. Returns x[N,784] → energy[N, C*49]."""
+    We, Wo = _gabor_quadrature_bank()
+    pad = GABOR_K // 2
+
+    def gabor_sense(x: torch.Tensor) -> torch.Tensor:
+        img = x.view(-1, 1, 28, 28)
+        # REFLECT pad (not zero): makes background-swap invariance exact at
+        # the border too — conv of a reflected constant is sum(kernel)·c = 0
+        # everywhere (zero-DC kernels), so conv(1−x) = −conv(x) and the
+        # energy is bit-exact under inversion. Zero-pad breaks this at edges.
+        img = F.pad(img, (pad, pad, pad, pad), mode="reflect")
+        ce = F.conv2d(img, We)                     # even (cos) response
+        co = F.conv2d(img, Wo)                     # odd  (sin) response
+        energy = torch.sqrt(ce * ce + co * co + 1e-12)   # [N,C,28,28]
+        energy = F.avg_pool2d(energy, GABOR_POOL)        # [N,C,7,7]
+        return energy.flatten(1)                         # [N, C*49]
+    return gabor_sense
+
+
 def make_sense(seed: int):
     """raw: identity — genesis faces the world (default). conv: a FIXED
     (random, gradient-free) convolution + ReLU + avg-pool spatial
@@ -140,22 +174,23 @@ def make_sense(seed: int):
     if SENSE == "raw":
         return lambda x: x
     if SENSE == "gabor":
-        # the converged perception front-end (s037). No learned weights,
-        # no gradients — a fixed sensory transform, inside PCLL's
-        # gradient-free claim, like the conv/lcn arms. Diagnostic oracle
-        # upper bound: energy 0.553 vs raw 0.249 (30-way), and the energy
-        # channel is bit-exact under background swap.
-        We, Wo = _gabor_quadrature_bank()
-        pad = GABOR_K // 2
+        # the converged perception front-end (s037). Oracle upper bound:
+        # energy 0.553 vs raw 0.249 (30-way), bit-exact under background
+        # swap. Organism (s038, seed 0): task-aware 0.690 / full 0.304.
+        return _build_gabor_sense()
+    if SENSE == "rff":
+        # holographic wave-vectors ON the Gabor energy: Ψ(r)=sin(2π·W·r+b).
+        # projection-then-wrap (Gemma s038). energy base keeps invariance.
+        base = _build_gabor_sense()
+        in_dim = base(torch.zeros(1, 784)).shape[1]
+        g = torch.Generator().manual_seed(30_000 + seed)
+        W = torch.randn(in_dim, RFF_DIM, generator=g) * RFF_BANDWIDTH
+        b = torch.rand(RFF_DIM, generator=g) * 2 * math.pi
 
-        def gabor_sense(x: torch.Tensor) -> torch.Tensor:
-            img = x.view(-1, 1, 28, 28)
-            ce = F.conv2d(img, We, padding=pad)        # even (cos) response
-            co = F.conv2d(img, Wo, padding=pad)        # odd  (sin) response
-            energy = torch.sqrt(ce * ce + co * co + 1e-12)   # [N,C,28,28]
-            energy = F.avg_pool2d(energy, GABOR_POOL)        # [N,C,7,7]
-            return energy.flatten(1)                         # [N, C*49]
-        return gabor_sense
+        def rff_sense(x: torch.Tensor) -> torch.Tensor:
+            r = F.normalize(base(x), dim=1)        # unit wave amplitude
+            return torch.sin(2 * math.pi * (r @ W) + b)   # [N, RFF_DIM]
+        return rff_sense
     if SENSE == "conv":
         g = torch.Generator().manual_seed(20_000 + seed)
         W = torch.randn(CONV_C, 1, CONV_K, CONV_K, generator=g)
