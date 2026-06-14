@@ -43,7 +43,7 @@ PCLL15_SENSE=lcn, no geometry, disfavored).
 
 Run: python3 -m experiments.progenitor.run_pcll_chained15
 Env: PCLL15_SEEDS (default 1), PCLL15_MANIFOLD (default 1),
-     PCLL15_WINDOW (default 1000), PCLL15_SENSE (raw|lcn),
+     PCLL15_WINDOW (default 1000), PCLL15_SENSE (raw|gabor|conv|lcn),
      PCLL15_CAP (default 128; 0 = uncapped),
      PCLL15_COMPOSER (default 1).
 """
@@ -83,7 +83,47 @@ FRAC = float(os.environ.get("PCLL15_FRAC", "1.0"))      # per-task subsample
                                                         # meetings = less tiling)
 L0_WIDTH, LCN_SIGMA = 128, 0.10
 CONV_C, CONV_K, CONV_POOL = 12, 5, 4   # fixed-conv benchmark geometry
+# converged perception design (s037 handoff): complex quadrature Gabor
+# bank at low/mid scales, pooled, EMITTING THE ENERGY CHANNEL. Energy
+# |conv_even + i·conv_odd| is the invariant+shift-robust workhorse —
+# bit-exact under background swap (Rocky's binding criterion: a human
+# reads the digit even if you swap the background; inverted-test 0.553).
+# Phase has the higher oracle ceiling (0.597) but is polarity-sensitive
+# (inverted-test 0.000) AND is an angle that the per-sample contrast
+# quantizer cannot carry faithfully — phase wants direct phasor injection,
+# a pipeline change, deferred. Energy is a non-negative magnitude → the
+# receptor quantizes it natively, exactly like raw pixels / conv.
+GABOR_LAMBDAS = (4.0, 8.0)             # low/mid scales (high freq = noise)
+GABOR_THETAS = (0.0, math.pi / 4, math.pi / 2, 3 * math.pi / 4)
+GABOR_K, GABOR_POOL = 11, 4            # ksize fits σ=0.5·λ_max=4; pool 4px
 SHAPE = (28, 28) if SENSE == "raw" else None   # body geometry (raw only)
+
+
+def _gabor_quadrature_bank() -> tuple[torch.Tensor, torch.Tensor]:
+    """Complex quadrature bank: matched even (cos) / odd (sin) Gabor pairs.
+    energy = sqrt(conv_even² + conv_odd²) is phase-magnitude → invariant to
+    a global sign flip of the input (background swap) and, after pooling,
+    shift-tolerant. Both members zero-DC + L1-normalized so the energy map
+    is gain-comparable across filters. Returns [(C,1,k,k), (C,1,k,k)]."""
+    half = GABOR_K // 2
+    yy, xx = torch.meshgrid(torch.arange(-half, half + 1).float(),
+                            torch.arange(-half, half + 1).float(),
+                            indexing="ij")
+    even, odd = [], []
+    for lam in GABOR_LAMBDAS:
+        sigma = 0.5 * lam
+        for theta in GABOR_THETAS:
+            x_t = xx * math.cos(theta) + yy * math.sin(theta)
+            y_t = -xx * math.sin(theta) + yy * math.cos(theta)
+            env = torch.exp(-(x_t ** 2 + y_t ** 2) / (2 * sigma ** 2))
+            ge = env * torch.cos(2 * math.pi * x_t / lam)
+            go = env * torch.sin(2 * math.pi * x_t / lam)
+            ge = ge - ge.mean()                 # zero DC (cos has a DC term)
+            go = go - go.mean()                 # sin is ~odd, kept for parity
+            even.append(ge / ge.abs().sum().clamp_min(1e-6))
+            odd.append(go / go.abs().sum().clamp_min(1e-6))
+    return (torch.stack(even).unsqueeze(1),     # [C,1,k,k]
+            torch.stack(odd).unsqueeze(1))
 
 
 def make_sense(seed: int):
@@ -99,6 +139,23 @@ def make_sense(seed: int):
     frozen retinotopic projection (disfavored — tiles to cap)."""
     if SENSE == "raw":
         return lambda x: x
+    if SENSE == "gabor":
+        # the converged perception front-end (s037). No learned weights,
+        # no gradients — a fixed sensory transform, inside PCLL's
+        # gradient-free claim, like the conv/lcn arms. Diagnostic oracle
+        # upper bound: energy 0.553 vs raw 0.249 (30-way), and the energy
+        # channel is bit-exact under background swap.
+        We, Wo = _gabor_quadrature_bank()
+        pad = GABOR_K // 2
+
+        def gabor_sense(x: torch.Tensor) -> torch.Tensor:
+            img = x.view(-1, 1, 28, 28)
+            ce = F.conv2d(img, We, padding=pad)        # even (cos) response
+            co = F.conv2d(img, Wo, padding=pad)        # odd  (sin) response
+            energy = torch.sqrt(ce * ce + co * co + 1e-12)   # [N,C,28,28]
+            energy = F.avg_pool2d(energy, GABOR_POOL)        # [N,C,7,7]
+            return energy.flatten(1)                         # [N, C*49]
+        return gabor_sense
     if SENSE == "conv":
         g = torch.Generator().manual_seed(20_000 + seed)
         W = torch.randn(CONV_C, 1, CONV_K, CONV_K, generator=g)
