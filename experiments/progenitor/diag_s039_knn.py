@@ -53,6 +53,7 @@ DATA_ROOT = os.environ.get(
 PER_CLASS = int(os.environ.get("S039_PER_CLASS", "300"))
 K_SWEEP = [int(s) for s in os.environ.get("S039_K", "1,5").split(",")]
 USE_GABOR = os.environ.get("S039_GABOR", "0") == "1"
+FE = os.environ.get("S039_FE", "gabor" if USE_GABOR else "raw")  # raw|gabor|scatter
 INVERT_TEST = os.environ.get("S039_INVERT_TEST", "0") == "1"
 N_CLASSES = 30
 
@@ -69,16 +70,21 @@ def balanced_slice(views, per_class, seed):
     return X[idx], y[idx]
 
 
-def _gabor_energy(X: torch.Tensor) -> torch.Tensor:
-    """Lazy import of the runner's gabor bank so the two stay in sync."""
-    from experiments.progenitor.run_pcll_chained15 import _build_gabor_sense
-    return _build_gabor_sense()(X)
+def _frontend(X: torch.Tensor) -> torch.Tensor:
+    """Lazy import of the runner's front-ends so the two stay in sync."""
+    if FE == "gabor":
+        from experiments.progenitor.run_pcll_chained15 import _build_gabor_sense
+        return _build_gabor_sense()(X)
+    if FE == "scatter":
+        from experiments.progenitor.run_pcll_chained15 import _build_scatter_sense
+        return _build_scatter_sense(prune=True)(X)
+    return X.flatten(1)
 
 
 def reps(X: torch.Tensor, mu_phasor=None):
     """Return {name: (features, is_complex)} for one image batch.
     mu_phasor: global mean phasor from TRAIN, subtracted for 'centered'."""
-    feat = _gabor_energy(X) if USE_GABOR else X.flatten(1)
+    feat = _frontend(X)
     q = quantize(feat)                                  # [N, F] per-sample
     ref = (q == 0) | (q == N_QUANTA)                    # reference quanta
     Z = torch.exp(1j * 2 * math.pi * q / N_QUANTA)
@@ -132,7 +138,8 @@ def main() -> None:
     if INVERT_TEST:
         Xte = 1.0 - Xte                                # background swap
 
-    sense = "gabor energy" if USE_GABOR else "raw pixels"
+    sense = {"gabor": "gabor energy", "scatter": "scattering (2nd-order)",
+             "raw": "raw pixels"}.get(FE, FE)
     inv = "  [INVERTED test]" if INVERT_TEST else ""
     print(f"s039 KNN probe{inv} — {N_CLASSES}-way, {sense}, "
           f"train {tuple(Xtr.shape)} test {tuple(Xte.shape)}  "

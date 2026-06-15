@@ -1,0 +1,28 @@
+PCLL organism on chained-15 (s036 rebuild) — single pass, no gradients, labels 100% (D22), manifold=on, composer=on, cap=128, sense=scatter, window=1000, seeds=1
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+  [genesis/mixed] starved=0 merged=0->0 regions  receptors 1176->1176
+  [task  1/15 mnist_0_1] classes=128 spawned=0 (conv 0) t=59s
+  [task  2/15 mnist_2_3] classes=128 spawned=0 (conv 0) t=452s
+  [task  3/15 mnist_4_5] classes=128 spawned=0 (conv 0) t=872s
+  [task  4/15 mnist_6_7] classes=128 spawned=0 (conv 0) t=1338s
+  [task  5/15 mnist_8_9] classes=128 spawned=0 (conv 0) t=1777s
+  [task  6/15 fashion_mnist_0_1] classes=128 spawned=0 (conv 0) t=2279s
+  [task  7/15 fashion_mnist_2_3] classes=128 spawned=0 (conv 0) t=3004s
+  [task  8/15 fashion_mnist_4_5] classes=128 spawned=0 (conv 0) t=3656s
+  [task  9/15 fashion_mnist_6_7] classes=128 spawned=0 (conv 0) t=4356s
+  [task 10/15 fashion_mnist_8_9] classes=128 spawned=0 (conv 0) t=5030s
+  [task 11/15 emnist_letters_0_1] classes=128 spawned=0 (conv 0) t=5667s
+  [task 12/15 emnist_letters_2_3] classes=128 spawned=0 (conv 0) t=6330s
+  [task 13/15 emnist_letters_4_5] classes=128 spawned=0 (conv 0) t=6931s
+  [task 14/15 emnist_letters_6_7] classes=128 spawned=0 (conv 0) t=7479s
+  [task 15/15 emnist_letters_8_9] classes=128 spawned=0 (conv 0) t=7913s
+  per-task plain   : 1.00 0.94 0.40 0.48 0.93 0.50 0.00 0.50 0.50 0.50 0.82 0.00 0.89 0.64 0.65
+  per-task centered: 0.99 0.97 0.43 0.48 0.93 0.50 0.00 0.50 0.50 0.50 0.81 0.00 0.87 0.74 0.65
+[seed 0] PLAIN    task_aware=0.584  full=0.331
+[seed 0] CENTERED task_aware=0.592  full=0.368  (Δ ta +0.008, full +0.036)
+[seed 0] classes=128 (0 unnamed)  elapsed=7958s

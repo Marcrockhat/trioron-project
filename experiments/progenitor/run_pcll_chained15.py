@@ -160,6 +160,83 @@ def _build_gabor_sense():
     return gabor_sense
 
 
+def _energy_maps(img: torch.Tensor, We, Wo, pad) -> torch.Tensor:
+    """[N,1,H,W] -> [N,C,H,W] quadrature energy maps (no pool). Zero-DC
+    kernels + reflect pad -> bit-exact under background swap."""
+    img = F.pad(img, (pad, pad, pad, pad), mode="reflect")
+    ce = F.conv2d(img, We)
+    co = F.conv2d(img, Wo)
+    return torch.sqrt(ce * ce + co * co + 1e-12)
+
+
+def _build_scatter_sense(prune: bool = True):
+    """2nd-order wavelet SCATTERING — Rocky's 'cascade of prisms' (s039).
+    A prism DISPERSES into oriented-frequency bands; cascading re-disperses
+    each band's ENERGY again, capturing frequency-of-frequency (texture /
+    parts) that a single dispersion (gabor) folds away. Each stage = gabor
+    quadrature -> |energy|; no S0 lowpass (it is polarity-sensitive and
+    would break the inversion invariance the energy paths preserve).
+
+    path-pruning: keep only DECREASING-frequency 2nd-order paths λ2 > λ1
+    (the standard scattering trick — energy of |x*ψ_λ1| lives below λ1, so
+    increasing-frequency paths carry ~no energy). With λ∈{4,8}: λ1=4 bands
+    re-disperse to λ2=8; λ1=8 bands terminate.
+
+    Inversion-invariant (every stage is zero-DC energy) and faithful (each
+    eye outputs a non-negative magnitude the quantizer carries exactly)."""
+    We, Wo = _gabor_quadrature_bank()
+    pad = GABOR_K // 2
+    nth = len(GABOR_THETAS)
+    lam_of = lambda c: GABOR_LAMBDAS[c // nth]        # wavelength of channel c
+
+    def scatter(x: torch.Tensor) -> torch.Tensor:
+        img = x.view(-1, 1, 28, 28)
+        E1 = _energy_maps(img, We, Wo, pad)          # [N, C, 28,28]
+        outs = [F.avg_pool2d(E1, GABOR_POOL).flatten(1)]      # S1
+        for c1 in range(E1.shape[1]):                # 2nd prism per band
+            E2 = _energy_maps(E1[:, c1:c1 + 1], We, Wo, pad)
+            if prune:
+                keep = [c2 for c2 in range(E2.shape[1])
+                        if lam_of(c2) > lam_of(c1)]
+                if not keep:
+                    continue
+                E2 = E2[:, keep]
+            outs.append(F.avg_pool2d(E2, GABOR_POOL).flatten(1))   # S2
+        return torch.cat(outs, dim=1)
+    return scatter
+
+
+def _build_cstree_sense(with_tree: bool):
+    """Rocky's receptor design as a PCLL sense (s039). Leaf feature =
+    |center-surround| (|LoG|, reflect-pad) → polarity/inversion invariant.
+    If with_tree: neighbour-join a tree over the leaf dims and append each
+    bounded clade's mean as a multi-scale PATCH dimension. The tree is fit
+    ONCE, lazily, on the FIRST batch — which is the genesis priming window
+    (union data, unlabeled): the principled place to learn topology. KNN
+    couldn't use the tree (permutation-invariant readout); PCLL's
+    per-dimension division can — a patch-mean may be cleanly bimodal where
+    a single pixel is not."""
+    from experiments.progenitor.diag_s039_patchtree import (
+        center_surround, coquantum_distance, neighbour_join_clades,
+        patch_features, PATCH_MIN, PATCH_MAX)
+    state = {}
+
+    def cs_sense(x: torch.Tensor) -> torch.Tensor:
+        cs = center_surround(x)                          # [N, 784], |LoG|
+        if not with_tree:
+            return cs
+        if "clades" not in state:                        # fit on first batch
+            D, active = coquantum_distance(cs)
+            state["clades"] = [c for c in neighbour_join_clades(
+                D, list(active)) if PATCH_MIN <= len(c) <= PATCH_MAX]
+            state["active"] = active
+            print(f"  [cstree] fit topology: {len(active)} active dims, "
+                  f"{len(state['clades'])} patch clades", flush=True)
+        P = patch_features(cs, state["active"], state["clades"])
+        return torch.cat([cs, P], dim=1)                 # [N, 784 + P]
+    return cs_sense
+
+
 def make_sense(seed: int):
     """raw: identity — genesis faces the world (default). conv: a FIXED
     (random, gradient-free) convolution + ReLU + avg-pool spatial
@@ -178,6 +255,17 @@ def make_sense(seed: int):
         # energy 0.553 vs raw 0.249 (30-way), bit-exact under background
         # swap. Organism (s038, seed 0): task-aware 0.690 / full 0.304.
         return _build_gabor_sense()
+    if SENSE == "scatter":
+        # 2nd-order wavelet scattering, path-pruned (Rocky's prism cascade).
+        return _build_scatter_sense(prune=True)
+    if SENSE == "scatter_full":
+        return _build_scatter_sense(prune=False)       # no path-pruning
+    if SENSE == "cs":
+        # |center-surround| leaves only — the inversion fix, no tree.
+        return _build_cstree_sense(with_tree=False)
+    if SENSE == "cstree":
+        # |center-surround| + neighbour-joined patch dims (Rocky s039).
+        return _build_cstree_sense(with_tree=True)
     if SENSE == "rff":
         # holographic wave-vectors ON the Gabor energy: Ψ(r)=sin(2π·W·r+b).
         # projection-then-wrap (Gemma s038). energy base keeps invariance.

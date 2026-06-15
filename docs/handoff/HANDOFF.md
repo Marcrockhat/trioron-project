@@ -2,206 +2,177 @@
 
 **Session date:** 2026-06-15
 **Session number:** 039
-**Session title:** **Receptor diagnostics — the keystone is the READOUT/
-MECHANISM, proven three ways. (1) Centered matched-filter readout lifts the
-gabor organism to 0.736/0.446 (from s038 0.690/0.304). (2) KNN proves the
-class info is FULLY in the quanta (0.83–0.88 ≈ raw pixels) — so the gap is
-downstream, not perception. (3) Rocky's two receptor fixes tested: |center-
-surround| quanta give PERFECT inversion invariance (0.782=0.782), and a
-neighbour-joining tree over the dimensions RECOVERS the 2D image topology
-from data alone (tree-nearest leaf 1.58 px, Spearman +0.39) — BUT tree-as-
-appended-features is NULL (random groupings match/beat it), because the
-matched filter is permutation-invariant over features and literally cannot
-see topology. The tree must enter the DIVISION/COUNCIL machinery, not the
-feature vector.** Checkpoint commit; the architectural build (tree-into-
-division) starts fresh next session.**
+**Session title:** **Perception is NOT the bottleneck — proven by exhausting
+the front-end. The keystone is the division + readout.** A full diagnostic
+sweep: (1) KNN proves the class info is FULLY in the quanta (0.83–0.88 ≈
+raw pixels). (2) Centered matched-filter readout lifts the gabor organism
+to 0.736/0.446 (from s038 0.690/0.304). (3) Rocky's receptor ideas, each
+built and tested end-to-end: |center-surround| gives PERFECT inversion
+invariance (0.782=0.782) but ≤ gabor; a neighbour-joining tree over the
+dimensions RECOVERS the 2D image topology from data alone (1.58 px) but
+tree-as-features is NULL (permutation-invariant readout can't use it);
+t-SNE shows the quantum bands fold 2D position into ~1D; and a 2nd-order
+wavelet SCATTERING cascade ("cascade of prisms") ties gabor in KNN, wins a
+3-task smoke (+0.024), but **LOSES at full 15-task (0.592/0.368 vs gabor
+0.736/0.446)** — its 1176 dims give division more rope to over-segment.
+**Every path converges: the flat discriminative ceiling is ~0.87, the
+organism realizes 0.37–0.74, and gabor is the front-end ceiling. The gap
+is downstream: kill the cap=128 over-segmentation and replace the
+generative mean-template readout.**
 
 ---
 
 ## READ THIS FIRST
 
-1. **This was a DIAGNOSTIC session — no organism/package code changed**
-   except the readout A/B in the runner. Four new probes under
-   `experiments/progenitor/`. The findings redirect the work; act on them
-   before building.
-2. **The keystone is now triangulated and it is NOT perception.** KNN on
-   the raw pocket-integer vector hits **0.826** (≈ raw pixels 0.834,
-   30-way, chance 0.033). The class information is fully preserved in the
-   quanta. Every loss is downstream: encoding-to-phasor, then the
-   generative mean-template readout, then division/name-majority. On the
-   headline GABOR sense the phasor encoding is faithful (0.881→0.874) and
-   the dominant single loss is the **mean-template oracle collapse**
-   (KNN 0.874 → oracle 0.553, **−0.32**) — i.e. NEXT is a discriminative/
-   distributional readout, with a measured ceiling of ~0.87.
-3. **Rocky's design (this session's core):** the receptor is spatially
-   blind (flat bag-of-pixels; position survives only as an index, never as
-   a patch) and polarity-bound (inverting the image drops raw KNN
-   0.834→0.023, below chance). His two fixes:
-   - **|center-surround| receptor** (a pixel vs its neighbours, |LoG|) →
-     inversion invariance. **CONFIRMED:** cs-leaves 0.782 normal = 0.782
-     inverted, bit-exact, and a better base than raw intensity (+0.15).
-   - **neighbour-joining tree over the dimensions** → patches/hierarchy,
-     modality-agnostic (1D/2D/3D — NJ needs only a distance matrix).
-     **Topology recovery CONFIRMED** (1.58 px), but **tree-as-features
-     NULL** (see #4). The tree is valid; the *consumption* was wrong.
-4. **The decisive negative result:** appending tree-aggregated patch
-   features to the matched-filter/KNN readout does NOT help — random
-   groupings of the same sizes match or beat the tree (raw: random 0.767
-   > tree 0.730; cs: tree 0.798 ≈ random 0.785). **Why:** cosine /
-   matched-filter sums over features → permutation-invariant → it cannot
-   see feature grouping at all, and tree-local pooling averages correlated
-   (redundant) pixels while random pooling averages diverse ones. So the
-   tree can only pay off where the mechanism processes features LOCALLY:
-   **division splitting on patches instead of per-pixel** (the cause of
-   the cap=128 over-segmentation), or substrate connectivity / weight-
-   sharing. This is Rocky's concern #2 ("fix the council and architecture").
+1. **DIAGNOSTIC session. The conclusion is a PIVOT: stop tuning
+   perception, fix the division/readout.** No package code changed; the
+   runner got A/B readout + 4 new senses; 5 new probe scripts.
+2. **The keystone, triangulated and final:** KNN on the raw pocket-integer
+   vector = **0.826** ≈ raw pixels 0.834 (30-way, chance 0.033). Class info
+   is fully in the quanta. On gabor the phasor is faithful (0.881→0.874)
+   and the dominant single loss is the **mean-template oracle collapse**
+   (KNN 0.874 → oracle 0.553, −0.32) → NEXT is a discriminative readout
+   (ceiling ~0.87), and killing over-segmentation.
+3. **Perception is exhausted as a lever.** Four front-end ideas tried; NONE
+   beats gabor in the full organism:
+   - **centered readout** (μ-subtract): +0.06 full on gabor (0.446). KEEP —
+     committed, it is the current best.
+   - **|center-surround| (|LoG|):** inversion-invariant (0.782=0.782),
+     better than raw, but ≤ gabor (which is also invariant).
+   - **NJ dimension-tree:** recovers 2D topology (1.58 px, Spearman +0.39)
+     but tree-as-appended-features is NULL in BOTH KNN and PCLL (random
+     groupings match/beat it — the readout is permutation-invariant).
+   - **2nd-order scattering (prism cascade):** ties gabor in KNN, +0.024 on
+     a 3-task smoke, but **−0.14 task / −0.08 full at full 15-task.** A
+     richer (1176-d) front-end makes the organism WORSE: more spurious
+     bimodal dims → division over-segments dirtier. Confirms the keystone.
+4. **The mechanism truth that killed tree + scattering as features:** the
+   matched filter / KNN sum over the feature axis → **permutation-invariant
+   over features** → they CANNOT exploit feature grouping or spatial
+   structure. The tree/cascade can only pay off by changing the DIVISION
+   ALGORITHM (split on patch-units, or local connectivity), not by adding
+   feature dimensions. The richer the bag, the worse division fragments.
 5. **DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM):**
    `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
-   `trioron/viz/export.py`; `.claude/`, `runs/` untracked. NOT staged.
-   Two **stalled** raw runs left untracked on disk
-   (`outputs/pcll_chained15_s039_raw_centered.log`,
-   `..._raw_nocomp_centered.log`) — they crawled (task 6 = 5449s, task 7 =
-   20893s) from **CPU contention** (both launched concurrently), never
-   finished, and are NOT committed. Re-run raw+centered ALONE if the A/B
-   baseline is wanted.
+   `trioron/viz/export.py`; `.claude/`, `runs/` untracked. Two **stalled**
+   raw runs (`..._s039_raw_centered.log`, `..._raw_nocomp_centered.log`)
+   left untracked — CPU contention, never finished, NOT committed.
 
 ---
 
-## What was built (4 probes + 1 readout A/B)
+## What was built
 
-- **`run_pcll_chained15.py`** — `evidence()` → `evidence_both()`: computes
-  the **plain** matched filter AND a **centered** one (subtract the mean
-  template μ = common-mode phasor) in one forward pass; `_score()` helper;
-  `run_seed` returns the centered numbers. Readout-only A/B on the
-  identical trained organism (no retrain). Result (gabor, seed 0):
-  PLAIN 0.712/0.385, **CENTERED 0.736/0.446** (Δ full +0.061). Beats the
-  s038 committed gabor 0.690/0.304. *(See OPEN: plain ≠ s038 plain.)*
-- **`diag_s039_knn.py`** — KNN encoding probe. Representations: raw,
-  quanta, phasor `exp(iθ)`, halfcirc `exp(iπq/N)`, centered; `S039_GABOR`,
-  `S039_INVERT_TEST`. The keystone-triangulation tool.
-- **`diag_s039_bands.py`** — band-offset (per-dimension offset circles)
-  encoding probe. **FALSIFIED** (hand-coded spatial separation doesn't
-  recover; the real superposition is the generative-readout common mode).
-  Superseded by the NJ tree (the data-driven version).
-- **`diag_s039_njtree.py`** — neighbour-joining a tree over the 784 pixel
-  dimensions from **co-quantum agreement** distance; validates topology
-  recovery vs the known 2D grid. `S039_METRIC=active` (background-
-  conditioned, the working metric) | `raw`.
-- **`diag_s039_patchtree.py`** — the COMBINED proposal end-to-end:
-  |LoG| leaves + NJ tree clades as patch features, KNN normal vs inverted,
-  with the random-grouping control that produced the null.
+**`run_pcll_chained15.py`** (one A/B + four senses, all gradient-free):
+- `evidence_both()` / `_score()` — plain AND **centered** (μ-subtracted
+  common-mode) matched filter in one pass; `run_seed` returns centered.
+- `SENSE=cs` / `cstree` — `|center-surround|` leaves (`_build_cstree_sense`),
+  optional NJ patch-dims; tree fit lazily on the genesis window.
+- `SENSE=scatter` / `scatter_full` — 2nd-order wavelet scattering
+  (`_build_scatter_sense`, `_energy_maps`), path-pruned (λ2>λ1) or full.
+  Reuses the gabor quadrature bank; no S0 lowpass (keeps inversion inv.).
+
+**Probes** (`experiments/progenitor/`):
+- `diag_s039_knn.py` — KNN encoding probe; `S039_FE=raw|gabor|scatter`,
+  `S039_INVERT_TEST`; reps raw/quanta/phasor/halfcirc/centered.
+- `diag_s039_njtree.py` — NJ tree over dims (co-quantum dist) vs grid.
+- `diag_s039_patchtree.py` — combined |LoG|+tree, KNN + random control.
+- `diag_s039_tsne.py` — saves `outputs/diag_s039_tsne.png` (dims by
+  co-quantum dist colored by grid; samples by class, raw vs cs).
+- `diag_s039_bands.py` — band-offset encoding (FALSIFIED; superseded by NJ).
 
 ## The numbers
 
-**KNN keystone (30-way, chance 0.033, k=1):**
+**KNN keystone (30-way, k=1, NORMAL / INVERTED):**
 
-| rep | raw normal | raw INVERTED | gabor normal | gabor INVERTED |
-|---|---|---|---|---|
-| raw cosine | 0.834 | 0.023 | 0.895 | 0.895 |
-| quanta | 0.826 | 0.322 | 0.881 | 0.881 |
-| phasor | 0.628 | 0.372 | 0.874 | 0.874 |
-| halfcirc | 0.732 | 0.171 | 0.872 | 0.872 |
+| rep | raw | gabor | scatter |
+|---|---|---|---|
+| quanta | 0.826 / 0.322 | 0.881 / 0.881 | 0.885 / 0.885 |
+| phasor | 0.628 / 0.372 | 0.874 / 0.874 | 0.875 / 0.875 |
 
-- Info is in the quanta (0.826≈0.834). Raw phasor loses 0.20 to the
-  **circular wrap** (raw pixels bimodal → q=0/q=1000 antipodal); the
-  half-circle `θ=πq/N` recovers +0.10, confirming the wrap is the cause.
-- Gabor energy is phasor-COMPATIBLE (0.881→0.874, −0.007) AND inversion-
-  invariant (bit-identical) — a *new* reason gabor wins, not in any prior
-  handoff.
+Info is in the quanta. Raw phasor loses 0.20 to the circular wrap (raw is
+bimodal); gabor/scatter are phasor-faithful AND inversion-invariant.
+scatter ≈ gabor (no KNN lift; the cascade's value is invisible to a
+permutation-invariant readout).
 
-**NJ topology recovery (raw pixels, active-conditioned metric):**
-Spearman(tree, grid) **+0.389** (shuffled control +0.025); tree-nearest
-leaf **1.58 px** (random ~13.5). A tree built from data alone, given no
-coordinates, reconstructs the image lattice — modality-agnostically.
+**NJ topology recovery:** Spearman(tree,grid) +0.389 (shuffle +0.025);
+tree-nearest leaf 1.58 px (random ~13.5). t-SNE: dims form a folded ~1D
+manifold, not a 2D sheet → 2D position poorly represented in quantum bands.
 
-**Combined patch-tree (phasor KNN, 30-way):**
+**Full 15-task organism, centered (seed 0) — the headline:**
 
-| rep | normal | inverted |
+| sense | task-aware | full |
 |---|---|---|
-| raw-leaves | 0.628 | 0.372 |
-| raw + tree patch | 0.730 | 0.246 |
-| raw + **random** patch | **0.767** | — |
-| cs-leaves (\|LoG\|) | 0.782 | **0.782** |
-| cs + tree patch | 0.798 | 0.798 |
-| cs + **random** patch | 0.785 | — |
+| **gabor (BEST)** | **0.736** | **0.446** |
+| scatter | 0.592 | 0.368 |
+| raw (s034) | 0.552 | 0.172 |
 
-cs = perfect inversion invariance + better base. Tree patches ≤ random
-patches → the lift is generic pooling, not topology (the null).
+3-task smokes (FRAC=0.3) MISLED: gabor 0.981/0.880, scatter 0.984/0.904,
+cs 0.749/0.661, cstree 0.753/0.662 — short streams hide cross-task
+interference; do NOT trust 3-task smokes for the 15-task verdict.
 
-## NEXT (priority order)
+## NEXT (priority — all downstream of perception now)
 
-1. **Tree-into-division (highest leverage, Rocky's concern #2).** Make
-   `division.try_divide` split on tree-clades / patch-units instead of
-   per-dimension, and measure whether it stops over-segmenting (cap=128
-   from task 1) and lifts full toward the 0.55 oracle / 0.87 KNN ceiling.
-   This is the ONLY place the validated tree can pay off (the readout is
-   permutation-invariant). Build the NJ tree at genesis from the receptor
-   stream, freeze it (or re-estimate per CL-task — open design question).
-2. **Adopt the |center-surround| receptor.** Wire `|LoG|` (reflect-pad,
-   it IS the s038 invariance fix) as a new `PCLL15_SENSE=cs` and run the
-   full organism normal + inverted. Banks the confirmed inversion fix and
-   the +0.15 base over raw intensity, independent of the tree work.
-3. **Discriminative readout (the −0.32).** Wire the manifold full-cov /
-   H-routing readout (manual §5.5, `bench_chained_15_v2.py`) — the
-   measured gap from generative mean-template (0.553) to discriminative
-   (KNN 0.874). Centering (this session) is a +0.06 down-payment on it.
-4. **Modality-agnostic proof.** Run the NJ recovery on a 1D signal to
-   demonstrate topology discovery off the 2D grid (Rocky's generality
-   claim; cheap, strengthens the paper story).
-5. **Oriented center-surround.** cs uses one isotropic |LoG| (0.782) <
-   gabor's 8 oriented energy channels (0.874). An oriented |center-
-   surround| bank would close that, still inversion-invariant.
+1. **Kill cap=128 over-segmentation (highest leverage).** Every sense tiles
+   to 128 on task 1 at FRAC=1.0; 128 fragments for 30 classes is 4× over.
+   Make `division.try_divide` self-arrest on dense surfaces, or split on
+   patch-units, OR derive the cap. The FRAC knob is the cheap probe
+   (fewer meetings → less tiling lifted the smoke).
+2. **Discriminative readout (the −0.32).** Replace the generative
+   mean-template matched filter with the manifold full-cov / H-routing
+   readout (manual §5.5, `bench_chained_15_v2.py`). KNN proves ~0.87 is
+   reachable; centering (this session) is a +0.06 down-payment.
+3. **Tree as STRUCTURE, not features (Rocky's concern #2).** The ONLY
+   untested place the validated NJ tree can help: make division split on
+   tree-clades / wire clade-local connectivity. Tree-as-features is dead.
+4. **(Lower) Modality-agnostic proof** of NJ on a 1D signal; **oriented
+   center-surround** bank; revisit scattering only if div over-segmentation
+   is fixed first (its loss was dimension-driven fragmentation).
 
 ## OPEN / unresolved
 
-- **Plain gabor discrepancy:** s039 `evidence_both` PLAIN = 0.712/0.385,
-  but s038 committed PLAIN = 0.690/0.304 (same seed, same readout). Must
-  be explained before trusting the 0.736/0.446 headline. Candidates:
-  reflect-pad fix (9fbf59b) changing gabor after the s038 headline was
-  recorded; eval-set ordering in `evidence_both`; run nondeterminism.
-- **NJ scaling:** O(N³), fine for 784, dead at the 1.5 Mi working-
-  resolution target — a local/approximate NJ is needed before vision.
+- **Plain gabor discrepancy:** s039 `evidence_both` PLAIN = 0.712/0.385 vs
+  s038 committed PLAIN 0.690/0.304 (same seed/readout). Explain before
+  fully trusting 0.736/0.446. Likely the reflect-pad fix (9fbf59b) post-
+  dating the s038 headline, or eval ordering in `evidence_both`.
+- **NJ scaling:** O(N³), fine at 784, dead at the 1.5 Mi vision target.
+- All headline numbers are seed 0 only.
 
 ## State of the build
 
-- Branch `progenitor-council`. This commit adds the 4 `diag_s039_*.py`
-  probes + the `evidence_both` centered-readout A/B in
-  `run_pcll_chained15.py` + `outputs/pcll_chained15_s039_gabor_centered.log`
-  + this handoff. No package code touched; gate battery untouched (green
-  from s036, not re-run).
-- `developmental.py` ×2 + `viz/export.py` carries NOT staged (s034 carry).
-- Two stalled raw logs left untracked (contention; not committed).
-- Run cost: KNN/NJ probes seconds–minutes each; gabor-centered organism
-  ~3239s seed 0 CPU OMP_NUM_THREADS=8.
+- Branch `progenitor-council`. Two commits this session: `24875be`
+  (KNN/NJ/patchtree + centered readout) and this one (cs/cstree/scatter
+  senses + t-SNE + scatter full-15 log + this handoff). No package code
+  touched; gate battery untouched (green from s036).
+- Carries NOT staged (developmental ×2, viz/export); stalled raw logs
+  untracked.
+- Run cost: scatter full-15 = 7958s (~2.2 h, slower than gabor's 3239s —
+  1176 dims). KNN/NJ/t-SNE probes seconds–minutes.
 
 ## Pointers
 
-- **Keystone tool:** `experiments/progenitor/diag_s039_knn.py` (raw/quanta/
-  phasor/halfcirc/centered; `S039_GABOR`, `S039_INVERT_TEST`).
-- **Topology tool:** `diag_s039_njtree.py` (co-quantum NJ vs grid).
-- **Combined proposal + the null:** `diag_s039_patchtree.py`
-  (`center_surround` |LoG| reflect-pad, `neighbour_join_clades`,
-  random-grouping control).
-- **Division to modify for NEXT#1:** `trioron/pcll/division.py`
-  (`try_divide`, per-dimension bimodality, `NULL_SPLIT=0.72`).
-- **Readout for NEXT#3:** `experiments/bench_chained_15_v2.py`
+- **Front-ends:** `run_pcll_chained15.py` `make_sense` (raw|gabor|scatter|
+  scatter_full|cs|cstree|conv|lcn; dispatches on the `SENSE` env GLOBAL,
+  not its arg); `_build_scatter_sense`, `_build_cstree_sense`,
+  `_build_gabor_sense`, `_energy_maps`, `_gabor_quadrature_bank`.
+- **Division to fix for NEXT#1/#3:** `trioron/pcll/division.py`
+  (`try_divide`, per-dim bimodality, `NULL_SPLIT=0.72`).
+- **Readout for NEXT#2:** `experiments/bench_chained_15_v2.py`
   (`--full-cov`, H-routing); `trioron/learning/manifold.py`.
 - **Encoding internals:** `trioron/core/receptor.py` (`quantize`, per-sample
-  global lo/hi — the spatial-blindness root); `trioron/pcll/mixed.py`
-  (`pockets_of` 1316, `_evidence` 445, `templates` 1297).
-- **The gabor base + senses:** `run_pcll_chained15.py` (`make_sense`
-  dispatches on the `SENSE` env global — NOT its arg; `_build_gabor_sense`).
+  global lo/hi = the spatial-blindness + bimodal-wrap root);
+  `trioron/pcll/mixed.py` (`pockets_of` 1316, `_evidence` 445,
+  `templates` 1297).
 - **Design:** `docs/design/progenitor_council.md:66` (center-surround
-  positional cells), `docs/design/pcll_substrate_integration.md:131`.
+  cells), `docs/design/pcll_substrate_integration.md:131`.
 
 ## Environment notes
 
 - `/home/marcrockhat/trioron-project/`, branch `progenitor-council`,
-  Python 3.10.12, torch 2.11.0, scipy 1.15.3, WSL2, `python3` (NOT
-  `python`), `OMP_NUM_THREADS=8`. Data at `outputs/data/`.
-- bench-15 = 30 true global classes, 15 tasks (MNIST/Fashion/EMNIST-letters
-  pairs), single gradient-free pass per task.
-- **Model note:** lead with the computational/ML framing (frequency,
-  convolution, matched filter, energy = magnitude of a quadrature pair,
-  neighbour-joining = phylogenetic clustering on a distance matrix) — the
-  biological metaphors can trip mid-session safety downgrades.
+  Python 3.10.12, torch 2.11.0, scipy 1.15.3, sklearn 1.7.2, WSL2,
+  `python3` (NOT `python`), `OMP_NUM_THREADS=8`. Data `outputs/data/`.
+- bench-15 = 30 global classes, 15 tasks (MNIST/Fashion/EMNIST pairs),
+  single gradient-free pass per task. **3-task smokes are NOT predictive.**
+- **Model note:** lead with computational framing (frequency, convolution,
+  matched filter, quadrature energy, neighbour-joining = phylogenetic
+  clustering, scattering transform = cascaded wavelet+modulus) — biological
+  metaphors ("eyes", "prism", "cells") can trip mid-session downgrades.
