@@ -219,14 +219,51 @@ def names_of(mixed) -> torch.Tensor:
     return torch.tensor(out, dtype=torch.long)
 
 
-def evidence(mixed, sense, X: torch.Tensor) -> torch.Tensor:
+def evidence_both(mixed, sense, X: torch.Tensor):
+    """Matched-filter evidence under TWO readouts on the SAME templates,
+    computed in one forward pass (pockets_of runs the substrate — the
+    expensive part — once per chunk):
+
+      plain    E = Σ_f Re(Z·T̄)                 — the shipped generative filter
+      centered E = Σ_f Re((Z−μ)·(T−μ)̄), μ = mean_k T[k]
+
+    The CENTERED filter subtracts the COMMON-MODE phasor that every class
+    template shares (the average image/background structure). s039 oracle:
+    removing it ~doubles raw-pixel accuracy (0.249→0.496) — the real
+    superposition is this shared component in the GENERATIVE readout, not
+    the input layout (the band-offset probe falsified spatial separation).
+    Readout-only: no retrain, the organism state is identical."""
     T = mixed.templates()
-    out = []
+    mu = T.mean(0, keepdim=True)
+    Tc = T - mu
+    Ep, Ec = [], []
     for i in range(0, len(X), 2000):
         q = mixed.pockets_of(sense(X[i:i + 2000]))
         Z = torch.exp(1j * 2 * math.pi * q / N_QUANTA)
-        out.append(mixed._evidence(Z, T))
-    return torch.cat(out)
+        Ep.append(mixed._evidence(Z, T))
+        Ec.append(mixed._evidence(Z - mu, Tc))
+    return torch.cat(Ep), torch.cat(Ec)
+
+
+def _score(E: torch.Tensor, name: torch.Tensor, eval_views, specs):
+    """(task_aware, full, per_task) for one evidence matrix — the readout
+    is the only thing that varies, so name/views/specs are shared."""
+    yt = torch.cat([v.labels_global for v in eval_views])
+    full = float((name[E.argmax(1)] == yt).float().mean())
+    per_task, off = [], 0
+    for view, spec in zip(eval_views, specs):
+        n = len(view.labels_global)
+        Et = E[off:off + n]
+        off += n
+        cand = torch.isin(name, torch.tensor(spec.global_classes)) \
+            .nonzero().squeeze(1)
+        if not len(cand):
+            per_task.append(0.0)
+            continue
+        pred = name[cand[Et[:, cand].argmax(1)]]
+        per_task.append(
+            float((pred == view.labels_global).float().mean()))
+    return sum(per_task) / len(per_task), full, per_task
 
 
 def run_seed(seed: int):
@@ -288,36 +325,21 @@ def run_seed(seed: int):
               f"t={time.time() - t0:.0f}s", flush=True)
 
     name = names_of(mixed)
-    # full: union of all 15 test sets, argmax over every template
+    # full + task-aware under BOTH readouts on the union of all 15 test
+    # sets — readout-only A/B on the identical trained organism.
     Xt = torch.cat([v.images for v in eval_views])
-    yt = torch.cat([v.labels_global for v in eval_views])
-    E = evidence(mixed, sense, Xt)
-    full = float((name[E.argmax(1)] == yt).float().mean())
-
-    # task-aware: argmax restricted to classes named with the task's
-    # global labels (bench semantics); a task whose labels own no
-    # class scores 0 — honest, not skipped
-    per_task = []
-    off = 0
-    for view, spec in zip(eval_views, specs):
-        n = len(view.labels_global)
-        Et = E[off:off + n]
-        off += n
-        cand = torch.isin(name, torch.tensor(spec.global_classes)) \
-            .nonzero().squeeze(1)
-        if not len(cand):
-            per_task.append(0.0)
-            continue
-        pred = name[cand[Et[:, cand].argmax(1)]]
-        per_task.append(
-            float((pred == view.labels_global).float().mean()))
-    ta = sum(per_task) / len(per_task)
+    Ep, Ec = evidence_both(mixed, sense, Xt)
+    ta_p, full_p, pt_p = _score(Ep, name, eval_views, specs)
+    ta_c, full_c, pt_c = _score(Ec, name, eval_views, specs)
     unnamed = int((name < 0).sum())
-    print(f"  per-task: " + " ".join(f"{a:.2f}" for a in per_task))
-    print(f"[seed {seed}] task_aware={ta:.3f}  full={full:.3f}  "
-          f"classes={len(mixed.classes)} ({unnamed} unnamed)  "
+    print(f"  per-task plain   : " + " ".join(f"{a:.2f}" for a in pt_p))
+    print(f"  per-task centered: " + " ".join(f"{a:.2f}" for a in pt_c))
+    print(f"[seed {seed}] PLAIN    task_aware={ta_p:.3f}  full={full_p:.3f}")
+    print(f"[seed {seed}] CENTERED task_aware={ta_c:.3f}  full={full_c:.3f}  "
+          f"(Δ ta {ta_c - ta_p:+.3f}, full {full_c - full_p:+.3f})")
+    print(f"[seed {seed}] classes={len(mixed.classes)} ({unnamed} unnamed)  "
           f"elapsed={time.time() - t0:.0f}s", flush=True)
-    return ta, full, len(mixed.classes)
+    return ta_c, full_c, len(mixed.classes)
 
 
 def main() -> None:
