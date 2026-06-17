@@ -549,3 +549,10 @@ the oracle ceiling 0.980 and closing the whole 0.645→0.975 gap. The stereo
 where-channel is **retired** on this bench: one shared filter swept over all
 positions (a convolution) reads WHAT+WHERE jointly off the peak. (Numpy proxy,
 ~2 min for 200×360 crops; a promoted `conv.forward_batch` version batches it.)
+
+**(g) Unified volumetric localizer** (`volumetric_full.py`). Compose the two
+solved channels — conv response map for x,y, Fresnel focal sweep for z — on the
+flat-digit-at-(z,r,c) bench: **identity 0.980 (= oracle), z MAE 0.010, r MAE
+0.00, c MAE 0.01.** The channels do not interfere; the toy bench is solved on all
+four readouts. (Supersedes (e)'s 0.675, which predated step 2 and used the old
+where_2d + row_slide lateral.)

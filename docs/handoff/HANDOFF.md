@@ -72,6 +72,10 @@ Commit this session (branch `progenitor-council`), 5 scripts under
   **distance** → identity **0.975** (row MAE 0.00, col MAE 0.01) = oracle 0.980;
   margin (gap) → only 0.620 (spurious off-target peaks). Retires stereo on this
   bench. Numpy proxy (~2 min); promotion uses `conv.forward_batch`.
+- `volumetric_full.py` — **unified (z,r,c): conv register (x,y) + Fresnel focus
+  (z).** identity **0.980 (= oracle)**, z MAE 0.010, r MAE 0.00, c MAE 0.01. The
+  two solved channels compose without interference — the toy bench is solved on
+  all four readouts (supersedes volumetric_localize's 0.675, pre–step-2 lateral).
 
 ## Key findings
 
