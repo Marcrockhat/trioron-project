@@ -360,3 +360,38 @@ chained-15* — NOT "conv can't help". Consistent with the s039 keystone
 (perception not the chained-15 bottleneck) but does not close depth.
 **Before promotion: test depth, and/or demonstrate positive CONV value on a
 translation-structured task (CIFAR / shifted-MNIST / embodied arc).**
+
+**Depth result + positive (s041, `conv_depth_shifted_mnist.py`).** The §8
+"later stage" — the conv→pool→conv stack — is now built and validated, and it
+is the FIRST positive CONV result on real-ish data. Task: shifted-MNIST (a
+28×28 digit dropped at a random offset in [0,8]² on a 36×36 canvas, so the
+object MOVES — a tabular learner that sums fixed columns cannot follow it).
+Both conv arms use the real `conv.forward_batch` weight-tie; the new piece is a
+**second conjoined-twin cohort that tiles over the 2×2-pooled L1 feature map**,
+each L2 channel reading ACROSS all L1 channels in its K2×K2 patch in matched
+tap order (real cross-channel 2nd-layer convolution, one shared kernel per
+channel). Pooling is the consumer's job (ReLU→maxpool between layers), as §8
+predicted ("the consumer must pool too").
+
+| arm | REAL | SHUFFLED |
+|---|---|---|
+| raw-logreg | 0.493 | 0.488 |
+| conv1 (1-layer) | 0.498 | 0.261 |
+| **conv2 (DEPTH)** | **0.842** | 0.417 |
+
+(n=2 seeds, C1=8 K1=5 s2 / pool 2×2 / C2=12 K2=3 s1, 8 epochs, Adam.) Three
+findings: (1) **DEPTH is the lever.** Single-layer conv merely ties the tabular
+logreg (0.498 vs 0.493 — neither follows the moving object); the conv→pool→conv
+hierarchy lifts it to 0.842 (**+0.344** over 1-layer, **+0.350** over logreg).
+This is the positive that single-layer could never show on centered chained-15
+— DEPTH was indeed the untested lever, not channel count. (2) **The advantage
+is LOCALITY, not capacity.** With columns shuffled by a fixed permutation
+(geometry destroyed), conv2 collapses 0.842→0.417 (a **−0.426** locality gap)
+while permutation-invariant logreg is unchanged (0.493→0.488). The depth win
+comes from the spatial wiring, not from being a bigger nonlinear net. (3) The
+gradient-free regime is still untested (this is Adam-on-kernels, the s040
+caveat carries). Honest scope: this proves *the conjoined-twin depth mechanism
+helps where geometry matters* — it does NOT revisit centered chained-15 (still
+the wrong demo) and does NOT yet show gradient-free conv. Next: either run the
+depth stack on centered chained-15 to close that gap too, or move conv toward
+the gradient-free PCLL pipeline / a package home (§7 lateral-growth event).

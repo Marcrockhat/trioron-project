@@ -1,0 +1,12 @@
+shifted-MNIST: 28x28 digit at random offset in [0,8]^2 on a 36x36 canvas, 10-way (chance 0.10).
+L1: C1=8 K1=5 s2  pool 2x2  L2: C2=12 K2=3 s1  EPOCHS=8  n=2 seeds.
+
+arm                   REAL    SHUFFLED
+raw-logreg           0.493       0.488
+conv1 (1-layer)      0.498       0.261
+conv2 (DEPTH)        0.842       0.417
+
+DEPTH lift  conv2 - conv1 = +0.344
+conv2 - raw-logreg          = +0.350
+LOCALITY    conv2 REAL - SHUF = +0.426  (positive => conv2 uses geometry, not just capacity)
+[154s]
