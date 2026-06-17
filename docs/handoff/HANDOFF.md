@@ -76,6 +76,17 @@ Commit this session (branch `progenitor-council`), 5 scripts under
   (z).** identity **0.980 (= oracle)**, z MAE 0.010, r MAE 0.00, c MAE 0.01. The
   two solved channels compose without interference — the toy bench is solved on
   all four readouts (supersedes volumetric_localize's 0.675, pre–step-2 lateral).
+- `taxonomy_receptor.py` / `taxonomy_manifold.py` — **first real(ish)-data test:
+  the receptor on the 32-class hard taxonomy** (`data_hard`, K=32/D=12/M=3,
+  Bayes 0.937, council 0.775). Finding (back-end-dependent, the honest one):
+  against a WEAK back-end (numpy centroid/k-means) the per-feature phasor receptor
+  BEATS raw (0.848 vs 0.818); against the REAL `ManifoldArchive` full-cov
+  Mahalanobis it HURTS — **raw 0.901 vs phasor 0.876**. cos/sin of a Gaussian
+  feature is non-Gaussian → breaks the density model's assumption. The receptor
+  is a crutch for weak classifiers (and for images, where raw pixels suit no
+  Gaussian); on near-Gaussian tabular data the substrate's QDA alone (0.901, near
+  Bayes) doesn't need it. NOTE: literal per-SAMPLE `quantize` is image-specific
+  (couples heterogeneous columns) — use a per-FEATURE phase frame for tabular.
 
 ## Key findings
 
