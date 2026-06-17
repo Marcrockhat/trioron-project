@@ -260,3 +260,103 @@ residual / which-class-still-wrong depth-target signal instead of raw `|w·g|`.
   growth path (`arena.utility` reads all-zero; no `accumulate_saliency`). The
   prune arm and the normalized-λ lock (log-domain, per-weight self-ratio) are
   designed but unbuilt.
+
+## 8. Conjoined-twin CONV spawn rule (s040 — makes the CONV gene non-trivial)
+
+**Origin: Rocky, s040.** The whole-session thread (table-vs-image): the
+substrate is a flat *table* learner — readout sums over columns
+(permutation-invariant), division judges one column at a time. Neither
+reads column *adjacency*, so an image's geometry is invisible. Encoding
+position into a column *value* (amplitude-ramp Gabor, NJ-tree-as-features,
+chord/Fourier positional code, stereo/PSD ratio) is **inert**: the
+readout never relates two columns, so a position *value* never becomes a
+position *relation* (the s039 NJ-tree probe recovered the 2D topology
+exactly — 1.58 px — yet was NULL as features, for exactly this reason).
+Spatial structure is a **wiring + a cross-column operation**, not a value.
+
+The three fixes that put that wiring *in the organism* (so it stays
+data-type-adaptive — image → grows spatial structure, table → stays flat):
+
+1. **Spatial coordinates** — a topographic field on the inputs:
+   `f → (row, col, orient, scale)`. For our senses this is a *known exact
+   lookup*, not something to discover (raw: `f→(f//28, f%28)`; gabor:
+   `c=f//49, (i,j)=(f%49)//7, f%49%7`). §3.6 already calls for
+   "positionally aware sensor cells (owns a region/scale)" — this is that
+   field, made an explicit arena buffer.
+2. **Proposer** — growth that reads the field: spawn/split on a
+   coordinate-local *patch*, not the worst anonymous column. The §3.4
+   council vote (CONV maps to "image-localized") or §7's lateral-growth
+   event is the proposer; it gains a coordinate input.
+3. **Weight-tying** — the conjoined-twin rule below.
+
+**The reduction that makes the rule necessary.** `trioron/phenotype/conv.py`
+(its own "Reduction guarantee," lines 15–20): when a CONV cell is its own
+`lineage_root`, every edge reads its *own* weight, so `y = b + Σ w·a` —
+**byte-identical to LINEAR.** Convolution does not exist until **≥2 cells
+share a root.** So a council CONV win, as specced, spawns a *linear cell in
+disguise* — the CONV gene is dead on arrival.
+
+**The rule.** When CONV wins (or a lateral event is tagged image-localized),
+the progenitor spawns a **conjoined cohort, not one cell**:
+- ≥2 CONV soma cells sharing **one** `lineage_root` (the kernel lives once);
+- each twin's fan-in = the **raw input/perception columns in its own patch**
+  (NOT the phase-injected RECEPTOR cells — those carry angles,
+  `scheduler.py:292`; the conv cell *is* the sensor, spec §3.4), wired in
+  **matched relative-offset (tap-ordinal) order** so `conv.forward_batch`'s
+  `(root, tap)` share lines up tap-i of twin A with tap-i of twin B;
+- twin outputs feed the quantizer as new pocket dims (composer-cell path);
+- the pair is the **seed**; the full form **tiles the cohort across the
+  region** (free coverage — new sensor cells, one kernel, §3.4).
+
+**Conditions (non-negotiable):**
+- Twins must read **different, translation-related** patches. Same fan-in →
+  identical redundant cells; arbitrary different fan-in → one kernel forced
+  to explain unrelated inputs (a handicap). Only neighboring/translated
+  patches = real convolution.
+- Both twins must be **CONV phenotype** — tying lives only in
+  `conv.forward_batch`; a LINEAR twin silently reads its own weights.
+
+**First test (deferred proposer):** hand-wire a tied pair/cohort to a small
+input grid and validate the *mechanism* (fixes #1+#3) before automating the
+spawn (#2): (a) correctness — a single CONV cell == LINEAR (reduction), a
+tied pair applies one kernel at two positions (translation equivariance) and
+gradient ties them; (b) benefit — on a translation task (same local pattern
+at varying positions) tied twins generalize/sample-efficient over untied
+independent cells. `experiments/progenitor/test_conjoined_conv.py`.
+The conv-on-conv stack is a later stage (needs the layer-1 feature map to
+carry positions too); first layer over the sensor field only.
+
+**Validated (s040).** `test_conjoined_conv.py`: reduction PASS (lone CONV ==
+linear, max|Δ|=5e-7), tying PASS (translation equivariance exact + gradient
+tying), benefit PASS (tied train 1.000/test 0.977 vs untied 0.571/0.273 on a
+held-out-position translation task — *and* a key side-finding: the benefit
+only appears with a translation-invariant POOLING readout, never a
+per-position head — "the consumer must pool too"; our PCLL matched filter
+already sums over columns, so it is compatible). `conv_proposer.py`: the
+§3.4 trial-vote, instantiated as CONV-cohort-vs-LINEAR on held-out
+competence — DATA-TYPE ADAPTIVITY PASS (spawns on real 2-D grid adv +0.57,
+rejects when columns shuffled / locality destroyed, conv→chance).
+
+**Real-data validation (s040, `conv_proposer_chained15.py`).** On the real
+30-way sensor field, vote uses conv-maxpool vs raw-logreg:
+
+| arm | C=12 REAL | C=48 REAL | C=48 SHUF |
+|---|---|---|---|
+| raw-logreg | 0.798 | 0.796 | 0.794 |
+| conv-maxpool | 0.432 | 0.683 | 0.639 |
+| conv-flatten | 0.763 | 0.754 | 0.762 |
+
+Vote **REJECTS** CONV at both channel counts (conv < raw). Corrected
+reading (the C=12 run alone was UNDER-POWERED — a methodological caveat,
+s040): 4× channels did NOT let conv-flatten cross logreg (0.754 < 0.796),
+so the reject is *not* a channel-count artifact. Nuances: (1) at C=48
+conv-maxpool shows real>shuf (+0.044) → locality IS exploited, just not
+enough to beat raw on CENTERED data; (2) conv-maxpool reaches 86% of
+logreg accuracy at ~11% of the params — a vote weighing accuracy-per-param
+(the 50K envelope) could flip, UNSETTLED. **Untested lever: DEPTH** — this
+is all SINGLE-LAYER conv; a conv→pool→conv hierarchy is deferred (§8 "later
+stage"). Honest claim: *single-layer conv does not beat logreg on centered
+chained-15* — NOT "conv can't help". Consistent with the s039 keystone
+(perception not the chained-15 bottleneck) but does not close depth.
+**Before promotion: test depth, and/or demonstrate positive CONV value on a
+translation-structured task (CIFAR / shifted-MNIST / embodied arc).**
