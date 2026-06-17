@@ -87,6 +87,16 @@ Commit this session (branch `progenitor-council`), 5 scripts under
   Gaussian); on near-Gaussian tabular data the substrate's QDA alone (0.901, near
   Bayes) doesn't need it. NOTE: literal per-SAMPLE `quantize` is image-specific
   (couples heterogeneous columns) — use a per-FEATURE phase frame for tabular.
+- `taxonomy_lens1d.py` / `taxonomy_fold2d.py` — **the lens is a SPATIAL-LOCALITY
+  prior** (Rocky's "1x2/1x3?" and "fold quanta to 2D to mimic image"). Faithful
+  1xk lens: compression hurts monotonically (1x3 non-overlap 8-d → 0.227/0.591);
+  per-feature (degenerate 1x1) best in the family. Fold-to-(feature×value)-image
+  + 2D lens: underperforms per-feature (best 0.372/0.678 vs 0.471/0.876) —
+  place→quantize→lens blurs the crisp value, dim blow-up breaks Mahalanobis,
+  feature axis still non-local (corr-reorder only a tiny bump). Manufacturing 2D
+  from non-local tabular adds no info; **raw + full-cov Mahalanobis 0.901 wins.**
+  The lens earns its keep on IMAGES, not tabular. Positive control NOT YET run:
+  same fold→lens→manifold on real MNIST (should win) — the clean boundary check.
 
 ## Key findings
 
