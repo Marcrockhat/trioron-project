@@ -472,3 +472,69 @@ spectrum; (2) the **WHEN** channel on an object moving over *time*; (3) the
 screen; (5) **promotion** to a package (`ScatteringLens` + stereo emitter +
 manifold path) — deferred until the exploration matures (Rocky's call). All
 gradient-free; fits PCLL. None promoted.
+
+### 9.1 s042 — wavelength sweep, the WHAT/WHERE/DEPTH decomposition, perspective
+
+Five toy scripts under `experiments/progenitor/` (none promoted). The session
+resolved the lens into three orthogonal channels and located the real
+bottleneck; closed NEXT thread (1) (wavelength sweep) and opened the depth axis.
+
+**(a) Wavelength sweep — built, and it is NOT the lever** (`spectral_lens.py`).
+The single lens reads one carrier (`exp(iθ)`, mean per patch = first Fourier
+mode). The sweep generalizes to a filterbank `R_p(w)=mean_j exp(i·w·θ_j)` over
+carriers `w=1,2,4,…` — the empirical characteristic function of the patch's
+phase distribution (within-patch texture the single carrier discards). Honest
+held-out eval, WHAT isolated (perfectly registered patches): the single-carrier
+lens is **already 0.927** (toy3, 3-class) / **0.995** (digit10, 0–9). The sweep
+adds **≤+0.02** (toy3 z-scored, w≤16) / **+0.003** (digit10, w≤4); beyond ~4
+carriers high frequencies **alias and HURT** (raw acc → 0.86/0.95 at w≤32). The
+sweep enriches an already-solved channel. (z-score whitening, not the sweep, is
+the larger of the two small levers on toy3.)
+
+**(b) The bottleneck is WHERE/registration, not WHAT** (`where_decompose.py`).
+On the 10-digit 2D bench, identity at the **oracle** crop (true r,c) = **0.980**
+(the WHAT ceiling); at the **stereo** coarse guess = 0.450 (row MAE 1.21, col
+MAE 0.33); after **margin-seeking refine** = 0.645 (row MAE 0.62). The whole
+0.98→0.645 loss (34%) is registration, almost all on the **cramped row axis** (a
+7-row digit in a 16-row field fills 44% of it, biasing the single-frequency
+phase centroid by the object's extent). A full lens-margin **row-slide** (col
+from stereo, row from the lens's own confidence over the whole extent) reaches
+0.675 (row MAE 0.52).
+
+**(c) Perspective = a DEPTH phenomenon (Rocky).** Why the current stereo fails
+on extended objects, by the math: for ink-shape `s(u)` at position `p` the
+lock-in is `Z(w)=e^{i w p}·S(w)`, so the measured phase is `w·p + angle(S(w))` —
+the `angle(S(w))` is a class-dependent **shape-phase bias** that BOTH parallel
+plane-wave emitters carry, so a second parallel view cannot triangulate it out.
+Rocky's revision: make the 2nd emitter a **near-field curved (Fresnel)
+wavefront** `θ_B = w·idx + κ(idx−idx_c)²`, whose local frequency fans out with
+position (perspective rays). Tested three ways on flat 2D digits
+(`stereo_perspective.py`): plane-pair, plane+curved, opposite-curvature. Result
+**~null / non-monotonic in κ** (best `opp κ=0.08` row MAE 3.20→2.02 but other κ
+worse) — *because a flat object has no depth*; a curved wavefront only
+reparametrizes one plane. **Perspective needs depth** (Rocky called this before
+the run).
+
+**(d) Depth-from-focus — the curved emitter recovers the axis the plane wave is
+blind to** (`lens_depth_focus.py`). Model each tile as a point scatterer at
+depth `z`, read by an aperture; an emitter focusing at `f` imposes defocus
+`φ(a)=μ(1/z−1/f)a²`; aperture lock-in `|Z(f)|` peaks at `f=z`. Sweep `f`,
+argmax → depth. A plane wave is `μ=0` → `|Z|≡1` → **depth-blind**. On two depth
+reliefs: curved depth MAE **0.013–0.019** vs plane **0.37–0.44** (=chance over a
+range of 1.0); identity from the recovered depth map **1.000** (curved) vs
+**0.483** (plane = chance). "Each tile carries its own z" → the focal sweep reads
+the whole depth map.
+
+**(e) Volumetric joint localization (z, r, c)** (`volumetric_localize.py`). A
+flat digit at a random depth plane: a flat object occupies ONE plane, so z is
+read from the **aggregate focus over the lit tiles** (Rocky's "center of the
+tiles") — a per-tile map only appears for relief/thickness. Joint result:
+**z MAE 0.009** (curved; aggregation sharpens past the single-tile demo), r MAE
+0.52, c MAE 0.51, identity 0.675; plane-wave z = 0.335 (=chance, depth-blind).
+
+**Pinned mechanism:** plane waves handle **x,y**; the curved/Fresnel wavefront
+handles **z** (via focus) and only bites when tiles carry depth; the wavelength
+sweep enriches an already-solved **WHAT**. The remaining weak bench number
+(identity 0.675) is purely lateral **row registration** — a separate problem
+from the depth channel, and the s042 NEXT (a field-wide tied-lens conv response
+map, retiring the brittle stereo row guess — see §8 weight-tie).
