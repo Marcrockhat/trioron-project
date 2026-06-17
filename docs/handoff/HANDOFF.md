@@ -14,8 +14,10 @@ FLAT 2D — *perspective needs depth* (he called it before the run). (4) On data
 WITH depth the curved/Fresnel emitter recovers z near-losslessly (MAE ~0.015)
 where the plane wave is provably depth-blind (=chance); depth map → identity
 1.00. (5) Volumetric joint (z,r,c): z MAE 0.009 (aggregate tile focus), lateral
-r/c ~0.5, identity 0.675. **IN PROGRESS at session end: step 2 — the lateral row
-registration bottleneck** (the only thing still capping identity).
+r/c ~0.5, identity 0.675. (6) **STEP 2 SOLVED: a field-wide tied-lens conv
+response map** registered by min-centroid-distance gives identity **0.975**
+(row MAE 0.00, col MAE 0.01) — matching the oracle 0.980 and retiring the stereo
+where-channel on this bench.
 
 ---
 
@@ -65,6 +67,11 @@ Commit this session (branch `progenitor-council`), 5 scripts under
 - `volumetric_localize.py` — **joint (z,r,c).** z MAE **0.009** (aggregate tile
   focus = "center of the tiles"), r MAE 0.52, c MAE 0.51, identity 0.675;
   plane-wave z = 0.335 (=chance, depth-blind).
+- `field_conv_register.py` — **STEP 2: field-wide tied-lens conv response map.**
+  Sweep the shared lens over every (r,c); register at the peak. min-centroid-
+  **distance** → identity **0.975** (row MAE 0.00, col MAE 0.01) = oracle 0.980;
+  margin (gap) → only 0.620 (spurious off-target peaks). Retires stereo on this
+  bench. Numpy proxy (~2 min); promotion uses `conv.forward_batch`.
 
 ## Key findings
 
@@ -78,18 +85,17 @@ Commit this session (branch `progenitor-council`), 5 scripts under
 - **The plane wave is provably depth-blind** (z at chance); the Fresnel emitter
   is the z channel. Flat object → one focal plane (aggregate); relief/thick
   object → per-tile depth map.
-- **The standing bench cap (identity 0.675) is lateral row registration**, NOT
-  depth and NOT identity.
+- **The standing bench cap WAS lateral row registration — now SOLVED (f):** the
+  field-wide conv response map (min-distance) recovers 0.975 = oracle. Register
+  by **distance to a learned centroid**, not margin (margin peaks off-target).
 
-## NEXT (priority — step 2 is IN PROGRESS)
+## NEXT (priority — step 2 DONE)
 
-1. **STEP 2 (in progress): the lateral row registration bottleneck.** The only
-   thing still capping identity (0.675). It is a registration problem, not depth
-   and not WHAT. Candidate fix from §8: a **field-wide tied-lens conv response
-   map** — convolve the shared lens (one `lineage_root`, `conv.forward_batch`)
-   over the whole field, read identity+position jointly off the peak, retiring
-   the brittle stereo row guess. Numpy proxy first (the `row_slide` already
-   nudged 0.645→0.675), then substrate cells.
+1. **Promote the field-wide conv register** — the numpy proxy is a Python
+   double-loop (~2 min/200 imgs). Build the substrate version: the shared lens as
+   a tied conv cohort (one `lineage_root`, `conv.forward_batch`) swept over the
+   field, batched. This is the promotion-shaped path (`ScatteringLens` + min-
+   distance register). Generalize `spawn_conv_cohort` (kernel-from-patch) first.
 2. **WHEN** channel — object moving over *time*; lock-in as the moving screen;
    ties to Axis 7 (temporal gene). Untested.
 3. **Real-data test** — the front-end is toy-only (5×7 font); run the lens on

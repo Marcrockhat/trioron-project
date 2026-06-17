@@ -536,5 +536,16 @@ tiles") — a per-tile map only appears for relief/thickness. Joint result:
 handles **z** (via focus) and only bites when tiles carry depth; the wavelength
 sweep enriches an already-solved **WHAT**. The remaining weak bench number
 (identity 0.675) is purely lateral **row registration** — a separate problem
-from the depth channel, and the s042 NEXT (a field-wide tied-lens conv response
-map, retiring the brittle stereo row guess — see §8 weight-tie).
+from the depth channel, addressed by (f).
+
+**(f) Step 2 — field-wide tied-lens conv response map SOLVES registration**
+(`field_conv_register.py`). The §8 fix realized: sweep the SHARED lens over every
+`(r,c)` crop → a response map; register at its peak; read identity from the class
+there. The criterion matters — **margin** (gap to 2nd centroid) is spuriously
+large at off-target crops (argmax-margin → id 0.620, col MAE 3.54), but
+**distance to the nearest learned centroid** peaks exactly at true registration:
+argmin-distance gives **identity 0.975, row MAE 0.00, col MAE 0.01** — matching
+the oracle ceiling 0.980 and closing the whole 0.645→0.975 gap. The stereo
+where-channel is **retired** on this bench: one shared filter swept over all
+positions (a convolution) reads WHAT+WHERE jointly off the peak. (Numpy proxy,
+~2 min for 200×360 crops; a promoted `conv.forward_batch` version batches it.)
