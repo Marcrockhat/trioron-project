@@ -395,3 +395,80 @@ helps where geometry matters* — it does NOT revisit centered chained-15 (still
 the wrong demo) and does NOT yet show gradient-free conv. Next: either run the
 depth stack on centered chained-15 to close that gap too, or move conv toward
 the gradient-free PCLL pipeline / a package home (§7 lateral-growth event).
+
+## 9. Phasor optics — gradient-free spectral front-end (s041 exploration)
+
+**Origin: Rocky, s041.** A whole-session design exploration (NOT promoted; five
+toy scripts under `experiments/progenitor/`). The frame: treat a data sample as
+a **filter film**; an emitter sweeps phasor references through it; identity,
+position, and motion are read as **optical responses**. Computationally this is
+a gradient-free, fixed-filter front-end whose back-end is the existing
+**ManifoldArchive** (per-class Gaussian centroid). It targets the standing
+PCLL open problem ("can a conv/feature front-end be learned/built without
+backprop") and the s039 keystone ("position is a relation between references,
+not a value"), and continues the s037–039 frequency/Gabor direction.
+
+**The receptor facts it builds on** (`core/receptor.py`, `pcll/lockin.py`):
+per-sample `quantize` maps each feature to one pocket `q∈[0,1000]`, `θ=2πq/1000`
+(history-independent contrast code; q=0/1000 are reference, masked). The
+canonical frame (`mixed.py`) re-references samples into a stream-wide
+`[FLO,FHI]` that widens until frozen — so absolute brightness drifts unless
+frozen. Lock-in deposits a UNIT phasor per feature; magnitude is discarded and
+re-emerges only as **coherence** (resultant length). Margin = amplitude/√n =
+R·√N: coherent features grow ∝N over the stream and clear k; incoherent ones
+hug the √N floor (and a discriminative-across-classes feature stays incoherent —
+the "ripple" that flags a new class). The full circle has a **cos-fold** about π
+(q and 1000−q share a real part), so mid-gray features partly cancel; keeping
+the complex (cos,sin) pair avoids the collapse.
+
+**The three channels (each validated on toys):**
+1. **WHAT — dimensionality-adaptive scattering lens** (`fingerprint_lens.py`).
+   A hypercube patch matched to the data's dimensionality (1D→1×k, 2D→k×k,
+   nD→kⁿ); each patch → a complex mean phasor `(re,im)` (cos/sin = the two
+   deflection axes); concatenate → descriptor → nearest class **centroid**
+   (= ManifoldArchive). On the 3-class 3×5 toy: 2×2 + **contrast-normalized**
+   q → **0.93** nearest-centroid (vs 0.68 with the brightness-keeping canonical
+   frame — contrast-norm is the lever; it is the per-sample `quantize`, NOT
+   Gabor, which only detects oriented edges and still scales with contrast).
+   The global quanta histogram alone overlaps — the spatial grouping is what
+   separates.
+2. **WHERE — stereo dual-frequency emitter** (`stereo_emitter_2d.py`). Two
+   emitters impose phase ramps across an axis at **incommensurate rates**
+   (periods 16/13; the 0.3π offset only de-aligns the sawtooths). A single
+   emitter wraps (resolves one period); the two-frequency pair is unique over
+   `lcm(periods)` → **absolute position by Vernier unwrap, MAE 0.05 col over a
+   48-col field.** One emitter pair per axis (col, then row for 2D, depth for
+   3D) — emitters as dimensionality-adaptive as the lens. This is the s039
+   "position is a relation" fix: the cross-emitter phase **difference** is the
+   relation.
+3. **WHEN — lock-in as moving screen** (design only this session). The lock-in's
+   coherent integration over the stream IS a temporal detector; a moving object
+   decomposes as spatial scattering × temporal lock-in. Ties to Axis 7
+   (temporal gene). Untested.
+
+**Combined what+where** (`combined_what_where.py`, `digit_bench_2d.py`). Stereo
+localizes → crop registers → lens identifies. Moving off-center 3-class:
+pos MAE 0.00, id 0.967. Scaled to **10 digits, 2D off-center, 16×40 field**:
+2-pair where → **id 0.645** (vs col-only ablation 0.265; chance 0.10).
+- **Falsified hypothesis (tested, not assumed):** giving the field row headroom
+  made localization WORSE (row MAE 1.17→4.71→8.47 as H 16→28→40) — background
+  accumulates in the marginal and an extended shape-varying object biases the
+  phase centroid. Stereo localizes a *point* well, an extended object poorly.
+- **Architectural fix:** **couple where↔what** — move the aperture to maximize
+  the identity margin (the screen *seeks* the lock-in). id 0.555→0.645,
+  row MAE 1.17→0.62. Where and what are **coupled, not feed-forward.**
+
+**Ambiguity / refusal margin.** Centroid gap (nearest vs 2nd-nearest) is a
+confidence signal. A 2→Z morph collapses it 0.66→0.08 at the midpoint and the
+label destabilizes (2→7); clean-digit vs ambiguous margins separate (a refusal
+threshold ~0.25). This is the novelty/refusal mechanism for the mixed stream
+(§10.7 division-by-frustration) in the spectral front-end's terms.
+
+**Open threads (NEXT):** (1) the full **wavelength sweep** (multi-carrier
+filterbank spectrum) — only the complex scattering lens is built, not the swept
+spectrum; (2) the **WHEN** channel on an object moving over *time*; (3) the
+**word/symbol capacity** claim (continuous centroid descriptor dodges the
+1000-pocket aliasing ceiling) — untested; (4) **3D/4D** with a matched moving
+screen; (5) **promotion** to a package (`ScatteringLens` + stereo emitter +
+manifold path) — deferred until the exploration matures (Rocky's call). All
+gradient-free; fits PCLL. None promoted.

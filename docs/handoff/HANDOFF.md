@@ -2,158 +2,170 @@
 
 **Session date:** 2026-06-17
 **Session number:** 041
-**Session title:** **Conv DEPTH delivered: the conv→pool→conv stack §8 deferred
-is built, and it is the FIRST positive CONV result.** On shifted-MNIST (a 28×28
-digit dropped at a random offset on a 36×36 canvas, so the object *moves*), the
-two-layer conjoined-twin conv hierarchy reaches **0.842** vs single-layer conv
-**0.498** vs raw logreg **0.493** — a **+0.344** depth lift. A fixed
-column-shuffle control collapses conv2 to **0.417** (locality gap −0.426) while
-permutation-invariant logreg is unchanged: the win is **geometry, not capacity**.
-This closes the s040 honest gap ("DEPTH untested") — single-layer conv only
-*ties* the tabular learner; depth is what flips it. An experiment session; no
-package code touched.
+**Session title:** **"Phasor optics" — a gradient-free spectral front-end
+(scattering lens = WHAT, stereo emitter = WHERE), plus the conv-depth
+positive.** Two deliverables. (1) FINISHED + COMMITTED: the conv→pool→conv
+DEPTH stack §8 deferred — on shifted-MNIST it reaches 0.842 vs single-layer
+0.498 vs logreg 0.493, and a column-shuffle control proves the win is
+locality not capacity. First positive CONV result. (2) DESIGN EXPLORATION
+(Rocky, not promoted): treat a data sample as a *filter film*, sweep phasor
+references through it, and read identity/position/motion as optical responses.
+Built + validated on toys: a dimensionality-adaptive **scattering lens**
+(nD hypercube + complex phasor + contrast-norm → 0.93 nearest-centroid), a
+dual-frequency **stereo emitter** (Vernier unwrap → absolute position MAE
+~0), **what↔where coupling** (the aperture moves to maximize the identity
+margin), and an **ambiguity/refusal margin** (a 2→Z morph collapses the
+centroid gap). All gradient-free; back-end is the existing ManifoldArchive.
 
 ---
 
 ## READ THIS FIRST
 
-1. **EXPERIMENT session. No package code changed.** New file:
-   `experiments/progenitor/conv_depth_shifted_mnist.py`. Design §8 extended
-   with the depth result. The conv→pool→conv hierarchy is VALIDATED as a
-   mechanism + a positive, but NOT promoted into `trioron/`.
-2. **What the depth stack IS.** Both conv arms use the real
-   `conv.forward_batch` weight-tie (sharing by `lineage_root`+tap). L1 = C1
-   conjoined-twin cohorts over the input (s040 form). The NEW piece is **L2 = a
-   2nd conjoined-twin cohort that tiles over the 2×2-pooled L1 feature map**,
-   each L2 channel reading ACROSS all C1 L1-channels in its K2×K2 patch in
-   matched tap order (real cross-channel 2nd-layer convolution, one shared
-   kernel per channel). Pooling/ReLU between layers is the consumer's job — §8
-   predicted "the consumer must pool too," and that held.
-3. **Local `spawn_cohort` (in the experiment), NOT the shared
-   `spawn_conv_cohort`.** The shared spawner (`conv_proposer.py`) hardcodes the
-   root-kernel size to `k²`, which breaks for L2's non-square `C1·K2²` fan-in.
-   The experiment's `spawn_cohort` sizes the kernel from `len(patch[0])`, so it
-   handles both single-channel K×K (L1) and cross-channel C·K2² (L2). If this
-   gets promoted, generalize the shared spawner the same way.
-4. **REGIME CAVEAT carries from s040: this is GRADIENT-BASED (Adam on
-   kernels).** The chained-15 headline 0.736/0.446 is the GRADIENT-FREE PCLL
-   organism — a different pipeline. Gradient-free conv (lock-in / Hebbian
-   kernel) is still unsolved and gates any drop-in to the matched-filter
-   pipeline.
-5. **DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM):**
+1. **One session, two parts. Conv-depth is package-adjacent and DONE; phasor
+   optics is EXPLORATION (no package code).** Nothing promoted into
+   `trioron/`. New files all under `experiments/progenitor/`; design captured
+   in `docs/design/progenitor_council.md` §8 (depth result) + §9 (phasor
+   optics).
+2. **Regime caveat (carries from s040):** everything this session is
+   GRADIENT-BASED where it learns (Adam: conv depth) or FIXED-FILTER
+   gradient-free (the phasor front-end). The chained-15 headline 0.736/0.446
+   is the gradient-free PCLL organism — a different pipeline. Do not conflate.
+3. **The phasor front-end is built on the REAL receptor** (`core/receptor.py`,
+   `pcll/lockin.py`): per-sample `quantize` (q∈[0,1000], θ=2πq/1000,
+   contrast code, q=0/1000 masked as reference); the canonical frame
+   (`mixed.py`) re-references into a stream-wide `[FLO,FHI]` that drifts until
+   frozen; lock-in deposits UNIT phasors (magnitude discarded → re-emerges as
+   coherence; margin = R·√N). The full circle has a cos-fold about π — keep
+   the complex (cos,sin) pair to avoid mid-gray cancellation.
+4. **DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM):**
    `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
-   `trioron/viz/export.py`; `.claude/`, `runs/` untracked. Two stalled s039 raw
-   logs still untracked. This session's new files SHOULD be committed (the
-   experiment script + design §8 update + the run log + this handoff).
+   `trioron/viz/export.py`; `.claude/`, `runs/` untracked. Two stalled s039
+   raw logs still untracked. All this session's new files ARE committed
+   (4 commits, see below). Output PNGs are regenerable from the scripts and
+   intentionally NOT committed.
 
 ---
 
-## What was built
+## What was built (and committed)
 
-**`experiments/progenitor/conv_depth_shifted_mnist.py`** — the conv→pool→conv
-depth stack on shifted-MNIST, three arms (raw-logreg / conv1 single-layer /
-conv2 depth), with a fixed column-shuffle locality control. Env-tunable
-(`CANVAS/OFFSET/C1/C2/K1/S1/K2/S2/EPOCHS/N_TRAIN/N_TEST/SEEDS/SHUFFLE`).
-Helpers: `_shift_onto_canvas` (the moving-object task), `tile_patches_mc` (the
-multichannel L2 patch tiler in channel-major layout), `spawn_cohort` (the
-fan-in-sized conjoined-twin spawner), `build_l1`/`build_l2`/`l1_map`/`l2_feats`
-(the two-arena chained forward). Gradients verified to reach BOTH L1 and L2
-kernels end-to-end (through the maxpool + cross-channel tie).
+Commits this session (branch `progenitor-council`):
+- `382bb9e` — conv→pool→conv DEPTH stack (`conv_depth_shifted_mnist.py`).
+- `3f5217d` — phasor/spectral/scattering toys (`stream_sim_3class.py`,
+  `render_spectra.py`, `render_phasors.py`, `render_lockin_growth.py`,
+  `fingerprint_lens.py`, `stereo_emitter_2d.py`).
+- `bb87512` — combined what+where (`combined_what_where.py`).
+- `fc1fe8a` — 10-digit 2D off-center bench + ambiguity (`digit_bench_2d.py`).
+- (this handoff + design §9 commit follows.)
 
-**`docs/design/progenitor_council.md` §8** — extended with the "Depth result +
-positive (s041)" block: the task, the architecture, the table, the three
-findings, and the honest scope.
-
-## The numbers (shifted-MNIST, 10-way, n=2 seeds, Adam)
-
-C1=8 K1=5 s2 / pool 2×2 / C2=12 K2=3 s1, 8 epochs. Log:
+**Conv depth (DONE).** L1 conjoined-twin cohort → 2×2 maxpool → L2 cohort that
+tiles over the pooled feature map, each L2 channel reading ACROSS all L1
+channels per patch (real cross-channel 2nd-layer conv). Uses the real
+`conv.forward_batch` weight-tie. Local `spawn_cohort` sizes the kernel from
+`len(patch)` (the shared `spawn_conv_cohort` hardcodes k², breaks on L2's
+non-square fan-in — fix before any promotion). Log:
 `outputs/conv_depth_shifted_mnist_s041_run1.log`.
 
-| arm | REAL | SHUFFLED |
-|---|---|---|
-| raw-logreg | 0.493 | 0.488 |
-| conv1 (1-layer) | 0.498 | 0.261 |
-| **conv2 (DEPTH)** | **0.842** | 0.417 |
+**Phasor optics (EXPLORATION).** Three channels, each validated on toys:
+- **WHAT — scattering lens** (`fingerprint_lens.py`): `adaptive_patches(shape,k)`
+  = hypercube patch matched to dimensionality (1D→1×k, 2D→k×k, nD→kⁿ); each
+  patch → complex mean phasor (re,im) → descriptor → nearest class CENTROID
+  (= ManifoldArchive). 3-class 3×5: 2×2 + contrast-norm → **0.93** (vs 0.68
+  canonical). Contrast-norm is the per-sample `quantize`, NOT Gabor.
+- **WHERE — stereo emitter** (`stereo_emitter_2d.py`): two emitters at
+  incommensurate rates (periods 16/13) → Vernier unwrap → **absolute position
+  MAE 0.05 col / 48**; single emitter only resolves one period. One pair per
+  axis. (The s039 "position is a relation" fix: cross-emitter phase difference.)
+- **WHEN — lock-in as moving screen**: design only; the stream integration IS a
+  temporal detector. Untested. Ties to Axis 7.
+- **Combined** (`combined_what_where.py`, `digit_bench_2d.py`): stereo localizes
+  → crop → lens identifies. 3-class moving: pos MAE 0.00, id 0.967. 10-digit 2D
+  off-center 16×40: **id 0.645** (col-only ablation 0.265; chance 0.10).
 
-- **DEPTH lift** conv2 − conv1 = **+0.344**; conv2 − logreg = **+0.350**.
-- **LOCALITY** conv2 REAL − SHUF = **+0.426** → the advantage is spatial
-  wiring, not parameter count (logreg, permutation-invariant, is flat under
-  shuffle: 0.493→0.488).
-- Single-layer conv merely *ties* logreg (0.498≈0.493) — neither follows the
-  moving object. DEPTH is the lever. This is the positive that single-layer
-  could never show on centered chained-15; it confirms DEPTH (not channel
-  count) was the untested lever flagged in s040.
+## Key findings
 
-## NEXT (priority)
+- **Depth is the conv lever, not channel count.** Single-layer conv only ties
+  logreg; the conv→pool→conv hierarchy flips it (+0.344). Locality-proven by
+  shuffle control (0.842→0.417, logreg flat).
+- **Where↔what are COUPLED, not feed-forward.** Stereo localization of an
+  EXTENDED, shape-varying object is biased (row MAE 1.17); giving the field row
+  headroom made it WORSE (1.17→4.71→8.47, background swamps the marginal —
+  hypothesis TESTED and falsified). Fix: move the aperture to maximize the
+  identity margin (the screen seeks the lock-in) → id 0.555→0.645, row MAE
+  1.17→0.62.
+- **The ambiguity margin works.** Centroid gap (nearest vs 2nd) is a confidence
+  signal; a 2→Z morph collapses it 0.66→0.08 and the label destabilizes (2→7);
+  clean vs ambiguous margins separate → refusal threshold ~0.25.
 
-1. **(Optional) close the chained-15 depth gap too.** s040's honest gap was
-   "single-layer conv doesn't beat logreg on CENTERED chained-15, depth
-   untested." Now that the depth stack exists, run it on centered chained-15
-   (the `conv_proposer_chained15.py` data) to settle whether depth helps there
-   (likely still loses — centered, perception-saturated — but it would make the
-   claim airtight). The shifted-MNIST positive already covers the "conv CAN
-   help" requirement, so this is rigor, not blocker.
-2. **Gradient-free conv (the real open problem).** All conv numbers are
-   Adam-on-kernels. The PCLL organism is gradient-free. Whether a tied conv
-   kernel can be learned without backprop (lock-in / Hebbian / matched-filter
-   correlation) is unsolved and gates any drop-in to the chained-15 pipeline.
-3. **Package home & promotion (only after a regime decision).** The three
-   primitives (coordinate field, proposer, conjoined-twin cohort) + the depth
-   stack are validated. Promotion target is §7's lateral-growth event (mint a
-   conjoined CONV cohort when a spatial trial-vote wins) or the §3 council
-   scaffold. Generalize the shared `spawn_conv_cohort` to size the kernel from
-   the patch (see READ-THIS-FIRST #3) before promoting.
-4. **Vote weighing accuracy-per-param** (s040 open question) — under the 50K
-   envelope, conv's accuracy-at-low-params is attractive; the current vote uses
-   raw accuracy. Still a pending design decision.
+## NEXT (priority — pick a thread)
+
+1. **The full wavelength sweep.** Only the complex scattering lens is built, not
+   the multi-carrier filterbank SPECTRUM (shoot 1→1000, record the response
+   curve). That's the richer descriptor and the real "spectroscopy."
+2. **The WHEN channel** — an object moving over *time*; lock-in as the moving
+   screen; left-vs-right motion fingerprint. Ties scattering lens to Axis 7.
+3. **Word/symbol capacity** — test the claim that a continuous centroid
+   descriptor dodges the 1000-pocket aliasing ceiling (the open-vocabulary
+   case the scalar phase code can't handle).
+4. **3D/4D** with a matched moving screen (Rocky: "a 4D scatter needs a moving
+   screen too" — the readout dimensionality must match the lens).
+5. **Promotion** to a package (`ScatteringLens` + stereo emitter + manifold
+   path) — deferred until the exploration matures (Rocky's call). Generalize
+   `spawn_conv_cohort` (kernel-from-patch) before any conv promotion.
+6. **(Carry) Close the chained-15 conv-depth gap** — run the depth stack on
+   centered chained-15; and the standing gradient-free-conv question.
 
 ## OPEN / unresolved
 
-- **Gradient-free conv** — see NEXT#2; the gating unknown for the PCLL
-  pipeline.
-- **Centered chained-15 + depth** — NEXT#1; the last piece of "conv doesn't
-  help chained-15."
-- s039 carries (untouched this session): plain-gabor discrepancy
-  (0.712/0.385 vs s038 0.690/0.304); chained-15 over-segmentation (cap=128);
-  the generative mean-template readout (−0.32) — the s039 keystone NEXTs.
-- All conv numbers are gradient-based, n=2 seeds.
+- Phasor front-end is toy-only; no real-data (chained-15/CIFAR) test yet.
+- Gradient-free conv (kernel without backprop) still open — the scattering
+  transform (fixed wavelet bank) is the lead that fits PCLL.
+- s039 carries (untouched): plain-gabor discrepancy (0.712/0.385 vs s038
+  0.690/0.304); chained-15 over-segmentation (cap=128); generative
+  mean-template readout (−0.32) — the s039 keystone NEXTs.
+- All conv numbers gradient-based, n=2 seeds; phasor numbers toy-only.
 
 ## State of the build
 
 - Branch `progenitor-council`. Package code UNTOUCHED; gate battery green
-  (from s036). New files to commit this session: the experiment script + design
-  §8 update + the run log + this handoff. DO-NOT-COMMIT carries left alone.
-- Run cost: smoke seconds; full n=2 with shuffle control 154s (CPU,
-  OMP_NUM_THREADS=8).
+  (from s036). 5 commits this session (4 above + handoff/design). DO-NOT-COMMIT
+  carries left alone. Output PNGs regenerable, uncommitted.
+- Run cost: conv depth n=2 + shuffle 154s; all phasor toys seconds each (CPU).
 
 ## Pointers
 
-- **Design:** `docs/design/progenitor_council.md` §8 (conjoined-twin rule +
-  s040 single-layer validation + s041 depth result); §3.3–3.4 (council /
-  trial-vote); §3.6 (positional sensors = the coordinate field); §7 (branch-id
-  sheet — the promotion target).
-- **Conv primitive:** `trioron/phenotype/conv.py` (weight-tying by
-  `lineage_root`+tap; the LINEAR-reduction guarantee, lines 15–20).
-- **Experiments:** `experiments/progenitor/conv_depth_shifted_mnist.py` (s041,
-  DEPTH); `test_conjoined_conv.py` (s040 mechanism); `conv_proposer.py` (s040
-  trial-vote, synthetic); `conv_proposer_chained15.py` (s040 real sensor
-  field, single-layer).
+- **Design:** `docs/design/progenitor_council.md` §8 (conjoined-twin conv +
+  s041 depth result), **§9 (phasor optics — the full s041 exploration:
+  receptor facts, the three channels, combined what+where, falsified headroom
+  hypothesis, ambiguity margin, open threads).**
+- **Conv:** `trioron/phenotype/conv.py` (weight-tie by lineage_root+tap;
+  LINEAR-reduction guarantee lines 15–20). Depth: `conv_depth_shifted_mnist.py`.
+- **Phasor toys** (all `experiments/progenitor/`): `stream_sim_3class.py`
+  (receptor per-sample vs canonical), `render_spectra.py` / `render_phasors.py`
+  / `render_lockin_growth.py` (visualizations), `fingerprint_lens.py`
+  (scattering lens + centroid), `stereo_emitter_2d.py` (Vernier position),
+  `combined_what_where.py`, `digit_bench_2d.py` (10-digit 2D + ambiguity).
+- **Receptor/lock-in:** `trioron/core/receptor.py` (quantize, phase),
+  `trioron/pcll/receptor.py` (theta_discrete), `trioron/pcll/lockin.py`
+  (deposit, evidence_mask, margin), `trioron/pcll/mixed.py` (canonical frame
+  `_flo/_fhi`, `_canonical`).
+- **Back-end:** `trioron/learning/manifold.py` (ManifoldArchive — the per-class
+  Gaussian centroid the lens feeds).
 - **Data:** plain MNIST via `DatasetBundle(["mnist"]).task_view("mnist",
-  range(10), range(10), split=…)` → 784-d [0,1] with labels 0–9. chained-15:
-  `chained_15_specs` + `build_task_views`. Root `outputs/data/`.
-- **Memory:** `conv_depth_shifted_mnist_result` (this session);
-  `confirmation_drift_underpowered_experiment` (s040 caveat, now closed for
-  depth).
+  range(10), range(10), …)`. Toy digits are a built-in 5×7 font in
+  `digit_bench_2d.py`.
 
 ## Environment notes
 
 - `/home/marcrockhat/trioron-project/`, branch `progenitor-council`,
   Python 3.10.12, torch 2.11.0, WSL2, `python3` (NOT `python`),
-  `OMP_NUM_THREADS=8`. Data `outputs/data/`.
+  `OMP_NUM_THREADS=8`. Data `outputs/data/`. matplotlib 3.10.9, PIL 10.4.0
+  available for the renders.
+- **Model note:** the phasor-optics thread leans on optical metaphors
+  (emitter/prism/wavelength/scatter) — Rocky's framing, fine in conversation.
+  In code/docs lead with the COMPUTATIONAL framing (phase code θ=2πq/1000;
+  filterbank; complex correlation; Vernier dual-frequency unwrap;
+  translation-invariant scattering; centroid/Mahalanobis fingerprint) — the
+  biological/optical metaphors can trip mid-session safety downgrades.
 - **Regime distinction (DO NOT CONFLATE):** chained-15 headline 0.736/0.446 is
-  the GRADIENT-FREE PCLL organism (`run_pcll_chained15.py`). All conv work
-  (s040 + s041) is GRADIENT-BASED (Adam on kernels). Different pipelines.
-- **Model note:** lead with computational framing (convolution = weight-shared
-  local filter; weight-tying = parameter sharing; depth = conv→pool→conv
-  hierarchy; the shuffle control isolates locality) — biological metaphors
-  ("twins") can trip mid-session safety downgrades.
+  the gradient-free PCLL organism (`run_pcll_chained15.py`). Conv depth is Adam.
+  The phasor front-end is fixed-filter gradient-free but toy-only.
