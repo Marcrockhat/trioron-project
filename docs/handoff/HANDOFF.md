@@ -97,6 +97,12 @@ Commit this session (branch `progenitor-council`), 5 scripts under
   from non-local tabular adds no info; **raw + full-cov Mahalanobis 0.901 wins.**
   The lens earns its keep on IMAGES, not tabular. Positive control NOT YET run:
   same fold→lens→manifold on real MNIST (should win) — the clean boundary check.
+- `taxonomy_fold34.py` — **corrected fold** (Rocky: 12 features → small 3x4 grid,
+  not a 12x12 value-axis image). Right size (12-d) un-starves the covariance:
+  Mahalanobis 0.670 → **0.762** (3x4/4x3 best; elongated 2x6/6x2 worse). Still
+  loses to per-feature 0.876 / raw 0.901 — now a CLEAN locality result (2x2 avgs
+  arbitrarily-ordered features; a 1D corr-chain can't be laid 2D-adjacent). The
+  dim blow-up was half the earlier damage; locality mismatch is the rest.
 
 ## Key findings
 
