@@ -103,6 +103,14 @@ Commit this session (branch `progenitor-council`), 5 scripts under
   loses to per-feature 0.876 / raw 0.901 — now a CLEAN locality result (2x2 avgs
   arbitrarily-ordered features; a 1D corr-chain can't be laid 2D-adjacent). The
   dim blow-up was half the earlier damage; locality mismatch is the rest.
+- `taxonomy_perfeat_sweep.py` — **focus the filter on ONE quantum, read at many
+  carriers** (Rocky: trade compute for capacity). Per-feature Fourier-feature
+  expansion. WEAK back-end (centroid): **0.471 → 0.585** (+0.11) at w≤4, then
+  aliases off — capacity bought with compute, confirmed. STRONG back-end
+  (Mahalanobis): only hurts (0.876 → 0.799; covariance already has capacity, wide
+  descriptor starves 128 samples). **META: front-end richness ≡ back-end richness
+  are SUBSTITUTES.** The enrichment is the DEPLOYMENT lever — lift the cheap
+  1.88 KB centroid with compute instead of the 92 KB full covariance.
 
 ## Key findings
 
