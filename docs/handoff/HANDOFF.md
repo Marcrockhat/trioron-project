@@ -2,21 +2,24 @@
 
 **Session date:** 2026-06-18
 **Session number:** 042
-**⚠ HEADLINE FALSIFICATION (s042, late):** the scattering **lens never beats a
-raw baseline anywhere it is fairly tested.** The keystone toy number (~0.98) was
-NEVER compared to raw pixels — a confirming result that skipped scrutiny. Adding
-the baseline: toy 7x5 centroid **raw 1.000 vs lens 0.988**; 32-taxonomy **raw
-0.901 vs lens ≤0.876**; MNIST at FULL 28x28 (no downsample), patch-size SWEPT
-(Rocky's two catches): **raw 0.813/0.839 (centroid/Maha) beats every lens scale**
-— 2x2 0.769, 3x3 0.749, 4x4 0.751, 7x7 0.699, multiscale 0.763. Bigger patch =
-more averaging = worse. The lens's core op is mean-pooling UNIT phasors over a
-patch: it discards intensity AND within-patch arrangement (permutation-invariant
-mean) — the exact information-destroying step a real scattering transform avoids
-(`|wavelet*image|`, oriented, magnitude-bearing). `lens_raw_control.py`,
-`mnist_lens.py` (14x14, confounded — superseded), `mnist_lens_full.py` (28x28 +
-scale sweep, definitive). WHERE (registration) and DEPTH (Fresnel focus) stand on
-their own mechanisms; the WHAT/lens premise does not.
-See [[confirmation_drift_underpowered_experiment]].
+**⚠ CORRECTION (s042, Rocky caught it): the "lens falsification" tested the
+WRONG thing — unweighted POOLING, not a convolution.** What I tested
+(`fingerprint_lens.lens_descriptor` and every MNIST run) is `z.mean()` over a
+patch of unit phasors — the **all-ones kernel**. There are NO kernel weights and
+the pixel receptors are NOT wired to the lens cells through shared weighted edges.
+A convolution is `conv.forward_batch`: `out = b + Σ kw·a`, `kw` read from the
+shared `lineage_root` at each tap (parameter sharing across positions = the tie).
+So the result "raw 0.813 beats lens ≤0.769 at every scale" only shows
+**unweighted mean-pooling loses to raw** — expected, and NOT a verdict on a
+convolutional phasor front-end, which is UNTESTED. Counter-evidence already
+exists: the **s041 conv-DEPTH stack (real weight-tie) hit 0.842 vs logreg 0.493**
+on shifted-MNIST — the WIRED conv beats the flat baseline; the unwired mean does
+not. Numbers (`mnist_lens_full.py`, scale sweep) are real but apply to POOLING.
+**NEXT: wire pixel-receptors → lens cells with a SHARED kernel (`conv.forward_batch`/
+`lineage_root`), structured/oriented filters, test vs raw — the actual lens.**
+WHERE (registration) and DEPTH (Fresnel focus) stand on their own mechanisms.
+See [[confirmation_drift_underpowered_experiment]] — I overclaimed a falsification
+from a degenerate non-convolution. Don't repeat.
 
 **Session title:** **"Perspective is depth" — the phasor-optics front-end
 decomposed into WHAT / WHERE / DEPTH, and the curved-emitter (Fresnel) channel
