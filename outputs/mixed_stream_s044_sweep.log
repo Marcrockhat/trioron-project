@@ -1,0 +1,36 @@
+### none (reference)
+  council vote (seed0): LINEAR 0.295  TANH 0.309  DENDRITE 0.258  -> WON: TANH
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  none           0.297   0.000   0.315   0.204  0.444   +0.215     0.0
+
+### lambda STRENGTH=1
+  council vote (seed0): LINEAR 0.295  TANH 0.309  DENDRITE 0.258  -> WON: TANH
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  lambda         0.258   0.000   0.228   0.162  0.459   +0.296     0.0
+
+### lambda STRENGTH=10
+  council vote (seed0): LINEAR 0.295  TANH 0.309  DENDRITE 0.258  -> WON: TANH
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  lambda         0.228   0.000   0.139   0.122  0.546   +0.262     0.0
+
+### lambda STRENGTH=100
+  council vote (seed0): LINEAR 0.295  TANH 0.309  DENDRITE 0.258  -> WON: TANH
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  lambda         0.278   0.706   0.106   0.363  0.299   -0.022     0.0
+
+### credit LOCK_RATE=0.05
+  council vote (seed0): LINEAR 0.295  TANH 0.309  DENDRITE 0.258  -> WON: TANH
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  credit         0.239   0.000   0.302   0.180  0.486   +0.280    18.0
+
+### credit LOCK_RATE=0.1
+  council vote (seed0): LINEAR 0.295  TANH 0.309  DENDRITE 0.258  -> WON: TANH
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  credit         0.211   0.000   0.309   0.173  0.451   +0.252    30.0
+
+### credit LOCK_RATE=0.3
+  council vote (seed0): LINEAR 0.295  TANH 0.309  DENDRITE 0.258  -> WON: TANH
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  credit         0.156   0.000   0.264   0.140  0.494   +0.232    84.0
+
+SWEEP DONE

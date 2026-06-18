@@ -1,0 +1,17 @@
+### lambda STRENGTH=75
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  lambda         0.273   0.167   0.066   0.169  0.407   +0.092     0.0
+
+### lambda STRENGTH=150
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  lambda         0.278   0.495   0.098   0.290  0.305   +0.004     0.0
+
+### lambda STRENGTH=200
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  lambda         0.278   0.917   0.025   0.407  0.252   -0.003     0.0
+
+### both STRENGTH=100 LOCK_RATE=0.05
+  arm         taxonomy   mnist   cifar    mean    acq   forget  locked
+  both           0.277   0.741   0.100   0.373  0.286   -0.017    10.0
+
+REFINE DONE
