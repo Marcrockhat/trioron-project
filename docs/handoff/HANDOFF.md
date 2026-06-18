@@ -1,7 +1,18 @@
 # Trioron Handoff
 
-**Session date:** 2026-06-17
+**Session date:** 2026-06-18
 **Session number:** 042
+**⚠ HEADLINE FALSIFICATION (s042, late):** the scattering **lens never beats a
+raw baseline anywhere it is fairly tested.** The keystone toy number (~0.98) was
+NEVER compared to raw pixels — a confirming result that skipped scrutiny. Adding
+the baseline: toy 7x5 centroid **raw 1.000 vs lens 0.988**; MNIST 14x14 **raw
+0.815/0.885 vs lens 0.710/0.648** (centroid/Mahalanobis); 32-taxonomy **raw 0.901
+vs lens ≤0.876**. The 2x2 complex-mean is lossy pooling, NOT a scattering
+transform — it only looked good on a toy so easy raw pixels score 1.0.
+`lens_raw_control.py` + `mnist_lens.py`. The WHERE (registration) and DEPTH
+(Fresnel focus) results stand on their own mechanisms; the WHAT/lens premise does
+not. See [[confirmation_drift_underpowered_experiment]].
+
 **Session title:** **"Perspective is depth" — the phasor-optics front-end
 decomposed into WHAT / WHERE / DEPTH, and the curved-emitter (Fresnel) channel
 that recovers z.** Continuing s041's phasor optics. Five toy scripts (none
@@ -111,6 +122,14 @@ Commit this session (branch `progenitor-council`), 5 scripts under
   descriptor starves 128 samples). **META: front-end richness ≡ back-end richness
   are SUBSTITUTES.** The enrichment is the DEPLOYMENT lever — lift the cheap
   1.88 KB centroid with compute instead of the 92 KB full covariance.
+- `mnist_lens.py` / `lens_raw_control.py` — **THE FALSIFICATION (run last).** The
+  MNIST positive control was meant to confirm the lens wins on real images; it
+  FAILED — raw pixels beat the lens with both back-ends (centroid 0.815 vs 0.710;
+  Maha 0.885 vs 0.648 at 14x14). The missing toy baseline then closed it: raw 7x5
+  pixels = **1.000** vs lens 0.988. The lens never beat raw ANYWHERE; its ~0.98
+  was a lossy reading of a trivially-easy toy. The 2x2 complex-mean is pooling,
+  not the scattering transform (which needs wavelet modulus across scales/orient).
+  WHAT/lens premise FALSIFIED; WHERE + DEPTH stand on their own mechanisms.
 
 ## Key findings
 
