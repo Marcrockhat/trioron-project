@@ -2,222 +2,146 @@
 
 **Session date:** 2026-06-18
 **Session number:** 042
-**⚠ CORRECTION (s042, Rocky caught it): the "lens falsification" tested the
-WRONG thing — unweighted POOLING, not a convolution.** What I tested
-(`fingerprint_lens.lens_descriptor` and every MNIST run) is `z.mean()` over a
-patch of unit phasors — the **all-ones kernel**. There are NO kernel weights and
-the pixel receptors are NOT wired to the lens cells through shared weighted edges.
-A convolution is `conv.forward_batch`: `out = b + Σ kw·a`, `kw` read from the
-shared `lineage_root` at each tap (parameter sharing across positions = the tie).
-So the result "raw 0.813 beats lens ≤0.769 at every scale" only shows
-**unweighted mean-pooling loses to raw** — expected, and NOT a verdict on a
-convolutional phasor front-end, which is UNTESTED. Counter-evidence already
-exists: the **s041 conv-DEPTH stack (real weight-tie) hit 0.842 vs logreg 0.493**
-on shifted-MNIST — the WIRED conv beats the flat baseline; the unwired mean does
-not. Numbers (`mnist_lens_full.py`, scale sweep) are real but apply to POOLING.
-**NEXT: wire pixel-receptors → lens cells with a SHARED kernel (`conv.forward_batch`/
-`lineage_root`), structured/oriented filters, test vs raw — the actual lens.**
-WHERE (registration) and DEPTH (Fresnel focus) stand on their own mechanisms.
-See [[confirmation_drift_underpowered_experiment]] — I overclaimed a falsification
-from a degenerate non-convolution. Don't repeat.
-
-**Session title:** **"Perspective is depth" — the phasor-optics front-end
-decomposed into WHAT / WHERE / DEPTH, and the curved-emitter (Fresnel) channel
-that recovers z.** Continuing s041's phasor optics. Five toy scripts (none
-promoted). The arc: (1) BUILT the wavelength sweep (NEXT #1) and found it is NOT
-the lever — the lens (WHAT) is already ~0.98–0.99 when registered, the sweep
-adds ≤+0.02 and high carriers alias/hurt. (2) DECOMPOSED the bench's low 0.645
-identity → it is WHERE/registration, almost all on the cramped row axis (WHAT
-ceiling 0.98). (3) Rocky's perspective revision (curved 2nd emitter) is ~null on
-FLAT 2D — *perspective needs depth* (he called it before the run). (4) On data
-WITH depth the curved/Fresnel emitter recovers z near-losslessly (MAE ~0.015)
-where the plane wave is provably depth-blind (=chance); depth map → identity
-1.00. (5) Volumetric joint (z,r,c): z MAE 0.009 (aggregate tile focus), lateral
-r/c ~0.5, identity 0.675. (6) **STEP 2 SOLVED: a field-wide tied-lens conv
-response map** registered by min-centroid-distance gives identity **0.975**
-(row MAE 0.00, col MAE 0.01) — matching the oracle 0.980 and retiring the stereo
-where-channel on this bench.
+**Session title:** **Phasor optics → the WIRED convolution wins.** The headline
+result, reached last: a real substrate convolution (pixel receptors wired to
+conv cells via `conv.forward_batch` + shared `lineage_root`, FIXED Gabor kernel,
+MODULUS nonlinearity) **beats raw pixels on MNIST** — centroid 0.907 / Mahalanobis
+**0.980** vs raw 0.815. The earlier "lens" was `z.mean()` over a patch = the
+all-ones kernel = POOLING (no weights, no wiring), and a same-wiring MEAN control
+confirms it (0.603/0.877) — the ONLY change to 0.907/0.980 is the kernel. Rocky
+caught that I had been testing a degenerate non-convolution and overclaiming a
+falsification from it. Also this session: WHAT/WHERE/DEPTH decomposition, the
+Fresnel depth channel, the field-conv registration, and a tabular receptor study.
 
 ---
 
 ## READ THIS FIRST
 
-1. **Exploration only — nothing promoted into `trioron/`.** All five new files
-   are under `experiments/progenitor/`; design captured in
-   `docs/design/progenitor_council.md` **§9.1 (s042)**.
-2. **The pinned mechanism (s042 result):** plane waves handle **x,y**; a
-   **curved/Fresnel wavefront** handles **z** (depth-from-focus) and only bites
-   when tiles carry depth; the **wavelength sweep** enriches an already-solved
-   **WHAT**. The remaining weak bench number (identity 0.675) is purely lateral
-   **row registration** — a *separate* problem from the depth channel.
-3. **Regime caveat (carries from s040/s041):** the phasor front-end is
-   FIXED-FILTER gradient-free but TOY-only (5×7 dot-matrix font, no real-data
-   test yet). Do NOT conflate with the chained-15 headline 0.736/0.446
-   (gradient-free PCLL organism, `run_pcll_chained15.py`) or the conv-depth
-   stack (Adam, s041).
+1. **Exploration only — nothing promoted into `trioron/`.** All new files under
+   `experiments/progenitor/`; design in `docs/design/progenitor_council.md` §9.1.
+2. **THE KEY RESULT + THE CORRECTION (read together):**
+   - The phasor **"lens"** (`fingerprint_lens.lens_descriptor`: `z.mean()` over a
+     patch) is the **all-ones kernel = average pooling**. It has NO weights and
+     does NOT wire pixel receptors to lens cells. It is **not a convolution**, and
+     it loses to raw pixels everywhere (that part is real but UNsurprising).
+   - A **real convolution** = `conv.forward_batch`: `out = b + Σ kw·a`, `kw` read
+     from the shared `lineage_root` at each tap (parameter sharing across
+     positions). Built with a FIXED Gabor kernel + modulus, it **BEATS raw**:
+     MNIST centroid **0.907**, Maha **0.980** (`mnist_conv_fixed.py`). Same-wiring
+     MEAN-kernel control = 0.603/0.877 → the kernel is the whole story.
+   - LESSON (recorded in memory): I declared a "lens falsification" from a
+     degenerate non-conv and had to walk it back. Always run the raw baseline AND
+     make sure the thing you test is the thing you claim.
+3. **Regime:** all gradient-free / fixed-filter, but TOY/standard-bench only (MNIST,
+   5x7 font, 32-class tabular). Do NOT conflate with the chained-15 PCLL headline
+   (0.736/0.446) or the s041 Adam conv-depth (0.842).
 4. **DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM):**
    `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
-   `trioron/viz/export.py`; `.claude/`, `runs/` untracked. Two stalled s039 raw
-   logs still untracked. Output PNGs are regenerable and intentionally NOT
-   committed. This session's 5 scripts ARE committed.
+   `trioron/viz/export.py`; `.claude/`, `runs/` untracked. Output PNGs regenerable,
+   uncommitted. All this session's scripts ARE committed.
 
 ---
 
-## What was built (and committed)
+## What was built (committed, branch `progenitor-council`)
 
-Commit this session (branch `progenitor-council`), 5 scripts under
-`experiments/progenitor/` + design §9.1 + this handoff:
+s042 scripts under `experiments/progenitor/` (in build order):
 
-- `spectral_lens.py` — **wavelength sweep** (NEXT #1). Multi-carrier filterbank
-  `R_p(w)=mean_j exp(i·w·θ_j)` vs the single carrier. Honest held-out eval, WHAT
-  isolated (registered patches). **Finding: not the lever.** single-carrier
-  already 0.927 (toy3) / 0.995 (digit10); sweep ≤+0.02 / +0.003; w>~4 aliases
-  and HURTS (→0.86/0.95 at w≤32). z-score whitening > the sweep on toy3.
-- `where_decompose.py` — **the bottleneck is WHERE.** 10-digit bench identity:
-  oracle crop **0.980** (WHAT ceiling), stereo guess 0.450 (row MAE 1.21),
-  margin refine 0.645 (row MAE 0.62), full row-slide 0.675 (row MAE 0.52). The
-  whole loss is registration, almost all the **row** axis.
-- `stereo_perspective.py` — Rocky's **curved 2nd emitter** (Fresnel
-  `θ_B=w·idx+κ(idx−idx_c)²`) vs plane-pair vs opposite-curvature, on FLAT 2D
-  digits. **~null / non-monotonic in κ** — flat data has no depth to triangulate.
-- `lens_depth_focus.py` — **depth-from-focus.** Defocus `φ(a)=μ(1/z−1/f)a²`,
-  aperture lock-in peaks at f=z. Curved depth MAE **0.013–0.019** vs plane
-  **0.37–0.44** (=chance); depth-map identity **1.000** vs 0.483 (plane=chance).
-- `volumetric_localize.py` — **joint (z,r,c).** z MAE **0.009** (aggregate tile
-  focus = "center of the tiles"), r MAE 0.52, c MAE 0.51, identity 0.675;
-  plane-wave z = 0.335 (=chance, depth-blind).
-- `field_conv_register.py` — **STEP 2: field-wide tied-lens conv response map.**
-  Sweep the shared lens over every (r,c); register at the peak. min-centroid-
-  **distance** → identity **0.975** (row MAE 0.00, col MAE 0.01) = oracle 0.980;
-  margin (gap) → only 0.620 (spurious off-target peaks). Retires stereo on this
-  bench. Numpy proxy (~2 min); promotion uses `conv.forward_batch`.
-- `volumetric_full.py` — **unified (z,r,c): conv register (x,y) + Fresnel focus
-  (z).** identity **0.980 (= oracle)**, z MAE 0.010, r MAE 0.00, c MAE 0.01. The
-  two solved channels compose without interference — the toy bench is solved on
-  all four readouts (supersedes volumetric_localize's 0.675, pre–step-2 lateral).
-- `taxonomy_receptor.py` / `taxonomy_manifold.py` — **first real(ish)-data test:
-  the receptor on the 32-class hard taxonomy** (`data_hard`, K=32/D=12/M=3,
-  Bayes 0.937, council 0.775). Finding (back-end-dependent, the honest one):
-  against a WEAK back-end (numpy centroid/k-means) the per-feature phasor receptor
-  BEATS raw (0.848 vs 0.818); against the REAL `ManifoldArchive` full-cov
-  Mahalanobis it HURTS — **raw 0.901 vs phasor 0.876**. cos/sin of a Gaussian
-  feature is non-Gaussian → breaks the density model's assumption. The receptor
-  is a crutch for weak classifiers (and for images, where raw pixels suit no
-  Gaussian); on near-Gaussian tabular data the substrate's QDA alone (0.901, near
-  Bayes) doesn't need it. NOTE: literal per-SAMPLE `quantize` is image-specific
-  (couples heterogeneous columns) — use a per-FEATURE phase frame for tabular.
-- `taxonomy_lens1d.py` / `taxonomy_fold2d.py` — **the lens is a SPATIAL-LOCALITY
-  prior** (Rocky's "1x2/1x3?" and "fold quanta to 2D to mimic image"). Faithful
-  1xk lens: compression hurts monotonically (1x3 non-overlap 8-d → 0.227/0.591);
-  per-feature (degenerate 1x1) best in the family. Fold-to-(feature×value)-image
-  + 2D lens: underperforms per-feature (best 0.372/0.678 vs 0.471/0.876) —
-  place→quantize→lens blurs the crisp value, dim blow-up breaks Mahalanobis,
-  feature axis still non-local (corr-reorder only a tiny bump). Manufacturing 2D
-  from non-local tabular adds no info; **raw + full-cov Mahalanobis 0.901 wins.**
-  The lens earns its keep on IMAGES, not tabular. Positive control NOT YET run:
-  same fold→lens→manifold on real MNIST (should win) — the clean boundary check.
-- `taxonomy_fold34.py` — **corrected fold** (Rocky: 12 features → small 3x4 grid,
-  not a 12x12 value-axis image). Right size (12-d) un-starves the covariance:
-  Mahalanobis 0.670 → **0.762** (3x4/4x3 best; elongated 2x6/6x2 worse). Still
-  loses to per-feature 0.876 / raw 0.901 — now a CLEAN locality result (2x2 avgs
-  arbitrarily-ordered features; a 1D corr-chain can't be laid 2D-adjacent). The
-  dim blow-up was half the earlier damage; locality mismatch is the rest.
-- `taxonomy_perfeat_sweep.py` — **focus the filter on ONE quantum, read at many
-  carriers** (Rocky: trade compute for capacity). Per-feature Fourier-feature
-  expansion. WEAK back-end (centroid): **0.471 → 0.585** (+0.11) at w≤4, then
-  aliases off — capacity bought with compute, confirmed. STRONG back-end
-  (Mahalanobis): only hurts (0.876 → 0.799; covariance already has capacity, wide
-  descriptor starves 128 samples). **META: front-end richness ≡ back-end richness
-  are SUBSTITUTES.** The enrichment is the DEPLOYMENT lever — lift the cheap
-  1.88 KB centroid with compute instead of the 92 KB full covariance.
-- `mnist_lens.py` / `lens_raw_control.py` — **THE FALSIFICATION (run last).** The
-  MNIST positive control was meant to confirm the lens wins on real images; it
-  FAILED — raw pixels beat the lens with both back-ends (centroid 0.815 vs 0.710;
-  Maha 0.885 vs 0.648 at 14x14). The missing toy baseline then closed it: raw 7x5
-  pixels = **1.000** vs lens 0.988. The lens never beat raw ANYWHERE; its ~0.98
-  was a lossy reading of a trivially-easy toy. The 2x2 complex-mean is pooling,
-  not the scattering transform (which needs wavelet modulus across scales/orient).
-  WHAT/lens premise FALSIFIED; WHERE + DEPTH stand on their own mechanisms.
+- `spectral_lens.py` — wavelength sweep (multi-carrier filterbank). NOT the lever:
+  WHAT ~0.93–0.99 registered single-carrier; sweep ≤+0.02, high carriers alias.
+- `where_decompose.py` — the 10-digit bench's low identity is WHERE/registration
+  (row axis), WHAT ceiling 0.98.
+- `stereo_perspective.py` — Rocky's curved 2nd emitter ~null on FLAT 2D
+  (perspective needs depth — he called it pre-run).
+- `lens_depth_focus.py` — Fresnel curved emitter recovers depth (MAE 0.013–0.019)
+  where a plane wave is depth-blind (=chance); depth-map identity 1.000.
+- `volumetric_localize.py` / `volumetric_full.py` — joint (z,r,c); the unified
+  localizer (conv-register x,y + Fresnel z) hits identity 0.980 = oracle, z MAE
+  0.010, r/c MAE ~0.
+- `field_conv_register.py` — field-wide min-centroid-DISTANCE registration → 0.975
+  (= oracle), retiring stereo. (Uses the lens descriptor as a template; works
+  because it's matching, not because the lens is a good feature.)
+- `taxonomy_receptor.py` / `taxonomy_manifold.py` / `taxonomy_lens1d.py` /
+  `taxonomy_fold34.py` / `taxonomy_perfeat_sweep.py` — receptor on the 32-class
+  hard taxonomy. Phase-code helps a WEAK back-end, hurts the strong full-cov
+  Mahalanobis (cos/sin of a Gaussian feature is non-Gaussian). META: front-end
+  richness ≡ back-end richness are SUBSTITUTES. Best per-feature multi-carrier
+  centroid 0.585 (+0.11), but raw + Mahalanobis 0.901 wins outright. The lens is
+  a SPATIAL-LOCALITY prior; tabular has none.
+- `mnist_lens.py` (14x14, confounded — superseded) / `mnist_lens_full.py` (28x28,
+  patch-scale sweep) / `lens_raw_control.py` — the mean-POOLING "lens" loses to
+  raw at every scale (raw 0.813/0.839; lens ≤0.769). Correct but it's pooling.
+- **`mnist_conv_fixed.py` — THE RESULT.** Wired fixed-Gabor convolution beats raw
+  (0.907/0.980 vs 0.815); mean-kernel control through the same wiring 0.603/0.877.
 
 ## Key findings
 
-- **The wavelength sweep is built but is not the accuracy lever** — the lens
-  identifies near-perfectly once registered; richer carriers alias.
-- **Perspective is a DEPTH phenomenon** (Rocky, confirmed): a curved wavefront
-  does nothing on a flat object (only reparametrizes one plane); it recovers z
-  near-losslessly once the data has depth. The math: both plane-wave emitters
-  carry the same shape-phase bias `angle(S(w))`, so a parallel 2nd view can't
-  triangulate an extended object — a *different-geometry* (curved) view can.
-- **The plane wave is provably depth-blind** (z at chance); the Fresnel emitter
-  is the z channel. Flat object → one focal plane (aggregate); relief/thick
-  object → per-tile depth map.
-- **The standing bench cap WAS lateral row registration — now SOLVED (f):** the
-  field-wide conv response map (min-distance) recovers 0.975 = oracle. Register
-  by **distance to a learned centroid**, not margin (margin peaks off-target).
+- **The wired convolution (fixed Gabor + modulus) beats raw pixels on MNIST,
+  gradient-free.** Centroid 0.907, Mahalanobis 0.980. The kernel is the whole
+  story (mean control 0.603/0.877, same wiring).
+- **"The lens" as built (s041) was never a convolution** — unweighted mean = the
+  all-ones kernel = pooling. It loses to raw; that's expected and not a verdict on
+  conv. The modulus nonlinearity (not the mean) is essential.
+- **DEPTH is real and lens-independent:** the curved/Fresnel emitter recovers z
+  where plane waves are blind (depth-from-focus); WHERE registration is template
+  matching (works with any descriptor).
+- **Receptor on tabular:** phase-code is a crutch for weak classifiers; the strong
+  Mahalanobis back-end doesn't want it. Front-end and back-end richness substitute.
 
-## NEXT (priority — step 2 DONE)
+## NEXT (priority — for the NEW session)
 
-1. **Promote the field-wide conv register** — the numpy proxy is a Python
-   double-loop (~2 min/200 imgs). Build the substrate version: the shared lens as
-   a tied conv cohort (one `lineage_root`, `conv.forward_batch`) swept over the
-   field, batched. This is the promotion-shaped path (`ScatteringLens` + min-
-   distance register). Generalize `spawn_conv_cohort` (kernel-from-patch) first.
-2. **WHEN** channel — object moving over *time*; lock-in as the moving screen;
-   ties to Axis 7 (temporal gene). Untested.
-3. **Real-data test** — the front-end is toy-only (5×7 font); run the lens on
-   real MNIST/chained-15.
-4. **Word/symbol capacity** — continuous centroid descriptor vs the 1000-pocket
-   aliasing ceiling. Untested.
-5. **Promotion** to a package (`ScatteringLens` + stereo/Fresnel emitter +
-   manifold path) — deferred until the exploration matures (Rocky's call).
-   Generalize `spawn_conv_cohort` (kernel-from-patch) before any conv promotion.
+1. **Build on the wired-conv win.** (a) Add DEPTH: fixed-Gabor conv → 2x2 pool →
+   2nd fixed conv (the s041 conv→pool→conv form, but gradient-free) — does a 2nd
+   layer lift 0.907? (b) Add scales/orientations to the Gabor bank. (c) Try it on
+   SHIFTED-MNIST (where translation-equivariance should widen the margin over raw).
+2. **Promote** the wired fixed-conv front-end: `ScatteringLens` = receptor field →
+   tied conv cohort (fixed Gabor) → modulus → pool → ManifoldArchive. The mechanism
+   is now validated; generalize `spawn_conv_cohort` (kernel-from-patch) first.
+3. **Tie to PCLL** — the original motive was a gradient-free conv front-end for the
+   chained-15 organism. The fixed-Gabor conv is exactly that; test it on chained-15.
+4. **WHEN channel** (object over time; lock-in as moving screen; Axis 7) — untested.
+5. **DEPTH** — volumetric object with true 3D structure; the Fresnel channel scales.
 
 ## OPEN / unresolved
 
-- Phasor front-end is toy-only; no real-data (chained-15/CIFAR) test yet.
-- Depth toy uses a synthetic point-scatterer defocus model, not a rendered 3D
-  volume; the z result is the mechanism, not a benchmark.
-- s039/s041 carries (untouched): gradient-free conv kernel still open; plain-gabor
-  discrepancy; chained-15 over-segmentation (cap=128); generative mean-template
-  readout (−0.32); conv-depth on centered chained-15.
-- All phasor numbers toy-only; conv numbers (s041) gradient-based n=2 seeds.
+- MNIST centered: raw template-matching is already strong (0.815), so the conv's
+  translation-equivariance isn't fully exercised — SHIFTED-MNIST is the cleaner
+  arena for the conv advantage (s041 saw 0.842 vs 0.493 there with Adam).
+- Gabor params (K=9, σ=K/4, freq {0.16,0.28}) unswept — likely more headroom.
+- All numbers single-seed; phasor/depth toys are toy-only.
+- s039/s041 carries (untouched): gradient-free conv on chained-15; over-segmentation
+  (cap=128); generative mean-template readout (−0.32).
 
 ## State of the build
 
 - Branch `progenitor-council`. Package code UNTOUCHED; gate battery green (s036).
-  DO-NOT-COMMIT carries left alone. Output PNGs regenerable, uncommitted.
-- Run cost: all s042 toys are seconds–low-tens-of-seconds each (CPU).
+  ~16 commits this session. DO-NOT-COMMIT carries left alone. PNGs uncommitted.
+- Run cost: MNIST conv ~1–2 min (CPU, 7000+7000 samples); toys seconds each.
 
 ## Pointers
 
-- **Design:** `docs/design/progenitor_council.md` **§9.1 (s042 — wavelength
-  sweep, WHAT/WHERE/DEPTH decomposition, perspective=depth, volumetric)**; §9
-  (s041 phasor optics); §8 (conjoined-twin conv weight-tie — the lever for
-  step 2's field-wide conv).
-- **s042 scripts** (all `experiments/progenitor/`): `spectral_lens.py`,
-  `where_decompose.py`, `stereo_perspective.py`, `lens_depth_focus.py`,
-  `volumetric_localize.py`. s041 base: `fingerprint_lens.py` (lens + centroid),
-  `stereo_emitter_2d.py` (plane Vernier), `digit_bench_2d.py` (font, variant,
-  place, descriptor, crop, where_2d — reused by the s042 scripts).
-- **Conv weight-tie:** `trioron/phenotype/conv.py` (lines 1–24 docstring:
-  parameter-sharing = the defining property; reduction guarantee = "no sharing →
-  plain linear").
-- **Receptor/lock-in:** `trioron/core/receptor.py` (quantize, θ=2πq/1000),
-  `trioron/pcll/lockin.py`, `trioron/pcll/mixed.py` (canonical frame).
-- **Back-end:** `trioron/learning/manifold.py` (ManifoldArchive = the per-class
-  centroid the lens feeds).
+- **Design:** `docs/design/progenitor_council.md` §9.1 (s042 — NOTE: §9.1(a–g)
+  predate the wired-conv result; the lens-vs-raw paragraphs describe POOLING, the
+  correction is in this handoff and `mnist_conv_fixed.py`). §8 = conv weight-tie.
+- **The win:** `experiments/progenitor/mnist_conv_fixed.py` (fixed Gabor via
+  `conv.forward_batch`). Wiring helpers: `conv_proposer.tile_patches` /
+  `_bucket_for`, `conv_depth_shifted_mnist.spawn_cohort` (s041, Adam version).
+- **Conv primitive:** `trioron/phenotype/conv.py` (lines 1–24: parameter sharing =
+  convolution; reduction guarantee = "no sharing → plain linear").
+- **Back-end:** `trioron/learning/manifold.py` — `ManifoldArchive(arena,
+  full_cov=True)`, `update_class`, `ManifoldAstrocyte.log_likelihood_full`
+  (Mahalanobis); `StreamingMixture` (K diag modes). Build via `Arena(Envelope(),
+  capacity=…)`.
+- **Data:** `DatasetBundle(["mnist"]).task_view("mnist", range(10), range(10),
+  split=…).all_examples()` → ([N,784] in [0,1], labels). `data_hard.make_split()`
+  = the 32-class tabular taxonomy (Bayes 0.937).
 
 ## Environment notes
 
 - `/home/marcrockhat/trioron-project/`, branch `progenitor-council`,
   Python 3.10.12, torch 2.11.0, WSL2, `python3` (NOT `python`),
-  `OMP_NUM_THREADS=8`. matplotlib 3.10.9, PIL 10.4.0 for renders.
-- **Model note:** the phasor thread leans on optical metaphors
-  (emitter/lens/wavelength/focus/perspective) — Rocky's framing, fine in
-  conversation. In code/docs lead with the COMPUTATIONAL framing (phase code
-  θ=2πq/1000; filterbank; complex correlation; Vernier dual-frequency unwrap;
-  Fresnel quadratic-phase defocus; centroid fingerprint) — the optical metaphors
-  can trip mid-session safety downgrades.
-- **Regime distinction (DO NOT CONFLATE):** chained-15 headline 0.736/0.446 is
-  the gradient-free PCLL organism. Conv depth (s041) is Adam. The phasor
-  front-end is fixed-filter gradient-free but toy-only.
+  `OMP_NUM_THREADS=8`. Data `outputs/data/`.
+- **Model note:** lead with the COMPUTATIONAL framing in code/docs (phase code
+  θ=2πq/1000; tied conv kernel via `lineage_root`; Gabor filterbank; modulus =
+  oriented energy; Mahalanobis fingerprint). The optical metaphors
+  (lens/emitter/focus) are Rocky's conversational framing — keep them out of
+  code to avoid mid-session safety downgrades.
