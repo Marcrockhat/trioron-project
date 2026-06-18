@@ -5,13 +5,18 @@
 **⚠ HEADLINE FALSIFICATION (s042, late):** the scattering **lens never beats a
 raw baseline anywhere it is fairly tested.** The keystone toy number (~0.98) was
 NEVER compared to raw pixels — a confirming result that skipped scrutiny. Adding
-the baseline: toy 7x5 centroid **raw 1.000 vs lens 0.988**; MNIST 14x14 **raw
-0.815/0.885 vs lens 0.710/0.648** (centroid/Mahalanobis); 32-taxonomy **raw 0.901
-vs lens ≤0.876**. The 2x2 complex-mean is lossy pooling, NOT a scattering
-transform — it only looked good on a toy so easy raw pixels score 1.0.
-`lens_raw_control.py` + `mnist_lens.py`. The WHERE (registration) and DEPTH
-(Fresnel focus) results stand on their own mechanisms; the WHAT/lens premise does
-not. See [[confirmation_drift_underpowered_experiment]].
+the baseline: toy 7x5 centroid **raw 1.000 vs lens 0.988**; 32-taxonomy **raw
+0.901 vs lens ≤0.876**; MNIST at FULL 28x28 (no downsample), patch-size SWEPT
+(Rocky's two catches): **raw 0.813/0.839 (centroid/Maha) beats every lens scale**
+— 2x2 0.769, 3x3 0.749, 4x4 0.751, 7x7 0.699, multiscale 0.763. Bigger patch =
+more averaging = worse. The lens's core op is mean-pooling UNIT phasors over a
+patch: it discards intensity AND within-patch arrangement (permutation-invariant
+mean) — the exact information-destroying step a real scattering transform avoids
+(`|wavelet*image|`, oriented, magnitude-bearing). `lens_raw_control.py`,
+`mnist_lens.py` (14x14, confounded — superseded), `mnist_lens_full.py` (28x28 +
+scale sweep, definitive). WHERE (registration) and DEPTH (Fresnel focus) stand on
+their own mechanisms; the WHAT/lens premise does not.
+See [[confirmation_drift_underpowered_experiment]].
 
 **Session title:** **"Perspective is depth" — the phasor-optics front-end
 decomposed into WHAT / WHERE / DEPTH, and the curved-emitter (Fresnel) channel
