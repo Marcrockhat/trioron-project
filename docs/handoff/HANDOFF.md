@@ -3,15 +3,17 @@
 **Session date:** 2026-06-18
 **Session number:** 043
 **Session title:** **Deep scattering wins, SHIFTED quadruples it, and the
-front-end becomes a LIVING trioron (learnable kernels + λ).** Continuing the
-phasor→trioron wiring. (1) Built a gradient-free conv→pool→conv (Mallat
-scattering S1⊕S2): centered MNIST 0.909→**0.931** centroid (depth lift +0.022),
-SHIFTED-MNIST **0.765/0.971** with depth lift **quadrupling to +0.091 ±0.010**
-(raw collapses to 0.399; Maha un-saturates). (2) Then, on Rocky's ask, wired two
-of the triparametric node's three variables back in: **w** (conv kernels now
-LEARNABLE via Adam through `conv.forward_batch`) + **λ** (the real
-`epigenetic_lock` module). n=5 split-MNIST: λ eliminates **6.3pp** of catastrophic
-forgetting (kernel drift 4.98→0.011) at a 2.8pp B-cost. Three files, committed.
+front-end becomes a LIVING trioron — the triparametric node (w,λ,u) is COMPLETE.**
+Continuing the phasor→trioron wiring. (1) Gradient-free conv→pool→conv (Mallat
+scattering S1⊕S2): centered MNIST 0.909→**0.931** centroid, SHIFTED-MNIST
+**0.765/0.971**, depth lift **quadruples to +0.091** (raw collapses to 0.399).
+(2) Then wired the triparametric node back in, all three variables: **w** (conv
+kernels LEARNABLE via Adam through `conv.forward_batch`), **λ** (real
+`epigenetic_lock` — eliminates 6.3pp forgetting, n=5), and **u** (utility →
+credit-locking on the soma). The council decision (Rocky): **GLOBAL VOTE → ONE
+SOMA BRANCH** — germline sensors (never locked) → council votes one phenotype →
+credit-eligible soma. Credit-locking PROVEN: locked cells freeze exactly (drift
+0.00e+00), germline never lockable. Five files, committed.
 
 ---
 
@@ -58,15 +60,33 @@ forgetting (kernel drift 4.98→0.011) at a 2.8pp B-cost. Three files, committed
    - **HONEST limit:** with the roomy N_CH=8 front-end there is NO forgetting to
      fix — general scattering features are drift-robust; forgetting lives in the
      READOUT, not a redundant perception organ (manual §7). λ only earns its keep
-     when capacity is load-bearing. u (utility) still unused; no growth/replay/dream.
-4. **Regime:** standard benches only (centered + shifted MNIST). Do NOT conflate
+     when capacity is load-bearing.
+4. **THE NODE IS COMPLETE — u + credit-locking** (`council_soma_credit.py`).
+   Rocky's council decision: **GLOBAL VOTE → ONE SOMA BRANCH**. Germline fixed-Gabor
+   sensors (NEVER locked) → pooled descriptor → the council votes ONE phenotype for
+   a single soma branch (applicable palette on a POOLED vector: LINEAR/TANH/DENDRITE;
+   CONV/ATTENTION/RECURRENT have no spatial/temporal axis left post-pool, so not
+   trialled) → a CREDIT_ELIGIBLE soma hidden layer; per-task heads.
+   - **u** = `CreditTracker.update_utility` (mean |edge-grad|/cell) + `update_engagement`
+     + `consolidate()` at each boundary → locks settled high-engagement/low-utility
+     soma cells → dormant → incoming grads zeroed (the HARD anchor, vs λ's soft pull).
+   - Soma forward reuses `conv.forward_batch` at OWN-ROOT (lineage_root=-1 ⇒ exact
+     linear, per its docstring) so utility reads REAL edge gradients.
+   - **MECHANISM PROVEN** (split-MNIST 5-task, n=3): max post-lock weight drift of any
+     locked cell = **0.00e+00** (lock truly freezes); germline sensors in a SEPARATE
+     arena with 0 CREDIT_ELIGIBLE cells ⇒ never lockable (spec §3.1). Credit-locking
+     Δ mean-acc = **+0.017** (0.844→0.861) — modest/regime-dependent (same load-bearing
+     lesson as λ; the locked soma becomes a stable feature bank the heads read).
+   - **Node status:** w ✓ (kernels + soma weights), λ ✓ (sensors), u ✓ (soma). No
+     growth/division/replay/dream yet (those are the lifecycle, not the node).
+5. **Regime:** standard benches only (centered + shifted MNIST). Do NOT conflate
    with the chained-15 PCLL headline (0.736/0.446) or the s041 Adam conv-depth
    (shifted 0.842 vs raw 0.493). All conv runs through the real substrate
    `conv.forward_batch` (lineage_root weight-tie).
-5. **DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM):**
+6. **DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM):**
    `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
    `trioron/viz/export.py`; `.claude/`, `runs/` untracked. Output PNGs regenerable,
-   uncommitted. This session's three scripts ARE committed.
+   uncommitted. This session's five scripts ARE committed.
 
 ---
 
@@ -89,6 +109,13 @@ forgetting (kernel drift 4.98→0.011) at a 2.8pp B-cost. Three files, committed
   `spawn_fixed_cohort`/`conv_map` (s042) + `gabor`/`pool_to` (s043). Env `SEEDS
   N_CH EPOCHS EPOCHS_B PER_CLASS STRENGTH LR`. Defaults = the λ-demo regime
   (N_CH=2 starved, EPOCHS_B=20, LR=0.02, STRENGTH=1e3). ~23s/seed.
+- **`council_soma_credit.py`** (commit `5c277ad`) — u + credit-locking, the node
+  completion + council global-vote→soma (see READ-THIS-FIRST §4). Reuses sensor
+  helpers; uses `trioron/learning/credit.py` `CreditTracker` and the OWN-ROOT
+  `conv.forward_batch` linear trick. Env `SEEDS H N_CH EPOCHS PER_CLASS THETA_E
+  G_MIN LOCK_RATE`. ~35s/3-seed. NOTE: `LOCK_RATE` default 1.0 is ~13× the
+  calibrated `lock_base_rate` (0.078) — at 1.0 the whole 32-cell soma locks by
+  task 2 (stable-feature-bank); lower it for partial/selective locking.
 
 ## Key findings
 
@@ -101,10 +128,14 @@ forgetting (kernel drift 4.98→0.011) at a 2.8pp B-cost. Three files, committed
   centered 0.980), and 4×'s the depth lift. Centered hid all of this.
 - **S2-only is strong and, under translation, BEATS S1-only** (shifted 0.741 >
   0.674) — the scattering cascade builds invariance; concatenating wins.
-- **The front-end is now a living trioron** (learnable w + λ) — λ provably bites
-  (kernel drift 4.98→0.011) and zeroes A's forgetting when capacity is starved.
-  But λ ONLY matters when the perception organ is load-bearing; a roomy front-end
-  doesn't forget (drift is harmless). Forgetting lives in the readout (manual §7).
+- **The triparametric node (w, λ, u) is COMPLETE and exercised** — w (learnable
+  kernels + soma weights), λ (epigenetic lock, soft anchor on sensors), u (utility
+  → credit-locking, hard anchor on soma). λ provably bites (drift 4.98→0.011);
+  credit-locking provably freezes locked cells (drift 0.00e+00). Both anchors only
+  move the accuracy needle when capacity is load-bearing (manual §7).
+- **The council loop is closed** (Rocky: GLOBAL VOTE → ONE SOMA): germline sensors
+  (separate arena, 0 credit-eligible ⇒ never locked) → council phenotype vote →
+  credit-eligible soma. Clean germline/soma separation per spec §3.1.
 - **ARCHITECTURE / DISK** (asked s043, shifted config): ~6,200 cells, ~294K edges
   across the two arenas, but only **32 distinct kernels = 1,696 floats = 6.6 KB**
   of real parameters (weight-tying; the 294K wires are deterministic structure,
@@ -120,12 +151,14 @@ forgetting (kernel drift 4.98→0.011) at a 2.8pp B-cost. Three files, committed
    position; full invariance should lift S1 above 0.674 and is the honest readout
    for a moving object. (b) Try a 3rd order or λ2>λ1 bank (S2-beats-S1 suggests
    the cascade has more to give under translation). Both via `shifted_scatter_deep.py`.
-2. **Finish the living-trioron bridge.** (a) Wire **u (utility)** + credit-based
-   locking so the organ self-throttles which kernels lock — the 3rd node variable.
-   (b) Make the LEARNABLE kernels DEEP (the s043 S1⊕S2 is fixed-Gabor; learn both
-   layers end-to-end with λ on both). (c) Multi-task (>2) sequence to show λ
-   compounding, and compare soft-λ vs hard credit-freeze (manual §1: soft λ lets
-   the base keep improving — does it here?).
+2. **Now the node is whole, find a regime where the anchors clearly PAY** (both λ
+   and credit-locking are wired + proven-firing but only marginal on accuracy).
+   (a) A load-bearing multi-task arena where the soma genuinely must repurpose
+   (harder tasks / starved soma / more tasks) so SELECTIVE credit-locking (low
+   LOCK_RATE) beats both no-lock AND full-freeze — the PackNet-style story.
+   (b) λ-on-sensors + credit-on-soma TOGETHER in one organism (currently separate
+   files), and compare soft-λ vs hard credit-freeze (manual §1).
+   (c) Make the LEARNABLE kernels DEEP (s043 S1⊕S2 is fixed; learn both layers).
 3. **Promote** the now-validated front-end: `ScatteringLens` = receptor field →
    tied conv cohort (fixed OR learnable) → modulus → pool → (depthwise L2) →
    ManifoldArchive, in `trioron/`. Ship diag-cov back-end (36 KB) not full-cov
@@ -154,8 +187,10 @@ forgetting (kernel drift 4.98→0.011) at a 2.8pp B-cost. Three files, committed
 
 - Branch `progenitor-council`. Package code UNTOUCHED; gate battery green (s036).
   This session: `fde74ab` (centered scatter), `766e62e` (shifted), `418cc59`
-  (learnable+λ), + handoffs. DO-NOT-COMMIT carries left alone. PNGs uncommitted.
-- Run cost: centered scatter ~18s/seed, shifted ~63s/seed, learnable+λ ~23s/seed.
+  (learnable+λ), `5c277ad` (u+credit-locking), + handoffs. DO-NOT-COMMIT carries
+  left alone. PNGs uncommitted.
+- Run cost: centered scatter ~18s/seed, shifted ~63s/seed, learnable+λ ~23s/seed,
+  council+credit ~12s/seed.
 
 ## Pointers
 
@@ -172,6 +207,14 @@ forgetting (kernel drift 4.98→0.011) at a 2.8pp B-cost. Three files, committed
   λ API lives in `trioron/learning/epigenetic_lock.py` (anchor / accumulate_saliency
   / refresh_lambda / ewc_penalty — read its docstring: λ is per-cell row-sum, native
   driver |w·g|).
+- **u + credit-locking + council:** `council_soma_credit.py`. `council_vote`
+  (trial-vote phenotype, §3.4), `build_soma` (credit-eligible arena cells, own-root),
+  `soma_act` (forward_batch + phenotype nonlin), `zero_dormant_grads` (manual freeze),
+  `incoming`/`lock_snap` (the drift mechanism check). u API =
+  `trioron/learning/credit.py` `CreditTracker` (`update_engagement`/`update_utility`/
+  `consolidate`; `CreditConfig` knobs `theta_e`/`g_min`/`lock_base_rate`/
+  `consecutive_tasks` — set the last to 1 for single-boundary locking). Council
+  design = `docs/design/progenitor_council.md` §3 (germline vs soma, the 6×4 vote).
 - **The s041 Adam conv-depth reference (the form made gradient-free here):**
   `conv_depth_shifted_mnist.py` — shifted-MNIST, `tile_patches_mc` (cross-channel
   L2), `spawn_cohort`, `build_l1`/`build_l2`. Use its shifted-canvas data loader
