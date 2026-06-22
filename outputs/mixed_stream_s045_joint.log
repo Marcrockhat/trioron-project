@@ -1,0 +1,13 @@
+JOINT upper bound (offline, all 52 classes at once) — EPOCHS=20 | n=1 seeds
+  s045 CL `replay` for reference: tax 0.440  mnist 0.690  cifar 0.240  mean 0.456
+
+  arch              taxonomy       mnist       cifar        mean   params
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+  H64-tanh             0.836       0.936       0.347       0.706   121588
+  H256-tanh            0.840       0.916       0.371       0.709   486196
+  128-64-tanh          0.831       0.926       0.172       0.643   248052
+  H64-dend             0.837       0.956       0.457       0.750   121588
+  128-64-dend          0.838       0.115       0.100       0.351   248052
+
+[2051s]  (gap = joint − CL replay; large gap => forgetting, small gap => ceiling is perception/readout)

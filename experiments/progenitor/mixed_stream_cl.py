@@ -167,6 +167,13 @@ def run(per, block_dim, tasks, seed, arm):
     Xv, yv = Xtr[m0], ytr[m0] - cls0[0]
     nv = len(Xv) * 3 // 4
     gene, votes = council_vote(block_dim, Xv[:nv], yv[:nv], Xv[nv:], yv[nv:], len(cls0), seed)
+    # The council votes on task 0 (taxonomy) ONLY, where all phenotypes tie ~0.83;
+    # it cannot see that DENDRITE (quad) is far better on the IMAGE domains (s045
+    # joint sweep: H64-dend mean 0.750 vs tanh 0.706, CIFAR +0.11). SOMA_GENE lets
+    # us set the joint-validated phenotype directly.
+    override = os.environ.get("SOMA_GENE", "").lower()
+    if override:
+        gene = {"linear": LINEAR, "tanh": TANH, "dendrite": DENDRITE}[override]
 
     a, inc, soma_ids, head_ids, sbk, hbk = build_net(block_dim, gene, seed)
     elig = soma_ids + head_ids                       # both soma and head are credit-eligible
