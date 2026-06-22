@@ -3549,6 +3549,17 @@ the boundary meeting, never mid-period.
 - The injection is performed by the scheduler (`core/scheduler.py`); the
   quantizer math lives in `core/receptor.py`. The injected θ is
   non-differentiable by construction (an input transform, not a learned op).
+- **Non-wrapping encoder option (`arc_phase` / `arcsin_u_descriptor`, s045).**
+  The 2π carrier wraps: pockets 0 and 1000 land on the *same* phasor, which
+  collapses bounded-discrete features (a binary column → one point). Besides the
+  labeled-lines fix above, `core/receptor.py` offers a monotone alternative
+  θ = arcsin(q/1000) ∈ [0, π/2] (injective; 0 and 1 map to orthogonal phasors),
+  and the "arcsin × u" descriptor [u·cosθ, u·sinθ] that also carries the value as
+  the phasor *magnitude*. Scope (measured): a small lift on weak readouts + the
+  binary fix; it does **not** beat raw on a strong (quadratic) readout — a learned
+  readout builds its own basis. An option for discrete/heterogeneous tabular
+  features (pass a per-feature frame), not a default. The wrapping 2π `phase()`
+  stays the encoder for continuous signals and the periodic (Vernier) emitter.
 
 ### 10.3 Lock-in state (arena tensors)
 

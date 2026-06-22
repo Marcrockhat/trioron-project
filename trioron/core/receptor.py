@@ -58,3 +58,45 @@ def phase(x: torch.Tensor) -> torch.Tensor:
 def quanta_to_phase(q: torch.Tensor) -> torch.Tensor:
     """Phase for already-quantized pockets (the injection's second half)."""
     return 2 * math.pi * q / N_QUANTA
+
+
+def _unit(x: torch.Tensor, normalized: bool) -> torch.Tensor:
+    """Normalized pocket value u ∈ [0, 1]. ``normalized=True``: x is already in
+    [0, 1] under the CALLER's frame (use this for heterogeneous tables, which need
+    a PER-FEATURE frame — core quantize() is per-sample and would mix incommensurate
+    columns). ``normalized=False``: apply the per-sample receptor quantize()."""
+    return x.clamp(0.0, 1.0) if normalized else (quantize(x) / N_QUANTA)
+
+
+def arc_phase(x: torch.Tensor, *, normalized: bool = False) -> torch.Tensor:
+    """Non-wrapping receptor phase θ = arcsin(u) ∈ [0, π/2]  (u = pocket / N_QUANTA).
+
+    Unlike phase() (a 2π carrier), arc_phase is MONOTONE and INJECTIVE: u=0 and
+    u=1 map to DISTINCT angles (0 and π/2), not the same point. This removes the
+    wrap-collapse that makes the 2π carrier destroy bounded-discrete features — a
+    binary 0/1 column collapses to a single phasor under phase() but maps to the
+    orthogonal (1,0)/(0,1) under arc_phase.
+
+    Use for discrete / categorical / bounded features. Keep the 2π phase() for
+    continuous signals and for the periodic (Vernier) emitter, which NEED the wrap.
+    """
+    return torch.arcsin(_unit(x, normalized))
+
+
+def arcsin_u_descriptor(x: torch.Tensor, *, normalized: bool = False) -> torch.Tensor:
+    """"arcsin × u" encoding — magnitude-weighted arcsin phasor, concatenated
+    [u·cos θ, u·sin θ] on the last dim (2× the feature count), θ = arcsin(u).
+
+    The ANGLE encodes the value (arcsin → injective, no wrap-collapse); the
+    MAGNITUDE is the value u itself (the "intensity" — features carry brightness,
+    not just direction).
+
+    Scope (measured, s045 taxonomy): a small real lift over the unit arcsin phasor,
+    and it fixes the binary collapse. It does NOT beat raw features on a strong
+    (quadratic/dendrite) readout — a learned readout builds its own nonlinear basis.
+    So this is an OPTION for discrete/binary features and weak readouts, not a
+    default front-end. For tables pass per-feature-normalized x with normalized=True.
+    """
+    u = _unit(x, normalized)
+    th = torch.arcsin(u)
+    return torch.cat([u * th.cos(), u * th.sin()], dim=-1)
