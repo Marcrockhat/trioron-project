@@ -19,7 +19,10 @@ ping-pongs across modalities (tax_a, mnist_a, cifar_a, tax_b, ...). ONE shared
 chosen metric). Forgetting therefore includes shared-head drift; the head is held
 identical across arms, so arm deltas isolate what λ / credit do on the soma.
 
-ARMS (soma protection): none | λ (soft) | credit (hard) | both.
+ARMS (soma protection): none | λ (soft EWC) | credit (hard lock) | both |
+  replay (manifold pseudo-rehearsal over the fixed-lens block descriptors) |
+  all (λ + credit + replay). Replay defends BOTH soma weights and past-class
+  head logits by re-presenting old-class descriptors during each new task.
 METRICS: final per-domain full-softmax acc; mean acc; mean forgetting
   (acc on a task right after training it − acc at stream end).
 
@@ -40,6 +43,7 @@ from trioron.core.state import CellState
 from trioron.phenotype import conv
 from trioron.learning.credit import CreditTracker, CreditConfig
 from trioron.learning import epigenetic_lock as epi
+from trioron.learning.manifold import ManifoldArchive, ManifoldConfig
 from experiments.progenitor.conv_proposer import _bucket_for
 from experiments.progenitor import mixed_stream_lenses as L
 
@@ -47,6 +51,9 @@ H = int(os.environ.get("H", "64"))
 EPOCHS = int(os.environ.get("EPOCHS", "6"))
 N_CHUNK = int(os.environ.get("N_CHUNK", "2"))      # class-chunks per domain
 STRENGTH = float(os.environ.get("STRENGTH", "1e3"))
+REPLAY_BS = int(os.environ.get("REPLAY_BS", "32"))     # pseudo-samples per past class per step
+REPLAY_STEPS = int(os.environ.get("REPLAY_STEPS", "1"))
+REPLAY_W = float(os.environ.get("REPLAY_W", "1.0"))    # weight on the replay CE term
 BATCH, LR = 128, 0.01
 
 NONLIN = {LINEAR: lambda z: z, TANH: torch.tanh, DENDRITE: lambda z: z + z ** 2}
@@ -147,8 +154,9 @@ def council_vote(block_dim, Dtr, ytr, Dva, yva, n_class, seed):
 
 # ── one continual run over the interleaved stream ─────────────────────────
 def run(per, block_dim, tasks, seed, arm):
-    use_lam = arm in ("lambda", "both")
-    use_cred = arm in ("credit", "both")
+    use_lam = arm in ("lambda", "both", "all")
+    use_cred = arm in ("credit", "both", "all")
+    use_replay = arm in ("replay", "all")
     Xtr, ytr = block_matrices(per, "train")
     Xte, yte = block_matrices(per, "test")
     eval_per = int(os.environ.get("EVAL_PER", "120"))
@@ -169,6 +177,30 @@ def run(per, block_dim, tasks, seed, arm):
                        engagement_decay=0.3)
     credit = CreditTracker(a, cfg)
     locked_total = 0
+
+    # ── manifold replay: per-class (μ,σ) over the FIXED-LENS block descriptors.
+    # The lenses are germline (never trained), so block descriptors are a
+    # permanently-valid generative model; replaying them forward through the
+    # current soma+head defends BOTH the soma weights and past-class head logits
+    # against the new task's full-CE suppression. Lives in its OWN arena so it
+    # never collides with the net's bucket dispatch / capacity.
+    archive = None
+    if use_replay:
+        arch_arena = Arena(Envelope(), capacity=L.N_CLASS + 4)
+        archive = ManifoldArchive(arch_arena,
+                                  ManifoldConfig(replay_steps_per_class=REPLAY_STEPS),
+                                  full_cov=False)
+
+    def replay_ce():
+        """CE on pseudo-descriptors for all archived (past, dormant) classes."""
+        rxs, rys = [], []
+        for samples, cid in archive.replay_batches(REPLAY_BS):
+            rxs.append(samples); rys.append(torch.full((len(samples),), cid, dtype=torch.long))
+        if not rxs:
+            return None
+        rX, rY = torch.cat(rxs), torch.cat(rys)
+        rlog, _ = forward(a, inc, soma_ids, gene, sbk, hbk, rX)
+        return F.cross_entropy(rlog, rY)
 
     @torch.no_grad()
     def acc_on(classes):
@@ -192,6 +224,10 @@ def run(per, block_dim, tasks, seed, arm):
                 loss = F.cross_entropy(logits, Dy[bi])
                 if use_lam:
                     loss = loss + STRENGTH * epi.ewc_penalty(a)
+                if use_replay:
+                    rce = replay_ce()
+                    if rce is not None:
+                        loss = loss + REPLAY_W * rce
                 loss.backward()
                 credit.update_utility()
                 if use_lam:
@@ -209,21 +245,28 @@ def run(per, block_dim, tasks, seed, arm):
             epi.refresh_lambda(a); epi.anchor(a)
         if use_cred:
             locked_total += len(credit.consolidate())
+        if use_replay:                                 # sketch this task's classes, then freeze them
+            for c in cls:
+                cm = (Dy == c)
+                if cm.any():
+                    archive.update_class(c, Dx[cm])
+            archive.finalize_all()                     # active -> dormant => replayable next task
 
     # final per-domain full-softmax accuracy + per-task forgetting
     final_dom = {name: acc_on(list(range(off, off + k))) for name, (off, k) in DOM_OF.items()}
     forget = []
     for t, (name, cls) in enumerate(tasks):
         forget.append(acc_after[t] - acc_on(cls))
+    store_kb = (archive.storage_bytes() / 1024.0) if use_replay else 0.0
     return dict(gene=gene, votes=votes, final_dom=final_dom,
                 mean=sum(final_dom.values()) / 3, forget=sum(forget) / len(forget),
-                acq=sum(acc_after) / len(acc_after), locked=locked_total)
+                acq=sum(acc_after) / len(acc_after), locked=locked_total, store_kb=store_kb)
 
 
 def main():
     t0 = time.time()
     seeds = [int(s) for s in os.environ.get("SEEDS", "0").split(",")]
-    arms = os.environ.get("ARMS", "none,lambda,credit,both").split(",")
+    arms = os.environ.get("ARMS", "none,lambda,both,replay,all").split(",")
     tasks = interleaved_tasks()
 
     print(f"MIXED cross-domain CL — fully-upgraded node (w,λ,u) on {L.N_CLASS}-class union")
@@ -250,7 +293,7 @@ def main():
         return (f"{t.mean():.3f}" + (f"±{t.std(0):.3f}" if len(vals) > 1 else ""))
 
     print(f"  {'arm':<10} {'taxonomy':>11} {'mnist':>11} {'cifar':>11} "
-          f"{'mean':>11} {'acq':>6} {'forget':>8} {'locked':>7}")
+          f"{'mean':>11} {'acq':>6} {'forget':>8} {'locked':>7} {'store':>8}")
     for arm in arms:
         R = per_seed[arm]
         td = ms([r["final_dom"]["taxonomy"] for r in R])
@@ -260,7 +303,9 @@ def main():
         aq = sum(r["acq"] for r in R) / len(R)
         fg = sum(r["forget"] for r in R) / len(R)
         lk = sum(r["locked"] for r in R) / len(R)
-        print(f"  {arm:<10} {td:>11} {md:>11} {cd:>11} {mn:>11} {aq:>6.3f} {fg:>+8.3f} {lk:>7.1f}")
+        sk = sum(r["store_kb"] for r in R) / len(R)
+        st = f"{sk:.0f}KB" if sk else "-"
+        print(f"  {arm:<10} {td:>11} {md:>11} {cd:>11} {mn:>11} {aq:>6.3f} {fg:>+8.3f} {lk:>7.1f} {st:>8}")
     print(f"\n[{time.time() - t0:.0f}s]  (acq = mean acc right after each task; "
           f"forget = mean drop to stream end; want high acq, low forget)")
 
