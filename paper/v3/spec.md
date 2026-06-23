@@ -3561,6 +3561,91 @@ the boundary meeting, never mid-period.
   features (pass a per-feature frame), not a default. The wrapping 2π `phase()`
   stays the encoder for continuous signals and the periodic (Vernier) emitter.
 
+#### 10.2.1 Separable magnitude — independent intensity from a phase-conditioned surprise (DESIGN, s046, unbuilt)
+
+**Defect in `arcsin_u_descriptor`.** As shipped, the descriptor sets the
+phasor *magnitude* to `u` and the *angle* to `θ = arcsin(u)` — both functions
+of the **same scalar** `u`. The 2D output is therefore a 1-DOF curve embedded in
+a plane: it looks like a vector but carries no more information than `u` alone.
+This is the same redundancy the s045 sweep observed empirically (every fixed
+re-encoding could only match-or-lose a learned readout; the "stereo" win
+decomposed to a redundant linear combination). To make the phasor carry real
+information, **angle and magnitude must be independent quantities**:
+
+```
+out = [r·cosθ, r·sinθ],   θ = arcsin(u_angle),   r = independent intensity
+```
+
+The angle still encodes the feature value injectively (no wrap-collapse); the
+magnitude `r` now carries a *second* quantity. Phasors can then be **summed**
+across features into a resultant 2-vector, from which two (or more) logits are
+read — the literal form of the `(μ,σ)`-resultant intuition (cf. §10.9 manifold).
+
+**Choice of intensity `r`.** Constraints: the regime is **unsupervised**
+(no labels — Fisher / between-class ratios are out) and **streaming/growing**
+(statistics must be online, no stored data). The surviving principled choice is
+the **per-specimen surprise** `r = |x − μ| / σ` — the per-coordinate diagonal
+Mahalanobis term. It uses only per-feature marginal stats `(μ, σ)`, no labels,
+and is the unsupervised/incremental form of the codebase's strongest mechanism
+(Maha 0.901, §10.9). Diagonal only (per-feature σ), **not** full covariance:
+O(d) state, stable, streaming-native. (Earlier sweeps fed z-score/abs-dev as the
+*value* and they hurt; here it is the *magnitude*, a different and untested role.)
+
+**The baseline `(μ, σ)` is phase-conditioned (periodic feed).** The feed
+**recurs periodically** (type `i` returns every ~`P` samples). A plain EWMA `μ`
+then blurs across all types currently in the window, inflating surprise. Instead
+condition the baseline on the **cycle phase** so surprise is measured against
+"this feature the last time this type came around." Realized as the discrete
+periodic (comb) kernel — the seasonal component of Holt-Winters — `P` running
+buckets per feature, phase-anchored, only the current bucket updates:
+
+```
+φ   = phase(t, P)                       # phase-locked, see below
+μ_φ ← (1−β)·μ_φ + β·x
+v_φ ← (1−β)·v_φ + β·(x − μ_φ)²
+r   = |x − μ_φ| / √(v_φ + ε)            # phase-conditioned surprise = the intensity
+```
+
+`β`'s memory is in **cycles** (each bucket updates once per period); derive it,
+do **not** guess it. Under a local-level (random-walk-mean + noise) model the
+steady-state Kalman gain gives the forgetting factor in closed form from the
+signal-to-noise ratio `λ = q/r_obs` (drift variance over observation variance,
+both estimable online per feature): `α* = s/(s+1)`, `s = (λ+√(λ²+4λ))/2`. The
+exponential kernel is the unique *memoryless* decay and optimal under this model;
+the periodic comb is its phase-indexed extension, justified **only** because the
+feed recurs.
+
+**`P` is recovered from the stream, not given.** Two coupled loops:
+
+1. *Global period detector.* Form a scalar novelty trace `s_t = ‖x_t − μ_global,t‖`
+   (spikes on each type-switch). Recover `P` with a small **resonator bank**
+   (complex poles `z_i = ρ·e^{iω_i}`, `ω_i = 2π/P_i`, `m_t = z_i·m_{t-1}+(1−ρ)s_t`;
+   the `ω_i` of max steady `|m_t|` wins) or, equivalently, the peak of decayed
+   autocorrelation `R(k)` over candidate lags.
+2. *Per-feature phase buckets* (above), consuming the locked `P` and phase.
+
+**Traps (each with its fix), to bake into the implementation + smoke test:**
+
+- **Phase-lock, not `t mod P`.** Re-anchor bucket 0 to the novelty peak each
+  cycle (a PLL); a free-running modulus smears every bucket toward the global mean
+  once `P` is slightly off.
+- **Fundamental, not harmonic.** Resonators/ACF lock onto `2P` or `P/2`; pick the
+  smallest lag whose integer multiples *all* carry energy (comb score `Σ_m R(mP)`).
+- **Non-integer `P`.** Round and let `β` absorb the slack (start here) or
+  interpolate adjacent buckets by fractional phase.
+- **Warm-up + drift fallback.** Until the comb peak clears the noise floor, fall
+  back to the **aperiodic** EWMA `(μ,σ)` baseline; switch on phase-bucketing only
+  once `P` is locked. Decayed resonators track a drifting `P`; add hysteresis so
+  the locked `P` does not jitter.
+
+**Open inputs (carry to next session):** candidate period range `P_min..P_max`
+(sizes the detector / lag window, O(P_max) state; rejects out-of-range harmonics)
+— not yet supplied. **Falsification gate before promotion:** on a synthetic
+periodic stream, the detector must lock the correct `P` (and reject `2P`/`P/2`),
+and the separable-magnitude descriptor must beat the same-source `[u·cosθ,u·sinθ]`
+on a *weak/linear* readout (the live niche per §10.2) — it is not expected to beat
+raw→dendrite on a strong readout, and that is not the bar.
+
 ### 10.3 Lock-in state (arena tensors)
 
 Three per-cell **non-trainable** tensors, lifecycle-identical to
