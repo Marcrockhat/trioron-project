@@ -9,9 +9,9 @@
 > or `file:line` so it can be re-verified, not trusted.
 >
 > Maintained by: rewrite/extend whenever a session re-derives a fundamental that
-> isn't here. Last verified: session 033 (2026-06-12) — PCLL §10.6–10.10
-> amendment mirrored (§2: mixed stream, per-class settlement, composer arm,
-> manifold adapter, census); dispatch-table + σ-readout drift traps added (§8).
+> isn't here. Last verified: session 047 (2026-08-07) — H-routing promoted to core
+> (`learning/router.py`, §5.5/§7/§9 updated with validated numbers + the 2-epoch
+> caveat on the 0.76 figure). Prior: s033 PCLL §10.6–10.10 mirror.
 
 ---
 
@@ -249,8 +249,14 @@ None of it auto-runs; the driver wires it.
    **Beat fixed-EWC by +6.4σ on chained-15** at 30 KB (memory: `manifold_replay_result`).
    - **Full covariance (`full_cov=True`) → Mahalanobis `log_likelihood_full`** is the
      **full-softmax accuracy pump**: chained-15 full 0.55→0.68 (dual-manifold H-routing)
-     →0.76 (full-cov). full-cov **is in core**; the **routing orchestration is bench-only**
-     (`bench_chained_15_v2.py`, not promoted). (commits `62aa57e`, `7e561e4`.)
+     →0.76 (full-cov). full-cov **is in core**, and since s047 the **routing
+     orchestration is too**: `learning/router.py` `ManifoldRouter` (class-mode QDA /
+     group-mode task pick) + `build_h_archive_from_{data,manifold}` — validated
+     bit-exact vs the archived bench (`experiments/validate_router_promotion.py`).
+     CAVEAT (s047): 0.76 was produced by the `7e561e4`-era core and does NOT
+     reproduce on current core (its own 2ep config → 0.6776). Current-core numbers
+     (seed 42, 4ep): class-mode oracle 0.7111 / storage-free 0.6989; task-mode
+     0.6962 / 0.6833. Cite these, not 0.76.
    - **z2 = the second, H-space (interior-code) ROUTING manifold** — infers which task/
      context a query belongs to from the stable interior code, sidestepping head drift.
      Validated to transfer to the world (session 014: 0.71 full-cov routing).
@@ -294,8 +300,9 @@ recent task; memory `epigenetic_lock_hypothesis`). Two regimes:
 The fix that recovered full-softmax was **not** EWC and **not** task-masking — it was
 **manifold machinery**: replay (defends weights) **+ H-space full-cov routing** (a
 *learned task selector* that picks the skill from the stable interior code). That is the
-validated direction for the world (open item: build replay+router; promote routing to
-core).
+validated direction for the world. Routing was promoted to core in s047
+(`learning/router.py`, bit-exact vs the archived bench); the open item is wiring
+replay+router together in a deployment loop.
 
 ---
 
@@ -347,7 +354,8 @@ core).
   **epigenetic_lock** — the restored λ).
   **Lifecycle:** `trioron/lifecycle/` (grow, graft, ship, wake, compact, saliency).
   **Legacy v1.1:** `trioron/legacy/` (triparametric node, EWC, axes API).
-- **Chained-15 routing to port:** `experiments/bench_chained_15_v2.py` (H-routing,
-  `--full-cov`, `--perc-mixture-k`).
+- **Chained-15 routing:** PROMOTED s047 → `trioron/learning/router.py`; bench source
+  `archive/experiments/bench_chained_15_v2.py`, validation shim
+  `experiments/validate_router_promotion.py`.
 - **`docs/handoff/HANDOFF.md`** — current session state (rewritten every session).
 - **Related project:** `~/project-aidos/` vendors the trioron substrate (separate memory dir).

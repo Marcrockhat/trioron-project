@@ -1,140 +1,128 @@
 # Trioron Handoff
 
-**Session date:** 2026-06-23
-**Session number:** 046
-**Session title:** **Design session — diagnosed the `arcsin_u_descriptor`
-degeneracy (angle and magnitude are the same scalar → 1-DOF) and specced the fix:
-a SEPARABLE magnitude carrying an independent, unsupervised, streaming intensity =
-per-specimen surprise `|x−μ|/σ` against a PHASE-CONDITIONED baseline, with the
-recurrence period `P` recovered from the stream and the EWMA forgetting factor
-derived (not guessed) from a local-level Kalman SNR. Written up as spec §10.2.1.
-No code yet — implementation + smoke test is the next session's job.**
+**Session date:** 2026-08-07
+**Session number:** 047
+**Session title:** **Conscience-core pivot — council line PARKED; H-space routing
+PROMOTED to `trioron/learning/router.py` and validated BIT-EXACT against the
+archived chained-15 bench (4 arms + smoke, all MATCH); the 0.76 headline shown to
+be ERA-BOUND (doesn't reproduce on current core — cite 0.7111). New deployment
+thesis: trioron = task-aware conscience layer for Aidos, adaptable across LLMs.**
 
 ---
 
 ## READ THIS FIRST
 
-1. **Branch `progenitor-council`.** This session is **design only**. One file
-   changed and committed: `paper/v3/spec.md` — new subsection **§10.2.1
-   "Separable magnitude — independent intensity from a phase-conditioned surprise
-   (DESIGN, s046, unbuilt)"**. No `trioron/` code touched. DO-NOT-COMMIT carries
-   unchanged (see bottom).
-2. Everything below is the reasoning chain behind §10.2.1, in case the spec note
-   needs unpacking. The spec note is the source of truth; this is the narrative.
+1. **Branch `conscience-core`** (new, off `progenitor-council`). The council /
+   progenitor line is **PARKED, not deleted**: its gate (typed growth must
+   rediscover the dendrite advantage, s045 item 5) was never met, and Rocky
+   confirmed the councils were trioron covering functions it shouldn't. History
+   stays on `progenitor-council`. DO-NOT-COMMIT carries continue (bottom).
+2. **The pivot (Rocky, this session):** enhance what trioron demonstrably excels
+   at — task awareness — and deploy it to Aidos as the conscience layer. Aidos
+   context: "project tefilin" moved to a Flip 7 device; Aidos focus returns to
+   the heart = trioron's adaptability to different LLMs. Chosen shape: trioron
+   reads **model-agnostic** inputs (its own features, not host hidden states —
+   learn-to-use-not-from), emits **text-first** context (portable to any host),
+   per-host soft-prompt projections later. Trioron's job = infer which
+   context/persona/task is live + retrieve/protect the right competence.
+3. **Work order agreed:** (1) park council ✓; (2) promote H-routing to core ✓
+   (this session); (3) streaming context-shift detection ← NEXT (the §10.2.1
+   surprise machinery survives the council pivot as exactly this detector).
 
-## WHAT WE DECIDED (the design, in order)
+## WHAT SHIPPED (all committed on `conscience-core`)
 
-The conversation walked a chain of constraints to a single concrete design. Each
-step pinned a parameter so **nothing in the final design is a free knob to guess**:
+1. **`trioron/learning/router.py`** (commit `b6d9290`) — `ManifoldRouter` over a
+   `ManifoldArchive` of interior codes:
+   - `route_class` — pure QDA argmax over per-class log-likelihoods (head
+     bypassed entirely; the forgetting-prone edges unused).
+   - `route_group` / `route_prediction` — manifold picks the task group, head
+     logits pick the class within it.
+   - `build_h_archive_from_data` (oracle path) and
+     `build_h_archive_from_manifold` (storage-free: sample the perception
+     manifold, forward through the CURRENT substrate, collect H codes — fixes
+     stale statistics). Exported from `trioron.learning`. 6 new tests in
+     `tests/test_v2/test_router.py` (all pass; suite 135 pass / 4 PRE-EXISTING
+     failures in test_learning/test_lifecycle — they fail with s047 changes
+     stashed too, likely the s034 DO-NOT-COMMIT carries; untouched).
+2. **`experiments/validate_router_promotion.py`** (commit `21c70f8`) — shim
+   runner: aliases `experiments.datasets` → legacy donorkit, loads
+   `archive/experiments/bench_chained_15_v2.py`, monkeypatches
+   `evaluate_all_tasks` so the final pure-H post-refresh eval ALSO routes with
+   the promoted `ManifoldRouter` and compares. **All 5 runs MATCH bit-exact.**
+3. **Manual updated** (§ header, §5.5, §7, §9) with promoted status + corrected
+   numbers.
 
-1. **The defect.** `arcsin_u_descriptor` ships `[u·cosθ, u·sinθ]` with
-   `θ=arcsin(u)` — both magnitude and angle are functions of the *same* `u`. So
-   the 2D output is a 1-DOF curve in a plane: no more information than `u` alone.
-   This IS the s045 redundancy finding ("stereo win = redundant linear combo").
-   **Fix: angle and magnitude must be independent** → `[r·cosθ, r·sinθ]`,
-   `θ=arcsin(u_angle)`, `r` = a *separate* intensity. Then phasors can be summed
-   to a resultant 2-vector → read 2+ logits (the `(μ,σ)`-resultant made literal).
-2. **What is `r`?** Regime is **unsupervised** (Fisher/between-class is OUT) and
-   **streaming/growing** (stats must be online, no stored data). Survivor =
-   **per-specimen surprise `r = |x−μ|/σ`** = the diagonal per-coordinate
-   Mahalanobis term. Diagonal only (O(d), stable); NOT full covariance. This is
-   the unsupervised/incremental form of the codebase's best mechanism (Maha 0.901).
-3. **The baseline `(μ,σ)` must be phase-conditioned** because Rocky confirmed the
-   feed has **periodic recurrence** (types return every ~`P` samples). A plain
-   EWMA blurs across types and inflates surprise; instead use the **seasonal /
-   comb kernel** — `P` phase buckets per feature, only the current bucket updates,
-   `r = |x−μ_φ|/√(v_φ+ε)`. Surprise is measured against "same phase last cycle."
-4. **The forgetting factor is DERIVED, not guessed.** Local-level model
-   (random-walk mean + observation noise) → steady-state Kalman gain gives the
-   EWMA `α*` in closed form from the SNR `λ=q/r_obs`: `α*=s/(s+1)`,
-   `s=(λ+√(λ²+4λ))/2`. `q` (drift var) and `r_obs` (noise var) are estimable
-   online per feature. Exponential decay is the unique *memoryless* kernel and
-   optimal here; the comb is its phase-indexed extension, justified ONLY because
-   the feed recurs (we explicitly rejected a "wave/oscillating" kernel for the
-   non-periodic case — it would add a frequency knob to guess).
-5. **`P` is recovered from the stream** (Rocky: not known a priori). Two coupled
-   loops: (i) a GLOBAL period detector on a scalar novelty trace
-   `s_t=‖x_t−μ_global‖` via a small **resonator bank** (complex poles, the §10.2
-   complex-pole machinery reused) or decayed-autocorrelation peak; (ii) the
-   per-feature phase buckets consuming the locked `P`.
+## THE NUMBERS (seed 42, full-cov, current core — logs in outputs/validate_router_*.log)
 
-## THE FOUR IMPLEMENTATION TRAPS (must be handled — see §10.2.1)
+| config | storage-free (manifold refresh) | oracle (real refresh) |
+|---|---|---|
+| task-mode, 4ep | 0.6833 (task-aware 0.9504) | 0.6962 (0.9507) |
+| class-mode QDA, 4ep | **0.6989** (0.9491) | **0.7111** (0.9505) |
+| class-mode QDA, 2ep | — | 0.6776 (0.9564) |
 
-1. **Phase-lock, not `t mod P`** — anchor bucket 0 to the novelty peak each cycle
-   (a PLL), or buckets smear to the global mean when `P` is slightly off.
-2. **Fundamental, not harmonic** — resonators lock onto `2P`/`P/2`; pick smallest
-   lag whose multiples all carry energy (comb score `Σ_m R(mP)`).
-3. **Non-integer `P`** — round + let `β` absorb slack (start here), or interpolate.
-4. **Warm-up + drift fallback** — until the comb peak clears the noise floor, fall
-   back to APERIODIC EWMA `(μ,σ)`; switch on phase-buckets only once `P` locks;
-   hysteresis so locked `P` doesn't jitter; decayed resonators track drifting `P`.
+**Claim correction (important):** the manual/paper-adjacent "0.76" (commit
+`7e561e4`) is ERA-BOUND — it does not reproduce on current core even at its own
+2-epoch config (0.6776 today). The archived bench imports LIVE trioron modules;
+the core evolved since (dendrite/tanh/growth/credit/soft-apoptosis...). Not a
+router bug — bit-exact MATCH rules that out; the same-run bench and promoted
+router always agree to the last digit. **Cite 0.7111 class-oracle / 0.6989
+storage-free.** Note 4ep > 2ep on current core (old relationship reversed).
+Single-seed; n≥3 before any paper use.
 
-## NEXT (priority — pick one to open the next session)
+## NEXT (priority)
 
-1. **Implement §10.2.1 in `trioron/core/receptor.py`** + a **smoke test on a
-   synthetic periodic stream**. Falsification gate (from §10.2.1): the detector
-   must lock the correct `P` and reject `2P`/`P/2`, AND the separable-magnitude
-   descriptor must beat the same-source `[u·cosθ,u·sinθ]` on a **weak/linear**
-   readout (the live niche). It is NOT expected to beat raw→dendrite on a strong
-   readout — that is not the bar (s045 closed that door).
-2. **BLOCKER for #1: get `P_min..P_max` from Rocky** — the candidate period range
-   (in samples between type-recurrences). Sizes the detector / lag window
-   (O(P_max) state) and rejects out-of-range harmonics. NOT yet supplied — ask
-   first. Also confirm whether `P` itself drifts (→ adaptive `P` + hysteresis).
-3. **(Carried from s045) dendrite soma n=5 in the CL stream** —
-   `SEEDS=0,1,2,3,4 SOMA_GENE=dendrite STRENGTH=150 LOCK_RATE=0.1 REPLAY_BS=16
-   ARMS=none,replay,all EPOCHS=6 python3 experiments/progenitor/mixed_stream_cl.py`.
-   Confirm single-seed 0.540 vs 0.343.
-4. **(Carried from s045) raw→dendrite taxonomy block swap** in `mixed_stream_cl.py`
-   (joint showed raw→dendrite 0.863 > phasor-lens→dendrite 0.779; ~+0.08 if holds).
-5. **(Carried from s045) frustration / council redesign (DESIGN, parked)** — local
-   `u=|w·g|`-driven frustration + phenotype-by-audition; gate = can typed growth
-   REDISCOVER the dendrite advantage? Do NOT dismantle the council before the gate.
+1. **Streaming context-shift detector** — deployment has no task boundaries;
+   the router needs a "context changed" signal. Reuse spec §10.2.1's design
+   (per-feature surprise `|x−μ|/σ`, Kalman-derived EWMA α, optional
+   phase-conditioned comb) — the design survives the council pivot; its
+   original niche (arcsin_u magnitude) does not. STILL BLOCKED on
+   `P_min..P_max` from Rocky IF the periodic comb is wanted; the aperiodic
+   EWMA fallback needs no input and is the deployment-relevant first cut.
+2. **Deployment loop: replay + router wired together** (manual §7 open item) —
+   a `conscience` API shape for Aidos: enroll context → route → retrieve →
+   extend. Then the Aidos bundle: substrate + manifold + router + shift
+   detector, text-first interface.
+3. **n≥3 seeds on the router numbers** before anything is quoted outside.
+4. **Storage note:** full-cov Σ per class is code_dim² (~363 KB at 30 classes
+   vs 6.6 KB diag — `7e561e4` note). Selective per-class full-cov upgrade is
+   the optimization if the Aidos budget cares.
+5. **(Carried, parked)** council-gate items from s045/s046 remain on
+   `progenitor-council`: §10.2.1 implementation in receptor.py, dendrite soma
+   n=5, raw→dendrite taxonomy swap. Reopen only with a reason.
 
 ## OPEN / unresolved
 
-- §10.2.1 is **unbuilt** — design only. No measurement yet; the lift on a weak
-  readout is hypothesized, not shown.
-- `P_min..P_max` not supplied (blocks the smoke test sizing).
-- s045 carries: replay storage 750KB input-space vs 30KB H-space headline (shrink
-  before promotion); `forget` confounded when acq≈final≈0 (read acq alongside);
-  s039–s044 scattering / learnable-kernels-λ / council-vote / chained-15 PCLL /
-  optics toys / s044 mixed-stream lenses all untouched.
+- 4 pre-existing test failures (test_learning TestCredit ×2, test_lifecycle
+  ×2) — predate s047; probably the s034 uncommitted carries; diagnose someday.
+- The 0.76→0.71 era-drift means OTHER archived-bench claims may also be
+  era-bound; re-run before citing any of them.
+- EMNIST downloaded fresh this session (562 MB) to the legacy donorkit data
+  root — first bench run on a new PC will re-download.
 
 ## State of the build / Pointers
 
-- **Spec note (this session):** `paper/v3/spec.md` §10.2.1 (right before §10.3
-  "Lock-in state"). Extends §10.2's `arc_phase`/`arcsin_u_descriptor` (s045).
-- **Core encoders (s045):** `trioron/core/receptor.py` — `arc_phase`,
-  `arcsin_u_descriptor` (both take `normalized=`). `quantize`/`phase`/
-  `quanta_to_phase` unchanged. The descriptor at lines ~86–102 is what §10.2.1
-  re-specs (separable `r` replacing the `u` magnitude).
-- **Manifold (the resultant's existing home):** `trioron/learning/manifold.py`
-  `ManifoldArchive` (per-class Gaussian; the SUPERVISED analog of the unsupervised
-  streaming `(μ,σ)` §10.2.1 proposes).
-- **The CL / joint experiments (s045, unchanged):**
-  `experiments/progenitor/mixed_stream_cl.py`, `mixed_stream_joint.py`,
-  `mixed_stream_lenses.py`; notebook `notebooks/01_emitter_and_quantization.ipynb`.
-- s045's two headline results still stand: **manifold replay = best CL mechanism**
-  (mean 0.456, +63% over s044 `both`) and **the bottleneck is acquisition not
-  forgetting** (joint upper bound 0.706; taxonomy undertrained, CIFAR
-  perception-bound, MNIST the real forgetting gap). DENDRITE soma wins at same
-  params (joint 0.750 vs tanh 0.706).
+- **Core:** `trioron/learning/router.py` (NEW), `manifold.py` (unchanged;
+  scoring primitives already lived there), exports in `learning/__init__.py`.
+- **Validation:** `experiments/validate_router_promotion.py`; bench source
+  `archive/experiments/bench_chained_15_v2.py` (untouched); logs
+  `outputs/validate_router_{smoke,real,manifold,real_class,manifold_class,real_class_2ep}.log`
+  (untracked, PNG/log convention as before).
+- **Docs:** `docs/TRIORON_MANUAL.md` updated (s047 header, §5.5 caveat, §7, §9).
+- s045 headline results still stand (manifold replay best CL mechanism;
+  bottleneck = acquisition not forgetting; dendrite soma > tanh at same params).
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
 `trioron/viz/export.py`; `.claude/`, `runs/`, `trioron/legacy/outputs/`,
-`notebooks/` checkpoints, output PNGs untracked (PNGs intentionally uncommitted).
+`notebooks/` checkpoints, output PNGs/logs untracked.
 
 ## Environment notes
 
-- `/home/marcrockhat/trioron-project/`, branch `progenitor-council`, Python
-  3.10.12, torch 2.11.0, torchvision 0.26.0, WSL2, `python3` (NOT `python`),
-  `OMP_NUM_THREADS=8`. Data `outputs/data/` (CIFAR-100 on disk).
-- **Model note (keep):** lead with the COMPUTATIONAL framing in code/docs
-  (per-feature Gaussian / Mahalanobis surprise; Kalman/EWMA forgetting; seasonal
-  comb = phase-conditioned baseline; resonator bank = streaming periodogram).
-  Optical metaphors (lens/emitter/phasor/atom/intensity) are Rocky's conversational
-  framing — fine in prose, keep them out of code to avoid mid-session safety
-  downgrades.
+- `/home/marcrockhat/trioron-project/`, branch `conscience-core`, Python
+  3.10.12, torch 2.11.0, WSL2, `python3` (NOT `python`), `OMP_NUM_THREADS=8`
+  (use 4 per process when running two arms in parallel).
+- Bench logs buffer: `python3 ... > log` shows 0 bytes until exit; the run is
+  fine — check `ps` before assuming a hang.
+- Computational framing in code/docs (Gaussian/Mahalanobis/QDA/Kalman);
+  optical metaphors stay in prose only.
