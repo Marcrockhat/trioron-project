@@ -86,16 +86,21 @@ Single-seed; n≥3 before any paper use.
 
 ## NEXT (priority)
 
-1. **Shift detector on H-codes, not pixels.** Real-stream probe (chained-15
-   raw pixels, 200/task): catches DATASET-level shifts (MNIST→Fashion at
-   step 1000 detected at 1002) but misses within-dataset class-pair
-   boundaries — per-sample pixel variance drowns the pair-level mean shift.
-   Same lesson as routing: the stable signal is the interior code. Wire
-   `ShiftDetector` to H-space activations of a trained substrate and re-probe.
-   (An 8-sample-pooled variant was INCONCLUSIVE — warmup/cooldown spanned the
-   25-step pooled tasks; don't read it as a null.) Do NOT threshold-fiddle
-   pixel space first. Periodic comb variant still wants `P_min..P_max` from
-   Rocky; aperiodic cut needed no input and is shipped.
+1. **Detector = NOVELTY alarm, not boundary detector (s047 reframe; probe it).**
+   The H-codes probe RAN (`experiments/shift_h_probe.py`, commit `2c4b14c`;
+   log `outputs/shift_h_probe_smoke.log`): on known-context switches through a
+   frozen trained substrate, H-codes give 1/14 boundaries (the MNIST→Fashion
+   dataset shift, +3 samples, ZERO false fires) vs pixels 1/14 with 3 false
+   fires. Within-dataset pair boundaries are invisible in BOTH spaces — and
+   that is CORRECT behavior: known contexts sit inside the trained
+   distribution (not surprising), and the router already re-routes known
+   contexts per sample without needing a boundary signal. The detector's real
+   deployment job is NOVEL-context detection (trigger enrollment / growth /
+   re-anchor). Next probe: train on tasks 0–9, stream 10–14 as novel; signal =
+   max class log-likelihood under the H-archive ("no enrolled context explains
+   this"), so detector and router share the manifold. SHIP the trained
+   substrate so detector variants iterate without retraining. Periodic comb
+   still wants `P_min..P_max` from Rocky; aperiodic cut shipped.
 2. **Deployment loop: replay + router + shift detector wired together** —
    a `conscience` API shape for Aidos: enroll context → route → retrieve →
    extend. Then the Aidos bundle: substrate + manifold + router + shift
