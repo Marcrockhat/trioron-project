@@ -5,8 +5,11 @@
 **Session title:** **Conscience-core pivot — council line PARKED; H-space routing
 PROMOTED to `trioron/learning/router.py` and validated BIT-EXACT against the
 archived chained-15 bench (4 arms + smoke, all MATCH); the 0.76 headline shown to
-be ERA-BOUND (doesn't reproduce on current core — cite 0.7111). New deployment
-thesis: trioron = task-aware conscience layer for Aidos, adaptable across LLMs.**
+be ERA-BOUND (doesn't reproduce on current core — cite 0.7111); streaming
+context-shift detector SHIPPED (`learning/shift.py`, §10.2.1 aperiodic cut,
+Kalman-derived α) — works on synthetic + dataset-level shifts, needs H-codes for
+within-dataset boundaries. New deployment thesis: trioron = task-aware conscience
+layer for Aidos, adaptable across LLMs.**
 
 ---
 
@@ -51,6 +54,18 @@ thesis: trioron = task-aware conscience layer for Aidos, adaptable across LLMs.*
    the promoted `ManifoldRouter` and compares. **All 5 runs MATCH bit-exact.**
 3. **Manual updated** (§ header, §5.5, §7, §9) with promoted status + corrected
    numbers.
+4. **`trioron/learning/shift.py`** (commit `cce801b`) — the §10.2.1 APERIODIC
+   cut, built for the conscience layer's boundary-free deployment:
+   `SurpriseBaseline` (per-feature `|x−μ|/σ`; EWMA rate DERIVED online from the
+   local-level Kalman SNR — `Var(d)=q+2r`, `lag1Cov(d)=−r` on the differenced
+   stream; Huber-gated absorption) + `ShiftDetector` (self-normalized novelty z,
+   k-consecutive + cooldown, **freeze BOTH baselines while a candidate run is
+   open** — a suspected shift gets zero absorption until ruled on; optional
+   reanchor). 8 tests pass (`tests/test_v2/test_shift.py`). Two implementation
+   lessons baked in: naive absorption buries the shift within 1 sample (the
+   derived α has a ~0.2 noise floor on stationary data — one-sided q-clamp
+   bias), fixed by the candidate-freeze, and the two-phase `score`/`absorb`
+   split exists precisely for that gating.
 
 ## THE NUMBERS (seed 42, full-cov, current core — logs in outputs/validate_router_*.log)
 
@@ -71,14 +86,17 @@ Single-seed; n≥3 before any paper use.
 
 ## NEXT (priority)
 
-1. **Streaming context-shift detector** — deployment has no task boundaries;
-   the router needs a "context changed" signal. Reuse spec §10.2.1's design
-   (per-feature surprise `|x−μ|/σ`, Kalman-derived EWMA α, optional
-   phase-conditioned comb) — the design survives the council pivot; its
-   original niche (arcsin_u magnitude) does not. STILL BLOCKED on
-   `P_min..P_max` from Rocky IF the periodic comb is wanted; the aperiodic
-   EWMA fallback needs no input and is the deployment-relevant first cut.
-2. **Deployment loop: replay + router wired together** (manual §7 open item) —
+1. **Shift detector on H-codes, not pixels.** Real-stream probe (chained-15
+   raw pixels, 200/task): catches DATASET-level shifts (MNIST→Fashion at
+   step 1000 detected at 1002) but misses within-dataset class-pair
+   boundaries — per-sample pixel variance drowns the pair-level mean shift.
+   Same lesson as routing: the stable signal is the interior code. Wire
+   `ShiftDetector` to H-space activations of a trained substrate and re-probe.
+   (An 8-sample-pooled variant was INCONCLUSIVE — warmup/cooldown spanned the
+   25-step pooled tasks; don't read it as a null.) Do NOT threshold-fiddle
+   pixel space first. Periodic comb variant still wants `P_min..P_max` from
+   Rocky; aperiodic cut needed no input and is shipped.
+2. **Deployment loop: replay + router + shift detector wired together** —
    a `conscience` API shape for Aidos: enroll context → route → retrieve →
    extend. Then the Aidos bundle: substrate + manifold + router + shift
    detector, text-first interface.
