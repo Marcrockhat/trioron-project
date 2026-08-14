@@ -77,6 +77,17 @@ at same budget: 37.9 (4× below nest).**
    not asymptote (untuned DQN; more episodes would close it)
    (`runs/dqn_baseline.log`).
 
+8. **`watch_duel.py`** — the first product-shaped artifact: retrains + CHECKPOINTS
+   both headline agents (`archive/runs/duel/{router_td,dqn}.pt`; retrained pair
+   reproduces held-out means exactly — 163.2 / 34.9), runs both on the same
+   unseen map, renders a side-by-side GIF with the router's live leaf choice
+   displayed. Map 987654: **nest 144 steps, DQN dead at 13**
+   (`runs/duel_map987654.gif`, `runs/watch_duel.log`). Re-render on any map in
+   <1 min: `cd archive && python3 experiments/world/watch_duel.py --map-seed N`.
+9. **Clarified for Rocky:** the game organisms contain NO sin-wave machinery —
+   leaves are linear, router is quad-dendrite σ(z)=z+z² (`bases/seeded.py:33`);
+   the phasor/lock-in line (s041–s045) stays parked and unimported here.
+
 ## DREAMING DESIGN FOR THE NEST (discussed, not built)
 
 Per-level: leaf dreams = existing `dream_loop.py` (frustration→implicated
