@@ -1,138 +1,134 @@
 # Trioron Handoff
 
-**Session date:** 2026-08-07
-**Session number:** 047
-**Session title:** **Conscience-core pivot — council line PARKED; H-space routing
-PROMOTED to `trioron/learning/router.py` and validated BIT-EXACT against the
-archived chained-15 bench (4 arms + smoke, all MATCH); the 0.76 headline shown to
-be ERA-BOUND (doesn't reproduce on current core — cite 0.7111); streaming
-context-shift detector SHIPPED (`learning/shift.py`, §10.2.1 aperiodic cut,
-Kalman-derived α) — works on synthetic + dataset-level shifts, needs H-codes for
-within-dataset boundaries. New deployment thesis: trioron = task-aware conscience
-layer for Aidos, adaptable across LLMs.**
+**Session date:** 2026-08-15
+**Session number:** 048
+**Session title:** **Product pivot to GAMING — the survival-world arc revisited on
+`conscience-core`. Nested organism (5 trioron leaves + trioron router) VALIDATED:
+a consequence-taught trioron router DISCOVERS arbitration (163.2 survival, near
+the hand-coded ceiling 167.6, above every master incl. a new "perfect" one at
+131); flat distillation FAILS reproducibly (mirror-gate choke + linearity,
+diagnosed); cold-start router width collapses by N=20 leaves; flat DQN control
+at same budget: 37.9 (4× below nest).**
 
 ---
 
 ## READ THIS FIRST
 
-1. **Branch `conscience-core`** (new, off `progenitor-council`). The council /
-   progenitor line is **PARKED, not deleted**: its gate (typed growth must
-   rediscover the dendrite advantage, s045 item 5) was never met, and Rocky
-   confirmed the councils were trioron covering functions it shouldn't. History
-   stays on `progenitor-council`. DO-NOT-COMMIT carries continue (bottom).
-2. **The pivot (Rocky, this session):** enhance what trioron demonstrably excels
-   at — task awareness — and deploy it to Aidos as the conscience layer. Aidos
-   context: "project tefilin" moved to a Flip 7 device; Aidos focus returns to
-   the heart = trioron's adaptability to different LLMs. Chosen shape: trioron
-   reads **model-agnostic** inputs (its own features, not host hidden states —
-   learn-to-use-not-from), emits **text-first** context (portable to any host),
-   per-host soft-prompt projections later. Trioron's job = infer which
-   context/persona/task is live + retrieve/protect the right competence.
-3. **Work order agreed:** (1) park council ✓; (2) promote H-routing to core ✓
-   (this session); (3) streaming context-shift detection ← NEXT (the §10.2.1
-   surprise machinery survives the council pivot as exactly this detector).
+1. **The pivot (Rocky, this session):** ArXiv push judged premature ("pushing a
+   premature project"); focus moves to PRODUCT, and the chosen application is
+   **gaming** — NPCs/organisms that visibly learn and absorb skills at runtime.
+   The vehicle is the mini-Minecraft survival world
+   (`archive/experiments/world/`, s015–s021 era), now re-validated on the
+   current core. The s047 conscience/router line is not abandoned — the nest's
+   parent IS that mechanism (see 3).
+2. **Everything below is single-seed direction-finding** (40-world evals,
+   ±~8 steps noise) unless marked otherwise. n≥3 before quoting anything.
+3. **The architecture that works:** skills as separate trioron leaves +
+   a trioron router choosing per tick ("nested triorons", Rocky's term).
+   Distillation into one flat policy is the architecture that fails — shown
+   three independent ways this session.
 
-## WHAT SHIPPED (all committed on `conscience-core`)
+## WHAT RAN (chronological; all logs in `runs/`, scripts committed `9b664cf`)
 
-1. **`trioron/learning/router.py`** (commit `b6d9290`) — `ManifoldRouter` over a
-   `ManifoldArchive` of interior codes:
-   - `route_class` — pure QDA argmax over per-class log-likelihoods (head
-     bypassed entirely; the forgetting-prone edges unused).
-   - `route_group` / `route_prediction` — manifold picks the task group, head
-     logits pick the class within it.
-   - `build_h_archive_from_data` (oracle path) and
-     `build_h_archive_from_manifold` (storage-free: sample the perception
-     manifold, forward through the CURRENT substrate, collect H codes — fixes
-     stale statistics). Exported from `trioron.learning`. 6 new tests in
-     `tests/test_v2/test_router.py` (all pass; suite 135 pass / 4 PRE-EXISTING
-     failures in test_learning/test_lifecycle — they fail with s047 changes
-     stashed too, likely the s034 DO-NOT-COMMIT carries; untouched).
-2. **`experiments/validate_router_promotion.py`** (commit `21c70f8`) — shim
-   runner: aliases `experiments.datasets` → legacy donorkit, loads
-   `archive/experiments/bench_chained_15_v2.py`, monkeypatches
-   `evaluate_all_tasks` so the final pure-H post-refresh eval ALSO routes with
-   the promoted `ManifoldRouter` and compares. **All 5 runs MATCH bit-exact.**
-3. **Manual updated** (§ header, §5.5, §7, §9) with promoted status + corrected
-   numbers.
-4. **`trioron/learning/shift.py`** (commit `cce801b`) — the §10.2.1 APERIODIC
-   cut, built for the conscience layer's boundary-free deployment:
-   `SurpriseBaseline` (per-feature `|x−μ|/σ`; EWMA rate DERIVED online from the
-   local-level Kalman SNR — `Var(d)=q+2r`, `lag1Cov(d)=−r` on the differenced
-   stream; Huber-gated absorption) + `ShiftDetector` (self-normalized novelty z,
-   k-consecutive + cooldown, **freeze BOTH baselines while a candidate run is
-   open** — a suspected shift gets zero absorption until ruled on; optional
-   reanchor). 8 tests pass (`tests/test_v2/test_shift.py`). Two implementation
-   lessons baked in: naive absorption buries the shift within 1 sample (the
-   derived α has a ~0.2 noise floor on stationary data — one-sided q-clamp
-   bias), fixed by the candidate-freeze, and the two-phase `score`/`absorb`
-   split exists precisely for that gating.
+1. **`revisit_smoke.py`** — skill absorption on current core. Wiring smoke
+   PASSED (mirror cells intact after 2 months of core drift). Chain
+   solo→fire→water: 52.4→54.3→56.1, cause-of-death shifts correct, no
+   forgetting — complementary skills absorb. Chain +flee: **regression to 41.0**
+   (fire-avoidance overwrites warming — antagonistic pair). A hand-built
+   **perfect master** (all skills, deterministic, bar 131–135) made the student
+   WORSE: 52.4→35.1, integrity deaths 1→17 — arbitrated behavior does not
+   distill into a flat policy (`runs/revisit_smoke*.log`).
+2. **`diagnose_imitation.py`** — WHY it can't learn fast, 6 supervised arms on
+   perfect-master action prediction (`runs/diagnose_imitation.log`):
+   - **mirror-gated channel (the DAgger path): 0.476 asymptote, slowest — THE
+     choke**; below even the linear ceiling.
+   - **linear substrate: 0.600 = linear probe 0.595** — arbiter has linearly
+     inexpressible sign-flips (s017 confirmed).
+   - **nonlinear full-credit trioron: 0.723 ≈ MLP 0.730 — substrate is FINE.**
+   - No perception gap (percept ≥ privileged state).
+   - Recipe: leaves train **nonlinear=True + full-credit**, integrate by routing.
+3. **Nest re-validation** — `primitives.py` + `vocabulary.py` re-run on current
+   core (`runs/{primitives,vocabulary}_recore.log`): 5 leaf donors rebuilt,
+   Gaussian-routed organism **148.1** (June result reproduces; routing acc
+   0.813 full-cov; HYDRATE leaf weak at 0.533 fidelity — nonlinear retrain is
+   the known fix, not yet done).
+4. **HONESTY AUDIT (Rocky pushed, was right):** the vocabulary nest is NOT
+   100% trioron — router = Gaussian QDA fitted to a HAND-CODED `danger()`
+   formula on a hand-picked percept slice. Led to:
+5. **`router_trioron.py`** — a real trioron substrate (77→5, nonlinear,
+   full-credit) as router (`runs/router_trioron.log`):
+   - **(b) consequence-taught (Q over leaf choices, drive-delta reward only):
+     163.2** — beats Gaussian 148.1 and imitation arm, ~4 below the hand-coded
+     arbiter 167.6; train tail 178.9. **Agreement with the hand-coded danger
+     formula only 0.389 — discovery OUT-DESIGNED the formula** (more FLEE, less
+     EVADE). 100%-trioron deployed loop achieved.
+   - (a) imitation-taught fallback: 152.2 (label acc 0.933).
+6. **`router_width_sweep.py`** — how many leaves can cold-start TD discovery
+   arbitrate at fixed budget (300 eps)? **5→163.2 (mass on real leaves 1.00),
+   10→112.7 (0.56), 20→65.2 (0.40), 40→64.8 (0.10)** — exploration cost is the
+   wall, NOT Q-capacity (`runs/router_width_sweep.log`). Fixes, in preference
+   order: incremental enrollment (curriculum — how a game works anyway),
+   manifold-recognition shortlist + TD choice (hybrid of the two validated
+   routers), dreamed exploration.
+7. **`dqn_baseline.py`** — the control we owed ourselves: flat 2×128 ReLU DQN,
+   identical budget/reward/eval, **n=3: mean 37.9** (34.9/40.0/38.9) — below
+   flat linear trioron solo (52.4), 4× below the nest. Dies of the
+   fire-exploration trap. Claim earned: **sample-efficiency at game budgets**,
+   not asymptote (untuned DQN; more episodes would close it)
+   (`runs/dqn_baseline.log`).
 
-## THE NUMBERS (seed 42, full-cov, current core — logs in outputs/validate_router_*.log)
+## DREAMING DESIGN FOR THE NEST (discussed, not built)
 
-| config | storage-free (manifold refresh) | oracle (real refresh) |
-|---|---|---|
-| task-mode, 4ep | 0.6833 (task-aware 0.9504) | 0.6962 (0.9507) |
-| class-mode QDA, 4ep | **0.6989** (0.9491) | **0.7111** (0.9505) |
-| class-mode QDA, 2ep | — | 0.6776 (0.9564) |
-
-**Claim correction (important):** the manual/paper-adjacent "0.76" (commit
-`7e561e4`) is ERA-BOUND — it does not reproduce on current core even at its own
-2-epoch config (0.6776 today). The archived bench imports LIVE trioron modules;
-the core evolved since (dendrite/tanh/growth/credit/soft-apoptosis...). Not a
-router bug — bit-exact MATCH rules that out; the same-run bench and promoted
-router always agree to the last digit. **Cite 0.7111 class-oracle / 0.6989
-storage-free.** Note 4ep > 2ep on current core (old relationship reversed).
-Single-seed; n≥3 before any paper use.
+Per-level: leaf dreams = existing `dream_loop.py` (frustration→implicated
+primitive→relabel own failures→consolidate w/ replay interleave; broke the
+Breakout plateau); router dreams = Dyna-style offline replay oversampling
+near-death states; structural dreams = engagement-conditional apoptosis of
+unused leaves (validated +0.8σ/-33% std) + int8 archive demotion + NEW-leaf
+enrollment triggered by the s047 shift detector (novelty alarm). Day/night in
+`tile_world` is the intended wake/dream signal — player-legible learning.
+Caveat: Pong dream loop replicated only 2/4 seeds; per-game config sensitivity.
 
 ## NEXT (priority)
 
-1. **Detector = NOVELTY alarm, not boundary detector (s047 reframe; probe it).**
-   The H-codes probe RAN (`experiments/shift_h_probe.py`, commit `2c4b14c`;
-   log `outputs/shift_h_probe_smoke.log`): on known-context switches through a
-   frozen trained substrate, H-codes give 1/14 boundaries (the MNIST→Fashion
-   dataset shift, +3 samples, ZERO false fires) vs pixels 1/14 with 3 false
-   fires. Within-dataset pair boundaries are invisible in BOTH spaces — and
-   that is CORRECT behavior: known contexts sit inside the trained
-   distribution (not surprising), and the router already re-routes known
-   contexts per sample without needing a boundary signal. The detector's real
-   deployment job is NOVEL-context detection (trigger enrollment / growth /
-   re-anchor). Next probe: train on tasks 0–9, stream 10–14 as novel; signal =
-   max class log-likelihood under the H-archive ("no enrolled context explains
-   this"), so detector and router share the manifold. SHIP the trained
-   substrate so detector variants iterate without retraining. Periodic comb
-   still wants `P_min..P_max` from Rocky; aperiodic cut shipped.
-2. **Deployment loop: replay + router + shift detector wired together** —
-   a `conscience` API shape for Aidos: enroll context → route → retrieve →
-   extend. Then the Aidos bundle: substrate + manifold + router + shift
-   detector, text-first interface.
-3. **n≥3 seeds on the router numbers** before anything is quoted outside.
-4. **Storage note:** full-cov Σ per class is code_dim² (~363 KB at 30 classes
-   vs 6.6 KB diag — `7e561e4` note). Selective per-class full-cov upgrade is
-   the optimization if the Aidos budget cares.
-5. **(Carried, parked)** council-gate items from s045/s046 remain on
-   `progenitor-council`: §10.2.1 implementation in receptor.py, dendrite soma
-   n=5, raw→dendrite taxonomy swap. Reopen only with a reason.
+1. **Wire `dream_loop.py` to the trioron-routed nest** (it currently rebuilds
+   the Gaussian organism). Target: push 163.2 past the 167.6 arbiter ceiling.
+2. **Incremental-enrollment experiment** — add leaves one at a time to the TD
+   router (the width-collapse fix that matches game design).
+3. **Retrain leaves nonlinear + full-credit** (HYDRATE 0.533 → expect big lift;
+   then the nest number should rise).
+4. **n≥3 on the headline arms** (nest 148/163, arbiter, width sweep) before any
+   external quote.
+5. **NAV leaf design** (Rocky asked): skills emit goals, one shared nav trioron
+   walks — router→skill→nav three-level nest. New build.
+6. Swap Gaussian `VocabularyRouter` internals for the promoted
+   `learning/router.py` `ManifoldRouter` where recognition-routing is used.
 
 ## OPEN / unresolved
 
-- 4 pre-existing test failures (test_learning TestCredit ×2, test_lifecycle
-  ×2) — predate s047; probably the s034 uncommitted carries; diagnose someday.
-- The 0.76→0.71 era-drift means OTHER archived-bench claims may also be
-  era-bound; re-run before citing any of them.
-- EMNIST downloaded fresh this session (562 MB) to the legacy donorkit data
-  root — first bench run on a new PC will re-download.
+- 4 pre-existing test failures (test_learning TestCredit ×2, test_lifecycle ×2)
+  — predate s047, untouched.
+- s047 NEXT items (novelty-alarm probe on tasks 0–9 vs 10–14, conscience API
+  bundle for Aidos, router n≥3) are PARKED behind the game arc, not dropped —
+  the nest's enrollment trigger (dream design above) is the same mechanism.
+- Watcher-command lesson: `pgrep -f X` inside a queued command matches its own
+  command line — the DQN queue silently never fired (fixed by direct launch;
+  a stale watcher survived ~2.6h and was killed). Don't chain background runs
+  that way; launch on completion notification instead.
+- `perfect_master` lives in `revisit_smoke.py` (bar 131–135; overheat/thirst
+  tradeoffs at the margin remain).
 
 ## State of the build / Pointers
 
-- **Core:** `trioron/learning/router.py` (NEW), `manifold.py` (unchanged;
-  scoring primitives already lived there), exports in `learning/__init__.py`.
-- **Validation:** `experiments/validate_router_promotion.py`; bench source
-  `archive/experiments/bench_chained_15_v2.py` (untouched); logs
-  `outputs/validate_router_{smoke,real,manifold,real_class,manifold_class,real_class_2ep}.log`
-  (untracked, PNG/log convention as before).
-- **Docs:** `docs/TRIORON_MANUAL.md` updated (s047 header, §5.5 caveat, §7, §9).
-- s045 headline results still stand (manifold replay best CL mechanism;
-  bottleneck = acquisition not forgetting; dendrite soma > tanh at same params).
+- **Scripts (committed `9b664cf`, branch `conscience-core`):**
+  `archive/experiments/world/{revisit_smoke,diagnose_imitation,router_trioron,router_width_sweep,dqn_baseline}.py`
+- **Logs (untracked per convention):** `runs/revisit_smoke*.log`,
+  `runs/diagnose_imitation.log`, `runs/{primitives,vocabulary}_recore.log`,
+  `runs/router_trioron.log`, `runs/router_width_sweep.log`,
+  `runs/dqn_baseline.log`.
+- **Leaf donors:** `runs/primitives/{WARM,FLEE,HYDRATE,FORAGE,EVADE}.pt`
+  (rebuilt this session on current core; linear — see NEXT 3).
+- s047 state (H-routing promoted, 0.76 era-bound → cite 0.7111, shift detector
+  shipped) unchanged and still current — see git history of this file.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 
@@ -144,8 +140,9 @@ Single-seed; n≥3 before any paper use.
 
 - `/home/marcrockhat/trioron-project/`, branch `conscience-core`, Python
   3.10.12, torch 2.11.0, WSL2, `python3` (NOT `python`), `OMP_NUM_THREADS=8`
-  (use 4 per process when running two arms in parallel).
-- Bench logs buffer: `python3 ... > log` shows 0 bytes until exit; the run is
-  fine — check `ps` before assuming a hang.
-- Computational framing in code/docs (Gaussian/Mahalanobis/QDA/Kalman);
-  optical metaphors stay in prose only.
+  (4 per process when two run in parallel).
+- World experiments run from `archive/` cwd:
+  `cd archive && python3 experiments/world/<script>.py` (they insert
+  `/repo/archive` on sys.path so `experiments.world.*` resolves there).
+- Bench/experiment logs buffer — 0 bytes until exit is normal; check `ps`
+  (with a pattern that can't self-match) before assuming a hang.
