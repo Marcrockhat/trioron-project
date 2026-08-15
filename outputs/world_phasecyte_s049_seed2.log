@@ -1,0 +1,28 @@
+WORLD PHASECYTE (s049 showcase) — wake/dream nested hybrid; trained via trioron v0.3.0 package API only. collect=40 eval=40 pseudo=1500 epochs=8 hidden=32 seed=2
+  [genesis g0] starved=12 merged=0->0  receptors->65
+  [wake WARM] pairs=719 classes=27 named=27 t=5s
+  [genesis g1] starved=3 merged=0->0  receptors->74
+  [wake FLEE] pairs=900 classes=29 named=29 t=8s
+  [genesis g2] starved=7 merged=0->0  receptors->70
+  [wake HYDRATE] pairs=900 classes=34 named=34 t=12s
+  [genesis g3] starved=6 merged=0->0  receptors->71
+  [wake FORAGE] pairs=322 classes=8 named=8 t=14s
+  [genesis g4] starved=6 merged=0->0  receptors->71
+  [wake EVADE] pairs=236 classes=5 named=5 t=16s
+  phasecyte-wake (day 1): survival  42.5  cold-deaths 14/40  fire-occupancy 21.6%  [cold:14, overheat:13, thirst:9, integrity:4]
+  wake route_hist={'WARM': 804, 'FLEE': 403, 'HYDRATE': 80, 'FORAGE': 246, 'EVADE': 168}
+    [dream g0] ep0 loss=1.296 (39000 pseudo, 1 sketches skipped)
+    [dream g0] ep7 loss=0.247 (39000 pseudo, 1 sketches skipped)
+    [dream g1] ep0 loss=0.773 (42000 pseudo, 1 sketches skipped)
+    [dream g1] ep7 loss=0.097 (42000 pseudo, 1 sketches skipped)
+    [dream g2] ep0 loss=1.573 (51000 pseudo, 0 sketches skipped)
+    [dream g2] ep7 loss=0.870 (51000 pseudo, 0 sketches skipped)
+    [dream g3] ep0 loss=1.228 (12000 pseudo, 0 sketches skipped)
+    [dream g3] ep7 loss=0.310 (12000 pseudo, 0 sketches skipped)
+    [dream g4] ep0 loss=1.483 (7500 pseudo, 0 sketches skipped)
+    [dream g4] ep7 loss=0.239 (7500 pseudo, 0 sketches skipped)
+  trioron-dreamed (day 2): survival  47.5  cold-deaths  8/40  fire-occupancy 26.6%  [overheat:17, integrity:9, cold:8, thirst:6]
+  dreamed route_hist={'WARM': 725, 'FLEE': 786, 'HYDRATE': 109, 'FORAGE': 182, 'EVADE': 96}
+
+[seed 2] survival: wake=42.5  dreamed=47.5  (recorded bars: DQN 37.9, solo 52.4, vocab-nest 148.1, TD-router 163.2, arbiter 167.6)
+[gif] /home/marcrockhat/trioron-project/archive/runs/phasecyte_dream_map987654.gif (62 frames)  wake t=61 dreamed t=34  elapsed=109s

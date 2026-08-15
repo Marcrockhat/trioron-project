@@ -136,7 +136,9 @@ def _panel(axg, axd, s, title, dead_now):
         sp.set_visible(False)
 
 
-def render(frames_a, frames_b, out_path, fps=10):
+def render(frames_a, frames_b, out_path, fps=10,
+           title_a="NESTED TRIORON (router + 5 leaves)",
+           title_b="FLAT DQN (2x128 MLP)"):
     n = max(len(frames_a), len(frames_b))
     imgs = []
     for t in range(n):
@@ -149,9 +151,9 @@ def render(frames_a, frames_b, out_path, fps=10):
         gs = fig.add_gridspec(2, 2, height_ratios=[4, 1.1], hspace=0.16,
                               wspace=0.08)
         _panel(fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[1, 0]), sa,
-               "NESTED TRIORON (router + 5 leaves)", dead_a)
+               title_a, dead_a)
         _panel(fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, 1]), sb,
-               "FLAT DQN (2x128 MLP)", dead_b)
+               title_b, dead_b)
         fig.canvas.draw()
         imgs.append(np.asarray(fig.canvas.buffer_rgba())[..., :3].copy())
         plt.close(fig)

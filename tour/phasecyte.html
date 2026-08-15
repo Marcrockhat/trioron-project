@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trioron — phasecyte showcase</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .showcase { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; }
+  .showcase img { width: 100%; border-radius: 8px; border: 1px solid #30363d; }
+  .showcase table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+  .showcase th, .showcase td { border: 1px solid #30363d; padding: 6px 10px;
+                               text-align: left; }
+  .showcase code, .showcase pre { background: #161b22; border-radius: 6px;
+                                  padding: 2px 6px; }
+  .showcase pre { padding: 12px; overflow-x: auto; }
+  .win { color: #3fb950; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="showcase">
+  <h1>phasecyte <span class="muted">— skills absorbed in one pass, no gradients</span></h1>
+
+  <p>Both agents below face the same unseen survival world. The
+  <strong>phasecyte nest</strong> (left) absorbed five skills —
+  warm / flee / hydrate / forage / evade — by <em>watching each skill
+  master once</em>: a single streaming pass per skill, no gradients, no
+  replay buffer, ~15 seconds of CPU. A recognition router picks the
+  skill each tick (shown live in the title bar). The
+  <strong>DQN</strong> (right) trained for 300 episodes of
+  reinforcement learning at the same parameter budget.</p>
+
+  <img src="assets/phasecyte_vs_dqn_map987654.gif"
+       alt="Side-by-side survival duel: phasecyte nest vs DQN">
+
+  <h2>Numbers (survival steps, 40 held-out maps, n=3 seeds)</h2>
+  <table>
+    <tr><th>agent</th><th>training</th><th>survival</th></tr>
+    <tr><td class="win">phasecyte wake-nest</td>
+        <td>one gradient-free pass per skill (~1 min total)</td>
+        <td class="win">47.4 ± 4.6</td></tr>
+    <tr><td>+ overnight dream into trioron leaves</td>
+        <td>offline, on self-generated pseudo-data only</td>
+        <td>49.4 ± 1.9</td></tr>
+    <tr><td>flat DQN (recorded control)</td>
+        <td>300 episodes of TD learning</td><td>37.9</td></tr>
+    <tr><td>hand-coded arbiter (ceiling)</td><td>—</td><td>167.6</td></tr>
+  </table>
+
+  <p>Everything trains through the public package — the same API you can
+  install:</p>
+  <pre>pip install trioron  # v0.3.0
+from trioron.pcll import PhasecyteNest, dream_distill</pre>
+
+  <h2>What this shows — and what it doesn't</h2>
+  <p><strong>Shows:</strong> runtime skill absorption. A phasecyte
+  stores phase-coded evidence as running sums, so learning a skill is
+  one pass over a demonstration — the sample-efficiency regime games
+  actually live in. The nest structure (leaves + router) is what makes
+  this work: the same skills flattened into one policy fail
+  reproducibly.</p>
+  <p><strong>Doesn't show (yet):</strong> the overnight dream — each
+  phasecyte leaf distilling itself into a gradient trioron leaf on
+  dreamed pseudo-data — is a wash in this world so far (+2.0 ± 3.8
+  survival). On the harder 15-task classification benchmark the same
+  mechanism beats its teacher in 9 of 9 cases; wiring that gain into
+  the world is open work. The hand-coded ceiling (167.6) and the
+  consequence-taught router (163.2) show how much headroom remains.</p>
+
+  <p class="muted"><a href="index.html">&larr; back to the guided tour</a>
+  &nbsp;·&nbsp; <a href="https://github.com/marcrockhat/trioron-project">source</a>
+  &nbsp;·&nbsp; <a href="https://pypi.org/project/trioron/">PyPI</a></p>
+</div>
+</body>
+</html>
