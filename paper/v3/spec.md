@@ -3218,7 +3218,7 @@ trioron/
 ├── phenotype/                 # how genes express into operations
 ├── bases/                     # modular construction recipes
 ├── learning/                  # credit, frustration, dream, manifold
-├── pcll/                      # Phase-Coherent Lock-in Learning (§10, partition §9.15)
+├── pcll/                      # Phasecyte — Phase-Coherent Lock-in Learning (§10, partition §9.15)
 ├── lifecycle/                 # growth, evolution, ship, graft, compact
 ├── viz/                       # recorder, detector, viewer, exporter
 ├── evolution/                 # multi-substrate controller (opt-in)
@@ -3478,7 +3478,7 @@ to its defining section and primary implementation file:
 | PCLL manifold adapter | 10.9 | `pcll/manifold.py` |
 | Structural census | 10.10 | `core/census.py` |
 
-### 9.15 `pcll/` — Phase-Coherent Lock-in Learning
+### 9.15 `pcll/` — Phasecyte (Phase-Coherent Lock-in Learning)
 
 Added after the original v2.0 partition (s030); the contract is §10. The
 receptor *injection math* lives in `core/receptor.py` (pure-torch, no
@@ -3503,8 +3503,19 @@ package dependencies) because the scheduler performs the injection and
 
 ---
 
-## 10. Phase-Coherent Lock-in Learning (PCLL)
+## 10. Phasecyte — Phase-Coherent Lock-in Learning (PCLL)
 
+> **Naming (s049).** The learner specified here is named **Phasecyte**;
+> PCLL remains the technical acronym for its mechanism. Phasecyte is a
+> *sibling learner on the trioron substrate*, not a trioron mode: it
+> shares the substrate organs (arena, cells, epigenome, division,
+> astrocytes, manifold, census) but never exercises the triparametric
+> node — no gradient-trained `w`, no epigenetic lock `λ`, no utility
+> EMA. The substrate therefore carries two learners: **trioron**
+> (gradient, triparametric) and **phasecyte** (gradient-free,
+> phase-coherent). Code stays in `trioron/pcll/` for now (partition
+> §9.15); a package split is deferred until the framing settles.
+>
 > Added s030. The full method rationale, build-time corrections, and
 > experimental validation live in `docs/design/receptor_period_frustration.md`
 > (the PCLL spec of record) and

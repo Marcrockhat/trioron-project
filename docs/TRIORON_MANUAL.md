@@ -133,6 +133,13 @@ Marker genes (not expression): PERCEPTION, OUTPUT, …, MIRROR (10, experimental
 **RECEPTOR (11, s030)** — PCLL phase injection, and **PCLL itself is spec §10**:
 the gradient-free streaming layer (lock-in + matched filter + signatures) living
 in `trioron/pcll/`, wired via `PCLLController` / `substrate.attach_pcll`.
+**Named Phasecyte (s049):** PCLL is the mechanism acronym; *Phasecyte* is the
+learner's name — a gradient-free SIBLING learner on the trioron substrate, not a
+trioron mode. It shares the substrate organs (arena/division/astrocytes/manifold)
+but never exercises the triparametric node: no gradient `w`, no λ, no utility EMA
+(verified s049 — zero `node_lambda`/epigenetic references in `trioron/pcll/`).
+Two learners, one body: trioron (gradient, triparametric) + phasecyte
+(phase-coherent, sufficient-statistics state, constant in samples seen).
 
 **PCLL grew up in s032–s033 (spec §10.6–10.10, all gated M1–M5):** the
 deployment regime is the MIXED STREAM (`MixedStreamController`, §10.7 —

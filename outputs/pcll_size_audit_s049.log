@@ -1,0 +1,90 @@
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+  [genesis digits] starved=0 merged=0->0  receptors->392
+  [task  1/15 mnist_0_1 -> digits] classes=43 spawned=0 t=29s
+  [task  2/15 mnist_2_3 -> digits] classes=43 spawned=0 t=88s
+  [task  3/15 mnist_4_5 -> digits] classes=43 spawned=0 t=138s
+  [task  4/15 mnist_6_7 -> digits] classes=43 spawned=0 t=192s
+  [task  5/15 mnist_8_9 -> digits] classes=43 spawned=0 t=243s
+  [genesis fashion] starved=0 merged=0->0  receptors->392
+  [task  6/15 fashion_mnist_0_1 -> fashion] classes=43 spawned=0 t=266s
+  [task  7/15 fashion_mnist_2_3 -> fashion] classes=43 spawned=0 t=317s
+  [task  8/15 fashion_mnist_4_5 -> fashion] classes=43 spawned=0 t=370s
+  [task  9/15 fashion_mnist_6_7 -> fashion] classes=43 spawned=0 t=422s
+  [task 10/15 fashion_mnist_8_9 -> fashion] classes=43 spawned=0 t=476s
+  [genesis letters] starved=0 merged=0->0  receptors->392
+  [task 11/15 emnist_letters_0_1 -> letters] classes=43 spawned=0 t=487s
+  [task 12/15 emnist_letters_2_3 -> letters] classes=43 spawned=0 t=527s
+  [task 13/15 emnist_letters_4_5 -> letters] classes=43 spawned=0 t=570s
+  [task 14/15 emnist_letters_6_7 -> letters] classes=43 spawned=0 t=616s
+  [task 15/15 emnist_letters_8_9 -> letters] classes=43 spawned=0 t=661s
+  per-task: 0.99 0.91 0.00 1.00 0.49 0.98 0.93 0.50 0.84 0.86 0.94 0.96 0.94 0.85 0.78
+[seed 0] NEST routed full=0.507  oracle full=0.545  concat full=0.293
+[seed 0] NEST task_aware=0.798  routing_acc=0.938  classes=129 (caps 43x3)  elapsed=696s
+[seed 0] monolithic reference (s039 gabor centered): task_aware 0.736 / full 0.446
+
+=== EXACT STATE AUDIT (trained nest, seed 0) ===
+
+-- leaf digits --
+  mixed.substrate           201,168,120 B (196453.2 KiB)
+  arena.edge_src              2,097,152 B (  2048.0 KiB)
+  arena.edge_dst              2,097,152 B (  2048.0 KiB)
+  arena.edge_weight           2,097,152 B (  2048.0 KiB)
+  arena.edge_fisher           2,097,152 B (  2048.0 KiB)
+  arena.edge_anchor           2,097,152 B (  2048.0 KiB)
+  arena.edge_protected          524,288 B (   512.0 KiB)
+  arena.edge_branch             524,288 B (   512.0 KiB)
+  arena.branch_alpha            131,072 B (   128.0 KiB)
+  controller total        201,168,120 B (196453.2 KiB)
+  arena total              12,468,224 B ( 12176.0 KiB)
+
+-- leaf fashion --
+  mixed.substrate           201,168,120 B (196453.2 KiB)
+  arena.edge_src              2,097,152 B (  2048.0 KiB)
+  arena.edge_dst              2,097,152 B (  2048.0 KiB)
+  arena.edge_weight           2,097,152 B (  2048.0 KiB)
+  arena.edge_fisher           2,097,152 B (  2048.0 KiB)
+  arena.edge_anchor           2,097,152 B (  2048.0 KiB)
+  arena.edge_protected          524,288 B (   512.0 KiB)
+  arena.edge_branch             524,288 B (   512.0 KiB)
+  arena.branch_alpha            131,072 B (   128.0 KiB)
+  controller total        201,168,120 B (196453.2 KiB)
+  arena total              12,468,224 B ( 12176.0 KiB)
+
+-- leaf letters --
+  mixed.substrate           201,168,120 B (196453.2 KiB)
+  arena.edge_src              2,097,152 B (  2048.0 KiB)
+  arena.edge_dst              2,097,152 B (  2048.0 KiB)
+  arena.edge_weight           2,097,152 B (  2048.0 KiB)
+  arena.edge_fisher           2,097,152 B (  2048.0 KiB)
+  arena.edge_anchor           2,097,152 B (  2048.0 KiB)
+  arena.edge_protected          524,288 B (   512.0 KiB)
+  arena.edge_branch             524,288 B (   512.0 KiB)
+  arena.branch_alpha            131,072 B (   128.0 KiB)
+  controller total        201,168,120 B (196453.2 KiB)
+  arena total              12,468,224 B ( 12176.0 KiB)
+
+-- router archive (full-cov, 3 domains) --
+  archive total            16,171,840 B ( 15792.8 KiB)
+
+TOTAL training state      657,080,872 B (641680.5 KiB)
+
+=== INFERENCE-MINIMAL DEPLOY SET ===
+  digits   templates (43, 392)      134,848 B (   131.7 KiB)  + names          344 B (     0.3 KiB)
+  fashion  templates (43, 392)      134,848 B (   131.7 KiB)  + names          344 B (     0.3 KiB)
+  letters  templates (43, 392)      134,848 B (   131.7 KiB)  + names          344 B (     0.3 KiB)
+  router mu+Sigma x3 (392-d)         1,848,672 B (  1805.3 KiB)
+  DEPLOY total              2,254,248 B (  2201.4 KiB)
+
+=== REFERENCE POINTS (recorded) ===
+  v0.2.2 gradient substrate            371,316 B (   362.6 KiB)   (+30 KiB manifold archive)
+  hippo K=20 exemplars, 30 cls       1,881,600 B (  1837.5 KiB)
+  raw stream retained, n=   10,000   31,360,000 B ( 30625.0 KiB)
+  raw stream retained, n=  100,000  313,600,000 B (306250.0 KiB)
+  raw stream retained, n=1,000,000 3,136,000,000 B (3062500.0 KiB)
+
+(nest accuracy this run: task_aware=0.798 full=0.507)

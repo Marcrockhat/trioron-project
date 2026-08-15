@@ -1,5 +1,8 @@
 # PCLL → Substrate Integration (design, s030)
 
+> Naming (s049): the PCLL learner is named **Phasecyte** — a sibling
+> learner on the trioron substrate (spec §10 naming note).
+
 > Status: **DESIGN FOR DISCUSSION — nothing here is built.** Companion to
 > `receptor_period_frustration.md` (the PCLL spec). That doc defines the method;
 > this one defines how it becomes trioron substrate machinery, per Rocky's s029

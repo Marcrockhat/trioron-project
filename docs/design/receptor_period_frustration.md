@@ -1,5 +1,9 @@
-# PCLL — Phase-Coherent Lock-in Learning (Trioron)
+# Phasecyte (PCLL) — Phase-Coherent Lock-in Learning
 
+> **The learner is named Phasecyte (Rocky, s049);** PCLL remains the
+> mechanism acronym. Phasecyte is a sibling learner ON the trioron
+> substrate, not a trioron mode — it shares the substrate organs but not
+> the triparametric node (spec §10 naming note).
 > **The method is named PCLL: Phase-Coherent Lock-in Learning by Trioron**
 > (Rocky, s029). Magnitude is **phase-coded** into 1000 quanta, swept over a
 > period, and **coherently integrated** (lock-in detection) so a real class grows
