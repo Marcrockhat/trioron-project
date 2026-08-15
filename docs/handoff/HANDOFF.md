@@ -89,7 +89,9 @@ data, no wake gradients.**
    §9.15 partition row added BEFORE code landed, per the house rule.
    Tests: 131+6 pass; only the 4 known pre-existing failures.
    **`conscience-core` fast-forward merged into `main`** (main was 227
-   behind, 0 ahead) and both branches pushed.
+   behind, 0 ahead) and both branches pushed. **Released to PyPI:**
+   https://pypi.org/project/trioron/0.3.0/ (twine, wheel + sdist,
+   both checks PASSED) — the first release since 0.2.2.
 
 ## GOTCHAS (hard-won this session)
 
