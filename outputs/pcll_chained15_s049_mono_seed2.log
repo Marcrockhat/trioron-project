@@ -1,0 +1,27 @@
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+  [genesis/mixed] starved=0 merged=0->0 regions  receptors 392->392
+  [task  1/15 mnist_0_1] classes=128 spawned=0 (conv 0) t=35s
+  [task  2/15 mnist_2_3] classes=128 spawned=0 (conv 0) t=230s
+  [task  3/15 mnist_4_5] classes=128 spawned=0 (conv 0) t=439s
+  [task  4/15 mnist_6_7] classes=128 spawned=0 (conv 0) t=657s
+  [task  5/15 mnist_8_9] classes=128 spawned=0 (conv 0) t=903s
+  [task  6/15 fashion_mnist_0_1] classes=128 spawned=0 (conv 0) t=1101s
+  [task  7/15 fashion_mnist_2_3] classes=128 spawned=0 (conv 0) t=1295s
+  [task  8/15 fashion_mnist_4_5] classes=128 spawned=0 (conv 0) t=1490s
+  [task  9/15 fashion_mnist_6_7] classes=128 spawned=0 (conv 0) t=1653s
+  [task 10/15 fashion_mnist_8_9] classes=128 spawned=0 (conv 0) t=1775s
+  [task 11/15 emnist_letters_0_1] classes=128 spawned=0 (conv 0) t=1880s
+  [task 12/15 emnist_letters_2_3] classes=128 spawned=0 (conv 0) t=1989s
+  [task 13/15 emnist_letters_4_5] classes=128 spawned=0 (conv 0) t=2103s
+  [task 14/15 emnist_letters_6_7] classes=128 spawned=0 (conv 0) t=2212s
+  [task 15/15 emnist_letters_8_9] classes=128 spawned=0 (conv 0) t=2320s
+  per-task plain   : 1.00 0.49 0.97 0.98 0.68 0.54 0.76 0.00 0.50 0.50 0.50 0.50 0.50 0.79 0.83
+  per-task centered: 1.00 0.49 0.97 0.99 0.85 0.51 0.57 0.00 0.50 0.50 0.50 0.50 0.50 0.81 0.88
+[seed 2] PLAIN    task_aware=0.637  full=0.318
+[seed 2] CENTERED task_aware=0.638  full=0.369  (Δ ta +0.001, full +0.051)
+[seed 2] classes=128 (0 unnamed)  elapsed=2329s

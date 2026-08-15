@@ -1,0 +1,50 @@
+HYBRID NEST (s049) — phasecyte wake + dream-distilled trioron leaves; sense=gabor, pseudo=1500/class, epochs=8, hidden=64, seed=2
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+  [genesis digits] starved=0 merged=0->0  receptors->392
+  [task  1/15 mnist_0_1 -> digits] classes=43 spawned=0 t=20s
+  [task  2/15 mnist_2_3 -> digits] classes=43 spawned=0 t=61s
+  [task  3/15 mnist_4_5 -> digits] classes=43 spawned=0 t=94s
+  [task  4/15 mnist_6_7 -> digits] classes=43 spawned=0 t=130s
+  [task  5/15 mnist_8_9 -> digits] classes=43 spawned=0 t=161s
+  [genesis fashion] starved=0 merged=0->0  receptors->392
+  [task  6/15 fashion_mnist_0_1 -> fashion] classes=43 spawned=0 t=171s
+  [task  7/15 fashion_mnist_2_3 -> fashion] classes=43 spawned=0 t=198s
+  [task  8/15 fashion_mnist_4_5 -> fashion] classes=43 spawned=0 t=228s
+  [task  9/15 fashion_mnist_6_7 -> fashion] classes=43 spawned=0 t=261s
+  [task 10/15 fashion_mnist_8_9 -> fashion] classes=43 spawned=0 t=290s
+  [genesis letters] starved=0 merged=0->0  receptors->392
+  [task 11/15 emnist_letters_0_1 -> letters] classes=43 spawned=0 t=297s
+  [task 12/15 emnist_letters_2_3 -> letters] classes=43 spawned=0 t=318s
+  [task 13/15 emnist_letters_4_5 -> letters] classes=43 spawned=0 t=345s
+  [task 14/15 emnist_letters_6_7 -> letters] classes=43 spawned=0 t=373s
+  [task 15/15 emnist_letters_8_9 -> letters] classes=43 spawned=0 t=401s
+  per-task: 0.99 0.55 0.00 1.00 0.49 0.99 0.50 0.50 0.86 0.79 0.96 0.86 0.92 0.82 0.71
+[seed 2] NEST routed full=0.446  oracle full=0.480  concat full=0.252
+[seed 2] NEST task_aware=0.731  routing_acc=0.938  classes=129 (caps 43x3)  elapsed=426s
+/home/marcrockhat/trioron-project/experiments/progenitor/hybrid_nest.py:93: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+  tot += float(loss) * len(idx)
+[seed 2] monolithic reference (s039 gabor centered): task_aware 0.736 / full 0.446
+[datasets] loading mnist (train) ...
+[datasets] loading mnist (test)  ...
+[datasets] loading fashion_mnist (train) ...
+[datasets] loading fashion_mnist (test)  ...
+[datasets] loading emnist_letters (train) ...
+[datasets] loading emnist_letters (test)  ...
+    [dream digits] ep0 loss=0.373 (64500 pseudo, 0 sketches skipped)
+    [dream digits] ep7 loss=0.000 (64500 pseudo, 0 sketches skipped)
+  [digits] own-domain acc: phasecyte 0.431  trioron(dreamed) 0.510
+    [dream fashion] ep0 loss=0.556 (64500 pseudo, 0 sketches skipped)
+    [dream fashion] ep7 loss=0.003 (64500 pseudo, 0 sketches skipped)
+  [fashion] own-domain acc: phasecyte 0.498  trioron(dreamed) 0.593
+    [dream letters] ep0 loss=0.614 (64500 pseudo, 0 sketches skipped)
+    [dream letters] ep7 loss=0.000 (64500 pseudo, 0 sketches skipped)
+  [letters] own-domain acc: phasecyte 0.518  trioron(dreamed) 0.606
+
+[seed 2] routed full: phasecyte=0.446  trioron(dreamed)=0.527  hybrid(oracle-pick gr/gr/gr)=0.527
+[seed 2] reference: nested phasecyte n=3 0.474±0.031; monolithic s039 0.446  elapsed=1082s
