@@ -106,9 +106,28 @@ def snap(w, act, note):
 # ----------------------------------------------------------------------
 # Side-by-side rendering
 # ----------------------------------------------------------------------
+# tile glyphs: shape + color both encode the type (readable in gray too)
+_TILE_MARKS = {1: ("o", "#3fb950", 110),   # FOOD   — circle, green
+               2: ("v", "#58a6ff", 110),   # WATER  — down-triangle, blue
+               3: ("^", "#f85149", 150),   # FIRE   — up-triangle, red
+               4: ("D", "#bc8cff", 80),    # BERRY  — diamond, purple
+               5: ("P", "#db61a2", 110)}   # POISON — plus, pink
+
+
 def _panel(axg, axd, s, title, dead_now):
-    axg.imshow(s["grid"], cmap=_CMAP, vmin=0, vmax=5,
-               alpha=0.35 if dead_now else 1.0)
+    n = s["grid"].shape[0]
+    axg.set_facecolor("#0a0d12" if s["night"] else "#161b22")
+    axg.set_xlim(-0.5, n - 0.5); axg.set_ylim(n - 0.5, -0.5)
+    axg.set_aspect("equal")
+    for k in range(n + 1):                       # faint grid lines
+        axg.axhline(k - 0.5, color="#21262d", lw=0.5, zorder=0)
+        axg.axvline(k - 0.5, color="#21262d", lw=0.5, zorder=0)
+    alpha = 0.35 if dead_now else 1.0
+    for t, (mark, col, size) in _TILE_MARKS.items():
+        ys, xs = np.where(s["grid"] == t)
+        if len(xs):
+            axg.scatter(xs, ys, marker=mark, color=col, s=size,
+                        alpha=alpha, zorder=2)
     face = "#666666" if dead_now else "white"
     axg.scatter([s["px"]], [s["py"]], s=260, marker="o", facecolors=face,
                 edgecolors="black", linewidths=2, zorder=3)
@@ -154,6 +173,10 @@ def render(frames_a, frames_b, out_path, fps=10,
                title_a, dead_a)
         _panel(fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, 1]), sb,
                title_b, dead_b)
+        fig.text(0.5, 0.015,
+                 "● food   ▼ water   ▲ fire   ◆ berry   "
+                 "✚ poison   ○ agent   ✖ predator",
+                 ha="center", color="#8b949e", fontsize=9)
         fig.canvas.draw()
         imgs.append(np.asarray(fig.canvas.buffer_rgba())[..., :3].copy())
         plt.close(fig)
