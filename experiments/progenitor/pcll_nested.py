@@ -45,14 +45,10 @@ import time
 
 import torch
 
-from trioron.core import construct
-from trioron.learning.manifold import ManifoldArchive
-from trioron.learning.router import ManifoldRouter
 from trioron.legacy.donorkit.datasets import (DatasetBundle,
                                               chained_15_specs,
                                               build_task_views)
-from trioron.pcll import (MixedStreamController, PerceptionGenesis,
-                          germline_base)
+from trioron.pcll import PhasecyteNest
 
 from experiments.progenitor import run_pcll_chained15 as base
 
@@ -60,25 +56,6 @@ LEAFCAP = int(os.environ.get("PCLLNEST_LEAFCAP", "43"))
 ROUTER_N = int(os.environ.get("PCLLNEST_ROUTER_N", "4000"))
 DOMAINS = ("digits", "fashion", "letters")
 N_DOM = 3
-
-
-class Leaf:
-    def __init__(self, sense, pool: torch.Tensor, seed: int, dom: int):
-        torch.manual_seed(1000 * seed + dom)
-        self.sub = construct(germline_base, capacity=8192)
-        pg = PerceptionGenesis(self.sub, input_shape=base.SHAPE)
-        g = torch.Generator().manual_seed(1000 * seed + dom)
-        gidx = torch.randperm(len(pool), generator=g)[:base.WINDOW]
-        pg.feed(sense(pool[gidx]))
-        rep = self.sub.end_task()
-        n_rec = int(self.sub.scheduler._plan.receptor_ids.numel())
-        print(f"  [genesis {DOMAINS[dom]}] starved={len(rep.starved)} "
-              f"merged={len(rep.merged)}->{len(rep.regions)}  "
-              f"receptors->{n_rec}", flush=True)
-        self.mixed = MixedStreamController(
-            self.sub, stress=pg.router, adopt=pg.controller,
-            manifold=base.MANIFOLD, composer=base.COMPOSER,
-            class_cap=LEAFCAP if LEAFCAP > 0 else None)
 
 
 def run_seed(seed: int, return_state: bool = False):
@@ -91,18 +68,20 @@ def run_seed(seed: int, return_state: bool = False):
     n_dom = min(N_DOM, (len(specs) + 4) // 5)
     t0 = time.time()
 
-    leaves: list[Leaf | None] = [None] * n_dom
-    router_buf: list[list[torch.Tensor]] = [[] for _ in range(n_dom)]
+    nest = PhasecyteNest(
+        sense, seed=seed, router_n=ROUTER_N, window=base.WINDOW,
+        class_cap=LEAFCAP if LEAFCAP > 0 else None,
+        manifold=base.MANIFOLD, composer=base.COMPOSER,
+        input_shape=base.SHAPE)
 
     # the continual stream — identical order/subsampling to the monolith;
     # a leaf is enrolled when its domain's first task arrives
     for ti, view in enumerate(train_views):
         dom = ti // 5
-        if leaves[dom] is None:
+        if dom not in nest.leaves:
             pool = torch.cat([v.images for v in
                               train_views[5 * dom:5 * dom + 5]])
-            leaves[dom] = Leaf(sense, pool, seed, dom)
-        leaf = leaves[dom]
+            nest.enroll(dom, pool)
         g = torch.Generator().manual_seed(100 * seed + ti)
         order = torch.randperm(len(view.labels_global), generator=g)
         if base.FRAC < 1.0:
@@ -110,24 +89,16 @@ def run_seed(seed: int, return_state: bool = False):
         X = view.images[order]
         labs = [f"g{int(v):02d}" for v in view.labels_global[order]]
         for w0 in range(0, len(X), base.WINDOW):
-            xw = sense(X[w0:w0 + base.WINDOW])
-            leaf.mixed.observe(xw, labels=labs[w0:w0 + base.WINDOW])
-            leaf.sub.end_task()
-            router_buf[dom].append(xw)
+            nest.observe(dom, X[w0:w0 + base.WINDOW],
+                         labs[w0:w0 + base.WINDOW])
+        leaf = nest.leaves[dom]
         print(f"  [task {ti + 1:>2d}/{len(specs)} {view.name} -> "
               f"{DOMAINS[dom]}] classes={len(leaf.mixed.classes)} "
               f"spawned={len(leaf.mixed.specs)} "
               f"t={time.time() - t0:.0f}s", flush=True)
 
-    # router: per-domain full-cov Gaussian over the descriptor stream
-    archive = ManifoldArchive(leaves[0].sub.arena, full_cov=True)
-    for dom in range(n_dom):
-        D = torch.cat(router_buf[dom])
-        g = torch.Generator().manual_seed(7000 + seed + dom)
-        D = D[torch.randperm(len(D), generator=g)[:ROUTER_N]]
-        archive.update_class(dom, D)
-    archive.finalize_all()
-    router = ManifoldRouter(archive, full_cov=True)
+    router = nest.fit_router()
+    leaves = [nest.leaves[d] for d in range(n_dom)]
 
     # eval on the union test set
     Xt = torch.cat([v.images for v in eval_views])
@@ -135,18 +106,13 @@ def run_seed(seed: int, return_state: bool = False):
     dom_true = torch.cat([torch.full((len(v.labels_global),), ti // 5)
                           for ti, v in enumerate(eval_views)])
 
-    dom_pred = []
-    for i in range(0, len(Xt), 2000):
-        dom_pred.append(router.route_class(
-            sense(Xt[i:i + 2000]), class_ids=list(range(n_dom)),
-            n_classes=n_dom))
-    dom_pred = torch.cat(dom_pred)
+    dom_pred = nest.route(Xt)
     route_acc = float((dom_pred == dom_true).float().mean())
 
     names, evid = [], []
     for dom in range(n_dom):
-        _, Ec = base.evidence_both(leaves[dom].mixed, sense, Xt)
-        names.append(base.names_of(leaves[dom].mixed))
+        _, Ec = leaves[dom].evidence(sense, Xt)
+        names.append(leaves[dom].names())
         evid.append(Ec)
 
     def leaf_pred(d: torch.Tensor) -> torch.Tensor:

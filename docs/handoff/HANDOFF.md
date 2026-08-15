@@ -78,6 +78,18 @@ data, no wake gradients.**
 4. **Naming/spec pass** (`77ef15a`): spec §10 re-headed "Phasecyte — PCLL"
    + naming note; §9.15; directory-tree comment; manual §2 PCLL block;
    both design docs. Paper has no PCLL mentions — untouched.
+5. **API PROMOTION + v0.3.0** (Rocky's call, end of session): the nest +
+   wake/dream machinery promoted to **`trioron/pcll/nest.py`**
+   (`PhasecyteLeaf`, `PhasecyteNest`, `dream_distill`, `dreamed_predict`;
+   exported from `trioron.pcll`); both experiments refactored to thin
+   drivers over the package. **Parity validated BIT-IDENTICAL** at smoke
+   scale for both paths (nested 0.403/0.432/0.322/0.591/0.936; hybrid
+   0.403/0.386 + matching dream losses). Version bumped **0.2.2 → 0.3.0**
+   (pyproject + `__init__` fallback; editable install refreshed). Spec
+   §9.15 partition row added BEFORE code landed, per the house rule.
+   Tests: 131+6 pass; only the 4 known pre-existing failures.
+   **`conscience-core` fast-forward merged into `main`** (main was 227
+   behind, 0 ahead) and both branches pushed.
 
 ## GOTCHAS (hard-won this session)
 

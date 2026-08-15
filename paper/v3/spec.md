@@ -3500,6 +3500,7 @@ package dependencies) because the scheduler performs the injection and
 | `composer.py` | genome candidate set + affine-folded spawns, residual-incoherence trial statistic, importance gating, prune, ComposerPending | 10.8 |
 | `labels.py` | label tap bank: labels as reference carriers — per-label demodulation taps over receptor pockets (write-only from learning's side; naming/mixture readout) | s034 first cut; spec § pending gates |
 | `manifold.py` | per-class pocket-space μ/σ sketches on class astrocyte rows: annealing, σ-readout, replay, persistence | 10.9 |
+| `nest.py` | nested phasecyte organisms: per-group leaves + full-cov manifold recognition router (`PhasecyteNest`); wake/dream distillation into gradient trioron leaves (`dream_distill`/`dreamed_predict`) — imports `learning/` (router, manifold); s049 promotion, validated vs `outputs/*_s049_*.log` | 10 naming note; s049 |
 
 ---
 

@@ -36,11 +36,9 @@ import os
 import time
 
 import torch
-import torch.nn.functional as F
 
-from trioron.bases.seeded import Seeded
-from trioron.core import construct
-from trioron.core.receptor import N_QUANTA
+from trioron.pcll import dream_distill as pkg_dream_distill
+from trioron.pcll import dreamed_predict
 
 from experiments.progenitor import run_pcll_chained15 as base
 from experiments.progenitor.pcll_nested import run_seed, DOMAINS
@@ -53,60 +51,12 @@ MIN_SKETCH_N = 8          # skip sketches with fewer real deposits
 
 
 def dream_distill(leaf, names: torch.Tensor, dom: int, seed: int):
-    """Train a gradient trioron leaf on pseudo-pockets sampled from the
-    phasecyte leaf's per-class sketches. Returns (substrate, labels)."""
-    mixed = leaf.mixed
+    """Promoted to trioron.pcll.nest (s049) — thin shim keeping the
+    experiment's RNG streams (5000/6000 bases) and per-domain labels."""
     dom_labels = sorted(range(10 * dom, 10 * dom + 10))
-    local = {g: i for i, g in enumerate(dom_labels)}
-    Xs, ys, skipped = [], [], 0
-    for ci, cls in enumerate(mixed.classes):
-        g = int(names[ci])
-        astro = mixed.manifold.sketches.get(cls.name) \
-            if mixed.manifold else None
-        if g < 0 or g not in local or astro is None \
-                or astro._n < MIN_SKETCH_N:
-            skipped += 1
-            continue
-        q = astro.sample(PSEUDO).clamp(0, N_QUANTA)
-        Xs.append(q / N_QUANTA)
-        ys.append(torch.full((len(q),), local[g], dtype=torch.long))
-    X = torch.cat(Xs)
-    y = torch.cat(ys)
-    width = X.shape[1]
-    torch.manual_seed(5000 + seed + dom)
-    sub = construct(Seeded(width, len(dom_labels),
-                           interior_cells=HIDDEN, nonlinear=True),
-                    capacity=width + HIDDEN + len(dom_labels) + 8)
-    sub.prepare_training()
-    opt = torch.optim.Adam(sub.trainable_tensors(), lr=1e-3)
-    g0 = torch.Generator().manual_seed(6000 + seed + dom)
-    for ep in range(EPOCHS):
-        perm = torch.randperm(len(X), generator=g0)
-        tot = 0.0
-        for i in range(0, len(X), 256):
-            idx = perm[i:i + 256]
-            opt.zero_grad()
-            loss = F.cross_entropy(sub(X[idx]), y[idx])
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(sub.trainable_tensors(), 1.0)
-            opt.step()
-            tot += float(loss) * len(idx)
-        if ep in (0, EPOCHS - 1):
-            print(f"    [dream {DOMAINS[dom]}] ep{ep} "
-                  f"loss={tot / len(X):.3f} ({len(X)} pseudo, "
-                  f"{skipped} sketches skipped)", flush=True)
-    return sub, dom_labels
-
-
-@torch.no_grad()
-def grad_leaf_pred(sub, mixed, sense, X: torch.Tensor,
-                   dom_labels) -> torch.Tensor:
-    lab = torch.tensor(dom_labels)
-    out = []
-    for i in range(0, len(X), 2000):
-        q = mixed.pockets_of(sense(X[i:i + 2000])) / N_QUANTA
-        out.append(lab[sub(q).argmax(1)])
-    return torch.cat(out)
+    return pkg_dream_distill(leaf, names, dom_labels, pseudo=PSEUDO,
+                             epochs=EPOCHS, hidden=HIDDEN, seed=seed,
+                             min_sketch=MIN_SKETCH_N)
 
 
 def main() -> None:
@@ -143,7 +93,7 @@ def main() -> None:
         _, Ec = base.evidence_both(leaf.mixed, sense, Xt)
         pc = names[Ec.argmax(1)]
         sub, dom_labels = dream_distill(leaf, names, dom, SEED)
-        gr = grad_leaf_pred(sub, leaf.mixed, sense, Xt, dom_labels)
+        gr = dreamed_predict(sub, leaf, sense, Xt, dom_labels)
         pc_pred.append(pc)
         gr_pred.append(gr)
         m = dom_true == dom
