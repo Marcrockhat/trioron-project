@@ -93,6 +93,21 @@ data, no wake gradients.**
    https://pypi.org/project/trioron/0.3.0/ (twine, wheel + sdist,
    both checks PASSED) — the first release since 0.2.2.
 
+6. **WORLD SHOWCASE (Rocky's ask, end of session):**
+   `archive/experiments/world/world_phasecyte.py` — 5 phasecyte leaves
+   absorb the skill masters (banded pairs, ACTION-BLOCKED stream — the
+   chained class-sequential analog; window 50, without which division
+   forms 1-2 classes named the majority action), manifold router, all
+   through the released v0.3.0 API. **n=3 over 40 maps: wake 47.4±4.6 —
+   beats the recorded DQN (37.9) every seed, one gradient-free pass vs
+   300 TD episodes. In-world dream lift is a WASH (+2.0±3.8; one seed
+   negative)** — unlike chained-15's 9/9; the wake matched filter is a
+   weak action readout (train-acc 0.545 vs majority 0.423 on WARM) and
+   dream inherits class impurity. Public page: **`tour/phasecyte.html`**
+   (linked from tour index; GIF `tour/assets/phasecyte_vs_dqn_map987654.gif`,
+   nest t=67 vs DQN t=13; wash stated plainly). Commit `7b59835`,
+   merged to main → live on GH Pages.
+
 ## GOTCHAS (hard-won this session)
 
 - Substrate gradient training needs **`sub.prepare_training()`** — plain
@@ -108,6 +123,12 @@ data, no wake gradients.**
 
 ## NEXT (priority)
 
+0. **Close the in-world dream gap** — the wash traces to wake class
+   impurity (dream trains pseudo-samples under the class's MAJORITY
+   action). Candidates: purer class formation (smaller windows /
+   per-action enrollment), or dream targets weighted by tap
+   composition instead of majority naming. Chained-15 says the
+   mechanism works when classes are clean.
 1. **Learned arbitration for the hybrid** (replace the oracle pick): route
    phasecyte-vs-gradient per domain by sketch-space confidence, or the
    consequence-taught substrate router (reward = correctness) — would also
