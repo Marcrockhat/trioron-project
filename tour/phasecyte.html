@@ -33,19 +33,34 @@
   <img src="assets/phasecyte_vs_dqn_map987654.gif"
        alt="Side-by-side survival duel: phasecyte nest vs DQN">
 
-  <h2>Numbers (survival steps, 40 held-out maps, n=3 seeds)</h2>
+  <h2>Survival distributions — the same 40 held-out maps for all three</h2>
   <table>
-    <tr><th>agent</th><th>training</th><th>survival</th></tr>
+    <tr><th>agent</th><th>training</th><th>mean</th><th>median</th>
+        <th>per-map &sigma;</th><th>worst</th><th>dead &le;20</th>
+        <th>reach t&ge;67</th></tr>
+    <tr><td>flat DQN</td><td>300 episodes of TD</td>
+        <td>34.9</td><td>38</td><td>15.0</td><td>11</td>
+        <td>10 / 40</td><td>1 / 40</td></tr>
     <tr><td class="win">phasecyte wake-nest</td>
-        <td>one gradient-free pass per skill (~1 min total)</td>
-        <td class="win">47.4 ± 4.6</td></tr>
-    <tr><td>+ overnight dream into trioron leaves</td>
-        <td>offline, on self-generated pseudo-data only</td>
-        <td>49.4 ± 1.9</td></tr>
-    <tr><td>flat DQN (recorded control)</td>
-        <td>300 episodes of TD learning</td><td>37.9</td></tr>
-    <tr><td>hand-coded arbiter (ceiling)</td><td>—</td><td>167.6</td></tr>
+        <td>one gradient-free pass per skill (~1 min)</td>
+        <td class="win">50.0</td><td>43</td><td>12.7</td><td>18</td>
+        <td class="win">1 / 40</td><td>8 / 40</td></tr>
+    <tr><td class="win">+ overnight dream</td>
+        <td>offline, self-generated pseudo-data only</td>
+        <td class="win">54.4</td><td class="win">57.5</td><td>12.8</td>
+        <td>19</td><td class="win">1 / 40</td>
+        <td class="win">16 / 40</td></tr>
   </table>
+  <p>The distributions say more than the means. The DQN's modal death is
+  <strong>t&nbsp;=&nbsp;13</strong> — it dies in the first minute on a
+  quarter of maps (the fire-exploration trap); the nests hit that regime
+  once in forty, worst case 18. Deaths cluster at the day/night
+  boundaries (t&nbsp;=&nbsp;43 and 67 with a 20-tick day): the wake nest
+  piles up at nightfall of day two, and <strong>dreaming moves 8 more
+  maps through a full extra day/night cycle</strong> (median 43 &rarr;
+  57.5). Nobody in this cohort beats the second night — the
+  consequence-taught nest (163.2) and the hand-coded arbiter (167.6) live
+  several days beyond it, which is the open headroom.</p>
 
   <p>Everything trains through the public package — the same API you can
   install:</p>
