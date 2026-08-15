@@ -59,8 +59,27 @@
   piles up at nightfall of day two, and <strong>dreaming moves 8 more
   maps through a full extra day/night cycle</strong> (median 43 &rarr;
   57.5). Nobody in this cohort beats the second night — the
-  consequence-taught nest (163.2) and the hand-coded arbiter (167.6) live
+  consequence-taught nest (148.5 n=3) and the hand-coded arbiter (167.6) live
   several days beyond it, which is the open headroom.</p>
+
+  <h2>Quick vs optimized — both architectures at both budgets (n=3)</h2>
+  <table>
+    <tr><th>survival, 40 maps</th><th>nested organism</th><th>flat DQN</th></tr>
+    <tr><td><strong>quick budget</strong></td>
+        <td class="win">47.4 &plusmn; 4.6 — one gradient-free pass (~1 min)</td>
+        <td>37.9 &plusmn; 2.7 — 300 episodes of TD</td></tr>
+    <tr><td><strong>optimized budget</strong></td>
+        <td class="win">148.5 &plusmn; 12.9 — consequence-taught trioron
+            router, 300 TD episodes over gradient-trained skill
+            leaves</td>
+        <td>49.0 &plusmn; 14.3 — 3000 episodes (10&times;)</td></tr>
+  </table>
+  <p>At ten times the training budget, the DQN just reaches what the
+  nest gets from a single pass — and the optimized nest sits 3&times;
+  above that. One asymmetry to state plainly: the nest's leaves learn
+  from skill demonstrations and the DQN learns tabula-rasa; a
+  demonstration-warm-started DQN is the fully symmetric control we have
+  not run.</p>
 
   <p>Everything trains through the public package — the same API you can
   install:</p>
@@ -80,7 +99,8 @@ from trioron.pcll import PhasecyteNest, dream_distill</pre>
   survival). On the harder 15-task classification benchmark the same
   mechanism beats its teacher in 9 of 9 cases; wiring that gain into
   the world is open work. The hand-coded ceiling (167.6) and the
-  consequence-taught router (163.2) show how much headroom remains.</p>
+  consequence-taught router (148.5 &plusmn; 12.9, n=3) show how much
+  headroom remains.</p>
 
   <p class="muted"><a href="index.html">&larr; back to the guided tour</a>
   &nbsp;·&nbsp; <a href="https://github.com/marcrockhat/trioron-project">source</a>

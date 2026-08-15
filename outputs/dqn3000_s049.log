@@ -1,0 +1,13 @@
+=== FLAT DQN BASELINE (2x128 ReLU MLP, 27270 params) ===
+episodes=3000 (same budget as trioron router) seeds=[0, 1, 2] eval_seeds=40
+
+              DQN seed=0: survival  62.3  cold-deaths 22/40  fire-occupancy 14.2%  [cold:22, energy:9, integrity:4, thirst:4, overheat:1]
+      train tail(30)=81.8
+              DQN seed=1: survival  50.9  cold-deaths 22/40  fire-occupancy 14.7%  [cold:22, thirst:15, overheat:3]
+      train tail(30)=61.0
+              DQN seed=2: survival  33.7  cold-deaths 18/40  fire-occupancy  5.8%  [cold:18, integrity:16, overheat:6]
+      train tail(30)=57.2
+
+=== VERDICT (n=3) ===
+  flat DQN: mean 49.0  per-seed ['62.3', '50.9', '33.7']
+  bars: TD trioron-router 163.2 | arbiter 167.6 | Gaussian nest 148.1 | reactive 141.8 | flat linear trioron 52.4

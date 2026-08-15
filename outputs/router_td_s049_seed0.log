@@ -1,0 +1,26 @@
+=== TRIORON ROUTER: (b) consequence-taught vs (a) imitation fallback ===
+seed=0 td_eps=300 imit_epochs=300 eval_seeds=40 nonlinear=True full-credit
+
+arm (a): imitation-taught trioron router (danger labels)...
+  held-out label accuracy: 0.933
+  (a) imit trioron-router: survival 152.2  cold-deaths 15/40  fire-occupancy 20.0%  [cold:15, integrity:9, overheat:7, timeout:5, thirst:4]
+      route usage: WARM=21%  FLEE=10%  HYDRATE=27%  FORAGE=17%  EVADE=25%
+
+arm (b): consequence-taught trioron router (Q over leaf-choices)...
+  training survival, last-30-episode mean: 178.9
+  (b) TD trioron-router  : survival 163.2  cold-deaths 14/40  fire-occupancy 20.6%  [cold:14, integrity:8, thirst:6, energy:5, overheat:4, timeout:3]
+      route usage: WARM=22%  FLEE=23%  HYDRATE=18%  FORAGE=25%  EVADE=12%
+      agreement with the hand-coded danger formula: 0.389 (NOT a target — just: did discovery converge to our design or elsewhere?)
+
+bars on the same eval:
+  Gaussian vocab router  : survival 148.1  cold-deaths  9/40  fire-occupancy 20.2%  [integrity:15, cold:9, thirst:8, timeout:4, overheat:3, energy:1]
+  hand-coded arbiter     : survival 167.6  cold-deaths 10/40  fire-occupancy 21.0%  [integrity:12, cold:10, overheat:8, timeout:6, thirst:4]
+
+=== VERDICT (single seed) ===
+  (b) discovered trioron router : 163.2
+  (a) imitation trioron router  : 152.2
+  Gaussian router (prev nest)   : 148.1
+  hand-coded arbiter (ceiling)  : 167.6
+  reactive floor                : 141.8
+
+  100%-trioron claim holds if (b) ≥ Gaussian router; (a) is the fallback if TD credit fails.

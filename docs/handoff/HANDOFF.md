@@ -108,6 +108,22 @@ data, no wake gradients.**
    nest t=67 vs DQN t=13; wash stated plainly). Commit `7b59835`,
    merged to main → live on GH Pages.
 
+7. **OPTIMIZED-ROW CONTROLS (overnight, Rocky's 2×2):**
+   - **TD trioron router n=3: 148.5±12.9** (163.2/143.2/139.2,
+     `runs/router_td_s049_seed{0,1,2}.log` → outputs/). **HEADLINE
+     CORRECTION: s048's 163.2 was the best seed.** Claim "TD ≥ Gaussian
+     nest (148.1)" survives on the mean, barely.
+   - **DQN @3000 episodes (10×) n=3: 49.0±14.3** (62.3/50.9/33.7,
+     `outputs/dqn3000_s049.log`) — 10× budget lifts DQN only to the
+     wake-nest's one-pass level; optimized nest 3× above.
+   - 2×2 published on `tour/phasecyte.html` with the
+     demonstrations-vs-tabula-rasa asymmetry stated (BC-warm-started
+     DQN = unrun symmetric control). Per-map DQN distribution measured:
+     σ=15, modal death t=13, 10/40 maps ≤20 ticks.
+   - Map rendering upgraded to tile GLYPHS (shape+color, legend,
+     night shading) in `watch_duel._panel` — all future duel GIFs
+     inherit it.
+
 ## GOTCHAS (hard-won this session)
 
 - Substrate gradient training needs **`sub.prepare_training()`** — plain
