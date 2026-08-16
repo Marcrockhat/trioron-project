@@ -24,10 +24,10 @@ On a 30-class class-incremental curriculum (chained-15: MNIST → Fashion-MNIST 
 
 Method and result details: `paper/paper.pdf` (built from `paper/paper.tex`).
 
-## Quick install (use as a library)
+## Install
 
 ```bash
-pip install trioron
+pip install trioron            # 0.3.1+ — earlier wheels lack trioron.pcll and trioron.api
 ```
 
 Or straight from GitHub for the latest unreleased changes:
@@ -36,36 +36,90 @@ Or straight from GitHub for the latest unreleased changes:
 pip install git+https://github.com/marcrockhat/trioron-project.git
 ```
 
-Build your first donor:
+Everything a user should import lives in **`trioron.api`**. There are three
+ways in, and — the thing that trips people up — **each is fed differently.**
+Trioron is not a `fit(X, y)` library; only the first path takes a dataset.
+
+### 1. Continual classification / donors (dataset in, donor out)
+
+The paper's flow. You bring `(X, y)` per task; the network grows, locks,
+dreams and rehearses on its own under a byte budget.
 
 ```python
 from trioron.api import TaskData, TrioronConfig, build_donor
 
 tasks = [
-    TaskData(
-        name="cats_vs_dogs",
-        X_train=Xtr, y_train=ytr,   # (N, 784) float32, (N,) int64
-        X_test=Xte,  y_test=yte,
-        classes=[0, 1],
-    ),
-    TaskData(
-        name="birds_vs_fish",
-        X_train=..., y_train=...,
-        X_test=...,  y_test=...,
-        classes=[2, 3],
-    ),
+    TaskData(name="cats_vs_dogs",
+             X_train=Xtr, y_train=ytr,   # (N, 784) float32, (N,) int64
+             X_test=Xte,  y_test=yte,
+             classes=[0, 1]),
+    TaskData(name="birds_vs_fish",
+             X_train=..., y_train=..., X_test=..., y_test=...,
+             classes=[2, 3]),
 ]
-
-donor = build_donor(
-    label="my_donor",
-    tasks=tasks,
-    seed=42,                            # shared L0 seed (paper §3.10)
-    config=TrioronConfig(cap_bytes=32_000),
-    out_path="my_donor.pt",
-)
+donor = build_donor(label="my_donor", tasks=tasks, seed=42,
+                    config=TrioronConfig(cap_bytes=32_000),
+                    out_path="my_donor.pt")
 ```
 
-Compose donors with `trioron.api.absorb` and deploy with `trioron.api.deploy_agent`; see [MANUAL.md](MANUAL.md) for the full surface and the docstring in `trioron/api.py` for the three supported flows.
+Compose donors with `absorb`, keep teaching with `extend`, deploy with
+`deploy_agent` — all from `trioron.api`; see [MANUAL.md](MANUAL.md).
+
+### 2. The substrate itself (a growing net you train like any torch module)
+
+The 2.0 core: cells with a **triparametric node** (weight, epigenetic lock
+λ, axonal gain), a hard parameter envelope, growth/pruning/locking as
+lifecycle events. Trained by consequence — a loss you choose, TD, anything
+that produces a gradient.
+
+```python
+import torch
+from trioron.api import construct, seeded, Envelope, default_dispatch_table
+
+sub = construct(base=seeded(784, 10, interior_cells=32, nonlinear=True),
+                envelope=Envelope(max_parameter_bytes=200_000),
+                dispatch_table=default_dispatch_table(),
+                capacity=1024, sparsity_k=0)
+sub.compile(); sub.prepare_training()          # prepare_training() is required
+opt = torch.optim.Adam(sub.trainable_tensors(), lr=3e-3)
+loss = torch.nn.functional.cross_entropy(sub(x), y)
+opt.zero_grad(); loss.backward(); sub.zero_dormant_grads(); opt.step()
+```
+
+Spec: `paper/v3/spec.md` (§2–§6); canonical short reference:
+`docs/TRIORON_MANUAL.md`.
+
+### 3. Phasecyte — the gradient-free learner (a stream in, no labels required)
+
+The second learner on the same body: single-pass, phase-coherent lock-in
+over a stream, sufficient statistics only (no stored data). Leaves are
+enrolled as domains appear; a manifold router arbitrates; a gradient
+substrate can then be **dreamed** from the leaves' own sketches with no
+wake gradients (chained-15: dreamed 0.540 vs phasecyte-nest 0.474 vs
+monolith 0.403, n = 3).
+
+```python
+from trioron.api import PhasecyteNest, dream_distill, dreamed_predict
+
+nest = PhasecyteNest(sense)                # sense: X -> descriptor tensor
+nest.enroll(group=0, genesis_pool=X0)      # when domain 0 first appears
+nest.observe(0, X_batch, labels)           # single pass, label-free tolerant
+router = nest.fit_router()
+pred_group = nest.route(X_query)
+```
+
+Spec §10; `docs/design/pcll_substrate_integration.md`.
+
+### What is *not* in the package yet: the embodied organism
+
+The survival showcase (<https://marcrockhat.github.io/trioron-project/tour/phasecyte.html>)
+— drives → primitive leaves → consequence-taught router → structural
+dreaming from its own cause-of-death table — still lives in
+`archive/experiments/world/` and requires hand-written skill masters. It is
+being reduced to a **"declare your drives"** contract (drive-only
+vocabulary reaches 112 ± 23 survival vs 148 ± 13 master-built, n = 3, zero
+policy code; see `docs/handoff/HANDOFF.md`). Until that ships, use the
+recipe in `docs/learning_methods.md` and the scripts under `archive/`.
 
 ## Setup (WSL2)
 
@@ -88,20 +142,11 @@ Torch CPU wheel is ~750 MB. First install is the slow part.
 ## Run the unit tests
 
 ```bash
-python3 test_node.py            # TrioronLayer
-python3 test_network.py         # TrioronNetwork
-python3 test_classification.py  # multi-class head
-python3 test_dreaming.py        # dream block (replay/compress/purge/archive)
-python3 test_frustration.py     # plateau-counter multiplier
-python3 test_pruner.py
-python3 test_triggers.py        # plateau / rank-saturation / grad-stability
-python3 test_incubator.py
-python3 test_ceilings.py        # cap_bytes pre-flight
-python3 test_packnet.py
-python3 test_hat.py
+python3 -m pytest tests -q          # v2 substrate + phenotype + Phasecyte tests
 ```
 
-Expected: all PASS, 0 FAIL on each file.
+Four known pre-existing failures (test_learning TestCredit ×2, test_lifecycle
+×2) are tracked in `docs/handoff/HANDOFF.md`; everything else passes.
 
 ## Reproduce the headline results
 
@@ -137,35 +182,28 @@ CSVs and `*_run*.log` files land in `outputs/`. Run logs from every reported pan
 ```
 trioron-project/
 ├── README.md                    # this file
-├── trioron_blueprint.md         # full design doc
-├── trioron/                     # core modules
-│   ├── api.py                   # public build_donor / train / extend API
-│   ├── cli.py                   # command-line entry point
-│   ├── node.py                  # TrioronLayer (per-node λ, u, r)
-│   ├── network.py               # TrioronNetwork (multi-layer, EWC)
-│   ├── classification.py        # CE head + grow_class
-│   ├── triggers.py              # plateau / rank / grad-stability
-│   ├── pruner.py                # cellular pruning (cosine-nearest redistribute)
-│   ├── incubator.py             # growth probe
-│   ├── ceilings.py              # cap_bytes pre-flight
-│   ├── dreaming.py              # replay / compress / purge / archive
-│   ├── frustration.py           # plateau multiplier
-│   ├── curriculum.py            # chained-15 / chained-23 builders
-│   ├── multibranch.py           # multi-branch organism (zero-shot absorption)
-│   ├── composition/             # L0 handshake translator (R · S factorization)
-│   ├── senses/                  # sensory-organism / CIFAR-side experiments
-│   ├── bridge/                  # cross-modal encoders (see BRIDGE.md)
-│   ├── packnet.py               # PackNet competitor
-│   └── hat.py                   # HAT competitor
-├── experiments/                 # bench scripts (CSV + log outputs)
+├── MANUAL.md · QUICKSTART.md    # donor API manual; 5-min reproduction
+├── docs/TRIORON_MANUAL.md       # canonical short reference (subordinate to the spec)
+├── docs/handoff/HANDOFF.md      # cross-session state of record (rewritten every session)
+├── paper/v3/spec.md             # Trioron 2.0 architecture spec — source of truth
+├── trioron/                     # the package (pip install trioron)
+│   ├── api.py                   # PUBLIC SURFACE — import from here
+│   ├── core/                    # cell, epigenome, graph, envelope, arena, construct
+│   ├── phenotype/               # how genes express into ops (linear, dendrite, …)
+│   ├── bases/                   # construction recipes (seeded, minimal, developmental, …)
+│   ├── learning/                # credit, frustration, dream, manifold, router
+│   ├── lifecycle/               # growth, evolution, ship, graft, compact
+│   ├── pcll/                    # Phasecyte (phase-coherent lock-in) + nest + wake/dream
+│   ├── evolution/ · viz/        # multi-substrate controller; recorder / viewer
+│   ├── compat/                  # v1 ↔ v2 bridge
+│   └── legacy/                  # v1 modules (donor API implementation, benches, competitors)
+├── archive/experiments/         # research drivers (world/, progenitor/, …) — not packaged
+├── experiments/                 # paper bench scripts (CSV + log outputs)
 ├── outputs/                     # bench CSVs (gitignored) + run logs (committed)
-├── paper/
-│   ├── paper.tex                # integrated paper source (compiles with pdflatex)
-│   ├── paper.pdf                # built artifact
-│   └── refs.bib                 # bibliography
-├── tour/                        # static Canvas demo (13 scenes); GitHub Pages source
+├── paper/                       # paper.tex / paper.pdf / refs.bib
+├── tour/                        # static Canvas demo + phasecyte showcase; GitHub Pages
 ├── hf_space_build/              # Hugging Face Space deployment build
-└── test_*.py                    # unit tests
+└── tests/                       # unit tests
 ```
 
 ## Status
@@ -188,7 +226,8 @@ trioron-project/
 - [x] Tour: 13-scene Canvas demo at <https://marcrockhat.github.io/trioron-project/tour/>
 - [x] Full integrated paper draft (`paper/paper.tex`, 29 pages)
 - [ ] ArXiv submission (pending endorsement)
-- [x] PyPI release (`pip install trioron`)
+- [x] PyPI release (`pip install trioron`); 0.3.x adds Phasecyte nest + wake/dream (`trioron.pcll`)
+- [ ] Embodied organism as a package API ("declare your drives", no hand-written masters)
 - [ ] Deployment script + ready-to-use checkpoint for Orange Pi 5B
 
 ## Disclosure
