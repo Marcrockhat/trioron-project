@@ -177,9 +177,15 @@ data, no wake gradients.**
    strikes again, manual §8 warning); λ s=300 + α-freeze: CHANGED
    +25.2 with retention ±0.0** — the restored s014 epigenetic lock
    doing its designed job in the world for the first time.
-   Next session: read the three logs, table the n=3, decide page
-   section ("the world changed" — nest adapts+retains vs DQN), commit
-   logs. If λ arm holds at full scale it's a headline.
+   **FINAL n=3 (harvested before session close, logs in outputs/):
+   zero-shot changed: nest 86.1 vs dqn 40.2 (2.1×). Naive adapt:
+   changed −32.0±5.2, retention −96.8±18.4 (catastrophic). λ-lock
+   s=300+α-freeze: changed −2.8±11.6, retention −4.9±11.0 — HOLDS BOTH
+   within noise (first in-world n=3 validation of the λ lock). DQN
+   fine-tune: +4.1/+10.5 generic floor-lift; even adapted it is half
+   the untouched nest. 50 eps buys NO upward adaptation for anyone —
+   upward likely needs the structural path (dream a fuel-seeking
+   leaf), the s050 experiment. Page section not yet written.**
 
 ## GOTCHAS (hard-won this session)
 

@@ -1,0 +1,10 @@
+loaded router <- /home/marcrockhat/trioron-project/archive/runs/duel/router_td.pt
+loaded DQN <- /home/marcrockhat/trioron-project/archive/runs/duel/dqn.pt
+[zero-shot] original: nest 163.2  dqn 34.9   CHANGED: nest 86.1  dqn 40.2  t=26s
+loaded router <- /home/marcrockhat/trioron-project/archive/runs/duel/router_td.pt
+loaded DQN <- /home/marcrockhat/trioron-project/archive/runs/duel/dqn.pt
+[seed 2] nest naive-adapt : CHANGED 57.7 (Δ-28.4)   RETENTION 82.1 (Δ-81.1)  t=95s
+loaded router <- /home/marcrockhat/trioron-project/archive/runs/duel/router_td.pt
+loaded DQN <- /home/marcrockhat/trioron-project/archive/runs/duel/dqn.pt
+[seed 2] nest λ-lock s=300 : CHANGED 95.6 (Δ+9.5)   RETENTION 172.0 (Δ+8.8)  t=231s
+[seed 2] dqn fine-tune    : CHANGED 40.1 (Δ-0.1)   RETENTION 41.0 (Δ+6.1)  t=248s
