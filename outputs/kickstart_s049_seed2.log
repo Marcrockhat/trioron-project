@@ -1,0 +1,24 @@
+loaded router <- /home/marcrockhat/trioron-project/archive/runs/duel/router_td.pt
+loaded DQN <- /home/marcrockhat/trioron-project/archive/runs/duel/dqn.pt
+teacher = TD nest (ckpt); arms=rasa,guide,bctd seed=2
+    [rasa seed 2] ep  25: eval 45.7
+    [rasa seed 2] ep  50: eval 37.1
+    [rasa seed 2] ep 100: eval 35.2
+    [rasa seed 2] ep 200: eval 38.0
+    [rasa seed 2] ep 300: eval 38.9
+  [rasa] curve: ep25=45.7  ep50=37.1  ep100=35.2  ep200=38.0  ep300=38.9
+    [guide seed 2] ep  25: eval 41.6
+    [guide seed 2] ep  50: eval 48.9
+    [guide seed 2] ep 100: eval 53.0
+    [guide seed 2] ep 200: eval 80.7
+    [guide seed 2] ep 300: eval 139.4
+  [guide] curve: ep25=41.6  ep50=48.9  ep100=53.0  ep200=80.7  ep300=139.4
+    [bc] 6348 pairs, clone acc 0.920
+    [bctd seed 2] ep  25: eval 46.5
+    [bctd seed 2] ep  50: eval 41.6
+    [bctd seed 2] ep 100: eval 38.7
+    [bctd seed 2] ep 200: eval 31.5
+    [bctd seed 2] ep 300: eval 39.6
+  [bctd] curve: ep25=46.5  ep50=41.6  ep100=38.7  ep200=31.5  ep300=39.6
+
+[seed 2] final (300 eps): rasa=38.9  guide=139.4  bctd=39.6  (bars: nest one-pass wake ~47, TD nest 148.5)  elapsed=627s

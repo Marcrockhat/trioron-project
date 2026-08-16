@@ -158,6 +158,30 @@
   demonstration-warm-started DQN is the fully symmetric control we have
   not run.</p>
 
+  <h2>The nest as teacher (n=3)</h2>
+  <p>Can the organism train the DQN? Three arms, same student, same
+  300-episode budget — only where knowledge enters differs:</p>
+  <table>
+    <tr><th>student DQN</th><th>per-seed survival</th><th>mean</th></tr>
+    <tr><td>tabula rasa</td><td>34.9 / 40.0 / 38.9</td>
+        <td>37.9 &plusmn; 2.7</td></tr>
+    <tr><td>+ nest demonstrations (BC warm-start, then TD)</td>
+        <td>41.6 / 41.5 / 39.6</td><td>40.9 &plusmn; 1.1</td></tr>
+    <tr><td class="win">+ nest-guided exploration (the organism
+        explores <em>for</em> it)</td>
+        <td class="win">57.2 / 33.7 / <strong>139.4</strong></td>
+        <td class="win">76.8 &plusmn; 55.5 — bimodal</td></tr>
+  </table>
+  <p>Cloning the nest's play (92.6% action accuracy!) barely helps —
+  the missed 7% are exactly the critical fire decisions. But when the
+  nest <em>explores for</em> the student, one seed in three locks onto
+  the teacher's strategy and plays at near-teacher level (139 vs the
+  teacher's 148.5) — something no amount of solo training ever
+  produced. The flat network could always <em>represent</em> that
+  policy; it just never finds it without the organism showing it
+  where to look. Untuned vanilla DQN; the bimodality is the student's
+  instability, not the teacher's.</p>
+
   <p>Everything trains through the public package — the same API you can
   install:</p>
   <pre>pip install trioron  # v0.3.0

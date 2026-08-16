@@ -145,6 +145,24 @@ data, no wake gradients.**
    (½/1/2×, fps-variant GIFs), optimized duel added (TD nest t=144 vs
    DQN@3000 t=30, `render_optimized_duel.py`; dqn3000.pt ckpt saved).
 
+10. **NEST-AS-TEACHER (kickstarted DQN) n=3** — `world_kickstart.py`
+   (Rocky: "can the DQN be trained by our model?"). Same student/budget
+   (300 eps), three knowledge paths:
+   - tabula rasa 37.9±2.7 (matches control; CURVE DEGRADES — peaks
+     ep50≈49 then declines as it learns fire-camping and cooks);
+   - BC warm-start + TD 40.9±1.1 (clone acc 0.926 — the nest is far
+     more clonable than the perfect master's 0.73 — but deploy +3
+     only: the missed 7% are the critical fire decisions). SETTLES the
+     page's symmetric-control caveat: demonstrations alone don't
+     rescue the flat learner;
+   - **teacher-guided exploration 57.2/33.7/139.4 — BIMODAL: 1/3
+     seeds locks onto the teacher's strategy at near-teacher level
+     (139 vs 148.5).** KEY CORRECTION: the flat QNet CAN represent
+     near-teacher play — the barrier is exploration/optimization, not
+     capacity. Next lever if pursued: target net / annealed teacher
+     mixing to raise the hit rate.
+   Logs `outputs/kickstart_s049_seed{0,1,2}.log`; page section added.
+
 ## GOTCHAS (hard-won this session)
 
 - Substrate gradient training needs **`sub.prepare_training()`** — plain
