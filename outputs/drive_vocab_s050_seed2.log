@@ -1,0 +1,15 @@
+[1/3] leaf 1/4: TD on 'temperature' delta only (no master)  t=0s
+[1/3] leaf 2/4: TD on 'thirst' delta only (no master)  t=461s
+[1/3] leaf 3/4: TD on 'energy' delta only (no master)  t=819s
+[1/3] leaf 4/4: TD on 'integrity' delta only (no master)  t=1247s
+[2/3] solo evals  t=1623s
+  solo DRIVE_TEMPERATURE: survival  63.4  cold-deaths  2/40  fire-occupancy 21.9%  [thirst:28, overheat:4, energy:3, integrity:3, cold:2]
+       solo DRIVE_THIRST: survival  43.5  cold-deaths 24/40  fire-occupancy  8.2%  [cold:24, integrity:12, overheat:3, thirst:1]
+       solo DRIVE_ENERGY: survival  58.8  cold-deaths 17/40  fire-occupancy 14.4%  [thirst:17, cold:17, overheat:3, integrity:3]
+    solo DRIVE_INTEGRITY: survival  60.6  cold-deaths 14/40  fire-occupancy 19.1%  [thirst:16, cold:14, overheat:8, energy:2]
+[3/3] router TD over 4 drive leaves  t=1648s
+         drive-only nest: survival 138.6  cold-deaths 10/40  fire-occupancy 21.0%  [cold:10, thirst:8, energy:7, integrity:7, overheat:5, timeout:3]
+
+[seed 2] drive-only nest=138.6  master-built nest=139.2  delta -0.6
+  solo={'DRIVE_TEMPERATURE': 63.4, 'DRIVE_THIRST': 43.5, 'DRIVE_ENERGY': 58.8, 'DRIVE_INTEGRITY': 60.6}
+  route_hist={'DRIVE_TEMPERATURE': 1508, 'DRIVE_THIRST': 1179, 'DRIVE_ENERGY': 2171, 'DRIVE_INTEGRITY': 686}  causes={'energy': 7, 'thirst': 8, 'integrity': 7, 'timeout': 3, 'cold': 10, 'overheat': 5}  elapsed=2636s
