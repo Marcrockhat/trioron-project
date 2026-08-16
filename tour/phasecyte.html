@@ -18,6 +18,14 @@
   .showcase a { color: #f0883e; }
   .showcase a:hover { color: #ffa657; text-decoration: underline; }
   .showcase a:visited { color: #db8b4e; }
+  .gifbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+            margin: 6px 0 18px; font-size: 0.85em; }
+  .gifbar .speed { margin-left: auto; color: #8b949e; }
+  .gifbar button { background: #21262d; color: #c9d1d9; border: 1px solid
+                   #30363d; border-radius: 6px; padding: 2px 10px;
+                   cursor: pointer; margin-left: 4px; }
+  .gifbar button.on { background: #f0883e; color: #0d1117;
+                      border-color: #f0883e; }
 </style>
 </head>
 <body>
@@ -35,8 +43,23 @@
   parameters vs the nest's 19,383 (router + five leaves, 1.4&times;
   smaller).</p>
 
-  <img src="assets/phasecyte_vs_dqn_map987654.gif"
+  <img id="duel-quick" data-base="assets/phasecyte_vs_dqn_map987654"
+       src="assets/phasecyte_vs_dqn_map987654.gif"
        alt="Side-by-side survival duel: phasecyte nest vs DQN">
+  <div class="gifbar">
+    <span class="lg" style="color:#3fb950">&#9679; food</span>
+    <span class="lg" style="color:#58a6ff">&#9660; water</span>
+    <span class="lg" style="color:#f85149">&#9650; fire</span>
+    <span class="lg" style="color:#bc8cff">&#9670; berry</span>
+    <span class="lg" style="color:#db61a2">&#10010; poison</span>
+    <span class="lg" style="color:#e6edf3">&#9675; agent</span>
+    <span class="lg" style="color:#ff4d4d">&#10006; predator</span>
+    <span class="speed">speed:
+      <button data-for="duel-quick" data-tag="_slow">&frac12;&times;</button>
+      <button data-for="duel-quick" data-tag="" class="on">1&times;</button>
+      <button data-for="duel-quick" data-tag="_fast">2&times;</button>
+    </span>
+  </div>
 
   <h2>Survival distributions — the same 40 held-out maps for all three</h2>
   <table>
@@ -79,6 +102,25 @@
             leaves</td>
         <td>49.0 &plusmn; 14.3 — 3000 episodes (10&times;)</td></tr>
   </table>
+  <p>The same duel at the optimized budgets — the consequence-taught
+  nest against the 10&times;-trained DQN, same unseen map:</p>
+  <img id="duel-opt" data-base="assets/optimized_vs_dqn3000_map987654"
+       src="assets/optimized_vs_dqn3000_map987654.gif"
+       alt="Optimized duel: TD trioron nest vs 3000-episode DQN">
+  <div class="gifbar">
+    <span class="lg" style="color:#3fb950">&#9679; food</span>
+    <span class="lg" style="color:#58a6ff">&#9660; water</span>
+    <span class="lg" style="color:#f85149">&#9650; fire</span>
+    <span class="lg" style="color:#bc8cff">&#9670; berry</span>
+    <span class="lg" style="color:#db61a2">&#10010; poison</span>
+    <span class="lg" style="color:#e6edf3">&#9675; agent</span>
+    <span class="lg" style="color:#ff4d4d">&#10006; predator</span>
+    <span class="speed">speed:
+      <button data-for="duel-opt" data-tag="_slow">&frac12;&times;</button>
+      <button data-for="duel-opt" data-tag="" class="on">1&times;</button>
+      <button data-for="duel-opt" data-tag="_fast">2&times;</button>
+    </span>
+  </div>
   <p>At ten times the training budget, the DQN just reaches what the
   nest gets from a single pass — and the optimized nest sits 3&times;
   above that. One asymmetry to state plainly: the nest's leaves learn
@@ -111,5 +153,16 @@ from trioron.pcll import PhasecyteNest, dream_distill</pre>
   &nbsp;·&nbsp; <a href="https://github.com/marcrockhat/trioron-project">source</a>
   &nbsp;·&nbsp; <a href="https://pypi.org/project/trioron/">PyPI</a></p>
 </div>
+<script>
+document.querySelectorAll(".gifbar button").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var img = document.getElementById(b.dataset.for);
+    img.src = img.dataset.base + b.dataset.tag + ".gif";
+    b.parentElement.querySelectorAll("button").forEach(
+      function (o) { o.classList.remove("on"); });
+    b.classList.add("on");
+  });
+});
+</script>
 </body>
 </html>

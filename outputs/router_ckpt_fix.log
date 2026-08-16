@@ -1,0 +1,7 @@
+training TD trioron router (300 eps)...
+saved router -> /home/marcrockhat/trioron-project/archive/runs/duel/router_td.pt
+loaded DQN <- /home/marcrockhat/trioron-project/archive/runs/duel/dqn.pt
+retrained router 40-map mean 163.25
+loaded router <- /home/marcrockhat/trioron-project/archive/runs/duel/router_td.pt
+loaded DQN <- /home/marcrockhat/trioron-project/archive/runs/duel/dqn.pt
+RELOADED router 40-map mean 163.25 (must match)

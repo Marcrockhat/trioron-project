@@ -124,6 +124,27 @@ data, no wake gradients.**
      night shading) in `watch_duel._panel` — all future duel GIFs
      inherit it.
 
+8. **STRUCTURAL DREAMING VALIDATED n=3** (Rocky: "self-reflect, break
+   from its limit") — `world_dream_newleaf.py`: baseline TD nest →
+   organism reads its OWN cause-of-death table (diagnosis maps disjoint
+   from eval) → new trioron leaf TD-trained on the implicated drive's
+   delta only (NO master) → 6-leaf cold-start router → eval. **Paired
+   +1.7/+23.6/+5.8 (mean +10.4; 148.5→158.9); diagnosed cause shrank
+   3/3 seeds; seed 2 self-diagnosed integrity (not cold) and birthed a
+   different leaf — per-individual adaptation.** Extended nests near
+   the arbiter 167.6. Follow-ups: incremental enrollment (warm-start),
+   iterate the loop. Logs `outputs/dream_newleaf_s049_seed{0,1,2}.log`.
+9. **CHECKPOINT BUG (found via showcase render):** `watch_duel`
+   router ckpt saved bias+edge_weight only — quad-dendrite
+   `branch_alpha` (trainable!) dropped; reload = lobotomized router
+   (89.7 vs 163.2). FIXED + round-trip verified (163.25=163.25;
+   map-987654 replay = s048's t=144 exactly). **Rule: substrate ckpts
+   must save every tensor in `trainable_tensors()`.** Old
+   `runs/duel/router_td.pt` was replaced (retrained, reproduces).
+   Showcase page: colored in-GIF+HTML legends, speed controls
+   (½/1/2×, fps-variant GIFs), optimized duel added (TD nest t=144 vs
+   DQN@3000 t=30, `render_optimized_duel.py`; dqn3000.pt ckpt saved).
+
 ## GOTCHAS (hard-won this session)
 
 - Substrate gradient training needs **`sub.prepare_training()`** — plain

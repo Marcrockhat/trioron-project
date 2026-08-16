@@ -57,12 +57,21 @@ def get_agents(seed=0, episodes=300):
         with torch.no_grad():
             router.arena.bias.copy_(state["bias"])
             router.arena.edge_weight.copy_(state["edge_weight"])
+            # branch_alpha is TRAINABLE on the quad-dendrite router;
+            # omitting it lobotomizes the reload (s049: 89.7 vs 163.2)
+            if "branch_alpha" in state:
+                router.arena.branch_alpha.copy_(state["branch_alpha"])
+            else:
+                print("WARN: legacy ckpt without branch_alpha — "
+                      "router behavior will NOT match training")
         print(f"loaded router <- {r_ck}")
     else:
         print(f"training TD trioron router ({episodes} eps)...", flush=True)
         router, _ = train_router_td(seed, donors, episodes=episodes)
         torch.save({"bias": router.arena.bias.detach().clone(),
-                    "edge_weight": router.arena.edge_weight.detach().clone()},
+                    "edge_weight": router.arena.edge_weight.detach().clone(),
+                    "branch_alpha":
+                        router.arena.branch_alpha.detach().clone()},
                    r_ck)
         print(f"saved router -> {r_ck}")
 
@@ -173,10 +182,14 @@ def render(frames_a, frames_b, out_path, fps=10,
                title_a, dead_a)
         _panel(fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, 1]), sb,
                title_b, dead_b)
-        fig.text(0.5, 0.015,
-                 "● food   ▼ water   ▲ fire   ◆ berry   "
-                 "✚ poison   ○ agent   ✖ predator",
-                 ha="center", color="#8b949e", fontsize=9)
+        legend = [("● food", "#3fb950"), ("▼ water", "#58a6ff"),
+                  ("▲ fire", "#f85149"), ("◆ berry", "#bc8cff"),
+                  ("✚ poison", "#db61a2"), ("○ agent", "#e6edf3"),
+                  ("✖ predator", "#ff4d4d")]
+        x = 0.5 - 0.095 * len(legend) / 2
+        for txt, col in legend:
+            fig.text(x, 0.015, txt, ha="left", color=col, fontsize=9)
+            x += 0.095
         fig.canvas.draw()
         imgs.append(np.asarray(fig.canvas.buffer_rgba())[..., :3].copy())
         plt.close(fig)

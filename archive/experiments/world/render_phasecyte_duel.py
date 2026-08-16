@@ -43,12 +43,13 @@ def main() -> None:
     frames_b = record(
         lambda w, p: (int(q(p.unsqueeze(0))[0].argmax()), "-"),
         args.map_seed)
-    out = RUNS / f"phasecyte_vs_dqn_map{args.map_seed}.gif"
-    n = render(frames_a, frames_b, out,
-               title_a="PHASECYTE NEST (5 skills, one gradient-free pass)",
-               title_b="FLAT DQN (300 training episodes)")
-    print(f"[gif] {out} ({n} frames)  nest t={frames_a[-1]['t']} "
-          f"dqn t={frames_b[-1]['t']}")
+    for fps, tag in ((5, "_slow"), (10, ""), (20, "_fast")):
+        out = RUNS / f"phasecyte_vs_dqn_map{args.map_seed}{tag}.gif"
+        n = render(frames_a, frames_b, out, fps=fps,
+                   title_a="PHASECYTE NEST (5 skills, one gradient-free pass)",
+                   title_b="FLAT DQN (300 training episodes)")
+        print(f"[gif] {out} ({n} frames, {fps} fps)  "
+              f"nest t={frames_a[-1]['t']} dqn t={frames_b[-1]['t']}")
 
 
 if __name__ == "__main__":

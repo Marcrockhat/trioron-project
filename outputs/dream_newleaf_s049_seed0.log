@@ -1,0 +1,12 @@
+[1/5] baseline TD nest (seed 0)
+     base 5-leaf nest   : survival 163.2  cold-deaths 14/40  fire-occupancy 20.6%  [cold:14, integrity:8, thirst:6, energy:5, overheat:4, timeout:3]
+[2/5] self-reflection on diagnosis maps  t=817s
+  organism's own diagnosis: deaths={'cold': 12, 'energy': 5, 'overheat': 9, 'thirst': 6, 'integrity': 5} -> top cause 'cold' -> implicated drive 'temperature'
+[3/5] dreaming a new primitive: TD on 'temperature' delta only (no master)  t=832s
+[4/5] enrollment: 6-leaf router TD  t=1237s
+[5/5] eval  t=2297s
+  6-leaf nest (+SELF_COLD): survival 165.0  cold-deaths  8/40  fire-occupancy 21.7%  [integrity:10, cold:8, overheat:6, energy:6, timeout:6, thirst:4]
+
+[seed 0] base=163.2 -> extended=165.0 (delta +1.7)
+  'cold' deaths: 14/40 -> 8/40   new-leaf route share 0.17
+  route_hist={'WARM': 934, 'FLEE': 1007, 'HYDRATE': 1461, 'FORAGE': 1254, 'EVADE': 846, 'SELF_COLD': 1097}  elapsed=2316s
