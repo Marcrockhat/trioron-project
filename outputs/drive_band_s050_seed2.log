@@ -1,0 +1,6 @@
+[1/2] band-masked router TD  t=1s
+[2/2] eval  t=2481s
+  band-masked drive nest: survival 159.0  cold-deaths 17/40  fire-occupancy 20.1%  [cold:17, timeout:7, overheat:6, energy:6, thirst:4]
+
+[seed 2] band-masked drive nest=159.0  master-built 139.2  delta +19.8
+  route_hist={'DRIVE_TEMPERATURE': 2360, 'DRIVE_THIRST': 1214, 'DRIVE_ENERGY': 1460, 'DRIVE_INTEGRITY': 1326}  causes={'cold': 17, 'overheat': 6, 'thirst': 4, 'energy': 6, 'timeout': 7}  elapsed=2524s

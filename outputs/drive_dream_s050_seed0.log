@@ -1,0 +1,13 @@
+    drive nest (round 0): survival 100.1  cold-deaths 12/40  fire-occupancy 20.0%  [cold:12, integrity:11, thirst:8, overheat:8, energy:1]
+[round 1] self-reflect  t=37s
+  diagnosis={'cold': 8, 'overheat': 8, 'thirst': 7, 'energy': 6, 'integrity': 11} -> 'integrity' -> drive 'integrity'
+[round 1] router TD over 5 leaves  t=969s
+    drive nest (round 1): survival 105.8  cold-deaths 11/40  fire-occupancy 20.1%  [cold:11, integrity:9, overheat:8, thirst:6, energy:5, timeout:1]
+  round 1: 100.1 -> 105.8 (+5.7)  'integrity' deaths 11->9  route_hist={'DRIVE_TEMPERATURE': 980, 'DRIVE_THIRST': 944, 'DRIVE_ENERGY': 1547, 'DRIVE_INTEGRITY': 587, 'SELF_INTEGRITY_R1': 174}
+[round 2] self-reflect  t=2608s
+  diagnosis={'energy': 1, 'cold': 11, 'overheat': 5, 'integrity': 11, 'thirst': 10} -> 'cold' -> drive 'temperature'
+[round 2] router TD over 6 leaves  t=3006s
+    drive nest (round 2): survival 108.0  cold-deaths 21/40  fire-occupancy 17.8%  [cold:21, integrity:8, thirst:5, energy:3, overheat:3]
+  round 2: 105.8 -> 108.0 (+2.2)  'cold' deaths ?->21  route_hist={'DRIVE_TEMPERATURE': 290, 'DRIVE_THIRST': 1968, 'DRIVE_ENERGY': 666, 'DRIVE_INTEGRITY': 687, 'SELF_INTEGRITY_R1': 299, 'SELF_COLD_R2': 410}
+
+[seed 0] trajectory 100.1 -> 105.8 -> 108.0  master-built 163.2  final delta -55.2  elapsed=4048s
