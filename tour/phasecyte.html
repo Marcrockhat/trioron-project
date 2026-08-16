@@ -61,6 +61,36 @@
     </span>
   </div>
 
+  <h2>How to read the duel</h2>
+  <p>A 12&times;12 toroidal tile world with a 20-tick day/night cycle.
+  The agent moves N/S/E/W, consumes the tile it stands on, or rests.
+  Nights are cold; fire is the only heat source — and also a hazard. A
+  slow predator wanders the map (it moves every 4th tick; contact
+  chips integrity). An episode ends at 300 ticks or at the
+  agent's death. The four bars are the agent's drives, and each has a
+  lethal condition:</p>
+  <table>
+    <tr><th>bar</th><th>restored by</th><th>lethal when</th></tr>
+    <tr><td style="color:#3fb950">energy</td>
+        <td>eating food ● / berries ◆</td><td>empty (0) — starvation</td></tr>
+    <tr><td style="color:#58a6ff">thirst</td>
+        <td>drinking water ▼</td><td>empty (0) — dehydration</td></tr>
+    <tr><td style="color:#f0883e">integrity</td>
+        <td>nothing — only avoid fire ▲, poison ✚, predator ✖</td>
+        <td>empty (0)</td></tr>
+    <tr><td style="color:#bc8cff">temp</td>
+        <td>a <em>homeostat</em>: fire warms, night cools; setpoint 0.5
+            (the dotted line)</td>
+        <td><strong>either end</strong> — empty freezes, full cooks.
+            The bar turns red near a lethal bound.</td></tr>
+  </table>
+  <p>So an agent that dies "with its bars full" almost always hit a
+  temperature bound — the classic flat-policy failure: it learns
+  "fire = survival at night," camps it, and cooks. Warming is a
+  sign-flip skill (approach fire when cold, retreat when warm), which
+  the nest carries as two separate leaves — WARM seeks, FLEE cools —
+  with the router doing the flip.</p>
+
   <h2>Survival distributions — the same 40 held-out maps for all three</h2>
   <table>
     <tr><th>agent</th><th>training</th><th>mean</th><th>median</th>

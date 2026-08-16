@@ -152,6 +152,10 @@ def _panel(axg, axd, s, title, dead_now):
     axd.set_facecolor("#0d1117")
     for i, (name, val, col) in enumerate(zip(names, s["drives"], cols)):
         y = len(names) - 1 - i
+        # temp is a HOMEOSTAT: both bar ends are lethal (<=0.02 freeze,
+        # >=0.99 cook) — flag the danger zones in red
+        if name == "temp" and (val <= 0.12 or val >= 0.89):
+            col = "#f85149"
         axd.barh(y, 1.0, color="#21262d", height=0.55)
         axd.barh(y, max(0.0, min(1.0, val)),
                  color="#444444" if dead_now else col, height=0.55)
