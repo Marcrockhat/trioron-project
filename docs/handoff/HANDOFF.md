@@ -163,6 +163,24 @@ data, no wake gradients.**
      mixing to raise the hit rate.
    Logs `outputs/kickstart_s049_seed{0,1,2}.log`; page section added.
 
+11. **CHANGE TEST (Rocky's moat question) — RUNNING AT SESSION END,
+   results land in `runs/change_test_s049_seed{0,1,2}.log`** (detached
+   process; copy to outputs/ + commit when done). `world_change_test.py`:
+   world shift = fires 4→1; both agents from ckpts; matched 50-ep
+   adaptation; arms = nest naive router fine-tune / **nest λ-locked**
+   (|w·g| saliency on original-world replay → refresh_lambda → anchor →
+   EWC pull s=300, branch_alpha FROZEN — outside anchor coverage, its
+   drift alone reshapes the policy) / DQN fine-tune. Retention axis =
+   re-eval on the ORIGINAL world after adapting.
+   **Smoke verdicts (5 eps/6 maps, direction only): naive retention
+   −138 (the router is the nest's forgetting surface — raw-Adam bypass
+   strikes again, manual §8 warning); λ s=300 + α-freeze: CHANGED
+   +25.2 with retention ±0.0** — the restored s014 epigenetic lock
+   doing its designed job in the world for the first time.
+   Next session: read the three logs, table the n=3, decide page
+   section ("the world changed" — nest adapts+retains vs DQN), commit
+   logs. If λ arm holds at full scale it's a headline.
+
 ## GOTCHAS (hard-won this session)
 
 - Substrate gradient training needs **`sub.prepare_training()`** — plain
@@ -178,6 +196,10 @@ data, no wake gradients.**
 
 ## NEXT (priority)
 
+-1. **FIRST: harvest the change test** (item 11 — logs in runs/,
+   detached run may still be going if this session just ended; check
+   log mtime). Table n=3, commit logs to outputs/, page section if the
+   λ arm holds.
 0. **Close the in-world dream gap** — the wash traces to wake class
    impurity (dream trains pseudo-samples under the class's MAJORITY
    action). Candidates: purer class formation (smaller windows /
