@@ -1893,6 +1893,24 @@ The consolidation-dream pass is opt-in via
 extra consolidation, preserving the substrate's exact training
 state.
 
+**Export (dense).** A shipped substrate that will only *serve* (no
+further learning) is folded to a fixed, buffers-only forward with
+`lifecycle.export_dense(substrate)` (`lifecycle/export.py`). The
+compiled dispatch plan is walked bucket by bucket; each LINEAR /
+DENDRITE / TANH bucket becomes one dense stage — `y = b + Σ_k α_k ·
+σ_k(Σ_j chunk_j · W_{k,j})` over the upstream activation chunks
+(inputs, then each earlier stage) — so the export is exact (fp32
+relative error ~1e-7) and `torch.jit.trace`-able. Receptor cells (§10)
+and ATTENTION / CONV / RECURRENT buckets are not folded (the call
+raises; serve those with the live forward). The export carries no
+gradients, no arena, no λ, no growth or dream machinery: **it does not
+learn.** Learning stays in the arena checkpoint; after each
+wake / extend / dream cycle the export is regenerated (milliseconds)
+and swapped. There is deliberately no export → arena path.
+Deployment is therefore two artifacts: the arena checkpoint (this
+section's *ship*) for learning and the dense export for serving.
+Measured latency in §6.4.
+
 **Wake.** Waking deserializes a checkpoint into an arena. The
 deserialized substrate is immediately runnable for inference; for
 further training, the operator typically calls `substrate.wake_for_training()`
@@ -2613,6 +2631,27 @@ hard ceiling triggers a release blocker, not just a CI warning.
 Each bench writes a CSV and a comparison HTML plot; the CI gate is
 the CSV against the bench-target table of Section 6.1.
 
+**Serving latency, measured (s050, 2026-08-17).** Deployment speed was
+first quantified on the world organism (router / leaf substrates:
+77-in, 32 interior quad cells, 6-out, 113 live cells in a 2048-cell
+arena; 1 CPU thread, batch 1, median of 5000 calls):
+
+| forward | latency | params |
+|---|---|---|
+| live arena forward (`Substrate.__call__`) | ~485 µs | 141 K allocated |
+| dense export, eager | ~78 µs | 5.5 K |
+| dense export, `torch.jit.freeze(trace)` | **~50 µs** | 5.5 K |
+| nest decision (router + one leaf), jit | ~105 µs | 11 K |
+| reference: 27 K-param 3-layer DQN MLP, eager / jit | 48 / 30 µs | 27 K |
+
+The live arena forward pays for growth (a `[batch, capacity]`
+activation buffer over dormant capacity, per-edge gather/scatter) —
+~10× the arithmetic cost. Exported, one substrate serves at the speed
+of a same-role MLP with 1/5 its parameters; a mixture-of-skills nest
+pays exactly the structural 2× (arbiter + leaf). This is the reference
+point for the §6.1 deploy column and for the honest statement that the
+substrate is a training-time structure, not an inference-time cost.
+
 ### 6.5 Honest Limits
 
 - **Phase 1 cap is a discipline, not a hardware limit.** The 50K-
@@ -3294,6 +3333,7 @@ trioron/
 | `ship.py` | Substrate serialization, optional consolidation-dream pass | 5.4 |
 | `wake.py` | Substrate deserialization, wake_for_training | 5.4 |
 | `extend.py` | Envelope lifting, growth on top of frozen foundation | 5.4 |
+| `export.py` | Dense export: fold compiled plan to a fixed buffers-only forward (LINEAR/DENDRITE/TANH), exact, jit-traceable; does not learn | 5.4 / 6.4 |
 | `compact.py` | Recycling pass, saliency-based sort, adaptive defrag threshold | 5.5 |
 | `saliency.py` | `saliency(cell)` composite metric + downstream-impact BFS | 5.5 |
 
@@ -3380,6 +3420,7 @@ tests/
 │   ├── test_graft.py
 │   ├── test_ship_wake_extend.py
 │   ├── test_compact.py
+│   ├── test_export.py
 │   ├── test_saliency.py
 │   ├── test_recorder.py
 │   ├── test_detect.py
@@ -3462,6 +3503,7 @@ to its defining section and primary implementation file:
 | Multi-substrate exploration (opt-in) | 5.2.3 | `evolution/controller.py` |
 | Grafting | 5.3 | `lifecycle/graft.py` |
 | Ship-wake-extend | 5.4 | `lifecycle/ship.py` + `wake.py` + `extend.py` |
+| Dense export (serving artifact) | 5.4 / 6.4 | `lifecycle/export.py` |
 | Compaction + saliency | 5.5 | `lifecycle/compact.py` + `saliency.py` |
 | Performance contract | 6 | `bench/run_contract.py` |
 | Recorder | 7.1 | `viz/recorder.py` |

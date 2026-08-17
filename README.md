@@ -89,6 +89,21 @@ opt.zero_grad(); loss.backward(); sub.zero_dormant_grads(); opt.step()
 Spec: `paper/v3/spec.md` (§2–§6); canonical short reference:
 `docs/TRIORON_MANUAL.md`.
 
+**Deploying it — the substrate is a training-time structure, not an
+inference-time cost.** The live forward walks the arena (that is what
+lets it grow); for serving, fold it to a fixed module:
+
+```python
+from trioron.api import export_dense
+module = export_dense(sub)                                  # exact, buffers-only
+fast = torch.jit.freeze(torch.jit.trace(module, x[:1]))
+```
+
+Measured on the world organism (1 CPU thread, batch 1): arena forward
+~485 µs → exported ~50 µs — the same per-call latency as a 27 K-param
+DQN MLP, at 1/5 the parameters. The export does not learn; keep the arena
+checkpoint for learning and re-export after each wake/extend/dream cycle.
+
 ### 3. Phasecyte — the gradient-free learner (a stream in, no labels required)
 
 The second learner on the same body: single-pass, phase-coherent lock-in

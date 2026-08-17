@@ -287,6 +287,12 @@ task-aware **0.961** (manifold-grown, 30 KB). PackNet sat at 0.046 full. (paper 
   (`lifecycle/graft.py`); the basis of multi-branch absorption / skill-packs.
 - **Ship-Wake-Extend** (§5.4) — serialize (`ship`), reload (`wake`), resume training and
   grow within a new cap. The lifetime-deployment loop.
+- **Dense export** (§5.4/§6.4, `lifecycle/export.py`, s050) — fold the compiled plan to a
+  fixed buffers-only forward for SERVING: exact (fp32 rel ~1e-7), jit-traceable, LINEAR/
+  DENDRITE/TANH only. Measured: arena forward ~485 µs → export ~50 µs jit (= a 27K-param
+  DQN MLP at 1/5 the params); nest tick (router+leaf) ~105 µs. **It does not learn** — no
+  arena/λ/growth; learning stays in the arena checkpoint, re-export after each cycle. Two
+  deploy artifacts: arena ckpt (learn) + export (serve). No export→arena path by design.
 - **Compaction** (§5.5) — recycle low-saliency dormant cells (`compute_saliency` =
   0.6·utility + 0.3·engagement + 0.1·downstream, `lifecycle/saliency.py`).
 - **Developmental program** (§5.7) — stem cells, morphogens, redifferentiation.

@@ -23,6 +23,7 @@ instead. For the cross-modal bridge / encoder reference,
 10. [Deploying as an agent (REPL + HTTP)](#10-deploying-as-an-agent-repl--http)
 11. [Tool registration](#11-tool-registration)
 12. [The Python API at a glance](#12-the-python-api-at-a-glance)
+    - [12.1 Beyond the donor API — substrate, Phasecyte, dense export](#121-beyond-the-donor-api--substrate-phasecyte-dense-export)
 13. [Trioron 2.0 — profiles, axes, topography](#13-trioron-20--profiles-axes-topography)
 14. [Troubleshooting](#14-troubleshooting)
 15. [Reference: CLI commands](#15-reference-cli-commands)
@@ -535,7 +536,7 @@ the args resolver.
 ```python
 # my_agent.py
 import torch
-from trioron.bridge import ToolDispatcher
+from trioron.legacy.bridge import ToolDispatcher
 
 # 1. Encoder: any object with .encode_dim and __call__(raw) → tensor
 class MyEncoder:
@@ -575,9 +576,9 @@ The `[bridge-text]` / `[bridge-image]` / `[bridge-audio]` extras give
 you ready-made encoders:
 
 ```python
-from trioron.bridge.encoders.text import TextEncoder      # 384-dim
-from trioron.bridge.encoders.image import ImageEncoder    # 512-dim
-from trioron.bridge.encoders.audio import AudioEncoder    # 384-dim
+from trioron.legacy.bridge.encoders.text import TextEncoder      # 384-dim
+from trioron.legacy.bridge.encoders.image import ImageEncoder    # 512-dim
+from trioron.legacy.bridge.encoders.audio import AudioEncoder    # 384-dim
 ```
 
 See [BRIDGE.md](BRIDGE.md) for the full catalogue.
@@ -591,7 +592,7 @@ Two equivalent paths.
 ### Path A — Python decorator (type-hint inference)
 
 ```python
-from trioron.bridge import ToolDispatcher
+from trioron.legacy.bridge import ToolDispatcher
 
 tools = ToolDispatcher()
 
@@ -641,9 +642,17 @@ print(tools.to_json())           # JSON string for an Anthropic API call
 
 ## 12. The Python API at a glance
 
-Everything users should import lives in `trioron.api`. The research
-scripts under `experiments/*` remain available for paper
-reproduction but are not part of the supported surface.
+Everything users should import lives in `trioron.api` (0.3.1+; earlier
+wheels shipped no `trioron.api` module — upgrade). The research scripts
+under `archive/experiments/*` remain available for paper reproduction
+but are not part of the supported surface.
+
+`trioron.api` is one import path over three learners/flows — the donor
+API below (v1 flows, implemented in `trioron.legacy.api`), the 2.0
+substrate (`construct`, `seeded`, `Envelope`, `default_dispatch_table`,
+`export_dense`), and Phasecyte (`PhasecyteNest`, `dream_distill`,
+`dreamed_predict`, `PCLLController`). §12.1 below covers the two that
+this manual's donor flow does not.
 
 ```python
 from trioron.api import (
@@ -657,7 +666,7 @@ from trioron.api import (
     evaluate,         # accuracy summary on held-out test tasks
     deploy_agent,     # wrap organism in a BridgedOrganism
 )
-from trioron.bridge import (
+from trioron.legacy.bridge import (
     Encoder, L0Adapter,
     Tool, ToolDispatcher,
     BridgedOrganism, Decision,
@@ -684,8 +693,8 @@ A full mini-app in 30 lines:
 from trioron.api import (
     TaskData, TrioronConfig, build_donor, absorb, deploy_agent,
 )
-from trioron.bridge import ToolDispatcher
-from trioron.bridge.encoders.text import TextEncoder
+from trioron.legacy.bridge import ToolDispatcher
+from trioron.legacy.bridge.encoders.text import TextEncoder
 
 tasks_a = [TaskData(name="...", X_train=..., y_train=..., X_test=..., y_test=..., classes=[0, 1])]
 tasks_b = [TaskData(name="...", X_train=..., y_train=..., X_test=..., y_test=..., classes=[2, 3])]
@@ -712,6 +721,82 @@ print(agent.act("world"))
 ```
 
 ---
+
+### 12.1 Beyond the donor API — substrate, Phasecyte, dense export
+
+**Feed contracts differ.** The donor API takes a dataset. The substrate
+learns from any gradient (a loss you choose, TD, imitation). Phasecyte
+learns from a stream, single pass, tolerant of missing labels. Neither of
+the latter is `fit(X, y)`; if you are looking for a dataset-in /
+model-out flow, stay with §4–§9.
+
+**The 2.0 substrate directly** — a growing net you train like a torch
+module (spec §2–§6; `docs/TRIORON_MANUAL.md` is the short reference):
+
+```python
+import torch
+from trioron.api import construct, seeded, Envelope, default_dispatch_table
+
+sub = construct(base=seeded(784, 10, interior_cells=32, nonlinear=True),
+                envelope=Envelope(max_parameter_bytes=200_000),
+                dispatch_table=default_dispatch_table(),
+                capacity=1024, sparsity_k=0)
+sub.compile()
+sub.prepare_training()            # REQUIRED — turns on grads and compiles
+opt = torch.optim.Adam(sub.trainable_tensors(), lr=3e-3)
+loss = torch.nn.functional.cross_entropy(sub(x), y)
+opt.zero_grad(); loss.backward()
+sub.zero_dormant_grads()          # commitment 5: dormant cells stay frozen
+opt.step()
+```
+
+Gotchas: `compile()` alone leaves `requires_grad` off (loss has no
+`grad_fn`); checkpoints must save every tensor in
+`sub.trainable_tensors()` — `branch_alpha` is trainable and silently
+dropping it lobotomises quad cells (s049 bug).
+
+**Phasecyte** — the gradient-free learner (spec §10):
+
+```python
+from trioron.api import PhasecyteNest, dream_distill, dreamed_predict
+
+nest = PhasecyteNest(sense)                # sense: X -> descriptor tensor
+nest.enroll(group=0, genesis_pool=X0)      # when domain 0 first appears
+nest.observe(0, X_batch, labels)           # single pass; no stored data
+router = nest.fit_router()                 # manifold recognition router
+groups = nest.route(X_query)
+```
+
+`dream_distill(leaf, names, ...)` trains a gradient substrate on
+pseudo-samples drawn from the leaf's own class sketches — no wake
+gradients, no stored data (chained-15: dreamed 0.540 vs phasecyte-nest
+0.474 vs monolith 0.403, n = 3).
+
+**Dense export — the serving artifact** (spec §5.4 / §6.4). The live
+substrate forward walks the arena (dormant capacity included) — that is
+the price of growth, ~10× the arithmetic. For deployment, fold the
+compiled plan to a fixed, buffers-only module:
+
+```python
+from trioron.api import export_dense, verify_export
+import torch
+
+module = export_dense(sub)                       # exact: fp32 rel. err ~1e-7
+assert verify_export(sub, module, x) < 1e-5 * float(sub(x).abs().max())
+fast = torch.jit.freeze(torch.jit.trace(module, x[:1]))
+torch.jit.save(fast, "leaf.pt")                  # dependency-free serving
+```
+
+Measured (world router/leaf, 113 live cells, 1 CPU thread, batch 1):
+arena forward ~485 µs → export ~78 µs eager / **~50 µs jit** — the same
+latency as a 27 K-param DQN MLP at 1/5 the parameters; a nest decision
+(router + leaf) ~105 µs. **The export does not learn**: no grads, no
+arena, no λ, no growth/dream. Keep the arena checkpoint (`ship`) for
+learning; after each wake/extend/dream cycle re-export (milliseconds)
+and swap. There is no export → arena path. Supported buckets:
+LINEAR / DENDRITE / TANH; receptor (PCLL) cells and
+ATTENTION / CONV / RECURRENT raise `NotImplementedError` — serve those
+with the live forward.
 
 ## 13. Trioron 2.0 — profiles, axes, topography
 

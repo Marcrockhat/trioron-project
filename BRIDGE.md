@@ -1,6 +1,6 @@
 # Trioron Bridge
 
-The bridge layer (`trioron.bridge`) wraps a multi-branch trioron
+The bridge layer (`trioron.legacy.bridge`) wraps a multi-branch trioron
 organism behind a pluggable encoder + tool dispatcher, turning it
 into a cross-modal orchestrator. The shared-L0 invariant from
 absorption (paper §3.10) generalizes to **shared encoder + shared
@@ -39,7 +39,7 @@ pip install trioron[bridge-all]     # all three
 ```
 
 Each extra is a transitive dependency on the upstream package; if you
-don't install one, the corresponding `trioron.bridge.encoders.*`
+don't install one, the corresponding `trioron.legacy.bridge.encoders.*`
 module raises a clear `ImportError` with the pip command needed.
 
 ## Registering tools
@@ -47,7 +47,7 @@ module raises a clear `ImportError` with the pip command needed.
 ### Path 1 — JSON-schema (OpenAI / Anthropic compatible)
 
 ```python
-from trioron.bridge import ToolDispatcher
+from trioron.legacy.bridge import ToolDispatcher
 
 tools = ToolDispatcher()
 
@@ -72,7 +72,7 @@ print(tools.to_openai_dicts())
 ### Path 2 — Python decorator (type-hint inference)
 
 ```python
-from trioron.bridge import ToolDispatcher
+from trioron.legacy.bridge import ToolDispatcher
 
 tools = ToolDispatcher()
 
@@ -97,10 +97,10 @@ Replace `StubEncoder` from `examples/bridge_demo.py` with the real
 text encoder once `trioron[bridge-text]` is installed:
 
 ```python
-from trioron.bridge import (
+from trioron.legacy.bridge import (
     BridgedOrganism, ToolDispatcher, L0Adapter,
 )
-from trioron.bridge.encoders.text import TextEncoder
+from trioron.legacy.bridge.encoders.text import TextEncoder
 from trioron.cli import _load_organism
 
 # 1. Frozen text encoder (sentence-transformers all-MiniLM-L6-v2 by default)
@@ -163,7 +163,7 @@ print(f"tool result: {result['tool_result']}")
 ## Example: image encoder
 
 ```python
-from trioron.bridge.encoders.image import ImageEncoder
+from trioron.legacy.bridge.encoders.image import ImageEncoder
 
 encoder = ImageEncoder(model_name="ViT-B-32", pretrained="openai")
 # encode_dim = 512
@@ -178,7 +178,7 @@ features = encoder(["img1.png", "img2.png"])       # (2, 512)
 ## Example: audio encoder
 
 ```python
-from trioron.bridge.encoders.audio import AudioEncoder
+from trioron.legacy.bridge.encoders.audio import AudioEncoder
 
 encoder = AudioEncoder(model_name="tiny")  # encode_dim = 384
 
@@ -216,13 +216,13 @@ of the paper.
 
 | module | exports |
 |---|---|
-| `trioron.bridge` | `Encoder`, `L0Adapter`, `Tool`, `ToolDispatcher`, `BridgedOrganism`, `Decision` |
-| `trioron.bridge.base` | `Encoder` Protocol, `L0Adapter` |
-| `trioron.bridge.tools` | `Tool` dataclass, `ToolDispatcher` |
-| `trioron.bridge.organism` | `BridgedOrganism`, `Decision` |
-| `trioron.bridge.encoders.text` | `TextEncoder` |
-| `trioron.bridge.encoders.image` | `ImageEncoder` |
-| `trioron.bridge.encoders.audio` | `AudioEncoder` |
+| `trioron.legacy.bridge` | `Encoder`, `L0Adapter`, `Tool`, `ToolDispatcher`, `BridgedOrganism`, `Decision` |
+| `trioron.legacy.bridge.base` | `Encoder` Protocol, `L0Adapter` |
+| `trioron.legacy.bridge.tools` | `Tool` dataclass, `ToolDispatcher` |
+| `trioron.legacy.bridge.organism` | `BridgedOrganism`, `Decision` |
+| `trioron.legacy.bridge.encoders.text` | `TextEncoder` |
+| `trioron.legacy.bridge.encoders.image` | `ImageEncoder` |
+| `trioron.legacy.bridge.encoders.audio` | `AudioEncoder` |
 
 End-to-end smoke test (no extras required):
 

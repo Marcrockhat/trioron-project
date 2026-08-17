@@ -33,6 +33,7 @@ from .legacy.api import __all__ as _legacy_all
 from .core import Envelope, construct  # noqa: F401
 from .bases import seeded, minimal, frozen, compose  # noqa: F401
 from .phenotype import default_dispatch_table  # noqa: F401
+from .lifecycle import export_dense, verify_export  # noqa: F401  (spec §5.4 dense export)
 
 # 3. Phasecyte
 from .pcll import (PhasecyteLeaf, PhasecyteNest, dream_distill,  # noqa: F401
@@ -40,7 +41,7 @@ from .pcll import (PhasecyteLeaf, PhasecyteNest, dream_distill,  # noqa: F401
 
 __all__ = list(_legacy_all) + [
     "Envelope", "construct", "seeded", "minimal", "frozen", "compose",
-    "default_dispatch_table",
+    "default_dispatch_table", "export_dense", "verify_export",
     "PhasecyteLeaf", "PhasecyteNest", "dream_distill", "dreamed_predict",
     "PCLLController",
 ]

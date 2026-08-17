@@ -31,10 +31,10 @@ pip install -e .
 pip install git+https://github.com/marcrockhat/trioron-project.git
 ```
 
-### From PyPI (when published):
+### From PyPI:
 
 ```bash
-pip install trioron
+pip install trioron            # 0.3.1+
 ```
 
 The install pulls in `torch`, `numpy`, `torchvision`. CPU-only PyTorch
@@ -162,6 +162,8 @@ above exposes only the curated production path.
 
 ## Going further
 
+- **The 2.0 substrate, Phasecyte, and the dense serving export**:
+  [MANUAL.md §12.1](MANUAL.md#121-beyond-the-donor-api--substrate-phasecyte-dense-export)
 - **Building your own trioron network**: [MANUAL.md](MANUAL.md) —
   custom datasets, knob tuning, extending a deployed organism,
   agentic deployment with REPL + HTTP.
