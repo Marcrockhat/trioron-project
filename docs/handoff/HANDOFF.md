@@ -2,7 +2,7 @@
 
 **Session date:** 2026-08-17
 **Session number:** 050
-**Session title:** **Accessibility session — Rocky's problem: pip users can't
+**Session title (updated at close):** **Accessibility session — Rocky's problem: pip users can't
 write skill masters. Answer built: the ZERO-MASTER vocabulary (one TD leaf
 per declared drive, reward = own drive delta) reaches 112±23 survival vs
 master-built 148.5±12.9 (n=3, zero policy code, 3× DQN); band-masked
@@ -10,8 +10,10 @@ arbitration from four user-declared thresholds lifts it to 128±27 (paired
 +16.2±4.0, seed 2 BEATS its master nest); structural dreaming on top is
 flat (+3.6±3.9). Also: `trioron/api.py` public surface created (spec §9.1
 row, previously never written), `trioron.pcll` was MISSING from the 0.3.0
-wheel (fixed, v0.3.1 built, NOT yet published), README rewritten around
-"three ways in, each fed differently".**
+wheel (fixed), **v0.3.1 PUBLISHED to PyPI and verified**, README/MANUAL/
+QUICKSTART/BRIDGE/TRIORON_MANUAL updated, and **DEPLOYMENT SPEED REALIZED:
+new `lifecycle/export.py` dense export — arena forward 485 µs → 50 µs
+jit (= a 27 K-param DQN MLP at 1/5 the params), exact 2e-7.**
 
 ---
 
@@ -27,10 +29,10 @@ wheel (fixed, v0.3.1 built, NOT yet published), README rewritten around
 2. **All numbers n=3 seeds 0–2, 40-map protocol, tamed physics; baseline =
    s049 master-built TD nest per seed 163.2/143.2/139.2 (deterministic —
    reused, not rerun).**
-3. **v0.3.1 is built but NOT published to PyPI** (outward-facing; Rocky
-   hadn't said go at session end). PyPI 0.3.0 has no `trioron.pcll` and no
-   `trioron.api` — the README quick-start on PyPI is broken until 0.3.1
-   ships. `python3 -m build --wheel` then `twine upload dist/*`.
+3. **v0.3.1 IS PUBLISHED** (https://pypi.org/project/trioron/0.3.1/,
+   Rocky's call; clean `pip install trioron==0.3.1` import-verified).
+   PyPI 0.3.0 was broken for pip users (no `trioron.pcll`, no
+   `trioron.api`).
 4. s049 NEXT items (in-world dream gap, hybrid arbitration, accuracy-vs-
    samples curve, cap-43 pathology, router Σ diet, s048 gaming items) are
    untouched and still stand.
@@ -100,6 +102,37 @@ Scripts (all `archive/experiments/world/`, thin drivers over
      numbers; v2 layout tree; test section → `pytest tests`; Status
      lines. Disclosure paragraph untouched (still says Opus 4.7).
 
+6. **DENSE EXPORT — deployment speed realized (`d9e15dc`).** Rocky asked
+   "how fast is our trioron's response vs DQN?" Measured (1 CPU thread,
+   batch 1, world router/leaf 77→32 quad→6, 113 live cells / 2048
+   capacity): live arena forward **485 µs** vs DQN QNet (27 K params)
+   **48 µs eager / 30 jit** — 10× slower, but that is arena overhead
+   (activation buffer over dormant capacity + per-edge gather/scatter),
+   not arithmetic (5.5 K live params). Built
+   **`trioron/lifecycle/export.py`**: `export_dense(sub)` folds the
+   compiled plan bucket-by-bucket into a buffers-only `DenseExport`
+   module (per-chunk matmuls over upstream activation blocks, K=1
+   stages as 2-D matmul, α folded when 1.0, quad `z+z²` where K≥2,
+   tanh) — **exact 2e-7**, jit-traceable: **eager 78 µs / jit 50 µs;
+   nest tick (router+leaf) 105 µs.** LINEAR/DENDRITE/TANH only;
+   receptor + ATTENTION/CONV/RECURRENT raise NotImplementedError.
+   **Does NOT learn** (no grads/arena/λ) — Rocky asked; answer: learning
+   stays in the arena checkpoint, re-export after each cycle, no
+   export→arena path by design (drops lineage/epigenome/λ/capacity).
+   Exported from `trioron.api` and `trioron.lifecycle`;
+   `verify_export(sub, module, x)`. Spec rows added: §5.4 Export
+   paragraph, §6.4 measured latency table, §9.6 row, §9.14 index,
+   §9.11 test list. Tests `tests/test_v2/test_export.py` (6, incl.
+   two-layer, tanh, trained+jit, receptor refusal). Full suite 143 pass
+   + the 4 known.
+7. **Docs pass for 0.3.1:** MANUAL.md new §12.1 (substrate / Phasecyte /
+   dense export, feed contracts, gotchas); README deploy note; QUICKSTART
+   install + pointer; docs/TRIORON_MANUAL.md §6 bullet; **`trioron.bridge`
+   → `trioron.legacy.bridge` in MANUAL/BRIDGE** (the bridge lives only
+   under legacy; `from trioron.bridge import ToolDispatcher` was broken —
+   only docs referenced it). Disclosure paragraph still says Opus 4.7
+   (untouched, Rocky's call).
+
 ## GOTCHAS
 
 - 6 background processes at OMP_NUM_THREADS=2 on 12 CPUs ran fine (~40
@@ -110,8 +143,8 @@ Scripts (all `archive/experiments/world/`, thin drivers over
 
 ## NEXT (priority)
 
-0. **Publish 0.3.1** if Rocky says go (`twine upload dist/*`); until then
-   PyPI users hit a broken quick-start.
+0. ~~Publish 0.3.1~~ DONE. Merge `conscience-core` → `main` + push (done
+   at close if this line is struck through below).
 1. **Arm 3 — integrity on threat-distance delta** (reward = Δ predator
    Chebyshev distance, not damage) + band mask; the last identified wall.
    If it lands, drive-only ≈ master-built and the contract is settled.
@@ -134,12 +167,15 @@ Scripts (all `archive/experiments/world/`, thin drivers over
 
 ## State of the build / Pointers
 
-- **Commits (branch `conscience-core`, NOT yet merged to main this
-  session):** `fe9f75a` (drive vocab), `8e50baa` (api.py + packaging +
-  README + arm scripts), `797918d` (arm logs), + this handoff.
+- **Commits (branch `conscience-core`):** `fe9f75a` (drive vocab),
+  `8e50baa` (api.py + packaging + README + arm scripts), `797918d` (arm
+  logs), `21e34db` (handoff v1), `d9e15dc` (dense export + spec + docs),
+  + this handoff; merged to `main` and pushed at close.
 - Checkpoints (untracked, `runs/`): `runs/drive_vocab/`,
   `runs/drive_dream/`, `runs/drive_band/`.
-- `dist/trioron-0.3.1-py3-none-any.whl` built, unpublished.
+- `dist/trioron-0.3.1-py3-none-any.whl` + sdist = what is on PyPI.
+- Export latency bench was a scratch script (in this handoff's numbers);
+  a committed `bench/bench_export_latency.py` is a cheap follow-up.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 
