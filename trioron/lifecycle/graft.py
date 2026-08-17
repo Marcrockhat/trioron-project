@@ -27,6 +27,7 @@ def graft(
     *,
     freeze: bool = True,
     wiring: str = "dense",
+    merge_output: bool = False,
 ) -> GraftResult:
     """Transplant donor cells into recipient arena.
 
@@ -34,6 +35,13 @@ def graft(
     from perception are rewired to the recipient's perception cells
     (matched by rank-order position). This avoids doubling the input
     dimension.
+
+    Per-cell state carried across: bias, λ (node_lambda), engagement,
+    position, epigenome/phenotype, rank, age, output_dim, k_unroll,
+    division_mode, and the dendritic compartment state (n_branches,
+    branch_alpha, per-edge edge_branch) — a quad-dendrite donor stays a
+    quad-dendrite after the graft (spec §3.6; without this the transplant
+    silently linearises the donor).
 
     Args:
         recipient: target substrate that receives the graft.
@@ -44,6 +52,16 @@ def graft(
             ``"dense"`` — every recipient output-rank cell gets edges from
                           every donor interior cell.
             ``"sparse"`` — random subset bounded by fan-in cap.
+            ``"none"`` — no new cross-edges (pure transplant; use with
+                          ``merge_output`` for absorption).
+        merge_output: head-merged absorption (the v2 analog of v1.1
+            pool-matched absorb, spec §5.3). Donor OUTPUT cells are NOT
+            copied; donor edges into donor output cell *j* are rewired onto
+            the recipient's output cell *j* (rank-order match, weights kept)
+            and the donor output bias is added to the recipient's. Requires
+            equal output widths. Result: ``merged(x) == recipient(x) +
+            donor(x)`` exactly (Q-heads sum) — donor and recipient must
+            share input AND output spaces.
 
     Returns:
         GraftResult with mapping from donor to recipient cell ids.
@@ -54,11 +72,14 @@ def graft(
     d_alive = d_arena.alive_ids()
 
     d_perc_ids = set()
+    d_out_ids: list[int] = []
     d_non_perc = []
     for d_id in d_alive.tolist():
         epi = int(d_arena.epigenome[d_id].item())
         if has_gene(epi, PERCEPTION):
             d_perc_ids.add(d_id)
+        elif merge_output and has_gene(epi, OUTPUT):
+            d_out_ids.append(d_id)
         else:
             d_non_perc.append(d_id)
 
@@ -73,6 +94,20 @@ def graft(
     for i, d_pid in enumerate(d_perc_sorted):
         if i < len(r_perc_ids):
             perc_remap[d_pid] = r_perc_ids[i]
+
+    out_remap: dict[int, int] = {}
+    if merge_output:
+        r_out_mask = r_arena.alive & has_gene(r_arena.epigenome, OUTPUT).bool()
+        r_out_sorted = r_out_mask.nonzero(as_tuple=False).squeeze(-1).tolist()
+        d_out_sorted = sorted(d_out_ids)
+        if len(d_out_sorted) != len(r_out_sorted):
+            raise ValueError(
+                f"graft(merge_output=True): output widths differ "
+                f"(donor {len(d_out_sorted)}, recipient {len(r_out_sorted)})")
+        out_remap = dict(zip(d_out_sorted, r_out_sorted))
+        with torch.no_grad():
+            for d_oid, r_oid in out_remap.items():
+                r_arena.bias[r_oid] += d_arena.bias[d_oid].detach()
 
     new_ids = r_arena.alloc(len(d_non_perc))
     id_map: dict[int, int] = {}
@@ -97,6 +132,13 @@ def graft(
             r_arena.age[r_id] = d_arena.age[d_id].clone()
             r_arena.output_dim[r_id] = d_arena.output_dim[d_id].clone()
             r_arena.forward_inclusion[r_id] = True
+            # λ + recurrent/division + dendritic compartments (spec §3.6)
+            r_arena.node_lambda[r_id] = d_arena.node_lambda[d_id].clone()
+            r_arena.k_unroll[r_id] = d_arena.k_unroll[d_id].clone()
+            r_arena.division_mode[r_id] = d_arena.division_mode[d_id].clone()
+            r_arena.n_branches[r_id] = d_arena.n_branches[d_id].clone()
+            nb = min(r_arena.branch_cap, d_arena.branch_cap)
+            r_arena.branch_alpha[r_id, :nb] = d_arena.branch_alpha[d_id, :nb].detach()
 
             if freeze:
                 r_arena.state[r_id] = CellState.DORMANT
@@ -106,15 +148,17 @@ def graft(
             r_arena.lineage_root[r_id] = r_id
             r_arena.parent[r_id] = -1
 
-    full_remap = {**perc_remap, **id_map}
+    full_remap = {**perc_remap, **out_remap, **id_map}
 
     d_src = d_arena.edge_src[:d_arena.edge_cursor]
     d_dst = d_arena.edge_dst[:d_arena.edge_cursor]
     d_wt = d_arena.edge_weight[:d_arena.edge_cursor]
+    d_br = d_arena.edge_branch[:d_arena.edge_cursor]
 
     intra_src = []
     intra_dst = []
     intra_wt = []
+    intra_br = []
 
     for ei in range(d_arena.edge_cursor):
         s = int(d_src[ei].item())
@@ -123,13 +167,17 @@ def graft(
             intra_src.append(full_remap[s])
             intra_dst.append(full_remap[d])
             intra_wt.append(d_wt[ei].item())
+            intra_br.append(int(d_br[ei].item()))
 
     if intra_src:
+        e0 = r_arena.edge_cursor
         r_arena.add_edges(
             torch.tensor(intra_src, dtype=torch.int32, device=r_arena.device),
             torch.tensor(intra_dst, dtype=torch.int32, device=r_arena.device),
             torch.tensor(intra_wt, device=r_arena.device),
         )
+        r_arena.edge_branch[e0:e0 + len(intra_br)] = torch.tensor(
+            intra_br, dtype=torch.int8, device=r_arena.device)
 
     n_cross = 0
     if wiring == "dense":

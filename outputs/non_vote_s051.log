@@ -1,0 +1,3 @@
+NEST-OF-NESTS vs ABSORB (s051) arm=vote rseed=0 td=300
+        majority vote x3: survival 179.0  cold-deaths  4/40  fire-occupancy 21.6%  [integrity:20, thirst:6, timeout:5, cold:4, energy:3, overheat:2]
+[vote] 179.0  tick=36482us  causes={'energy': 3, 'thirst': 6, 'integrity': 20, 'cold': 4, 'overheat': 2, 'timeout': 5}  elapsed=228s

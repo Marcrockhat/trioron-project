@@ -1,0 +1,5 @@
+NEST-OF-NESTS vs ABSORB (s051) arm=nest rseed=0 td=300
+[1/2] outer router TD  t=5s
+[2/2] eval  t=3806s
+           nest of nests: survival 172.3  cold-deaths 11/40  fire-occupancy 20.1%  [cold:11, integrity:10, thirst:7, energy:5, timeout:4, overheat:3]
+[nest rseed 0] 172.3  best-single 159.0  outer_route_hist={0: 2194, 1: 2389, 2: 2311}  params=44039  tick=2642us  causes={'energy': 5, 'cold': 11, 'thirst': 7, 'integrity': 10, 'timeout': 4, 'overheat': 3}  elapsed=3845s

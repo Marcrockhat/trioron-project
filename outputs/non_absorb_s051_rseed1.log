@@ -1,0 +1,7 @@
+NEST-OF-NESTS vs ABSORB (s051) arm=absorb rseed=1 td=300
+[1/3] absorb (head-merged graft x2 per drive)  t=0s
+  fat leaves: cells=[179, 179, 179, 179]  params=[8147, 8147, 8147, 8147]
+[2/3] band router TD over fat leaves  t=9s
+[3/3] eval  t=3835s
+                  absorb: survival 206.1  cold-deaths  2/40  fire-occupancy 21.8%  [integrity:12, timeout:11, thirst:6, overheat:5, energy:4, cold:2]
+[absorb rseed 1] 206.1  best-single 159.0  route_hist={'DRIVE_TEMPERATURE': 3777, 'DRIVE_THIRST': 2209, 'DRIVE_ENERGY': 1645, 'DRIVE_INTEGRITY': 612}  params=35293  tick=2212us  causes={'timeout': 11, 'energy': 4, 'integrity': 12, 'thirst': 6, 'cold': 2, 'overheat': 5}  elapsed=3863s

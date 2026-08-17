@@ -1855,6 +1855,27 @@ where $g_b$ is the per-branch gate from the donor's manifold
 log-likelihood (Section 4.5). This is unchanged from v1.1 and
 imported into v2.0 via `lifecycle/graft.py:compose_heads`.
 
+**Head-merged absorption (same input AND output space).** When donor
+and recipient are siblings — the same task grown from different seeds,
+or the same drive leaf of two organisms — they share the perception
+width and the output width, and the cleanest composition is not a
+routed pair of heads but ONE substrate whose head sums both:
+`graft(recipient, donor, merge_output=True, wiring="none")`. Donor
+OUTPUT cells are not copied; every donor edge into donor output cell
+*j* is rewired onto recipient output cell *j* (rank-order match,
+weights kept) and the donor output bias is added to the recipient's.
+The transplant carries the full per-cell state (bias, λ, k_unroll,
+division mode, and the dendritic compartments `n_branches` /
+`branch_alpha` / per-edge `edge_branch` — a quad-dendrite donor stays
+quad after the graft), so the merged forward is exactly
+$\text{merged}(x) = \text{recipient}(x) + \text{donor}(x)$ (measured
+6e-6 fp32 on 32-cell quad leaves) with no new random edges. This is
+the v2 analog of v1.1's `pool_matched_absorb` at cell granularity;
+absorbing $k$ siblings gives a $k$-fold Q-head sum that Protocol B
+then settles as one substrate. Output-width mismatch raises.
+Measured (s051, world drive nests, three seed-different organisms):
+see `archive/experiments/world/world_nest_of_nests.py`.
+
 ### 5.4 The Ship-Wake-Extend Loop
 
 Deployment in v2.0 is not a one-shot training run. The substrate is
@@ -3329,7 +3350,7 @@ trioron/
 | `__init__.py` | Top-level lifecycle hooks | 5 |
 | `grow.py` | Cellular division, growth trigger conjunction, wiring policies | 5.1 |
 | `evolve.py` | Sister mutation rules (opt-in), gene flip probabilities | 5.2.2 |
-| `graft.py` | Multi-substrate composition, four wiring policies (default `manifold_routed`) | 5.3 |
+| `graft.py` | Multi-substrate composition, four wiring policies (default `manifold_routed`); `merge_output` head-merged absorption | 5.3 |
 | `ship.py` | Substrate serialization, optional consolidation-dream pass | 5.4 |
 | `wake.py` | Substrate deserialization, wake_for_training | 5.4 |
 | `extend.py` | Envelope lifting, growth on top of frozen foundation | 5.4 |
