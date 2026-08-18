@@ -2,7 +2,7 @@
 
 **Session date:** 2026-08-18
 **Session number:** 051
-**Session title:** **Nest-of-nests vs absorption — combining three seed-different
+**Session title:** **(A) Nest-of-nests vs absorption + (B) the eye / frequency-primitive arc.** (A): Nest-of-nests vs absorption — combining three seed-different
 drive organisms into one. Answer: BOTH beat every single organism and the
 master-built nest; ABSORB (head-merged graft, exact Q-sum of sibling
 leaves, leaves untouched, band router retrained) 190.6±22.3 ≥ nest-of-nests
@@ -12,6 +12,95 @@ the fat leaves DESTROYS it (98.2±9.6). Package: `lifecycle/graft.py` gained
 `merge_output=True` (v2 analog of v1.1 pool-matched absorb) and now carries
 dendrite state — the shipped graft silently LINEARISED quad-dendrite donors
 (n_branches/branch_alpha/edge_branch were never copied).**
+
+---
+
+## PART B (later in s051): the EYE + the frequency-primitive arc (Rocky AFK at close)
+
+Rocky's chain: "phasecyte first then triorons" → "retina-pooled
+phasecyte, human eyes as inspiration" (approved design
+`docs/design/retina_phasecyte.md`: continual 20-task, 5 fixations,
+opponent colour, fovea 8×8, bar = pure-trioron v2b 0.309/0.606) → "no
+convolution in nature; multiplex linears" (§1.1 of the design) → "are we
+chasing the wrong primitives? flies see motion, humans match templates"
+→ "form = a wave frequency, coordinate-free" → "frequency matching is
+fast (speech); we need to know where it starts/ends" → "add simple-shape
+classifiers (circle/triangle/square/polkadots/stripes) as primitives —
+built with OUR APIs, not hand-coded (generator hand-coded = benchmark
+data is fine)" → "how does Shazam find a fragment?" (constellation of
+relative landmark pairs). Every step got a probe. Commit `920559f`.
+
+**Built:** `trioron/pcll/eye.py` (`Eye`, `fixations`, `retina_layout`;
+tests `tests/test_v2/test_eye.py`), spec §10.11 + §9 row;
+`experiments/progenitor/cifar_eye_nest.py` (A0 null / A1 1-fixation /
+A2-A3 5-fixation absorb+nest, Phasecyte leaves P+M per fixation → sketch-
+dreamed trioron leaf per fixation, band = 20 superclasses); probes
+`experiments/progenitor/diag_eye{,2,3,4,5,6}.py`, logs
+`outputs/primitive_probe{,2,3,4}_s051.log`, `outputs/cifar_eye_nest_s051_*`.
+
+**Probe protocol (all rows below):** CIFAR-100 first 5 superclasses = 25
+fine classes, supervised trioron leaf `Seeded(d, 100, 48, nonlinear)`,
+8 epochs Adam, standardized inputs; full = 100-way argmax over the 25
+present, task = 5-way superclass-restricted; chance 0.04 / 0.20; "blur"
+= eval on 2×avg-pool→bilinear-up test images. Single seed. n=1 — a
+ranking, not σ.
+
+| front end (fixed, no learning unless stated) | d | full | task | blur full |
+|---|---|---|---|---|
+| eye DoG, centre fixation, signed | 412 | 0.202 | 0.383 | 0.202 |
+| fly: DoG + ±1px saccade differences | 1236 | 0.176 | 0.366 | 0.203 |
+| wave: log-polar power spectra (abs) | 160 | 0.253 | 0.472 | 0.084 |
+| collapse: structure fn D(s) | 96 | 0.128 | 0.347 | 0.095 |
+| (a) global cepstrum | 100 | 0.258 | 0.466 | 0.104 |
+| **(b) cepstral spectrogram, 25 windows, positions kept** | 800 | **0.304** | **0.494** | 0.119 |
+| (c) cepstra pooled over positions | 64 | 0.154 | 0.384 | 0.045 |
+| (d) onset (max-energy) window only + where | 34 | 0.115 | 0.324 | 0.065 |
+| (f) eye DoG + (b) | 1212 | 0.313 | 0.498 | 0.153 |
+| (g) primitive vocabulary ×25 windows (detector 0.72 synth) | 150 | 0.144 | 0.342 | 0.084 |
+| (h) (g) + (b) | 950 | 0.293 | 0.475 | 0.141 |
+| (i) (b) trained WITH blur augmentation | 800 | 0.264 | 0.456 | **0.254** |
+| (k) constellation: landmark PAIRS relative only | 1024 | 0.174 | 0.372 | 0.148 |
+| (l) same landmarks, absolute 4×4 position | 128 | 0.170 | 0.381 | 0.159 |
+| (m) (k) + (b) | 1824 | 0.304 | 0.471 | 0.131 |
+| raw pixels (control; 6× the params) | 3072 | 0.356 | 0.533 | 0.359 |
+
+**Readings.** (1) Frequency-SHAPE (cepstra) is the most information-dense
+fixed primitive: 100 numbers ≥ 412 DoG numbers; the windowed spectrogram
+WITH positions is the best fixed front end (0.304, within 5 pp of raw
+pixels at ¼ width). (2) "Where it starts/ends" = keep windows + positions
+(pooling halves it; a single onset window is worse). (3) Fly/saccade
+differences, the shape vocabulary (detector caps 0.72 on clean 16×16
+shapes — resolution), and the Shazam constellation are NULLS on this
+probe (constellation: relative == absolute at 8× fewer dims — the
+coordinate-free property holds but landmarks are weak at 32×32).
+(4) Blur robustness of the frequency features is not free (0.30→0.12)
+but is trainable by blur augmentation (0.25 blur / 0.26 sharp) —
+"accommodation". The DoG eye is natively blur-robust. (5) Everything
+here is a linear/quad readout on fixed features; the leaf is 25–90 K
+params.
+
+**Eye + Phasecyte arms (20 superclasses, 100 classes, seed 0):**
+A1 (1 fixation, Phasecyte P+M → sketch-dreamed trioron): **full 0.048 /
+task 0.297** still-eyed (0.043 with microsaccades); Phasecyte alone
+0.028; chance 0.01/0.20. A0 (flat null) and A2/A3 (5 fixations) were
+still running at close (A2 crawling in composer-spawn: 10 leaves × 1314
+spawned cells at task ~12; hours). Whatever they land at, G3 (0.309/
+0.606) is not reachable from 0.048/fixation. **Phasecyte-first on CIFAR
+is the wrong order**: the template stage's internal classes are so mixed
+(no internal class ≥34% one real class) that sketch dreaming keeps ~half
+of what the same real pockets support (0.09 vs 0.20 supervised);
+microsaccades abolish class discovery outright (templates need a still
+eye — verified: jitter 1 → 1 class, jitter 0 → 20 classes by task 2).
+Fixes shipped in the bench: signed DoG (ON/OFF zeros were masked as
+silence, spec §10.3), sketch-derived standardizer (pockets sit at
+0.5±0.07), composition-weighted pseudo sampling (purity³), still eye.
+
+**NEXT (Rocky's call):** the promising line is `(b)`-style windowed
+cepstra (± the eye's DoG) as the *sense* of a gradient trioron leaf /
+nest — Phasecyte later or not at all for CIFAR; test at 100 classes with
+the 5-fixation absorb+nest level-2 (s051 part A) and blur augmentation;
+param-match vs raw pixels; then the continual 20-task version. Kill or
+let finish `cifar_eye_nest` A0/A2 (`pgrep -f cifar_eye_nest`).
 
 ---
 
