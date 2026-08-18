@@ -1,266 +1,247 @@
 # Trioron Handoff
 
-**Session date:** 2026-08-18
-**Session number:** 051
-**Session title:** **(A) Nest-of-nests vs absorption + (B) the eye / frequency-primitive arc.** (A): Nest-of-nests vs absorption — combining three seed-different
-drive organisms into one. Answer: BOTH beat every single organism and the
-master-built nest; ABSORB (head-merged graft, exact Q-sum of sibling
-leaves, leaves untouched, band router retrained) 190.6±22.3 ≥ nest-of-nests
-180.0±7.6 ≥ zero-training majority vote 179.0 ≫ best single 159.0 (s050
-band nests 128.2±26.7; s049 master nest 148.5). Post-absorb TD "settle" of
-the fat leaves DESTROYS it (98.2±9.6). Package: `lifecycle/graft.py` gained
-`merge_output=True` (v2 analog of v1.1 pool-matched absorb) and now carries
-dendrite state — the shipped graft silently LINEARISED quad-dendrite donors
-(n_branches/branch_alpha/edge_branch were never copied).**
-
----
-
-## PART B (later in s051): the EYE + the frequency-primitive arc (Rocky AFK at close)
-
-Rocky's chain: "phasecyte first then triorons" → "retina-pooled
-phasecyte, human eyes as inspiration" (approved design
-`docs/design/retina_phasecyte.md`: continual 20-task, 5 fixations,
-opponent colour, fovea 8×8, bar = pure-trioron v2b 0.309/0.606) → "no
-convolution in nature; multiplex linears" (§1.1 of the design) → "are we
-chasing the wrong primitives? flies see motion, humans match templates"
-→ "form = a wave frequency, coordinate-free" → "frequency matching is
-fast (speech); we need to know where it starts/ends" → "add simple-shape
-classifiers (circle/triangle/square/polkadots/stripes) as primitives —
-built with OUR APIs, not hand-coded (generator hand-coded = benchmark
-data is fine)" → "how does Shazam find a fragment?" (constellation of
-relative landmark pairs). Every step got a probe. Commit `920559f`.
-
-**Built:** `trioron/pcll/eye.py` (`Eye`, `fixations`, `retina_layout`;
-tests `tests/test_v2/test_eye.py`), spec §10.11 + §9 row;
-`experiments/progenitor/cifar_eye_nest.py` (A0 null / A1 1-fixation /
-A2-A3 5-fixation absorb+nest, Phasecyte leaves P+M per fixation → sketch-
-dreamed trioron leaf per fixation, band = 20 superclasses); probes
-`experiments/progenitor/diag_eye{,2,3,4,5,6}.py`, logs
-`outputs/primitive_probe{,2,3,4}_s051.log`, `outputs/cifar_eye_nest_s051_*`.
-
-**Probe protocol (all rows below):** CIFAR-100 first 5 superclasses = 25
-fine classes, supervised trioron leaf `Seeded(d, 100, 48, nonlinear)`,
-8 epochs Adam, standardized inputs; full = 100-way argmax over the 25
-present, task = 5-way superclass-restricted; chance 0.04 / 0.20; "blur"
-= eval on 2×avg-pool→bilinear-up test images. Single seed. n=1 — a
-ranking, not σ.
-
-| front end (fixed, no learning unless stated) | d | full | task | blur full |
-|---|---|---|---|---|
-| eye DoG, centre fixation, signed | 412 | 0.202 | 0.383 | 0.202 |
-| fly: DoG + ±1px saccade differences | 1236 | 0.176 | 0.366 | 0.203 |
-| wave: log-polar power spectra (abs) | 160 | 0.253 | 0.472 | 0.084 |
-| collapse: structure fn D(s) | 96 | 0.128 | 0.347 | 0.095 |
-| (a) global cepstrum | 100 | 0.258 | 0.466 | 0.104 |
-| **(b) cepstral spectrogram, 25 windows, positions kept** | 800 | **0.304** | **0.494** | 0.119 |
-| (c) cepstra pooled over positions | 64 | 0.154 | 0.384 | 0.045 |
-| (d) onset (max-energy) window only + where | 34 | 0.115 | 0.324 | 0.065 |
-| (f) eye DoG + (b) | 1212 | 0.313 | 0.498 | 0.153 |
-| (g) primitive vocabulary ×25 windows (detector 0.72 synth) | 150 | 0.144 | 0.342 | 0.084 |
-| (h) (g) + (b) | 950 | 0.293 | 0.475 | 0.141 |
-| (i) (b) trained WITH blur augmentation | 800 | 0.264 | 0.456 | **0.254** |
-| (k) constellation: landmark PAIRS relative only | 1024 | 0.174 | 0.372 | 0.148 |
-| (l) same landmarks, absolute 4×4 position | 128 | 0.170 | 0.381 | 0.159 |
-| (m) (k) + (b) | 1824 | 0.304 | 0.471 | 0.131 |
-| raw pixels (control; 6× the params) | 3072 | 0.356 | 0.533 | 0.359 |
-
-**Readings.** (1) Frequency-SHAPE (cepstra) is the most information-dense
-fixed primitive: 100 numbers ≥ 412 DoG numbers; the windowed spectrogram
-WITH positions is the best fixed front end (0.304, within 5 pp of raw
-pixels at ¼ width). (2) "Where it starts/ends" = keep windows + positions
-(pooling halves it; a single onset window is worse). (3) Fly/saccade
-differences, the shape vocabulary (detector caps 0.72 on clean 16×16
-shapes — resolution), and the Shazam constellation are NULLS on this
-probe (constellation: relative == absolute at 8× fewer dims — the
-coordinate-free property holds but landmarks are weak at 32×32).
-(4) Blur robustness of the frequency features is not free (0.30→0.12)
-but is trainable by blur augmentation (0.25 blur / 0.26 sharp) —
-"accommodation". The DoG eye is natively blur-robust. (5) Everything
-here is a linear/quad readout on fixed features; the leaf is 25–90 K
-params.
-
-**Eye + Phasecyte arms (20 superclasses, 100 classes, seed 0):**
-A0 (flat luminance null, redundancy retina, 871 receptors): **full 0.028
-/ task 0.260**. A1 (1 fixation, Phasecyte P+M → sketch-dreamed trioron):
-**full 0.048 / task 0.297** still-eyed (0.043 with microsaccades);
-Phasecyte alone 0.028; chance 0.01/0.20. **G1 (eye > null) holds
-directionally (+2.0 full / +3.7 task, n=1) but both sit at the floor.**
-A2/A3 (5 fixations) died/stalled in the composer-spawn phase after task
-5 (log `..._fix5_seed0_killed_task6.log`; 10 Phasecyte leaves is
-impractically slow) — not rerun: G3 (0.309/0.606) is not reachable from
-0.048/fixation, so its outcome cannot change the conclusion. **Phasecyte-first on CIFAR
-is the wrong order**: the template stage's internal classes are so mixed
-(no internal class ≥34% one real class) that sketch dreaming keeps ~half
-of what the same real pockets support (0.09 vs 0.20 supervised);
-microsaccades abolish class discovery outright (templates need a still
-eye — verified: jitter 1 → 1 class, jitter 0 → 20 classes by task 2).
-Fixes shipped in the bench: signed DoG (ON/OFF zeros were masked as
-silence, spec §10.3), sketch-derived standardizer (pockets sit at
-0.5±0.07), composition-weighted pseudo sampling (purity³), still eye.
-
-**NEXT (Rocky's call):** the promising line is `(b)`-style windowed
-cepstra (± the eye's DoG) as the *sense* of a gradient trioron leaf /
-nest — Phasecyte later or not at all for CIFAR; test at 100 classes with
-the 5-fixation absorb+nest level-2 (s051 part A) and blur augmentation;
-param-match vs raw pixels; then the continual 20-task version. No
-background runs left at close.
+**Session date:** 2026-08-19 (started 2026-08-18)
+**Session number:** 052
+**Session title:** **The wave-stream arc: Shazam (null) → tokenizer (null) →
+stereo (sync is the lever) → dense 2-D ⊕ stereo = new best fixed front end
+(0.345 @ 800-d, raw-pixel parity at 30 % width) → what the unsupervised
+layer-1 clusters are (texture-style bands, not class, not geometry) → style-
+band nest loses to a single leaf (data starvation). Design doc for the next
+arc: tokenize→frame→read → canonical-frame primitives (light / scale /
+orientation / number) + recogniser trained in canonical frame, off-canonical
+test sets. Rocky's frame for the project, restated at close: not chasing
+CNNs — asking how nested simple linear elements (genotypic filter bank +
+position-specific readouts + routing) get to what convolution gets, and
+whether that route composes (crops / zoom / inversion / count) where
+monoliths don't. "What we lack is data, not architecture."**
 
 ---
 
 ## READ THIS FIRST
 
-1. **Rocky's question:** "we have different triorons from different seeds.
-   As an organism it should be able to absorb. Is a nest of nests
-   comparable to absorb?" Scoped by Rocky: world drive nests (s050 band-
-   masked, seeds 0/1/2), same task (committee), absorb = the existing
-   pool-matched absorb primitive.
-2. **v1 `api.absorb`/`pool_matched_absorb` cannot consume v2 substrates**
-   (they take v1 `TrioronNetwork`). The v2 counterpart is
-   `lifecycle/graft.py`; as shipped it (a) copied donor OUTPUT cells (→
-   12-wide head for two 6-action leaves) and (b) dropped n_branches /
-   branch_alpha / edge_branch / λ / k_unroll (→ quad donor becomes
-   linear). Both fixed this session (Rocky approved "head-merged v2 graft
-   into the package"): `graft(rec, donor, merge_output=True,
-   wiring="none", freeze=False)` → `merged(x) == rec(x) + donor(x)` (fp32
-   6e-6 measured on real drive leaves and routers). Spec §5.3 paragraph +
-   §9.6 row added; `tests/test_v2/test_graft.py` (4 tests, new — there
-   were NO graft tests before).
-3. **All numbers: fixed 40-map eval (`fire_taming.evaluate`, maps
-   ep*7000+7), tamed physics.** Only three organisms exist, so combination
-   is n=1 on organisms; **n=3 is on the ROUTER seed** (rseed 0/1/2 → seed
-   line 700+) for the learned arms. Single-organism numbers reproduced
-   bit-exact from s050 (112.6/113.0/159.0).
+1. **Everything this session is the s051 probe protocol** (`experiments/
+   progenitor/diag_eye4.py` head: CIFAR-100 first 5 superclasses = 25 fine
+   classes, 12.5 K train / 2.5 K test, supervised leaf `Seeded(d,100,48,
+   nonlinear)`, 8 epochs, standardized; "full" = 100-way argmax over the
+   25 present (chance 0.04), "task" = 5-way superclass-restricted (chance
+   0.20), "blur" = 2×avg-pool→bilinear-up test set). **Single seed, n=1 —
+   a ranking, not σ.** No nest, no Phasecyte, no absorb ran this session
+   except the style-band nest probe (§ below).
+2. **Design doc for the next arc:** `docs/design/canonical_frame_primitives.md`
+   (DRAFT for Rocky's sign-off; §8 lists his open decisions). Read it
+   before building anything. Build order §7: `frames.py` generators →
+   `diag_number.py` (P_N) → frame primitives L/S/O → arms A/B/B′/C →
+   100 classes → continual (arm D, G5).
+3. **R's front end going forward:** dense 8-px/stride-2 2-D log-polar
+   cepstra (4 radial × 8 orient − gain = 24/patch, 13×13 patches) region-
+   pooled to 5×5 (600) ⊕ synchronised stereo (L = horizontal 1-D spectrum
+   of the patch, R = vertical, 4+4 bins, pooled 5×5 = 200) = **800-d,
+   0.345 / 0.529**; + disparity L−R (900-d) 0.355 = raw pixels 0.356 at
+   ¼–⅓ the width. Blur 0.10 (raw 0.36) — accommodation, trainable per
+   s051 (i). Code: `diag_stereo.py` (`dense_pooled`, `sync_pooled`,
+   `sync_pooled_disp`).
+4. **Phase-1 cap reminder:** 50 K params per substrate ⇒ ≤ ~800–1000
+   input dims for a hidden-48 leaf. Everything wider is another leaf in a
+   nest, not a fatter leaf. Rows marked "(OVER CAP)" in the logs are
+   references only.
 
-## WHAT RAN (all committed `354b9a0`; logs `outputs/non_*_s051*.log`)
+## WHAT RAN (all committed on `conscience-core`; logs in `outputs/*_s052*.log`)
 
-Script: `archive/experiments/world/world_nest_of_nests.py --arm
-{single,vote,nest,absorb,absorb_settle} --rseed N`.
+### A. Proper Shazam probe (`diag_eye7.py`, `diag_eye7b.py`) — NULL for categories
+Spectrogram (8-px windows, stride 2, log-polar 32 bins) → 3-D local-max
+peaks (top-48) → anchor→target hashes (f1,f2,Δrow,Δcol; zone Z=3) →
+inverted index over 12.5 K training images → **offset-consistent vote**
+with the 2-D window coordinate as "time" (class-as-song and exemplar-as-
+song), + bag-of-hash ablation, + corrected standardized-cosine kNN
+baselines, + clean / blur / shift-4 (roll and pad) / fragment-20 (hard,
+soft) test sets.
 
-| arm | what | survival (rseed 0/1/2) | mean±σ | params | 
+| test | class-vote | bag (no offset) | exemplar 1-NN | raw 1-NN (std) | cep(b) 1-NN |
+|---|---|---|---|---|---|
+| clean | 0.176 | 0.080 | 0.128 | **0.338** | 0.261 |
+| 2×-blur | 0.148 | 0.079 | 0.096 | 0.330 | 0.145 |
+| shift 4 px (pad) | 0.086 | 0.071 | 0.092 | 0.174 | 0.118 |
+| fragment 20×20 (soft) | 0.068 | 0.066 | 0.070 | 0.209 | 0.103 |
+
+Offset consistency doubles bag matching but the class table is a
+**position-locked template** (under shift the true class's vote still
+peaks at offset (0,0)); exemplar-level (true Shazam) is worst. Reading:
+Shazam = instance retrieval; CIFAR = category generalisation. Keep as an
+instance-memory primitive (place / specific-object re-identification)
+for the world arc. Note the s051 (k) row was NOT a Shazam probe (spatial
+energy peaks, no spectrogram, no vote); this one is.
+
+### B. Wave-stream tokenizer (`diag_tokenizer.py`; env K0,V,WS,ST,NR) — FAILS gate
+k-means codebook over per-window cepstral shapes → 2-D BPE (merge most
+frequent adjacent right/down pair until V or min-count 50) → tokens =
+merged extents; metrics compression / reuse (class entropy) / mosaic
+tile-boundary respect / tokens-per-image on 4-tile mosaics; overlapping
+n-gram bags (all pairs/triples, top-V vocab); reads via the same leaf
+(per-slot centroid, random emb, bag, ⊕ VQ). Gate: tokens ≥ control − 2 pp.
+
+| grid | K0 | V (sat.) | tokens/img | VQ per-slot | tokens per-slot | VQ bag | token bag | overlap pair bag | control |
+|---|---|---|---|---|---|---|---|---|---|
+| 5×5 (12/5) | 64 | 256 | 21.1/25 | 0.208 | 0.208 | 0.152 | 0.143 | — | (b) 0.304 |
+| 5×5 | 64 | 718 | 18.6 | 0.208 | 0.210 | 0.152 | 0.126 | 0.108 | 0.304 |
+| 5×5 | 128 | 481 | 22.3 | 0.223 | 0.222 | 0.161 | 0.138 | 0.102 | 0.304 |
+| 5×5 | 256 | 432 | 24.0 | 0.236 | 0.232 | 0.163 | 0.149 | 0.082 | 0.304 |
+| 13×13 (8/2), pooled 25 | 64 | 1024 | 106/169 | 0.268 | 0.263 | 0.201 | 0.150 | 0.160 | **0.322** |
+| 13×13, pooled 25 | 256 | 2048 | 133/169 | 0.276 | 0.270 | **0.242** | 0.145 | 0.145 | 0.322 |
+
+Readings: tokens ≤ VQ ≤ control in every row; quantisation costs 7–10 pp
+(≈1.4 pp back per codebook doubling); merges saturate at pairs (max
+extent 4) — no phrase structure at 32×32; overlapping n-grams nearly flat
+and hurt; the dense grid fixes compression (169→106) not the read; no
+number signal from token count. Tokens ARE class-agnostic (4.3–4.5 of
+4.64 bits) and respect tile boundaries where measurable. Side findings:
+dense 2-D pooled-25 (600-d) 0.322 > (b); dense VQ-256 bag 0.242 at 256-d
+position-free (bag-of-visual-words). Rocky's reframing kept in the doc:
+the s051 Phasecyte templates were judged by class purity, the wrong
+criterion for a tokenizer — but the read still fails.
+
+### C. Stereo spectra (`diag_stereo.py`, `diag_stereo2.py`)
+| representation | d | full | task | blur |
 |---|---|---|---|---|
-| single (s050) | each band nest alone | 112.6 / 113.0 / 159.0 | 128.2±26.7 | 13.8K each |
-| vote | majority action over the 3 nests, tie→seed 0; NO training | 179.0 (n=1) | — | 41.4K |
-| **nest-of-nests** | outer trioron router (77→32 quad→3) picks which seed-nest acts; sub-nests untouched; outer TD 300 eps world reward | 172.3 / 180.3 / 187.5 | **180.0±7.6** | 44.0K |
-| **absorb** | per drive: seed-0 leaf ← graft(seed-1, seed-2 leaves, merge_output) = 179-cell fat leaf, exact Q-sum; leaves untouched; band router cold 300 eps | 165.1 / 206.1 / 200.6 | **190.6±22.3** | 35.3K |
-| absorb+settle | as absorb + 50 eps TD/leaf on own drive reward (eps .1, lr 1e-3) before router | 87.2 / 103.0 / 104.5 | 98.2±9.6 | 35.3K |
+| H rows / V cols / H+V unsync / H+V cepstral | 512/512/1024/512 | 0.171 / 0.146 / 0.189 / 0.208 | | |
+| synced L/R raster, pooled 25 | 200 | 0.244 | 0.445 | 0.071 |
+| synced L/R pooled 49 | 392 | 0.262 | 0.457 | 0.079 |
+| synced + disparity, pooled 25 | 300 | 0.254 | | |
+| synced full 169 (over cap) | 1352 | 0.243 | | |
+| dense 2-D pooled 25 (control) | 600 | 0.322 | 0.511 | 0.132 |
+| **dense ⊕ stereo pooled 25** | **800** | **0.345** | **0.529** | 0.095 |
+| dense ⊕ stereo ⊕ disparity | 900 | **0.355** | 0.526 | 0.114 |
+| dense pooled 49 (over cap) | 1176 | 0.340 | 0.530 | 0.130 |
+| dense-49 ⊕ stereo-49 (over cap) | 1568 | 0.344 | 0.530 | 0.125 |
+| raw pixels (s051) | 3072 | 0.356 | 0.533 | 0.359 |
 
-Reference bars: best single 159.0; s049 master-built nest 148.5±12.9;
-DQN ~50.
+Readings: **synchronisation is the lever** (Rocky's objection: row t and
+column t are not the same object — fixed by time = shared 13×13 raster,
+both spectra of the same patch): 200-d synced > 1024-d unsync. Stereo =
+a 1-D projection (8/patch) of the 2-D window spectrum (24/patch); reads
+like one; but the incoherent per-row average it carries is not in the
+2-D bins, hence the +2.4 pp when combined. Its form (a genuine time-
+ordered 169×8 stream) is the natural Axis-7 temporal-leaf input.
 
-Readings:
-- **Combining seed-siblings is a large, robust win** by every method
-  that leaves the leaves alone: even zero-training majority vote (+20
-  over best single). Sibling organisms are complementary, not redundant
-  (each single dies of a different cause profile: seed 2 cold 17/40,
-  seeds 0/1 integrity 11-14/40; combined organisms spread deaths ~evenly,
-  timeouts 4-11/40 appear).
-- **Absorb ≥ nest-of-nests** on mean, at fewer params (35K vs 44K), one
-  router instead of four, but higher variance (rseed 0 = 165.1 — router
-  seed matters more for a fat-leaf nest). n=3 on router seed; the
-  ordering absorb > nest is NOT resolved at σ (Δ+10.6, σ≈22).
-- **Q-sum absorption works BECAUSE the leaves are untouched.** The
-  50-ep TD settle wrecked it (−92 vs absorb): a 3-fold Q-head sum has
-  3× value scale; TD targets pull it back to 1× scale, re-learning the
-  leaf from a bad start with 1/6 of the original budget. Settling an
-  absorbed substrate needs either a 1/k head rescale first or the native
-  machinery (credit-lock the transplanted cells; only new cells plastic)
-  — untested. **Do NOT fine-tune absorbed leaves with raw TD.**
-- Absorb route_hist: temperature leaf carries 40-45% of routes; integrity
-  least (as s050).
-- Tick latencies in the logs were measured under 10-way CPU
-  oversubscription — do not quote them; re-measure single-process
-  (fat leaf alone was 696 µs vs 485 µs live leaf, pre-run).
+### D. What the unsupervised layer-1 clusters are (`diag_cluster_purity.py`, `diag_cluster_what.py`, `diag_cluster_shapes.py`)
+k-means (PCA-64, k=25/50/100) as proxy for Phasecyte templates: eye DoG
+0/25 clusters ≥34 % one class (s051 reproduced); (b) 3/25; dense 5/25;
+**dense⊕stereo 3/25, purity 0.145, NMI 0.111**; raw pixels NMI 0.178
+(colour/brightness/background is CIFAR's dominant unsupervised
+structure, which gain-removed luminance features discard). Clusters are
+not sparse (79–1147). What pushes them (η² by cluster vs by fine class):
+**contrast 0.31 vs 0.06, HF energy 0.16 vs 0.06, orientation 0.18 vs
+0.15; saturation/colour 0.06 vs 0.31, luminance 0.07 vs 0.16.** NMI vs
+superclass 0.066 < vs fine 0.111 — not semantic at any level. **Not
+geometry**: synthetic 32×32 circle/triangle/square land in the same
+three clusters in the same proportions; polkadots/stripes shift toward
+texture clusters; k-means on the shapes alone purity 0.30 (chance 0.20);
+a supervised leaf on the same features gets 5 shapes 0.81 (square↔circle
+still confused 83/176; polkadots/stripes near-perfect). ⇒ layer-1 =
+**texture-style bands**; Phasecyte-first stays the wrong order on CIFAR;
+colour is the biggest class-carrying factor the front end lacks.
 
-## API ALIGNMENT + MERGE (second half of session, `f5a6a99`, on `main`)
+### E. Style-band nest (`diag_style_nest.py`) — loses to single leaf
+Rocky: "the clusters are our first layer; the down layer re-classifies."
+k-means bands (dense⊕stereo) → one leaf per band, hard route (nearest
+centroid) / soft (softmax −d/T) / uniform-mix control:
 
-Rocky: "fix the absorb to match the APIs and merge it to main."
-- **`trioron.api.absorb` / `pool_matched_absorb` now dispatch on type:**
-  positional v2 `Substrate`s → `graft(merge_output=True, wiring="none",
-  freeze=False)` in place (returns `GraftResult`s; `pool_matched_absorb`
-  = single-donor form, v1-only kwargs rejected); `donor_paths=/out_path=`
-  → unchanged v1 branch-granularity organism. `graft`/`GraftResult`
-  exported from `trioron.api`.
-- **Found+fixed a v1 breakage in the documented pip flow:** `build_donor`
-  (and `absorb` payload / cli) crashed with `'dict' object has no
-  attribute 'detach'` — `TrioronLayer.state_dict()` carries a dict
-  `_extra_state` (LCN masks) and `legacy/api.py` `.detach()`ed every
-  value. `_cpu_state()` helper passes non-tensors through. New
-  `tests/test_donor_api_smoke.py` (build_donor→absorb→load_organism).
-  PyPI 0.3.1's `build_donor` was broken → **v0.3.2 PUBLISHED**
-  (https://pypi.org/project/trioron/0.3.2/, `d5c3607`; Rocky ran the
-  twine upload). Wheel verified from a clean `pip install --target` of
-  the built file BEFORE upload (v1 build_donor→absorb→load + v2 absorb
-  exact 5e-10); a post-upload `pip install trioron==0.3.2` check was
-  blocked by the sandbox classifier — same file, not re-verified from
-  PyPI. README/QUICKSTART install notes say 0.3.2+.
-- Docs: MANUAL §13.7 v2 paragraph + snippet + the settle warning; README
-  one-liner; TRIORON_MANUAL §6 graft bullet; spec §9.1 api.py row.
-- Tests: 128 pass (`tests` minus the two known-failing modules), + the
-  same 4 known failures.
-- **`main` fast-forwarded to `f5a6a99` and pushed** (first merge since
-  s050 opened the item).
+| k | hard | soft | uniform-mix | blur (hard/soft) | params |
+|---|---|---|---|---|---|
+| 1 (single leaf) | 0.345 | | | 0.095 | 45 K |
+| 5 | 0.322 | 0.323 | 0.266 | 0.122 / 0.124 | 225 K |
+| 10 | 0.292 | 0.318 | 0.260 | 0.111 / 0.107 | 450 K |
+| 25 | 0.242 | 0.248 | 0.185 | 0.063 / 0.096 | 1.1 M |
+
+Monotone decline = per-leaf data starvation (500/class → ~100 → 50 →
+20); routed ≫ uniform shows real specialists; the only win is blur (a
+"blurry band" routes blurred inputs). **Rocky: what we lack is data,
+not architecture** (agreed for nesting; Chloe added: the fixed-front-end
++ single-linear-leaf ceiling and missing colour are also real).
+
+## DESIGN DOC — `docs/design/canonical_frame_primitives.md` (DRAFT)
+Question: with the image as a wave stream, do *nuisance-frame estimator*
+primitives (light direction, scale/distance, orientation, number/
+grouping), built as ≤50 K trioron leaves on generator ground truth and
+frozen as donors, let a recogniser trained only in canonical frame
+survive off-canonical input, and does that beat an augmentation-trained
+monolith on anything (accuracy, params, robustness, continual)? Human
+illusions (hollow-face, Thatcher, Ames/Ponzo) as the argument that the
+recogniser is *not* invariant — it reads through separate frame
+estimates with priors. Contents: §0 provenance (all of the above), §1
+H1–H3 with prediction (rescue holds; economy ~tie; case rests on
+continual + reuse), §2 factor generators on real CIFAR (light ramp 8 dirs
++ top; scale 0.5/0.7/1.4; orientation 90° steps + Thatcher flip; mosaics
+2–4 subitizing / 6-8-12 "many"), priors = canonical over-represented, §2b
+stage order tokenize→frame→read (tokenizer now marked DROPPED, §2c),
+§2c all s052 results, §3 primitives P_L/P_S/P_O/P_N with senses + sanity
+bars (plane fit, spectral centroid, connected components; P_N =
+subitizer 1–4 exact + log-count Weber head), discovery control, §4 arms
+A / B (conditioning) / B′ (canonicalising, the human model) / C
+(augmentation, param-matched) / D (nest for continual), §5 gates G0–G5
+(+G2b multi-object set-accuracy, G4 prior cost), §6 out of scope (shape
+primitives until resolution/discovery is settled), §7 build order, §8
+Rocky's decisions: arms to keep; rotation range; priors on/off;
+tokenizer knobs (now moot).
+
+## NEXT (priority — "chase the stars")
+1. **Rocky signs off the design doc §8** (arms A/B/B′/C or B′ vs C only;
+   90° steps incl. 180° vs ±30°; priors on/off).
+2. `experiments/progenitor/frames.py` — factor generators + off-canonical
+   test-set builders + analytic sanity bars; unit test on synthetic
+   shaded blobs.
+3. `diag_number.py` — P_N from the spectral-continuity boundary map + eye
+   DoG on the mosaic sets; G0-N (subitizer exact 1–4; Weber 6:8 ≥ .7,
+   6:12 ≥ .9).
+4. `diag_frame_primitives.py` — P_L/P_S/P_O; G0; save under `runs/frames/`.
+5. `diag_frame_arms.py` — A/B/B′/C at 25 classes; G1–G4.
+6. Cheap ceiling-raisers for R, in parallel: **colour** (per-region
+   opponent-colour means/contrast, ~50–100 dims; η² says it's the biggest
+   class cue missing); blur augmentation; n=3 seeds on the 25-class
+   probe; **100 classes** for dense⊕stereo (the number every arm compares
+   to).
+7. Later gates: 5-fixation absorb+nest level-2 (s051 part A) on the new
+   front end; continual 20-task (G5) vs pure-trioron 0.309/0.606; Axis-7
+   temporal leaf on the synced stereo stream; Shazam-style instance
+   memory for the world arc; "dream a zoomed/cropped view never seen".
+8. s051 items still open: absorb variance n=5 + settle done right; absorb
+   the routers; s050/s049 items.
 
 ## GOTCHAS
-
-- 10 background procs (OMP=1) on 12 CPUs: learned arms 55-65 min each.
-- `absorb_settle` finished BEFORE `absorb` because settled leaves die
-  sooner (fewer steps/episode) — not a hang.
-- graft `merge_output` requires equal output widths (raises); donor and
-  recipient must share input space (perception matched by rank order,
-  unchecked beyond count).
-- pytest: 119 pass in test_v2 (+4 new graft), the same 4 known failures
-  (test_learning TestCredit ×2, test_lifecycle ×2).
-
-## NEXT (priority)
-
-1. **Absorb variance + settle done right:** (a) n=5 router seeds for
-   absorb vs nest to resolve the ordering; (b) settle with credit-locked
-   transplanted cells / λ-anchored (native machinery, TRIORON_MANUAL §8
-   last bullet) or head rescale 1/k — the "organism absorbs then keeps
-   learning" path is the real question; (c) absorb into a running s050
-   pipeline: does an organism that absorbs its siblings then dream
-   (world_drive_dream) still improve, or is the ceiling now
-   arbitration again?
-2. **Absorb the routers too** (zero-shot: graft the 3 band routers with
-   merge_output — same 4-leaf index space) — no retraining at all; if it
-   holds ~180+ the whole combine step is training-free.
-3. s050 NEXT items still stand: arm 3 integrity-on-threat-distance;
-   `Body`/`Organism.live` API shape doc (spec §9 row first); s049 items.
-4. ~~Merge `conscience-core` → `main`~~ DONE. ~~Publish 0.3.2~~ DONE.
-   Cheap follow-up: `pip install trioron==0.3.2` from PyPI on a clean
-   venv + run `tests/test_donor_api_smoke.py` against it.
-
-## OPEN / unresolved
-
-- (resolved) `api.absorb`/`pool_matched_absorb` dispatch v1/v2 by type.
-- s049/s050 open items unchanged.
+- `pgrep -f "diag_x.py"` inside a `bash -c` waiter matches the waiter's
+  own command line → deadlock (bit me once; killed and ran directly).
+- Nested `exec` of probe files: set `__file__` to the target path before
+  `exec` rather than string-replacing `os.path.abspath(__file__)`.
+- Mosaic tile-boundary metric is structurally 0 on the 8/2 grid (clean
+  slots either side are 4 steps apart, tokens ≤ 4) — uninformative there.
+- The knn() in `diag_eye7.py` main run had a centering bug (row logged);
+  corrected baselines are in `diag_eye7b.py` / `shazam_probe_s052_b.log`.
+- Probe leaf rows print `[dream ...] ep` progress lines — filter on
+  `^  .*full=` when tailing.
 
 ## State of the build / Pointers
-
-- **Commits:** `354b9a0` (graft merge_output + dendrite carry + tests +
-  spec + bench + logs), `a1d2030` (handoff v1), `f5a6a99` (api dispatch
-  + v1 build_donor fix + docs), `d7f2311` (handoff v2), `d5c3607`
-  (v0.3.2 bump) — all on `conscience-core` AND `main` (ff), pushed; +
-  this handoff (pushed to both at close).
-- `dist/trioron-0.3.2-py3-none-any.whl` + sdist = what is on PyPI.
-- Checkpoints (untracked `runs/nest_of_nests/`): `outer_router_rseed{0,1,2}.pt`,
-  `router_absorb_rseed*.pt`, `router_absorb_settle_rseed*.pt`
-  (trainable_tensors lists, s049 ckpt rule; fat leaves are rebuilt
-  deterministically by `absorb_leaves()`).
-- s050 checkpoints (`runs/drive_vocab/`, `runs/drive_band/`) are the
-  inputs; do not delete.
+- **Commits (all `conscience-core`, pushed at close):** `6bfdd02` Shazam
+  + design doc; `8825d40` tokenizer sparse; `24b8e11` tokenizer dense +
+  stereo; `c60c625` dense⊕stereo; `edd5793` cluster purity; `2df49e0`
+  cluster what/shapes + style nest; + this handoff. `main` NOT advanced
+  this session (last ff `d5c3607`/v0.3.2 + s051 handoff).
+- New files: `experiments/progenitor/diag_eye7{,b}.py`, `diag_tokenizer.py`,
+  `diag_stereo{,2}.py`, `diag_cluster_{purity,what,shapes}.py`,
+  `diag_style_nest.py`; logs `outputs/{shazam_probe_s052,shazam_probe_s052_b,
+  tokenizer_probe_s052_*,stereo_probe_s052,stereo2_probe_s052,cluster_purity_s052,
+  cluster_what_s052,cluster_shapes_s052,style_nest_s052}.log`;
+  `docs/design/canonical_frame_primitives.md`.
+- No background runs at close. No checkpoints written this session.
+- Package (`trioron/`) untouched this session.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
-
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
-`trioron/viz/export.py`; `.claude/`, `runs/`, `trioron/legacy/outputs/`,
-`notebooks/` checkpoints, output PNGs/uncommitted logs untracked.
+`trioron/viz/export.py`; `.claude/`, `runs/`, `archive/runs/`,
+`trioron/legacy/outputs/`, `notebooks/` checkpoints, output PNGs /
+uncommitted logs untracked.
 
 ## Environment notes
-
 - `/home/marcrockhat/trioron-project/`, branch `conscience-core`, Python
-  3.10.12, torch 2.11.0, WSL2, `python3` (NOT `python`), 12 CPUs.
-- Bench: `OMP_NUM_THREADS=1 python3 archive/experiments/world/
-  world_nest_of_nests.py --arm absorb --rseed 0` (~60 min; `single`/`vote`
-  ~4 min).
-- Bench logs buffer — check mtime before assuming a hang.
+  3.10.12, torch 2.11.0, WSL2, `python3` (NOT `python`), 12 CPUs, 7 GB RAM.
+- Probes: `OMP_NUM_THREADS=6 python3 experiments/progenitor/diag_stereo.py`
+  (~10 min); tokenizer dense K0=256/V=2048 ~15 min; Shazam query ~5 min
+  per test set. Logs buffer — check mtime before assuming a hang.
