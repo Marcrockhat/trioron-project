@@ -79,6 +79,30 @@ Readings:
   oversubscription — do not quote them; re-measure single-process
   (fat leaf alone was 696 µs vs 485 µs live leaf, pre-run).
 
+## API ALIGNMENT + MERGE (second half of session, `f5a6a99`, on `main`)
+
+Rocky: "fix the absorb to match the APIs and merge it to main."
+- **`trioron.api.absorb` / `pool_matched_absorb` now dispatch on type:**
+  positional v2 `Substrate`s → `graft(merge_output=True, wiring="none",
+  freeze=False)` in place (returns `GraftResult`s; `pool_matched_absorb`
+  = single-donor form, v1-only kwargs rejected); `donor_paths=/out_path=`
+  → unchanged v1 branch-granularity organism. `graft`/`GraftResult`
+  exported from `trioron.api`.
+- **Found+fixed a v1 breakage in the documented pip flow:** `build_donor`
+  (and `absorb` payload / cli) crashed with `'dict' object has no
+  attribute 'detach'` — `TrioronLayer.state_dict()` carries a dict
+  `_extra_state` (LCN masks) and `legacy/api.py` `.detach()`ed every
+  value. `_cpu_state()` helper passes non-tensors through. New
+  `tests/test_donor_api_smoke.py` (build_donor→absorb→load_organism).
+  This means PyPI 0.3.1's `build_donor` is broken → **0.3.2 release is
+  warranted** (not done; Rocky's call).
+- Docs: MANUAL §13.7 v2 paragraph + snippet + the settle warning; README
+  one-liner; TRIORON_MANUAL §6 graft bullet; spec §9.1 api.py row.
+- Tests: 128 pass (`tests` minus the two known-failing modules), + the
+  same 4 known failures.
+- **`main` fast-forwarded to `f5a6a99` and pushed** (first merge since
+  s050 opened the item).
+
 ## GOTCHAS
 
 - 10 background procs (OMP=1) on 12 CPUs: learned arms 55-65 min each.
@@ -105,21 +129,21 @@ Readings:
    holds ~180+ the whole combine step is training-free.
 3. s050 NEXT items still stand: arm 3 integrity-on-threat-distance;
    `Body`/`Organism.live` API shape doc (spec §9 row first); s049 items.
-4. Merge `conscience-core` → `main` (not done; Rocky's call — was open in
-   s050 too).
+4. ~~Merge `conscience-core` → `main`~~ DONE (`f5a6a99`). **Publish
+   0.3.2** (v1 `build_donor` on PyPI 0.3.1 is broken by the
+   `_extra_state` crash; the fix is on main) — Rocky's call.
 
 ## OPEN / unresolved
 
-- Whether the v1 `api.absorb`/`pool_matched_absorb` should be re-pointed
-  at v2 graft(merge_output) for v2 substrates — API is currently
-  v1-only for that name; spec §5.3 now documents both.
+- (resolved) `api.absorb`/`pool_matched_absorb` dispatch v1/v2 by type.
 - s049/s050 open items unchanged.
 
 ## State of the build / Pointers
 
-- **Commits (branch `conscience-core`):** `354b9a0` (graft merge_output +
-  dendrite carry + tests + spec + bench + logs), + this handoff. Pushed
-  at close.
+- **Commits:** `354b9a0` (graft merge_output + dendrite carry + tests +
+  spec + bench + logs), `a1d2030` (handoff v1), `f5a6a99` (api dispatch
+  + v1 build_donor fix + docs) — all on `conscience-core` AND `main`
+  (ff), pushed; + this handoff (pushed to both at close).
 - Checkpoints (untracked `runs/nest_of_nests/`): `outer_router_rseed{0,1,2}.pt`,
   `router_absorb_rseed*.pt`, `router_absorb_settle_rseed*.pt`
   (trainable_tensors lists, s049 ckpt rule; fat leaves are rebuilt
