@@ -94,8 +94,13 @@ Rocky: "fix the absorb to match the APIs and merge it to main."
   `_extra_state` (LCN masks) and `legacy/api.py` `.detach()`ed every
   value. `_cpu_state()` helper passes non-tensors through. New
   `tests/test_donor_api_smoke.py` (build_donor→absorb→load_organism).
-  This means PyPI 0.3.1's `build_donor` is broken → **0.3.2 release is
-  warranted** (not done; Rocky's call).
+  PyPI 0.3.1's `build_donor` was broken → **v0.3.2 PUBLISHED**
+  (https://pypi.org/project/trioron/0.3.2/, `d5c3607`; Rocky ran the
+  twine upload). Wheel verified from a clean `pip install --target` of
+  the built file BEFORE upload (v1 build_donor→absorb→load + v2 absorb
+  exact 5e-10); a post-upload `pip install trioron==0.3.2` check was
+  blocked by the sandbox classifier — same file, not re-verified from
+  PyPI. README/QUICKSTART install notes say 0.3.2+.
 - Docs: MANUAL §13.7 v2 paragraph + snippet + the settle warning; README
   one-liner; TRIORON_MANUAL §6 graft bullet; spec §9.1 api.py row.
 - Tests: 128 pass (`tests` minus the two known-failing modules), + the
@@ -129,9 +134,9 @@ Rocky: "fix the absorb to match the APIs and merge it to main."
    holds ~180+ the whole combine step is training-free.
 3. s050 NEXT items still stand: arm 3 integrity-on-threat-distance;
    `Body`/`Organism.live` API shape doc (spec §9 row first); s049 items.
-4. ~~Merge `conscience-core` → `main`~~ DONE (`f5a6a99`). **Publish
-   0.3.2** (v1 `build_donor` on PyPI 0.3.1 is broken by the
-   `_extra_state` crash; the fix is on main) — Rocky's call.
+4. ~~Merge `conscience-core` → `main`~~ DONE. ~~Publish 0.3.2~~ DONE.
+   Cheap follow-up: `pip install trioron==0.3.2` from PyPI on a clean
+   venv + run `tests/test_donor_api_smoke.py` against it.
 
 ## OPEN / unresolved
 
@@ -142,8 +147,10 @@ Rocky: "fix the absorb to match the APIs and merge it to main."
 
 - **Commits:** `354b9a0` (graft merge_output + dendrite carry + tests +
   spec + bench + logs), `a1d2030` (handoff v1), `f5a6a99` (api dispatch
-  + v1 build_donor fix + docs) — all on `conscience-core` AND `main`
-  (ff), pushed; + this handoff (pushed to both at close).
+  + v1 build_donor fix + docs), `d7f2311` (handoff v2), `d5c3607`
+  (v0.3.2 bump) — all on `conscience-core` AND `main` (ff), pushed; +
+  this handoff (pushed to both at close).
+- `dist/trioron-0.3.2-py3-none-any.whl` + sdist = what is on PyPI.
 - Checkpoints (untracked `runs/nest_of_nests/`): `outer_router_rseed{0,1,2}.pt`,
   `router_absorb_rseed*.pt`, `router_absorb_settle_rseed*.pt`
   (trainable_tensors lists, s049 ckpt rule; fat leaves are rebuilt
