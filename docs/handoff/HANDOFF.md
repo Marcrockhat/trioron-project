@@ -10,9 +10,15 @@ CIFAR's data the s052 front end + leaf plateaus at 0.70 and an over-cap MLP
 on the same features at 0.73 ⇒ the ceiling is the FRONT END, not the leaf,
 not the data. Cepstra read texture not silhouette; a 92-d boundary-
 orientation primitive alone matches the 900-d front end; geometric 3-way
-stuck at 0.67 for every fixed primitive ⇒ needs figure/ground + fill/
-boundary separation (grouping) before the descriptor. Rocky: recognition is
-the deliverable; "fantasizing" (novel-object generation) is parked.**
+stuck at 0.67 for every fixed primitive ⇒ built the GROUPING primitive
+(figure/ground + body closing + components + field rule): silhouette-only
+stream lifts geo 3-way 0.67→0.76 and held-out combos 0.38→0.53; grouped +
+whole-image 311-d + one 50 K leaf = 0.853 fresh ≈ CNN ref 0.882 (242 K,
+over cap) and +15 pp over the CNN on the compositional test (CNN 0.33 —
+it memorises combos). Count from grouping: 1→0.91, 2→0.37, 3→0 (closing
+merges neighbours — next fix). Rocky: recognition is the deliverable;
+"fantasizing" is parked; nest = survivor recipe (SPLIT by factor +
+arbitration = grouping).**
 
 ---
 
@@ -37,7 +43,8 @@ the deliverable; "fantasizing" (novel-object generation) is parked.**
    train 36` → `outputs/shapes_sheet_train.png`.
 3. **Front end code moved:** `experiments/progenitor/frontend.py` holds the
    s052 dense⊕stereo (800) lifted out of the exec-chained probes, plus new
-   `colour_block` (100), `boundary_block` (92), `corner_block` (13). Old
+   `colour_block` (100), `boundary_block` (92), `corner_block` (13);
+   `grouping.py` = the grouping primitive (`groups`, `describe`). Old
    probes untouched.
 4. **Probe protocol here:** train split 20 K single-object (≈4 000/shape),
    `Seeded(d,5,48,nonlinear)` leaf, 8 epochs, standardized features, n=3
@@ -91,33 +98,82 @@ grouping (figure/ground, boundary vs interior) before any descriptor —
 i.e. the design doc's tokenize→frame→read, with grouping first.
 
 ### C. CNN dataset-ceiling reference (`shapes_cnn_ref.py`, OVER CAP, not trioron)
-First run (no BN, 8 ep) undertrained 0.56; rerun with BN/30 ep/one-cycle
-was **still running at close** — see `outputs/shapes_cnn_ref_s053.log`
-last `ep` line for fresh/held/small/cropped/iso/blur2. Purpose: how much of
-the 0.77 gap is label noise (tiny+blur+crop unreadables) vs missing
-primitives.
+4-block BN CNN, 242 K params, 30 ep one-cycle: **fresh 0.882, geo 3-way
+0.809, held-out 0.331, small 0.672, cropped 0.686, iso 0.893, blur2 0.871.**
+⇒ readable ceiling ≥ 0.88; the learned monolith ALSO fails the
+compositional test (memorises shape×fill combos).
+
+### D. Grouping primitive (`grouping.py`) — figure/ground + object split + boundary/interior split
+No labels, no params: bg = border median in (Y, 2·RG, 2·BY); distance map
+(3×3 pooled); threshold = max(Otsu, 0.08, 2.5 × 10 %-quantile of border
+distances = noise floor); FIELD if ≥ 3 raw components (≥ 4 px) whose joint
+bbox spans ≥ 85 % of the frame both ways; else closing (disk r=4) + hole
+fill → components (≥ 6 px) → per group: silhouette, boundary ring,
+interior (eroded), raw-fg colour mean, second-moment frame (cx, cy, major/
+minor scale, orientation, elongation, fill fraction), border-touch; count =
+#objects. Sanity vs ground-truth silhouettes (600 draws): IoU 0.74 (solid
+0.89 / striped 0.78 / dotted 0.68 / outline 0.59; iso 0.69, blur2 0.69,
+small 0.65, cropped 0.68); exactly-one-object 91 %; fields flagged 74 %,
+5 % false. `describe(X)` → silhouette-only boundary block (92) / interior-
+only dense cepstra (600) / colour (3) / frame (7) / flags (4); cached as
+`feat_grp_<split>.pt`. Cost ~10 ms/img.
+
+### E. Grouped streams → leaves (`diag_shapes4.py`, n=3)
+| stream | d | fresh | geo 3-way | held-out | small | cropped | iso | blur2 | fill fresh/held |
+|---|---|---|---|---|---|---|---|---|---|
+| whole-image bd+col+corner | 205 | 0.771 | 0.673 | 0.376 | 0.502 | 0.428 | 0.614 | 0.755 | 0.801 / 0.555 |
+| grouped silhouette only | 92 | 0.632 | **0.762** | **0.528** | 0.486 | 0.534 | 0.652 | 0.601 | 0.685 / 0.140 |
+| grouped sil+colour+frame+flags | 106 | 0.756 | 0.775 | 0.527 | 0.499 | 0.557 | 0.800 | 0.686 | 0.772 / 0.250 |
+| grouped + interior | 706 | 0.801 | 0.783 | 0.464 | 0.541 | 0.582 | 0.767 | 0.757 | 0.828 / 0.527 |
+| **grouped 106 + whole 205** | **311** | **0.853** | **0.802** | 0.478 | 0.560 | 0.610 | 0.837 | 0.827 | 0.862 / 0.585 |
+| CNN ref (C) | — | 0.882 | 0.809 | 0.331 | 0.672 | 0.686 | 0.893 | 0.871 | — |
+Count primitive (grouping alone, test_multi): exact 0.43; 1→0.91, 2→0.37,
+3→0.00.
+
+**Readings.** Separating boundary from interior is what factors shape from
+fill: silhouette-only geo 3-way +9 pp and held-out +15 pp; fill reads from
+the interior stream (held-out 0.53) not the silhouette (0.14). 311-d fixed
+primitives + one ≤50 K leaf ≈ CNN on fresh/geo/iso/blur and +15 pp on the
+compositional test. Gaps vs CNN = mask quality on small/cropped. Multi-
+object counting fails because closing r=4 (needed to bridge dotted fills)
+also merges neighbours 8 px apart — bridging must be per body (e.g. close
+within each colour-consistent component, or grow bodies from seeds), and
+the multi-object splits are the test.
+
+### F. Rocky's framing (keep)
+The nest = the survivor recipe: WARM/FLEE masters were weak per class,
+the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
+interior texture / colour / count) and the arbiter is grouping (which
+pixels belong to which object, boundary vs interior) — before any leaf.
+Caveat: today's primitives are hand-coded; the s019 doctrine (discover,
+don't imitate) means a discovery control must come back once grouping
+exists. Every image is multi-labelled (all factors tagged); the probes so
+far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. Read the CNN ceiling line; if ≫ 0.77, the primitives are the gap; if ≈
-   0.8, the dataset floor is close and shrink the unreadable tail
-   (min r for blur2, etc.) before more primitives.
-2. **Grouping primitive** (the finding's ask): figure/ground mask from the
-   colour+luminance blocks (object vs bg colour is known to be distinct by
-   construction) → silhouette-only boundary block + interior-only texture
-   block ⇒ predicted to factor shape×fill (held-out ↑) and lift the geo
-   3-way. Then affine-normalise the silhouette (second moments → P_S/P_O
-   of the design doc) before the orientation spectrum.
-3. Multi-object: per-object grouping → per-group read (set-accuracy row);
-   the depth-of-field subset is the "eye focus" test Rocky asked for.
-4. Then the nest question proper: Phasecyte/trioron nest per primitive
-   band vs single leaf on this data (s052 E said single leaf wins on CIFAR
-   from data starvation — here data is unlimited, so it is a clean test).
+1. **Grouping v2 — per-body bridging** so neighbours don't merge: seeds
+   from raw components, close/fill inside colour-consistent regions only,
+   or split merged bodies by concavity/colour; targets: count exact ≥ 0.8
+   on test_multi, IoU on outline/dotted ≥ 0.75, small/cropped rows toward
+   the CNN (0.67/0.69). Then multi-object: per-group read → set-accuracy
+   (`test_multi`, depth-of-field subset = Rocky's "eye focus" test).
+2. **Frame canonicalisation** on the silhouette (second moments → rotate/
+   de-shear/scale before the orientation spectrum): predicted to close the
+   geo 3-way gap under shear (design doc P_S/P_O, now with ground truth).
+3. **Per-factor leaves + router (the survivor recipe):** shape leaf ←
+   silhouette; fill leaf ← interior; colour leaf; count from grouping;
+   blur/focus leaf ← edge width; compose vs the single 311-d leaf; then
+   Phasecyte/trioron nest per band — data is unlimited here, so it's the
+   clean nest-vs-leaf test s052 E couldn't run.
+4. Held-out combos still 0.53 vs fresh 0.76 on the silhouette stream —
+   inspect which held-out combo fails (outline circles' rings, dotted
+   triangles' bridged masks) after grouping v2.
 5. Continual: shapes as tasks (per shape / per fill / per colour) with the
    CL machinery — the reason the substrate exists.
-6. Fantasizing (parked): H-space factor recombination once shape/fill/
-   colour are factored (they are not yet — held-out 0.35).
+6. Discovery control for the primitives (s019 doctrine); fantasizing
+   (H-space factor recombination) once factors are separated — parked.
 7. Design doc `canonical_frame_primitives.md` §8 decisions still open;
-   this dataset can serve its frame generators (light ramp not yet added).
+   light-ramp generator not yet added to shapes.py.
 
 ## GOTCHAS
 - `pkill -f`/`pgrep -f` from inside the Bash tool matches the tool's own
@@ -132,13 +188,14 @@ primitives.
 
 ## State of the build / Pointers
 - Commits (`conscience-core`): `f84f74f` dataset + probe 1; `f6dd87b`
-  probes 2/3 + boundary/corner blocks + CNN ref; + doc/handoff commit.
-  `main` NOT advanced. Push at close.
+  probes 2/3 + boundary/corner blocks; `8db6d0a` grouping + probe 4 + CNN
+  ref; + this handoff. `main` NOT advanced. Pushed at close.
 - New files: `experiments/progenitor/{shapes,shapes_sheet,shapes_feats,
-  frontend,diag_shapes,diag_shapes2,diag_shapes3,shapes_cnn_ref}.py`,
-  `docs/design/shape_world_dataset.md`, logs `outputs/shapes_{build,probe,
-  probe2,probe3,probe3b,cnn_ref}_s053.log`, `outputs/data/shapes/manifest.json`.
-- Background at close: `shapes_cnn_ref.py` (BN, 30 ep) → log above.
+  frontend,grouping,diag_shapes,diag_shapes2,diag_shapes3,diag_shapes4,
+  shapes_cnn_ref}.py`, `docs/design/shape_world_dataset.md` (has the
+  results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
+  probe4,cnn_ref}_s053.log`, `outputs/data/shapes/manifest.json`.
+- No background runs at close.
 - Package (`trioron/`) untouched. Memory pointer added
   (`shape_world_dataset.md`); memory is per-PC — this file is the truth.
 
