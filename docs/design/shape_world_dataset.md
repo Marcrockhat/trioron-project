@@ -1,0 +1,78 @@
+# Shape world — synthetic recognition dataset (s053)
+
+**Status:** v1 built this session. Generator `experiments/progenitor/shapes.py`;
+splits under `outputs/data/shapes/*.pt` (gitignored; rebuild with
+`python3 experiments/progenitor/shapes.py build`, deterministic per split seed);
+`manifest.json` alongside. Probe: `experiments/progenitor/diag_shapes.py`.
+
+## Why
+
+CIFAR gives 500 images/class and entangles every nuisance factor. Rocky's
+frame (s052 close): "what we lack is data, not architecture." This world
+gives unlimited images per class with every factor *known and tagged*, so we
+can ask the recognition question cleanly: which front-end primitive + which
+leaf/nest carries which factor, and does the organism read images it has
+never seen — fresh draws, *held-out factor combinations*, extreme zoom, crops,
+iso-luminant, blurred, multi-object.
+
+## Classes and factors
+
+| factor | values | tag |
+|---|---|---|
+| shape | circle, triangle, square, stripes-field, dots-field | `objects[j].shape/name` |
+| fill | solid, striped, dotted, outline (fields always solid) | `fill/fill_name` |
+| line thickness | 1..3 px (outline only) | `thick` |
+| colour | fg hue ∈ [0,1) (bin 0..5), sat, val; bg hue/sat/val; **iso**=1 ⇒ fg luminance == bg (chroma only) | `hue, hue_bin, sat, val, iso`, `bg` |
+| scale (zoom) | radius 3..18 px — zoom-out tiny .. zoom-in overflowing the 32-px frame; textured fills capped at 13 (a zoomed dotted square *is* a dots field — boundary must stay in frame) | `r` |
+| pose | rot 0..2π, shear −0.6..0.6 (skew), flip | `rot, shear, flip` |
+| position / crop | (cx,cy); **crop**=1 ⇒ centre at a border (r ≥ 6, ≥ 30 % of the silhouette in frame); `vis` = exact in-frame fraction of the solid silhouette | `cx, cy, crop, vis` |
+| blur (per object) | 0 sharp / 1 mild σ=.7 / 2 strong σ=1.5 | `blur` |
+| focus (per image) | 0 uniform; 1 per-object depth-of-field (one sharp, another defocused; multi-object only); 2 gradient — sharp at a focal point, blur grows with distance ("eye focus") | `focus, focal` |
+| count | 1..3 objects (fields only when count = 1); multi-hot `y_set` | `count`, `objects[]` |
+| noise | Gaussian σ .03 | `noise` |
+
+Image-level label tensors `ys` (object 0 = "the" object): `y_shape, y_fill,
+y_iso, y_hue, y_scale, y_rot, y_vis, y_crop, y_blur, y_count, y_set[5],
+y_focus, y_blur_img`. Full per-object records in `meta[i]["objects"]`.
+
+## Held-out combinations (compositional "never seen")
+
+`HELD = {(triangle, dotted), (square, striped), (circle, outline)}` never
+appear in any *train* split; `test_held` contains only them. A recogniser
+that reads shape and fill as separate factors passes; a template matcher
+fails.
+
+## Splits (n, seed fixed — same files on every PC)
+
+| split | n | seed | notes |
+|---|---|---|---|
+| train | 20 000 | 1 | single-object, ~4 000/shape (8× CIFAR), HELD excluded |
+| test_fresh | 5 000 | 2 | same distribution, unseen images |
+| test_held | 3 000 | 3 | HELD combos only |
+| test_stress | 12 000 | 4 | crop .3, iso .3, blur levels ⅓ each — subsets: zoom-out r≤5, zoom-in r≥14, cropped, iso, outline, sharp/mild/strong blur, focus-gradient |
+| train_multi | 20 000 | 6 | 1–3 objects, multi-hot targets |
+| test_multi | 4 000 | 5 | set-accuracy; depth-of-field subset |
+
+## Intended readings (probe rows)
+
+Fronts: dense⊕stereo 800 (s052 R) | + colour block 100 (per-region Y/RG/BY
+mean + Y std) | colour only | raw pixels (over-cap reference). One
+`Seeded(d,5,48)` leaf per head; n=3 seeds. Predictions before running (so
+the result is a test, not a description): iso-luminant collapses on the
+luminance-only front (its whole point); held-out combos ≥ fresh − 10 pp if
+shape/fill are separable in the front end; strong blur costs the cepstral
+front the most (s052 blur 0.10); zoom-in (overflowing) hurts the
+region-pooled read; multi-object set-accuracy is the hard row.
+
+## Known floors
+
+- Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).
+- Blur is applied per object *before* compositing, so a defocused object's edge bleeds over a sharp neighbour — that is what depth of field looks like.
+
+## Open / next
+
+- Balance: shape sampled uniformly then fill; fields have one fill.
+- Not yet: gradient/textured backgrounds, occlusion between objects,
+  motion (Axis 7), rotation-range restriction (design doc §8).
+- Fantasizing (novel-object generation by H-space factor recombination) is
+  parked — recognition first (Rocky, s053).
