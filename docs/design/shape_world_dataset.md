@@ -64,6 +64,39 @@ shape/fill are separable in the front end; strong blur costs the cepstral
 front the most (s052 blur 0.10); zoom-in (overflowing) hurts the
 region-pooled read; multi-object set-accuracy is the hard row.
 
+## Results (s053, n=3 seeds unless noted; logs `outputs/shapes_probe*_s053.log`)
+
+| front | d | fresh | geometric 3-way | held-out combos | small r<5 | cropped | iso | blur strong | fill |
+|---|---|---|---|---|---|---|---|---|---|
+| dense⊕stereo (s052 R) | 800 | 0.686 | — | 0.220 | — | 0.359 | 0.398 | 0.641 | 0.796 |
+| dense⊕stereo⊕colour | 900 | 0.705 | 0.583 | 0.227 | 0.367 | 0.356 | 0.519 | 0.677 | 0.798 |
+| colour block only | 100 | 0.429 | | 0.301 | | 0.256 | 0.502 | | 0.688 |
+| raw pixels (over cap) | 3072 | 0.483 | | 0.279 | | 0.342 | 0.480 | 0.502 | 0.721 |
+| **boundary-orientation only** | **92** | **0.709** | 0.655 | 0.354 | 0.465 | 0.406 | 0.391 | 0.648 | |
+| boundary ⊕ colour | 192 | 0.761 | 0.664 | 0.352 | 0.455 | 0.395 | 0.604 | 0.751 | |
+| boundary ⊕ colour ⊕ corner | 205 | 0.771 | 0.673 | 0.376 | 0.502 | 0.428 | 0.614 | 0.755 | |
+| all four blocks | 1005 | 0.766 | 0.674 | 0.349 | 0.500 | 0.432 | 0.546 | 0.733 | |
+| refs on 900-d: MLP 2×1024 / 1-NN | | 0.729 / 0.639 | | 0.228 | | | | | |
+| refs on 205-d: MLP 2×256 / 1-NN | | 0.792 / 0.659 | | 0.374 | | | | | |
+
+Multi-object set-accuracy (900-d, seed 0): 0.345 all / 0.506 single-object / 0.290 depth-of-field.
+
+Readings: (1) with 8× CIFAR's data per class the fixed front end + leaf
+plateaus at 0.70, and an over-cap MLP on the same features at 0.73 — the
+ceiling is the **front end**, not the leaf and not the data. (2) The
+cepstral front end reads texture (fields 0.88) not silhouette (circle/
+triangle/square confuse each other; circle-outline → "square", square-
+striped → "circle"); a dotted triangle is read as "dots" ⇒ shape × fill
+are not factored ⇒ held-out combos at chance. (3) A 92-d boundary-
+orientation block matches the whole 900-d front end and lifts small,
+cropped and held-out; corner counting adds ~1 pp because textured fills
+create interior corners. (4) Blur is cheap here (−3 pp strong) — opposite
+of CIFAR (0.35 → 0.10). (5) The geometric 3-way sits at 0.67 for every
+fixed primitive: shear turns circle/square into ellipse/parallelogram with
+the same orientation statistics; the affine-invariant reading needs figure/
+ground + fill/boundary separation *before* the descriptor — grouping, not
+another global block.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).
