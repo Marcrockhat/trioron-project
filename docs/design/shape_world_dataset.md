@@ -97,6 +97,34 @@ the same orientation statistics; the affine-invariant reading needs figure/
 ground + fill/boundary separation *before* the descriptor — grouping, not
 another global block.
 
+### Grouping before describing (`grouping.py`, `diag_shapes4.py`)
+Figure/ground (border-median bg, chroma-weighted distance, Otsu + noise
+floor) → closing r=4 + hole fill → components → largest object's
+silhouette / interior / colour / second-moment frame / flags; field rule =
+≥3 components spanning ≥85 % of the frame. Mask IoU vs ground truth
+(600-sample check): geometric 0.74 (solid 0.89, striped 0.78, dotted 0.68,
+outline 0.59; iso 0.69, blur2 0.69, small 0.65, cropped 0.68); 91 % exactly
+one object; fields flagged 74 % with 5 % false.
+
+| stream | d | fresh | geo 3-way | held-out | small | cropped | iso | blur2 | fill fresh/held |
+|---|---|---|---|---|---|---|---|---|---|
+| whole-image bd+col+corner | 205 | 0.771 | 0.673 | 0.376 | 0.502 | 0.428 | 0.614 | 0.755 | 0.801 / 0.555 |
+| grouped silhouette only | 92 | 0.632 | 0.762 | 0.528 | 0.486 | 0.534 | 0.652 | 0.601 | 0.685 / 0.140 |
+| grouped sil+colour+frame+flags | 106 | 0.756 | 0.775 | 0.527 | 0.499 | 0.557 | 0.800 | 0.686 | 0.772 / 0.250 |
+| grouped + interior | 706 | 0.801 | 0.783 | 0.464 | 0.541 | 0.582 | 0.767 | 0.757 | 0.828 / 0.527 |
+| grouped 106 + whole 205 | 311 | **0.853** | **0.802** | 0.478 | 0.560 | 0.610 | 0.837 | 0.827 | 0.862 / 0.585 |
+| CNN ref (242 K params, 30 ep, over cap) | — | 0.882 | 0.809 | 0.331 | 0.672 | 0.686 | 0.893 | 0.871 | — |
+
+Readings: silhouette-only lifts geometric 3-way 0.67→0.76 and held-out
+0.38→0.53 (shape and fill factor once boundary and interior are separate
+streams; fill is read from the interior stream, 0.53 held-out vs 0.14
+from the silhouette). 311-d fixed primitives + one 50 K leaf ≈ CNN on
+fresh/geo/iso/blur and +15 pp on the compositional test (the CNN
+memorises combos: 0.33). Gaps vs CNN: small (0.56 vs 0.67) and cropped
+(0.61 vs 0.69) = mask quality. Count from grouping alone on test_multi:
+1→0.91, 2→0.37, 3→0.00 — the closing that bridges dotted fills also merges
+neighbouring objects (8 px apart): bridging must be per body, next fix.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

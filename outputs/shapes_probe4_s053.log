@@ -1,0 +1,10 @@
+  grouped train in 212s
+  grouped test_fresh in 63s
+  grouped test_held in 33s
+  grouped test_stress in 120s
+         whole-image bd+col+corner 205 | fresh 0.771±0.003 | geo 3-way 0.673±0.004 | held-out 0.376±0.004 | small r<5 0.502±0.005 | cropped 0.428±0.009 | iso 0.614±0.003 | blur2 0.755±0.003 | fill fresh 0.801±0.001 | fill held-out 0.555±0.041  [818s]
+                 grouped silhouette 92 | fresh 0.632±0.019 | geo 3-way 0.762±0.003 | held-out 0.528±0.002 | small r<5 0.486±0.004 | cropped 0.534±0.007 | iso 0.652±0.025 | blur2 0.601±0.008 | fill fresh 0.685±0.004 | fill held-out 0.140±0.017  [907s]
+    grouped sil+colour+frame+flags 106 | fresh 0.756±0.008 | geo 3-way 0.775±0.005 | held-out 0.527±0.011 | small r<5 0.499±0.006 | cropped 0.557±0.005 | iso 0.800±0.002 | blur2 0.686±0.007 | fill fresh 0.772±0.003 | fill held-out 0.250±0.025  [1003s]
+           grouped all (+interior) 706 | fresh 0.801±0.007 | geo 3-way 0.783±0.005 | held-out 0.464±0.023 | small r<5 0.541±0.014 | cropped 0.582±0.013 | iso 0.767±0.033 | blur2 0.757±0.006 | fill fresh 0.828±0.003 | fill held-out 0.527±0.010  [1549s]
+         grouped 106 + whole 205 = 311 | fresh 0.853±0.003 | geo 3-way 0.802±0.005 | held-out 0.478±0.011 | small r<5 0.560±0.005 | cropped 0.610±0.010 | iso 0.837±0.004 | blur2 0.827±0.001 | fill fresh 0.862±0.005 | fill held-out 0.585±0.033  [1798s]
+  count primitive (grouping only) test_multi: exact 0.430; per true count 1:0.91, 2:0.37, 3:0.00

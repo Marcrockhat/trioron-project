@@ -1,0 +1,82 @@
+"""Grouping primitive (s053): figure/ground + object split + boundary/interior split,
+BEFORE any descriptor.  No labels, no learned parameters.
+
+  bg colour   : median of the frame's border pixels in (Y, RG, BY)
+  distance    : per-pixel weighted colour distance to bg (chroma weighted up so
+                iso-luminant objects survive)
+  foreground  : Otsu threshold on the distance map (adaptive per image)
+  bodies      : morphological CLOSING (radius R_CLOSE) bridges the stripes / dots of a
+                textured fill into one body, then connected components; components
+                smaller than MIN_AREA are dropped; a body covering > FIELD_FRAC of the
+                frame is a FIELD (stripes-/dots-field), else an OBJECT
+  per group   : silhouette (closed body mask), boundary ring (silhouette - eroded),
+                interior (eroded), colour mean over the raw fg pixels, second-moment
+                frame (area, centroid, sqrt-eigen scales, orientation, elongation),
+                border-touch flag (crop), count = number of objects
+Descriptors are computed on the SEPARATED streams:
+  silhouette_desc : boundary-orientation block of the silhouette image (shape only)
+  interior_desc   : cepstral texture of luminance * interior mask (fill only)
+returned by `describe(X)` as a dict of [N, d] tensors for the LARGEST object.
+"""
+import math, torch, numpy as np
+import torch.nn.functional as F
+from scipy import ndimage as ndi
+from experiments.progenitor import frontend as FE
+S = 32; R_CLOSE = 4; MIN_AREA = 6; FIELD_SPAN = 0.85
+
+def _otsu(d):   # d [P] flat distances -> threshold
+    h = torch.histc(d, 64, float(d.min()), float(d.max()) + 1e-6); e = torch.linspace(float(d.min()), float(d.max()) + 1e-6, 65)
+    w0 = h.cumsum(0); w1 = w0[-1] - w0; c = (e[:-1] + e[1:]) / 2; m0 = (h * c).cumsum(0) / w0.clamp(min=1); m1 = ((h * c).sum() - (h * c).cumsum(0)) / w1.clamp(min=1)
+    v = w0 * w1 * (m0 - m1) ** 2; return float(c[int(v.argmax())])
+
+def foreground(X):
+    """X [N,3,S,S] -> fg mask [N,S,S] bool, distance map [N,S,S]"""
+    y = FE.Y(X); rg = X[:, 0] - X[:, 1]; by = X[:, 2] - 0.5 * (X[:, 0] + X[:, 1]); C = torch.stack([y, 2.0 * rg, 2.0 * by], 1)   # chroma up-weighted
+    border = torch.cat([C[:, :, 0, :], C[:, :, -1, :], C[:, :, :, 0], C[:, :, :, -1]], 2)   # [N,3,4S]
+    bg = border.median(2).values                                                            # [N,3]
+    d = torch.sqrt(((C - bg[:, :, None, None]) ** 2).sum(1))                                # [N,S,S]
+    d = F.avg_pool2d(d[:, None], 3, 1, 1)[:, 0]                                            # denoise
+    bd = torch.cat([d[:, 0, :], d[:, -1, :], d[:, :, 0], d[:, :, -1]], 1).quantile(0.10, dim=1)   # noise floor: bg-side border quantile
+    fg = torch.stack([di > max(_otsu(di.flatten()), 0.08, 2.5 * float(bd[i])) for i, di in enumerate(d)])
+    return fg, d
+
+_disk = lambda r: (lambda a: (a[:, None] ** 2 + a[None, :] ** 2 <= r * r))(torch.arange(-r, r + 1).float()).numpy()
+
+def groups(X):
+    """-> list (per image) of list of dicts: mask (silhouette bool [S,S]), interior, boundary, area, is_field, touches, colour, frame"""
+    fg, d = foreground(X); out = []
+    disk = _disk(R_CLOSE); erode_k = _disk(1)
+    for i in range(len(X)):
+        m = fg[i].numpy()
+        closed = ndi.binary_fill_holes(ndi.binary_closing(m, structure=disk, border_value=0) | m)
+        # FIELD: texture covering the frame (fg touches all four borders and covers > FIELD_FG)
+        rlab, rn = ndi.label(m); sizes = np.bincount(rlab.ravel())[1:]; big = np.isin(rlab, 1 + np.nonzero(sizes >= 4)[0]); ys_, xs_ = np.nonzero(big)
+        if int((sizes >= 4).sum()) >= 3 and len(ys_) and (ys_.max() - ys_.min()) >= FIELD_SPAN * S and (xs_.max() - xs_.min()) >= FIELD_SPAN * S:
+            full = np.ones((S, S), bool)
+            out.append([dict(mask=torch.from_numpy(full), interior=torch.from_numpy(full), boundary=torch.zeros(S, S, dtype=torch.bool), rawfg=torch.from_numpy(m), area=S * S,
+                             is_field=True, touches=True, colour=X[i][:, torch.from_numpy(m)].mean(1), frame=torch.tensor([S / 2, S / 2, S / 3, S / 3, 0.0, 1.0, m.mean()]))]); continue
+        lab, n = ndi.label(closed); gs = []
+        for g in range(1, n + 1):
+            sil = lab == g; area = int(sil.sum())
+            if area < MIN_AREA: continue
+            inter = ndi.binary_erosion(sil, structure=erode_k, border_value=0); bnd = sil & ~inter
+            yy, xx = np.nonzero(sil); cy, cx = yy.mean(), xx.mean(); cov = np.cov(np.stack([xx - cx, yy - cy])) if area > 2 else np.eye(2)
+            ev, evec = np.linalg.eigh(cov + 1e-6 * np.eye(2)); sc = np.sqrt(np.maximum(ev, 1e-6)); ang = math.atan2(evec[1, 1], evec[0, 1]) % math.pi
+            raw = m & sil; col = X[i][:, torch.from_numpy(raw)].mean(1) if raw.any() else X[i][:, torch.from_numpy(sil)].mean(1)
+            gs.append(dict(mask=torch.from_numpy(sil), interior=torch.from_numpy(inter), boundary=torch.from_numpy(bnd), rawfg=torch.from_numpy(raw), area=area,
+                           is_field=False, touches=bool(sil[0].any() or sil[-1].any() or sil[:, 0].any() or sil[:, -1].any()),
+                           colour=col, frame=torch.tensor([cx, cy, sc[1], sc[0], ang, sc[1] / max(sc[0], 1e-3), raw.sum() / max(area, 1)])))
+        gs.sort(key=lambda g: -g["area"]); out.append(gs)
+    return out, fg, d
+
+def describe(X, gl=None):
+    """Descriptors of the LARGEST group per image (zeros if none). Returns dict of [N,d] tensors + the group lists."""
+    if gl is None: gl, _, _ = groups(X)
+    N = len(X); sil_img = torch.zeros(N, 3, S, S); int_img = torch.zeros(N, 3, S, S); frame = torch.zeros(N, 7); col = torch.zeros(N, 3)
+    flags = torch.zeros(N, 4)   # n_objects, has_field, touches, fill fraction (rawfg / area)
+    for i, gs in enumerate(gl):
+        objs = [g for g in gs if not g["is_field"]]; flags[i, 0] = len(objs); flags[i, 1] = float(any(g["is_field"] for g in gs))
+        if not gs: continue
+        g = gs[0]; sil_img[i] = g["mask"].float(); int_img[i] = FE.Y(X[i:i + 1])[0] * g["interior"].float() + (~g["interior"]).float() * FE.Y(X[i:i + 1])[0][g["interior"]].mean() if g["interior"].any() else 0
+        frame[i] = g["frame"]; col[i] = g["colour"]; flags[i, 2] = float(g["touches"]); flags[i, 3] = g["frame"][6]
+    return dict(silhouette=FE.boundary_block(sil_img), interior=FE.dense_pooled(int_img), colour=torch.cat([col, FE.colour_block(X)[:, :0]], 1), frame=frame, flags=flags), gl
