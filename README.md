@@ -27,7 +27,7 @@ Method and result details: `paper/paper.pdf` (built from `paper/paper.tex`).
 ## Install
 
 ```bash
-pip install trioron            # 0.3.1+ — earlier wheels lack trioron.pcll and trioron.api
+pip install trioron            # 0.3.2+ — 0.3.1 build_donor crashes; earlier wheels lack trioron.pcll/api
 ```
 
 Or straight from GitHub for the latest unreleased changes:

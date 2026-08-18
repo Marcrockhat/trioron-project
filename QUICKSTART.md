@@ -34,7 +34,7 @@ pip install git+https://github.com/marcrockhat/trioron-project.git
 ### From PyPI:
 
 ```bash
-pip install trioron            # 0.3.1+
+pip install trioron            # 0.3.2+ (0.3.1 build_donor is broken)
 ```
 
 The install pulls in `torch`, `numpy`, `torchvision`. CPU-only PyTorch

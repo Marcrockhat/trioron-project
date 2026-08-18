@@ -88,4 +88,4 @@ try:
 
     __version__ = _pkg_version("trioron")
 except PackageNotFoundError:  # pragma: no cover - raw source / not installed
-    __version__ = "0.3.1"
+    __version__ = "0.3.2"
