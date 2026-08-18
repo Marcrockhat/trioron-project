@@ -1,0 +1,15 @@
+peaks P=48 zone Z=3 hash space 28672 pos grid 13x13
+index: 2650030 entries over 12500 exemplars (212/img), 13s
+[     clean] shazam: class_vote=0.1764 class_bag=0.0800 ex1=0.1276 ex_k1=0.1276 ex_k5=0.1004 ex_k20=0.1140  (260s)
+[     clean] kNN k= 1: raw=0.1168 cep(b)=0.0396
+[     clean] kNN k=20: raw=0.0744 cep(b)=0.0508
+[   2x-blur] shazam: class_vote=0.1480 class_bag=0.0788 ex1=0.0964 ex_k1=0.0964 ex_k5=0.0820 ex_k20=0.0944  (282s)
+[   2x-blur] kNN k= 1: raw=0.1116 cep(b)=0.0404
+[   2x-blur] kNN k=20: raw=0.0716 cep(b)=0.0420
+[    shift4] shazam: class_vote=0.0884 class_bag=0.0712 ex1=0.0944 ex_k1=0.0944 ex_k5=0.0844 ex_k20=0.0896  (273s)
+[    shift4] kNN k= 1: raw=0.0744 cep(b)=0.0400
+[    shift4] kNN k=20: raw=0.0528 cep(b)=0.0428
+[fragment20] shazam: class_vote=0.0936 class_bag=0.0644 ex1=0.0728 ex_k1=0.0728 ex_k5=0.0636 ex_k20=0.0640  (324s)
+[fragment20] kNN k= 1: raw=0.0724 cep(b)=0.0404
+[fragment20] kNN k=20: raw=0.0524 cep(b)=0.0504
+chance 0.04

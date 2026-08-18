@@ -1,0 +1,10 @@
+[          clean] kNN(std-cos): raw k1=0.3380 k5=0.3332 | cep(b) k1=0.2612 k5=0.2504
+[        2x-blur] kNN(std-cos): raw k1=0.3304 k5=0.3308 | cep(b) k1=0.1452 k5=0.1316
+[    shift4_roll] kNN(std-cos): raw k1=0.1616 k5=0.1936 | cep(b) k1=0.1036 k5=0.1176
+[     shift4_pad] kNN(std-cos): raw k1=0.1740 k5=0.2096 | cep(b) k1=0.1176 k5=0.1212
+[fragment20_hard] kNN(std-cos): raw k1=0.2536 k5=0.2552 | cep(b) k1=0.1716 k5=0.1656
+[fragment20_soft] kNN(std-cos): raw k1=0.2092 k5=0.2260 | cep(b) k1=0.1028 k5=0.1028
+[     shift4_pad] shazam: class_vote=0.0856 class_bag=0.0708 ex1=0.0920 ex_k1=0.0920 ex_k5=0.0800 ex_k20=0.0920
+[fragment20_soft] shazam: class_vote=0.0680 class_bag=0.0660 ex1=0.0696 ex_k1=0.0696 ex_k5=0.0684 ex_k20=0.0792
+true-class argmax offset for shift4_pad (expect (-2,-2) or (2,2) in window steps): mode counts 95 /200; mean [-0.1850000023841858, -0.18000000715255737]
+true-class argmax offset for CLEAN (expect (0,0)): mode counts 128 /200; mean [-0.014999999664723873, -0.014999999664723873]
