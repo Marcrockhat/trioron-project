@@ -3272,7 +3272,7 @@ under `trioron/legacy/` (not shown in detail; preserved unchanged).
 ```
 trioron/
 ├── __init__.py                # public surface (re-exports for v1 callers)
-├── api.py                     # v2 public API (replaces v1's 1446-line api.py)
+├── api.py                     # v2 public API (replaces v1's 1446-line api.py); absorb/pool_matched_absorb dispatch v1 paths vs v2 Substrates (§5.3)
 │
 ├── core/                      # the new substrate — one concept per file
 ├── phenotype/                 # how genes express into operations

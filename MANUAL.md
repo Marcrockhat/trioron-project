@@ -993,6 +993,32 @@ settle_head_via_manifold(
 Use this when you want one substrate (not a routed multi-branch
 ensemble) carrying the union of two donors' cells.
 
+**v2 substrates (2.0 `construct(...)` objects).** The same two names
+dispatch on type. `absorb(recipient, donor1, donor2, ...)` with
+positional `Substrate` objects (no `donor_paths=`) grafts every donor
+INTO the recipient in place — head-merged: donor interior cells are
+transplanted with their dendritic state, donor edges into output cell
+*j* land on the recipient's output cell *j*, biases summed — so
+`recipient(x) == old_recipient(x) + Σ donor(x)` exactly. Requires equal
+input and output widths (siblings: the same task grown from different
+seeds). `pool_matched_absorb(recipient, donor)` on two `Substrate`s is
+the single-donor form. Both return `GraftResult`s
+(`trioron.api.graft` is the underlying `lifecycle.graft.graft`).
+
+```python
+from trioron.api import absorb, construct, seeded, Envelope, default_dispatch_table
+
+# rec / d1 / d2: three trained Substrates with the same input and output width
+absorb(rec, d1, d2)            # freeze=False (trainable), merge_output=True
+# rec(x) == old_rec(x) + d1(x) + d2(x)
+```
+
+Do NOT fine-tune the absorbed substrate with raw TD/SGD straight away:
+the k-fold head sum has k× output scale and the first gradient steps
+undo the absorption (measured: −92 survival on the world drive nests,
+s051). Rescale the head by 1/k, or lock the transplanted cells
+(`freeze=True`) and let only new growth learn.
+
 ### 13.8 Continual-learning benchmark — split-CIFAR-100
 
 `experiments/bench_2_0_cifar_continual.py` is the canonical

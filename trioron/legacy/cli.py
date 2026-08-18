@@ -32,6 +32,12 @@ import torch
 # ---------------------------------------------------------------------
 
 
+def _cpu_state(v):
+    """state_dict values are tensors EXCEPT ``_extra_state`` (a plain dict
+    stashed by TrioronLayer for LCN masks) — pass non-tensors through."""
+    return v.detach().cpu() if hasattr(v, "detach") else v
+
+
 def _resolve_py_entry(spec: str):
     """Parse 'path/to/file.py:fn_name' (or 'pkg.mod:fn_name') and
     return the resolved attribute. Used by --from-py and --tools to
@@ -248,7 +254,7 @@ def cmd_absorb(args: argparse.Namespace) -> int:
                 "l0_seed": b.l0_seed,
                 "n_nodes_per_layer": list(b.net.n_nodes_per_layer()),
                 "input_dim": b.net.layers[0].fan_in,
-                "state_dict": {k: v.detach().cpu()
+                "state_dict": {k: _cpu_state(v)
                                for k, v in b.net.state_dict().items()},
                 "manifold_stats": {
                     int(c): (mu.detach().cpu(), sg.detach().cpu())

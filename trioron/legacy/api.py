@@ -211,6 +211,12 @@ class TrioronConfig:
 # ---------------------------------------------------------------------
 
 
+def _cpu_state(v):
+    """state_dict values are tensors EXCEPT ``_extra_state`` (a plain dict
+    stashed by TrioronLayer for LCN masks) — pass non-tensors through."""
+    return v.detach().cpu() if hasattr(v, "detach") else v
+
+
 def _apply_config_to_bench(cfg: TrioronConfig) -> None:
     """Inject the user's TrioronConfig into the module-level globals
     of experiments/bench_chained_15task.py.
@@ -420,7 +426,7 @@ def build_donor(
         "l0_seed": int(seed),
         "arm": arm,
         "task_class_lists": [list(t.classes) for t in tasks],
-        "state_dict": {k: v.detach().cpu()
+        "state_dict": {k: _cpu_state(v)
                        for k, v in net.state_dict().items()},
         "manifold_stats": {int(c): (mu.detach().cpu(), sg.detach().cpu())
                            for c, (mu, sg) in mb._stats.items()},
@@ -568,7 +574,7 @@ def _branch_to_dict(b) -> Dict[str, Any]:
         "l0_seed": b.l0_seed,
         "n_nodes_per_layer": list(b.net.n_nodes_per_layer()),
         "input_dim": b.net.layers[0].fan_in,
-        "state_dict": {k: v.detach().cpu()
+        "state_dict": {k: _cpu_state(v)
                        for k, v in b.net.state_dict().items()},
         "manifold_stats": {
             int(c): (mu.detach().cpu(), sg.detach().cpu())
@@ -977,7 +983,7 @@ def extend(
         "label": payload.get("label", "extended"),
         "classes_covered": extended_classes,
         "n_nodes_per_layer": list(net.n_nodes_per_layer()),
-        "state_dict": {k: v.detach().cpu()
+        "state_dict": {k: _cpu_state(v)
                        for k, v in net.state_dict().items()},
         "manifold_stats": {int(c): (mu.detach().cpu(), sg.detach().cpu())
                            for c, (mu, sg) in mb._stats.items()},

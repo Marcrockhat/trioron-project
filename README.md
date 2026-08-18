@@ -64,6 +64,9 @@ donor = build_donor(label="my_donor", tasks=tasks, seed=42,
 
 Compose donors with `absorb`, keep teaching with `extend`, deploy with
 `deploy_agent` — all from `trioron.api`; see [MANUAL.md](MANUAL.md).
+(`absorb(rec, donor, ...)` on 2.0 `Substrate` objects is the head-merged
+graft — one substrate whose forward is the exact sum of its siblings';
+MANUAL §13.7.)
 
 ### 2. The substrate itself (a growing net you train like any torch module)
 

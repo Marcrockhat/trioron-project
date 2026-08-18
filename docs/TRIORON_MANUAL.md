@@ -285,6 +285,15 @@ task-aware **0.961** (manifold-grown, 30 KB). PackNet sat at 0.046 full. (paper 
   mitosis, child inherits a fraction of edges + new ones; gated by frustration.
 - **Grafting** (§5.3) — transplant donor cells into a recipient substrate
   (`lifecycle/graft.py`); the basis of multi-branch absorption / skill-packs.
+  **Head-merged absorption (s051):** `graft(rec, donor, merge_output=True, wiring="none")`
+  = `trioron.api.absorb(rec, donor, ...)` for v2 substrates — donor interior cells
+  transplanted WITH their quad-dendrite state (n_branches/branch_alpha/edge_branch, λ;
+  the old graft silently linearised quad donors), donor head summed onto the recipient's:
+  `merged(x) == rec(x) + donor(x)` exactly. Same input+output width required. Measured on
+  three seed-sibling drive organisms: absorb 190.6±22.3 ≥ nest-of-nests 180.0±7.6 ≫ best
+  single 159.0; **raw-TD "settling" the k-fold Q-sum afterwards destroys it (98.2)** — lock
+  or rescale first. `trioron.api.absorb` dispatches: positional `Substrate`s → v2 graft;
+  `donor_paths=/out_path=` → v1 branch-granularity organism (unchanged).
 - **Ship-Wake-Extend** (§5.4) — serialize (`ship`), reload (`wake`), resume training and
   grow within a new cap. The lifetime-deployment loop.
 - **Dense export** (§5.4/§6.4, `lifecycle/export.py`, s050) — fold the compiled plan to a

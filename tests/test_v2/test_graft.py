@@ -86,3 +86,35 @@ def test_output_width_mismatch_raises():
     rec, don = _build(n_out=4, seed=6), _build(n_out=3, seed=7)
     with pytest.raises(ValueError):
         graft(rec, don, freeze=False, wiring="none", merge_output=True)
+
+
+# ── trioron.api dispatch (spec §9.1) ─────────────────────────────────
+
+def test_api_absorb_dispatches_v2_substrates():
+    from trioron.api import absorb, pool_matched_absorb, graft as api_graft
+    assert api_graft is graft
+    rec, d1, d2 = _build(seed=8), _build(seed=9), _build(seed=10)
+    x = torch.randn(16, 9)
+    with torch.no_grad():
+        ref = rec(x) + d1(x) + d2(x)
+        res = absorb(rec, d1, d2)
+        assert len(res) == 2 and all(len(r.recipient_ids) == 8 for r in res)
+        assert torch.allclose(rec(x), ref, atol=1e-5)
+        rec2, d3 = _build(seed=11), _build(seed=12)
+        ref2 = rec2(x) + d3(x)
+        r = pool_matched_absorb(rec2, d3)
+        assert len(r.recipient_ids) == 8
+        assert torch.allclose(rec2(x), ref2, atol=1e-5)
+
+
+def test_api_absorb_rejects_mixed_calls():
+    from trioron.api import absorb, pool_matched_absorb
+    rec, d1 = _build(seed=13), _build(seed=14)
+    with pytest.raises(TypeError):
+        absorb(rec, d1, donor_paths=["a.pt"], out_path="o.pt")
+    with pytest.raises(TypeError):
+        absorb(rec)                       # no donor
+    with pytest.raises(TypeError):
+        absorb(rec, "not-a-substrate")
+    with pytest.raises(TypeError):
+        pool_matched_absorb(rec, d1, grid_size=4)   # v1-only kwarg on v2
