@@ -1,0 +1,17 @@
+cluster sizes (sorted): [1147, 1108, 946, 816, 742, 735, 681, 635, 609, 598, 569, 561, 505, 402, 402, 340, 313, 305, 237, 204, 184, 153, 143, 86, 79]
+NMI vs fine(25)=0.111  vs superclass(5)=0.066
+eta^2 (fraction of factor variance explained by cluster id; fine class as reference):
+             luminance: cluster 0.066   fine-class 0.161
+              contrast: cluster 0.305   fine-class 0.061
+         rel HF energy: cluster 0.162   fine-class 0.062
+            anisotropy: cluster 0.076   fine-class 0.077
+    V/H gradient ratio: cluster 0.183   fine-class 0.148
+            saturation: cluster 0.055   fine-class 0.314
+               cos2ori: cluster 0.183   fine-class 0.149
+               sin2ori: cluster 0.064   fine-class 0.023
+  cluster 15 n=1147: top fine [(11, 0.1), (0, 0.09), (5, 0.08)]  super [0.21, 0.19, 0.35, 0.08, 0.17]  lum=0.45 con=0.18 hf=0.64 aniso=0.26 V/H=0.89
+  cluster 17 n=1108: top fine [(10, 0.09), (14, 0.09), (24, 0.09)]  super [0.15, 0.14, 0.32, 0.1, 0.29]  lum=0.46 con=0.23 hf=0.56 aniso=0.25 V/H=1.01
+  cluster  0 n= 946: top fine [(21, 0.1), (10, 0.09), (19, 0.08)]  super [0.14, 0.14, 0.34, 0.21, 0.17]  lum=0.47 con=0.23 hf=0.62 aniso=0.24 V/H=0.98
+  cluster  7 n= 816: top fine [(20, 0.13), (24, 0.08), (22, 0.08)]  super [0.09, 0.13, 0.23, 0.17, 0.38]  lum=0.50 con=0.20 hf=0.62 aniso=0.25 V/H=1.02
+  cluster 14 n= 742: top fine [(23, 0.1), (24, 0.08), (22, 0.08)]  super [0.12, 0.16, 0.2, 0.15, 0.37]  lum=0.47 con=0.21 hf=0.57 aniso=0.27 V/H=1.19
+  cluster  6 n= 735: top fine [(0, 0.08), (7, 0.08), (1, 0.08)]  super [0.33, 0.23, 0.19, 0.18, 0.07]  lum=0.46 con=0.13 hf=0.81 aniso=0.30 V/H=1.42

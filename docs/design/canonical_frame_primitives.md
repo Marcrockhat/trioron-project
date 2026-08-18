@@ -194,6 +194,27 @@ pooled-49 alone 0.340 (1176-d): finer pooling gives +1.8, stereo +2.4 at
 fewer dims, disparity +1. **This is R's front end going forward:
 `dense2d25 ⊕ stereo25` (800) — the "wave stream" of the design.**
 
+**What the unsupervised layer-1 clusters are** (`diag_cluster_purity.py`,
+`diag_cluster_what.py`, `diag_cluster_shapes.py`, `diag_style_nest.py`;
+logs `outputs/cluster_*_s052.log`, `style_nest_s052.log`): k-means on
+dense⊕stereo (proxy for Phasecyte templates) — clusters are not sparse
+(79–1147 of 12.5 K) but not class-pure (k=25: purity 0.145, NMI 0.11,
+3/25 clusters ≥34 % one class; eye DoG 0/25 = s051 reproduced; raw
+pixels cluster best, NMI 0.18). They are **texture-style bands**: η² by
+cluster — contrast 0.31, HF energy 0.16, orientation 0.18; by fine class
+— saturation/colour 0.31 (which the front end discards), luminance 0.16.
+Not geometry: synthetic circle/triangle/square land in the same three
+clusters in the same proportions; only polkadots/stripes shift toward
+texture clusters (a supervised leaf on the same features gets the 5
+shapes 0.81 — carried, not dominant). **Style bands as layer 1 of a
+nest** (one leaf per band, route by nearest centroid): k=5 0.322 / soft
+0.323, k=10 0.292 / 0.318, k=25 0.242 / 0.248 vs single leaf 0.345 —
+monotone decline = per-leaf data starvation (500/class → 100 → 50 → 20);
+uniform-mix ≪ routed shows the leaves are real specialists. Only win:
+blur (k=5 0.122 vs 0.095 — a "blurry band" routes blurred inputs).
+**Rocky's reading (s052): what is lacking is data, not architecture** —
+plus (Chloe) the fixed-front-end ceiling and missing colour.
+
 Consequence for the design: **stage 1 (tokenize) is dropped as a
 partition/BPE tokenizer.** What survives of the fragmenter idea is the
 *continuity boundary map* (adjacent-window spectral discontinuity —
