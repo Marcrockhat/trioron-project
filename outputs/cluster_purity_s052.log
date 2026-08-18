@@ -1,0 +1,16 @@
+k-means on train (12.5K imgs, 25 classes); purity chance ~0.04+; NMI; clusters with best-class >=34%; max best-class frac
+   eye DoG signed (s051 Phasecyte input) d= 412 k= 25: purity=0.106 NMI=0.052 clusters>=34%=  0/25 max=0.19
+   eye DoG signed (s051 Phasecyte input) d= 412 k= 50: purity=0.116 NMI=0.064 clusters>=34%=  0/50 max=0.24
+   eye DoG signed (s051 Phasecyte input) d= 412 k=100: purity=0.135 NMI=0.080 clusters>=34%=  4/100 max=1.00
+                      (b) 12px/5 cepstra d= 800 k= 25: purity=0.130 NMI=0.092 clusters>=34%=  3/25 max=0.74
+                      (b) 12px/5 cepstra d= 800 k= 50: purity=0.154 NMI=0.110 clusters>=34%=  7/50 max=0.82
+                      (b) 12px/5 cepstra d= 800 k=100: purity=0.194 NMI=0.142 clusters>=34%= 20/100 max=0.90
+                     dense 2-D pooled 25 d= 600 k= 25: purity=0.144 NMI=0.104 clusters>=34%=  5/25 max=0.83
+                     dense 2-D pooled 25 d= 600 k= 50: purity=0.164 NMI=0.118 clusters>=34%=  9/50 max=0.85
+                     dense 2-D pooled 25 d= 600 k=100: purity=0.186 NMI=0.138 clusters>=34%= 17/100 max=0.95
+                dense + stereo pooled 25 d= 800 k= 25: purity=0.145 NMI=0.111 clusters>=34%=  3/25 max=0.82
+                dense + stereo pooled 25 d= 800 k= 50: purity=0.178 NMI=0.132 clusters>=34%= 11/50 max=0.87
+                dense + stereo pooled 25 d= 800 k=100: purity=0.205 NMI=0.154 clusters>=34%= 21/100 max=0.95
+                              raw pixels d=3072 k= 25: purity=0.200 NMI=0.178 clusters>=34%=  3/25 max=0.41
+                              raw pixels d=3072 k= 50: purity=0.230 NMI=0.193 clusters>=34%= 14/50 max=0.70
+                              raw pixels d=3072 k=100: purity=0.251 NMI=0.211 clusters>=34%= 29/100 max=1.00
