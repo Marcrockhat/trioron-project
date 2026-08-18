@@ -1,0 +1,10 @@
+              ds+col 900 | fresh 0.705±0.004 | geometric 3-way 0.583±0.001 | held-out 0.227±0.010 | small r<5 0.367±0.019 | cropped 0.356±0.027 | iso 0.519±0.058 | blur-strong 0.677±0.020
+  cached bd/train (20000, 92) in -1s
+  cached bd/test_fresh (5000, 92) in 1s
+  cached bd/test_held (3000, 92) in 0s
+  cached bd/test_stress (12000, 92) in 1s
+     ds+col+boundary 992 | fresh 0.765±0.004 | geometric 3-way 0.669±0.005 | held-out 0.345±0.003 | small r<5 0.464±0.023 | cropped 0.422±0.018 | iso 0.542±0.029 | blur-strong 0.738±0.008
+      1-NN fresh 0.671
+      MLP 2x256 (OVER CAP ref) fresh 0.779 held 0.338
+             boundary 92 | fresh 0.709±0.003 | geometric 3-way 0.655±0.003 | held-out 0.354±0.009 | small r<5 0.465±0.004 | cropped 0.406±0.009 | iso 0.391±0.005 | blur-strong 0.648±0.004
+        boundary+col 192 | fresh 0.761±0.006 | geometric 3-way 0.664±0.008 | held-out 0.352±0.007 | small r<5 0.455±0.006 | cropped 0.395±0.010 | iso 0.604±0.017 | blur-strong 0.751±0.005

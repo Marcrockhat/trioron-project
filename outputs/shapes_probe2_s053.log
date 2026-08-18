@@ -1,0 +1,25 @@
+hidden 48 fresh acc 0.6995999813079834
+confusion fresh (rows true circ/tri/squ/stripes/dots):
+[[593, 204, 197, 12, 3], [219, 697, 97, 8, 8], [351, 161, 447, 21, 11], [36, 24, 9, 880, 21], [35, 38, 18, 29, 881]]
+held-out combos -> predicted (rows: circle-outline, triangle-dotted, square-striped):
+  circle-outline: [311, 166, 512, 18, 17]
+  triangle-dotted: [356, 304, 283, 20, 11]
+  square-striped: [550, 286, 76, 85, 5]
+fresh acc per (shape,fill):
+  circle: solid 0.57, striped 0.64, dotted 0.56
+  triangle: solid 0.70, striped 0.61, outline 0.72
+  square: solid 0.48, dotted 0.35, outline 0.52
+stress acc per scale bin (uncropped, geometric only):
+  r[3,5) n=948 acc 0.387
+  r[5,8) n=1130 acc 0.462
+  r[8,11) n=976 acc 0.617
+  r[11,14) n=1617 acc 0.637
+  r[14,19) n=770 acc 0.660
+stress acc per vis bin (cropped):
+  vis[0.3,0.5) n=646 acc 0.350
+  vis[0.5,0.7) n=825 acc 0.387
+  vis[0.7,1.01) n=245 acc 0.400
+MLP 2x256 (OVER CAP ref) fresh 0.717 held 0.194 stress-small(r<5) 0.577
+MLP 2x1024 (OVER CAP ref) fresh 0.729 held 0.228 stress-small(r<5) 0.573
+1-NN fresh acc 0.6385999917984009
+joint (shape x fill) leaf: held-out shape acc via marginal 0.1550000011920929  fresh 0.7062000036239624

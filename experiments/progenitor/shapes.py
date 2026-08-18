@@ -101,7 +101,7 @@ def sample(n, seed, *, maxk=1, p_iso=0.15, p_crop=0.2, exclude=(), only=None, no
     pairs = [(s, f) for s in shape_choices for f in (fill_choices if s < 3 else (0,))]
     if only is not None: pairs = [p for p in pairs if p in set(only)]
     pairs = [p for p in pairs if p not in set(exclude)]
-    pb = torch.tensor(p_blur); pf = torch.tensor(p_focus)
+    pb = torch.tensor(p_blur, dtype=torch.float); pf = torch.tensor(p_focus, dtype=torch.float)
     for i in range(n):
         hb, sb, vb = R(), R() * 0.6, R() * 0.6 + 0.3; bg = _hsv(hb, sb, vb)
         k = int(torch.randint(1, maxk + 1, (1,), generator=gen)) if maxk > 1 else 1

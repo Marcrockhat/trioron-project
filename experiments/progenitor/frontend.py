@@ -65,3 +65,42 @@ def colour_block(X):   # 5x5 regions x (Y, RG, BY mean; Y std) = 100
     return torch.cat([m(y), m(rg), m(by), sd(y)], 1)
 def dense_stereo_colour(X): return torch.cat([dense_stereo(X), colour_block(X)], 1)   # 900
 def raw(X): return X.flatten(1)   # 3072 (over cap; reference)
+
+def boundary_block(X, nb=16):
+    """s053: boundary-orientation primitive. Coarse-scale (sigma~1) luminance gradient
+    -> magnitude-weighted orientation histogram mod 180 (nb bins), globally + per 2x2
+    quadrant, + angular DCT magnitude of the global histogram (rotation-invariant
+    'corner-count' spectrum: circle flat, square period 90, triangle 120), + gradient
+    energy per quadrant.  16 + 64 + 8 + 4 = 92 dims.  Silhouette, not interior texture."""
+    y = Y(X); k = torch.tensor([[1., 2., 1.], [2., 4., 2.], [1., 2., 1.]]) / 16
+    y = F.conv2d(F.pad(y[:, None], (1, 1, 1, 1), mode="reflect"), k[None, None])[:, 0]
+    gx = y[:, :, 2:] - y[:, :, :-2]; gy = y[:, 2:, :] - y[:, :-2, :]; gx, gy = gx[:, 1:-1, :], gy[:, :, 1:-1]
+    mag = torch.sqrt(gx ** 2 + gy ** 2); ang = (torch.atan2(gy, gx) % math.pi) / math.pi * nb
+    b0 = ang.floor().long() % nb; w1 = ang - ang.floor(); b1 = (b0 + 1) % nb   # linear binning
+    N = len(X); H = torch.zeros(N, nb); H.index_put_((torch.arange(N)[:, None, None].expand_as(b0), b0), mag * (1 - w1), accumulate=True)
+    H.index_put_((torch.arange(N)[:, None, None].expand_as(b1), b1), mag * w1, accumulate=True)
+    Hn = H / (H.sum(1, keepdim=True) + 1e-6)
+    Q = []; s = mag.shape[1] // 2
+    for r in (slice(0, s), slice(s, None)):
+        for c in (slice(0, s), slice(s, None)):
+            Hq = torch.zeros(N, nb); Hq.index_put_((torch.arange(N)[:, None, None].expand_as(b0[:, r, c]), b0[:, r, c]), mag[:, r, c], accumulate=True)
+            Q.append(Hq / (Hq.sum(1, keepdim=True) + 1e-6)); Q.append(mag[:, r, c].mean((1, 2))[:, None])
+    Fh = torch.fft.rfft(Hn, dim=1).abs()[:, 1:9]   # angular spectrum bins 1..8 (rotation-invariant)
+    return torch.cat([Hn, Fh, *Q], 1)
+def dsc_boundary(X): return torch.cat([dense_stereo_colour(X), boundary_block(X)], 1)   # 992
+
+def corner_block(X, k=8):
+    """s053: corner primitive (affine-invariant count: circle 0 / triangle 3 / square 4).
+    Harris response on the coarse luminance -> non-max suppressed local maxima ->
+    top-k responses (sorted, / max) + counts above 0.2/0.4/0.6 of max + max itself
+    + total corner mass.  k + 5 dims (13)."""
+    y = Y(X); g = torch.tensor([[1., 2., 1.], [2., 4., 2.], [1., 2., 1.]]) / 16
+    y = F.conv2d(F.pad(y[:, None], (1, 1, 1, 1), mode="reflect"), g[None, None])
+    gx = F.conv2d(F.pad(y, (1, 1, 0, 0), mode="reflect"), torch.tensor([[[[-1., 0., 1.]]]])); gy = F.conv2d(F.pad(y, (0, 0, 1, 1), mode="reflect"), torch.tensor([[[[-1.], [0.], [1.]]]]))
+    w = torch.ones(1, 1, 5, 5) / 25; Sxx = F.conv2d(gx * gx, w, padding=2); Syy = F.conv2d(gy * gy, w, padding=2); Sxy = F.conv2d(gx * gy, w, padding=2)
+    R = (Sxx * Syy - Sxy ** 2) - 0.05 * (Sxx + Syy) ** 2; R = R.clamp(min=0)
+    R[:, :, :2, :] = 0; R[:, :, -2:, :] = 0; R[:, :, :, :2] = 0; R[:, :, :, -2:] = 0   # ignore frame edge (crops make false corners there)
+    nms = (R == F.max_pool2d(R, 5, 1, 2)) & (R > 0); Rn = (R * nms).flatten(1)
+    top = Rn.topk(k, dim=1).values; mx = top[:, :1] + 1e-8; rel = top / mx
+    cnt = torch.stack([(rel > t).float().sum(1) for t in (0.2, 0.4, 0.6)], 1)
+    return torch.cat([rel, cnt, torch.log1p(mx * 1e3), torch.log1p(Rn.sum(1, keepdim=True) * 1e3)], 1)

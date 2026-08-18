@@ -3,7 +3,7 @@ import os, sys, time, torch
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from experiments.progenitor import frontend as FE, shapes as SH
 torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "6")))
-FRONTS = {"ds": FE.dense_stereo, "col": FE.colour_block}
+FRONTS = {"ds": FE.dense_stereo, "col": FE.colour_block, "bd": FE.boundary_block, "cn": FE.corner_block}
 def feats(front, split):
     p = os.path.join(SH.OUT, f"feat_{front}_{split}.pt")
     if os.path.exists(p): return torch.load(p).float()

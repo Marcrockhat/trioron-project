@@ -1,0 +1,9 @@
+  cached cn/train (20000, 13) in 3s
+  cached cn/test_fresh (5000, 13) in 1s
+  cached cn/test_held (3000, 13) in 0s
+  cached cn/test_stress (12000, 13) in 2s
+               corner 13 | fresh 0.437±0.002 | geometric 3-way 0.448±0.005 | held-out 0.255±0.010 | small r<5 0.453±0.008 | cropped 0.304±0.009 | iso 0.278±0.003 | blur-strong 0.382±0.009
+  boundary+col+corner 205 | fresh 0.771±0.003 | geometric 3-way 0.673±0.004 | held-out 0.376±0.004 | small r<5 0.502±0.005 | cropped 0.428±0.009 | iso 0.614±0.003 | blur-strong 0.755±0.003
+      1-NN fresh 0.659
+      MLP 2x256 (OVER CAP ref) fresh 0.792 held 0.374
+   ds+col+bd+corner 1005 | fresh 0.766±0.003 | geometric 3-way 0.674±0.007 | held-out 0.349±0.017 | small r<5 0.500±0.016 | cropped 0.432±0.038 | iso 0.546±0.032 | blur-strong 0.733±0.011
