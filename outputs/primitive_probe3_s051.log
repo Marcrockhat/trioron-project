@@ -1,0 +1,16 @@
+    [dream primitive detector] ep0 loss=1.416 (24000 pseudo)
+    [dream primitive detector] ep14 loss=0.752 (24000 pseudo)
+  primitive detector synthetic acc=0.721 per-class {'circle': 0.7, 'triangle': 0.69, 'square': 0.62, 'polkadots': 0.68, 'stripes': 0.78, 'blank': 0.84}
+prim feats mean response per primitive (train): [0.18350790441036224, 0.20641309022903442, 0.2592755854129791, 0.06901705265045166, 0.20632801949977875, 0.07545839995145798]
+    [dream (g) primitives x25 windows] ep0 loss=3.991 (12500 pseudo)
+    [dream (g) primitives x25 windows] ep7 loss=2.831 (12500 pseudo)
+                (g) primitives x25 windows d= 150: full=0.1440 task=0.3420 | 2x-blur full=0.0836 task=0.2684
+    [dream (h) primitives + cepstral spectrogram (b)] ep0 loss=3.443 (12500 pseudo)
+    [dream (h) primitives + cepstral spectrogram (b)] ep7 loss=1.763 (12500 pseudo)
+  (h) primitives + cepstral spectrogram (b) d= 950: full=0.2928 task=0.4752 | 2x-blur full=0.1408 task=0.3236
+    [dream (i) (b) trained with blur augmentation] ep0 loss=3.220 (25000 pseudo)
+    [dream (i) (b) trained with blur augmentation] ep7 loss=1.791 (25000 pseudo)
+    (i) (b) trained with blur augmentation d= 800: full=0.2644 task=0.4556 | 2x-blur full=0.2544 task=0.4476
+    [dream (j) (h) + blur aug] ep0 loss=3.151 (25000 pseudo)
+    [dream (j) (h) + blur aug] ep7 loss=1.650 (25000 pseudo)
+                        (j) (h) + blur aug d= 950: full=0.2592 task=0.4428 | 2x-blur full=0.2408 task=0.4384

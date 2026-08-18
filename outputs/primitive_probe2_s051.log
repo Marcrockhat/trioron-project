@@ -1,0 +1,18 @@
+    [dream (a) global cepstrum] ep0 loss=4.064 (12500 pseudo)
+    [dream (a) global cepstrum] ep7 loss=2.438 (12500 pseudo)
+                       (a) global cepstrum d= 100: full=0.2576 task=0.4660 | 2x-blur full=0.1044 task=0.2976
+    [dream (b) cepstral spectrogram, positions kept] ep0 loss=3.498 (12500 pseudo)
+    [dream (b) cepstral spectrogram, positions kept] ep7 loss=1.942 (12500 pseudo)
+  (b) cepstral spectrogram, positions kept d= 800: full=0.3036 task=0.4944 | 2x-blur full=0.1188 task=0.3256
+    [dream (c) cepstra pooled over positions] ep0 loss=4.150 (12500 pseudo)
+    [dream (c) cepstra pooled over positions] ep7 loss=2.880 (12500 pseudo)
+         (c) cepstra pooled over positions d=  64: full=0.1544 task=0.3836 | 2x-blur full=0.0452 task=0.2388
+    [dream (d) onset window cepstrum + where] ep0 loss=4.423 (12500 pseudo)
+    [dream (d) onset window cepstrum + where] ep7 loss=3.030 (12500 pseudo)
+         (d) onset window cepstrum + where d=  34: full=0.1148 task=0.3240 | 2x-blur full=0.0652 task=0.2412
+    [dream (e) eye DoG + (c)] ep0 loss=3.872 (12500 pseudo)
+    [dream (e) eye DoG + (c)] ep7 loss=2.033 (12500 pseudo)
+                         (e) eye DoG + (c) d= 476: full=0.2376 task=0.4300 | 2x-blur full=0.1724 task=0.3820
+    [dream (f) eye DoG + (b)] ep0 loss=3.483 (12500 pseudo)
+    [dream (f) eye DoG + (b)] ep7 loss=1.459 (12500 pseudo)
+                         (f) eye DoG + (b) d=1212: full=0.3128 task=0.4976 | 2x-blur full=0.1532 task=0.3292

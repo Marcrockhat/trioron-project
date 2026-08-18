@@ -1,0 +1,18 @@
+CIFAR EYE NEST (s051) fix=0 seed=0 frac=1.0 window=1000 jitter=1 hidden=48 pseudo=300/class epochs=8 cap=128 tasks=20 rectify=False
+/home/marcrockhat/trioron-project/trioron/core/scheduler.py:157: UserWarning: Sparse invariant checks are implicitly disabled. Memory errors (e.g. SEGFAULT) will occur when operating on a sparse tensor which violates the invariants, but checks incur performance overhead. To silence this warning, explicitly opt in or out. See `torch.sparse.check_sparse_tensor_invariants.__doc__` for guidance.  (Triggered internally at /pytorch/aten/src/ATen/Context.cpp:760.)
+  pool_mat = torch.sparse_coo_tensor(
+  [genesis g0] starved=0 merged=199->32  receptors->857
+[genesis] 1 fixation organs, 1 phasecyte leaves  t=7s
+  [task  1/20 coarse 0] classes(leaf0)=1 spawned=0 t=9s
+  [task  2/20 coarse 1] classes(leaf0)=1 spawned=0 t=11s
+  [task  3/20 coarse 2] classes(leaf0)=2 spawned=0 t=13s
+  [task  4/20 coarse 3] classes(leaf0)=2 spawned=0 t=17s
+  [task  5/20 coarse 4] classes(leaf0)=2 spawned=0 t=20s
+  [task  6/20 coarse 5] classes(leaf0)=2 spawned=0 t=23s
+  [task  7/20 coarse 6] classes(leaf0)=2 spawned=0 t=26s
+  [task  8/20 coarse 7] classes(leaf0)=9 spawned=0 t=28s
+  [task  9/20 coarse 8] classes(leaf0)=47 spawned=0 t=37s
+  [task 10/20 coarse 9] classes(leaf0)=103 spawned=0 t=54s
+  [task 11/20 coarse 10] classes(leaf0)=104 spawned=0 t=84s
+  [task 12/20 coarse 11] classes(leaf0)=122 spawned=1314 t=2978s
+  [task 13/20 coarse 12] classes(leaf0)=128 spawned=0 t=3112s

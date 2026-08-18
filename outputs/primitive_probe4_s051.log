@@ -1,0 +1,9 @@
+    [dream (k) constellation: landmark PAIRS, relative only] ep0 loss=3.537 (12500 pseudo)
+    [dream (k) constellation: landmark PAIRS, relative only] ep7 loss=2.559 (12500 pseudo)
+  (k) constellation: landmark PAIRS, relative only d=1024: full=0.1736 task=0.3716 | 2x-blur full=0.1484 task=0.3368
+    [dream (l) landmarks with absolute position (4x4 grid)] ep0 loss=4.136 (12500 pseudo)
+    [dream (l) landmarks with absolute position (4x4 grid)] ep7 loss=2.689 (12500 pseudo)
+  (l) landmarks with absolute position (4x4 grid) d= 128: full=0.1704 task=0.3812 | 2x-blur full=0.1588 task=0.3544
+    [dream (m) (k) + cepstral spectrogram (b)] ep0 loss=3.339 (12500 pseudo)
+    [dream (m) (k) + cepstral spectrogram (b)] ep7 loss=1.581 (12500 pseudo)
+            (m) (k) + cepstral spectrogram (b) d=1824: full=0.3044 task=0.4712 | 2x-blur full=0.1312 task=0.3300

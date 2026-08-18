@@ -3563,6 +3563,7 @@ package dependencies) because the scheduler performs the injection and
 | `composer.py` | genome candidate set + affine-folded spawns, residual-incoherence trial statistic, importance gating, prune, ComposerPending | 10.8 |
 | `labels.py` | label tap bank: labels as reference carriers — per-label demodulation taps over receptor pockets (write-only from learning's side; naming/mixture readout) | s034 first cut; spec § pending gates |
 | `manifold.py` | per-class pocket-space μ/σ sketches on class astrocyte rows: annealing, σ-readout, replay, persistence | 10.9 |
+| `eye.py` | the eye — retina-pooled, foveated, opponent-colour receptor body (`Eye`, `fixations`, `retina_layout`); no convolution; s051 exploratory | 10.11 |
 | `nest.py` | nested phasecyte organisms: per-group leaves + full-cov manifold recognition router (`PhasecyteNest`); wake/dream distillation into gradient trioron leaves (`dream_distill`/`dreamed_predict`) — imports `learning/` (router, manifold); s049 promotion, validated vs `outputs/*_s049_*.log` | 10 naming note; s049 |
 
 ---
@@ -4032,3 +4033,26 @@ plan.
 Each step has its own commit and PR; spec changes are pre-requisites,
 not afterthoughts.
 
+### 10.11 The eye — retina-pooled receptor body (s051, exploratory)
+
+`pcll/eye.py` — a fixed sensory ORGAN in front of a Phasecyte leaf, built
+without convolution (no learned weights shared across positions):
+(1) genotypic replication — the same receptive-field type (DoG centre−
+surround) stamped at every retinal position as independent linear
+functionals; (2) time-multiplexing — one foveated retina moved over the
+scene (fixations; ±1 px microsaccades); (3) pooling that grows with
+eccentricity (fovea 1 px, parafovea 2×2, periphery 4×4). Opponent
+colour (Y, L−M, S−(L+M)); chroma only in fovea+parafovea (P stream),
+periphery luminance-only (M stream). `Eye.sense_P/M(x)` → features;
+`Eye.positions()` → imposed retinotopic (x, y, scale) per feature;
+`fixations(n)` → 1/5/9 fixation centres. Design + measurements:
+`docs/design/retina_phasecyte.md`; bench
+`experiments/progenitor/cifar_eye_nest.py`. Findings (s051): the eye is
+a sound perception body (supervised leaf 0.21 full on a 25-class CIFAR
+probe vs 0.36 raw pixels at 1/7 the width); ON/OFF half-wave pairs must
+be SIGNED for Phasecyte (q=0 is masked as silence); Phasecyte templates
+need a still eye (microsaccades abolish class discovery); Phasecyte-first
+on CIFAR-100 caps at ~0.05 full (template impurity), far below the
+pure-trioron record. Frequency-shape front ends (windowed cepstra with
+positions kept) outperform the DoG eye at equal leaf size (probe logs
+`outputs/primitive_probe*_s051.log`).

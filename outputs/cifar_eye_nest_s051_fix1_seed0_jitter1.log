@@ -1,0 +1,32 @@
+CIFAR EYE NEST (s051) fix=1 seed=0 frac=1.0 window=1000 jitter=1 hidden=48 pseudo=300/class epochs=8 cap=128 tasks=20 rectify=False
+  [genesis g0] starved=0 merged=0->0  receptors->336
+  [genesis g1] starved=0 merged=0->0  receptors->76
+[genesis] 1 fixation organs, 2 phasecyte leaves  t=6s
+  [task  1/20 coarse 0] classes(leaf0)=4 spawned=0 t=9s
+  [task  2/20 coarse 1] classes(leaf0)=25 spawned=0 t=19s
+  [task  3/20 coarse 2] classes(leaf0)=119 spawned=0 t=33s
+  [task  4/20 coarse 3] classes(leaf0)=128 spawned=0 t=41s
+  [task  5/20 coarse 4] classes(leaf0)=128 spawned=0 t=69s
+  [task  6/20 coarse 5] classes(leaf0)=128 spawned=0 t=122s
+  [task  7/20 coarse 6] classes(leaf0)=128 spawned=0 t=198s
+  [task  8/20 coarse 7] classes(leaf0)=128 spawned=0 t=298s
+  [task  9/20 coarse 8] classes(leaf0)=128 spawned=0 t=416s
+  [task 10/20 coarse 9] classes(leaf0)=128 spawned=0 t=590s
+  [task 11/20 coarse 10] classes(leaf0)=128 spawned=0 t=760s
+  [task 12/20 coarse 11] classes(leaf0)=128 spawned=0 t=987s
+  [task 13/20 coarse 12] classes(leaf0)=128 spawned=0 t=1127s
+  [task 14/20 coarse 13] classes(leaf0)=128 spawned=0 t=1269s
+  [task 15/20 coarse 14] classes(leaf0)=128 spawned=0 t=1430s
+  [task 16/20 coarse 15] classes(leaf0)=128 spawned=0 t=1569s
+  [task 17/20 coarse 16] classes(leaf0)=128 spawned=0 t=1666s
+  [task 18/20 coarse 17] classes(leaf0)=128 spawned=0 t=1767s
+  [task 19/20 coarse 18] classes(leaf0)=128 spawned=0 t=1879s
+  [task 20/20 coarse 19] classes(leaf0)=128 spawned=0 t=2011s
+[dream] 1 trioron leaves  t=2011s
+    [dream f0 skipped=0] ep0 loss=4.358 (30000 pseudo)
+    [dream f0 skipped=0] ep7 loss=3.054 (30000 pseudo)
+[eval] test=10000  t=2240s
+  fixation 0 centre=(16, 16) width=412 params=25136: full=0.0429 task=0.2909
+  phasecyte leaf0 (P) alone: full=0.0276 classes=128
+
+[seed 0 fix=1] SINGLE full=0.0429 task=0.2909 params=25136  bar (0.309, 0.606)  elapsed=2267s

@@ -1,0 +1,21 @@
+    [dream eye DoG (i)] ep0 loss=4.060 (12500 pseudo)
+    [dream eye DoG (i)] ep7 loss=2.158 (12500 pseudo)
+                                   eye DoG (i) d= 412: full=0.2020 task=0.3832 | 2x-blur full=0.2024 task=0.3908
+    [dream fly: DoG + saccade diffs (ii)] ep0 loss=3.766 (12500 pseudo)
+    [dream fly: DoG + saccade diffs (ii)] ep7 loss=1.537 (12500 pseudo)
+                 fly: DoG + saccade diffs (ii) d=1236: full=0.1756 task=0.3660 | 2x-blur full=0.2032 task=0.3968
+    [dream wave: log-polar spectra (iii)] ep0 loss=3.776 (12500 pseudo)
+    [dream wave: log-polar spectra (iii)] ep7 loss=2.434 (12500 pseudo)
+                 wave: log-polar spectra (iii) d= 160: full=0.2528 task=0.4724 | 2x-blur full=0.0844 task=0.2712
+    [dream collapse: structure fn (iv)] ep0 loss=3.869 (12500 pseudo)
+    [dream collapse: structure fn (iv)] ep7 loss=3.047 (12500 pseudo)
+                   collapse: structure fn (iv) d=  96: full=0.1276 task=0.3472 | 2x-blur full=0.0952 task=0.2984
+    [dream eye + wave] ep0 loss=3.700 (12500 pseudo)
+    [dream eye + wave] ep7 loss=1.750 (12500 pseudo)
+                                    eye + wave d= 572: full=0.3032 task=0.4820 | 2x-blur full=0.1532 task=0.3432
+    [dream fly + wave + collapse] ep0 loss=3.535 (12500 pseudo)
+    [dream fly + wave + collapse] ep7 loss=1.223 (12500 pseudo)
+                         fly + wave + collapse d=1492: full=0.2624 task=0.4404 | 2x-blur full=0.1608 task=0.3388
+    [dream raw pixels (control)] ep0 loss=3.097 (12500 pseudo)
+    [dream raw pixels (control)] ep7 loss=1.750 (12500 pseudo)
+                          raw pixels (control) d=3072: full=0.3560 task=0.5332 | 2x-blur full=0.3588 task=0.5368
