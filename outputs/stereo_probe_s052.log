@@ -1,0 +1,31 @@
+    [dream (i) H rows stream (unsync)] ep0 loss=3.695 (12500 pseudo)
+    [dream (i) H rows stream (unsync)] ep7 loss=2.407 (12500 pseudo)
+                      (i) H rows stream (unsync) d= 512: full=0.1708 task=0.3708 | 2x-blur full=0.0640 task=0.2252
+    [dream (i) V cols stream (unsync)] ep0 loss=3.686 (12500 pseudo)
+    [dream (i) V cols stream (unsync)] ep7 loss=2.498 (12500 pseudo)
+                      (i) V cols stream (unsync) d= 512: full=0.1456 task=0.3356 | 2x-blur full=0.0644 task=0.2364
+    [dream (i) H+V unsync (OVER CAP)] ep0 loss=3.469 (12500 pseudo)
+    [dream (i) H+V unsync (OVER CAP)] ep7 loss=1.760 (12500 pseudo)
+                       (i) H+V unsync (OVER CAP) d=1024: full=0.1892 task=0.3892 | 2x-blur full=0.0720 task=0.2400
+    [dream (i) H+V unsync cepstral 8] ep0 loss=3.762 (12500 pseudo)
+    [dream (i) H+V unsync cepstral 8] ep7 loss=2.129 (12500 pseudo)
+                       (i) H+V unsync cepstral 8 d= 512: full=0.2076 task=0.4076 | 2x-blur full=0.0908 task=0.2624
+    [dream (ii) synced L/R raster, pooled 25] ep0 loss=3.800 (12500 pseudo)
+    [dream (ii) synced L/R raster, pooled 25] ep7 loss=2.502 (12500 pseudo)
+               (ii) synced L/R raster, pooled 25 d= 200: full=0.2440 task=0.4448 | 2x-blur full=0.0708 task=0.2300
+    [dream (ii) synced L/R, pooled 49] ep0 loss=3.619 (12500 pseudo)
+    [dream (ii) synced L/R, pooled 49] ep7 loss=2.350 (12500 pseudo)
+                      (ii) synced L/R, pooled 49 d= 392: full=0.2624 task=0.4572 | 2x-blur full=0.0788 task=0.2444
+    [dream (iii) synced L/R + disparity, pooled 25] ep0 loss=3.660 (12500 pseudo)
+    [dream (iii) synced L/R + disparity, pooled 25] ep7 loss=2.428 (12500 pseudo)
+         (iii) synced L/R + disparity, pooled 25 d= 300: full=0.2544 task=0.4468 | 2x-blur full=0.0704 task=0.2452
+    [dream (ii) synced L/R full 169 (OVER CAP)] ep0 loss=3.395 (12500 pseudo)
+    [dream (ii) synced L/R full 169 (OVER CAP)] ep7 loss=1.897 (12500 pseudo)
+             (ii) synced L/R full 169 (OVER CAP) d=1352: full=0.2432 task=0.4344 | 2x-blur full=0.0808 task=0.2612
+    [dream dense 8px cepstra pooled 25 (control)] ep0 loss=3.484 (12500 pseudo)
+    [dream dense 8px cepstra pooled 25 (control)] ep7 loss=2.159 (12500 pseudo)
+           dense 8px cepstra pooled 25 (control) d= 600: full=0.3216 task=0.5112 | 2x-blur full=0.1324 task=0.3272
+    [dream (b) 12px/5 (control)] ep0 loss=3.498 (12500 pseudo)
+    [dream (b) 12px/5 (control)] ep7 loss=1.942 (12500 pseudo)
+                            (b) 12px/5 (control) d= 800: full=0.3036 task=0.4944 | 2x-blur full=0.1188 task=0.3256
+raw pixels control (s051): 0.356 / 0.533; done

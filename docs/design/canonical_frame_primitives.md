@@ -137,7 +137,24 @@ untokenized `(b)` 0.304 / raw 0.356 at 25 classes.
 | 256 | 176 → 432 (sat.) | 24.0 | 2 | 4.30 | .017 | 0.236 | 0.232 | 0.163 | 0.149 | 0.082 |
 | control `(b)` un-quantised | | | | | | **0.304** | | | | |
 
-Readings. (1) **Fails the gate** (≥ 0.284): every tokenized read ≤ the
+**Dense stream** (Rocky: "21 tokens for 32×32 is too few" — 8-px windows,
+stride 2, 169 slots × 24-d; per-slot reads region-pooled to 5×5 = 600-d
+to fit the cap; logs `..._dense8_*.log`):
+
+| K0 | merges → V | tokens/img (169 slots) | max extent | control: dense pooled 25 | VQ per-slot pooled | tokens per-slot pooled | VQ bag | token bag | overlap pair bag |
+|---|---|---|---|---|---|---|---|---|---|
+| 64 | 960 → 1024 (not saturated) | 106 | 4 | **0.322** | 0.268 | 0.263 | 0.201 | 0.150 | 0.160 |
+| 256 | 1792 → 2048 (not sat.) | 133 | 4 | 0.322 | 0.276 | 0.270 | **0.242** | 0.145 | 0.145 |
+
+The dense stream fixes the *tokenizer* metrics (169 → 106 tokens, V no
+longer saturates) but not the read: tokens ≤ VQ ≤ control in every row
+(gate 0.302: best token read 0.270). Two side findings: the dense
+stream region-pooled (600-d) is a **new best fixed front end, 0.322 >
+`(b)` 0.304 at ¾ the width**; and the dense VQ-256 *bag* reads 0.242 at
+256-d with no position at all (bag-of-visual-words) vs 0.154 for the
+s051 pooled-cepstra row.
+
+Readings. (1) **Fails the gate** (≥ control − 2 pp) on both grids: every tokenized read ≤ the
 quantised stream it is built on, and quantisation itself costs 7–10 pp
 (64→128→256 recovers ~1.4 pp per doubling — the cost is quantisation
 per se, not codebook size). (2) **There is no phrase structure to
@@ -154,6 +171,19 @@ continuity is real, but too weak to compress. (4) **No number signal**
 from token count (4-tile mosaic 17.8–23.7 vs single 18.6–24.0).
 (5) Larger V and overlapping tokens (Rocky's two knobs) do not change
 (1)–(4).
+
+**Stereo spectra** (Rocky, s052; `diag_stereo.py`, `outputs/stereo_probe_s052.log`):
+two 1-D frequency streams. Unsynchronised (H = each row's spectrum,
+V = each column's) 0.171 / 0.146 / H+V 0.189 (1024-d) / cepstral 0.208
+(512-d). **Synchronised** (time = shared 13×13 raster of 8-px patches;
+L = horizontal spectrum of the patch, R = vertical; both see the same
+object at the same time): pooled-25 **0.244 at 200-d**, pooled-49
+**0.262 at 392-d**, + disparity L−R 0.254 (300-d), full 169 (1352-d)
+0.243. Readings: synchronisation is what matters (200-d synced > 1024-d
+unsync); stereo = a 1-D projection (8 numbers/patch) of the 2-D window
+spectrum (24/patch), reads like one (0.262 vs 0.322 same grid); its
+niche is *form* — a genuine time-ordered stream (169 × 8) for the
+Axis-7 temporal leaf, which the static spectrogram is not.
 
 Consequence for the design: **stage 1 (tokenize) is dropped as a
 partition/BPE tokenizer.** What survives of the fragmenter idea is the

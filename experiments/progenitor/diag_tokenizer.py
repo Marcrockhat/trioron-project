@@ -10,11 +10,14 @@ import torch.nn.functional as F
 HERE=os.path.dirname(os.path.abspath(__file__))
 exec(open(os.path.join(HERE,"diag_eye4.py")).read().split("eye=B.Eye")[0].replace('os.path.abspath(__file__)','os.path.abspath(%r)'%os.path.join(HERE,"diag_eye4.py")))
 torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS","6")))
-K0=int(os.environ.get("K0","64")); V=int(os.environ.get("V","256")); G=5; NS=G*G
+K0=int(os.environ.get("K0","64")); V=int(os.environ.get("V","256"))
+WS=int(os.environ.get("WS","12")); ST=int(os.environ.get("ST","5")); G=(32-WS)//ST+1; NS=G*G
+NR=int(os.environ.get("NR","5"))   # radial bins for the per-window cepstrum (5 for 12px; use 4 for 8px)
+CD=(NR-1)*8                        # cepstral dims per window
 DIRS=((0,1),(1,0))   # right, down
 
-def stream(X):   # [N,25,32] per-window cepstral shape (same as (b), unflattened)
-    y=Y(X); return torch.stack([cepstrum(w,5,8,(1,5)) for w in windows(y)],1)
+def stream(X):   # [N,NS,CD] per-window cepstral shape ((b) unflattened when WS=12,ST=5,NR=5)
+    y=Y(X); return torch.stack([cepstrum(w,NR,8,(1,NR)) for w in windows(y,WS,ST)],1)
 def kmeans(Z,k,iters=25,seed=0):
     g=torch.Generator().manual_seed(seed); C=Z[torch.randperm(len(Z),generator=g)[:k]].clone()
     for _ in range(iters):
@@ -81,10 +84,10 @@ def mosaic(X,k,seed=0):   # k in {1,4}: 4 = 2x2 tiles of 4 different images down
 if __name__=="__main__":
     print(f"K0={K0} V={V} grid {G}x{G}",flush=True)
     Str=batched(stream,Xtr); Ste=batched(stream,Xte); Sbl=batched(stream,Xte_blur)
-    mu,sd=Str.reshape(-1,32).mean(0),Str.reshape(-1,32).std(0)+1e-6
+    mu,sd=Str.reshape(-1,CD).mean(0),Str.reshape(-1,CD).std(0)+1e-6
     Ztr=((Str-mu)/sd); Zte=((Ste-mu)/sd); Zbl=((Sbl-mu)/sd)
-    t0=time.time(); C=kmeans(Ztr.reshape(-1,32)[torch.randperm(len(Ztr)*NS)[:60000]],K0); print(f"codebook {K0} ({time.time()-t0:.0f}s)",flush=True)
-    Btr=assign(Ztr.reshape(-1,32),C).view(-1,NS); Bte=assign(Zte.reshape(-1,32),C).view(-1,NS); Bbl=assign(Zbl.reshape(-1,32),C).view(-1,NS)
+    t0=time.time(); C=kmeans(Ztr.reshape(-1,CD)[torch.randperm(len(Ztr)*NS)[:60000]],K0); print(f"codebook {K0} ({time.time()-t0:.0f}s)",flush=True)
+    Btr=assign(Ztr.reshape(-1,CD),C).view(-1,NS); Bte=assign(Zte.reshape(-1,CD),C).view(-1,NS); Bbl=assign(Zbl.reshape(-1,CD),C).view(-1,NS)
     tok=Tok(K0); t0=time.time(); Atr,Mtr=tok.learn(Btr,V); print(f"learned {len(tok.rules)} merges -> V={K0+len(tok.rules)} ({time.time()-t0:.0f}s)",flush=True)
     Ate,Mte=tok.encode(Bte); Abl,Mbl=tok.encode(Bbl)
     Vt=K0+len(tok.rules)
@@ -100,18 +103,24 @@ if __name__=="__main__":
     used=freq>0
     print(f"reuse: tokens used {int(used.sum())}/{Vt}; class-entropy mean {H[used].mean():.2f} bits (max 4.64), freq-weighted {(H*freq).sum()/freq.sum():.2f}; base symbols {H[:K0].mean():.2f}, merged {H[K0:][used[K0:]].mean():.2f}",flush=True)
     # mosaic boundary respect + number signal
-    Xm=mosaic(Xte,4); Sm=(batched(stream,Xm)-mu)/sd; Bm=assign(Sm.reshape(-1,32),C).view(-1,NS); Am,Mm=tok.encode(Bm)
+    Xm=mosaic(Xte,4); Sm=(batched(stream,Xm)-mu)/sd; Bm=assign(Sm.reshape(-1,CD),C).view(-1,NS); Am,Mm=tok.encode(Bm)
     # slot (r,c) tile = (r>=3? , c>=3?) with 12px windows stride 5: window starts 0,5,10,15,20 -> centre 6,11,16,21,26 -> tile boundary at 16: slots 0,1 top, 3,4 bottom, 2 straddles
-    tile=torch.tensor([[(2 if r==2 else r//3)*3+(2 if c==2 else c//3) for c in range(G)] for r in range(G)]).view(-1)   # 2 = straddle
+    def tl(i):   # window i: start i*ST, end i*ST+WS; tile 0 if entirely <16, 1 if entirely >=16, else 2 (straddle)
+        a,b=i*ST,i*ST+WS; return 0 if b<=16 else (1 if a>=16 else 2)
+    tile=torch.tensor([[(2 if (tl(r)==2 or tl(c)==2) else tl(r)*3+tl(c)) for c in range(G)] for r in range(G)]).view(-1)   # 2 = straddle
     Mf=Mm.view(-1,NS); own=tile[Mf]; me=tile.view(1,-1).expand_as(Mf)
     clean=(me!=2)&(own!=2); cross=((own!=me)&clean).sum().item()/max(1,clean.sum().item())
+
     print(f"mosaic(4 tiles): tokens/img {n_tokens(Am).float().mean():.2f} vs single {nte.mean():.2f}; slots owned across a tile boundary {cross:.3f} (0 = boundaries respected; chance ~0.19)",flush=True)
-    # --- downstream read: same leaf; representations
+    # --- downstream read: same leaf; per-slot representations are pooled to a 5x5 region grid (25*CD dims; identity when G=5)
+    rid=torch.tensor([[(r*5)//G*5+(c*5)//G for c in range(G)] for r in range(G)]).view(-1)
+    def pool25(Xs):   # [N,NS,CD] -> [N,25*CD]
+        out=torch.zeros(len(Xs),25,Xs.shape[2]); out.index_add_(1,rid,Xs); cnt=torch.bincount(rid,minlength=25).float().view(1,25,1); return (out/cnt).reshape(len(Xs),-1)
     Cb=torch.cat([C, torch.stack([C[list(tok.parts[t])].mean(0) for t in range(K0,Vt)])]) if Vt>K0 else C   # token -> mean base centroid (32-d)
-    g=torch.Generator().manual_seed(1); E=torch.randn(Vt,32,generator=g)/math.sqrt(32)   # fixed random embedding
-    def rep_vq(Bx): return C[Bx].reshape(len(Bx),-1)                          # per-slot base centroid (quantized (b)) 800
-    def rep_tokcent(A,M): return Cb[token_ids(A,M)].reshape(len(A),-1)      # per-slot merged-token centroid 800
-    def rep_tokemb(A,M): return E[token_ids(A,M)].reshape(len(A),-1)        # per-slot random token embedding 800
+    g=torch.Generator().manual_seed(1); E=torch.randn(Vt,CD,generator=g)/math.sqrt(CD)   # fixed random embedding
+    def rep_vq(Bx): return pool25(C[Bx])                          # per-slot base centroid (quantized stream), region-pooled
+    def rep_tokcent(A,M): return pool25(Cb[token_ids(A,M)])      # per-slot merged-token centroid, region-pooled
+    def rep_tokemb(A,M): return pool25(E[token_ids(A,M)])        # per-slot random token embedding, region-pooled
     def rep_bag(A):
         t=A.view(len(A),-1); ok=t>=0; h=torch.zeros(len(A),Vt); h.scatter_add_(1,t.clamp(min=0),ok.float()); return h   # 256, position-free
     def rep_bag_vq(Bx): return torch.zeros(len(Bx),K0).scatter_add_(1,Bx,torch.ones_like(Bx,dtype=torch.float))
@@ -120,7 +129,12 @@ if __name__=="__main__":
         sub=B.train_sub(Xa,ya,100,hidden=48,seed=1,epochs=8,tag=tag)
         fa,ta=B.acc_pair(B.logits_of(sub,Xb),yb,f2c); fb,tb=B.acc_pair(B.logits_of(sub,(Xb2-m)/s),yb,f2c)
         print(f"  {tag:>44s} d={Xa.shape[1]:4d}: full={fa:.4f} task={ta:.4f} | 2x-blur full={fb:.4f} task={tb:.4f}",flush=True)
-    fit(Ztr.reshape(len(Ztr),-1),ytr,Zte.reshape(len(Zte),-1),yte,"(b) cepstral spectrogram (control)",Zbl.reshape(len(Zbl),-1))
+    fit(pool25(Ztr),ytr,pool25(Zte),yte,f"stream {G}x{G}x{CD} region-pooled to 25 (control)",pool25(Zbl))
+    if G!=5:
+        Str5=batched(lambda X: torch.stack([cepstrum(w,5,8,(1,5)) for w in windows(Y(X),12,5)],1),Xtr).reshape(len(Xtr),-1)
+        Ste5=batched(lambda X: torch.stack([cepstrum(w,5,8,(1,5)) for w in windows(Y(X),12,5)],1),Xte).reshape(len(Xte),-1)
+        Sbl5=batched(lambda X: torch.stack([cepstrum(w,5,8,(1,5)) for w in windows(Y(X),12,5)],1),Xte_blur).reshape(len(Xte),-1)
+        fit(Str5,ytr,Ste5,yte,"(b) 12px/5 cepstral spectrogram (control)",Sbl5)
     fit(rep_vq(Btr),ytr,rep_vq(Bte),yte,f"VQ K0={K0} per-slot centroid",rep_vq(Bbl))
     fit(rep_bag_vq(Btr),ytr,rep_bag_vq(Bte),yte,f"VQ bag (position-free) K0={K0}",rep_bag_vq(Bbl))
     fit(rep_tokcent(Atr,Mtr),ytr,rep_tokcent(Ate,Mte),yte,f"tokens V={Vt} per-slot centroid",rep_tokcent(Abl,Mbl))
