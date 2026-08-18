@@ -185,6 +185,15 @@ spectrum (24/patch), reads like one (0.262 vs 0.322 same grid); its
 niche is *form* — a genuine time-ordered stream (169 × 8) for the
 Axis-7 temporal leaf, which the static spectrogram is not.
 
+**Dense ⊕ stereo** (`diag_stereo2.py`, `outputs/stereo2_probe_s052.log`):
+dense 2-D pooled-25 (600) ⊕ synced stereo pooled-25 (200) = 800-d →
+**0.345 / 0.529**; ⊕ disparity (900-d, marginally over cap) → **0.355 /
+0.526 = raw-pixel parity (0.356) at 30 % of the width**; blur 0.10–0.11
+(raw 0.36) — the accommodation cost, trainable per s051 (i). Dense
+pooled-49 alone 0.340 (1176-d): finer pooling gives +1.8, stereo +2.4 at
+fewer dims, disparity +1. **This is R's front end going forward:
+`dense2d25 ⊕ stereo25` (800) — the "wave stream" of the design.**
+
 Consequence for the design: **stage 1 (tokenize) is dropped as a
 partition/BPE tokenizer.** What survives of the fragmenter idea is the
 *continuity boundary map* (adjacent-window spectral discontinuity —
@@ -237,8 +246,10 @@ know how much of each frame is discoverable without labels.
 
 ## 4. Recogniser and the three arms
 
-R = the current best fixed-front-end leaf: cepstral spectrogram `(b)`
-(+ eye DoG, `(f)`, as a knob), 25-class probe protocol first, then 100.
+R = the current best fixed-front-end leaf: **dense 8-px 2-D cepstra
+region-pooled 5×5 ⊕ synced stereo pooled 5×5 (800-d, s052: 0.345;
++disparity 900-d 0.355)** — supersedes `(b)` (0.304); eye DoG `(f)` as a
+knob. 25-class probe protocol first, then 100.
 
 | arm | what | trained on |
 |---|---|---|

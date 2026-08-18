@@ -1,0 +1,13 @@
+    [dream dense 2-D pooled 25 + stereo pooled 25] ep0 loss=3.371 (12500 pseudo)
+    [dream dense 2-D pooled 25 + stereo pooled 25] ep7 loss=1.901 (12500 pseudo)
+          dense 2-D pooled 25 + stereo pooled 25 d= 800: full=0.3452 task=0.5288 | 2x-blur full=0.0952 task=0.2836
+    [dream dense 2-D pooled 25 + stereo+disp pooled 25] ep0 loss=3.297 (12500 pseudo)
+    [dream dense 2-D pooled 25 + stereo+disp pooled 25] ep7 loss=1.863 (12500 pseudo)
+     dense 2-D pooled 25 + stereo+disp pooled 25 d= 900: full=0.3548 task=0.5260 | 2x-blur full=0.1144 task=0.2756
+    [dream dense 2-D pooled 49 (OVER CAP)] ep0 loss=3.399 (12500 pseudo)
+    [dream dense 2-D pooled 49 (OVER CAP)] ep7 loss=1.876 (12500 pseudo)
+                  dense 2-D pooled 49 (OVER CAP) d=1176: full=0.3396 task=0.5300 | 2x-blur full=0.1300 task=0.3268
+    [dream dense 2-D pooled 49 + stereo pooled 49 (OVER CAP)] ep0 loss=3.251 (12500 pseudo)
+    [dream dense 2-D pooled 49 + stereo pooled 49 (OVER CAP)] ep7 loss=1.525 (12500 pseudo)
+  dense 2-D pooled 49 + stereo pooled 49 (OVER CAP) d=1568: full=0.3444 task=0.5300 | 2x-blur full=0.1248 task=0.3016
+done
