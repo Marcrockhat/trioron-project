@@ -1,0 +1,29 @@
+K0=64 V=256 grid 5x5
+codebook 64 (3s)
+learned 192 merges -> V=256 (8s)
+compression: tokens/img train 21.00±1.70  test 21.13  (25 slots)
+token extents: mean slots/token 2.00, max 2
+reuse: tokens used 256/256; class-entropy mean 4.42 bits (max 4.64), freq-weighted 4.54; base symbols 4.55, merged 4.38
+mosaic(4 tiles): tokens/img 20.33 vs single 21.13; slots owned across a tile boundary 0.064 (0 = boundaries respected; chance ~0.19)
+    [dream (b) cepstral spectrogram (control)] ep0 loss=3.498 (12500 pseudo)
+    [dream (b) cepstral spectrogram (control)] ep7 loss=1.942 (12500 pseudo)
+            (b) cepstral spectrogram (control) d= 800: full=0.3036 task=0.4944 | 2x-blur full=0.1188 task=0.3256
+    [dream VQ K0=64 per-slot centroid] ep0 loss=3.514 (12500 pseudo)
+    [dream VQ K0=64 per-slot centroid] ep7 loss=2.480 (12500 pseudo)
+                    VQ K0=64 per-slot centroid d= 800: full=0.2080 task=0.4176 | 2x-blur full=0.1184 task=0.2992
+    [dream VQ bag (position-free) K0=64] ep0 loss=4.364 (12500 pseudo)
+    [dream VQ bag (position-free) K0=64] ep7 loss=2.810 (12500 pseudo)
+                  VQ bag (position-free) K0=64 d=  64: full=0.1520 task=0.3740 | 2x-blur full=0.0640 task=0.2388
+    [dream tokens V=256 per-slot centroid] ep0 loss=3.514 (12500 pseudo)
+    [dream tokens V=256 per-slot centroid] ep7 loss=2.484 (12500 pseudo)
+                tokens V=256 per-slot centroid d= 800: full=0.2080 task=0.4140 | 2x-blur full=0.1152 task=0.2992
+    [dream tokens V=256 per-slot random emb] ep0 loss=4.039 (12500 pseudo)
+    [dream tokens V=256 per-slot random emb] ep7 loss=1.840 (12500 pseudo)
+              tokens V=256 per-slot random emb d= 800: full=0.0996 task=0.2932 | 2x-blur full=0.0740 task=0.2404
+    [dream token bag (position-free) V=256] ep0 loss=4.190 (12500 pseudo)
+    [dream token bag (position-free) V=256] ep7 loss=2.577 (12500 pseudo)
+               token bag (position-free) V=256 d= 256: full=0.1432 task=0.3544 | 2x-blur full=0.0608 task=0.2372
+    [dream token bag + VQ bag] ep0 loss=4.058 (12500 pseudo)
+    [dream token bag + VQ bag] ep7 loss=2.551 (12500 pseudo)
+                            token bag + VQ bag d= 320: full=0.1420 task=0.3488 | 2x-blur full=0.0628 task=0.2344
+done

@@ -125,6 +125,43 @@ a token), and downstream: R over the token stream (25 slots × 32-d
 token embedding = 800, or a V=256 bag, both under the cap) vs R over
 untokenized `(b)` 0.304 / raw 0.356 at 25 classes.
 
+### 2c. Tokenizer probe result (s052, `diag_tokenizer.py`, logs `outputs/tokenizer_probe_s052_*.log`)
+
+25-class probe, same leaf; wave stream = 25 windows × 32-d cepstra.
+
+| K0 (codebook) | merges → V | tokens/img (25 slots) | max extent | class-entropy (max 4.64) | tile-boundary cross (chance .19) | VQ per-slot | tokens per-slot | VQ bag | token bag | overlap pair bag |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 64 | 192 → 256 | 21.1 | 2 | 4.42 | .064 | 0.208 | 0.208 | 0.152 | 0.143 | — |
+| 64 | 654 → 718 (saturated) | 18.6 | 4 | 4.31 | .100 | 0.208 | 0.210 | 0.152 | 0.126 | 0.108 |
+| 128 | 353 → 481 (sat.) | 22.3 | 2 | 4.28 | .040 | 0.223 | 0.222 | 0.161 | 0.138 | 0.102 |
+| 256 | 176 → 432 (sat.) | 24.0 | 2 | 4.30 | .017 | 0.236 | 0.232 | 0.163 | 0.149 | 0.082 |
+| control `(b)` un-quantised | | | | | | **0.304** | | | | |
+
+Readings. (1) **Fails the gate** (≥ 0.284): every tokenized read ≤ the
+quantised stream it is built on, and quantisation itself costs 7–10 pp
+(64→128→256 recovers ~1.4 pp per doubling — the cost is quantisation
+per se, not codebook size). (2) **There is no phrase structure to
+tokenize at 32×32**: merges saturate (V 718/481/432 at min-count 50),
+every merged token is a pair (max extent 2, one run reaches 4),
+compression 18–24 of 25 slots; overlapping n-grams are nearly flat
+(8052/8192 possible pairs occur; top-1024 cover 41 %) and *hurt* the
+read (pair bag 0.10–0.11; pair bag + VQ per-slot 0.159 < VQ per-slot
+0.208). Adjacent window shapes are ~independent at this quantisation.
+(3) The tokenizer *behaves* like a tokenizer where it can: tokens are
+class-agnostic (entropy 4.3–4.4 of 4.64 bits) and merges respect
+mosaic tile boundaries (1.7–10 % cross vs 19 % chance) — spectral
+continuity is real, but too weak to compress. (4) **No number signal**
+from token count (4-tile mosaic 17.8–23.7 vs single 18.6–24.0).
+(5) Larger V and overlapping tokens (Rocky's two knobs) do not change
+(1)–(4).
+
+Consequence for the design: **stage 1 (tokenize) is dropped as a
+partition/BPE tokenizer.** What survives of the fragmenter idea is the
+*continuity boundary map* (adjacent-window spectral discontinuity —
+which the mosaic check shows is real) as a P_N input, and the un-
+quantised stream `(b)` stays R's input. Build order §7 step 2 becomes:
+P_N grouping/number from the boundary map + eye DoG (§3), no tokenizer.
+
 ## 3. Primitives = trioron leaves, frozen donors
 
 Each primitive P_k is a supervised trioron leaf built with the same
@@ -236,11 +273,10 @@ headline arms; primitives single-seed (they are frozen fixtures).
    ramp, scale, orientation, mosaics) + off-canonical test-set builders +
    analytic sanity bars. Unit test on the synthetic shaded-blob set (must
    be near-perfect there).
-2. `diag_tokenizer.py` — P_F: codebook + BPE merges over the wave stream,
-   tokenize, the three tokenizer metrics, subitizer/log-density heads,
-   mosaic-boundary check. **Gate: R over tokens ≥ R over `(b)` − 2 pp**
-   (a tokenizer that loses much information is the wrong tokenizer);
-   number heads per G0-N.
+2. ~~`diag_tokenizer.py` — P_F tokenizer~~ DONE s052, **failed the gate**
+   (§2c). Replaced by: `diag_number.py` — P_N from the spectral-
+   continuity boundary map + eye DoG on the mosaic sets; G0-N
+   (subitizer exact 1–4, Weber ratio on 6/8/12).
 3. `diag_frame_primitives.py` — train P_L, P_S, P_O per token extent;
    report G0 and the discovery control; save the leaves under
    `runs/frames/`.

@@ -1,0 +1,43 @@
+K0=64 V=1024 grid 5x5
+codebook 64 (3s)
+  stop: best pair count 49 < 50
+learned 654 merges -> V=718 (16s)
+compression: tokens/img train 18.33±1.61  test 18.56  (25 slots)
+token extents: mean slots/token 2.01, max 4
+reuse: tokens used 718/718; class-entropy mean 4.31 bits (max 4.64), freq-weighted 4.49; base symbols 4.55, merged 4.28
+mosaic(4 tiles): tokens/img 17.78 vs single 18.56; slots owned across a tile boundary 0.100 (0 = boundaries respected; chance ~0.19)
+    [dream (b) cepstral spectrogram (control)] ep0 loss=3.498 (12500 pseudo)
+    [dream (b) cepstral spectrogram (control)] ep7 loss=1.942 (12500 pseudo)
+            (b) cepstral spectrogram (control) d= 800: full=0.3036 task=0.4944 | 2x-blur full=0.1188 task=0.3256
+    [dream VQ K0=64 per-slot centroid] ep0 loss=3.514 (12500 pseudo)
+    [dream VQ K0=64 per-slot centroid] ep7 loss=2.480 (12500 pseudo)
+                    VQ K0=64 per-slot centroid d= 800: full=0.2080 task=0.4176 | 2x-blur full=0.1184 task=0.2992
+    [dream VQ bag (position-free) K0=64] ep0 loss=4.364 (12500 pseudo)
+    [dream VQ bag (position-free) K0=64] ep7 loss=2.810 (12500 pseudo)
+                  VQ bag (position-free) K0=64 d=  64: full=0.1520 task=0.3740 | 2x-blur full=0.0640 task=0.2388
+    [dream tokens V=718 per-slot centroid] ep0 loss=3.521 (12500 pseudo)
+    [dream tokens V=718 per-slot centroid] ep7 loss=2.498 (12500 pseudo)
+                tokens V=718 per-slot centroid d= 800: full=0.2104 task=0.4156 | 2x-blur full=0.1156 task=0.3016
+    [dream tokens V=718 per-slot random emb] ep0 loss=4.079 (12500 pseudo)
+    [dream tokens V=718 per-slot random emb] ep7 loss=1.860 (12500 pseudo)
+              tokens V=718 per-slot random emb d= 800: full=0.0892 task=0.2712 | 2x-blur full=0.0664 task=0.2360
+    [dream token bag (position-free) V=718] ep0 loss=4.033 (12500 pseudo)
+    [dream token bag (position-free) V=718] ep7 loss=1.919 (12500 pseudo)
+               token bag (position-free) V=718 d= 718: full=0.1264 task=0.3220 | 2x-blur full=0.0588 task=0.2332
+    [dream token bag + VQ bag] ep0 loss=3.952 (12500 pseudo)
+    [dream token bag + VQ bag] ep7 loss=1.873 (12500 pseudo)
+                            token bag + VQ bag d= 782: full=0.1164 task=0.3232 | 2x-blur full=0.0572 task=0.2280
+overlap: distinct pairs 8052, triples 170423; top-1024 pairs cover 0.412 of pair occurrences, triples 0.075
+    [dream OVERLAP pair bag top-1024] ep0 loss=3.896 (12500 pseudo)
+    [dream OVERLAP pair bag top-1024] ep7 loss=1.617 (12500 pseudo)
+                     OVERLAP pair bag top-1024 d=1024: full=0.1080 task=0.2936 | 2x-blur full=0.0668 task=0.2344
+    [dream OVERLAP pair+triple bag 2x1024] ep0 loss=3.760 (12500 pseudo)
+    [dream OVERLAP pair+triple bag 2x1024] ep7 loss=0.719 (12500 pseudo)
+                OVERLAP pair+triple bag 2x1024 d=2048: full=0.1120 task=0.2872 | 2x-blur full=0.0564 task=0.2244
+    [dream OVERLAP pair bag + VQ bag] ep0 loss=3.822 (12500 pseudo)
+    [dream OVERLAP pair bag + VQ bag] ep7 loss=1.577 (12500 pseudo)
+                     OVERLAP pair bag + VQ bag d=1088: full=0.1104 task=0.2920 | 2x-blur full=0.0552 task=0.2276
+    [dream OVERLAP pair bag + VQ per-slot (OVER CAP)] ep0 loss=3.491 (12500 pseudo)
+    [dream OVERLAP pair bag + VQ per-slot (OVER CAP)] ep7 loss=1.064 (12500 pseudo)
+     OVERLAP pair bag + VQ per-slot (OVER CAP) d=1824: full=0.1588 task=0.3500 | 2x-blur full=0.0864 task=0.2624
+done
