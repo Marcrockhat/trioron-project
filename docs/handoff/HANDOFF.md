@@ -80,12 +80,15 @@ here is a linear/quad readout on fixed features; the leaf is 25–90 K
 params.
 
 **Eye + Phasecyte arms (20 superclasses, 100 classes, seed 0):**
-A1 (1 fixation, Phasecyte P+M → sketch-dreamed trioron): **full 0.048 /
-task 0.297** still-eyed (0.043 with microsaccades); Phasecyte alone
-0.028; chance 0.01/0.20. A0 (flat null) and A2/A3 (5 fixations) were
-still running at close (A2 crawling in composer-spawn: 10 leaves × 1314
-spawned cells at task ~12; hours). Whatever they land at, G3 (0.309/
-0.606) is not reachable from 0.048/fixation. **Phasecyte-first on CIFAR
+A0 (flat luminance null, redundancy retina, 871 receptors): **full 0.028
+/ task 0.260**. A1 (1 fixation, Phasecyte P+M → sketch-dreamed trioron):
+**full 0.048 / task 0.297** still-eyed (0.043 with microsaccades);
+Phasecyte alone 0.028; chance 0.01/0.20. **G1 (eye > null) holds
+directionally (+2.0 full / +3.7 task, n=1) but both sit at the floor.**
+A2/A3 (5 fixations) died/stalled in the composer-spawn phase after task
+5 (log `..._fix5_seed0_killed_task6.log`; 10 Phasecyte leaves is
+impractically slow) — not rerun: G3 (0.309/0.606) is not reachable from
+0.048/fixation, so its outcome cannot change the conclusion. **Phasecyte-first on CIFAR
 is the wrong order**: the template stage's internal classes are so mixed
 (no internal class ≥34% one real class) that sketch dreaming keeps ~half
 of what the same real pockets support (0.09 vs 0.20 supervised);
@@ -99,8 +102,8 @@ silence, spec §10.3), sketch-derived standardizer (pockets sit at
 cepstra (± the eye's DoG) as the *sense* of a gradient trioron leaf /
 nest — Phasecyte later or not at all for CIFAR; test at 100 classes with
 the 5-fixation absorb+nest level-2 (s051 part A) and blur augmentation;
-param-match vs raw pixels; then the continual 20-task version. Kill or
-let finish `cifar_eye_nest` A0/A2 (`pgrep -f cifar_eye_nest`).
+param-match vs raw pixels; then the continual 20-task version. No
+background runs left at close.
 
 ---
 

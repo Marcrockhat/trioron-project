@@ -1,0 +1,9 @@
+CIFAR EYE NEST (s051) fix=5 seed=0 frac=1.0 window=1000 jitter=0 hidden=48 pseudo=300/class epochs=8 cap=128 tasks=20 rectify=False
+  [genesis g0] starved=0 merged=0->0  receptors->336
+  [genesis g1] starved=0 merged=0->0  receptors->76
+[genesis] 5 fixation organs, 10 phasecyte leaves  t=13s
+  [task  1/20 coarse 0] classes(leaf0)=3 spawned=0 t=29s
+  [task  2/20 coarse 1] classes(leaf0)=20 spawned=0 t=74s
+  [task  3/20 coarse 2] classes(leaf0)=111 spawned=0 t=175s
+  [task  4/20 coarse 3] classes(leaf0)=128 spawned=0 t=287s
+  [task  5/20 coarse 4] classes(leaf0)=128 spawned=0 t=536s
