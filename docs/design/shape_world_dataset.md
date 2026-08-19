@@ -224,6 +224,38 @@ nest's value here is structural (factored, reusable reads: iso as its own
 0.94 leaf; per-body reads), not raw accuracy — capped by the primitives at
 ≈ 0.86 vs CNN 0.88. The test the nest exists for is continual / absorb.
 
+### Continual / compositional stream (`shapes_continual.py`, n=3, log `shapes_continual_s053.log`)
+5 tasks: T1 solid {c,t,s} → T2 fields → T3 striped {c,t} → T4 dotted {c,s} → T5 outline
+{t,s}; shared shape (5) + fill (4) heads, full-softmax, no task id; readers mono (one 311-d
+leaf, 9 outputs) vs nest (shape+whole leaves summed, fill leaf); arms none / λ / credit
+(lock rate 1.0) / replay / all; bar = CNN 242 K fine-tuned sequentially. Note the design
+confounds fill with task (one fill per task) — hardest class-incremental case for the fill head.
+
+| reader / arm | shape | fill | pair | forget | acq | T1@end | held pair | locked |
+|---|---|---|---|---|---|---|---|---|
+| mono none | 0.356 | 0.135 | 0.121 | 0.679 | 0.858 | 0.000 | 0.000 | 0 |
+| mono λ | 0.581 | 0.135 | 0.101 | 0.609 | 0.758 | 0.000 | 0.274* | 0 |
+| mono credit | 0.322 | 0.564 | 0.263 | 0.236 | 0.385 | 0.094 | 0.004 | 29 |
+| mono replay | 0.636 | 0.456 | **0.399** | 0.478 | 0.839 | 0.295 | 0.042 | 0 |
+| mono all | 0.574 | 0.394 | 0.209 | **0.065** | 0.261 | **0.723** | 0.016 | 10 |
+| nest none | 0.343 | 0.136 | 0.121 | 0.678 | 0.857 | 0.000 | 0.000 | 0 |
+| nest λ | 0.639 | 0.134 | 0.104 | 0.568 | 0.721 | 0.009 | 0.249* | 0 |
+| nest credit | 0.418 | 0.140 | 0.114 | 0.550 | 0.716 | 0.014 | 0.017 | 89 |
+| nest replay | 0.477 | 0.388 | 0.224 | 0.534 | 0.789 | 0.260 | 0.093 | 0 |
+| nest all | 0.484 | 0.298 | 0.198 | 0.143 | 0.370 | 0.679 | 0.184 | 39 |
+| CNN sequential | 0.217 | 0.134 | 0.077 | 0.520 | 0.633 | 0.000 | 0.003 | — |
+\* λ's fill head collapsed to a constant fill → held pair ≈ shape × ⅓ (artefact).
+
+Readings: (1) unprotected leaf and CNN both forget catastrophically (T1 → 0);
+CNN ends worst (0.077). (2) Replay is the mechanism that carries final
+accuracy (mono 0.40); λ protects the soma but the shared head drifts to the
+last task; credit at rate 1.0 over-locks (mono acq 0.39) or locks interiors
+without protecting the head (nest). (3) "all" keeps T1 (0.72) at ~zero
+forgetting but stops learning (acq 0.26–0.37) — over-protection (lock rate
+1.0 = 13× default), tuning not verdict. (4) Nest does not beat mono under
+continual here (replay 0.22 vs 0.40). Follow-up arms: replay+λ, all-soft
+(default lock rate) → `shapes_continual_b_s053.log`.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

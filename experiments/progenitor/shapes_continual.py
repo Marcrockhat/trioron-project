@@ -10,8 +10,9 @@ STREAM (5 tasks): T1 solid {circle,triangle,square} | T2 fields {stripes,dots} |
 READERS: mono = ONE leaf on the 311-d stream (shape+fill heads) |
          nest = shape leaf (canon silhouette+frame+flags 103) + whole leaf (205) summed for shape,
                 fill leaf (ctex+flags 220) — the (b) split, each leaf protected separately.
-ARMS (protection): none | lambda (soft λ anchor, |w·g| saliency) | credit (hard lock) |
-         replay (manifold pseudo-rehearsal over the FIXED descriptors, per pair class) | all.
+ARMS (protection): none | lambda (soft λ anchor, |w·g| saliency) | credit (hard lock, LOCK_RATE 1.0) |
+         replay (manifold pseudo-rehearsal over the FIXED descriptors, per pair class) | all |
+         replay+lambda (no hard lock) | all-soft (all with the DEFAULT lock rate 0.078).
 BARS: cnn-seq = the 242K CNN fine-tuned task after task (forgetting bar).
 METRICS at stream end on test_fresh: shape / fill / pair acc; per-task pair-acc right after
 training vs at end -> forgetting; test_held: shape / fill / pair (compositional, never trained).
@@ -56,8 +57,9 @@ class Leaf:
         self.sub = construct(base=Seeded(d, n_out, interior_cells=hidden, nonlinear=True), envelope=Envelope(max_parameter_bytes=400_000),
                              dispatch_table=default_dispatch_table(), capacity=d + hidden + n_out + 8, sparsity_k=0)
         self.sub.compile(); self.sub.prepare_training(); self.a = self.sub.arena; self.arm = arm
-        self.lam = arm in ("lambda", "all"); self.cred = arm in ("credit", "all"); self.rep = arm in ("replay", "all")
-        self.credit = CreditTracker(self.a, CreditConfig(consecutive_tasks=1, theta_e=0.30, g_min=1e-3, lock_base_rate=1.0, engagement_decay=0.3)) if self.cred else None
+        self.lam = arm in ("lambda", "all", "replay+lambda", "all-soft"); self.cred = arm in ("credit", "all", "all-soft"); self.rep = arm in ("replay", "all", "replay+lambda", "all-soft")
+        rate = float(os.environ.get("LOCK_RATE", "0.078" if arm == "all-soft" else "1.0"))
+        self.credit = CreditTracker(self.a, CreditConfig(consecutive_tasks=1, theta_e=0.30, g_min=1e-3, lock_base_rate=rate, engagement_decay=0.3)) if self.cred else None
         self.archive = ManifoldArchive(Arena(Envelope(), capacity=32), ManifoldConfig(replay_steps_per_class=1), full_cov=False) if self.rep else None
         self.locked = 0
     def __call__(self, Z): return self.sub(Z)
