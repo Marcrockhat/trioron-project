@@ -97,7 +97,7 @@ def sample(n, seed, *, maxk=1, p_iso=0.15, p_crop=0.2, exclude=(), only=None, no
     X = torch.zeros(n, 3, S, S); meta = []
     L = lambda: torch.zeros(n, dtype=torch.long)
     ys = dict(y_shape=L(), y_fill=L(), y_count=L(), y_set=torch.zeros(n, 5), y_iso=L(), y_hue=L(), y_scale=torch.zeros(n),
-              y_rot=torch.zeros(n), y_vis=torch.ones(n), y_crop=L(), y_blur=L(), y_focus=L(), y_blur_img=L())
+              y_rot=torch.zeros(n), y_vis=torch.ones(n), y_crop=L(), y_blur=L(), y_focus=L(), y_blur_img=L(), y_overlap=L())
     pairs = [(s, f) for s in shape_choices for f in (fill_choices if s < 3 else (0,))]
     if only is not None: pairs = [p for p in pairs if p in set(only)]
     pairs = [p for p in pairs if p not in set(exclude)]
@@ -110,14 +110,19 @@ def sample(n, seed, *, maxk=1, p_iso=0.15, p_crop=0.2, exclude=(), only=None, no
         if k == 1 and focus == 1: focus = 0
         base_blur = int(torch.multinomial(pb, 1, generator=gen))
         fx, fy = R() * S, R() * S   # focal point (mode 2)
-        cxs = torch.linspace(8, 24, k) if k > 1 else torch.tensor([16.0])
-        layers = []; objs = []
+        layers = []; objs = []; placed = []; overlap = 0
         for j in range(k):
             shs = sorted({p[0] for p in kp}); sh = shs[int(torch.randint(len(shs), (1,), generator=gen))]   # shape first (balanced)
             fls = [p[1] for p in kp if p[0] == sh]; fl = fls[int(torch.randint(len(fls), (1,), generator=gen))]
-            r = R() * 15 + 3 if k == 1 else R() * 3 + 4
+            r = R() * 15 + 3 if k == 1 else R() * 2.5 + 3.5
             if fl in (1, 2): r = min(r, 13.0)   # textured fills keep a boundary in frame (else == a field)
-            cx = float(cxs[j]) + R() * 4 - 2 + (R() * 8 - 4 if k == 1 else 0); cy = R() * 8 + 12
+            if k == 1: cx = 16.0 + R() * 4 - 2 + R() * 8 - 4; cy = R() * 8 + 12
+            else:   # multi-object: rejection-sample a centre with >= 2 px gap to placed objects; else accept and TAG overlap
+                for _try in range(30):
+                    cx = R() * (S - 2 * r - 2) + r + 1; cy = R() * (S - 2 * r - 2) + r + 1
+                    if all(math.hypot(cx - px, cy - py) >= 1.4 * (r + pr) + 1 for px, py, pr in placed): break
+                else: overlap = 1
+                placed.append((cx, cy, r))
             th, shear, flip, thick = R() * 2 * math.pi, R() * 1.2 - 0.6, R() < 0.5, int(torch.randint(1, 4, (1,), generator=gen))
             crop = k == 1 and sh < 3 and r >= 6 and R() < p_crop
             vis = 1.0
@@ -162,7 +167,8 @@ def sample(n, seed, *, maxk=1, p_iso=0.15, p_crop=0.2, exclude=(), only=None, no
         ys["y_scale"][i], ys["y_rot"][i], ys["y_vis"][i], ys["y_crop"][i], ys["y_blur"][i] = o["r"], o["rot"], o["vis"], o["crop"], o["blur"]
         ys["y_count"][i] = k; ys["y_focus"][i] = focus; ys["y_blur_img"][i] = max(oo["blur"] for oo in objs)
         for oo in objs: ys["y_set"][i, oo["shape"]] = 1
-        meta.append(dict(seed=seed, idx=i, count=k, focus=focus, focus_name=FOCUS[focus], bg=dict(hue=round(hb, 3), sat=round(sb, 3), val=round(vb, 3)),
+        ys["y_overlap"][i] = overlap
+        meta.append(dict(seed=seed, idx=i, count=k, overlap=overlap, focus=focus, focus_name=FOCUS[focus], bg=dict(hue=round(hb, 3), sat=round(sb, 3), val=round(vb, 3)),
                          focal=(round(fx, 1), round(fy, 1)) if focus == 2 else None, noise=noise, objects=objs))
     return X, ys, meta
 

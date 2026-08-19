@@ -1,0 +1,5 @@
+v2: 11.6 ms/img
+  single-object geometric n=465: IoU 0.736  IoU>.5 0.845  exactly-1-object 0.886  wrongly-field 0.056 | fields flagged 0.731
+  IoU by fill: solid 0.891, striped 0.780, dotted 0.668, outline 0.582 | iso 0.700 blur2 0.705 small 0.657 cropped 0.706
+  multi-object count exact 0.555; per true count 1:0.55, 2:0.75, 3:0.35; mean |err| 0.56
+  multi per-object best-match IoU 0.566  (>0.5: 0.635)

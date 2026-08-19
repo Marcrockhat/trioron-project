@@ -58,4 +58,5 @@ for name, keys in combos.items():
     print(f"  {name:>36s} | " + " | ".join(f"{k} {f(v)}" for k, v in rows.items()) + f"  [{time.time()-t0:.0f}s]", flush=True)
 # grouping as the count primitive (no leaf): n_objects vs y_count on test_multi
 Xm, ym, _ = SH.load("test_multi"); Dm, _ = G.describe(Xm); n = Dm["flags"][:, 0].long().clamp(max=3); n = torch.where(Dm["flags"][:, 1] > 0, torch.ones_like(n), n)
-print(f"  count primitive (grouping only) test_multi: exact {float((n==ym['y_count']).float().mean()):.3f}; per true count " + ", ".join(f"{k}:{float((n[ym['y_count']==k]==k).float().mean()):.2f}" for k in (1, 2, 3)))
+for tag, m in (("all", torch.ones_like(n, dtype=torch.bool)), ("no-overlap", ym["y_overlap"] == 0), ("overlap-tagged", ym["y_overlap"] == 1)):
+    print(f"  count primitive (grouping only) test_multi [{tag} n={int(m.sum())}]: exact {float((n[m]==ym['y_count'][m]).float().mean()):.3f}; per true count " + ", ".join(f"{k}:{float((n[m&(ym['y_count']==k)]==k).float().mean()):.2f}" for k in (1, 2, 3)))
