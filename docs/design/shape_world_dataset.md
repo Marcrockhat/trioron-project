@@ -175,6 +175,18 @@ extra is eaten by mask imperfections (jagged dotted/outline bodies,
 cropped bodies' moments) and edge softening on resample. Remaining CNN
 margins: iso −6, blur −4, small −4.5, fresh −2.4 pp.
 
+### Mask quality: convex closure per body (`grouping.convex_fill`, CONVEX=True)
+Bodies in this world are convex (a cropped convex body is convex) → the
+silhouette is the convex hull of the merged body. IoU (600 draws): 0.742 →
+**0.789**; outline 0.59 → 0.74, cropped 0.70 → 0.82, iso 0.67 → 0.74,
+blur2 0.70 → 0.76; solid 0.90, striped 0.81, dotted 0.71 (hull of dots sits
+inside the edge; 1-px dilation didn't help), small 0.65 (≈ 1-px
+discretisation floor for ~50-px bodies). Chroma weight 3–4 hurts (keep 2).
+Recognition with convex masks (scale-canon, n=3): 106-d held-out 0.569 →
+0.604, cropped 0.601 → 0.631; 311-d fresh 0.856 → **0.861**, geo 0.813,
+cropped 0.670, held-out 0.515; multi set-acc 0.479 → 0.484. Reader
+saturates ≈ 0.86 on this front end — diminishing returns on mask polish.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

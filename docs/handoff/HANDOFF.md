@@ -174,6 +174,14 @@ this session is ONE `Seeded(d,5,48)` leaf ≈ 15 K learned params on fixed
 primitives (+ a fill leaf, + a whole-image field leaf) — NOT a nest; the
 nest is NEXT-3.
 
+### E4. Mask quality — convex closure per body (`grouping.convex_fill`; logs `shapes_probe4d/5d`)
+IoU 0.742 → 0.789 (outline 0.59→0.74, cropped 0.70→0.82, iso 0.67→0.74,
+blur2 0.70→0.76; dotted 0.71, small 0.65 ≈ discretisation floor); chroma
+weight 3–4 hurts, texture dilation no help. Recognition (scale-canon, n=3):
+106-d held-out 0.569→0.604, cropped 0.601→0.631; **311-d fresh 0.861**
+(geo 0.813, held-out 0.515, small 0.618, cropped 0.670, iso 0.831, blur2
+0.832); multi set-acc 0.484. Reader saturates ≈ 0.86 on this front end.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -185,15 +193,16 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. Mask quality is now the limiter (canonicalisation done, E3): dotted/
-   outline bodies (IoU 0.67/0.58), tiny bodies, cropped bodies' moments;
-   iso −6 pp vs CNN says the chroma foreground is still weak. Ideas: edge-
-   aware closing, outline ring → filled body earlier, chroma-only second
-   pass, interior texture on the canon crop.
-2. Per-body reads at ~0.6–0.75 each cap multi set-accuracy (0.48); fix the
-   body read first, then rerun `diag_shapes5.py CANON=1|2`. Fields in the
-   multi split 77 % flagged — field rule on the canon crop / texture leaf
-   fallback.
+1. Mask polish is at diminishing returns (E4). Remaining CNN margins
+   (fresh −2, iso −6, blur −4, small −5) point at the *reader* / whole-
+   image streams, not masks: interior texture on the canon crop; colour
+   block per body; a second-order read. Or accept ≈0.86 as the fixed-
+   primitive ceiling and move on.
+2. **Per-factor leaves + router / nest** (Rocky's actual question): the
+   survivor recipe on the separated streams; then Phasecyte/trioron nest
+   per band; clean nest-vs-leaf test on unlimited data. Multi set-acc
+   (0.48) rises with per-body read accuracy; fields in the multi split
+   77 % flagged.
 3. **Per-factor leaves + router (survivor recipe):** shape ← canon
    silhouette; fill ← canon interior; colour; count from grouping; blur/
    focus ← edge width; compose vs single 311-d leaf; then Phasecyte/
@@ -220,12 +229,12 @@ far train shape/fill/set heads and use the rest as test slices.
 - Commits (`conscience-core`): `f84f74f` dataset + probe 1; `f6dd87b`
   probes 2/3 + boundary/corner blocks; `8db6d0a` grouping + probe 4 + CNN
   ref; `98cdfae` grouping v2 + multi placement; `4b5cecb` scale canon +
-  probe 5; + affine canon + this handoff. `main` NOT advanced. Pushed at close.
+  probe 5; `51bcaa8` affine canon; + convex masks + this handoff. `main` NOT advanced. Pushed at close.
 - New files: `experiments/progenitor/{shapes,shapes_sheet,shapes_feats,
   frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
   diag_shapes4,diag_shapes5,shapes_cnn_ref}.py`, `docs/design/shape_world_dataset.md` (has the
   results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,probe4b,probe4c1,probe4c2,probe5,probe5c,probe5a,cnn_ref,build2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
+  probe4,probe4b,probe4c1,probe4c2,probe4d,probe5,probe5c,probe5a,probe5d,cnn_ref,build2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
 - No background runs at close.
 - Package (`trioron/`) untouched. Memory pointer added
   (`shape_world_dataset.md`); memory is per-PC — this file is the truth.

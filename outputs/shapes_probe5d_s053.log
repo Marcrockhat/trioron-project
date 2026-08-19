@@ -1,0 +1,9 @@
+  leaves trained [44s]
+  grouping per-group read (106+205) CANON-scale set-acc | all 0.484 | k=1 0.780 | k=2 0.401 | k=3 0.281 | no-overlap 0.556 | overlap 0.202 | depth-of-field 0.351  [84s]
+  single-object shape leaf on grouped 106 CANON-scale: test_fresh 0.753
+  single-object shape leaf on grouped 106 CANON-scale: test_held 0.607
+  single-object shape leaf on grouped 106 CANON-scale: small r<5 0.560 | cropped 0.624 | zoom-in r>=14 0.741
+                 whole-image BCE 205 set-acc | all 0.330 | k=1 0.546 | k=2 0.209 | k=3 0.242 | no-overlap 0.354 | overlap 0.237 | depth-of-field 0.241  [114s]
+  grouped_canon train_multi (20000, 92) in 124s
+  grouped_canon test_multi (4000, 92) in 27s
+       whole+grouped-largest BCE 311 set-acc | all 0.427 | k=1 0.718 | k=2 0.289 | k=3 0.283 | no-overlap 0.468 | overlap 0.264 | depth-of-field 0.275  [304s]

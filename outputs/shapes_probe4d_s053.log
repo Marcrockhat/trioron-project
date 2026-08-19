@@ -1,0 +1,9 @@
+  grouped_canon train (20000, 92) in 100s
+  grouped_canon test_fresh (5000, 92) in 27s
+  grouped_canon test_held (3000, 92) in 22s
+  grouped_canon test_stress (12000, 92) in 58s
+  grouped sil+colour+frame+flags 106 [scale] | fresh 0.753±0.002 | geo 3-way 0.784±0.003 | held-out 0.604±0.009 | small r<5 0.547±0.013 | cropped 0.631±0.007 | iso 0.788±0.000 | blur2 0.694±0.002 | fill fresh 0.754±0.003 | fill held-out 0.197±0.010  [302s]
+  grouped 106 + whole 205 = 311 [scale] | fresh 0.861±0.001 | geo 3-way 0.813±0.001 | held-out 0.515±0.006 | small r<5 0.618±0.007 | cropped 0.670±0.003 | iso 0.831±0.002 | blur2 0.832±0.005 | fill fresh 0.858±0.005 | fill held-out 0.550±0.021  [543s]
+  count primitive (grouping only) test_multi [all n=4000]: exact 0.675; per true count 1:0.87, 2:0.75, 3:0.41
+  count primitive (grouping only) test_multi [no-overlap n=3189]: exact 0.829; per true count 1:0.87, 2:0.84, 3:0.73
+  count primitive (grouping only) test_multi [overlap-tagged n=811]: exact 0.070; per true count 1:nan, 2:0.08, 3:0.07

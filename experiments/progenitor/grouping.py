@@ -22,7 +22,7 @@ import math, torch, numpy as np
 import torch.nn.functional as F
 from scipy import ndimage as ndi
 from experiments.progenitor import frontend as FE
-S = 32; R_CLOSE = 4; MIN_AREA = 6; FIELD_SPAN = 0.85; OTSU_W = 1.0; SECOND_PASS = True; SECOND_MIN = 1.1
+S = 32; CONVEX = True; TEX_DILATE = False; CHROMA_W = 2.0; R_CLOSE = 4; MIN_AREA = 6; FIELD_SPAN = 0.85; OTSU_W = 1.0; SECOND_PASS = True; SECOND_MIN = 1.1
 
 def _otsu(d):   # d [P] flat distances -> threshold
     h = torch.histc(d, 64, float(d.min()), float(d.max()) + 1e-6); e = torch.linspace(float(d.min()), float(d.max()) + 1e-6, 65)
@@ -31,7 +31,7 @@ def _otsu(d):   # d [P] flat distances -> threshold
 
 def foreground(X):
     """X [N,3,S,S] -> fg mask [N,S,S] bool, distance map [N,S,S]"""
-    y = FE.Y(X); rg = X[:, 0] - X[:, 1]; by = X[:, 2] - 0.5 * (X[:, 0] + X[:, 1]); C = torch.stack([y, 2.0 * rg, 2.0 * by], 1)   # chroma up-weighted
+    y = FE.Y(X); rg = X[:, 0] - X[:, 1]; by = X[:, 2] - 0.5 * (X[:, 0] + X[:, 1]); C = torch.stack([y, CHROMA_W * rg, CHROMA_W * by], 1)   # chroma up-weighted
     border = torch.cat([C[:, :, 0, :], C[:, :, -1, :], C[:, :, :, 0], C[:, :, :, -1]], 2)   # [N,3,4S]
     bg = border.median(2).values                                                            # [N,3]
     d = torch.sqrt(((C - bg[:, :, None, None]) ** 2).sum(1))                                # [N,S,S]
@@ -57,6 +57,22 @@ def _comp_stats(sil):
     if area < 3: return area, 1.0, 0.0, 0.5
     cov = np.cov(np.stack([xx - xx.mean(), yy - yy.mean()])) + 1e-6 * np.eye(2); ev, evec = np.linalg.eigh(cov)
     return area, float(math.sqrt(max(ev[1], 1e-6) / max(ev[0], 1e-6))), math.atan2(evec[1, 1], evec[0, 1]) % math.pi, float(math.sqrt(max(ev[0], 1e-6)))
+
+_gy, _gx = np.mgrid[0:S, 0:S]
+def convex_fill(mask):
+    """convex hull of a body's pixels, rasterised (bodies in this world are convex; a cropped convex body is convex)."""
+    ys_, xs_ = np.nonzero(mask)
+    if len(ys_) < 3: return mask
+    pts = np.stack([xs_, ys_], 1).astype(float)
+    try:
+        from scipy.spatial import ConvexHull
+        h = ConvexHull(pts + np.random.RandomState(0).rand(*pts.shape) * 1e-6); verts = pts[h.vertices]
+    except Exception: return mask
+    inside = np.ones((S, S), bool); n = len(verts)
+    for i in range(n):   # half-plane test per hull edge (hull vertices are counter-clockwise)
+        x0, y0 = verts[i]; x1, y1 = verts[(i + 1) % n]
+        inside &= ((x1 - x0) * (_gy - y0) - (y1 - y0) * (_gx - x0)) >= -0.5
+    return inside | mask
 
 def bodies_v2(m, r_bridge=R_CLOSE, small=30, elong=3.0, thin=1.5):
     """raw fg mask -> list of body masks. Merge two components within r_bridge only if the smaller
@@ -86,6 +102,10 @@ def bodies_v2(m, r_bridge=R_CLOSE, small=30, elong=3.0, thin=1.5):
         u = np.zeros_like(m)
         for g in members: u |= comps[g]
         body = ndi.binary_fill_holes(ndi.binary_closing(u, structure=disk, border_value=0) | u)
+        if CONVEX:
+            body = convex_fill(body)
+            if TEX_DILATE and float((u & body).sum()) / max(float(body.sum()), 1) < 0.6:   # texture-filled body: outermost dots/stripes sit inside the true edge
+                body = ndi.binary_dilation(body, structure=_disk(1))
         out.append(body)
     return out
 
