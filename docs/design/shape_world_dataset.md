@@ -200,6 +200,30 @@ Reading: ≤ +0.5 pp on shape; ctex is a fill primitive (+2.5 / +7 held-out)
 but costs shape held-out. **Fixed primitives + one 48-cell leaf cap ≈ 0.865
 on this world (CNN 0.882); (a) closed — the rest is the reader.**
 
+### (b) Per-factor leaves + router (`diag_shapes6.py`, n=3, leaves on 16 K / router on 4 K)
+Leaves: shape ← canon silhouette+frame+flags 103; whole ← 205; fill ← ctex+flags;
+hue / iso ← bcolour; blur ← edge+ctex; count ← grouping. Factor leaves fresh/
+held-out: fill 0.79/0.57, hue 0.56 (6-way), **iso 0.94/0.92**, blur 0.57 (3-way).
+
+| reader | fresh | geo | held-out | small | cropped | iso | blur2 |
+|---|---|---|---|---|---|---|---|
+| shape leaf alone | 0.749 | 0.744 | **0.609** | 0.533 | 0.625 | 0.783 | 0.696 |
+| whole leaf alone | 0.768 | 0.649 | 0.372 | 0.502 | 0.410 | 0.606 | 0.746 |
+| single 311-d leaf | 0.854 | 0.793 | 0.520 | 0.601 | 0.660 | 0.829 | 0.828 |
+| uniform mix shape+whole (absorb) | 0.863 | 0.798 | 0.530 | 0.581 | 0.642 | 0.847 | 0.840 |
+| ROUTER 16-cell leaf (80 ep) | 0.858 | 0.798 | 0.538 | 0.593 | 0.659 | 0.831 | 0.822 |
+| linear router (ref) | 0.864 | 0.804 | 0.524 | 0.589 | 0.657 | 0.835 | 0.834 |
+| ROUTER + fill/iso/blur context | 0.862 | 0.805 | 0.430±.06 | 0.620 | 0.643 | 0.827 | 0.825 |
+Multi (seed 0): shape-set 0.476, (shape,fill)-pair-set 0.278 (no-overlap 0.548 / 0.343); count 0.83 no-overlap.
+
+Reading: split = +1 pp over the monolithic leaf; learned arbitration ≈
+uniform sum (all compositions 0.86 ± 0.5); other factors' logits as router
+context re-entangle shape with fill (held-out ↓, unstable). A router at 8
+epochs (125 steps) was 0.71 ± 0.05 — training bug, not a verdict. The
+nest's value here is structural (factored, reusable reads: iso as its own
+0.94 leaf; per-body reads), not raw accuracy — capped by the primitives at
+≈ 0.86 vs CNN 0.88. The test the nest exists for is continual / absorb.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

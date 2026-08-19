@@ -1,0 +1,16 @@
+  grouped_canon test_multi (4000, 92) in 28s
+  seed 0 done [175s]
+  multi [all]: shape-set acc 0.476 | (shape,fill)-pair-set acc 0.278
+  multi [no-overlap]: shape-set acc 0.548 | (shape,fill)-pair-set acc 0.343
+  multi [k=2]: shape-set acc 0.393 | (shape,fill)-pair-set acc 0.163
+  multi [k=3]: shape-set acc 0.269 | (shape,fill)-pair-set acc 0.047
+  count primitive: exact 0.675 (no-overlap 0.829)
+  seed 1 done [1017s]
+  seed 2 done [1160s]
+factor leaves (fresh / held-out): fill 0.790±0.006 / 0.566±0.005 | hue 0.564±0.001 / 0.646±0.007 | iso 0.937±0.003 / 0.921±0.002 | blur 0.573±0.004 / 0.532±0.004
+                    leaf shape alone | fresh 0.749±0.002 | geo 3-way 0.744±0.001 | held-out 0.609±0.004 | small r<5 0.533±0.003 | cropped 0.625±0.008 | iso 0.783±0.002 | blur2 0.696±0.008
+                    leaf whole alone | fresh 0.768±0.006 | geo 3-way 0.649±0.011 | held-out 0.372±0.010 | small r<5 0.502±0.010 | cropped 0.410±0.015 | iso 0.606±0.008 | blur2 0.746±0.002
+                leaf single311 alone | fresh 0.854±0.002 | geo 3-way 0.793±0.002 | held-out 0.520±0.013 | small r<5 0.601±0.006 | cropped 0.660±0.004 | iso 0.829±0.003 | blur2 0.828±0.003
+    uniform mix shape+whole (absorb) | fresh 0.863±0.001 | geo 3-way 0.798±0.001 | held-out 0.530±0.001 | small r<5 0.581±0.003 | cropped 0.642±0.001 | iso 0.847±0.004 | blur2 0.840±0.005
+      ROUTER over shape+whole leaves | fresh 0.714±0.045 | geo 3-way 0.673±0.043 | held-out 0.489±0.077 | small r<5 0.436±0.005 | cropped 0.569±0.064 | iso 0.692±0.013 | blur2 0.681±0.018
+      ROUTER + fill/iso/blur context | fresh 0.726±0.017 | geo 3-way 0.698±0.032 | held-out 0.417±0.063 | small r<5 0.464±0.015 | cropped 0.549±0.034 | iso 0.695±0.012 | blur2 0.677±0.006

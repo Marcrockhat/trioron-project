@@ -190,6 +190,19 @@ weight 3–4 hurts, texture dilation no help. Recognition (scale-canon, n=3):
 ≈ 0.865 (CNN 0.882). Rocky's order: (a) then (b) — (b) = per-factor leaves
 + router / nest is next.
 
+### E6. (b) Per-factor leaves + router (`diag_shapes6.py`; logs `shapes_probe6/6b`)
+Leaves shape/whole/fill/hue/iso/blur + grouping count; router = 16-cell
+leaf on [shape logits, whole logits, flags, frame scale] trained on 4 K.
+n=3: single 311 leaf 0.854 | uniform mix shape+whole 0.863 | ROUTER 0.858
+(held-out 0.538) | linear router 0.864 | ROUTER + fill/iso/blur context
+0.862 but held-out 0.43±0.06. Factor leaves: fill 0.79, hue 0.56, iso
+0.94, blur 0.57. Multi (per-body shape+fill leaves): shape-set 0.476,
+pair-set 0.278; count 0.83 no-overlap. **Reading:** split = +1 pp; learned
+arbitration ≈ uniform sum; texture context re-entangles shape×fill; nest
+value here is structural, not accuracy (primitives cap ≈ 0.86; CNN 0.88).
+Gotcha: router at 8 epochs on 4 K = 125 steps → 0.71 ± 0.05 (undertrained,
+not a verdict) — ROUTER_EPOCHS=80 default now.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -201,14 +214,19 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. **(b) Per-factor leaves + router / nest** (Rocky's actual question,
-   started as `diag_shapes6.py` if present): shape ← canon silhouette+frame
-   +flags; fill ← ctex; colour ← bcolour (hue/iso heads); blur ← edge;
-   count ← grouping; whole-image 205 leaf for fields/texture; router leaf
-   over the leaves' logits + flags = arbitration; compare composed vs the
-   single 311/543 leaf; then Phasecyte/trioron nest per band — clean nest-
-   vs-leaf test on unlimited data. Multi: per-body (shape, fill) pairs.
-2. (a) is closed at ≈0.865 (E5); only revisit with a wider reader.
+1. **Continual / absorb on the shape world** — the test the nest exists
+   for and where a monolithic CNN can't follow: (i) tasks = shapes / fills
+   / colours in sequence with the CL machinery (credit lock + manifold +
+   dream), single leaf vs per-factor nest, forgetting curves; (ii) absorb a
+   new factor leaf (e.g. blur, or a 6th shape) without retraining the
+   others; (iii) CNN fine-tuned sequentially as the forgetting bar.
+2. Phasecyte layer per band (unsupervised) vs supervised leaves — same
+   harness, prediction: ≈ 0.86 again (all readers converge on this front
+   end); only worth it inside (1).
+3. Multi-object: pair-set 0.28 bounded by per-body reads; fields in the
+   multi split 77 % flagged; blur primitive weak (0.57) — edge-width sense
+   needs work if blur becomes a task.
+4. (a) closed at ≈ 0.865 (E5); (b) stage 1 closed at 0.86 (E6).
 3. **Per-factor leaves + router (survivor recipe):** shape ← canon
    silhouette; fill ← canon interior; colour; count from grouping; blur/
    focus ← edge width; compose vs single 311-d leaf; then Phasecyte/
@@ -235,12 +253,13 @@ far train shape/fill/set heads and use the rest as test slices.
 - Commits (`conscience-core`): `f84f74f` dataset + probe 1; `f6dd87b`
   probes 2/3 + boundary/corner blocks; `8db6d0a` grouping + probe 4 + CNN
   ref; `98cdfae` grouping v2 + multi placement; `4b5cecb` scale canon +
-  probe 5; `51bcaa8` affine canon; + convex masks + this handoff. `main` NOT advanced. Pushed at close.
+  probe 5; `51bcaa8` affine canon; `74f011d` convex masks; `ae6357d` (a)
+  per-body streams; + (b) leaves+router + this handoff. `main` NOT advanced. Pushed at close.
 - New files: `experiments/progenitor/{shapes,shapes_sheet,shapes_feats,
   frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
-  diag_shapes4,diag_shapes5,shapes_cnn_ref}.py`, `docs/design/shape_world_dataset.md` (has the
+  diag_shapes4,diag_shapes5,diag_shapes6,shapes_cnn_ref}.py`, `docs/design/shape_world_dataset.md` (has the
   results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,probe4b,probe4c1,probe4c2,probe4d,probe5,probe5c,probe5a,probe5d,cnn_ref,build2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
+  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,cnn_ref,build2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
 - No background runs at close.
 - Package (`trioron/`) untouched. Memory pointer added
   (`shape_world_dataset.md`); memory is per-PC — this file is the truth.
