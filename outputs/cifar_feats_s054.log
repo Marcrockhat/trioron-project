@@ -1,0 +1,35 @@
+    grouped train 2500/50000 [14s]
+    grouped train 5000/50000 [36s]
+    grouped train 7500/50000 [58s]
+    grouped train 10000/50000 [79s]
+    grouped train 12500/50000 [101s]
+    grouped train 15000/50000 [121s]
+    grouped train 17500/50000 [142s]
+    grouped train 20000/50000 [163s]
+    grouped train 22500/50000 [184s]
+    grouped train 25000/50000 [205s]
+    grouped train 27500/50000 [226s]
+    grouped train 30000/50000 [246s]
+    grouped train 32500/50000 [267s]
+    grouped train 35000/50000 [287s]
+    grouped train 37500/50000 [311s]
+    grouped train 40000/50000 [331s]
+    grouped train 42500/50000 [351s]
+    grouped train 45000/50000 [373s]
+    grouped train 47500/50000 [392s]
+    grouped train 50000/50000 [413s]
+  grouped train (50000, 92) in 414s
+    grouped test 2500/10000 [17s]
+    grouped test 5000/10000 [39s]
+    grouped test 7500/10000 [59s]
+    grouped test 10000/10000 [78s]
+  grouped test (10000, 92) in 78s
+  cached bd/train (50000, 92) in 3s
+  cached col/train (50000, 100) in 1s
+  cached cn/train (50000, 13) in 6s
+  cached bd/test (10000, 92) in 1s
+  cached col/test (10000, 100) in 0s
+  cached cn/test (10000, 13) in 1s
+  cached ds/train (50000, 800) in 50s
+  cached ds/test (10000, 800) in 15s
+grouping on CIFAR: objects/img 1.15, field-flag 0.21, touches 0.69, fill-frac 0.73

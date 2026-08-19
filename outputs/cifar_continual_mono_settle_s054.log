@@ -1,0 +1,13 @@
+CIFAR CONTINUAL s054: stream split tasks 10; seeds [0, 1, 2]; epochs 8; replay_total 256; full_rank 32; readers ['mono']; arms ['full+settle']
+grouping on CIFAR (train): objects/img 1.15, field-flag 0.21, touches 0.69, fill-frac 0.73
+metrics on the 10K test set at stream end: full = 100-way argmax (chance .01); task = argmax within the sample's own 10-class task (chance .10); forget = mean(full acc on task t right after it - at end); t1_end = T1 full acc at end
+      [mono full+settle s0] after T1 0-9: acc 0.572 T1 now 0.580 [144s]
+      [mono full+settle s0] after T5 40-49: acc 0.468 T1 now 0.317 [824s]
+      [mono full+settle s0] after T10 90-99: acc 0.450 T1 now 0.240 [1673s]
+      [mono full+settle s1] after T1 0-9: acc 0.568 T1 now 0.590 [1902s]
+      [mono full+settle s1] after T5 40-49: acc 0.460 T1 now 0.315 [2559s]
+      [mono full+settle s1] after T10 90-99: acc 0.423 T1 now 0.232 [3243s]
+      [mono full+settle s2] after T1 0-9: acc 0.571 T1 now 0.572 [3383s]
+      [mono full+settle s2] after T5 40-49: acc 0.452 T1 now 0.319 [3865s]
+      [mono full+settle s2] after T10 90-99: acc 0.443 T1 now 0.213 [4235s]
+     mono      full+settle | full 0.236±0.004 | task 0.568±0.004 | forget 0.203±0.003 | acq 0.440±0.004 | t1_end 0.228±0.014 | locked 0.000±0.000 | params 32223   [4269s]

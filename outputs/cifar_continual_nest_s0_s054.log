@@ -1,0 +1,12 @@
+CIFAR CONTINUAL s054: stream split tasks 10; seeds [0]; epochs 8; replay_total 256; full_rank 32; readers ['nest']; arms ['none', 'replay-full', 'full+credit-soft']
+grouping on CIFAR (train): objects/img 1.15, field-flag 0.21, touches 0.69, fill-frac 0.73
+metrics on the 10K test set at stream end: full = 100-way argmax (chance .01); task = argmax within the sample's own 10-class task (chance .10); forget = mean(full acc on task t right after it - at end); t1_end = T1 full acc at end
+      [nest none s0] after T1 0-9: acc 0.683 T1 now 0.683 [315s]
+      [nest none s0] after T5 40-49: acc 0.704 T1 now 0.000 [1408s]
+      [nest none s0] after T10 90-99: acc 0.722 T1 now 0.000 [2648s]
+     nest             none | full 0.072 | task 0.190 | forget 0.602 | acq 0.674 | t1_end 0.000 | locked 0.000 | params 146556   [2936s]
+      [nest replay-full s0] after T1 0-9: acc 0.683 T1 now 0.683 [3230s]
+      [nest replay-full s0] after T5 40-49: acc 0.614 T1 now 0.358 [5119s]
+      [nest replay-full s0] after T10 90-99: acc 0.682 T1 now 0.157 [7402s]
+     nest      replay-full | full 0.188 | task 0.651 | forget 0.433 | acq 0.621 | t1_end 0.157 | locked 0.000 | params 146556   [7662s]
+      [nest full+credit-soft s0] after T1 0-9: acc 0.683 T1 now 0.683 [7998s]

@@ -1,0 +1,4 @@
+CIFAR CONTINUAL s054: stream split tasks 10; seeds [0, 1, 2]; epochs 8; replay_total 256; full_rank 32; readers ['none']; arms ['none', 'replay', 'replay-full', 'full+credit-soft']
+grouping on CIFAR (train): objects/img 1.15, field-flag 0.21, touches 0.69, fill-frac 0.73
+metrics on the 10K test set at stream end: full = 100-way argmax (chance .01); task = argmax within the sample's own 10-class task (chance .10); forget = mean(full acc on task t right after it - at end); t1_end = T1 full acc at end
+  cnn-seq (242K, no protection) | full 0.010±0.000 | task 0.100±0.000 | forget 0.343±0.017 | acq 0.353±0.017 | t1_end 0.000±0.000 | locked 0.000±0.000 | params 254436   [3869s]

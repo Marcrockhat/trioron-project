@@ -1,0 +1,4 @@
+  organ trained (8 ep, seed 0) in 249s
+  organ sanity (shapes test_fresh): shape 0.867 fill 0.815
+  cached pre/train (50000, 158) in 29s
+  cached pre/test (10000, 158) in 7s
