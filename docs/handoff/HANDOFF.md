@@ -182,6 +182,14 @@ weight 3–4 hurts, texture dilation no help. Recognition (scale-canon, n=3):
 (geo 0.813, held-out 0.515, small 0.618, cropped 0.670, iso 0.831, blur2
 0.832); multi set-acc 0.484. Reader saturates ≈ 0.86 on this front end.
 
+### E5. Per-body reader streams (a) — `describe(extras=True)`: bcolour 12, edge 4, ctex 216 (log `shapes_probe4e`)
+311 → +all 543: fresh 0.861 → 0.866, geo 0.813 → 0.820, small 0.618 →
+0.629, iso 0.831 → 0.832, blur2 0.832 → 0.836; held-out 0.515 → 0.473
+(ctex invites combo memorising); fill 0.858/0.550 → **0.883/0.621** (ctex
+= fill primitive). ⇒ (a) closed: fixed primitives + one 48-cell leaf cap
+≈ 0.865 (CNN 0.882). Rocky's order: (a) then (b) — (b) = per-factor leaves
++ router / nest is next.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -193,16 +201,14 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. Mask polish is at diminishing returns (E4). Remaining CNN margins
-   (fresh −2, iso −6, blur −4, small −5) point at the *reader* / whole-
-   image streams, not masks: interior texture on the canon crop; colour
-   block per body; a second-order read. Or accept ≈0.86 as the fixed-
-   primitive ceiling and move on.
-2. **Per-factor leaves + router / nest** (Rocky's actual question): the
-   survivor recipe on the separated streams; then Phasecyte/trioron nest
-   per band; clean nest-vs-leaf test on unlimited data. Multi set-acc
-   (0.48) rises with per-body read accuracy; fields in the multi split
-   77 % flagged.
+1. **(b) Per-factor leaves + router / nest** (Rocky's actual question,
+   started as `diag_shapes6.py` if present): shape ← canon silhouette+frame
+   +flags; fill ← ctex; colour ← bcolour (hue/iso heads); blur ← edge;
+   count ← grouping; whole-image 205 leaf for fields/texture; router leaf
+   over the leaves' logits + flags = arbitration; compare composed vs the
+   single 311/543 leaf; then Phasecyte/trioron nest per band — clean nest-
+   vs-leaf test on unlimited data. Multi: per-body (shape, fill) pairs.
+2. (a) is closed at ≈0.865 (E5); only revisit with a wider reader.
 3. **Per-factor leaves + router (survivor recipe):** shape ← canon
    silhouette; fill ← canon interior; colour; count from grouping; blur/
    focus ← edge width; compose vs single 311-d leaf; then Phasecyte/

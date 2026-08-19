@@ -138,15 +138,51 @@ def groups(X, version=2):
         gs.sort(key=lambda g: -g["area"]); out.append(gs)
     return out, fg, d
 
+def canon_box(mask, margin=2):
+    """square bbox (+margin) of the mask, aspect preserved: (y0, y1, x0, x1); None if empty."""
+    yy, xx = torch.nonzero(mask, as_tuple=True)
+    if len(yy) == 0: return None
+    y0, y1 = max(int(yy.min()) - margin, 0), min(int(yy.max()) + margin + 1, S); x0, x1 = max(int(xx.min()) - margin, 0), min(int(xx.max()) + margin + 1, S)
+    side = max(y1 - y0, x1 - x0); cy, cx = (y0 + y1) // 2, (x0 + x1) // 2
+    y0, x0 = max(cy - side // 2, 0), max(cx - side // 2, 0); return y0, min(y0 + side, S), x0, min(x0 + side, S)
+def canon_crop(img, box, size=S, mode="bilinear"):
+    """img [C,S,S] -> canonical crop resized to size x size"""
+    y0, y1, x0, x1 = box; return F.interpolate(img[:, y0:y1, x0:x1][None], size=(size, size), mode=mode, align_corners=False)[0]
 def canon_mask(mask, margin=2, size=S):
     """scale canonicalisation: crop the mask's bbox (+margin) and resize to size x size (the fovea's zoom)."""
-    yy, xx = torch.nonzero(mask, as_tuple=True)
-    if len(yy) == 0: return mask.float()
-    y0, y1 = max(int(yy.min()) - margin, 0), min(int(yy.max()) + margin + 1, S); x0, x1 = max(int(xx.min()) - margin, 0), min(int(xx.max()) + margin + 1, S)
-    side = max(y1 - y0, x1 - x0); cy, cx = (y0 + y1) // 2, (x0 + x1) // 2   # square crop, aspect preserved
-    y0, x0 = max(cy - side // 2, 0), max(cx - side // 2, 0); y1, x1 = min(y0 + side, S), min(x0 + side, S)
-    crop = mask[y0:y1, x0:x1].float()[None, None]
-    return F.interpolate(crop, size=(size, size), mode="bilinear", align_corners=False)[0, 0]
+    box = canon_box(mask, margin)
+    if box is None: return mask.float()
+    return canon_crop(mask.float()[None], box, size)[0]
+
+def body_streams(X, gl):
+    """per-image extra streams for the LARGEST group: bcolour (12) fg/bg mean RGB, fg-bg contrast (Y,RG,BY), fg RGB std;
+    ctex (216) interior-only dense cepstra on the CANON crop of luminance, pooled 3x3; edge (4) boundary gradient / contrast."""
+    N = len(X); bcol = torch.zeros(N, 12); cimg = torch.zeros(N, 3, S, S); edge = torch.zeros(N, 4)
+    y = FE.Y(X)
+    gy_, gx_ = torch.gradient(F.avg_pool2d(y[:, None], 3, 1, 1)[:, 0], dim=(1, 2)); gm = torch.sqrt(gx_ ** 2 + gy_ ** 2)
+    for i, gs in enumerate(gl):
+        if not gs: continue
+        g = gs[0]; m = g["mask"]; raw = g["rawfg"] if g["rawfg"].any() else m; bg = ~ndi_dilate(m)
+        fg_px = X[i][:, raw]; bg_px = X[i][:, bg] if bg.any() else X[i].flatten(1)
+        fmean, bmean = fg_px.mean(1), bg_px.mean(1); fy, by_ = FE.Y(fmean[None, :, None, None])[0, 0, 0], FE.Y(bmean[None, :, None, None])[0, 0, 0]
+        bcol[i, :3] = fmean; bcol[i, 3:6] = bmean; bcol[i, 6] = fy - by_; bcol[i, 7] = (fmean[0] - fmean[1]) - (bmean[0] - bmean[1])
+        bcol[i, 8] = (fmean[2] - 0.5 * (fmean[0] + fmean[1])) - (bmean[2] - 0.5 * (bmean[0] + bmean[1])); bcol[i, 9:12] = fg_px.std(1) if fg_px.shape[1] > 1 else 0
+        box = canon_box(m)
+        if box is not None and not g["is_field"]:
+            yi = y[i] * g["interior"].float() + (~g["interior"]).float() * (y[i][g["interior"]].mean() if g["interior"].any() else 0)
+            cimg[i] = canon_crop(yi[None], box).expand(3, -1, -1)
+        else: cimg[i] = y[i].expand(3, -1, -1)
+        b = g["boundary"]
+        if b.any():
+            e = gm[i][b]; c = abs(float(bcol[i, 6])) + 1e-3
+            edge[i] = torch.tensor([float(e.mean()) / c, float(e.max()) / c, float(e.mean()), float(b.sum()) / max(float(m.sum()), 1)])
+    ctex = ctex_pool(FE.Y(cimg))
+    return dict(bcolour=bcol, ctex=ctex, edge=edge)
+def ndi_dilate(m, r=2): return torch.from_numpy(ndi.binary_dilation(m.numpy(), structure=_disk(r)))
+_r9 = torch.tensor([[(r * 3) // 13 * 3 + (c * 3) // 13 for c in range(13)] for r in range(13)]).view(-1)
+def ctex_pool(y):   # 8px/2 windows -> cepstra 24 -> pooled 3x3 = 216
+    Sx = torch.stack([FE.cepstrum(w, 4, 8, (1, 4)) for w in FE.windows(y, 8, 2)], 1)
+    out = torch.zeros(len(y), 9, Sx.shape[2]); out.index_add_(1, _r9, Sx); return (out / torch.bincount(_r9, minlength=9).float().view(1, 9, 1)).reshape(len(y), -1)
 
 def canon_affine(mask, rho=2.6, size=S):
     """rotation/shear/scale canonicalisation: whiten the mask by its second moments (C^-1/2) so
@@ -166,7 +202,7 @@ def _canon(mask, mode):
     if mode in ("affine", 2): return canon_affine(mask)
     return mask.float()
 
-def describe(X, gl=None, canon=False):
+def describe(X, gl=None, canon=False, extras=True):
     """Descriptors of the LARGEST group per image (zeros if none). Returns dict of [N,d] tensors + the group lists."""
     if gl is None: gl, _, _ = groups(X)
     N = len(X); sil_img = torch.zeros(N, 3, S, S); int_img = torch.zeros(N, 3, S, S); frame = torch.zeros(N, 7); col = torch.zeros(N, 3)
@@ -176,7 +212,9 @@ def describe(X, gl=None, canon=False):
         if not gs: continue
         g = gs[0]; sil_img[i] = _canon(g["mask"], canon); int_img[i] = FE.Y(X[i:i + 1])[0] * g["interior"].float() + (~g["interior"]).float() * FE.Y(X[i:i + 1])[0][g["interior"]].mean() if g["interior"].any() else 0
         frame[i] = g["frame"]; col[i] = g["colour"]; flags[i, 2] = float(g["touches"]); flags[i, 3] = g["frame"][6]
-    return dict(silhouette=FE.boundary_block(sil_img), interior=FE.dense_pooled(int_img), colour=torch.cat([col, FE.colour_block(X)[:, :0]], 1), frame=frame, flags=flags), gl
+    D = dict(silhouette=FE.boundary_block(sil_img), interior=FE.dense_pooled(int_img), colour=col, frame=frame, flags=flags)
+    if extras: D.update(body_streams(X, gl))
+    return D, gl
 
 def describe_groups(X, gl=None, max_groups=4, canon=False):
     """Per-GROUP descriptors: list (per image) of dict(silhouette [n,92], colour [n,3], frame [n,7], flags [n,4], is_field [n]) for

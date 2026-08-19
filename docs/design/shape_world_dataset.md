@@ -187,6 +187,19 @@ Recognition with convex masks (scale-canon, n=3): 106-d held-out 0.569 →
 cropped 0.670, held-out 0.515; multi set-acc 0.479 → 0.484. Reader
 saturates ≈ 0.86 on this front end — diminishing returns on mask polish.
 
+### Per-body reader streams (a): bcolour 12 / edge 4 / ctex 216 on the canon crop (n=3, scale-canon)
+| stream | fresh | geo | held-out | small | cropped | iso | blur2 | fill / held |
+|---|---|---|---|---|---|---|---|---|
+| 311 | 0.861 | 0.813 | 0.515 | 0.618 | 0.670 | 0.831 | 0.832 | 0.858 / 0.550 |
+| +bcolour 323 | 0.863 | 0.816 | 0.503 | 0.605 | 0.672 | 0.835 | 0.838 | 0.866 / 0.559 |
+| +edge 315 | 0.863 | 0.816 | 0.517 | 0.614 | 0.666 | 0.834 | 0.837 | 0.861 / 0.576 |
+| +ctex 527 | 0.864 | 0.820 | 0.474 | 0.620 | 0.654 | 0.826 | 0.836 | **0.876 / 0.608** |
+| +all 543 | **0.866** | 0.820 | 0.473 | 0.629 | 0.655 | 0.832 | 0.836 | **0.883 / 0.621** |
+| grouped-only 338 | 0.821 | 0.805 | 0.515 | 0.561 | 0.627 | 0.787 | 0.767 | 0.854 / 0.512 |
+Reading: ≤ +0.5 pp on shape; ctex is a fill primitive (+2.5 / +7 held-out)
+but costs shape held-out. **Fixed primitives + one 48-cell leaf cap ≈ 0.865
+on this world (CNN 0.882); (a) closed — the rest is the reader.**
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

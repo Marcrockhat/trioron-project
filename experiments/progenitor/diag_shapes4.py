@@ -31,14 +31,19 @@ GD = {sp: {k: v.float() for k, v in grouped(sp).items()} for sp in SPL}
 def stream(sp, keys):
     parts = []
     for k in keys:
-        if k in ("silhouette", "colour", "frame", "flags", "interior"): parts.append(GD[sp][k])
+        if k in ("silhouette", "colour", "frame", "flags", "interior", "bcolour", "ctex", "edge"): parts.append(GD[sp][k])
         else: parts.append(SF.feats(k, sp))
     return torch.cat(parts, 1)
 ALL = {"whole-image bd+col+corner 205": ["bd", "col", "cn"],
           "grouped silhouette 92": ["silhouette"],
           "grouped sil+colour+frame+flags 106": ["silhouette", "colour", "frame", "flags"],
           "grouped all (+interior) 706": ["silhouette", "colour", "frame", "flags", "interior"],
-          "grouped 106 + whole 205 = 311": ["silhouette", "colour", "frame", "flags", "bd", "col", "cn"]}
+          "grouped 106 + whole 205 = 311": ["silhouette", "colour", "frame", "flags", "bd", "col", "cn"],
+          "311 + bcolour 323": ["silhouette", "colour", "frame", "flags", "bd", "col", "cn", "bcolour"],
+          "311 + edge 315": ["silhouette", "colour", "frame", "flags", "bd", "col", "cn", "edge"],
+          "311 + ctex 527": ["silhouette", "colour", "frame", "flags", "bd", "col", "cn", "ctex"],
+          "311 + bcolour + edge + ctex 543": ["silhouette", "colour", "frame", "flags", "bd", "col", "cn", "bcolour", "edge", "ctex"],
+          "grouped-only 106 + bcolour + edge + ctex 338": ["silhouette", "colour", "frame", "flags", "bcolour", "edge", "ctex"]}
 combos = {k + (f" [{CANON}]" if CANON else ""): ALL[k] for k in os.environ.get("COMBOS", ",".join(ALL)).split(",")}
 nc = yst["y_crop"] == 0; geo = yfr["y_shape"] < 3
 sub_st = {"small r<5": (yst["y_scale"] < 5) & nc & (yst["y_shape"] < 3), "cropped": yst["y_crop"] == 1, "iso": (yst["y_iso"] == 1) & nc, "blur2": (yst["y_blur"] == 2) & nc}
