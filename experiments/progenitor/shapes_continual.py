@@ -12,7 +12,8 @@ READERS: mono = ONE leaf on the 311-d stream (shape+fill heads) |
                 fill leaf (ctex+flags 220) — the (b) split, each leaf protected separately.
 ARMS (protection): none | lambda (soft λ anchor, |w·g| saliency) | credit (hard lock, LOCK_RATE 1.0) |
          replay (manifold pseudo-rehearsal over the FIXED descriptors, per pair class) | all |
-         replay+lambda (no hard lock) | all-soft (all with the DEFAULT lock rate 0.078).
+         replay+lambda (no hard lock) | all-soft (all with the DEFAULT lock rate 0.078) |
+         replay-full (full-cov manifold, sample_full rank FULL_RANK=32) | replay-ex (EX_K=20 real exemplars/class, hippo bar).
 BARS: cnn-seq = the 242K CNN fine-tuned task after task (forgetting bar).
 METRICS at stream end on test_fresh: shape / fill / pair acc; per-task pair-acc right after
 training vs at end -> forgetting; test_held: shape / fill / pair (compositional, never trained).
@@ -33,7 +34,7 @@ from trioron.learning import epigenetic_lock as epi
 from trioron.learning.manifold import ManifoldArchive, ManifoldConfig
 torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "6")))
 SEEDS = [int(s) for s in os.environ.get("SEEDS", "0,1,2").split(",")]; EPOCHS = int(os.environ.get("EPOCHS", "8"))
-STRENGTH = float(os.environ.get("STRENGTH", "1e3")); REPLAY_BS = int(os.environ.get("REPLAY_BS", "32")); REPLAY_W = float(os.environ.get("REPLAY_W", "1.0"))
+STRENGTH = float(os.environ.get("STRENGTH", "1e3")); REPLAY_BS = int(os.environ.get("REPLAY_BS", "32")); REPLAY_W = float(os.environ.get("REPLAY_W", "1.0")); FULL_RANK = int(os.environ.get("FULL_RANK", "32")) or None; EX_K = int(os.environ.get("EX_K", "20"))
 READERS = os.environ.get("READERS", "mono,nest").split(","); ARMS = os.environ.get("ARMS", "none,lambda,credit,replay,all").split(","); RUN_CNN = os.environ.get("CNN", "1") == "1"
 t0 = time.time()
 def log(*a): print(*a, flush=True)
@@ -61,16 +62,32 @@ class Leaf:
         self.sub = construct(base=Seeded(d, n_out, interior_cells=hidden, nonlinear=True), envelope=Envelope(max_parameter_bytes=400_000),
                              dispatch_table=default_dispatch_table(), capacity=d + hidden + n_out + 8, sparsity_k=0)
         self.sub.compile(); self.sub.prepare_training(); self.a = self.sub.arena; self.arm = arm
-        self.lam = arm in ("lambda", "all", "replay+lambda", "all-soft"); self.cred = arm in ("credit", "all", "all-soft"); self.rep = arm in ("replay", "all", "replay+lambda", "all-soft")
+        self.lam = arm in ("lambda", "all", "replay+lambda", "all-soft"); self.cred = arm in ("credit", "all", "all-soft")
+        self.rep = arm in ("replay", "all", "replay+lambda", "all-soft", "replay-full", "replay-ex"); self.full = arm == "replay-full"; self.ex = arm == "replay-ex"
+        self.exemplars = {}   # class -> [K, d] real descriptors (hippo bar)
         rate = float(os.environ.get("LOCK_RATE", "0.078" if arm == "all-soft" else "1.0"))
         self.credit = CreditTracker(self.a, CreditConfig(consecutive_tasks=1, theta_e=0.30, g_min=1e-3, lock_base_rate=rate, engagement_decay=0.3)) if self.cred else None
-        self.archive = ManifoldArchive(Arena(Envelope(), capacity=32), ManifoldConfig(replay_steps_per_class=1), full_cov=False) if self.rep else None
+        self.archive = ManifoldArchive(Arena(Envelope(), capacity=32), ManifoldConfig(replay_steps_per_class=1), full_cov=self.full) if (self.rep and not self.ex) else None
         self.locked = 0
     def __call__(self, Z): return self.sub(Z)
     def logits(self, Z): return B.logits_of(self.sub, Z)
     def penalty(self): return STRENGTH * epi.ewc_penalty(self.a) if self.lam else 0.0
     def replay(self):   # -> (samples, pair ids) or None
         if not self.rep: return None
+        if self.ex:
+            if not self.exemplars: return None
+            xs, cs = [], []
+            for c, E in self.exemplars.items():
+                idx = torch.randint(len(E), (REPLAY_BS,)); xs.append(E[idx]); cs.append(torch.full((REPLAY_BS,), c, dtype=torch.long))
+            return torch.cat(xs), torch.cat(cs)
+        if self.full:
+            from trioron.core.state import CellState
+            xs, cs = [], []
+            for c, astro in self.archive._astrocytes.items():
+                if self.archive.arena.state[astro.cell_id] != CellState.DORMANT: continue
+                xs.append(astro.sample_full(REPLAY_BS, rank=FULL_RANK)); cs.append(torch.full((REPLAY_BS,), c, dtype=torch.long))
+            if not xs: return None
+            return torch.cat(xs), torch.cat(cs)
         out = self.archive.replay_batches(REPLAY_BS)
         if not out: return None
         return torch.cat([s for s, _ in out]), torch.cat([torch.full((len(s),), c, dtype=torch.long) for s, c in out])
@@ -85,7 +102,11 @@ class Leaf:
     def boundary(self, Ztask, ptask):
         if self.lam: epi.refresh_lambda(self.a); epi.anchor(self.a)
         if self.cred: self.locked += len(self.credit.consolidate())
-        if self.rep:
+        if self.rep and self.ex:
+            g = torch.Generator().manual_seed(int(ptask.sum()))
+            for c in ptask.unique().tolist():
+                Zc = Ztask[ptask == c]; self.exemplars[c] = Zc[torch.randperm(len(Zc), generator=g)[:EX_K]].clone()
+        elif self.rep:
             for c in ptask.unique().tolist(): self.archive.update_class(c, Ztask[ptask == c])
             self.archive.finalize_all()
 # ── readers ────────────────────────────────────────────────────────────────

@@ -290,6 +290,24 @@ fields 0.60 under λ). Hypothesis: diagonal-Gaussian replay is off-manifold in t
 texture space (ctex/cstereo) → test full_cov manifold / exemplar replay for
 that leaf.
 
+### Continual round 3 — full-cov manifold replay (`replay-full`, rank 32) vs 20 real exemplars/class (`replay-ex`); stream v2, n=3
+| reader / arm | shape | fill | pair | forget | acq | T1@end | held pair |
+|---|---|---|---|---|---|---|---|
+| mono replay (diag) | 0.600 | 0.681 | 0.480 | 0.381 | 0.868 | 0.302 | 0.035 |
+| **mono replay-full** | 0.808 | 0.777 | **0.686** | 0.170 | 0.834 | 0.586 | 0.126 |
+| mono replay-ex | 0.623 | 0.670 | 0.457 | 0.403 | 0.877 | 0.259 | 0.044 |
+| nest replay (diag) | 0.497 | 0.592 | 0.319 | 0.394 | 0.757 | 0.273 | 0.030 |
+| **nest replay-full** | 0.811 | 0.774 | **0.664** | **0.100** | 0.746 | 0.585 | **0.351** |
+| nest replay-ex | 0.600 | 0.709 | 0.458 | 0.279 | 0.761 | 0.399 | 0.227 |
+| CNN sequential | 0.233 | 0.523 | 0.130 | 0.613 | 0.853 | 0.000 | 0.000 |
+Hypothesis confirmed: diagonal sketches are off-manifold in the correlated
+descriptor spaces; the full-cov sketch (existing core) lifts pair +0.21/+0.35,
+fixes the nest's fill leaf (T1 0.70, predictions spread over all fills), and
+beats 20 real exemplars/class. Nest now = mono on pair, less forgetting (0.10
+vs 0.17), and 0.35 vs 0.13 on the never-trained combos — the factored reader's
+structural advantage shows under continual learning. Per-leaf (nest full): shape
+leaf 0.72 / whole 0.69 / sum 0.81; fill leaf 0.78.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

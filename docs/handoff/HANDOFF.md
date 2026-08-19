@@ -237,6 +237,16 @@ its shape leaves retain (T1 0.74, fields 0.60). Hypothesis: diag-Gaussian
 replay is off-manifold in texture space → full_cov / exemplar replay for
 that leaf is the next test. Full table in the dataset doc.
 
+### E10. Continual round 3 — FULL-COV replay fixes it (log `shapes_continual_v2b`)
+`replay-full` (ManifoldArchive full_cov=True, sample_full rank 32) vs
+`replay-ex` (20 real exemplars/class): mono pair 0.480 → **0.686** (forget
+0.17); nest 0.319 → **0.664** (forget **0.10**, held-out pair **0.351**);
+exemplars 0.46 both (worse than the sketch); CNN seq 0.13. Hypothesis
+confirmed (diag sketch off-manifold in correlated descriptor spaces); the
+nest's fill leaf is fixed (T1 0.70). **Headline continual now: nest +
+full-cov replay pair 0.66 / forget 0.10 / held-out 0.35 vs CNN 0.13 / 0.61
+/ 0.00.** Storage: 14 classes × (μ + Σ) per leaf, no images.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -248,11 +258,11 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. **Continual round 3** (E9): the nest's fill leaf is the one gap —
-   test `full_cov=True` manifold (Mahalanobis sketch) and an exemplar-
-   replay bar for the texture leaf; REPLAY_BS 64–128; then λ 1e1–1e2 ×
-   credit 0.078 grid on mono+nest. Target: pair ≥ 0.6 at forget ≤ 0.2
-   (mono replay 0.48 / nest 0.37 now). `STREAM=v2 PER_LEAF=1`.
+1. **Continual round 4** (E10 done: full-cov replay = pair 0.66–0.69,
+   forget 0.10–0.17): replay-full + λ(1e1–1e2) and + credit 0.078 to push
+   forget → 0 without the acquisition cost; FULL_RANK 16/64; REPLAY_BS
+   64; n=3. Then absorb (new factor leaf grafted, no retrain) and the
+   developmental arcs (coarse-to-fine; Phasecyte discovery control).
 2. **Developmental arcs Rocky asked for:** (i) coarse-to-fine stream
    (blur2 → blur1 → sharp) vs random mix — does the infant schedule help
    generalisation/held-out? (ii) discovery control: Phasecyte (unsupervised)
@@ -290,7 +300,7 @@ far train shape/fill/set heads and use the rest as test slices.
   frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
   diag_shapes4,diag_shapes5,diag_shapes6,shapes_cnn_ref,shapes_continual}.py`, `docs/design/shape_world_dataset.md` (has the
   results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,probe4f,cnn_ref,build2,continual,continual_b,continual_v2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
+  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,probe4f,cnn_ref,build2,continual,continual_b,continual_v2,continual_v2b}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
 - No background runs at close. Timings: one continual run (5 tasks, 8 ep)
   ≈ 1–2.5 min mono / 2–5 min nest; CNN sequential ≈ 5 min/seed.
 - Package (`trioron/`) untouched. Memory pointer added
