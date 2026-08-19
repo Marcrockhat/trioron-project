@@ -271,6 +271,25 @@ Stereo on the canonical crop (`cstereo` 72 = synced L/R spectra pooled 3×3),
 fill leaf n=3: ctex 0.803/0.577 → **ctex+cstereo 0.816/0.597**; cstereo alone
 76-d 0.761/0.502; whole-interior 600 0.802/0.594. Same +1–2 pp as on CIFAR.
 
+### Continual round 2 (`STREAM=v2` fills mixed within tasks, fill = ctex+cstereo, λ 1e2; `shapes_continual_v2_s053.log`)
+| reader / arm | shape | fill | pair | forget | acq | T1@end | held pair |
+|---|---|---|---|---|---|---|---|
+| mono none | 0.254 | 0.493 | 0.148 | 0.654 | 0.916 | 0.073 | 0.000 |
+| mono replay | 0.600 | 0.681 | **0.480** | 0.381 | 0.868 | 0.302 | 0.035 |
+| mono replay+λ | 0.641 | 0.638 | 0.442 | 0.133 | 0.518 | 0.475 | 0.089 |
+| mono all-soft | 0.514 | 0.625 | 0.313 | 0.081 | 0.393 | 0.634 | 0.009 |
+| nest none | 0.246 | 0.461 | 0.137 | 0.560 | 0.800 | 0.089 | 0.007 |
+| nest replay | 0.497 | 0.592 | 0.319 | 0.394 | 0.757 | 0.273 | 0.030 |
+| nest replay+λ | 0.585 | 0.601 | 0.369 | 0.215 | 0.578 | 0.319 | 0.104 |
+| nest all-soft | 0.487 | 0.607 | 0.297 | 0.243 | 0.568 | 0.320 | 0.093 |
+| CNN sequential | 0.233 | 0.523 | 0.130 | 0.613 | 0.853 | 0.000 | 0.000 |
+Mixing fills fixed mono's fill head (0.46 → 0.68; pair 0.40 → 0.48). The nest's
+fill leaf still collapses to the last task's fills (pred hist 3351/80/1536/33)
+despite replay in its own space; its shape leaves retain (shape leaf T1 0.74,
+fields 0.60 under λ). Hypothesis: diagonal-Gaussian replay is off-manifold in the
+texture space (ctex/cstereo) → test full_cov manifold / exemplar replay for
+that leaf.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

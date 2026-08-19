@@ -16,7 +16,8 @@ ARMS (protection): none | lambda (soft λ anchor, |w·g| saliency) | credit (har
 BARS: cnn-seq = the 242K CNN fine-tuned task after task (forgetting bar).
 METRICS at stream end on test_fresh: shape / fill / pair acc; per-task pair-acc right after
 training vs at end -> forgetting; test_held: shape / fill / pair (compositional, never trained).
-Env: SEEDS (0,1,2) READERS ARMS EPOCHS(8) STRENGTH(1e3) REPLAY_BS(32) CNN(1)
+Env: SEEDS (0,1,2) READERS ARMS EPOCHS(8) STRENGTH(1e3) REPLAY_BS(32) CNN(1) STREAM(v1|v2: fills mixed within tasks)
+     FILL_STEREO(1: fill leaf = ctex+cstereo+flags) PER_LEAF(0) LOCK_RATE
 Run: OMP_NUM_THREADS=6 python3 experiments/progenitor/shapes_continual.py
 """
 import os, sys, time, torch
@@ -38,13 +39,16 @@ t0 = time.time()
 def log(*a): print(*a, flush=True)
 # ── data: pair classes ─────────────────────────────────────────────────────
 def pair_id(ys): return torch.where(ys["y_shape"] < 3, ys["y_shape"] * 4 + ys["y_fill"], 12 + (ys["y_shape"] - 3))
-TASKS = [("T1 solid", [0, 4, 8]), ("T2 fields", [12, 13]), ("T3 striped", [1, 5]), ("T4 dotted", [2, 10]), ("T5 outline", [7, 11])]   # HELD: 6 (tri-dot), 9 (sq-stri), 3 (circ-out)
+STREAM = os.environ.get("STREAM", "v1")
+TASKS = {"v1": [("T1 solid", [0, 4, 8]), ("T2 fields", [12, 13]), ("T3 striped", [1, 5]), ("T4 dotted", [2, 10]), ("T5 outline", [7, 11])],   # one fill per task (confounded)
+         "v2": [("T1 c-sol t-str s-out", [0, 5, 11]), ("T2 fields t-sol", [12, 13, 4]), ("T3 c-str s-dot t-out", [1, 10, 7]), ("T4 c-dot s-sol", [2, 8])]}[STREAM]   # fills MIXED within tasks
+# HELD (never trained): 6 tri-dot, 9 sq-stri, 3 circ-out
 def sf_of(pid): return torch.where(pid >= 12, pid - 12 + 3, pid // 4), torch.where(pid >= 12, torch.zeros_like(pid), pid % 4)
 Y = {sp: SH.load(sp)[1] for sp in ("train", "test_fresh", "test_held")}; P = {sp: pair_id(Y[sp]) for sp in Y}
 GD = {sp: SF.grouped(sp, canon="scale") for sp in Y}; WH = {sp: torch.cat([SF.feats(k, sp) for k in ("bd", "col", "cn")], 1) for sp in Y}
 STREAMS = {"mono": lambda sp: torch.cat([GD[sp]["silhouette"], GD[sp]["colour"], GD[sp]["frame"], GD[sp]["flags"], WH[sp]], 1),
            "shape": lambda sp: torch.cat([GD[sp]["silhouette"], GD[sp]["frame"], GD[sp]["flags"]], 1), "whole": lambda sp: WH[sp],
-           "fill": lambda sp: torch.cat([GD[sp]["ctex"], GD[sp]["flags"]], 1)}
+           "fill": (lambda sp: torch.cat([GD[sp]["ctex"], GD[sp]["cstereo"], GD[sp]["flags"]], 1)) if os.environ.get("FILL_STEREO", "1") == "1" else (lambda sp: torch.cat([GD[sp]["ctex"], GD[sp]["flags"]], 1))}
 class Std:
     def __init__(self, Z): self.mu, self.sd = Z.mean(0), Z.std(0) + 1e-6
     def __call__(self, Z): return ((Z - self.mu) / self.sd).float()
@@ -171,7 +175,7 @@ def cnn_seq(seed):
 def fmt(rs):
     keys = ["shape", "fill", "pair", "forget", "acq", "t1_end", "held_shape", "held_fill", "held_pair", "locked"]; T = {k: torch.tensor([float(r[k]) for r in rs]) for k in keys}
     return " | ".join(f"{k} {T[k].mean():.3f}±{T[k].std():.3f}" if len(rs) > 1 else f"{k} {T[k].mean():.3f}" for k in keys)
-log(f"SHAPE CONTINUAL s053: tasks {[n for n,_ in TASKS]}; seeds {SEEDS}; epochs {EPOCHS}; strength {STRENGTH}; replay_bs {REPLAY_BS}")
+log(f"SHAPE CONTINUAL s053: stream {STREAM} tasks {[n for n,_ in TASKS]}; fill_stereo {os.environ.get('FILL_STEREO','1')}; seeds {SEEDS}; epochs {EPOCHS}; strength {STRENGTH}; replay_bs {REPLAY_BS}")
 log("metrics on test_fresh over the 11 trained pair-classes (full-softmax, no task id): shape/fill/pair acc at end; forget = mean(pair acc right after task - at end); t1_end = T1 pair acc at end; held_* = never-trained combos")
 for rd in READERS:
     for arm in ARMS:
