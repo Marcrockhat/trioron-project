@@ -12,10 +12,11 @@ def feats(front, split):
 def grouped(split, canon=False):
     """grouping.describe features per split, cached (fp16): feat_grp[_canon]_<split>.pt"""
     from experiments.progenitor import grouping as G
-    p = os.path.join(SH.OUT, f"feat_grp{'_canon' if canon else ''}_{split}.pt")
+    tag = {False: "", True: "_canon", "scale": "_canon", "affine": "_affine"}[canon]
+    p = os.path.join(SH.OUT, f"feat_grp{tag}_{split}.pt")
     if os.path.exists(p): return {k: v.float() for k, v in torch.load(p).items()}
     X, _, _ = SH.load(split); t = time.time(); D, _ = G.describe(X, canon=canon); torch.save({k: v.half() for k, v in D.items()}, p)
-    print(f"  grouped{'-canon' if canon else ''} {split} {tuple(D['silhouette'].shape)} in {time.time()-t:.0f}s", flush=True); return {k: v.float() for k, v in D.items()}
+    print(f"  grouped{tag} {split} {tuple(D['silhouette'].shape)} in {time.time()-t:.0f}s", flush=True); return {k: v.float() for k, v in D.items()}
 def dsc(split): return torch.cat([feats("ds", split), feats("col", split)], 1)
 if __name__ == "__main__":
     for f in FRONTS:

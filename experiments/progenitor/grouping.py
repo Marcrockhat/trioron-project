@@ -128,6 +128,24 @@ def canon_mask(mask, margin=2, size=S):
     crop = mask[y0:y1, x0:x1].float()[None, None]
     return F.interpolate(crop, size=(size, size), mode="bilinear", align_corners=False)[0, 0]
 
+def canon_affine(mask, rho=2.6, size=S):
+    """rotation/shear/scale canonicalisation: whiten the mask by its second moments (C^-1/2) so
+    shear and anisotropic scale vanish (ellipse -> circle, parallelogram -> square, sheared
+    triangle -> equilateral); rho std-units map to the frame edge. Residual rotation is left
+    to the boundary block's rotation-invariant angular spectrum."""
+    yy, xx = torch.nonzero(mask, as_tuple=True)
+    if len(yy) < 3: return mask.float()
+    pts = torch.stack([xx.float(), yy.float()]); c = pts.mean(1); C = torch.cov(pts) + 0.25 * torch.eye(2)   # +pixel-quantisation cov
+    ev, V = torch.linalg.eigh(C); Ch = V @ torch.diag(ev.clamp(min=1e-3).sqrt()) @ V.T                    # C^{1/2}
+    theta = torch.cat([Ch * rho / (S / 2), ((c - (S - 1) / 2) / (S / 2))[:, None]], 1)[None]              # out-normalised -> in-normalised
+    grid = F.affine_grid(theta, (1, 1, size, size), align_corners=False)
+    return F.grid_sample(mask.float()[None, None], grid, mode="bilinear", padding_mode="zeros", align_corners=False)[0, 0]
+
+def _canon(mask, mode):
+    if mode in (True, "scale", 1): return canon_mask(mask)
+    if mode in ("affine", 2): return canon_affine(mask)
+    return mask.float()
+
 def describe(X, gl=None, canon=False):
     """Descriptors of the LARGEST group per image (zeros if none). Returns dict of [N,d] tensors + the group lists."""
     if gl is None: gl, _, _ = groups(X)
@@ -136,7 +154,7 @@ def describe(X, gl=None, canon=False):
     for i, gs in enumerate(gl):
         objs = [g for g in gs if not g["is_field"]]; flags[i, 0] = len(objs); flags[i, 1] = float(any(g["is_field"] for g in gs))
         if not gs: continue
-        g = gs[0]; sil_img[i] = canon_mask(g["mask"]) if canon else g["mask"].float(); int_img[i] = FE.Y(X[i:i + 1])[0] * g["interior"].float() + (~g["interior"]).float() * FE.Y(X[i:i + 1])[0][g["interior"]].mean() if g["interior"].any() else 0
+        g = gs[0]; sil_img[i] = _canon(g["mask"], canon); int_img[i] = FE.Y(X[i:i + 1])[0] * g["interior"].float() + (~g["interior"]).float() * FE.Y(X[i:i + 1])[0][g["interior"]].mean() if g["interior"].any() else 0
         frame[i] = g["frame"]; col[i] = g["colour"]; flags[i, 2] = float(g["touches"]); flags[i, 3] = g["frame"][6]
     return dict(silhouette=FE.boundary_block(sil_img), interior=FE.dense_pooled(int_img), colour=torch.cat([col, FE.colour_block(X)[:, :0]], 1), frame=frame, flags=flags), gl
 
@@ -149,7 +167,7 @@ def describe_groups(X, gl=None, max_groups=4, canon=False):
     for i, gs in enumerate(gl):
         gs = gs[:max_groups]
         if not gs: out.append(None); continue
-        sil = torch.stack([canon_mask(g["mask"]) if canon else g["mask"].float() for g in gs])[:, None].expand(-1, 3, -1, -1)
+        sil = torch.stack([_canon(g["mask"], canon) for g in gs])[:, None].expand(-1, 3, -1, -1)
         out.append(dict(silhouette=FE.boundary_block(sil), colour=torch.stack([g["colour"] for g in gs]), frame=torch.stack([g["frame"] for g in gs]),
                         flags=torch.tensor([[1.0, float(g["is_field"]), float(g["touches"]), float(g["frame"][6])] for g in gs], dtype=torch.float), is_field=torch.tensor([g["is_field"] for g in gs])))
     return out

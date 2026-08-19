@@ -1,0 +1,13 @@
+  grouped_affine train (20000, 92) in 91s
+  leaves trained [147s]
+  grouping per-group read (106+205) CANON-affine set-acc | all 0.474 | k=1 0.770 | k=2 0.394 | k=3 0.269 | no-overlap 0.544 | overlap 0.201 | depth-of-field 0.353  [184s]
+  grouped_affine test_fresh (5000, 92) in 22s
+  single-object shape leaf on grouped 106 CANON-affine: test_fresh 0.754
+  grouped_affine test_held (3000, 92) in 17s
+  single-object shape leaf on grouped 106 CANON-affine: test_held 0.550
+  grouped_affine test_stress (12000, 92) in 60s
+  single-object shape leaf on grouped 106 CANON-affine: small r<5 0.541 | cropped 0.595 | zoom-in r>=14 0.733
+                 whole-image BCE 205 set-acc | all 0.330 | k=1 0.546 | k=2 0.209 | k=3 0.242 | no-overlap 0.354 | overlap 0.237 | depth-of-field 0.241  [312s]
+  grouped_affine train_multi (20000, 92) in 114s
+  grouped_affine test_multi (4000, 92) in 25s
+       whole+grouped-largest BCE 311 set-acc | all 0.430 | k=1 0.716 | k=2 0.301 | k=3 0.283 | no-overlap 0.470 | overlap 0.275 | depth-of-field 0.296  [491s]

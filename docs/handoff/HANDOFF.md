@@ -161,6 +161,19 @@ whole+grouped BCE 311 0.423; the same CANON leaf on singles: held-out
 `describe(..., canon=True)`, `describe_groups(..., canon=True)`,
 `shapes_feats.grouped(split, canon)` cache `feat_grp[_canon]_<split>.pt`.
 
+### E3. Rotation/shear canonicalisation (`grouping.canon_affine`; logs `shapes_probe4c1/4c2/5a`)
+Whiten body mask by C^-1/2 (grid_sample). n=3, 311-d: plain / scale /
+affine = fresh 0.853 / 0.856 / 0.858; geo 3-way 0.798 / 0.808 / **0.814**
+(CNN 0.809); held-out 0.478 / **0.511** / 0.493; small 0.556 / **0.627** /
+0.597; cropped 0.619 / 0.654 / 0.656; iso 0.830 / 0.827 / 0.823; blur2
+0.828 / 0.834 / 0.831; fill 0.861 / 0.865 / 0.872. Multi set-acc per-group
+read: 0.357 / 0.479 / 0.474. ⇒ modest consistent gain; affine ≈ scale
+(mask imperfections eat whitening's extra). CNN margins left: iso −6,
+blur −4, small −4.5, fresh −2.4 pp. **Params reality check:** every number
+this session is ONE `Seeded(d,5,48)` leaf ≈ 15 K learned params on fixed
+primitives (+ a fill leaf, + a whole-image field leaf) — NOT a nest; the
+nest is NEXT-3.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -172,14 +185,15 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. **Rotation/shear canonicalisation (P_O)** on the canon silhouette
-   (second-moment frame → rotate major axis, de-shear) before the
-   orientation spectrum; predicted to lift geo 3-way beyond 0.80 and
-   held-out beyond 0.58; then interior texture on the canon crop too.
-2. Per-body reads at ~0.6–0.75 each cap set-accuracy; multiply out: fix
-   the body read first (1), then multi set-acc rows (`diag_shapes5.py`
-   CANON=1). Fields in the multi split 77 % flagged — field rule on the
-   canon crop / texture leaf fallback.
+1. Mask quality is now the limiter (canonicalisation done, E3): dotted/
+   outline bodies (IoU 0.67/0.58), tiny bodies, cropped bodies' moments;
+   iso −6 pp vs CNN says the chroma foreground is still weak. Ideas: edge-
+   aware closing, outline ring → filled body earlier, chroma-only second
+   pass, interior texture on the canon crop.
+2. Per-body reads at ~0.6–0.75 each cap multi set-accuracy (0.48); fix the
+   body read first, then rerun `diag_shapes5.py CANON=1|2`. Fields in the
+   multi split 77 % flagged — field rule on the canon crop / texture leaf
+   fallback.
 3. **Per-factor leaves + router (survivor recipe):** shape ← canon
    silhouette; fill ← canon interior; colour; count from grouping; blur/
    focus ← edge width; compose vs single 311-d leaf; then Phasecyte/
@@ -205,13 +219,13 @@ far train shape/fill/set heads and use the rest as test slices.
 ## State of the build / Pointers
 - Commits (`conscience-core`): `f84f74f` dataset + probe 1; `f6dd87b`
   probes 2/3 + boundary/corner blocks; `8db6d0a` grouping + probe 4 + CNN
-  ref; `98cdfae` grouping v2 + multi placement; + canon/probe 5 + this
-  handoff. `main` NOT advanced. Pushed at close.
+  ref; `98cdfae` grouping v2 + multi placement; `4b5cecb` scale canon +
+  probe 5; + affine canon + this handoff. `main` NOT advanced. Pushed at close.
 - New files: `experiments/progenitor/{shapes,shapes_sheet,shapes_feats,
   frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
   diag_shapes4,diag_shapes5,shapes_cnn_ref}.py`, `docs/design/shape_world_dataset.md` (has the
   results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,probe4b,probe5,probe5c,cnn_ref,build2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
+  probe4,probe4b,probe4c1,probe4c2,probe5,probe5c,probe5a,cnn_ref,build2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
 - No background runs at close.
 - Package (`trioron/`) untouched. Memory pointer added
   (`shape_world_dataset.md`); memory is per-PC — this file is the truth.

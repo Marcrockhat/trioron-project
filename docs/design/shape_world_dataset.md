@@ -152,6 +152,29 @@ held-out; the per-group read beats every whole-image multi-label leaf.
 Remaining: bodies still read at ~0.6–0.75 each; rotation/shear
 canonicalisation (P_O) next; fields in multi split 77 % flagged.
 
+### Rotation/shear canonicalisation (`grouping.canon_affine`, n=3, 311-d = grouped 106 + whole 205)
+Whitening the body mask by its second moments (C^-1/2; ellipse→circle,
+parallelogram→square, sheared triangle→equilateral), residual rotation left
+to the boundary block's angular spectrum.
+
+| | plain | scale-canon | affine-canon | CNN ref |
+|---|---|---|---|---|
+| fresh | 0.853 | 0.856 | 0.858 | 0.882 |
+| geometric 3-way | 0.798 | 0.808 | **0.814** | 0.809 |
+| held-out combos | 0.478 | **0.511** | 0.493 | 0.331 |
+| small r<5 | 0.556 | **0.627** | 0.597 | 0.672 |
+| cropped | 0.619 | 0.654 | 0.656 | 0.686 |
+| iso | 0.830 | 0.827 | 0.823 | 0.893 |
+| blur strong | 0.828 | 0.834 | 0.831 | 0.871 |
+| fill fresh / held-out | 0.861 / 0.582 | 0.865 / 0.591 | 0.872 / 0.607 | — |
+| multi set-acc (per-group read) | 0.357 | 0.479 | 0.474 | — |
+
+Reading: canonicalisation is a modest, consistent gain (geo 3-way now
+≥ CNN; small +7, cropped +4, held-out +3); affine ≈ scale — whitening's
+extra is eaten by mask imperfections (jagged dotted/outline bodies,
+cropped bodies' moments) and edge softening on resample. Remaining CNN
+margins: iso −6, blur −4, small −4.5, fresh −2.4 pp.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

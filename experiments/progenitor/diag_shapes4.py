@@ -23,11 +23,8 @@ def leaf(X, y, n_out, seed, hidden=48):
         for idx in torch.randperm(len(X), generator=g).split(256):
             opt.zero_grad(); F.cross_entropy(sub(X[idx]), y[idx]).backward(); torch.nn.utils.clip_grad_norm_(sub.trainable_tensors(), 1.0); sub.zero_dormant_grads(); opt.step()
     return sub
-def grouped(split):
-    p = os.path.join(SH.OUT, f"feat_grp_{split}.pt")
-    if os.path.exists(p): return torch.load(p)
-    X, _, _ = SH.load(split); t = time.time(); D, _ = G.describe(X); D = {k: v.half() for k, v in D.items()}; torch.save(D, p)
-    print(f"  grouped {split} in {time.time()-t:.0f}s", flush=True); return D
+CANON = {"0": False, "1": "scale", "2": "affine"}[os.environ.get("CANON", "0")]
+def grouped(split): return SF.grouped(split, canon=CANON)
 SPL = ("train", "test_fresh", "test_held", "test_stress")
 _, ytr, _ = SH.load("train"); _, yfr, _ = SH.load("test_fresh"); _, yho, _ = SH.load("test_held"); _, yst, _ = SH.load("test_stress")
 GD = {sp: {k: v.float() for k, v in grouped(sp).items()} for sp in SPL}
@@ -37,11 +34,12 @@ def stream(sp, keys):
         if k in ("silhouette", "colour", "frame", "flags", "interior"): parts.append(GD[sp][k])
         else: parts.append(SF.feats(k, sp))
     return torch.cat(parts, 1)
-combos = {"whole-image bd+col+corner 205": ["bd", "col", "cn"],
+ALL = {"whole-image bd+col+corner 205": ["bd", "col", "cn"],
           "grouped silhouette 92": ["silhouette"],
           "grouped sil+colour+frame+flags 106": ["silhouette", "colour", "frame", "flags"],
           "grouped all (+interior) 706": ["silhouette", "colour", "frame", "flags", "interior"],
           "grouped 106 + whole 205 = 311": ["silhouette", "colour", "frame", "flags", "bd", "col", "cn"]}
+combos = {k + (f" [{CANON}]" if CANON else ""): ALL[k] for k in os.environ.get("COMBOS", ",".join(ALL)).split(",")}
 nc = yst["y_crop"] == 0; geo = yfr["y_shape"] < 3
 sub_st = {"small r<5": (yst["y_scale"] < 5) & nc & (yst["y_shape"] < 3), "cropped": yst["y_crop"] == 1, "iso": (yst["y_iso"] == 1) & nc, "blur2": (yst["y_blur"] == 2) & nc}
 def f(v): v = torch.tensor(v); return f"{v.mean():.3f}±{v.std():.3f}"

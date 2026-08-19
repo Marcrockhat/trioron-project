@@ -1,0 +1,5 @@
+  grouped sil+colour+frame+flags 106 [affine] | fresh 0.753±0.004 | geo 3-way 0.782±0.005 | held-out 0.537±0.019 | small r<5 0.525±0.017 | cropped 0.605±0.008 | iso 0.780±0.005 | blur2 0.695±0.011 | fill fresh 0.793±0.004 | fill held-out 0.288±0.010  [95s]
+  grouped 106 + whole 205 = 311 [affine] | fresh 0.858±0.002 | geo 3-way 0.814±0.004 | held-out 0.493±0.013 | small r<5 0.597±0.019 | cropped 0.656±0.002 | iso 0.823±0.001 | blur2 0.831±0.006 | fill fresh 0.872±0.005 | fill held-out 0.607±0.016  [340s]
+  count primitive (grouping only) test_multi [all n=4000]: exact 0.678; per true count 1:0.89, 2:0.75, 3:0.40
+  count primitive (grouping only) test_multi [no-overlap n=3189]: exact 0.833; per true count 1:0.89, 2:0.84, 3:0.72
+  count primitive (grouping only) test_multi [overlap-tagged n=811]: exact 0.068; per true count 1:nan, 2:0.08, 3:0.06
