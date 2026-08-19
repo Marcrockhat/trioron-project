@@ -253,8 +253,12 @@ last task; credit at rate 1.0 over-locks (mono acq 0.39) or locks interiors
 without protecting the head (nest). (3) "all" keeps T1 (0.72) at ~zero
 forgetting but stops learning (acq 0.26–0.37) — over-protection (lock rate
 1.0 = 13× default), tuning not verdict. (4) Nest does not beat mono under
-continual here (replay 0.22 vs 0.40). Follow-up arms: replay+λ, all-soft
-(default lock rate) → `shapes_continual_b_s053.log`.
+continual here (replay 0.22 vs 0.40). Follow-up arms (`shapes_continual_b_s053.log`): mono replay+λ shape 0.711 / pair 0.180 /
+forget 0.49 / acq 0.68 / T1 0.03; mono all-soft 0.691 / 0.211 / 0.31 / 0.51 / 0.24;
+nest replay+λ 0.711 / 0.220 / 0.35 / 0.57 / 0.50; nest all-soft 0.599 / 0.189 / 0.30 /
+0.50 / 0.48. λ@1e3 lifts shape retention but strangles fill + acquisition; best final
+pair stays mono+replay 0.40 (CNN 0.08). Open: STRENGTH 1e1–1e2 sweep, replay size,
+and a stream that doesn't confound fill with task.
 
 ## Known floors
 

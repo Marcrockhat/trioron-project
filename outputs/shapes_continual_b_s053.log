@@ -1,0 +1,6 @@
+SHAPE CONTINUAL s053: tasks ['T1 solid', 'T2 fields', 'T3 striped', 'T4 dotted', 'T5 outline']; seeds [0, 1, 2]; epochs 8; strength 1000.0; replay_bs 32
+metrics on test_fresh over the 11 trained pair-classes (full-softmax, no task id): shape/fill/pair acc at end; forget = mean(pair acc right after task - at end); t1_end = T1 pair acc at end; held_* = never-trained combos
+  mono replay+lambda | shape 0.711±0.002 | fill 0.243±0.043 | pair 0.180±0.041 | forget 0.490±0.026 | acq 0.679±0.014 | t1_end 0.034±0.025 | held_shape 0.676±0.004 | held_fill 0.304±0.020 | held_pair 0.236±0.016 | locked 0.000±0.000   [254s]
+  mono all-soft | shape 0.691±0.031 | fill 0.308±0.134 | pair 0.211±0.082 | forget 0.306±0.136 | acq 0.506±0.117 | t1_end 0.237±0.194 | held_shape 0.690±0.016 | held_fill 0.196±0.092 | held_pair 0.145±0.080 | locked 2.667±1.155   [501s]
+  nest replay+lambda | shape 0.711±0.005 | fill 0.304±0.011 | pair 0.220±0.010 | forget 0.351±0.011 | acq 0.572±0.009 | t1_end 0.497±0.010 | held_shape 0.721±0.010 | held_fill 0.177±0.008 | held_pair 0.125±0.010 | locked 0.000±0.000   [921s]
+  nest all-soft | shape 0.599±0.028 | fill 0.315±0.019 | pair 0.189±0.016 | forget 0.301±0.036 | acq 0.503±0.031 | t1_end 0.484±0.052 | held_shape 0.737±0.004 | held_fill 0.171±0.007 | held_pair 0.124±0.004 | locked 7.000±0.000   [1343s]

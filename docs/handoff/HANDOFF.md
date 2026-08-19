@@ -203,6 +203,20 @@ value here is structural, not accuracy (primitives cap ≈ 0.86; CNN 0.88).
 Gotcha: router at 8 epochs on 4 K = 125 steps → 0.71 ± 0.05 (undertrained,
 not a verdict) — ROUTER_EPOCHS=80 default now.
 
+### E7. Continual / compositional stream (`shapes_continual.py`; logs `shapes_continual{,_b}_s053.log`)
+5 tasks (solid shapes → fields → striped → dotted → outline), shared shape+
+fill heads, full-softmax, no task id, n=3; readers mono (one 311-d leaf)
+vs nest (shape+whole+fill leaves); arms none / λ(1e3) / credit(rate 1.0) /
+replay / all / replay+λ / all-soft(rate .078); bar CNN 242 K sequential.
+**Unprotected leaf and CNN forget catastrophically (T1 → 0.00; CNN worst,
+pair 0.077). Replay carries final accuracy: mono+replay pair 0.399 / shape
+0.636 (best).** λ protects soma not the shared head (fill collapses);
+credit@1.0 over-locks (acq 0.39) or locks interiors without protecting the
+head; "all" keeps T1 0.72 at forget 0.065 but acq 0.26; replay+λ shape
+0.711 but pair 0.18–0.22; nest never beats mono under continual here.
+Design caveat: each task = one fill ⇒ fill head is single-class-per-task
+(hardest case). Full tables in the dataset doc.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -214,29 +228,25 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. **Continual / absorb on the shape world** — the test the nest exists
-   for and where a monolithic CNN can't follow: (i) tasks = shapes / fills
-   / colours in sequence with the CL machinery (credit lock + manifold +
-   dream), single leaf vs per-factor nest, forgetting curves; (ii) absorb a
-   new factor leaf (e.g. blur, or a 6th shape) without retraining the
-   others; (iii) CNN fine-tuned sequentially as the forgetting bar.
-2. Phasecyte layer per band (unsupervised) vs supervised leaves — same
-   harness, prediction: ≈ 0.86 again (all readers converge on this front
-   end); only worth it inside (1).
-3. Multi-object: pair-set 0.28 bounded by per-body reads; fields in the
-   multi split 77 % flagged; blur primitive weak (0.57) — edge-width sense
-   needs work if blur becomes a task.
-4. (a) closed at ≈ 0.865 (E5); (b) stage 1 closed at 0.86 (E6).
-3. **Per-factor leaves + router (survivor recipe):** shape ← canon
-   silhouette; fill ← canon interior; colour; count from grouping; blur/
-   focus ← edge width; compose vs single 311-d leaf; then Phasecyte/
-   trioron nest per band (data unlimited = clean nest-vs-leaf test).
-4. Continual: shapes as tasks with the CL machinery.
-5. Discovery control for the primitives (s019 doctrine); fantasizing
-   (H-space recombination) once factors separate — parked.
-6. Design doc `canonical_frame_primitives.md` §8 decisions still open;
-   light-ramp generator not yet in shapes.py; occlusion (overlap tag) is
-   now a labelled factor for later.
+1. **Continual tuning on the shape stream** (E7): STRENGTH sweep 1e1–1e2
+   for λ, replay size (REPLAY_BS 64–128, REPLAY_W), credit rate 0.078 with
+   theta_e default; and a stream that does NOT confound fill with task
+   (mix fills within tasks) so the fill head has within-task contrast.
+   Target: pair ≥ 0.6 at forget ≤ 0.2 (joint ceiling ≈ 0.86 shape).
+2. **Developmental arcs Rocky asked for:** (i) coarse-to-fine stream
+   (blur2 → blur1 → sharp) vs random mix — does the infant schedule help
+   generalisation/held-out? (ii) discovery control: Phasecyte (unsupervised)
+   on the separated per-body streams — do clusters now align with shape /
+   fill / colour (s052 whole-image clusters were texture bands)? Missing-
+   primitive detector = frustration plateau per slice.
+3. Absorb: train a new factor leaf (e.g. blur, or a 6th shape) and graft
+   it without retraining the others (`trioron.api.absorb`), vs retraining.
+4. Resolution scaling: shape world at 64/128 px (S hard-coded = 32 in
+   shapes.py / frontend.py) — params/FLOPs/accuracy vs the CNN; grouping
+   needs a batched rewrite first (8.9 ms/img python loop; CNN 1.2 ms).
+5. Speed: batched torch grouping (label/closing/hull) → ~1 ms/img.
+6. Multi-object pair-set 0.28; fields in multi split 77 % flagged; blur
+   primitive weak (0.57).
 
 ## GOTCHAS
 - `pkill -f`/`pgrep -f` from inside the Bash tool matches the tool's own
@@ -254,13 +264,15 @@ far train shape/fill/set heads and use the rest as test slices.
   probes 2/3 + boundary/corner blocks; `8db6d0a` grouping + probe 4 + CNN
   ref; `98cdfae` grouping v2 + multi placement; `4b5cecb` scale canon +
   probe 5; `51bcaa8` affine canon; `74f011d` convex masks; `ae6357d` (a)
-  per-body streams; + (b) leaves+router + this handoff. `main` NOT advanced. Pushed at close.
+  per-body streams; `8556779` (b) leaves+router; continual driver +
+  results + this handoff. `main` NOT advanced. Pushed at close.
 - New files: `experiments/progenitor/{shapes,shapes_sheet,shapes_feats,
   frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
-  diag_shapes4,diag_shapes5,diag_shapes6,shapes_cnn_ref}.py`, `docs/design/shape_world_dataset.md` (has the
+  diag_shapes4,diag_shapes5,diag_shapes6,shapes_cnn_ref,shapes_continual}.py`, `docs/design/shape_world_dataset.md` (has the
   results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,cnn_ref,build2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
-- No background runs at close.
+  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,cnn_ref,build2,continual,continual_b}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
+- No background runs at close. Timings: one continual run (5 tasks, 8 ep)
+  ≈ 1–2.5 min mono / 2–5 min nest; CNN sequential ≈ 5 min/seed.
 - Package (`trioron/`) untouched. Memory pointer added
   (`shape_world_dataset.md`); memory is per-PC — this file is the truth.
 
