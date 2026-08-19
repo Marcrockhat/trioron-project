@@ -14,7 +14,8 @@ ARMS (protection): none | lambda (soft λ anchor, |w·g| saliency) | credit (har
          replay (manifold pseudo-rehearsal over the FIXED descriptors, per pair class) | all |
          replay+lambda (no hard lock) | all-soft (all with the DEFAULT lock rate 0.078) |
          replay-full (full-cov manifold, sample_full rank FULL_RANK=32) | replay-ex (EX_K=20 real exemplars/class, hippo bar) |
-         full+lambda | full+credit-soft | full+all-soft (full-cov replay combined with λ(STRENGTH) / credit at 0.078 / both).
+         full+lambda | full+credit-soft | full+all-soft (full-cov replay combined with λ(STRENGTH) / credit at 0.078 / both) |
+         full+head | full+head+credit (full-cov replay + HEAD-ONLY λ anchor at HEAD_STRENGTH on the output cells' incoming edges; soma free).
 BARS: cnn-seq = the 242K CNN fine-tuned task after task (forgetting bar).
 METRICS at stream end on test_fresh: shape / fill / pair acc; per-task pair-acc right after
 training vs at end -> forgetting; test_held: shape / fill / pair (compositional, never trained).
@@ -35,7 +36,7 @@ from trioron.learning import epigenetic_lock as epi
 from trioron.learning.manifold import ManifoldArchive, ManifoldConfig
 torch.set_num_threads(int(os.environ.get("OMP_NUM_THREADS", "6")))
 SEEDS = [int(s) for s in os.environ.get("SEEDS", "0,1,2").split(",")]; EPOCHS = int(os.environ.get("EPOCHS", "8"))
-STRENGTH = float(os.environ.get("STRENGTH", "1e3")); REPLAY_BS = int(os.environ.get("REPLAY_BS", "32")); REPLAY_W = float(os.environ.get("REPLAY_W", "1.0")); FULL_RANK = int(os.environ.get("FULL_RANK", "32")) or None; EX_K = int(os.environ.get("EX_K", "20"))
+STRENGTH = float(os.environ.get("STRENGTH", "1e3")); REPLAY_BS = int(os.environ.get("REPLAY_BS", "32")); REPLAY_W = float(os.environ.get("REPLAY_W", "1.0")); HEAD_STRENGTH = float(os.environ.get("HEAD_STRENGTH", "1e2")); FULL_RANK = int(os.environ.get("FULL_RANK", "32")) or None; EX_K = int(os.environ.get("EX_K", "20"))
 READERS = os.environ.get("READERS", "mono,nest").split(","); ARMS = os.environ.get("ARMS", "none,lambda,credit,replay,all").split(","); RUN_CNN = os.environ.get("CNN", "1") == "1"
 t0 = time.time()
 def log(*a): print(*a, flush=True)
@@ -65,15 +66,19 @@ class Leaf:
         self.sub.compile(); self.sub.prepare_training(); self.a = self.sub.arena; self.arm = arm
         self.lam = arm in ("lambda", "all", "replay+lambda", "all-soft", "full+lambda", "full+all-soft"); self.cred = arm in ("credit", "all", "all-soft", "full+credit-soft", "full+all-soft")
         self.rep = arm in ("replay", "all", "replay+lambda", "all-soft", "replay-full", "replay-ex", "full+lambda", "full+credit-soft", "full+all-soft")
-        self.full = arm in ("replay-full", "full+lambda", "full+credit-soft", "full+all-soft"); self.ex = arm == "replay-ex"
+        self.head = arm.startswith("full+head")   # head-only λ anchor (soma stays plastic; replay defends it)
+        if self.head: self.cred = arm.endswith("+credit"); self.rep = True
+        self.full = arm in ("replay-full", "full+lambda", "full+credit-soft", "full+all-soft") or self.head; self.ex = arm == "replay-ex"
         self.exemplars = {}   # class -> [K, d] real descriptors (hippo bar)
-        rate = float(os.environ.get("LOCK_RATE", "0.078" if arm in ("all-soft", "full+credit-soft", "full+all-soft") else "1.0"))
+        rate = float(os.environ.get("LOCK_RATE", "0.078" if arm in ("all-soft", "full+credit-soft", "full+all-soft") or self.head else "1.0"))
         self.credit = CreditTracker(self.a, CreditConfig(consecutive_tasks=1, theta_e=0.30, g_min=1e-3, lock_base_rate=rate, engagement_decay=0.3)) if self.cred else None
         self.archive = ManifoldArchive(Arena(Envelope(), capacity=32), ManifoldConfig(replay_steps_per_class=1), full_cov=self.full) if (self.rep and not self.ex) else None
         self.locked = 0
     def __call__(self, Z): return self.sub(Z)
     def logits(self, Z): return B.logits_of(self.sub, Z)
-    def penalty(self): return STRENGTH * epi.ewc_penalty(self.a) if self.lam else 0.0
+    def penalty(self):
+        if self.head: return HEAD_STRENGTH * epi.ewc_penalty(self.a)
+        return STRENGTH * epi.ewc_penalty(self.a) if self.lam else 0.0
     def replay(self):   # -> (samples, pair ids) or None
         if not self.rep: return None
         if self.ex:
@@ -102,6 +107,9 @@ class Leaf:
             act = self.sub.last_activations
             if act is not None: self.credit.update_engagement(act)
     def boundary(self, Ztask, ptask):
+        if self.head:   # λ = 1 on output cells only, 0 elsewhere; snapshot head weights
+            sig = torch.zeros(self.a.capacity); sig[self.sub.scheduler._plan.output_ids.long()] = 1.0
+            epi.set_lambda(self.a, sig, mode="absolute", floor=0.0); epi.anchor(self.a)
         if self.lam: epi.refresh_lambda(self.a); epi.anchor(self.a)
         if self.cred: self.locked += len(self.credit.consolidate())
         if self.rep and self.ex:

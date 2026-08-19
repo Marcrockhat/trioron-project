@@ -329,6 +329,14 @@ nest + full-cov replay (+ credit-soft): pair 0.67, forget 0.09, held-out
 0.35.** Remaining forgetting is mostly shared-head drift, not soma — next
 lever is per-leaf head protection / the H-space router, not more λ.
 
+### Continual round 5 — head-only λ anchor on top of full-cov + credit-soft (n=3; `shapes_continual_v2d_h1e2/h1e3`)
+nest: pair 0.627 / forget 0.085 (1e2), 0.622 / 0.077 (1e3) vs operating point 0.669 /
+0.087; mono 0.612 / 0.078 vs 0.675 / 0.159. Null-to-negative: freezing past logit
+rows also blocks head re-calibration around replayed classes (acq −4 pp), forgetting
+unchanged. The residual 0.09 is joint soma+head re-tuning replay mostly handles, not
+head drift. **Final operating point: nest + full-cov replay + credit-soft — pair
+0.669, forget 0.087, held-out pair 0.349** (CNN sequential 0.130 / 0.613 / 0.000).
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

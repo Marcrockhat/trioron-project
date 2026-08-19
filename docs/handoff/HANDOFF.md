@@ -2,7 +2,13 @@
 
 **Session date:** 2026-08-19
 **Session number:** 053
-**Session title:** **Shape world: a fully tagged synthetic recognition dataset
+**Session title:** **Shape world: a fully tagged synthetic recognition dataset; CONTINUAL
+headline at close: nest + full-cov manifold replay + credit-soft = pair
+0.67 / forget 0.09 / never-trained combos 0.35 vs CNN-sequential 0.13 /
+0.61 / 0.00 (was 0.3-class numbers before this arc). Static: 0.86 vs CNN
+0.88 at ~15 K learned params.**
+
+**Dataset arc:
 (5 shapes × fill/thickness × colour+iso × zoom 3–18 × skew/rot/flip × crop ×
 per-object blur with 3 focus modes × count 1–3; unlimited images/class; held-
 out shape×fill combos = compositional "never seen"). First probes: with 8×
@@ -255,6 +261,14 @@ neutral-positive on the nest (**pair 0.669 / forget 0.087 / held-out 0.349**,
 cov replay (+ credit-soft)**. Remaining forgetting = shared-head drift →
 next lever is head protection / H-space routing, not more λ.
 
+### E12. Continual round 5 — head-only anchor: null (logs `shapes_continual_v2d_h1e2/h1e3`)
+nest full+head+credit pair 0.627 / forget 0.085 vs operating point 0.669 /
+0.087; mono 0.612 / 0.078. Freezing past logit rows blocks head re-
+calibration (acq −4 pp); forgetting unchanged. **FINAL OPERATING POINT:
+nest + full-cov replay (rank 32) + credit-soft (rate .078): pair 0.669 /
+forget 0.087 / held-out 0.349.** Rocky at close: "far too good improvement
+compared to our 0.3 results" — wrap.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -266,24 +280,21 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. **Continual round 5** (E11 done: λ costs acquisition; operating point
-   nest + full-cov + credit-soft 0.67/0.09/0.35): attack shared-head drift
-   — per-leaf head anchoring, or the H-space `ManifoldRouter` (core) over
-   the leaves' interior codes; FULL_RANK 16/64, REPLAY_BS 64. Then absorb
-   (graft a new factor leaf, no retrain) and the developmental arcs
-   (coarse-to-fine; Phasecyte discovery control).
-2. **Developmental arcs Rocky asked for:** (i) coarse-to-fine stream
-   (blur2 → blur1 → sharp) vs random mix — does the infant schedule help
-   generalisation/held-out? (ii) discovery control: Phasecyte (unsupervised)
-   on the separated per-body streams — do clusters now align with shape /
-   fill / colour (s052 whole-image clusters were texture bands)? Missing-
-   primitive detector = frustration plateau per slice.
-3. Absorb: train a new factor leaf (e.g. blur, or a 6th shape) and graft
-   it without retraining the others (`trioron.api.absorb`), vs retraining.
-4. Resolution scaling: shape world at 64/128 px (S hard-coded = 32 in
-   shapes.py / frontend.py) — params/FLOPs/accuracy vs the CNN; grouping
-   needs a batched rewrite first (8.9 ms/img python loop; CNN 1.2 ms).
-5. Speed: batched torch grouping (label/closing/hull) → ~1 ms/img.
+1. **Carry full-cov replay to CIFAR-continual** (one flag on the existing
+   bench; the v2-vs-v1 7.6σ result used diagonal sketches) — Rocky's
+   question at close; expect a lift on continual, modest on static (canon
+   helps small objects; grouping as built needs plain backgrounds).
+2. Absorb on the shape world: train a new factor leaf (blur, or a 6th
+   shape) and graft it (`trioron.api.absorb`) without retraining; vs
+   retrain.
+3. Developmental arcs: coarse-to-fine stream (blur2→blur1→sharp) vs mixed;
+   Phasecyte discovery control on the separated per-body streams
+   (missing-primitive detector = frustration plateau per slice).
+4. Continual polish (low priority, the curve is flat): H-space
+   `ManifoldRouter` over leaves' interior codes; FULL_RANK 16/64;
+   REPLAY_BS 64; n=5 on the operating point.
+5. Engineering: batched grouping (8.9 ms/img python loop vs CNN 1.2);
+   S-parametrised generator/front end for 64/128 px scaling.
 6. Multi-object pair-set 0.28; fields in multi split 77 % flagged; blur
    primitive weak (0.57).
 
@@ -295,6 +306,10 @@ far train shape/fill/set heads and use the rest as test slices.
 - The trioron leaf `construct` hits "Edge buffer full" above hidden≈48 at
   900-d — over-cap references use plain torch MLPs.
 - Probe scripts run on import (`diag_shapes*.py`); don't `import` them.
+- `shapes_continual.py` arms are string-matched in `Leaf.__init__`; a
+  typo'd ARMS entry silently runs as "none". STRENGTH default 1e3 — set it
+  explicitly for λ arms. Router/leaf `construct` output ids are on
+  `sub.scheduler._plan.output_ids` (private).
 - Sheets: some samples are unreadable by construction (tiny outline +
   strong blur + crop); label-noise floor of a few %.
 
@@ -303,13 +318,13 @@ far train shape/fill/set heads and use the rest as test slices.
   probes 2/3 + boundary/corner blocks; `8db6d0a` grouping + probe 4 + CNN
   ref; `98cdfae` grouping v2 + multi placement; `4b5cecb` scale canon +
   probe 5; `51bcaa8` affine canon; `74f011d` convex masks; `ae6357d` (a)
-  per-body streams; `8556779` (b) leaves+router; continual driver +
-  results + this handoff. `main` NOT advanced. Pushed at close.
+  per-body streams; `8556779` (b) leaves+router; `e983068`/`e1cddda`/
+  `413777f` continual rounds 2–4; + round 5 + this handoff. `main` NOT advanced. Pushed at close.
 - New files: `experiments/progenitor/{shapes,shapes_sheet,shapes_feats,
   frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
   diag_shapes4,diag_shapes5,diag_shapes6,shapes_cnn_ref,shapes_continual}.py`, `docs/design/shape_world_dataset.md` (has the
   results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,probe4f,cnn_ref,build2,continual,continual_b,continual_v2,continual_v2b,continual_v2c_s1e1,continual_v2c_s1e2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
+  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,probe4f,cnn_ref,build2,continual,continual_b,continual_v2,continual_v2b,continual_v2c_s1e1,continual_v2c_s1e2,continual_v2d_h1e2,continual_v2d_h1e3}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
 - No background runs at close. Timings: one continual run (5 tasks, 8 ep)
   ≈ 1–2.5 min mono / 2–5 min nest; CNN sequential ≈ 5 min/seed.
 - Package (`trioron/`) untouched. Memory pointer added

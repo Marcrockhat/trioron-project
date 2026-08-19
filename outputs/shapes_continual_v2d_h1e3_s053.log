@@ -1,0 +1,4 @@
+SHAPE CONTINUAL s053: stream v2 tasks ['T1 c-sol t-str s-out', 'T2 fields t-sol', 'T3 c-str s-dot t-out', 'T4 c-dot s-sol']; fill_stereo 1; seeds [0, 1, 2]; epochs 8; strength 1000.0; replay_bs 32
+metrics on test_fresh over the 11 trained pair-classes (full-softmax, no task id): shape/fill/pair acc at end; forget = mean(pair acc right after task - at end); t1_end = T1 pair acc at end; held_* = never-trained combos
+  mono full+head+credit | shape 0.717±0.023 | fill 0.721±0.018 | pair 0.547±0.035 | forget 0.079±0.007 | acq 0.591±0.039 | t1_end 0.672±0.013 | held_shape 0.432±0.021 | held_fill 0.255±0.050 | held_pair 0.041±0.018 | locked 2.000±0.000   [287s]
+  nest full+head+credit | shape 0.783±0.007 | fill 0.742±0.013 | pair 0.622±0.007 | forget 0.077±0.008 | acq 0.672±0.009 | t1_end 0.561±0.009 | held_shape 0.514±0.009 | held_fill 0.547±0.003 | held_pair 0.308±0.004 | locked 3.000±1.000   [820s]
