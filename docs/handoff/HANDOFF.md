@@ -16,7 +16,11 @@ stream lifts geo 3-way 0.67→0.76 and held-out combos 0.38→0.53; grouped +
 whole-image 311-d + one 50 K leaf = 0.853 fresh ≈ CNN ref 0.882 (242 K,
 over cap) and +15 pp over the CNN on the compositional test (CNN 0.33 —
 it memorises combos). Count from grouping: 1→0.91, 2→0.37, 3→0 (closing
-merges neighbours — next fix). Rocky: recognition is the deliverable;
+merged neighbours) → grouping v2 (per-body bridging + second-pass
+foreground; multi placement fixed, overlap TAGGED): count no-overlap
+0.74 (2: 0.84, 3: 0.75); per-group read + SCALE CANONICALISATION (bbox
+crop → 32) = multi set-acc 0.479 vs 0.33 whole-image leaf, small 0.50→
+0.57, cropped 0.56→0.60, held-out 0.54→0.58. Rocky: recognition is the deliverable;
 "fantasizing" is parked; nest = survivor recipe (SPLIT by factor +
 arbitration = grouping).**
 
@@ -140,6 +144,23 @@ also merges neighbours 8 px apart — bridging must be per body (e.g. close
 within each colour-consistent component, or grow bodies from seeds), and
 the multi-object splits are the test.
 
+### E2. Grouping v2 + per-group read + scale canonicalisation (`diag_shapes5.py`, logs `shapes_probe4b/5/5c`)
+v2: merge raw components only if the smaller is a texture element (≤ 30
+px) or both are thin/parallel stripes; close + fill inside each body;
+second-pass Otsu on the remainder (≥ 1.1 × noise floor) recovers a low-
+contrast (iso) object next to a high-contrast one. Multi splits REBUILT:
+centres rejection-sampled (≥ 1.4·(r₁+r₂)+1), failures tagged `y_overlap`
+(~19 %; 96 % of the old 3-object images were touching — unsplittable).
+Count from grouping alone (test_multi): all 0.60; no-overlap 0.71–0.74
+(1: 0.89, 2: 0.84, 3: 0.75); overlap 0.04. Single-object rows unchanged
+(311-d 0.853). Per-group read set-accuracy (shape leaf on grouped 106
+reads each body): plain 0.357 → **CANON 0.479** (k=2 0.40, k=3 0.27,
+no-overlap 0.55, depth-of-field 0.36) vs whole-image BCE 205 0.330 /
+whole+grouped BCE 311 0.423; the same CANON leaf on singles: held-out
+0.577, small 0.572, cropped 0.601 (fresh 0.749). `grouping.canon_mask`,
+`describe(..., canon=True)`, `describe_groups(..., canon=True)`,
+`shapes_feats.grouped(split, canon)` cache `feat_grp[_canon]_<split>.pt`.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -151,29 +172,24 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. **Grouping v2 — per-body bridging** so neighbours don't merge: seeds
-   from raw components, close/fill inside colour-consistent regions only,
-   or split merged bodies by concavity/colour; targets: count exact ≥ 0.8
-   on test_multi, IoU on outline/dotted ≥ 0.75, small/cropped rows toward
-   the CNN (0.67/0.69). Then multi-object: per-group read → set-accuracy
-   (`test_multi`, depth-of-field subset = Rocky's "eye focus" test).
-2. **Frame canonicalisation** on the silhouette (second moments → rotate/
-   de-shear/scale before the orientation spectrum): predicted to close the
-   geo 3-way gap under shear (design doc P_S/P_O, now with ground truth).
-3. **Per-factor leaves + router (the survivor recipe):** shape leaf ←
-   silhouette; fill leaf ← interior; colour leaf; count from grouping;
-   blur/focus leaf ← edge width; compose vs the single 311-d leaf; then
-   Phasecyte/trioron nest per band — data is unlimited here, so it's the
-   clean nest-vs-leaf test s052 E couldn't run.
-4. Held-out combos still 0.53 vs fresh 0.76 on the silhouette stream —
-   inspect which held-out combo fails (outline circles' rings, dotted
-   triangles' bridged masks) after grouping v2.
-5. Continual: shapes as tasks (per shape / per fill / per colour) with the
-   CL machinery — the reason the substrate exists.
-6. Discovery control for the primitives (s019 doctrine); fantasizing
-   (H-space factor recombination) once factors are separated — parked.
-7. Design doc `canonical_frame_primitives.md` §8 decisions still open;
-   light-ramp generator not yet added to shapes.py.
+1. **Rotation/shear canonicalisation (P_O)** on the canon silhouette
+   (second-moment frame → rotate major axis, de-shear) before the
+   orientation spectrum; predicted to lift geo 3-way beyond 0.80 and
+   held-out beyond 0.58; then interior texture on the canon crop too.
+2. Per-body reads at ~0.6–0.75 each cap set-accuracy; multiply out: fix
+   the body read first (1), then multi set-acc rows (`diag_shapes5.py`
+   CANON=1). Fields in the multi split 77 % flagged — field rule on the
+   canon crop / texture leaf fallback.
+3. **Per-factor leaves + router (survivor recipe):** shape ← canon
+   silhouette; fill ← canon interior; colour; count from grouping; blur/
+   focus ← edge width; compose vs single 311-d leaf; then Phasecyte/
+   trioron nest per band (data unlimited = clean nest-vs-leaf test).
+4. Continual: shapes as tasks with the CL machinery.
+5. Discovery control for the primitives (s019 doctrine); fantasizing
+   (H-space recombination) once factors separate — parked.
+6. Design doc `canonical_frame_primitives.md` §8 decisions still open;
+   light-ramp generator not yet in shapes.py; occlusion (overlap tag) is
+   now a labelled factor for later.
 
 ## GOTCHAS
 - `pkill -f`/`pgrep -f` from inside the Bash tool matches the tool's own
@@ -189,12 +205,13 @@ far train shape/fill/set heads and use the rest as test slices.
 ## State of the build / Pointers
 - Commits (`conscience-core`): `f84f74f` dataset + probe 1; `f6dd87b`
   probes 2/3 + boundary/corner blocks; `8db6d0a` grouping + probe 4 + CNN
-  ref; + this handoff. `main` NOT advanced. Pushed at close.
+  ref; `98cdfae` grouping v2 + multi placement; + canon/probe 5 + this
+  handoff. `main` NOT advanced. Pushed at close.
 - New files: `experiments/progenitor/{shapes,shapes_sheet,shapes_feats,
-  frontend,grouping,diag_shapes,diag_shapes2,diag_shapes3,diag_shapes4,
-  shapes_cnn_ref}.py`, `docs/design/shape_world_dataset.md` (has the
+  frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
+  diag_shapes4,diag_shapes5,shapes_cnn_ref}.py`, `docs/design/shape_world_dataset.md` (has the
   results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,cnn_ref}_s053.log`, `outputs/data/shapes/manifest.json`.
+  probe4,probe4b,probe5,probe5c,cnn_ref,build2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
 - No background runs at close.
 - Package (`trioron/`) untouched. Memory pointer added
   (`shape_world_dataset.md`); memory is per-PC — this file is the truth.

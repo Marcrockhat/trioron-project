@@ -22,8 +22,8 @@ def leaf(X, y, n_out, seed, loss="ce", hidden=48):
             opt.zero_grad(); out = sub(X[idx]); l = F.cross_entropy(out, y[idx]) if loss == "ce" else F.binary_cross_entropy_with_logits(out, y[idx])
             l.backward(); torch.nn.utils.clip_grad_norm_(sub.trainable_tensors(), 1.0); sub.zero_dormant_grads(); opt.step()
     return sub
-def grp(split):
-    D = torch.load(os.path.join(SH.OUT, f"feat_grp_{split}.pt")); return {k: v.float() for k, v in D.items()}
+CANON = os.environ.get("CANON", "0") == "1"
+def grp(split): return SF.grouped(split, canon=CANON)
 _, ytr, _ = SH.load("train"); Xm, ym, _ = SH.load("test_multi"); _, ymtr, _ = SH.load("train_multi")
 Dtr = grp("train"); K = ["silhouette", "colour", "frame", "flags"]
 Ztr = torch.cat([Dtr[k] for k in K], 1); mu, sd = Ztr.mean(0), Ztr.std(0) + 1e-6
@@ -33,7 +33,7 @@ W = ["bd", "col", "cn"]; Wtr = torch.cat([SF.feats(k, "train") for k in W], 1); 
 whole_leaf = leaf((Wtr - wmu) / wsd, ytr["y_shape"], 5, 0)
 print(f"  leaves trained [{time.time()-t0:.0f}s]", flush=True)
 # per-group read on test_multi
-gl, _, _ = G.groups(Xm); PG = G.describe_groups(Xm, gl); Wm = (torch.cat([SF.feats(k, "test_multi") for k in W], 1) - wmu) / wsd
+gl, _, _ = G.groups(Xm); PG = G.describe_groups(Xm, gl, canon=CANON); Wm = (torch.cat([SF.feats(k, "test_multi") for k in W], 1) - wmu) / wsd
 pw = B.logits_of(whole_leaf, Wm).argmax(1)
 pred = torch.zeros(len(Xm), 5)
 for i, d in enumerate(PG):
@@ -47,7 +47,15 @@ def report(name, P):
     sl = {"all": torch.ones(len(ok), dtype=torch.bool), "k=1": ym["y_count"] == 1, "k=2": ym["y_count"] == 2, "k=3": ym["y_count"] == 3,
           "no-overlap": ym["y_overlap"] == 0, "overlap": ym["y_overlap"] == 1, "depth-of-field": ym["y_focus"] == 1}
     print(f"  {name:>34s} set-acc | " + " | ".join(f"{k} {float(ok[m].mean()):.3f}" for k, m in sl.items()) + f"  [{time.time()-t0:.0f}s]", flush=True)
-report("grouping per-group read (106+205)", pred)
+report(f"grouping per-group read (106+205){' CANON' if CANON else ''}", pred)
+# single-object rows for the same shape leaf (canon effect on small / cropped / held-out)
+_, yfr, _ = SH.load("test_fresh"); _, yho, _ = SH.load("test_held"); _, yst, _ = SH.load("test_stress")
+for sp, yy in (("test_fresh", yfr), ("test_held", yho), ("test_stress", yst)):
+    D = grp(sp); z = (torch.cat([D[k] for k in K], 1) - mu) / sd; pr = B.logits_of(shape_leaf, z).argmax(1)
+    if sp == "test_stress":
+        nc = yst["y_crop"] == 0; sl = {"small r<5": (yst["y_scale"] < 5) & nc & (yst["y_shape"] < 3), "cropped": yst["y_crop"] == 1, "zoom-in r>=14": (yst["y_scale"] >= 14) & nc}
+        print("  single-object shape leaf on grouped 106" + (" CANON" if CANON else "") + ": " + " | ".join(f"{k} {float((pr[m]==yy['y_shape'][m]).float().mean()):.3f}" for k, m in sl.items()), flush=True)
+    else: print(f"  single-object shape leaf on grouped 106{' CANON' if CANON else ''}: {sp} {float((pr==yy['y_shape']).float().mean()):.3f}", flush=True)
 # baselines: whole-image multi-label sigmoid leaf trained on train_multi
 for name, keys in (("whole-image BCE 205", W), ("whole+grouped-largest BCE 311", None)):
     if keys is None:

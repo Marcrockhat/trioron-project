@@ -118,7 +118,17 @@ def groups(X, version=2):
         gs.sort(key=lambda g: -g["area"]); out.append(gs)
     return out, fg, d
 
-def describe(X, gl=None):
+def canon_mask(mask, margin=2, size=S):
+    """scale canonicalisation: crop the mask's bbox (+margin) and resize to size x size (the fovea's zoom)."""
+    yy, xx = torch.nonzero(mask, as_tuple=True)
+    if len(yy) == 0: return mask.float()
+    y0, y1 = max(int(yy.min()) - margin, 0), min(int(yy.max()) + margin + 1, S); x0, x1 = max(int(xx.min()) - margin, 0), min(int(xx.max()) + margin + 1, S)
+    side = max(y1 - y0, x1 - x0); cy, cx = (y0 + y1) // 2, (x0 + x1) // 2   # square crop, aspect preserved
+    y0, x0 = max(cy - side // 2, 0), max(cx - side // 2, 0); y1, x1 = min(y0 + side, S), min(x0 + side, S)
+    crop = mask[y0:y1, x0:x1].float()[None, None]
+    return F.interpolate(crop, size=(size, size), mode="bilinear", align_corners=False)[0, 0]
+
+def describe(X, gl=None, canon=False):
     """Descriptors of the LARGEST group per image (zeros if none). Returns dict of [N,d] tensors + the group lists."""
     if gl is None: gl, _, _ = groups(X)
     N = len(X); sil_img = torch.zeros(N, 3, S, S); int_img = torch.zeros(N, 3, S, S); frame = torch.zeros(N, 7); col = torch.zeros(N, 3)
@@ -126,11 +136,11 @@ def describe(X, gl=None):
     for i, gs in enumerate(gl):
         objs = [g for g in gs if not g["is_field"]]; flags[i, 0] = len(objs); flags[i, 1] = float(any(g["is_field"] for g in gs))
         if not gs: continue
-        g = gs[0]; sil_img[i] = g["mask"].float(); int_img[i] = FE.Y(X[i:i + 1])[0] * g["interior"].float() + (~g["interior"]).float() * FE.Y(X[i:i + 1])[0][g["interior"]].mean() if g["interior"].any() else 0
+        g = gs[0]; sil_img[i] = canon_mask(g["mask"]) if canon else g["mask"].float(); int_img[i] = FE.Y(X[i:i + 1])[0] * g["interior"].float() + (~g["interior"]).float() * FE.Y(X[i:i + 1])[0][g["interior"]].mean() if g["interior"].any() else 0
         frame[i] = g["frame"]; col[i] = g["colour"]; flags[i, 2] = float(g["touches"]); flags[i, 3] = g["frame"][6]
     return dict(silhouette=FE.boundary_block(sil_img), interior=FE.dense_pooled(int_img), colour=torch.cat([col, FE.colour_block(X)[:, :0]], 1), frame=frame, flags=flags), gl
 
-def describe_groups(X, gl=None, max_groups=4):
+def describe_groups(X, gl=None, max_groups=4, canon=False):
     """Per-GROUP descriptors: list (per image) of dict(silhouette [n,92], colour [n,3], frame [n,7], flags [n,4], is_field [n]) for
     the up-to-max_groups largest groups. flags mimic the single-object context ([1, is_field, touches, fillfrac]) so a leaf trained
     on describe() streams can read each group."""
@@ -139,7 +149,7 @@ def describe_groups(X, gl=None, max_groups=4):
     for i, gs in enumerate(gl):
         gs = gs[:max_groups]
         if not gs: out.append(None); continue
-        sil = torch.stack([g["mask"].float() for g in gs])[:, None].expand(-1, 3, -1, -1)
+        sil = torch.stack([canon_mask(g["mask"]) if canon else g["mask"].float() for g in gs])[:, None].expand(-1, 3, -1, -1)
         out.append(dict(silhouette=FE.boundary_block(sil), colour=torch.stack([g["colour"] for g in gs]), frame=torch.stack([g["frame"] for g in gs]),
                         flags=torch.tensor([[1.0, float(g["is_field"]), float(g["touches"]), float(g["frame"][6])] for g in gs], dtype=torch.float), is_field=torch.tensor([g["is_field"] for g in gs])))
     return out

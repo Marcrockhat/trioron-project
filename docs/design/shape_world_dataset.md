@@ -125,6 +125,33 @@ memorises combos: 0.33). Gaps vs CNN: small (0.56 vs 0.67) and cropped
 1→0.91, 2→0.37, 3→0.00 — the closing that bridges dotted fills also merges
 neighbouring objects (8 px apart): bridging must be per body, next fix.
 
+### Grouping v2 + per-group read + scale canonicalisation (`grouping.py`, `diag_shapes5.py`)
+v2 = per-body bridging (components merge only if the smaller is a texture
+element ≤ 30 px or both are thin/parallel stripes; closing + hole fill
+inside each body) + second-pass low-contrast foreground (re-Otsu on the
+remainder, accepted if ≥ 1.1 × noise floor). Multi-object placement fixed
+(rejection-sampled ≥ 1.4·(r₁+r₂)+1; failures TAGGED `overlap`, ~19 %).
+Count from grouping alone, test_multi no-overlap: exact 0.71–0.74
+(1: 0.89, 2: 0.84, 3: 0.75) vs 0.37 (v1); overlap-tagged 0.04 (occlusion).
+Single-object masks unchanged (IoU 0.74).
+
+Per-group read (shape leaf trained on single-object grouped 106 stream
+reads each body; fields → whole-image 205 leaf), set-accuracy on test_multi:
+
+| | plain | CANON (bbox crop → 32×32) | whole-image BCE 205 | whole+grouped BCE 311 |
+|---|---|---|---|---|
+| all | 0.357 | **0.479** | 0.330 | 0.423 |
+| k=1 / 2 / 3 | 0.77 / 0.20 / 0.12 | 0.78 / 0.40 / 0.27 | 0.55 / 0.21 / 0.24 | 0.70 / 0.29 / 0.28 |
+| no-overlap / overlap / depth-of-field | 0.41 / 0.15 / 0.16 | 0.55 / 0.21 / 0.36 | 0.35 / 0.24 / 0.24 | 0.46 / 0.27 / 0.28 |
+| single: fresh / held-out / small / cropped | 0.750 / 0.544 / 0.496 / 0.555 | 0.749 / 0.577 / 0.572 / 0.601 | | |
+
+Reading: bodies in multi-object images are small (r 3.5–6); scale
+canonicalisation (the fovea's zoom, design-doc P_S) is what makes them
+readable — +12 pp set-accuracy, +7 pp small, +5 pp cropped, +3 pp
+held-out; the per-group read beats every whole-image multi-label leaf.
+Remaining: bodies still read at ~0.6–0.75 each; rotation/shear
+canonicalisation (P_O) next; fields in multi split 77 % flagged.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

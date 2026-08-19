@@ -1,0 +1,13 @@
+  grouped train (20000, 92) in 80s
+  leaves trained [126s]
+   grouping per-group read (106+205) set-acc | all 0.357 | k=1 0.770 | k=2 0.198 | k=3 0.117 | no-overlap 0.411 | overlap 0.147 | depth-of-field 0.161  [159s]
+  grouped test_fresh (5000, 92) in 19s
+  single-object shape leaf on grouped 106: test_fresh 0.750
+  grouped test_held (3000, 92) in 11s
+  single-object shape leaf on grouped 106: test_held 0.544
+  grouped test_stress (12000, 92) in 52s
+  single-object shape leaf on grouped 106: small r<5 0.496 | cropped 0.555 | zoom-in r>=14 0.734
+                 whole-image BCE 205 set-acc | all 0.330 | k=1 0.546 | k=2 0.209 | k=3 0.242 | no-overlap 0.354 | overlap 0.237 | depth-of-field 0.241  [273s]
+  grouped train_multi (20000, 92) in 94s
+  grouped test_multi (4000, 92) in 23s
+       whole+grouped-largest BCE 311 set-acc | all 0.423 | k=1 0.699 | k=2 0.294 | k=3 0.284 | no-overlap 0.461 | overlap 0.273 | depth-of-field 0.280  [428s]
