@@ -13,7 +13,8 @@ READERS: mono = ONE leaf on the 311-d stream (shape+fill heads) |
 ARMS (protection): none | lambda (soft λ anchor, |w·g| saliency) | credit (hard lock, LOCK_RATE 1.0) |
          replay (manifold pseudo-rehearsal over the FIXED descriptors, per pair class) | all |
          replay+lambda (no hard lock) | all-soft (all with the DEFAULT lock rate 0.078) |
-         replay-full (full-cov manifold, sample_full rank FULL_RANK=32) | replay-ex (EX_K=20 real exemplars/class, hippo bar).
+         replay-full (full-cov manifold, sample_full rank FULL_RANK=32) | replay-ex (EX_K=20 real exemplars/class, hippo bar) |
+         full+lambda | full+credit-soft | full+all-soft (full-cov replay combined with λ(STRENGTH) / credit at 0.078 / both).
 BARS: cnn-seq = the 242K CNN fine-tuned task after task (forgetting bar).
 METRICS at stream end on test_fresh: shape / fill / pair acc; per-task pair-acc right after
 training vs at end -> forgetting; test_held: shape / fill / pair (compositional, never trained).
@@ -62,10 +63,11 @@ class Leaf:
         self.sub = construct(base=Seeded(d, n_out, interior_cells=hidden, nonlinear=True), envelope=Envelope(max_parameter_bytes=400_000),
                              dispatch_table=default_dispatch_table(), capacity=d + hidden + n_out + 8, sparsity_k=0)
         self.sub.compile(); self.sub.prepare_training(); self.a = self.sub.arena; self.arm = arm
-        self.lam = arm in ("lambda", "all", "replay+lambda", "all-soft"); self.cred = arm in ("credit", "all", "all-soft")
-        self.rep = arm in ("replay", "all", "replay+lambda", "all-soft", "replay-full", "replay-ex"); self.full = arm == "replay-full"; self.ex = arm == "replay-ex"
+        self.lam = arm in ("lambda", "all", "replay+lambda", "all-soft", "full+lambda", "full+all-soft"); self.cred = arm in ("credit", "all", "all-soft", "full+credit-soft", "full+all-soft")
+        self.rep = arm in ("replay", "all", "replay+lambda", "all-soft", "replay-full", "replay-ex", "full+lambda", "full+credit-soft", "full+all-soft")
+        self.full = arm in ("replay-full", "full+lambda", "full+credit-soft", "full+all-soft"); self.ex = arm == "replay-ex"
         self.exemplars = {}   # class -> [K, d] real descriptors (hippo bar)
-        rate = float(os.environ.get("LOCK_RATE", "0.078" if arm == "all-soft" else "1.0"))
+        rate = float(os.environ.get("LOCK_RATE", "0.078" if arm in ("all-soft", "full+credit-soft", "full+all-soft") else "1.0"))
         self.credit = CreditTracker(self.a, CreditConfig(consecutive_tasks=1, theta_e=0.30, g_min=1e-3, lock_base_rate=rate, engagement_decay=0.3)) if self.cred else None
         self.archive = ManifoldArchive(Arena(Envelope(), capacity=32), ManifoldConfig(replay_steps_per_class=1), full_cov=self.full) if (self.rep and not self.ex) else None
         self.locked = 0

@@ -308,6 +308,27 @@ vs 0.17), and 0.35 vs 0.13 on the never-trained combos — the factored reader's
 structural advantage shows under continual learning. Per-leaf (nest full): shape
 leaf 0.72 / whole 0.69 / sum 0.81; fill leaf 0.78.
 
+### Continual round 4 — full-cov replay + λ / credit-soft (stream v2, n=3; `shapes_continual_v2c_*`)
+| reader / arm | pair | forget | acq | T1@end | held pair |
+|---|---|---|---|---|---|
+| mono full (ref) | 0.686 | 0.170 | 0.834 | 0.586 | 0.126 |
+| mono full+λ 1e1 | 0.653 | 0.116 | 0.725 | 0.534 | 0.087 |
+| mono full+λ 1e2 | 0.489 | 0.069 | 0.486 | 0.582 | 0.064 |
+| mono full+credit-soft | 0.675 | 0.159 | 0.812 | 0.565 | 0.111 |
+| mono full+all-soft 1e2 | 0.319 | 0.058 | 0.369 | 0.695 | 0.007 |
+| nest full (ref) | 0.664 | 0.100 | 0.746 | 0.585 | 0.351 |
+| nest full+λ 1e1 | 0.592 | 0.098 | 0.646 | 0.503 | 0.246 |
+| nest full+λ 1e2 | 0.499 | 0.072 | 0.522 | 0.484 | 0.209 |
+| **nest full+credit-soft** | **0.669** | **0.087** | 0.730 | 0.585 | **0.349** |
+| nest full+all-soft 1e2 | 0.475 | 0.078 | 0.512 | 0.482 | 0.213 |
+Reading: λ on top of full-cov replay buys forgetting only by strangling
+acquisition (stability–plasticity, monotone in STRENGTH; 1e1 already −0.07
+pair); credit-soft (~4 locks) is neutral-to-slightly-positive on the nest
+(pair 0.669, forget 0.087); both together worst. **Best operating point:
+nest + full-cov replay (+ credit-soft): pair 0.67, forget 0.09, held-out
+0.35.** Remaining forgetting is mostly shared-head drift, not soma — next
+lever is per-leaf head protection / the H-space router, not more λ.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).

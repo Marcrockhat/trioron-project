@@ -247,6 +247,14 @@ nest's fill leaf is fixed (T1 0.70). **Headline continual now: nest +
 full-cov replay pair 0.66 / forget 0.10 / held-out 0.35 vs CNN 0.13 / 0.61
 / 0.00.** Storage: 14 classes × (μ + Σ) per leaf, no images.
 
+### E11. Continual round 4 — full-cov + λ / credit (logs `shapes_continual_v2c_s1e1/s1e2`)
+λ on top of full-cov replay trades acquisition for forgetting monotonically
+(1e1: mono pair 0.653 / forget 0.116; 1e2: 0.489 / 0.069); credit-soft is
+neutral-positive on the nest (**pair 0.669 / forget 0.087 / held-out 0.349**,
+~4 locks); both together worst (0.32–0.48). Operating point: **nest + full-
+cov replay (+ credit-soft)**. Remaining forgetting = shared-head drift →
+next lever is head protection / H-space routing, not more λ.
+
 ### F. Rocky's framing (keep)
 The nest = the survivor recipe: WARM/FLEE masters were weak per class,
 the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
@@ -258,11 +266,12 @@ exists. Every image is multi-labelled (all factors tagged); the probes so
 far train shape/fill/set heads and use the rest as test slices.
 
 ## NEXT (priority)
-1. **Continual round 4** (E10 done: full-cov replay = pair 0.66–0.69,
-   forget 0.10–0.17): replay-full + λ(1e1–1e2) and + credit 0.078 to push
-   forget → 0 without the acquisition cost; FULL_RANK 16/64; REPLAY_BS
-   64; n=3. Then absorb (new factor leaf grafted, no retrain) and the
-   developmental arcs (coarse-to-fine; Phasecyte discovery control).
+1. **Continual round 5** (E11 done: λ costs acquisition; operating point
+   nest + full-cov + credit-soft 0.67/0.09/0.35): attack shared-head drift
+   — per-leaf head anchoring, or the H-space `ManifoldRouter` (core) over
+   the leaves' interior codes; FULL_RANK 16/64, REPLAY_BS 64. Then absorb
+   (graft a new factor leaf, no retrain) and the developmental arcs
+   (coarse-to-fine; Phasecyte discovery control).
 2. **Developmental arcs Rocky asked for:** (i) coarse-to-fine stream
    (blur2 → blur1 → sharp) vs random mix — does the infant schedule help
    generalisation/held-out? (ii) discovery control: Phasecyte (unsupervised)
@@ -300,7 +309,7 @@ far train shape/fill/set heads and use the rest as test slices.
   frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
   diag_shapes4,diag_shapes5,diag_shapes6,shapes_cnn_ref,shapes_continual}.py`, `docs/design/shape_world_dataset.md` (has the
   results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,probe4f,cnn_ref,build2,continual,continual_b,continual_v2,continual_v2b}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
+  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,probe4f,cnn_ref,build2,continual,continual_b,continual_v2,continual_v2b,continual_v2c_s1e1,continual_v2c_s1e2}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
 - No background runs at close. Timings: one continual run (5 tasks, 8 ep)
   ≈ 1–2.5 min mono / 2–5 min nest; CNN sequential ≈ 5 min/seed.
 - Package (`trioron/`) untouched. Memory pointer added
