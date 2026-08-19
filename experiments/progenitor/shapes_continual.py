@@ -132,6 +132,14 @@ def run(reader_name, arm, seed):
     res = dict(shape=float((psh == ysh)[m].float().mean()), fill=float((pfl == yfl)[m].float().mean()), pair=float(((psh == ysh) & (pfl == yfl))[m].float().mean()),
                forget=sum(acc_after[t] - pair_acc("test_fresh", cls) for t, (_, cls) in enumerate(TASKS)) / len(TASKS), acq=sum(acc_after) / len(acc_after),
                t1_end=pair_acc("test_fresh", TASKS[0][1]), locked=sum(L.locked for L in R.leaves.values()))
+    if isinstance(R, Nest) and os.environ.get("PER_LEAF", "0") == "1":
+        with torch.no_grad():
+            a_sh = R.leaves["shape"].logits(X["shape"]["test_fresh"]).argmax(1); a_wh = R.leaves["whole"].logits(X["whole"]["test_fresh"]).argmax(1)
+        t1 = torch.isin(P["test_fresh"], torch.tensor(TASKS[0][1])); fld = torch.isin(P["test_fresh"], torch.tensor(TASKS[1][1]))
+        log(f"      per-leaf @end (seed {seed}): shape-leaf acc all {float((a_sh==ysh)[m].float().mean()):.3f} T1 {float((a_sh==ysh)[t1].float().mean()):.3f} fields {float((a_sh==ysh)[fld].float().mean()):.3f} | "
+            f"whole-leaf acc all {float((a_wh==ysh)[m].float().mean()):.3f} T1 {float((a_wh==ysh)[t1].float().mean()):.3f} fields {float((a_wh==ysh)[fld].float().mean()):.3f} | "
+            f"sum {float((psh==ysh)[m].float().mean()):.3f} T1 {float((psh==ysh)[t1].float().mean()):.3f} | fill-leaf acc {float((pfl==yfl)[m].float().mean()):.3f} T1 {float((pfl==yfl)[t1].float().mean()):.3f} "
+            f"| fill pred hist {torch.bincount(pfl[m], minlength=4).tolist()}")
     hsh, hfl = R.predict("test_held"); ysh_h, yfl_h = sf_of(P["test_held"])
     res.update(held_shape=float((hsh == ysh_h).float().mean()), held_fill=float((hfl == yfl_h).float().mean()), held_pair=float(((hsh == ysh_h) & (hfl == yfl_h)).float().mean()))
     return res

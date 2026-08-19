@@ -1,0 +1,11 @@
+  grouped_canon train (20000, 92) in 153s
+  grouped_canon test_fresh (5000, 92) in 44s
+  grouped_canon test_held (3000, 92) in 28s
+  grouped_canon test_stress (12000, 92) in 76s
+          fill: ctex+flags 220 [scale] | fresh 0.679±0.003 | geo 3-way 0.589±0.008 | held-out 0.173±0.004 | small r<5 0.429±0.005 | cropped 0.391±0.006 | iso 0.634±0.008 | blur2 0.672±0.003 | fill fresh 0.803±0.012 | fill held-out 0.577±0.030  [503s]
+  fill: ctex+cstereo+flags 292 [scale] | fresh 0.714±0.007 | geo 3-way 0.641±0.010 | held-out 0.238±0.011 | small r<5 0.454±0.017 | cropped 0.403±0.007 | iso 0.659±0.010 | blur2 0.703±0.008 | fill fresh 0.816±0.004 | fill held-out 0.597±0.021  [756s]
+        fill: cstereo+flags 76 [scale] | fresh 0.646±0.004 | geo 3-way 0.546±0.005 | held-out 0.226±0.005 | small r<5 0.382±0.002 | cropped 0.367±0.009 | iso 0.606±0.009 | blur2 0.640±0.005 | fill fresh 0.761±0.002 | fill held-out 0.502±0.012  [836s]
+   fill: interior600+flags 604 [scale] | fresh 0.646±0.004 | geo 3-way 0.541±0.006 | held-out 0.193±0.010 | small r<5 0.376±0.012 | cropped 0.379±0.016 | iso 0.590±0.025 | blur2 0.644±0.005 | fill fresh 0.802±0.013 | fill held-out 0.594±0.018  [1323s]
+  count primitive (grouping only) test_multi [all n=4000]: exact 0.675; per true count 1:0.87, 2:0.75, 3:0.41
+  count primitive (grouping only) test_multi [no-overlap n=3189]: exact 0.829; per true count 1:0.87, 2:0.84, 3:0.73
+  count primitive (grouping only) test_multi [overlap-tagged n=811]: exact 0.070; per true count 1:nan, 2:0.08, 3:0.07

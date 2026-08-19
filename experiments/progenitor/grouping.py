@@ -176,8 +176,10 @@ def body_streams(X, gl):
         if b.any():
             e = gm[i][b]; c = abs(float(bcol[i, 6])) + 1e-3
             edge[i] = torch.tensor([float(e.mean()) / c, float(e.max()) / c, float(e.mean()), float(b.sum()) / max(float(m.sum()), 1)])
-    ctex = ctex_pool(FE.Y(cimg))
-    return dict(bcolour=bcol, ctex=ctex, edge=edge)
+    yc = FE.Y(cimg); ctex = ctex_pool(yc)
+    L, R = FE.LR_sync(cimg); Zs = torch.cat([L, R], -1).reshape(len(yc), 169, -1)
+    out9 = torch.zeros(len(yc), 9, Zs.shape[2]); out9.index_add_(1, _r9, Zs); cstereo = (out9 / torch.bincount(_r9, minlength=9).float().view(1, 9, 1)).reshape(len(yc), -1)   # 9 x 8 = 72
+    return dict(bcolour=bcol, ctex=ctex, edge=edge, cstereo=cstereo)
 def ndi_dilate(m, r=2): return torch.from_numpy(ndi.binary_dilation(m.numpy(), structure=_disk(r)))
 _r9 = torch.tensor([[(r * 3) // 13 * 3 + (c * 3) // 13 for c in range(13)] for r in range(13)]).view(-1)
 def ctex_pool(y):   # 8px/2 windows -> cepstra 24 -> pooled 3x3 = 216

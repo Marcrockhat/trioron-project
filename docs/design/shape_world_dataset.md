@@ -260,6 +260,17 @@ nest replay+λ 0.711 / 0.220 / 0.35 / 0.57 / 0.50; nest all-soft 0.599 / 0.189 /
 pair stays mono+replay 0.40 (CNN 0.08). Open: STRENGTH 1e1–1e2 sweep, replay size,
 and a stream that doesn't confound fill with task.
 
+### Nest per-leaf diagnosis under continual (replay arm, n=3) and stereo on the crop
+Per leaf at stream end: shape leaf T1 0.78 / fields 0.04; whole leaf T1 0.66 /
+fields 0.32; their sum T1 **0.73** (mono+replay 0.30) — the nest retains shapes
+better; its shape number is dragged by the fields (40 % of test images) which
+live only in the whole leaf and are overwritten; fill leaf collapses to
+outline (last task) + solid (97 % of predictions) — single-class-per-task.
+⇒ "nest < mono" = fields + isolated fill head, both design, not mechanism.
+Stereo on the canonical crop (`cstereo` 72 = synced L/R spectra pooled 3×3),
+fill leaf n=3: ctex 0.803/0.577 → **ctex+cstereo 0.816/0.597**; cstereo alone
+76-d 0.761/0.502; whole-interior 600 0.802/0.594. Same +1–2 pp as on CIFAR.
+
 ## Known floors
 
 - Tiny outline + strong blur samples are unreadable by construction (label-noise floor, a few %).
