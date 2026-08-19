@@ -8,3 +8,6 @@
   grouped-canon test_stress (12000, 92) in 45s
   single-object shape leaf on grouped 106 CANON: small r<5 0.572 | cropped 0.601 | zoom-in r>=14 0.737
                  whole-image BCE 205 set-acc | all 0.330 | k=1 0.546 | k=2 0.209 | k=3 0.242 | no-overlap 0.354 | overlap 0.237 | depth-of-field 0.241  [271s]
+  grouped-canon train_multi (20000, 92) in 101s
+  grouped-canon test_multi (4000, 92) in 19s
+       whole+grouped-largest BCE 311 set-acc | all 0.423 | k=1 0.695 | k=2 0.301 | k=3 0.281 | no-overlap 0.462 | overlap 0.273 | depth-of-field 0.310  [432s]
