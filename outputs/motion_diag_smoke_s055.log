@@ -1,0 +1,21 @@
+split test n=1000 T=6 photo-frac 0.48 static-frac 0.16 alias-frac 0.05
+
+== A. linear probe on y_vel (17-way, chance .06; static-vs-moving chance .5) ==
+  static-spectra(mid frame, 800)     y_vel 0.056 | dir(8, moving only) 0.122 | moving? 0.761 | shape(3) 0.349   [8s]
+  motion_energy(25)                  y_vel 0.213 | dir(8, moving only) 0.164 | moving? 0.914 | shape(3) 0.381   [2s]
+  motion_phase(450)                  y_vel 0.346 | dir(8, moving only) 0.479 | moving? 0.744 | shape(3) 0.361   [7s]
+  motion_block(475)                  y_vel 0.369 | dir(8, moving only) 0.497 | moving? 0.784 | shape(3) 0.380   [10s]
+  population decode (no learning) bg=flat : median |v̂-v| 0.55 px  mean 0.72  cos 0.83  octant-acc 0.680  | static |v̂| med 0.28
+  population decode (no learning) bg=photo: median |v̂-v| 0.60 px  mean 0.76  cos 0.86  octant-acc 0.629  | static |v̂| med 0.29
+
+== B. wagon-wheel: population decode on textured fills (stripes/dots), by alias tag ==
+  alias=0 n=410: median err 0.50 px  cos 0.84  frac reversed (cos<0) 0.049  |v| 1.66
+  alias=1 n=46: median err 0.97 px  cos 0.67  frac reversed (cos<0) 0.174  |v| 2.54
+  solid fills n=180: median err 0.68 px  cos 0.85  frac reversed 0.056
+
+== C. grouping: colour/Otsu (s053) on the mid frame vs common-fate v3 on the packet; IoU vs exact mask ==
+  (7s for 600)
+  bg=flat  moving n= 273: colour-Otsu IoU(mid) 0.844 | motion-v3 IoU(mid) 0.349 IoU(swept) 0.436  | motion-mask area 0.163
+  bg=flat  static n=  56: colour-Otsu IoU(mid) 0.821 | motion-v3 IoU(mid) 0.014 IoU(swept) 0.014  | motion-mask area 0.005
+  bg=photo moving n= 232: colour-Otsu IoU(mid) 0.338 | motion-v3 IoU(mid) 0.308 IoU(swept) 0.351  | motion-mask area 0.130
+  bg=photo static n=  39: colour-Otsu IoU(mid) 0.352 | motion-v3 IoU(mid) 0.003 IoU(swept) 0.005  | motion-mask area 0.002
