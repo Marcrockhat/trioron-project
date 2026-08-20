@@ -73,7 +73,7 @@ def sample(n, seed, *, T=T_DEFAULT, maxk=1, bg="photo", p_static=0.15, p_rot=0.3
         objs = []
         for j in range(k):
             sh = shape_choices[RI(0, len(shape_choices))]; fl = fill_choices[RI(0, len(fill_choices))]
-            r = R() * 9 + 4 if k == 1 else R() * 3 + 3.5
+            r = R() * 8 + 6 if k == 1 else R() * 3 + 4.5   # radius 6..14 (Rocky s056; was 4..13)
             th, shear, flip, thick = R() * 2 * math.pi, R() * 1.0 - 0.5, R() < 0.5, RI(1, 4)
             tex = (R() * 4 + 3, R() * math.pi) if fl == 1 else ((R() * 3 + 4, 0.0) if fl == 2 else (6.0, 0.0))
             static = R() < p_static

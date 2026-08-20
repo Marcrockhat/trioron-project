@@ -1,7 +1,7 @@
 # Trioron Handoff
 
-**Session date:** 2026-08-20
-**Session number:** 055
+**Session date:** 2026-08-21
+**Session number:** 056
 **Session title:** **Motion arc steps 1–4 (Rocky: "start the motion arc"): moving-shape
 world over CIFAR scenery built; the spectral machinery re-aimed at TIME — 2-D
 cross-spectrum PHASE per 8×8 patch + temporal-difference adaptation + population
@@ -15,6 +15,19 @@ grouping on photos .50 vs colour-grouped .39 (chance .33).**
 ---
 
 ## READ THIS FIRST
+
+**s056 addendum (2026-08-21):** Rocky reviewed the sheet and asked for radius
+6–14 (was 4–13); world REBUILT (same seeds, `motion.py:76`), feature caches
+dropped, diag + leaves rerun (`outputs/motion_diag_smoke_s056.log`,
+`motion_leaf_s056.log`). Size was NOT the lever: velocity leaf .658/.660
+(unchanged); colour-silhouette shape +5 pp (photo .41 / flat .88); motion-
+silhouette shape only +2 pp (photo .52 / flat .64); motion grouping IoU .47/.47
+with mask area .20 vs true .29 — bigger bodies have more interior and more
+motion-parallel edge that temporal difference can't see. **Grouping v3's
+interior fill is the bottleneck (mechanism, not data).** Both-silhouettes
+concat now adds slightly on photos (.53). Tables below are the s055 (4–13)
+numbers; the s056 log has the current ones.
+
 
 1. **Rocky's asks:** "start the motion arc" (s054 NEXT-0, scope pinned there and
    still binding: readers PURE trioron/Phasecyte; CNNs = reference bars only;
