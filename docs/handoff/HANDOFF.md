@@ -28,6 +28,26 @@ interior fill is the bottleneck (mechanism, not data).** Both-silhouettes
 concat now adds slightly on photos (.53). Tables below are the s055 (4–13)
 numbers; the s056 log has the current ones.
 
+**s056 grouping v4 (Rocky: "fix the grouping interior fill first"):** the loss
+was NOT the interior core per se but the SYMMETRY of a pixel's time series —
+"body about to be uncovered" and "background about to be covered" are mirror
+images, so no per-pixel rule (median-bg, counts, endpoint diffs) can separate
+them. The motion DIRECTION breaks it: pixels changed vs the first frame split
+into two equal bands along v̂ (leading band inside / revealed bg behind), keep
+the AHEAD half; changed vs the last frame, keep the BEHIND half; then colour
+refinement + s053 closing/hull for the core that never uncovers. Plus a GLOBAL
+motion gate (colour-energy 99th-pct/median > 1.4: truly-static max 1.32,
+movers from 1.31) replacing v3's per-packet noise floor, which had been
+throwing away weak movers. Two measurement bugs fixed on the way: energy was
+Y-only (iso-luminant movers invisible) and "static" must exclude rotating/
+looming bodies (y_dth, y_dr). `motion_diag.motion_group` (v4) + `motion_gate`.
+**IoU photo .66 (colour .41) / flat .73 (colour .87); static masks exactly
+empty** (`outputs/motion_diag_C_v4_s056.log`). Shape leaves rerun
+(`motion_leaf_v4_s056.log`): motion silhouette photo/mov **.63** (was .52;
+colour .41), flat/mov .79 (colour .88); both silhouettes .61 photo / .88 flat —
+the concat still doesn't pick the better source per packet (gate NEXT-1).
+Velocity leaf unchanged .65–.66.
+
 
 1. **Rocky's asks:** "start the motion arc" (s054 NEXT-0, scope pinned there and
    still binding: readers PURE trioron/Phasecyte; CNNs = reference bars only;

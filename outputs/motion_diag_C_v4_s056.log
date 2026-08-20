@@ -1,0 +1,5 @@
+  (9s for 600)
+  bg=flat  moving n= 273: colour-Otsu IoU(mid) 0.867 | motion-v3 IoU(mid) 0.726 (no-hull 0.636) | mask area 0.208 vs true 0.285
+  bg=flat  static n=  38: colour-Otsu IoU(mid) 0.873 | motion-v3 IoU(mid) 0.000 (no-hull 0.000) | mask area 0.000 vs true 0.273
+  bg=photo moving n= 232: colour-Otsu IoU(mid) 0.407 | motion-v3 IoU(mid) 0.661 (no-hull 0.588) | mask area 0.252 vs true 0.296
+  bg=photo static n=  21: colour-Otsu IoU(mid) 0.456 | motion-v3 IoU(mid) 0.000 (no-hull 0.000) | mask area 0.000 vs true 0.249

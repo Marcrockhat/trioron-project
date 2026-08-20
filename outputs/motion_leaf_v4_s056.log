@@ -1,0 +1,13 @@
+  built sil_mot/train (8000, 92) in 73s
+  built sil_mot/test (2000, 92) in 16s
+  built sil_mot/test_photo (2000, 92) in 16s
+  built sil_mot/test_flat (2000, 92) in 17s
+MOTION LEAF s055: seeds 3 epochs 8 hidden 48; train n=8000
+  velocity motion           d= 656  50.3K | test 0.645±0.001 | test_photo 0.658±0.006 | test_flat 0.660±0.006  [33s/seed]
+  velocity static           d= 800  60.2K | test 0.112±0.000 | test_photo 0.118±0.007 | test_flat 0.119±0.007  [42s/seed]
+  velocity motion+sil_mot   d= 748  56.6K | test 0.644±0.002 | test_photo 0.652±0.009 | test_flat 0.646±0.006  [41s/seed]
+  shape    sil_col          d=  92  10.4K | test 0.647±0.003 | test/mov 0.650±0.002 | test_photo 0.417±0.002 | test_photo/mov 0.413±0.002 | test_flat 0.869±0.003 | test_flat/mov 0.875±0.003  [6s/seed]
+  shape    sil_mot          d=  92  10.4K | test 0.661±0.004 | test/mov 0.707±0.007 | test_photo 0.592±0.002 | test_photo/mov 0.628±0.006 | test_flat 0.730±0.005 | test_flat/mov 0.785±0.013  [7s/seed]
+  shape    sil_both         d= 184  16.8K | test 0.736±0.001 | test/mov 0.757±0.001 | test_photo 0.583±0.003 | test_photo/mov 0.608±0.003 | test_flat 0.876±0.002 | test_flat/mov 0.884±0.001  [12s/seed]
+  shape    static           d= 800  59.3K | test 0.449±0.004 | test/mov 0.453±0.003 | test_photo 0.375±0.011 | test_photo/mov 0.378±0.010 | test_flat 0.503±0.013 | test_flat/mov 0.517±0.012  [44s/seed]
+  shape    motion           d= 656  49.3K | test 0.470±0.003 | test/mov 0.494±0.003 | test_photo 0.458±0.004 | test_photo/mov 0.479±0.002 | test_flat 0.479±0.012 | test_flat/mov 0.493±0.015  [35s/seed]

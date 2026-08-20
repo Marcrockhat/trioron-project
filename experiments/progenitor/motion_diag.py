@@ -37,26 +37,50 @@ def load(sp):
     if NCAP: X, M, ys = X[:NCAP], M[:NCAP], {k: v[:NCAP] for k, v in ys.items()}
     return X, M, ys
 
-def motion_group(Xf, frame=None, floor_k=4.0, target=3.0, convex=True):
-    """common-fate grouping v3 (single dominant body).  Per packet: (1) decode the dominant velocity
-    (population read-out); (2) LOCK-IN baseline: pick the frame spacing b so the body moves ~`target`
-    px between the two frames (slow motion integrates longer, like a lock-in), centred on `frame`;
-    (3) |y_c - y_a| smoothed 3x3, thresholded at max(Otsu, floor_k * median) -- the median is the
-    sensor-noise floor, without it a static packet's mask is Otsu-on-noise; (4) the s053 body pipeline:
-    closing R=4 + hole fill + largest component + convex hull (edges parallel to the motion produce no
-    temporal difference, the hull bridges them; CONVEX=True is the s053 convention too).
-    -> bool [N,S,S]; empty when nothing moves."""
-    N, T = Xf.shape[:2]; y = FE.Y(Xf.flatten(0, 1)).view(N, T, MO.S, MO.S); t = T // 2 if frame is None else frame
-    spd = MF.batched(MF.decode_velocity, Xf).norm(dim=1); out = torch.zeros(N, MO.S, MO.S, dtype=torch.bool)
+def _chans(Z):   # (Y, 2RG, 2BY) -- chroma up-weighted as in grouping.foreground
+    y = 0.299 * Z[..., 0, :, :] + 0.587 * Z[..., 1, :, :] + 0.114 * Z[..., 2, :, :]; rg = Z[..., 0, :, :] - Z[..., 1, :, :]; by = Z[..., 2, :, :] - 0.5 * (Z[..., 0, :, :] + Z[..., 1, :, :])
+    return torch.stack([y, 2 * rg, 2 * by], -3)
+def motion_gate(Xf, thr=1.4):
+    """packet-level 'is anything moving': 99th-pct / median of the colour temporal-difference energy.
+    Truly static packets (no translation/rotation/loom) max out at 1.32, movers start at 1.31 (test, n=600)."""
+    C = _chans(Xf); e = F.avg_pool2d(torch.sqrt(((C[:, 1:] - C[:, :-1]) ** 2).sum(2)).amax(1)[:, None], 3, 1, 1)[:, 0]
+    return (e.flatten(1).quantile(0.99, 1) / e.flatten(1).median(1).values) > thr
+
+def motion_group(Xf, frame=None, convex=True, colour_refine=True):
+    """common-fate grouping v4 (single dominant body), s056.  The mid-frame body from a T-frame packet:
+    (1) motion_gate: nothing moves -> empty mask (the v3 per-packet noise floor is gone -- it threw away
+        weak movers; the gate is a GLOBAL decision, the threshold inside is Otsu only);
+    (2) endpoint differences: pixels where the mid frame differs from the FIRST frame form two bands of
+        equal thickness 2.5|v| -- the body's leading band (inside) and the revealed background behind it
+        (outside); likewise vs the LAST frame (trailing band inside / about-to-be-covered ahead outside).
+        A single pixel's time series cannot tell these apart (mirror images); the MOTION DIRECTION can:
+        project on v̂ (population decode) and keep the half AHEAD for changed-vs-first, the half BEHIND
+        for changed-vs-last; pixels changed vs both ends are body (thin/fast bodies);
+    (3) colour refinement: among all changed pixels keep those closer to the body colour than to the
+        complementary band's colour (helps flat bg +7 pp, neutral on photos);
+    (4) s053 body pipeline: closing R=4 + fill + largest + convex hull bridges the core that never
+        uncovers within the packet (a large body moving slowly hides its own interior).
+    v3 (temporal-difference edges + lock-in baseline) reached IoU .47/.47; v4 .73 flat / .66 photo.
+    -> bool [N,S,S]."""
+    N, T = Xf.shape[:2]; t = T // 2 if frame is None else frame; C = _chans(Xf); sm = lambda z: F.avg_pool2d(z[:, None], 3, 1, 1)[:, 0]
+    d0 = sm(torch.sqrt(((C[:, t] - C[:, 0]) ** 2).sum(1))); d5 = sm(torch.sqrt(((C[:, t] - C[:, T - 1]) ** 2).sum(1)))
+    gate = motion_gate(Xf); vh = MF.batched(MF.decode_velocity, Xf); vh = vh / (vh.norm(dim=1, keepdim=True) + 1e-6)
+    yy, xx = MO._yy, MO._xx; out = torch.zeros(N, MO.S, MO.S, dtype=torch.bool)
     for i in range(N):
-        b = int(min(T - 1, max(1, math.ceil(target / max(float(spd[i]), 1e-3))))); a = max(0, t - (b + 1) // 2); c = min(T - 1, a + b); a = c - b
-        dd = F.avg_pool2d((y[i, c] - y[i, a]).abs()[None, None], 3, 1, 1)[0, 0]
-        m = (dd > max(GR._otsu(dd.flatten()), floor_k * float(dd.median()))).numpy()
+        if not gate[i]: continue
+        dd = torch.maximum(d0[i], d5[i]); th = GR._otsu(dd.flatten()); c0, c5 = d0[i] > th, d5[i] > th
+        g1, g2 = c0 & ~c5, c5 & ~c0; p = xx * vh[i, 0] + yy * vh[i, 1]; body = c0 & c5
+        if g1.any(): body |= g1 & (p > p[g1].median())
+        if g2.any(): body |= g2 & (p < p[g2].median())
+        changed = c0 | c5
+        if colour_refine and body.sum() > 3 and (changed & ~body).any():
+            cm = C[i, t]; bcol = cm[:, body].mean(1); ocol = cm[:, changed & ~body].mean(1)
+            body = changed & (((cm - bcol[:, None, None]) ** 2).sum(0) < ((cm - ocol[:, None, None]) ** 2).sum(0))
+        m = body.numpy()
         if m.sum() < GR.MIN_AREA: continue
         cl = ndi.binary_fill_holes(ndi.binary_closing(m, structure=GR._disk(GR.R_CLOSE), border_value=0) | m)
-        lab, k = ndi.label(cl); sz = np.bincount(lab.ravel())[1:]; body = lab == (1 + sz.argmax())
-        if convex: body = np.asarray(GR.convex_fill(body), bool)
-        out[i] = torch.from_numpy(body)
+        lab, k = ndi.label(cl); sz = np.bincount(lab.ravel())[1:]; b = lab == (1 + sz.argmax())
+        out[i] = torch.from_numpy(np.asarray(GR.convex_fill(b), bool) if convex else b)
     return out
 
 def iou(a, b): return ((a & b).flatten(1).sum(1).float() / (a | b).flatten(1).sum(1).clamp(min=1).float())
@@ -99,6 +123,6 @@ if __name__ == "__main__":
         gl, fg, _ = GR.groups(Xf[:n, mid]); col = torch.stack([g[0]["mask"] if g else torch.zeros(MO.S, MO.S, dtype=torch.bool) for g in gl])
         mot = motion_group(Xf[:n]); raw = motion_group(Xf[:n], convex=False); log(f"  ({time.time() - t0:.0f}s for {n})")
         for k in (0, 1):
-            for nm, s in (("moving", mv[:n] & (kind[:n] == k)), ("static", (~mv[:n]) & (kind[:n] == k))):
+            for nm, s in (("moving", mv[:n] & (kind[:n] == k)), ("static", (~mv[:n]) & (yte["y_dth"][:n] == 0) & (yte["y_dr"][:n] == 0) & (kind[:n] == k))):
                 if s.sum() == 0: continue
-                log(f"  bg={'photo' if k else 'flat '} {nm:6s} n={int(s.sum()):4d}: colour-Otsu IoU(mid) {iou(col[s], Mmid[:n][s]).mean():.3f} | motion-v3 IoU(mid) {iou(mot[s], Mmid[:n][s]).mean():.3f} (no-hull {iou(raw[s], Mmid[:n][s]).mean():.3f}) | mask area {mot[s].float().mean():.3f} vs true {Mmid[:n][s].float().mean():.3f}")
+                log(f"  bg={'photo' if k else 'flat '} {nm:6s} n={int(s.sum()):4d}: colour-Otsu IoU(mid) {iou(col[s], Mmid[:n][s]).mean():.3f} | motion-v4 IoU(mid) {iou(mot[s], Mmid[:n][s]).mean():.3f} (no-hull {iou(raw[s], Mmid[:n][s]).mean():.3f}) | mask area {mot[s].float().mean():.3f} vs true {Mmid[:n][s].float().mean():.3f}")
