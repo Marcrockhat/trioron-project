@@ -128,6 +128,16 @@ last points, new primitives (motion) move the ceiling.
    new session").** Full design in item 3 below: moving-shapes-on-scenery
    generator first, then phase-keeping time-correlator primitive, then
    common-fate grouping v3, then the motion leaf + absorb.
+   **Rocky's scope constraints (explicit, binding):**
+   (a) readers are PURE trioron/Phasecyte ONLY — mono, nest, or hybrid
+   (trioron+Phasecyte) leaves on the fixed primitives; NO CNN/MobileNet/
+   ResNet backbones anywhere in the organism (CNNs appear only as
+   over-cap reference bars, per [[feedback_pure_trioron_scope]]);
+   (b) NOT tabula rasa: the PRE-TRAINED heads/organs are part of the
+   design — carry the s053 shape-world nest (and the s054 pre-feeder
+   organ) in as frozen/absorbable components of the continual learner,
+   the way s054 validated (as INPUT streams or absorbed leaves, not
+   equal voters).
 1. **Weighted/routed arbitration for heterogeneous leaves** — the nest sums
    log-softmax uniformly; nest+pre shows a weak voter dilutes. H-space
    `ManifoldRouter` over leaves, or learned per-leaf temperature. (This is
