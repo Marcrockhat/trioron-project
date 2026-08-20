@@ -16,6 +16,23 @@ grouping on photos .50 vs colour-grouped .39 (chance .33).**
 
 ## READ THIS FIRST
 
+**s056 FINAL WORLD (Rocky: "photos should be blurred to imitate focus"):** photo
+backgrounds are now DEFOCUSED (depth of field: object sharp, scenery σ=.7 or 1.5,
+50/50, tagged `y_bgblur`); radius 6–14. World rebuilt (RNG draws shifted, scenes
+differ from the earlier sheets), all caches dropped, full chain rerun — these are
+the CURRENT numbers (`*_s056b.log`); older tables below are superseded:
+- diag: photo grouping IoU motion **.70** vs colour .44 (flat .76 vs .86); decode
+  photo cos .90 ≥ flat .84; wagon-wheel unchanged.
+- leaves (n=3): velocity .655 (control .12); shape/mov photo: motion-sil **.66**,
+  colour-sil .44, both .63; flat: .77 / .87 / .89.
+- absorb (n=3): zero-shot .37 photo / .81 flat; +msil voter **.52** photo / .84
+  flat, 0 forget; both_in voter .51/.87; settle naive forget .39; settle+replay
+  .02 (photo .42); graft .08 forget; finetune .43 forget. msil alone .66 photo →
+  the voter dilution (.52) is STILL the blocker → NEXT-0 unchanged.
+Defocus helped motion more than colour (scenery clutter was the colour-grouping
+failure; defocus removes some clutter but the gap widened: +.04 motion, +.03 colour).
+
+
 **s056 addendum (2026-08-21):** Rocky reviewed the sheet and asked for radius
 6–14 (was 4–13); world REBUILT (same seeds, `motion.py:76`), feature caches
 dropped, diag + leaves rerun (`outputs/motion_diag_smoke_s056.log`,

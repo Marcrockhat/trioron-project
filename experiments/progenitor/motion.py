@@ -15,7 +15,8 @@ Per PACKET labels (`ys`, object 0):
   y_dx, y_dy, y_dth, y_dr : the raw velocities;  y_shape/y_fill/y_hue as before
   y_alias : 1 when a textured fill (stripes/dots, period p) moves > p/2 per frame
             along its own texture normal  -> wagon-wheel regime (kept, not avoided)
-  y_bgkind: 0 flat, 1 photo
+  y_bgkind: 0 flat, 1 photo;  y_bgblur: photo background defocus 0 none (flat) / 1 mild sigma .7 / 2 strong 1.5
+            (depth of field: the object is in focus, the scenery is not; 50/50 mild/strong)
 Frames are stored uint8 (X [N,T,3,S,S]); `as_float(X)` -> [0,1].
 build() writes outputs/data/motion/<split>.pt; load(split) reads it.
 """
@@ -64,10 +65,12 @@ def sample(n, seed, *, T=T_DEFAULT, maxk=1, bg="photo", p_static=0.15, p_rot=0.3
     X = torch.zeros(n, T, 3, S, S, dtype=torch.uint8); M = torch.zeros(n, T, S, S, dtype=torch.uint8); meta = []
     L = lambda: torch.zeros(n, dtype=torch.long); Fz = lambda: torch.zeros(n)
     ys = dict(y_vel=L(), y_dir=L(), y_speed=Fz(), y_dx=Fz(), y_dy=Fz(), y_dth=Fz(), y_dr=Fz(), y_shape=L(), y_fill=L(), y_hue=L(),
-              y_iso=L(), y_alias=L(), y_bgkind=L(), y_count=L(), y_scale=Fz(), y_blur=L())
+              y_iso=L(), y_alias=L(), y_bgkind=L(), y_count=L(), y_scale=Fz(), y_blur=L(), y_bgblur=L())
     for i in range(n):
         kind = 1 if bg == "photo" or (bg == "mixed" and R() < 0.5) else 0
-        if kind: base = bgs[RI(0, len(bgs))].float() / 255; hb = None; bgc = base.mean((1, 2))
+        bgblur = 0
+        if kind:   # depth of field (Rocky s056): the eye is focused on the object, the scenery is defocused -- mild or strong, 50/50
+            base = bgs[RI(0, len(bgs))].float() / 255; bgblur = 1 if R() < 0.5 else 2; base = SH.gblur(base, SH.BLUR_SIGMA[bgblur]); hb = None; bgc = base.mean((1, 2))
         else: hb, sb, vb = R(), R() * 0.6, R() * 0.6 + 0.3; bgc = SH._hsv(hb, sb, vb); base = bgc.view(3, 1, 1).expand(3, S, S).clone()
         k = RI(1, maxk + 1) if maxk > 1 else 1; bl = 0 if R() < blur[0] else 1
         objs = []
@@ -114,9 +117,9 @@ def sample(n, seed, *, T=T_DEFAULT, maxk=1, bg="photo", p_static=0.15, p_rot=0.3
         ys["y_vel"][i] = 0 if o["static"] else 1 + d8 + (8 if spd >= 1.75 else 0)
         ys["y_dir"][i], ys["y_speed"][i], ys["y_dx"][i], ys["y_dy"][i], ys["y_dth"][i], ys["y_dr"][i] = d8, spd, o["dx"], o["dy"], o["dth"], o["dr"]
         ys["y_shape"][i], ys["y_fill"][i], ys["y_hue"][i], ys["y_iso"][i], ys["y_alias"][i], ys["y_bgkind"][i] = o["shape"], o["fill"], o["hue_bin"], o["iso"], o["alias"], kind
-        ys["y_count"][i], ys["y_scale"][i], ys["y_blur"][i] = k, o["r"], bl
+        ys["y_count"][i], ys["y_scale"][i], ys["y_blur"][i], ys["y_bgblur"][i] = k, o["r"], bl, bgblur
         for oo in objs: oo.pop("_fg"); oo.pop("_tex")
-        meta.append(dict(seed=seed, idx=i, T=T, count=k, bgkind=kind, blur=bl, objects=objs))
+        meta.append(dict(seed=seed, idx=i, T=T, count=k, bgkind=kind, bgblur=bgblur, blur=bl, objects=objs))
     return X, M, ys, meta
 
 def as_float(X): return X.float() / 255
