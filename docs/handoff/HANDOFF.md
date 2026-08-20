@@ -1,344 +1,156 @@
 # Trioron Handoff
 
-**Session date:** 2026-08-19
-**Session number:** 053
-**Session title:** **Shape world: a fully tagged synthetic recognition dataset; CONTINUAL
-headline at close: nest + full-cov manifold replay + credit-soft = pair
-0.67 / forget 0.09 / never-trained combos 0.35 vs CNN-sequential 0.13 /
-0.61 / 0.00 (was 0.3-class numbers before this arc). Static: 0.86 vs CNN
-0.88 at ~15 K learned params.**
-
-**Dataset arc:
-(5 shapes × fill/thickness × colour+iso × zoom 3–18 × skew/rot/flip × crop ×
-per-object blur with 3 focus modes × count 1–3; unlimited images/class; held-
-out shape×fill combos = compositional "never seen"). First probes: with 8×
-CIFAR's data the s052 front end + leaf plateaus at 0.70 and an over-cap MLP
-on the same features at 0.73 ⇒ the ceiling is the FRONT END, not the leaf,
-not the data. Cepstra read texture not silhouette; a 92-d boundary-
-orientation primitive alone matches the 900-d front end; geometric 3-way
-stuck at 0.67 for every fixed primitive ⇒ built the GROUPING primitive
-(figure/ground + body closing + components + field rule): silhouette-only
-stream lifts geo 3-way 0.67→0.76 and held-out combos 0.38→0.53; grouped +
-whole-image 311-d + one 50 K leaf = 0.853 fresh ≈ CNN ref 0.882 (242 K,
-over cap) and +15 pp over the CNN on the compositional test (CNN 0.33 —
-it memorises combos). Count from grouping: 1→0.91, 2→0.37, 3→0 (closing
-merged neighbours) → grouping v2 (per-body bridging + second-pass
-foreground; multi placement fixed, overlap TAGGED): count no-overlap
-0.74 (2: 0.84, 3: 0.75); per-group read + SCALE CANONICALISATION (bbox
-crop → 32) = multi set-acc 0.479 vs 0.33 whole-image leaf, small 0.50→
-0.57, cropped 0.56→0.60, held-out 0.54→0.58. Rocky: recognition is the deliverable;
-"fantasizing" is parked; nest = survivor recipe (SPLIT by factor +
-arbitration = grouping).**
+**Session date:** 2026-08-20
+**Session number:** 054
+**Session title:** **s053 recipe carried to split-CIFAR-100 (handoff NEXT-1): full-cov
+manifold replay ~doubles diag replay (mono full .112→.204), post-task HEAD-ONLY
+settle adds the rest (mono .236, nest 0.330±0.002 / task 0.658 / forget 0.26 —
+86 % of its own static 0.383), while the 254 K CNN trained sequentially collapses
+to EXACT CHANCE (.010/.100). + Rocky's pre-feeder: the s053 shape-world nest,
+frozen, as a peripheral organ on CIFAR — alone 0.221 full (22× chance, 22 K
+params); as INPUT to a leaf +2.1 pp continual / +1.1 static; as a 5th VOTER in
+the nest: nothing.**
 
 ---
 
 ## READ THIS FIRST
 
-1. **Rocky's ask this session:** train the nests on simple shapes (single/
-   multiple, colours, skew, line thickness, zoom in/out, flip, crop, blur
-   incl. mixed focus, textures combined on shapes) and identify images never
-   seen; "what's important is the primitives to make it able to learn";
-   most of the session = dataset build + tagging (done). Fantasizing = new
-   term, distinct from trioron dreaming; explained as H-space factor
-   recombination / decoder leaf; **not a priority**.
-2. **Dataset:** `experiments/progenitor/shapes.py` (generator + `build`),
-   doc `docs/design/shape_world_dataset.md` (schema, factors, splits, results
-   table, known floors). Splits (fixed seeds, identical on every PC) under
-   `outputs/data/shapes/*.pt` — **gitignored, 213 MB; rebuild with
-   `python3 experiments/progenitor/shapes.py build` (~5 min)**; only
-   `manifest.json` is committed. Feature caches
-   `outputs/data/shapes/feat_<front>_<split>.pt` via `shapes_feats.py`
-   (ds/col/bd/cn; extraction is seconds — leaf training is the slow part).
-   Contact sheet with tags: `python3 experiments/progenitor/shapes_sheet.py
-   train 36` → `outputs/shapes_sheet_train.png`.
-3. **Front end code moved:** `experiments/progenitor/frontend.py` holds the
-   s052 dense⊕stereo (800) lifted out of the exec-chained probes, plus new
-   `colour_block` (100), `boundary_block` (92), `corner_block` (13);
-   `grouping.py` = the grouping primitive (`groups`, `describe`). Old
-   probes untouched.
-4. **Probe protocol here:** train split 20 K single-object (≈4 000/shape),
-   `Seeded(d,5,48,nonlinear)` leaf, 8 epochs, standardized features, n=3
-   seeds (σ shown); tests = fresh (5 K, same dist) / held-out combos (3 K,
-   only (triangle,dotted),(square,striped),(circle,outline)) / stress
-   subsets (12 K: zoom-out r≤5, zoom-in r≥14, cropped, iso-luminant, outline,
-   blur 0/1/2, focus-gradient) / multi-object (BCE 5-way sigmoid head trained
-   on train_multi, set-accuracy on test_multi). Chance 0.20.
+1. **Rocky's asks this session:** (a) "continue our latest model and test it on
+   CIFAR" = handoff s053 NEXT-1 (full-cov replay on CIFAR-continual) — done, it
+   transfers; (b) mid-session: "can the previous nest be extended as a
+   pre-feeder for the new CIFAR model … not tabula rasa but peripheral
+   augmentation" — built (`shape_prefeeder.py`) and measured (below);
+   (c) framing he stated: fewer params, mostly linear/fixed math, near-CNN
+   performance — "nature has its way"; the hand-coded primitives ≈ retinal
+   channels (colour opponency, V1 orientation, spatial-frequency, binocular),
+   and he pointed at MOTION (common fate) as the missing grouping cue —
+   noted as a future arc, our grouping substitutes colour-distance+Otsu
+   because datasets are static.
+2. **Bench:** `experiments/progenitor/cifar_continual.py` — split-CIFAR-100,
+   10 tasks × 10 fine classes in index order (same split as the archived
+   `bench_2_0_cifar_continual`), ONE shared 100-way head, full-softmax, NO task
+   id, 8 ep/task Adam 1e-3, n=3 seeds. full = 100-way argmax (chance .01),
+   task = argmax within the sample's own 10 classes (chance .10), forget =
+   mean(per-task full acc right after training − at end). STREAM=joint = static
+   reference. Front-end features cached at `outputs/data/cifar/feat_*.pt`
+   (gitignored; rebuild ~12 min, grouping dominates at ~8.5 ms/img).
+3. **Readers** (every leaf = `Seeded(d,100,48,nonlinear)`):
+   mono = s053 311-d (grouped canon sil+col+frame+flags 106 ⊕ whole bd+col+cn
+   205), 32 K; mono-ds = s052 dense⊕stereo⊕colour 900-d, 73 K (OVER the 50 K
+   cap — reference); nest = shape 103 + whole 205 + fill (ctex+cstereo+flags)
+   292 + ds 900 leaves, log-softmax sum, 147 K total (ds leaf over cap; other
+   three 10–19 K); nest3 = the exact s053 nest (74 K, all under cap);
+   \*+pre = + the frozen shape-organ stream (below).
+4. **Arms:** none | replay (diag sketch) | replay-full (full-cov, boundary-
+   cached eigendecomposition rank 32, per-class batch = clamp(256//n_past,
+   2, 32)) | full+credit-soft (lock rate .078) | full+settle = full-cov replay
+   + post-task HEAD-ONLY re-calibration (200 Adam 1e-3 steps on class-balanced
+   full-cov samples of every archived class; soma frozen) — the archived CIFAR
+   bench's "load-bearing fix", now per leaf.
 
-## WHAT RAN (all committed on `conscience-core`; logs `outputs/shapes_*_s053.log`)
+## RESULTS (all n=3 except noted; logs `outputs/cifar_*_s054.log`)
 
-### A. Dataset (`shapes.py`) — see doc for the full factor table
-Per-object tags: shape, fill, thick, hue/hue_bin/sat/val, iso, r, rot,
-shear, flip, cx/cy, crop, vis (exact in-frame fraction of the solid
-silhouette), blur level; per image: count, focus mode (uniform / per-object
-depth-of-field / gradient around a focal point), bg, noise. Constraints
-added after eyeballing sheets: shape sampled first (balanced 5-way);
-textured fills capped r≤13 (a zoomed dotted square *is* a dots field);
-crops need r≥6 and ≥30 % silhouette in frame; fields only in single-object
-images. Splits: train 20 K / test_fresh 5 K / test_held 3 K / test_stress
-12 K / train_multi 20 K / test_multi 4 K.
+### A. Continual split-CIFAR-100
+| reader | arm | full | task | forget | acq | t1_end |
+|---|---|---|---|---|---|---|
+| mono 32 K | none | .066±.002 | .181±.007 | .534 | .600 | .000 |
+| mono | replay (diag) | .112±.003 | .429±.008 | .407 | .519 | .069 |
+| mono | replay-full | .204±.006 | .567±.001 | .271 | .475 | .192 |
+| mono | **full+settle** | **.236±.004** | .568±.004 | **.203** | .440 | .228 |
+| mono | full+credit-soft | .160±.009 | .480±.005 | .259 | .419 | .208 |
+| mono-ds 73 K | replay-full | .238±.003 | .608±.000 | .287 | .526 | .250 |
+| mono-ds | full+settle | .281±.004 | .614±.001 | .204 | .485 | .296 |
+| nest 147 K | replay-full | .194±.005 | .653±.002 | .425 | .619 | .171 |
+| nest | **full+settle** | **.330±.002** | **.658±.001** | .255 | .584 | .331 |
+| mono+pre 43 K | full+settle | .257±.001 | .587±.003 | .204 | .461 | .256 |
+| nest+pre 168 K | full+settle | .326±.006 | .654±.001 | .251 | .577 | .333 |
+| **cnn-seq 254 K** | none | **.010±.000** | **.100±.000** | .343 | .353 | .000 |
 
-### B. Recognition probes (`diag_shapes.py`, `diag_shapes2.py`, `diag_shapes3.py`)
-| front | d | fresh | geo 3-way | held-out | small r<5 | cropped | iso | blur2 | fill |
-|---|---|---|---|---|---|---|---|---|---|
-| dense⊕stereo (s052 R) | 800 | 0.686 | — | 0.220 | — | 0.359 | 0.398 | 0.641 | 0.796 |
-| dense⊕stereo⊕colour | 900 | 0.705 | 0.583 | 0.227 | 0.367 | 0.356 | 0.519 | 0.677 | 0.798 |
-| colour block only | 100 | 0.429 | | 0.301 | | 0.256 | 0.502 | | 0.688 |
-| raw pixels (over cap) | 3072 | 0.483 | | 0.279 | | 0.342 | 0.480 | 0.502 | 0.721 |
-| **boundary-orientation only** | **92** | **0.709** | 0.655 | 0.354 | 0.465 | 0.406 | 0.391 | 0.648 | |
-| boundary⊕colour | 192 | 0.761 | 0.664 | 0.352 | 0.455 | 0.395 | 0.604 | 0.751 | |
-| boundary⊕colour⊕corner | 205 | 0.771 | 0.673 | 0.376 | 0.502 | 0.428 | 0.614 | 0.755 | |
-| all four | 1005 | 0.766 | 0.674 | 0.349 | 0.500 | 0.432 | 0.546 | 0.733 | |
-| refs: MLP 2×1024 on 900-d / on 205-d 2×256 | | 0.729 / 0.792 | | 0.228 / 0.374 | | | | | |
-Multi-object set-acc (900-d): 0.345 all / 0.506 single / 0.290 depth-of-field.
-Confusion (900-d): fields 0.88; circle 0.59, triangle 0.70, square 0.45;
-circle-outline→square 512/1024, square-striped→circle 550/1002, triangle-
-dotted→circle 356/974; per scale bin r<5 0.39 … r≥14 0.66; joint shape×fill
-20-way leaf does NOT fix held-out (0.155).
+### B. Static (joint, all 100 classes at once — the ceilings)
+mono .292/.630 | mono-ds .329/.665 | nest3 .314/.643 (74 K, beats blindman-v2b
+.309/.606 at 7.6× fewer params) | nest .383/.711 | pre-only .221/.553 (22 K) |
+mono+pre .303/.642 | nest+pre .379/.708 | CNN 242 K .442/.772.
 
-**Readings.** (1) Data is not the bottleneck: 8× CIFAR/class, ceiling
-0.70–0.73 for any reader on the s052 features. (2) The s052 front end is a
-texture reader (fields easy, geometry confused, shape×fill entangled) —
-the s052 "layer-1 = texture bands" finding, now on ground truth. (3) A
-92-d boundary-orientation block = the whole 900-d front end; +colour 192-d
-= best. (4) Corner counting is defeated by textured fills (interior
-corners). (5) Blur is cheap here (−3 pp) unlike CIFAR. (6) Geometric 3-way
-0.67 for every fixed primitive and the MLP: shear makes ellipse ≈
-parallelogram in orientation statistics; the affine-invariant reading needs
-grouping (figure/ground, boundary vs interior) before any descriptor —
-i.e. the design doc's tokenize→frame→read, with grouping first.
-
-### C. CNN dataset-ceiling reference (`shapes_cnn_ref.py`, OVER CAP, not trioron)
-4-block BN CNN, 242 K params, 30 ep one-cycle: **fresh 0.882, geo 3-way
-0.809, held-out 0.331, small 0.672, cropped 0.686, iso 0.893, blur2 0.871.**
-⇒ readable ceiling ≥ 0.88; the learned monolith ALSO fails the
-compositional test (memorises shape×fill combos).
-
-### D. Grouping primitive (`grouping.py`) — figure/ground + object split + boundary/interior split
-No labels, no params: bg = border median in (Y, 2·RG, 2·BY); distance map
-(3×3 pooled); threshold = max(Otsu, 0.08, 2.5 × 10 %-quantile of border
-distances = noise floor); FIELD if ≥ 3 raw components (≥ 4 px) whose joint
-bbox spans ≥ 85 % of the frame both ways; else closing (disk r=4) + hole
-fill → components (≥ 6 px) → per group: silhouette, boundary ring,
-interior (eroded), raw-fg colour mean, second-moment frame (cx, cy, major/
-minor scale, orientation, elongation, fill fraction), border-touch; count =
-#objects. Sanity vs ground-truth silhouettes (600 draws): IoU 0.74 (solid
-0.89 / striped 0.78 / dotted 0.68 / outline 0.59; iso 0.69, blur2 0.69,
-small 0.65, cropped 0.68); exactly-one-object 91 %; fields flagged 74 %,
-5 % false. `describe(X)` → silhouette-only boundary block (92) / interior-
-only dense cepstra (600) / colour (3) / frame (7) / flags (4); cached as
-`feat_grp_<split>.pt`. Cost ~10 ms/img.
-
-### E. Grouped streams → leaves (`diag_shapes4.py`, n=3)
-| stream | d | fresh | geo 3-way | held-out | small | cropped | iso | blur2 | fill fresh/held |
-|---|---|---|---|---|---|---|---|---|---|
-| whole-image bd+col+corner | 205 | 0.771 | 0.673 | 0.376 | 0.502 | 0.428 | 0.614 | 0.755 | 0.801 / 0.555 |
-| grouped silhouette only | 92 | 0.632 | **0.762** | **0.528** | 0.486 | 0.534 | 0.652 | 0.601 | 0.685 / 0.140 |
-| grouped sil+colour+frame+flags | 106 | 0.756 | 0.775 | 0.527 | 0.499 | 0.557 | 0.800 | 0.686 | 0.772 / 0.250 |
-| grouped + interior | 706 | 0.801 | 0.783 | 0.464 | 0.541 | 0.582 | 0.767 | 0.757 | 0.828 / 0.527 |
-| **grouped 106 + whole 205** | **311** | **0.853** | **0.802** | 0.478 | 0.560 | 0.610 | 0.837 | 0.827 | 0.862 / 0.585 |
-| CNN ref (C) | — | 0.882 | 0.809 | 0.331 | 0.672 | 0.686 | 0.893 | 0.871 | — |
-Count primitive (grouping alone, test_multi): exact 0.43; 1→0.91, 2→0.37,
-3→0.00.
-
-**Readings.** Separating boundary from interior is what factors shape from
-fill: silhouette-only geo 3-way +9 pp and held-out +15 pp; fill reads from
-the interior stream (held-out 0.53) not the silhouette (0.14). 311-d fixed
-primitives + one ≤50 K leaf ≈ CNN on fresh/geo/iso/blur and +15 pp on the
-compositional test. Gaps vs CNN = mask quality on small/cropped. Multi-
-object counting fails because closing r=4 (needed to bridge dotted fills)
-also merges neighbours 8 px apart — bridging must be per body (e.g. close
-within each colour-consistent component, or grow bodies from seeds), and
-the multi-object splits are the test.
-
-### E2. Grouping v2 + per-group read + scale canonicalisation (`diag_shapes5.py`, logs `shapes_probe4b/5/5c`)
-v2: merge raw components only if the smaller is a texture element (≤ 30
-px) or both are thin/parallel stripes; close + fill inside each body;
-second-pass Otsu on the remainder (≥ 1.1 × noise floor) recovers a low-
-contrast (iso) object next to a high-contrast one. Multi splits REBUILT:
-centres rejection-sampled (≥ 1.4·(r₁+r₂)+1), failures tagged `y_overlap`
-(~19 %; 96 % of the old 3-object images were touching — unsplittable).
-Count from grouping alone (test_multi): all 0.60; no-overlap 0.71–0.74
-(1: 0.89, 2: 0.84, 3: 0.75); overlap 0.04. Single-object rows unchanged
-(311-d 0.853). Per-group read set-accuracy (shape leaf on grouped 106
-reads each body): plain 0.357 → **CANON 0.479** (k=2 0.40, k=3 0.27,
-no-overlap 0.55, depth-of-field 0.36) vs whole-image BCE 205 0.330 /
-whole+grouped BCE 311 0.423; the same CANON leaf on singles: held-out
-0.577, small 0.572, cropped 0.601 (fresh 0.749). `grouping.canon_mask`,
-`describe(..., canon=True)`, `describe_groups(..., canon=True)`,
-`shapes_feats.grouped(split, canon)` cache `feat_grp[_canon]_<split>.pt`.
-
-### E3. Rotation/shear canonicalisation (`grouping.canon_affine`; logs `shapes_probe4c1/4c2/5a`)
-Whiten body mask by C^-1/2 (grid_sample). n=3, 311-d: plain / scale /
-affine = fresh 0.853 / 0.856 / 0.858; geo 3-way 0.798 / 0.808 / **0.814**
-(CNN 0.809); held-out 0.478 / **0.511** / 0.493; small 0.556 / **0.627** /
-0.597; cropped 0.619 / 0.654 / 0.656; iso 0.830 / 0.827 / 0.823; blur2
-0.828 / 0.834 / 0.831; fill 0.861 / 0.865 / 0.872. Multi set-acc per-group
-read: 0.357 / 0.479 / 0.474. ⇒ modest consistent gain; affine ≈ scale
-(mask imperfections eat whitening's extra). CNN margins left: iso −6,
-blur −4, small −4.5, fresh −2.4 pp. **Params reality check:** every number
-this session is ONE `Seeded(d,5,48)` leaf ≈ 15 K learned params on fixed
-primitives (+ a fill leaf, + a whole-image field leaf) — NOT a nest; the
-nest is NEXT-3.
-
-### E4. Mask quality — convex closure per body (`grouping.convex_fill`; logs `shapes_probe4d/5d`)
-IoU 0.742 → 0.789 (outline 0.59→0.74, cropped 0.70→0.82, iso 0.67→0.74,
-blur2 0.70→0.76; dotted 0.71, small 0.65 ≈ discretisation floor); chroma
-weight 3–4 hurts, texture dilation no help. Recognition (scale-canon, n=3):
-106-d held-out 0.569→0.604, cropped 0.601→0.631; **311-d fresh 0.861**
-(geo 0.813, held-out 0.515, small 0.618, cropped 0.670, iso 0.831, blur2
-0.832); multi set-acc 0.484. Reader saturates ≈ 0.86 on this front end.
-
-### E5. Per-body reader streams (a) — `describe(extras=True)`: bcolour 12, edge 4, ctex 216 (log `shapes_probe4e`)
-311 → +all 543: fresh 0.861 → 0.866, geo 0.813 → 0.820, small 0.618 →
-0.629, iso 0.831 → 0.832, blur2 0.832 → 0.836; held-out 0.515 → 0.473
-(ctex invites combo memorising); fill 0.858/0.550 → **0.883/0.621** (ctex
-= fill primitive). ⇒ (a) closed: fixed primitives + one 48-cell leaf cap
-≈ 0.865 (CNN 0.882). Rocky's order: (a) then (b) — (b) = per-factor leaves
-+ router / nest is next.
-
-### E6. (b) Per-factor leaves + router (`diag_shapes6.py`; logs `shapes_probe6/6b`)
-Leaves shape/whole/fill/hue/iso/blur + grouping count; router = 16-cell
-leaf on [shape logits, whole logits, flags, frame scale] trained on 4 K.
-n=3: single 311 leaf 0.854 | uniform mix shape+whole 0.863 | ROUTER 0.858
-(held-out 0.538) | linear router 0.864 | ROUTER + fill/iso/blur context
-0.862 but held-out 0.43±0.06. Factor leaves: fill 0.79, hue 0.56, iso
-0.94, blur 0.57. Multi (per-body shape+fill leaves): shape-set 0.476,
-pair-set 0.278; count 0.83 no-overlap. **Reading:** split = +1 pp; learned
-arbitration ≈ uniform sum; texture context re-entangles shape×fill; nest
-value here is structural, not accuracy (primitives cap ≈ 0.86; CNN 0.88).
-Gotcha: router at 8 epochs on 4 K = 125 steps → 0.71 ± 0.05 (undertrained,
-not a verdict) — ROUTER_EPOCHS=80 default now.
-
-### E7. Continual / compositional stream (`shapes_continual.py`; logs `shapes_continual{,_b}_s053.log`)
-5 tasks (solid shapes → fields → striped → dotted → outline), shared shape+
-fill heads, full-softmax, no task id, n=3; readers mono (one 311-d leaf)
-vs nest (shape+whole+fill leaves); arms none / λ(1e3) / credit(rate 1.0) /
-replay / all / replay+λ / all-soft(rate .078); bar CNN 242 K sequential.
-**Unprotected leaf and CNN forget catastrophically (T1 → 0.00; CNN worst,
-pair 0.077). Replay carries final accuracy: mono+replay pair 0.399 / shape
-0.636 (best).** λ protects soma not the shared head (fill collapses);
-credit@1.0 over-locks (acq 0.39) or locks interiors without protecting the
-head; "all" keeps T1 0.72 at forget 0.065 but acq 0.26; replay+λ shape
-0.711 but pair 0.18–0.22; nest never beats mono under continual here.
-Design caveat: each task = one fill ⇒ fill head is single-class-per-task
-(hardest case). Full tables in the dataset doc.
-
-### E8. Why nest < mono under continual (per-leaf diagnostic, replay arm, n=3) + stereo on crop
-shape leaf T1 0.78 / fields 0.04; whole leaf T1 0.66 / fields 0.32; sum T1
-0.73 vs mono+replay 0.30 ⇒ nest RETAINS SHAPES BETTER; it loses the fields
-task (lives only in the whole leaf, overwritten) and the fill leaf collapses
-to last-fill + solid (97 % of preds) under one-fill-per-task. Design fixes:
-field class protected / own leaf frozen after T2; mix fills within tasks.
-`cstereo` (synced L/R on the canonical crop, 72-d) added to
-`describe(extras)`: fill leaf ctex 0.803/0.577 → ctex+cstereo **0.816/0.597**
-(n=3); stereo alone 76-d 0.761. Same +1–2 pp as CIFAR; keep in the fill sense.
-
-### E9. Continual round 2 (`STREAM=v2`, fills mixed; fill = ctex+cstereo; λ 1e2; log `shapes_continual_v2`)
-mono replay pair **0.480** (fill 0.68, shape 0.60); mono replay+λ 0.442 /
-forget 0.133 / T1 0.475; mono all-soft forget 0.081 / T1 0.634 / acq 0.39;
-nest replay 0.319, replay+λ 0.369 (held pair 0.104, best); CNN seq 0.130,
-T1 0. Mixing fills fixed mono's fill head; the nest's FILL LEAF still
-collapses to last-task fills under replay (pred hist 3351/80/1536/33) while
-its shape leaves retain (T1 0.74, fields 0.60). Hypothesis: diag-Gaussian
-replay is off-manifold in texture space → full_cov / exemplar replay for
-that leaf is the next test. Full table in the dataset doc.
-
-### E10. Continual round 3 — FULL-COV replay fixes it (log `shapes_continual_v2b`)
-`replay-full` (ManifoldArchive full_cov=True, sample_full rank 32) vs
-`replay-ex` (20 real exemplars/class): mono pair 0.480 → **0.686** (forget
-0.17); nest 0.319 → **0.664** (forget **0.10**, held-out pair **0.351**);
-exemplars 0.46 both (worse than the sketch); CNN seq 0.13. Hypothesis
-confirmed (diag sketch off-manifold in correlated descriptor spaces); the
-nest's fill leaf is fixed (T1 0.70). **Headline continual now: nest +
-full-cov replay pair 0.66 / forget 0.10 / held-out 0.35 vs CNN 0.13 / 0.61
-/ 0.00.** Storage: 14 classes × (μ + Σ) per leaf, no images.
-
-### E11. Continual round 4 — full-cov + λ / credit (logs `shapes_continual_v2c_s1e1/s1e2`)
-λ on top of full-cov replay trades acquisition for forgetting monotonically
-(1e1: mono pair 0.653 / forget 0.116; 1e2: 0.489 / 0.069); credit-soft is
-neutral-positive on the nest (**pair 0.669 / forget 0.087 / held-out 0.349**,
-~4 locks); both together worst (0.32–0.48). Operating point: **nest + full-
-cov replay (+ credit-soft)**. Remaining forgetting = shared-head drift →
-next lever is head protection / H-space routing, not more λ.
-
-### E12. Continual round 5 — head-only anchor: null (logs `shapes_continual_v2d_h1e2/h1e3`)
-nest full+head+credit pair 0.627 / forget 0.085 vs operating point 0.669 /
-0.087; mono 0.612 / 0.078. Freezing past logit rows blocks head re-
-calibration (acq −4 pp); forgetting unchanged. **FINAL OPERATING POINT:
-nest + full-cov replay (rank 32) + credit-soft (rate .078): pair 0.669 /
-forget 0.087 / held-out 0.349.** Rocky at close: "far too good improvement
-compared to our 0.3 results" — wrap.
-
-### F. Rocky's framing (keep)
-The nest = the survivor recipe: WARM/FLEE masters were weak per class,
-the win was SPLIT + arbitration. Here SPLIT is by factor (silhouette /
-interior texture / colour / count) and the arbiter is grouping (which
-pixels belong to which object, boundary vs interior) — before any leaf.
-Caveat: today's primitives are hand-coded; the s019 doctrine (discover,
-don't imitate) means a discovery control must come back once grouping
-exists. Every image is multi-labelled (all factors tagged); the probes so
-far train shape/fill/set heads and use the rest as test slices.
+### C. Readings
+1. **Full-cov transfers.** Diag→full-cov doubles full-softmax (mono .112→.204,
+   mono-ds .116→.238, ~15σ) — same mechanism as shapes E10: diag sketches are
+   off-manifold in correlated descriptor spaces. 90 classes × (μ+Σ) per leaf,
+   no images.
+2. **Head-settle is the second half** (+.03 mono, +.14 nest). It fixes what
+   replay-during-training can't: interleaved replay fights the current task;
+   the post-task head-only pass on class-BALANCED archive samples re-calibrates
+   without touching the soma. This is `settle_head_with_retry` from the
+   archived bench / absorption arc, reproduced per leaf.
+   It closes 86 % of the continual→static gap for the nest (.330 vs .383).
+3. **Nest wins where it should**: task-aware .658 ≈ its static .711 scale;
+   nest+settle full .330 vs mono .236. The CNN sequential = exact chance —
+   continual is where the architecture pays, statics the CNN still wins
+   (.442 vs .383).
+4. **Credit-soft REGRESSES here** (mono .160 < .204; nest s1 .163): 9
+   boundaries × lock-cap locks 18/48 mono cells (79 across nest leaves) and
+   starves acquisition. s053's credit-soft-neutral was 4 boundaries. Lock
+   budget must scale with task count — open design point.
+5. **Pre-feeder (Rocky's ask):** the s053 nest retrained jointly on shapes
+   (deterministic, `PRE_SEED=0`; sanity on shapes .867 shape/.815 fill),
+   frozen, native (shape-world) standardization, emits 3×48 H-codes + 14
+   logits = 158-d per CIFAR image. Alone: .221/.553 static (22× chance) — the
+   organ genuinely reads CIFAR. Concatenated as INPUT: mono+pre continual
+   .257 vs .236 (+2.1 pp, ~5σ), static .303 vs .292. As a 5th VOTING leaf:
+   nest+pre .326±.006 vs .330±.002, static .379 vs .383 — a weak voter with equal say
+   dilutes; augmentation belongs at the INPUT (or needs a router), not the
+   vote. "Not tabula rasa" confirmed cheap and positive at +11 K params.
 
 ## NEXT (priority)
-1. **Carry full-cov replay to CIFAR-continual** (one flag on the existing
-   bench; the v2-vs-v1 7.6σ result used diagonal sketches) — Rocky's
-   question at close; expect a lift on continual, modest on static (canon
-   helps small objects; grouping as built needs plain backgrounds).
-2. Absorb on the shape world: train a new factor leaf (blur, or a 6th
-   shape) and graft it (`trioron.api.absorb`) without retraining; vs
-   retrain.
-3. Developmental arcs: coarse-to-fine stream (blur2→blur1→sharp) vs mixed;
-   Phasecyte discovery control on the separated per-body streams
-   (missing-primitive detector = frustration plateau per slice).
-4. Continual polish (low priority, the curve is flat): H-space
-   `ManifoldRouter` over leaves' interior codes; FULL_RANK 16/64;
-   REPLAY_BS 64; n=5 on the operating point.
-5. Engineering: batched grouping (8.9 ms/img python loop vs CNN 1.2);
-   S-parametrised generator/front end for 64/128 px scaling.
-6. Multi-object pair-set 0.28; fields in multi split 77 % flagged; blur
-   primitive weak (0.57).
+1. **Weighted/routed arbitration for heterogeneous leaves** — the nest sums
+   log-softmax uniformly; nest+pre shows a weak voter dilutes. H-space
+   `ManifoldRouter` over leaves, or learned per-leaf temperature. (This is
+   also s053 NEXT-4.)
+2. **Absorb proper on CIFAR** (`trioron.api.absorb`): graft a NEW task's leaf
+   without retraining, vs the settle recipe.
+3. Motion/common-fate grouping arc (Rocky): frame-differencing as the grouping
+   cue on a moving shape world; replaces the Otsu heuristic with the cue
+   biology uses. + discovery control for the hand-coded primitives (s019
+   doctrine) — Rocky repeated the germline framing.
+4. Lock budget vs task count for credit locking (finding 4).
+5. n=5 + capacity push (16 ep) on the operating point if paper-bound;
+   batched grouping (8.5 ms/img loop) for anything bigger.
 
-## GOTCHAS
-- `pkill -f`/`pgrep -f` from inside the Bash tool matches the tool's own
-  shell (exit 144, kills your own command) — use
-  `ps aux | grep "[s]cript" | awk '{print $2}' | xargs -r kill`.
-- `torch.multinomial` needs a float tensor (fixed in shapes.py).
-- The trioron leaf `construct` hits "Edge buffer full" above hidden≈48 at
-  900-d — over-cap references use plain torch MLPs.
-- Probe scripts run on import (`diag_shapes*.py`); don't `import` them.
-- `shapes_continual.py` arms are string-matched in `Leaf.__init__`; a
-  typo'd ARMS entry silently runs as "none". STRENGTH default 1e3 — set it
-  explicitly for λ arms. Router/leaf `construct` output ids are on
-  `sub.scheduler._plan.output_ids` (private).
-- Sheets: some samples are unreadable by construction (tiny outline +
-  strong blur + crop); label-noise floor of a few %.
+## GOTCHAS (new this session)
+- `cifar_continual.py` RUNS ON IMPORT (like diag_shapes*); `shape_prefeeder.py`
+  therefore reads the feature caches directly — never import cifar_continual.
+- 7 GB RAM fits at most ~3 leaf processes (full-cov archives grow: mono ~1 GB,
+  nest ~2.2–2.8 GB); two OOM kills this session — stagger seeds as separate
+  processes (`SEEDS=2 READERS=nest`), watch `free -m`.
+- READERS=none = CNN bar only. FEATS_ONLY=1 = build caches and exit.
+- `ManifoldArchive.replay_batches`/`sample_full` need `finalize_all()` at the
+  boundary first (astrocytes must be DORMANT); the bench caches (μ, eigvecs,
+  resid) per class at each boundary — sample_full's per-call eigh would be
+  ~90 × 800² otherwise.
+- Old gotchas from s053 (pkill self-match, ARMS string-typo silently = "none",
+  output_ids private) all still apply; ARMS matching here is exact-string in
+  `Leaf.__init__` too.
 
 ## State of the build / Pointers
-- Commits (`conscience-core`): `f84f74f` dataset + probe 1; `f6dd87b`
-  probes 2/3 + boundary/corner blocks; `8db6d0a` grouping + probe 4 + CNN
-  ref; `98cdfae` grouping v2 + multi placement; `4b5cecb` scale canon +
-  probe 5; `51bcaa8` affine canon; `74f011d` convex masks; `ae6357d` (a)
-  per-body streams; `8556779` (b) leaves+router; `e983068`/`e1cddda`/
-  `413777f` continual rounds 2–4; + round 5 + this handoff. `main` NOT advanced. Pushed at close.
-- New files: `experiments/progenitor/{shapes,shapes_sheet,shapes_feats,
-  frontend,grouping,grouping_eval,diag_shapes,diag_shapes2,diag_shapes3,
-  diag_shapes4,diag_shapes5,diag_shapes6,shapes_cnn_ref,shapes_continual}.py`, `docs/design/shape_world_dataset.md` (has the
-  results tables), logs `outputs/shapes_{build,probe,probe2,probe3,probe3b,
-  probe4,probe4b,probe4c1,probe4c2,probe4d,probe4e,probe5,probe5c,probe5a,probe5d,probe6,probe6b,probe4f,cnn_ref,build2,continual,continual_b,continual_v2,continual_v2b,continual_v2c_s1e1,continual_v2c_s1e2,continual_v2d_h1e2,continual_v2d_h1e3}_s053.log`, `grouping_eval_v2_s053.log`, `outputs/data/shapes/manifest.json`.
-- No background runs at close. Timings: one continual run (5 tasks, 8 ep)
-  ≈ 1–2.5 min mono / 2–5 min nest; CNN sequential ≈ 5 min/seed.
-- Package (`trioron/`) untouched. Memory pointer added
-  (`shape_world_dataset.md`); memory is per-PC — this file is the truth.
+- Commits (`conscience-core`): `20dc14a` bench + prefeeder + first results;
+  + this close commit (remaining logs + handoff). `main` NOT advanced. Pushed.
+- New files: `experiments/progenitor/cifar_continual.py`,
+  `experiments/progenitor/shape_prefeeder.py`; logs
+  `outputs/cifar_{feats,joint,joint_pre,prefeeder_build}_s054.log`,
+  `outputs/cifar_continual_{mono,monods,cnn,mono_settle,monods_settle,monopre}_s054.log`,
+  `outputs/cifar_continual_nest{_s0,_s1,_s2,_settle_s0,_settle_s1,_settle_s2,pre_s0,pre_s1,pre_s2}_s054.log`.
+- Caches (gitignored): `outputs/data/cifar/feat_{ds,col,bd,cn}_{train,test}.pt`,
+  `feat_grp_canon_*.pt`, `feat_pre_*.pt` (~1 GB; rebuild: FEATS_ONLY=1 run then
+  `python3 experiments/progenitor/shape_prefeeder.py`; needs shapes splits —
+  `python3 experiments/progenitor/shapes.py build` if absent).
+- Package (`trioron/`) untouched. Timings: mono arm ~17 min/3 seeds; nest arm
+  ~1 h/seed; settle adds ~2 min/run; CNN-seq ~20 min/seed.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
 `trioron/viz/export.py`; `.claude/`, `runs/`, `archive/runs/`,
 `trioron/legacy/outputs/`, `notebooks/` checkpoints, output PNGs /
-uncommitted logs untracked; `outputs/data/shapes/*.pt` and `feat_*.pt`.
+uncommitted logs untracked; `outputs/data/**` caches.
 
 ## Environment notes
 - `/home/marcrockhat/trioron-project/`, branch `conscience-core`, Python
   3.10.12, torch 2.11.0, WSL2, `python3` (NOT `python`), 12 CPUs, 7 GB RAM.
-- Timings: dataset build ~5 min; front-end extraction seconds (cached);
-  one trioron leaf on 20 K × 900-d ≈ 2–4 min; `diag_shapes.py` full ≈ 90
-  min (raw-pixel leaf dominates); `diag_shapes3.py` ≈ 3 min per front.

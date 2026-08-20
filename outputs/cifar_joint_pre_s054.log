@@ -1,0 +1,6 @@
+CIFAR CONTINUAL s054: stream joint tasks 1; seeds [0, 1, 2]; epochs 8; replay_total 256; full_rank 32; readers ['pre-only', 'mono+pre', 'nest+pre']; arms ['none']
+grouping on CIFAR (train): objects/img 1.15, field-flag 0.21, touches 0.69, fill-frac 0.73
+metrics on the 10K test set at stream end: full = 100-way argmax (chance .01); task = argmax within the sample's own 10-class task (chance .10); forget = mean(full acc on task t right after it - at end); t1_end = T1 full acc at end
+  pre-only             none | full 0.221±0.002 | task 0.553±0.002 | forget 0.000±0.000 | acq 0.221±0.002 | t1_end 0.221±0.002 | locked 0.000±0.000 | params 21666   [694s]
+  mono+pre             none | full 0.303±0.004 | task 0.642±0.003 | forget 0.000±0.000 | acq 0.303±0.004 | t1_end 0.303±0.004 | locked 0.000±0.000 | params 43125   [1986s]
+  nest+pre             none | full 0.379±0.002 | task 0.708±0.005 | forget 0.000±0.000 | acq 0.379±0.002 | t1_end 0.379±0.002 | locked 0.000±0.000 | params 168222   [6957s]
