@@ -1,0 +1,70 @@
+MOTION ABSORB s056: seeds 3 epochs 8 settle_n 2000 settle_steps 200
+  organ trained (8 ep, seed 0) in 48s
+  organ sanity (shapes test_fresh): shape 0.867 fill 0.815
+  s0 zero-shot            | moving shape: mixed 0.574 photo 0.340 flat 0.810 | old world 0.867 (forget +0.000) | vel nan
+  s0 +vel                 | moving shape: mixed 0.574 photo 0.340 flat 0.810 | old world 0.867 (forget +0.000) | vel 0.645
+  s0 +msil voter          | moving shape: mixed 0.670 photo 0.477 flat 0.844 | old world 0.867 (forget +0.000) | vel 0.645
+      msil alone test: 0.701
+      msil alone test_photo: 0.620
+      msil alone test_flat: 0.768
+  s0 +both_in voter       | moving shape: mixed 0.676 photo 0.462 flat 0.872 | old world 0.867 (forget +0.000) | vel 0.645
+      both_in alone test: 0.764
+      both_in alone test_photo: 0.617
+      both_in alone test_flat: 0.893
+  s0 settle naive         | moving shape: mixed 0.640 photo 0.445 flat 0.847 | old world 0.487 (forget +0.380) | vel 0.645
+  s0 settle+replay        | moving shape: mixed 0.619 photo 0.418 flat 0.843 | old world 0.849 (forget +0.018) | vel 0.645
+      graft: GraftResult(donor_ids=[103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150], recipient_ids=[156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203], n_edges_added=5184, id_map={103: 156, 104: 157, 105: 158, 106: 159, 107: 160, 108: 161, 109: 162, 110: 163, 111: 164, 112: 165, 113: 166, 114: 167, 115: 168, 116: 169, 117: 170, 118: 171, 119: 172, 120: 173, 121: 174, 122: 175, 123: 176, 124: 177, 125: 178, 126: 179, 127: 180, 128: 181, 129: 182, 130: 183, 131: 184, 132: 185, 133: 186, 134: 187, 135: 188, 136: 189, 137: 190, 138: 191, 139: 192, 140: 193, 141: 194, 142: 195, 143: 196, 144: 197, 145: 198, 146: 199, 147: 200, 148: 201, 149: 202, 150: 203})
+  s0 graft (no settle)    | moving shape: mixed 0.628 photo 0.396 flat 0.846 | old world 0.782 (forget +0.085) | vel 0.645
+  s0 graft+settle naive   | moving shape: mixed 0.641 photo 0.450 flat 0.853 | old world 0.466 (forget +0.401) | vel 0.645
+  s0 graft+settle+replay  | moving shape: mixed 0.631 photo 0.421 flat 0.858 | old world 0.841 (forget +0.026) | vel 0.645
+  s0 finetune             | moving shape: mixed 0.631 photo 0.432 flat 0.835 | old world 0.432 (forget +0.435) | vel 0.645
+  organ trained (8 ep, seed 1) in 62s
+  organ sanity (shapes test_fresh): shape 0.870 fill 0.811
+  s1 zero-shot            | moving shape: mixed 0.572 photo 0.335 flat 0.823 | old world 0.870 (forget +0.000) | vel nan
+  s1 +vel                 | moving shape: mixed 0.572 photo 0.335 flat 0.823 | old world 0.870 (forget +0.000) | vel 0.645
+  s1 +msil voter          | moving shape: mixed 0.665 photo 0.466 flat 0.854 | old world 0.870 (forget +0.000) | vel 0.645
+      msil alone test: 0.714
+      msil alone test_photo: 0.626
+      msil alone test_flat: 0.792
+  s1 +both_in voter       | moving shape: mixed 0.667 photo 0.456 flat 0.877 | old world 0.870 (forget +0.000) | vel 0.645
+      both_in alone test: 0.753
+      both_in alone test_photo: 0.607
+      both_in alone test_flat: 0.884
+  s1 settle naive         | moving shape: mixed 0.633 photo 0.459 flat 0.851 | old world 0.474 (forget +0.396) | vel 0.645
+  s1 settle+replay        | moving shape: mixed 0.620 photo 0.425 flat 0.848 | old world 0.843 (forget +0.028) | vel 0.645
+      graft: GraftResult(donor_ids=[103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150], recipient_ids=[156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203], n_edges_added=5184, id_map={103: 156, 104: 157, 105: 158, 106: 159, 107: 160, 108: 161, 109: 162, 110: 163, 111: 164, 112: 165, 113: 166, 114: 167, 115: 168, 116: 169, 117: 170, 118: 171, 119: 172, 120: 173, 121: 174, 122: 175, 123: 176, 124: 177, 125: 178, 126: 179, 127: 180, 128: 181, 129: 182, 130: 183, 131: 184, 132: 185, 133: 186, 134: 187, 135: 188, 136: 189, 137: 190, 138: 191, 139: 192, 140: 193, 141: 194, 142: 195, 143: 196, 144: 197, 145: 198, 146: 199, 147: 200, 148: 201, 149: 202, 150: 203})
+  s1 graft (no settle)    | moving shape: mixed 0.624 photo 0.396 flat 0.855 | old world 0.776 (forget +0.095) | vel 0.645
+  s1 graft+settle naive   | moving shape: mixed 0.648 photo 0.452 flat 0.868 | old world 0.466 (forget +0.405) | vel 0.645
+  s1 graft+settle+replay  | moving shape: mixed 0.638 photo 0.423 flat 0.860 | old world 0.841 (forget +0.029) | vel 0.645
+  s1 finetune             | moving shape: mixed 0.624 photo 0.420 flat 0.835 | old world 0.437 (forget +0.434) | vel 0.645
+  organ trained (8 ep, seed 2) in 61s
+  organ sanity (shapes test_fresh): shape 0.865 fill 0.817
+  s2 zero-shot            | moving shape: mixed 0.564 photo 0.320 flat 0.804 | old world 0.865 (forget +0.000) | vel nan
+  s2 +vel                 | moving shape: mixed 0.564 photo 0.320 flat 0.804 | old world 0.865 (forget +0.000) | vel 0.646
+  s2 +msil voter          | moving shape: mixed 0.658 photo 0.471 flat 0.843 | old world 0.865 (forget +0.000) | vel 0.646
+      msil alone test: 0.701
+      msil alone test_photo: 0.618
+      msil alone test_flat: 0.765
+  s2 +both_in voter       | moving shape: mixed 0.668 photo 0.456 flat 0.863 | old world 0.865 (forget +0.000) | vel 0.646
+      both_in alone test: 0.766
+      both_in alone test_photo: 0.603
+      both_in alone test_flat: 0.886
+  s2 settle naive         | moving shape: mixed 0.639 photo 0.448 flat 0.841 | old world 0.475 (forget +0.390) | vel 0.646
+  s2 settle+replay        | moving shape: mixed 0.622 photo 0.422 flat 0.844 | old world 0.842 (forget +0.022) | vel 0.646
+      graft: GraftResult(donor_ids=[103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150], recipient_ids=[156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203], n_edges_added=5184, id_map={103: 156, 104: 157, 105: 158, 106: 159, 107: 160, 108: 161, 109: 162, 110: 163, 111: 164, 112: 165, 113: 166, 114: 167, 115: 168, 116: 169, 117: 170, 118: 171, 119: 172, 120: 173, 121: 174, 122: 175, 123: 176, 124: 177, 125: 178, 126: 179, 127: 180, 128: 181, 129: 182, 130: 183, 131: 184, 132: 185, 133: 186, 134: 187, 135: 188, 136: 189, 137: 190, 138: 191, 139: 192, 140: 193, 141: 194, 142: 195, 143: 196, 144: 197, 145: 198, 146: 199, 147: 200, 148: 201, 149: 202, 150: 203})
+  s2 graft (no settle)    | moving shape: mixed 0.621 photo 0.396 flat 0.841 | old world 0.777 (forget +0.088) | vel 0.646
+  s2 graft+settle naive   | moving shape: mixed 0.642 photo 0.440 flat 0.854 | old world 0.464 (forget +0.400) | vel 0.646
+  s2 graft+settle+replay  | moving shape: mixed 0.630 photo 0.424 flat 0.856 | old world 0.838 (forget +0.026) | vel 0.646
+  s2 finetune             | moving shape: mixed 0.619 photo 0.437 flat 0.820 | old world 0.440 (forget +0.425) | vel 0.646
+
+== summary (mean±std over seeds; moving packets only) ==
+  zero-shot            mixed 0.570±0.005 photo 0.332±0.010 flat 0.812±0.010 | old 0.867 forget +0.000±0.000 | vel nan
+  +vel                 mixed 0.570±0.005 photo 0.332±0.010 flat 0.812±0.010 | old 0.867 forget +0.000±0.000 | vel 0.645
+  +msil voter          mixed 0.664±0.006 photo 0.471±0.005 flat 0.847±0.006 | old 0.867 forget +0.000±0.000 | vel 0.645
+  +both_in voter       mixed 0.670±0.005 photo 0.458±0.004 flat 0.871±0.007 | old 0.867 forget +0.000±0.000 | vel 0.645
+  settle naive         mixed 0.637±0.004 photo 0.451±0.007 flat 0.846±0.005 | old 0.479 forget +0.389±0.008 | vel 0.645
+  settle+replay        mixed 0.620±0.002 photo 0.421±0.004 flat 0.845±0.003 | old 0.845 forget +0.023±0.005 | vel 0.645
+  graft (no settle)    mixed 0.624±0.003 photo 0.396±0.000 flat 0.847±0.007 | old 0.778 forget +0.089±0.005 | vel 0.645
+  graft+settle naive   mixed 0.644±0.004 photo 0.447±0.006 flat 0.858±0.008 | old 0.465 forget +0.402±0.002 | vel 0.645
+  graft+settle+replay  mixed 0.633±0.005 photo 0.423±0.001 flat 0.858±0.002 | old 0.840 forget +0.027±0.002 | vel 0.645
+  finetune             mixed 0.625±0.006 photo 0.430±0.009 flat 0.830±0.009 | old 0.436 forget +0.431±0.005 | vel 0.645

@@ -48,6 +48,42 @@ colour .41), flat/mov .79 (colour .88); both silhouettes .61 photo / .88 flat �
 the concat still doesn't pick the better source per packet (gate NEXT-1).
 Velocity leaf unchanged .65–.66.
 
+**s056 ABSORB (Rocky: option 1, "absorb the motion leaf into the nest")** —
+`experiments/progenitor/motion_absorb.py`, log `outputs/motion_absorb_s056.log`
+(n=3; `_naive.log` = first run without replay-settle). Recipient = s053 organ
+(`shape_prefeeder.Organ`, needs `ORGAN_CAP_EXTRA=64` spare cells for grafts —
+new env, default 0 keeps the s054 caches valid), fed the moving world's MID
+frame through its own colour-grouped streams (cached `feat_nest_<split>.pt`).
+Shape = 5-way vote, scored on MOVING packets (shapes 0–2 present); old world =
+shapes test_fresh.
+| arm | mixed | photo | flat | old world | forget |
+|---|---|---|---|---|---|
+| zero-shot nest | .570 | .332 | .812 | .867 | 0 |
+| +vel leaf (paste-and-go) | same | same | same | .867 | 0 (vel .645) |
+| +msil voter (motion-silhouette 103→5) | .664 | .471 | .847 | .867 | 0 |
+| +both_in voter (colour⊕motion sil) | .670 | .458 | **.871** | .867 | 0 |
+| settle naive (heads, moving labels only) | .637 | .451 | .846 | .479 | **+.389** |
+| settle+replay (s054 recipe, archive of old classes) | .620 | .421 | .845 | .845 | +.023 |
+| graft csil (true sibling, no settle) | .624 | .396 | .847 | .778 | +.089 |
+| graft+settle naive | .644 | .447 | .858 | .465 | +.402 |
+| graft+settle+replay | .633 | .423 | .858 | .840 | +.027 |
+| finetune (bound) | .625 | .430 | .830 | .436 | +.431 |
+msil ALONE: .70 mixed / **.62 photo** / .77 flat; both_in alone .77/.60/.89.
+Readings: (1) the organ transfers zero-shot to the moving world on flat bg (.81)
+and fails on photos (.33 = chance) — colour grouping, as designed. (2) Adding
+the motion-silhouette leaf as an equal VOTER is the best zero-forgetting arm
+but photo .47 ≪ msil alone .62: the two colour-based voters DILUTE it — the
+same dilution as nest+pre in s054. Routed arbitration is now the blocking item,
+not a nice-to-have. (3) Naive head settle on a world with 3 of 5 classes
+destroys the field classes (forget .39 ≈ finetune .43); the replay-balanced
+settle holds forgetting to .02 but buys nothing on photos (.42) — the soma's
+input is the colour silhouette, so no head can fix photos. (4) The real
+`absorb()` graft of a sibling colour-stream leaf (Protocol B, head-merged) costs
+.09 old-world with no settle and gains only on flat — absorbing a same-stream
+sibling adds nothing the motion stream didn't already supply. (5) Velocity is
+acquired as a separate head at .645 with zero interaction — the nest's task
+set grew by one task for 50 K params.
+
 
 1. **Rocky's asks:** "start the motion arc" (s054 NEXT-0, scope pinned there and
    still binding: readers PURE trioron/Phasecyte; CNNs = reference bars only;
@@ -144,15 +180,17 @@ motion_energy / bg-kind is the obvious next fix; ties into the router item).
 Velocity leaf unchanged by adding sil_mot (.652 → .652).
 
 ## NEXT (priority)
-0. **Rocky's review of the world** (item 1). Then decide radius range / camera
-   pan / T.
-1. **Gate, don't concat:** the shape leaf should pick colour vs motion silhouette
+0. **ROUTED ARBITRATION (now blocking):** the absorb bench shows the motion leaf
+   carries photo shape at .62 alone and .47 in the uniform vote. Per-packet
+   leaf weighting from `motion_gate` / motion_energy / bg-kind evidence (or an
+   H-space ManifoldRouter over leaves); target: photo ≈ .62 AND flat ≈ .87 in
+   one organism with zero forgetting. Then re-run `motion_absorb.py`.
+1. **Gate, don't concat (same item, shape reader level):** the shape leaf should pick colour vs motion silhouette
    per packet (motion_energy is the fires-only-when-moving signal; s054 NEXT-1
    routed arbitration). Expect photo shape → ~.50 AND flat → ~.83 in one reader.
-2. **Absorb the motion leaf into the nest** (the step-4 second half, not done):
-   the 50 K velocity leaf as an absorbed leaf / INPUT stream of the s053 nest
-   (`pool_matched_absorb` + head settle), on a moving-shape continual stream
-   (shape tasks then velocity task). Needs a task schedule — design with Rocky.
+2. ~~Absorb the motion leaf into the nest~~ DONE s056 (table above); remaining:
+   a continual SCHEDULE (old world → moving world → velocity) with the replay
+   settle, and absorb of the msil leaf at the cell level once arbitration exists.
 3. **Multi-object common fate** (`train_multi`/`test_multi`, maxk=2, built, unused):
    two bodies, different velocities → v3 must split by velocity cluster; this is
    where the dropped agreement gate comes back as a CLUSTERING step, not a gate.

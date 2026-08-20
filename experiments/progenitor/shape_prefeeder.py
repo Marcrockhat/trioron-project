@@ -42,7 +42,7 @@ class Organ:
         for k, Z in tr.items():
             torch.manual_seed(PRE_SEED)
             sub = construct(base=Seeded(Z.shape[1], self.N_OUT[k], interior_cells=48, nonlinear=True), envelope=Envelope(max_parameter_bytes=400_000),
-                            dispatch_table=default_dispatch_table(), capacity=Z.shape[1] + 48 + self.N_OUT[k] + 8, sparsity_k=0)
+                            dispatch_table=default_dispatch_table(), capacity=Z.shape[1] + 48 + self.N_OUT[k] + 8 + int(os.environ.get("ORGAN_CAP_EXTRA", "0")), sparsity_k=0)   # ORGAN_CAP_EXTRA: spare cells for grafts (motion_absorb)
             sub.compile(); sub.prepare_training(); self.leaves[k] = sub
         self._train(tr)
         for sub in self.leaves.values():
