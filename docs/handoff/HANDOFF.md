@@ -1,212 +1,161 @@
 # Trioron Handoff
 
 **Session date:** 2026-08-20
-**Session number:** 054
-**Session title:** **s053 recipe carried to split-CIFAR-100 (handoff NEXT-1): full-cov
-manifold replay ~doubles diag replay (mono full .112→.204), post-task HEAD-ONLY
-settle adds the rest (mono .236, nest 0.330±0.002 / task 0.658 / forget 0.26 —
-86 % of its own static 0.383), while the 254 K CNN trained sequentially collapses
-to EXACT CHANCE (.010/.100). + Rocky's pre-feeder: the s053 shape-world nest,
-frozen, as a peripheral organ on CIFAR — alone 0.221 full (22× chance, 22 K
-params); as INPUT to a leaf +2.1 pp continual / +1.1 static; as a 5th VOTER in
-the nest: nothing.**
+**Session number:** 055
+**Session title:** **Motion arc steps 1–4 (Rocky: "start the motion arc"): moving-shape
+world over CIFAR scenery built; the spectral machinery re-aimed at TIME — 2-D
+cross-spectrum PHASE per 8×8 patch + temporal-difference adaptation + population
+velocity read-out — decodes velocity to 0.55–0.60 px (cos .83–.86) on flat AND
+photo backgrounds with zero learning, while the s052 magnitude spectra are motion-
+blind (.056 = chance); wagon-wheel reversal 17 % on alias-tagged textures; common-
+fate grouping v3 beats colour/Otsu on photos (IoU .48 vs .34); a 50 K motion leaf
+reads the 17-way velocity class at .65–.66 (control .12); shape-from-motion-
+grouping on photos .50 vs colour-grouped .39 (chance .33).**
 
 ---
 
 ## READ THIS FIRST
 
-1. **Rocky's asks this session:** (a) "continue our latest model and test it on
-   CIFAR" = handoff s053 NEXT-1 (full-cov replay on CIFAR-continual) — done, it
-   transfers; (b) mid-session: "can the previous nest be extended as a
-   pre-feeder for the new CIFAR model … not tabula rasa but peripheral
-   augmentation" — built (`shape_prefeeder.py`) and measured (below);
-   (c) framing he stated: fewer params, mostly linear/fixed math, near-CNN
-   performance — "nature has its way"; the hand-coded primitives ≈ retinal
-   channels (colour opponency, V1 orientation, spatial-frequency, binocular),
-   and he pointed at MOTION (common fate) as the missing grouping cue —
-   noted as a future arc, our grouping substitutes colour-distance+Otsu
-   because datasets are static.
-2. **Bench:** `experiments/progenitor/cifar_continual.py` — split-CIFAR-100,
-   10 tasks × 10 fine classes in index order (same split as the archived
-   `bench_2_0_cifar_continual`), ONE shared 100-way head, full-softmax, NO task
-   id, 8 ep/task Adam 1e-3, n=3 seeds. full = 100-way argmax (chance .01),
-   task = argmax within the sample's own 10 classes (chance .10), forget =
-   mean(per-task full acc right after training − at end). STREAM=joint = static
-   reference. Front-end features cached at `outputs/data/cifar/feat_*.pt`
-   (gitignored; rebuild ~12 min, grouping dominates at ~8.5 ms/img).
-3. **Readers** (every leaf = `Seeded(d,100,48,nonlinear)`):
-   mono = s053 311-d (grouped canon sil+col+frame+flags 106 ⊕ whole bd+col+cn
-   205), 32 K; mono-ds = s052 dense⊕stereo⊕colour 900-d, 73 K (OVER the 50 K
-   cap — reference); nest = shape 103 + whole 205 + fill (ctex+cstereo+flags)
-   292 + ds 900 leaves, log-softmax sum, 147 K total (ds leaf over cap; other
-   three 10–19 K); nest3 = the exact s053 nest (74 K, all under cap);
-   \*+pre = + the frozen shape-organ stream (below).
-4. **Arms:** none | replay (diag sketch) | replay-full (full-cov, boundary-
-   cached eigendecomposition rank 32, per-class batch = clamp(256//n_past,
-   2, 32)) | full+credit-soft (lock rate .078) | full+settle = full-cov replay
-   + post-task HEAD-ONLY re-calibration (200 Adam 1e-3 steps on class-balanced
-   full-cov samples of every archived class; soma frozen) — the archived CIFAR
-   bench's "load-bearing fix", now per leaf.
+1. **Rocky's asks:** "start the motion arc" (s054 NEXT-0, scope pinned there and
+   still binding: readers PURE trioron/Phasecyte; CNNs = reference bars only;
+   NOT tabula rasa — the s053 nest / s054 pre-feeder are carried in as frozen
+   organs / absorbed leaves, not equal voters). Mid-session he asked for a
+   rendered training sheet to check — `outputs/motion_train_sheet.png` (16
+   packets × 6 frames) + `motion_train_masks.png`; **he has not yet replied**
+   whether the world matches his intent (small radii 4–13 px, static camera,
+   speed 0.5–3 px/frame, 15 % static, T=6). Ask before scaling the world.
+2. **New files** (all `experiments/progenitor/`, committed):
+   - `motion.py` — generator. Packet = T=6 frames uint8 [N,T,3,32,32] + EXACT
+     per-frame mask of object 0 [N,T,32,32]. Per object: shape/fill/colour/pose
+     as shapes.py + velocity (dx,dy) px/frame, dθ rad/frame (p .3), dr px/frame
+     (loom, p .2). Background: flat colour | CIFAR-100 train photo (static, no
+     camera motion). Labels: y_vel 17-way (0 static | 1..8 octant slow <1.75 |
+     9..16 octant fast), y_dir, y_speed, y_dx/dy/dth/dr, y_shape/fill/hue,
+     y_alias (textured fill displaced > p/2 along its texture normal = wagon-
+     wheel regime, ~5 %), y_bgkind. Splits at `outputs/data/motion/*.pt`
+     (gitignored; `python3 experiments/progenitor/motion.py build`, ~6 min):
+     train 8000 mixed, test 2000 mixed, test_photo 2000, test_flat 2000,
+     train_multi 4000 / test_multi 1000 (maxk=2, unused so far).
+   - `motion_front.py` — the primitive. `motion_phase` 450 (25 regions × 6
+     2-D bins × (cos, sin, coherence)), `motion_energy` 25, `motion_pop` 181
+     (per-region decoded v̂, coherence, log E + global 9×9 population response),
+     `motion_full` = 656; `velocity_map` / `decode_velocity` (no learning).
+   - `motion_diag.py` — parts A (probe + decode), B (wagon-wheel), C (grouping
+     v3 vs colour/Otsu); holds `motion_group()` = common-fate grouping v3.
+   - `motion_leaf.py` — Seeded leaves on cached streams; log
+     `outputs/motion_leaf_s055.log`; feature caches `outputs/data/motion/feat_*`.
 
-## RESULTS (all n=3 except noted; logs `outputs/cifar_*_s054.log`)
+## WHAT WAS LEARNED BUILDING THE PRIMITIVE (don't re-derive)
+- **Sign:** content moving +dx ⇒ `F_{t+1} = F_t·e^{−2πi k·v/L}` ⇒ cross-
+  spectrum phase −2π k·v/L. (I flipped this twice; verified on `torch.roll`
+  fields AND rendered shapes: roll +1 → decodes 1.00.)
+- **Temporal adaptation must be a DIFFERENCE, not mean-subtraction.** Mean-
+  subtract kills the signal when the per-frame phase step is small (large
+  apertures). `D_t = F_{t+1} − F_t`, then `conj(D_t)D_{t+1} = |A|²|e^{iω}−1|²e^{iω}`:
+  static background cancels EXACTLY, phase is still exactly ω (magnitude is a
+  temporal band-pass). Photo backgrounds went from 1.65 px error to ≈ flat.
+- **1-D row/column spectra (the literal stereo L/R form) FAIL for 2-D motion:**
+  a square sliding along x makes column profiles appear/disappear → coherent
+  but meaningless vertical phase (decoded dy≈2 for true 0). The 2-D FFT per
+  patch with bins {(1,0),(0,1),(1,1),(1,−1),(2,0),(0,2)} is the right object;
+  bin (0,1) of the 2-D FFT = spectrum of row-SUMS, which is a pure shift.
+- **Read-out = a population of velocity-tuned units** (MT-like): score(v) =
+  Σ_k w_k cos(θ_k + 2π k·v/L) on a 33×33 grid in [−4,4]² (step .25), argmax.
+  Aliasing appears as secondary peaks (wagon-wheel for free).
+- **Aperture:** L=8 patches under-read magnitude ~20 % (gain 1.25) on small
+  bodies; L=16/32 are WORSE (fewer patches see the body, edge effects). Keep L=8.
+- Per-pixel temporal-difference energy lights only EDGES; interiors of uniform
+  bodies and edges PARALLEL to the motion produce nothing (aperture again).
+  Grouping therefore needs the s053 body pipeline (closing + fill) + convex
+  hull, a NOISE FLOOR (max(Otsu, 4×median) — without it a static packet's mask
+  is Otsu-on-noise covering 60 % of the frame, which also inflated moving IoU),
+  and a LOCK-IN baseline: frame spacing chosen from the decoded speed so the
+  body moves ~3 px between the compared frames (slow motion integrates longer).
+  A velocity-AGREEMENT gate (patch v̂ within 1 px of dominant) HALVED the mask —
+  patch decode at edges is too noisy for gating; dropped.
 
-### A. Continual split-CIFAR-100
-| reader | arm | full | task | forget | acq | t1_end |
-|---|---|---|---|---|---|---|
-| mono 32 K | none | .066±.002 | .181±.007 | .534 | .600 | .000 |
-| mono | replay (diag) | .112±.003 | .429±.008 | .407 | .519 | .069 |
-| mono | replay-full | .204±.006 | .567±.001 | .271 | .475 | .192 |
-| mono | **full+settle** | **.236±.004** | .568±.004 | **.203** | .440 | .228 |
-| mono | full+credit-soft | .160±.009 | .480±.005 | .259 | .419 | .208 |
-| mono-ds 73 K | replay-full | .238±.003 | .608±.000 | .287 | .526 | .250 |
-| mono-ds | full+settle | .281±.004 | .614±.001 | .204 | .485 | .296 |
-| nest 147 K | replay-full | .194±.005 | .653±.002 | .425 | .619 | .171 |
-| nest | **full+settle** | **.330±.002** | **.658±.001** | .255 | .584 | .331 |
-| mono+pre 43 K | full+settle | .257±.001 | .587±.003 | .204 | .461 | .256 |
-| nest+pre 168 K | full+settle | .326±.006 | .654±.001 | .251 | .577 | .333 |
-| **cnn-seq 254 K** | none | **.010±.000** | **.100±.000** | .343 | .353 | .000 |
-| cnn-seq | + 20 exemplars/class | .131±.021 | .430±.029 | .503 | .634 | .146 |
-| cnn-seq | + 20 ex + balanced settle | **.158±.007** | .449±.022 | .472 | .630 | .124 |
-| cnn-seq | + 100 exemplars/class | .025±.017 | .199±.065 | .484 | .509 | .008 |
-| cnn-seq | + 100 ex + balanced settle | .044±.014 | .257±.037 | .401 | .445 | .055 |
-
-### B. Static (joint, all 100 classes at once — the ceilings)
-mono .292/.630 | mono-ds .329/.665 | nest3 .314/.643 (74 K, beats blindman-v2b
-.309/.606 at 7.6× fewer params) | nest .383/.711 | pre-only .221/.553 (22 K) |
-mono+pre .303/.642 | nest+pre .379/.708 | CNN 242 K .442/.772.
-Capacity probe (HIDDEN=96, Rocky: "does 254 K of nest ≈ the CNN?"): mono 54 K
-.321/.657 (+.029 over h48), nest3 118 K .349/.674 (+.035) — ~+3 pp per
-param-doubling, unsaturated but decelerating; extrapolated 4-leaf nest @ h96
-(~280 K) ≈ .41–.42 vs CNN .442: matched-param statics MOSTLY close the gap,
-asymptotically not past it. Front end stays the ceiling; capacity rents the
-last points, new primitives (motion) move the ceiling.
-
-### C. Readings
-1. **Full-cov transfers.** Diag→full-cov doubles full-softmax (mono .112→.204,
-   mono-ds .116→.238, ~15σ) — same mechanism as shapes E10: diag sketches are
-   off-manifold in correlated descriptor spaces. 90 classes × (μ+Σ) per leaf,
-   no images.
-2. **Head-settle is the second half** (+.03 mono, +.14 nest). It fixes what
-   replay-during-training can't: interleaved replay fights the current task;
-   the post-task head-only pass on class-BALANCED archive samples re-calibrates
-   without touching the soma. This is `settle_head_with_retry` from the
-   archived bench / absorption arc, reproduced per leaf.
-   It closes 86 % of the continual→static gap for the nest (.330 vs .383).
-3. **Nest wins where it should — and against PROTECTED CNNs, not just the
-   floor.** Rocky (rightly): the unprotected CNN row is a designed loss —
-   a floor, not a competitor. So the fair 2×2 ran: CNN + stored-exemplar
-   replay (64/step) ± the same balanced post-task settle. Best CNN arm =
-   20 ex/class + settle: full .158 / forget .47 — the nest .330 / forget
-   .26 is >2× at fewer params, with the CNN additionally storing 2 000 raw
-   images. Settle gives the CNN only +.03 (vs +.14 for the nest): its
-   FEATURES drift, so head re-calibration can't restore them; our leaves'
-   soma stays intact behind the frozen front end and only the head needed
-   fixing. Oddity, replicated over 6 seeds: 100 ex/class is WORSE than 20
-   (.025/.044 vs .131/.158) — hypothesis (unverified): fixed 64-sample
-   replay revisits a small buffer ~5× more often, so CNN "retention" at
-   ex20 is substantially buffer MEMORISATION, and a buffer too large to
-   memorise stops helping. A tuned ER-CNN (lr schedule, class-balanced
-   replay sampling, more replay) might do better — open, flagged.
-   Statics the CNN still wins (.442 vs .383): continual is where the
-   architecture pays.
-4. **Credit-soft REGRESSES here** (mono .160 < .204; nest s1 .163): 9
-   boundaries × lock-cap locks 18/48 mono cells (79 across nest leaves) and
-   starves acquisition. s053's credit-soft-neutral was 4 boundaries. Lock
-   budget must scale with task count — open design point.
-5. **Pre-feeder (Rocky's ask):** the s053 nest retrained jointly on shapes
-   (deterministic, `PRE_SEED=0`; sanity on shapes .867 shape/.815 fill),
-   frozen, native (shape-world) standardization, emits 3×48 H-codes + 14
-   logits = 158-d per CIFAR image. Alone: .221/.553 static (22× chance) — the
-   organ genuinely reads CIFAR. Concatenated as INPUT: mono+pre continual
-   .257 vs .236 (+2.1 pp, ~5σ), static .303 vs .292. As a 5th VOTING leaf:
-   nest+pre .326±.006 vs .330±.002, static .379 vs .383 — a weak voter with equal say
-   dilutes; augmentation belongs at the INPUT (or needs a router), not the
-   vote. "Not tabula rasa" confirmed cheap and positive at +11 K params.
+## RESULTS (n=1000 diag smoke `outputs/motion_diag_smoke_s055.log`; leaves n=3 seeds)
+### A. Velocity read-out (17-way y_vel, chance .06; direction 8-way chance .125)
+| features | probe (linear) y_vel | dir | Seeded leaf y_vel test / photo / flat |
+|---|---|---|---|
+| s052 static spectra (mid frame, 800) — magnitude only | **.056** | .122 | .115 / .116 / .124 (≈ "always static" prior .15) |
+| motion_energy 25 | .213 | .164 | — |
+| motion_phase 450 | .346 | .479 | — |
+| motion_block 475 | .369 | .497 | — |
+| motion_full 656 (50.3 K leaf) | — | — | **.652±.010 / .660±.002 / .662±.003** |
+Population decode, no learning: median |v̂−v| 0.55 px flat / 0.60 photo, cos .83/.86,
+octant-acc .68/.63; static packets |v̂| .28. Photo ≈ flat = the HP works.
+### B. Wagon-wheel (population decode on textured fills)
+alias=0 (n=410): err .50 px, cos .84, reversed 4.9 % | **alias=1 (n=46): err .97 px,
+cos .67, reversed 17.4 %** | solid: .68 px, reversed 5.6 %. Illusion present, modest
+(low bins don't alias; population mixes). A clean demo stimulus (stripe field at
+> p/2) is not built yet.
+### C. Grouping, IoU vs exact mid-frame mask (n=600)
+| bg | colour/Otsu (s053) | common-fate v3 | v3 no-hull |
+|---|---|---|---|
+| flat, moving | **.844** | .489 | .451 |
+| photo, moving | .338 | **.478** | .414 |
+| flat/photo static | .82 / .35 | .16 / .11 (mask area .05/.04 — near empty, correct) | |
+### D. Shape-from-motion-grouping (3-way y_shape, chance .33; Seeded leaves, "/mov" = moving packets)
+| stream | test | test_photo/mov | test_flat/mov |
+|---|---|---|---|
+| sil_col (colour-grouped silhouette 92) | .616 | .386 | **.833** |
+| sil_mot (motion-grouped silhouette 92) | .535 | **.500** | .611 |
+| sil_both 184 | **.658** | .491 | .835 |
+| static spectra 800 | .403 | .355 | .460 |
+| motion_full 656 | .439 | .438 | .452 |
+Reading: on photos the colour silhouette is at chance+5 and the motion silhouette
+carries the shape (+11 pp); on flat colour wins by 22 pp. The concat does NOT add
+on photos (the leaf can't tell which silhouette to trust → a per-packet gate from
+motion_energy / bg-kind is the obvious next fix; ties into the router item).
+Velocity leaf unchanged by adding sil_mot (.652 → .652).
 
 ## NEXT (priority)
-0. **START HERE — MOTION ARC (Rocky at close: "start the motion arc in the
-   new session").** Full design in item 3 below: moving-shapes-on-scenery
-   generator first, then phase-keeping time-correlator primitive, then
-   common-fate grouping v3, then the motion leaf + absorb.
-   **Rocky's scope constraints (explicit, binding):**
-   (a) readers are PURE trioron/Phasecyte ONLY — mono, nest, or hybrid
-   (trioron+Phasecyte) leaves on the fixed primitives; NO CNN/MobileNet/
-   ResNet backbones anywhere in the organism (CNNs appear only as
-   over-cap reference bars, per [[feedback_pure_trioron_scope]]);
-   (b) NOT tabula rasa: the PRE-TRAINED heads/organs are part of the
-   design — carry the s053 shape-world nest (and the s054 pre-feeder
-   organ) in as frozen/absorbable components of the continual learner,
-   the way s054 validated (as INPUT streams or absorbed leaves, not
-   equal voters).
-1. **Weighted/routed arbitration for heterogeneous leaves** — the nest sums
-   log-softmax uniformly; nest+pre shows a weak voter dilutes. H-space
-   `ManifoldRouter` over leaves, or learned per-leaf temperature. (This is
-   also s053 NEXT-4.)
-2. **Absorb proper on CIFAR** (`trioron.api.absorb`): graft a NEW task's leaf
-   without retraining, vs the settle recipe.
-3. **Motion arc (Rocky, designed in-session — the fly/bee ganglia frame):**
-   composite generator = rendered shapes (exact masks) MOVING over static
-   photo/scenery backgrounds, per-object velocity (dx,dy,dθ,dr), T=4–8
-   frames/packet, tags carry velocity. Primitives: motion = phase — the
-   stereo 1-D spectra machinery re-aimed at the TIME axis is a Reichardt
-   correlator / motion-energy detector; keep the CROSS-SPECTRUM PHASE
-   between frame pairs (current spectra are magnitude-only = motion-blind);
-   phase-rotation rate = velocity (Rocky: a moving object packed in a few
-   frames = a frequency pulse, read it like the phasor/lock-in emitter
-   design). Expect + embrace wagon-wheel aliasing (displacement > λ/2 per
-   frame) — showing the illusion = built the mechanism. Common-fate
-   grouping v3 (coherent Δ across frames = one body) replaces Otsu — on
-   cluttered real backgrounds colour-grouping FAILS, motion is the only
-   cue, that's the falsification bench. Motion stream = its OWN leaf
-   (velocity-bin head), trained on the moving world, then ABSORBED into
-   the nest (pool-matched absorption + head settle) — also gives the
-   router a fires-only-when-moving gating signal (ties into NEXT-1).
-   Later: give the substrate the raw temporal stream and test whether
-   Reichardt-like correlators EMERGE under frustration (s019 doctrine).
-   + discovery control for the existing hand-coded primitives.
-4. Lock budget vs task count for credit locking (finding 4).
-5. n=5 + capacity push (16 ep) on the operating point if paper-bound;
-   batched grouping (8.5 ms/img loop) for anything bigger.
+0. **Rocky's review of the world** (item 1). Then decide radius range / camera
+   pan / T.
+1. **Gate, don't concat:** the shape leaf should pick colour vs motion silhouette
+   per packet (motion_energy is the fires-only-when-moving signal; s054 NEXT-1
+   routed arbitration). Expect photo shape → ~.50 AND flat → ~.83 in one reader.
+2. **Absorb the motion leaf into the nest** (the step-4 second half, not done):
+   the 50 K velocity leaf as an absorbed leaf / INPUT stream of the s053 nest
+   (`pool_matched_absorb` + head settle), on a moving-shape continual stream
+   (shape tasks then velocity task). Needs a task schedule — design with Rocky.
+3. **Multi-object common fate** (`train_multi`/`test_multi`, maxk=2, built, unused):
+   two bodies, different velocities → v3 must split by velocity cluster; this is
+   where the dropped agreement gate comes back as a CLUSTERING step, not a gate.
+4. **Clean wagon-wheel demo** (stripe field, period p, speeds crossing p/2) +
+   render the population response (secondary peak) — "showing the illusion =
+   built the mechanism".
+5. **Emergence control (s019 doctrine):** feed the raw T-frame packet (or per-
+   frame spectra WITHOUT the cross term) to a satellite/recurrent substrate and
+   test whether a Reichardt-like correlator emerges under frustration.
+6. Grouping v3 ceiling: per-pixel motion compensation (shift by v̂, compare) to
+   recover interiors; rotation/looming (dθ, dr) read-out heads (labels exist).
 
-## GOTCHAS (new this session)
-- `cifar_continual.py` RUNS ON IMPORT (like diag_shapes*); `shape_prefeeder.py`
-  therefore reads the feature caches directly — never import cifar_continual.
-- 7 GB RAM fits at most ~3 leaf processes (full-cov archives grow: mono ~1 GB,
-  nest ~2.2–2.8 GB); two OOM kills this session — stagger seeds as separate
-  processes (`SEEDS=2 READERS=nest`), watch `free -m`.
-- READERS=none = CNN bar only. FEATS_ONLY=1 = build caches and exit.
-- `ManifoldArchive.replay_batches`/`sample_full` need `finalize_all()` at the
-  boundary first (astrocytes must be DORMANT); the bench caches (μ, eigvecs,
-  resid) per class at each boundary — sample_full's per-call eigh would be
-  ~90 × 800² otherwise.
-- Old gotchas from s053 (pkill self-match, ARMS string-typo silently = "none",
-  output_ids private) all still apply; ARMS matching here is exact-string in
-  `Leaf.__init__` too.
+## GOTCHAS (new)
+- `motion.py build` must run as a script from repo root (sys.path fixed in-file);
+  first run cost one failed launch on `ModuleNotFoundError`.
+- `motion_front.HP/L/ST/BINS` are module globals; `velocity_map` returns 4 values
+  (v, coh, E, R) — R is [N,13,13,1089] (the population response), big but fine at
+  chunk 250–500.
+- `motion_diag.py` part A rebuilds train features in-process (~40 s); `motion_leaf`
+  caches them. `motion_group` is per-image Python (~15 ms/packet).
+- Old s053/s054 gotchas (cifar_continual runs on import, 7 GB RAM ≈ 3 leaf procs,
+  ARMS exact-string) still apply.
 
 ## State of the build / Pointers
-- Commits (`conscience-core`): `20dc14a` bench + prefeeder + first results;
-  + this close commit (remaining logs + handoff). `main` NOT advanced. Pushed.
-- CNN 2×2 logs: `outputs/cifar_continual_cnn_ex{20,100}{,_settle}_s054.log`;
-  h96 capacity probe (does 2× leaf params close the static gap? Rocky's
-  question; edge-buffer fix: capacity padded so ecap=capacity*64 fits
-  d*hidden edges) may still be running at close — `cifar_joint_h96_s054.log`.
-- New files: `experiments/progenitor/cifar_continual.py`,
-  `experiments/progenitor/shape_prefeeder.py`; logs
-  `outputs/cifar_{feats,joint,joint_pre,prefeeder_build}_s054.log`,
-  `outputs/cifar_continual_{mono,monods,cnn,mono_settle,monods_settle,monopre}_s054.log`,
-  `outputs/cifar_continual_nest{_s0,_s1,_s2,_settle_s0,_settle_s1,_settle_s2,pre_s0,pre_s1,pre_s2}_s054.log`.
-- Caches (gitignored): `outputs/data/cifar/feat_{ds,col,bd,cn}_{train,test}.pt`,
-  `feat_grp_canon_*.pt`, `feat_pre_*.pt` (~1 GB; rebuild: FEATS_ONLY=1 run then
-  `python3 experiments/progenitor/shape_prefeeder.py`; needs shapes splits —
-  `python3 experiments/progenitor/shapes.py build` if absent).
-- Package (`trioron/`) untouched. Timings: mono arm ~17 min/3 seeds; nest arm
-  ~1 h/seed; settle adds ~2 min/run; CNN-seq ~20 min/seed.
+- Commits (`conscience-core`): steps 1–3 commit + this close commit (leaf +
+  handoff). `main` NOT advanced. Pushed.
+- Logs: `outputs/motion_diag_smoke_s055.log`, `outputs/motion_leaf_s055.log`;
+  PNGs `outputs/motion_train_sheet.png`, `motion_train_masks.png`,
+  `motion_group_debug.png` (frame | energy | Otsu | closed | truth).
+- Package (`trioron/`) untouched.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
 `trioron/viz/export.py`; `.claude/`, `runs/`, `archive/runs/`,
-`trioron/legacy/outputs/`, `notebooks/` checkpoints, output PNGs /
-uncommitted logs untracked; `outputs/data/**` caches.
+`trioron/legacy/outputs/`, `notebooks/` checkpoints, output PNGs / uncommitted
+logs untracked; `outputs/data/**` caches.
 
 ## Environment notes
 - `/home/marcrockhat/trioron-project/`, branch `conscience-core`, Python

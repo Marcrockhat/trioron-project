@@ -1,0 +1,25 @@
+  built motion/train (8000, 656) in 23s
+  built motion/test (2000, 656) in 7s
+  built motion/test_photo (2000, 656) in 5s
+  built motion/test_flat (2000, 656) in 8s
+  built static/train (8000, 800) in 9s
+  built static/test (2000, 800) in 2s
+  built static/test_photo (2000, 800) in 2s
+  built static/test_flat (2000, 800) in 2s
+  built sil_col/train (8000, 92) in 43s
+  built sil_col/test (2000, 92) in 13s
+  built sil_col/test_photo (2000, 92) in 10s
+  built sil_col/test_flat (2000, 92) in 11s
+  built sil_mot/train (8000, 92) in 76s
+  built sil_mot/test (2000, 92) in 17s
+  built sil_mot/test_photo (2000, 92) in 16s
+  built sil_mot/test_flat (2000, 92) in 16s
+MOTION LEAF s055: seeds 3 epochs 8 hidden 48; train n=8000
+  velocity motion           d= 656  50.3K | test 0.652±0.010 | test_photo 0.660±0.002 | test_flat 0.662±0.003  [38s/seed]
+  velocity static           d= 800  60.2K | test 0.115±0.009 | test_photo 0.116±0.002 | test_flat 0.124±0.005  [46s/seed]
+  velocity motion+sil_mot   d= 748  56.6K | test 0.652±0.002 | test_photo 0.664±0.003 | test_flat 0.662±0.009  [41s/seed]
+  shape    sil_col          d=  92  10.4K | test 0.616±0.001 | test/mov 0.613±0.002 | test_photo 0.388±0.001 | test_photo/mov 0.386±0.001 | test_flat 0.825±0.000 | test_flat/mov 0.833±0.001  [5s/seed]
+  shape    sil_mot          d=  92  10.4K | test 0.535±0.008 | test/mov 0.558±0.014 | test_photo 0.478±0.004 | test_photo/mov 0.500±0.001 | test_flat 0.572±0.005 | test_flat/mov 0.611±0.010  [7s/seed]
+  shape    sil_both         d= 184  16.8K | test 0.658±0.003 | test/mov 0.663±0.003 | test_photo 0.477±0.006 | test_photo/mov 0.491±0.006 | test_flat 0.826±0.005 | test_flat/mov 0.835±0.007  [12s/seed]
+  shape    static           d= 800  59.3K | test 0.403±0.015 | test/mov 0.404±0.016 | test_photo 0.352±0.009 | test_photo/mov 0.355±0.008 | test_flat 0.452±0.008 | test_flat/mov 0.460±0.008  [44s/seed]
+  shape    motion           d= 656  49.3K | test 0.439±0.004 | test/mov 0.460±0.001 | test_photo 0.425±0.009 | test_photo/mov 0.438±0.005 | test_flat 0.440±0.002 | test_flat/mov 0.452±0.003  [35s/seed]
