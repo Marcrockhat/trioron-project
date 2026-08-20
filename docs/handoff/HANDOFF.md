@@ -65,6 +65,10 @@ the nest: nothing.**
 | mono+pre 43 K | full+settle | .257±.001 | .587±.003 | .204 | .461 | .256 |
 | nest+pre 168 K | full+settle | .326±.006 | .654±.001 | .251 | .577 | .333 |
 | **cnn-seq 254 K** | none | **.010±.000** | **.100±.000** | .343 | .353 | .000 |
+| cnn-seq | + 20 exemplars/class | .131±.021 | .430±.029 | .503 | .634 | .146 |
+| cnn-seq | + 20 ex + balanced settle | **.158±.007** | .449±.022 | .472 | .630 | .124 |
+| cnn-seq | + 100 exemplars/class | .025±.017 | .199±.065 | .484 | .509 | .008 |
+| cnn-seq | + 100 ex + balanced settle | .044±.014 | .257±.037 | .401 | .445 | .055 |
 
 ### B. Static (joint, all 100 classes at once — the ceilings)
 mono .292/.630 | mono-ds .329/.665 | nest3 .314/.643 (74 K, beats blindman-v2b
@@ -82,10 +86,23 @@ mono+pre .303/.642 | nest+pre .379/.708 | CNN 242 K .442/.772.
    without touching the soma. This is `settle_head_with_retry` from the
    archived bench / absorption arc, reproduced per leaf.
    It closes 86 % of the continual→static gap for the nest (.330 vs .383).
-3. **Nest wins where it should**: task-aware .658 ≈ its static .711 scale;
-   nest+settle full .330 vs mono .236. The CNN sequential = exact chance —
-   continual is where the architecture pays, statics the CNN still wins
-   (.442 vs .383).
+3. **Nest wins where it should — and against PROTECTED CNNs, not just the
+   floor.** Rocky (rightly): the unprotected CNN row is a designed loss —
+   a floor, not a competitor. So the fair 2×2 ran: CNN + stored-exemplar
+   replay (64/step) ± the same balanced post-task settle. Best CNN arm =
+   20 ex/class + settle: full .158 / forget .47 — the nest .330 / forget
+   .26 is >2× at fewer params, with the CNN additionally storing 2 000 raw
+   images. Settle gives the CNN only +.03 (vs +.14 for the nest): its
+   FEATURES drift, so head re-calibration can't restore them; our leaves'
+   soma stays intact behind the frozen front end and only the head needed
+   fixing. Oddity, replicated over 6 seeds: 100 ex/class is WORSE than 20
+   (.025/.044 vs .131/.158) — hypothesis (unverified): fixed 64-sample
+   replay revisits a small buffer ~5× more often, so CNN "retention" at
+   ex20 is substantially buffer MEMORISATION, and a buffer too large to
+   memorise stops helping. A tuned ER-CNN (lr schedule, class-balanced
+   replay sampling, more replay) might do better — open, flagged.
+   Statics the CNN still wins (.442 vs .383): continual is where the
+   architecture pays.
 4. **Credit-soft REGRESSES here** (mono .160 < .204; nest s1 .163): 9
    boundaries × lock-cap locks 18/48 mono cells (79 across nest leaves) and
    starves acquisition. s053's credit-soft-neutral was 4 boundaries. Lock
@@ -107,10 +124,26 @@ mono+pre .303/.642 | nest+pre .379/.708 | CNN 242 K .442/.772.
    also s053 NEXT-4.)
 2. **Absorb proper on CIFAR** (`trioron.api.absorb`): graft a NEW task's leaf
    without retraining, vs the settle recipe.
-3. Motion/common-fate grouping arc (Rocky): frame-differencing as the grouping
-   cue on a moving shape world; replaces the Otsu heuristic with the cue
-   biology uses. + discovery control for the hand-coded primitives (s019
-   doctrine) — Rocky repeated the germline framing.
+3. **Motion arc (Rocky, designed in-session — the fly/bee ganglia frame):**
+   composite generator = rendered shapes (exact masks) MOVING over static
+   photo/scenery backgrounds, per-object velocity (dx,dy,dθ,dr), T=4–8
+   frames/packet, tags carry velocity. Primitives: motion = phase — the
+   stereo 1-D spectra machinery re-aimed at the TIME axis is a Reichardt
+   correlator / motion-energy detector; keep the CROSS-SPECTRUM PHASE
+   between frame pairs (current spectra are magnitude-only = motion-blind);
+   phase-rotation rate = velocity (Rocky: a moving object packed in a few
+   frames = a frequency pulse, read it like the phasor/lock-in emitter
+   design). Expect + embrace wagon-wheel aliasing (displacement > λ/2 per
+   frame) — showing the illusion = built the mechanism. Common-fate
+   grouping v3 (coherent Δ across frames = one body) replaces Otsu — on
+   cluttered real backgrounds colour-grouping FAILS, motion is the only
+   cue, that's the falsification bench. Motion stream = its OWN leaf
+   (velocity-bin head), trained on the moving world, then ABSORBED into
+   the nest (pool-matched absorption + head settle) — also gives the
+   router a fires-only-when-moving gating signal (ties into NEXT-1).
+   Later: give the substrate the raw temporal stream and test whether
+   Reichardt-like correlators EMERGE under frustration (s019 doctrine).
+   + discovery control for the existing hand-coded primitives.
 4. Lock budget vs task count for credit locking (finding 4).
 5. n=5 + capacity push (16 ep) on the operating point if paper-bound;
    batched grouping (8.5 ms/img loop) for anything bigger.
@@ -133,6 +166,10 @@ mono+pre .303/.642 | nest+pre .379/.708 | CNN 242 K .442/.772.
 ## State of the build / Pointers
 - Commits (`conscience-core`): `20dc14a` bench + prefeeder + first results;
   + this close commit (remaining logs + handoff). `main` NOT advanced. Pushed.
+- CNN 2×2 logs: `outputs/cifar_continual_cnn_ex{20,100}{,_settle}_s054.log`;
+  h96 capacity probe (does 2× leaf params close the static gap? Rocky's
+  question; edge-buffer fix: capacity padded so ecap=capacity*64 fits
+  d*hidden edges) may still be running at close — `cifar_joint_h96_s054.log`.
 - New files: `experiments/progenitor/cifar_continual.py`,
   `experiments/progenitor/shape_prefeeder.py`; logs
   `outputs/cifar_{feats,joint,joint_pre,prefeeder_build}_s054.log`,

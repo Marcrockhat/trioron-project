@@ -95,11 +95,13 @@ NCLS = 100
 TASKS = [(f"T{i+1} {i*10}-{i*10+9}", list(range(i * 10, i * 10 + 10))) for i in range(10)] if STREAM == "split" else [("joint 0-99", list(range(100)))]
 TASK_OF = torch.tensor([c // 10 for c in range(100)])
 # ── one protected leaf ─────────────────────────────────────────────────────
+HIDDEN = int(os.environ.get("HIDDEN", "48"))
 class Leaf:
-    def __init__(self, d, n_out, seed, arm, hidden=48):
+    def __init__(self, d, n_out, seed, arm, hidden=None):
+        hidden = hidden or HIDDEN
         torch.manual_seed(seed)
         self.sub = construct(base=Seeded(d, n_out, interior_cells=hidden, nonlinear=True), envelope=Envelope(max_parameter_bytes=400_000),
-                             dispatch_table=default_dispatch_table(), capacity=d + hidden + n_out + 8, sparsity_k=0)
+                             dispatch_table=default_dispatch_table(), capacity=max(d + hidden + n_out + 8, (d * hidden + hidden * n_out) * 5 // (4 * 64) + 8), sparsity_k=0)   # ecap = capacity*64; pad for hidden>48
         self.sub.compile(); self.sub.prepare_training(); self.a = self.sub.arena; self.arm = arm
         self.cred = arm in ("full+credit-soft",); self.rep = arm in ("replay", "replay-full", "full+credit-soft", "full+settle"); self.full = arm in ("replay-full", "full+credit-soft", "full+settle")
         self.settle = arm == "full+settle"   # post-task HEAD-ONLY re-calibration on balanced full-cov samples of every archived class
@@ -189,7 +191,8 @@ def run(reader_name, arm, seed):
     okf, okt = evaluate(R.scores("test"), yte)
     return dict(full=float(okf.float().mean()), task=float(okt.float().mean()), forget=sum(acc_after[t] - task_acc(cls) for t, (_, cls) in enumerate(TASKS)) / len(TASKS),
                 acq=sum(acc_after) / len(acc_after), t1_end=task_acc(TASKS[0][1]), locked=sum(L.locked for L in R.leaves.values()), params=sum(L.n_params for L in R.leaves.values()))
-def cnn_seq(seed):
+def cnn_seq(seed, ex_k=0):
+    """ex_k>0: CNN + exemplar replay (ex_k stored images/class, replayed 64/step) — the fair protected-CNN bar."""
     import torch.nn as nn
     Xtr, ytr = RAW["train"]; Xte, yte = RAW["test"]
     torch.manual_seed(seed)
@@ -200,13 +203,25 @@ def cnn_seq(seed):
         with torch.no_grad(): return torch.cat([net(Xte[i:i + 1000]) for i in range(0, len(Xte), 1000)])
     def task_acc(cls):
         ok, _ = evaluate(scores(), yte); m = torch.isin(yte, torch.tensor(cls)); return float(ok[m].float().mean())
-    acc_after = []
+    acc_after = []; ex = {}   # class -> [ex_k] train indices
     for t, (name, cls) in enumerate(TASKS):
         idx = torch.nonzero(torch.isin(ytr, torch.tensor(cls))).squeeze(1); opt = torch.optim.Adam(net.parameters(), 1e-3); g = torch.Generator().manual_seed(seed * 100 + t)
+        past = torch.cat([v for v in ex.values()]) if ex else None
         for ep in range(EPOCHS):
             net.train()
             for bi in idx[torch.randperm(len(idx), generator=g)].split(128):
+                if past is not None:
+                    ri = past[torch.randint(len(past), (64,), generator=g)]; bi = torch.cat([bi, ri])
                 opt.zero_grad(); F.cross_entropy(net(Xtr[bi]), ytr[bi]).backward(); opt.step()
+        if ex_k:
+            for c in cls:
+                ci = idx[ytr[idx] == c]; ex[c] = ci[torch.randperm(len(ci), generator=g)[:ex_k]]
+        if ex_k and os.environ.get("CNN_SETTLE", "0") == "1":   # post-task CLASS-BALANCED fine-tune on the buffer (the CNN analog of our settle)
+            buf = torch.cat([v for v in ex.values()]); opt2 = torch.optim.Adam(net.parameters(), 1e-4)
+            net.train()
+            for _ in range(200):
+                bi = buf[torch.randint(len(buf), (128,), generator=g)]
+                opt2.zero_grad(); F.cross_entropy(net(Xtr[bi]), ytr[bi]).backward(); opt2.step()
         acc_after.append(task_acc(cls))
     okf, okt = evaluate(scores(), yte)
     return dict(full=float(okf.float().mean()), task=float(okt.float().mean()), forget=sum(acc_after[t] - task_acc(cls) for t, (_, cls) in enumerate(TASKS)) / len(TASKS),
@@ -222,4 +237,7 @@ for rd in READERS:
     for arm in ARMS:
         rs = [run(rd, arm, s) for s in SEEDS]; log(f"  {rd:>7s} {arm:>16s} | " + fmt(rs) + f"   [{time.time()-t0:.0f}s]")
 if RUN_CNN:
-    rs = [cnn_seq(s) for s in SEEDS]; log(f"  cnn-seq (242K, no protection) | " + fmt(rs) + f"   [{time.time()-t0:.0f}s]")
+    EX_K = int(os.environ.get("CNN_EX_K", "0"))
+    rs = [cnn_seq(s, EX_K) for s in SEEDS]
+    tag = (f"+ exemplar replay {EX_K}/class" + (" + balanced settle" if os.environ.get("CNN_SETTLE", "0") == "1" else "")) if EX_K else "no protection"
+    log(f"  cnn-seq (242K, {tag}) | " + fmt(rs) + f"   [{time.time()-t0:.0f}s]")
