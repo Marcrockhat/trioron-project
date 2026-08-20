@@ -74,6 +74,12 @@ the nest: nothing.**
 mono .292/.630 | mono-ds .329/.665 | nest3 .314/.643 (74 K, beats blindman-v2b
 .309/.606 at 7.6× fewer params) | nest .383/.711 | pre-only .221/.553 (22 K) |
 mono+pre .303/.642 | nest+pre .379/.708 | CNN 242 K .442/.772.
+Capacity probe (HIDDEN=96, Rocky: "does 254 K of nest ≈ the CNN?"): mono 54 K
+.321/.657 (+.029 over h48), nest3 118 K .349/.674 (+.035) — ~+3 pp per
+param-doubling, unsaturated but decelerating; extrapolated 4-leaf nest @ h96
+(~280 K) ≈ .41–.42 vs CNN .442: matched-param statics MOSTLY close the gap,
+asymptotically not past it. Front end stays the ceiling; capacity rents the
+last points, new primitives (motion) move the ceiling.
 
 ### C. Readings
 1. **Full-cov transfers.** Diag→full-cov doubles full-softmax (mono .112→.204,
