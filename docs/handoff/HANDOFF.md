@@ -124,6 +124,10 @@ last points, new primitives (motion) move the ceiling.
    vote. "Not tabula rasa" confirmed cheap and positive at +11 K params.
 
 ## NEXT (priority)
+0. **START HERE — MOTION ARC (Rocky at close: "start the motion arc in the
+   new session").** Full design in item 3 below: moving-shapes-on-scenery
+   generator first, then phase-keeping time-correlator primitive, then
+   common-fate grouping v3, then the motion leaf + absorb.
 1. **Weighted/routed arbitration for heterogeneous leaves** — the nest sums
    log-softmax uniformly; nest+pre shows a weak voter dilutes. H-space
    `ManifoldRouter` over leaves, or learned per-leaf temperature. (This is
