@@ -6,6 +6,8 @@ Arms (all ~40-50K params to match the leaves, 8 ep Adam 1e-3 bs 256, n=SEEDS):
   cnn2d  : raw packet, T*3 = 18 channels stacked -> 3x conv3x3 (24/48/64) + pool -> GAP -> head
   cnn3d  : raw packet as [3,T,S,S]          -> 3x conv3d (16/32/48)            -> GAP -> head
   cnn2d_big    : cnn2d_strong with channels 32/64/64 (~70K, over the leaf budget) -- capacity check
+  *_pre        : NEXT-0b matched data -- trunk pretrained PRE_EPOCHS on the 20K static shape-world frames (5-way,
+                 tiled to T=6) before the packet run; the organ saw those frames, the plain CNN arms did not
   cnn2d_strong : frames + frame DIFFERENCES (33 ch), BatchNorm, flatten instead of GAP (keeps position/phase)
   mlp656 : the leaves' own primitive (motion_front.motion_full, 656-d, standardised) -> MLP-48.
            Same shape as the trioron leaf but plain torch: separates primitive from architecture.
@@ -58,8 +60,26 @@ class MLP(nn.Module):
 def make(arm, n_out, d=None):
     return {"cnn2d": lambda: CNN2D(n_out), "cnn3d": lambda: CNN3D(n_out), "cnn2d_strong": lambda: CNN2DStrong(n_out), "cnn2d_big": lambda: CNN2DStrong(n_out, ch=(32, 64, 64)), "mlp656": lambda: MLP(d, n_out)}[arm]()
 
+def pretrain_static(net, seed, epochs):
+    """NEXT-0b matched data: the Kinopsis shape organ saw the 20K static shape-world frames (5-way).  Give the CNN the
+    same: tile each static frame to T=6 (frame differences = 0), train trunk + 5-way head, then the caller swaps the head."""
+    from experiments.progenitor import shapes as SH
+    Xs, ys = SH.load("train")[:2]; ys = ys["y_shape"]; Xs = (Xs * 255).round().to(torch.uint8)     # match packet storage
+    head = nn.Linear(net.h.in_features, int(ys.max()) + 1); opt = torch.optim.Adam(list(net.f.parameters()) + list(head.parameters()), lr=1e-3)
+    g = torch.Generator().manual_seed(seed + 1000); net.train()
+    for ep in range(epochs):
+        for bi in torch.randperm(len(ys), generator=g).split(256):
+            x = MO.as_float(Xs[bi])[:, None].expand(-1, 6, -1, -1, -1)
+            opt.zero_grad(); F.cross_entropy(head(net.f(torch.cat([x.flatten(1, 2), (x[:, 1:] - x[:, :-1]).flatten(1, 2)], 1))), ys[bi]).backward(); opt.step()
+    with torch.no_grad():
+        Xt, yt = SH.load("test_fresh")[:2]; Xt = (Xt * 255).round().to(torch.uint8); net.eval()
+        x = lambda b: MO.as_float(b)[:, None].expand(-1, 6, -1, -1, -1)
+        pred = torch.cat([head(net.f(torch.cat([x(Xt[i:i+500]).flatten(1, 2), (x(Xt[i:i+500])[:, 1:] - x(Xt[i:i+500])[:, :-1]).flatten(1, 2)], 1))) for i in range(0, len(Xt), 500)]).argmax(1)
+    log(f"      pretrain s{seed}: static 5-way test_fresh {float((pred == yt['y_shape']).float().mean()):.3f}")
+
 def run(arm, Xtr, ytr, tests, n_out, seed):
-    torch.manual_seed(seed); net = make(arm, n_out, Xtr.shape[1] if Xtr.dim() == 2 else None)
+    torch.manual_seed(seed); base = arm.replace("_pre", ""); net = make(base, n_out, Xtr.shape[1] if Xtr.dim() == 2 else None)
+    if arm.endswith("_pre"): pretrain_static(net, seed, int(os.environ.get("PRE_EPOCHS", "20")))
     opt = torch.optim.Adam(net.parameters(), lr=1e-3); g = torch.Generator().manual_seed(seed)
     prep = (lambda b: b) if Xtr.dim() == 2 else MO.as_float
     for ep in range(EPOCHS):
@@ -76,12 +96,14 @@ def run(arm, Xtr, ytr, tests, n_out, seed):
 if __name__ == "__main__":
     D = {sp: MO.load(sp) for sp in SPLITS}; Y = {sp: D[sp]["ys"] for sp in SPLITS}; X = {sp: D[sp]["X"] for sp in SPLITS}
     ALL = lambda sp: torch.ones(len(Y[sp]["y_vel"]), dtype=torch.bool); MOV = lambda sp: Y[sp]["y_vel"] > 0
-    inputs = {"cnn2d": X, "cnn3d": X, "cnn2d_strong": X, "cnn2d_big": X}
+    inputs = {"cnn2d": X, "cnn3d": X, "cnn2d_strong": X, "cnn2d_big": X, "cnn2d_big_pre": X, "cnn2d_strong_pre": X}
     if "mlp656" in ARMS:
         Zm = {sp: ML.feats("motion", sp) for sp in SPLITS}; st = ML.Std(Zm["train"]); inputs["mlp656"] = {sp: st(Zm[sp]) for sp in SPLITS}
     log(f"MOTION CNN BAR s058: seeds {SEEDS} epochs {EPOCHS} arms {ARMS}; train n={len(Y['train']['y_vel'])}; T={X['train'].shape[1]}")
     log("  reference (Kinopsis s057, n=3): velocity .655 | shape moving-only photo .653 flat .870 mixed .766; msil voter alone photo .658")
-    for task, yk, n_out in [("velocity", "y_vel", 17), ("shape", "y_shape", 3)]:
+    TASKS = [("velocity", "y_vel", 17), ("shape", "y_shape", 3)]
+    if all(a.endswith("_pre") for a in ARMS): TASKS = TASKS[1:]     # pretrained arms are shape-only
+    for task, yk, n_out in TASKS:
         for arm in ARMS:
             res = []; t0 = time.time()
             for seed in range(SEEDS):

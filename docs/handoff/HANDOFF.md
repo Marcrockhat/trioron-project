@@ -50,14 +50,31 @@ moving-only packets like kinopsis):
    likely limiter, not architecture. Matched follow-up = NEXT-0b.
 4. GAP-CNN velocity σ (.11) is seed-chaotic at 30 ep; report cnn2d_strong / cnn2d_big as the bar.
 
+**NEXT-0b DONE (Rocky back, same session): matched-data shape bar — log
+`outputs/motion_cnn_s058_pre.log`, arms `cnn2d_big_pre` / `cnn2d_strong_pre`.** Trunk pretrained
+20 ep on the 20K static shape-world frames (5-way, tiled to T=6, diffs 0), then 3-way head
+fine-tuned 60 ep on the 8K packets, n=3:
+| arm | static 5-way test_fresh after pretrain | shape/mov photo | shape/mov flat |
+|---|---|---|---|
+| cnn2d_big_pre 68K | .747/.734/.696 | .410±.018 | .454±.011 |
+| cnn2d_strong_pre 20K | .711/.634/.586 | .395±.003 | .425±.007 |
+| (unpretrained cnn2d_big) | — | .395 | .434 |
+| Kinopsis | organ old-world .849 | .653 | .870 |
+**The shape gap SURVIVES matched data:** pretraining lifts the CNN ≤ +.02; even on the static
+frames alone the CNN (.70–.75) is below the organ (.85). At ≤ 70K params and this data, the
+silhouette/grouping primitives + linear leaves beat conv layers on shape by .24 (photo) / .42
+(flat); on velocity they tie at matched budget and lose to a 4× CNN. Remaining caveats: no
+augmentation / LR schedule for the CNN; fine-tuning may partly overwrite the pretrain
+(sequential, no replay — which is itself the organism's point). A CNN with 10× params/epochs
+was not tried (out of the leaf-budget frame).
+
 ## NEXT (priority)
 0. **Paper**: put the table in as the reviewer's comparison with reading 1–3 verbatim; the
    honest sentence is "at the leaf's budget a CNN on raw frames ties the primitive-fed leaf on
-   velocity and a 4× larger CNN beats it; the primitive buys 100–1000× less training compute."
-0b. **Matched-data shape bar**: pretrain cnn2d_big on the 20K static shape frames (5-way) then
-   fine-tune on the 8K packets (3-way), or give Kinopsis-equivalent data any other way; until
-   this runs the shape gap cannot be claimed. Also a CNN on sil_mot (92-d) is meaningless — the
-   architecture control for shape is `mlp` on the organ's streams if wanted.
+   velocity and a 4× larger CNN beats it; on shape the primitives beat the CNN by .24/.42 even
+   with matched data; the primitive buys 100–1000× less training compute."
+0b. ~~Matched-data shape bar~~ DONE (above). Optional hardening: CNN with flip/shift
+   augmentation + cosine LR, and an MLP on the organ's streams as the shape architecture control.
 1. Lift the msil voter (photo ceiling .658): grouping v4→v5 per-pixel motion compensation,
    silhouette descriptor (s057 NEXT-0b).
 2. Save format: arena-state-only + recompile on load (14.2 MB → ~1 MB; s057 NEXT-1).
@@ -74,7 +91,7 @@ moving-only packets like kinopsis):
   from repo root; 7 GB RAM ≈ 3 leaf procs.
 
 ## State of the build / Pointers
-- Commit on `conscience-core` this session: motion_cnn.py + 4 logs + this handoff. `main` NOT
+- Commits on `conscience-core` this session: 5c61f64 (CNN bar) + close commit (pretrained arms, _pre log, handoff). `main` NOT
   advanced. Pushed.
 - Kinopsis (s057) unchanged: `experiments/progenitor/kinopsis.py`, saved organisms
   `outputs/data/motion/motion_organism_s{0,1,2}.pt` (gitignored).
