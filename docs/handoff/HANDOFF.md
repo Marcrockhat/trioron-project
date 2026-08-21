@@ -68,7 +68,26 @@ augmentation / LR schedule for the CNN; fine-tuning may partly overwrite the pre
 (sequential, no replay — which is itself the organism's point). A CNN with 10× params/epochs
 was not tried (out of the leaf-budget frame).
 
-## NEXT (priority)
+## NEXT SESSION (s059) — LANGUAGE & LOGIC ARC (Rocky, end of s058: "next session will be
+generate language and logic"). Approach agreed in principle (doctrine: logic before language,
+sense→logic→symbol→language, primitives discovered not hand-built at the logic layer):
+- **Stage 0 depth gate (s059 NEXT-0):** bench where required depth scales with input (nested
+  parity/brackets depth k, 2–3-hop relational queries, two-transform ARC-lite). Arms: shallow
+  leaf / fixed 3-layer MLP / grown substrate (same_rank_edges + selective quad) / Axis-7
+  recurrent. PASS = grown tracks k where shallow breaks. If FAIL, fix depth before language.
+- **Stage 1 logic on Kinopsis symbols:** shape log-prob + vel logits + H-codes = symbols; tasks
+  "A toward B", "collide first", "same shape as before" (relational+temporal), world-labelled,
+  continual schedule, zero-forget on the organ.
+- **Stage 2 symbol→language as a code:** generated SVO + negation + 1 nesting over the world,
+  ~50 words; comprehension (sentence+packet→T/F) and production (packet→tokens via satellites);
+  claim = compositional generalisation (held-out combos, longer nestings).
+- **Stage 3 frozen LLM** conditioned by trioron (learn-to-use-not-from); never distil.
+- Every stage: matched-budget reference (fixed MLP / small GRU or transformer), n=3, and a
+  primitive-vs-substrate control like s058 `mlp656`.
+- Open for Rocky before s059: (1) Stage 0 on abstract sequences or on Kinopsis symbols;
+  (2) depth mechanism = Axis-7 recurrence vs spatial same_rank_edges — recommend test both.
+
+## NEXT (priority, motion arc — now secondary)
 0. **Paper**: put the table in as the reviewer's comparison with reading 1–3 verbatim; the
    honest sentence is "at the leaf's budget a CNN on raw frames ties the primitive-fed leaf on
    velocity and a 4× larger CNN beats it; on shape the primitives beat the CNN by .24/.42 even
