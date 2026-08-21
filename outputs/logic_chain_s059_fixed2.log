@@ -1,0 +1,2 @@
+parity4 seed0 fixed-2-link joint 60ep: acc 0.999 loss 0.516
+parity4 seed1 fixed-2-link joint 60ep: acc 1.000 loss 0.380

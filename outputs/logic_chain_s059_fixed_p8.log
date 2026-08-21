@@ -1,0 +1,4 @@
+parity8 seed0 fixed-3-link joint 60ep: acc 0.492 loss 0.678
+parity8 seed1 fixed-3-link joint 60ep: acc 0.496 loss 0.681
+parity8 seed0 fixed-4-link joint 60ep: acc 0.507 loss 0.682
+parity8 seed1 fixed-4-link joint 60ep: acc 0.491 loss 0.678

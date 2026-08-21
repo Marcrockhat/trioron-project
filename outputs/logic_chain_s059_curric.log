@@ -1,0 +1,5 @@
+# curriculum tied  task=hop ks=[1, 2, 3, 4] stage_ep=30
+hop      1 curric   zero-shot 0.122±0.004  trained 1.000±0.000  R=[1, 1, 1]
+hop      2 curric   zero-shot 0.233±0.006  trained 0.911±0.004  R=[2, 2, 2]
+hop      3 curric   zero-shot 0.164±0.022  trained 0.649±0.010  R=[3, 3, 3]
+hop      4 curric   zero-shot 0.285±0.013  trained 0.594±0.016  R=[4, 4, 4]
