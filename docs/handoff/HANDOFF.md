@@ -59,11 +59,11 @@ fine-tuned 60 ep on the 8K packets, n=3:
 | cnn2d_big_pre 68K | .747/.734/.696 | .410±.018 | .454±.011 |
 | cnn2d_strong_pre 20K | .711/.634/.586 | .395±.003 | .425±.007 |
 | (unpretrained cnn2d_big) | — | .395 | .434 |
-| Kinopsis | organ old-world .849 | .653 | .870 |
+| Kinopsis | organ .868 pre-schedule (.849 after, own primitives not raw pixels) | .653 | .870 |
 **The shape gap SURVIVES matched data:** pretraining lifts the CNN ≤ +.02; even on the static
 frames alone the CNN (.70–.75) is below the organ (.85). At ≤ 70K params and this data, the
 silhouette/grouping primitives + linear leaves beat conv layers on shape by .24 (photo) / .42
-(flat); on velocity they tie at matched budget and lose to a 4× CNN. Remaining caveats: no
+(flat); on velocity they tie at matched budget and lose to a 4× CNN. Rocky's close: "Kinopsis seems promising" — arc conclusion accepted. Remaining caveats: no
 augmentation / LR schedule for the CNN; fine-tuning may partly overwrite the pretrain
 (sequential, no replay — which is itself the organism's point). A CNN with 10× params/epochs
 was not tried (out of the leaf-budget frame).
