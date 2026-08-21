@@ -1,0 +1,61 @@
+MOTION ORGANISM s057: seeds 3 epochs 8 router steps 300 settle_n 2000 settle_steps 200
+  organ trained (8 ep, seed 0) in 60s
+  s0 stage 1 old world: shape 0.867 (uniform vote of the organ); zero-shot moving: test 0.601 test_photo 0.374 test_flat 0.810
+  s0 router          stage 2   | mixed 0.761 photo 0.655 flat 0.873 | old 0.857 (forget +0.010) | vel nan
+      photo voters alone: 0.336 0.332 0.658 | oracle 0.808 | router params 57
+  s0 router+H        stage 2   | mixed 0.772 photo 0.658 flat 0.880 | old 0.814 (forget +0.053) | vel nan
+      photo voters alone: 0.336 0.332 0.658 | oracle 0.808 | router params 489
+  s0 router+pc       stage 2   | mixed 0.770 photo 0.655 flat 0.876 | old 0.849 (forget +0.018) | vel nan
+      photo voters alone: 0.336 0.332 0.658 | oracle 0.808 | router params 285
+  s0 router+H+pc     stage 2   | mixed 0.773 photo 0.664 flat 0.871 | old 0.837 (forget +0.030) | vel nan
+      photo voters alone: 0.336 0.332 0.658 | oracle 0.808 | router params 2445
+  s0 router+qda      stage 2   | mixed 0.770 photo 0.657 flat 0.873 | old 0.856 (forget +0.011) | vel nan
+      photo voters alone: 0.336 0.332 0.658 0.620 | oracle 0.857 | router params 84
+  s0 router+qda+pc   stage 2   | mixed 0.773 photo 0.670 flat 0.882 | old 0.850 (forget +0.017) | vel nan
+      photo voters alone: 0.336 0.332 0.658 0.620 | oracle 0.857 | router params 420
+  s0 router+qda+H+pc stage 2   | mixed 0.771 photo 0.659 flat 0.879 | old 0.835 (forget +0.032) | vel nan
+      photo voters alone: 0.336 0.332 0.658 0.620 | oracle 0.857 | router params 3300
+  seed 0 done in 112s
+  organ trained (8 ep, seed 1) in 63s
+  s1 stage 1 old world: shape 0.870 (uniform vote of the organ); zero-shot moving: test 0.600 test_photo 0.375 test_flat 0.823
+  s1 router          stage 2   | mixed 0.771 photo 0.649 flat 0.870 | old 0.853 (forget +0.018) | vel nan
+      photo voters alone: 0.343 0.338 0.652 | oracle 0.808 | router params 57
+  s1 router+H        stage 2   | mixed 0.773 photo 0.648 flat 0.886 | old 0.798 (forget +0.073) | vel nan
+      photo voters alone: 0.343 0.338 0.652 | oracle 0.808 | router params 489
+  s1 router+pc       stage 2   | mixed 0.778 photo 0.651 flat 0.877 | old 0.852 (forget +0.018) | vel nan
+      photo voters alone: 0.343 0.338 0.652 | oracle 0.808 | router params 285
+  s1 router+H+pc     stage 2   | mixed 0.769 photo 0.651 flat 0.884 | old 0.831 (forget +0.039) | vel nan
+      photo voters alone: 0.343 0.338 0.652 | oracle 0.808 | router params 2445
+  s1 router+qda      stage 2   | mixed 0.763 photo 0.648 flat 0.875 | old 0.850 (forget +0.020) | vel nan
+      photo voters alone: 0.343 0.338 0.652 0.600 | oracle 0.846 | router params 84
+  s1 router+qda+pc   stage 2   | mixed 0.771 photo 0.658 flat 0.880 | old 0.848 (forget +0.022) | vel nan
+      photo voters alone: 0.343 0.338 0.652 0.600 | oracle 0.846 | router params 420
+  s1 router+qda+H+pc stage 2   | mixed 0.766 photo 0.651 flat 0.880 | old 0.831 (forget +0.039) | vel nan
+      photo voters alone: 0.343 0.338 0.652 0.600 | oracle 0.846 | router params 3300
+  seed 1 done in 112s
+  organ trained (8 ep, seed 2) in 63s
+  s2 stage 1 old world: shape 0.865 (uniform vote of the organ); zero-shot moving: test 0.601 test_photo 0.361 test_flat 0.804
+  s2 router          stage 2   | mixed 0.765 photo 0.655 flat 0.868 | old 0.836 (forget +0.028) | vel nan
+      photo voters alone: 0.335 0.312 0.654 | oracle 0.804 | router params 57
+  s2 router+H        stage 2   | mixed 0.766 photo 0.662 flat 0.880 | old 0.796 (forget +0.069) | vel nan
+      photo voters alone: 0.335 0.312 0.654 | oracle 0.804 | router params 489
+  s2 router+pc       stage 2   | mixed 0.766 photo 0.658 flat 0.875 | old 0.846 (forget +0.019) | vel nan
+      photo voters alone: 0.335 0.312 0.654 | oracle 0.804 | router params 285
+  s2 router+H+pc     stage 2   | mixed 0.772 photo 0.663 flat 0.874 | old 0.834 (forget +0.031) | vel nan
+      photo voters alone: 0.335 0.312 0.654 | oracle 0.804 | router params 2445
+  s2 router+qda      stage 2   | mixed 0.765 photo 0.662 flat 0.868 | old 0.833 (forget +0.032) | vel nan
+      photo voters alone: 0.335 0.312 0.654 0.597 | oracle 0.849 | router params 84
+  s2 router+qda+pc   stage 2   | mixed 0.776 photo 0.664 flat 0.870 | old 0.847 (forget +0.018) | vel nan
+      photo voters alone: 0.335 0.312 0.654 0.597 | oracle 0.849 | router params 420
+  s2 router+qda+H+pc stage 2   | mixed 0.769 photo 0.650 flat 0.875 | old 0.836 (forget +0.029) | vel nan
+      photo voters alone: 0.335 0.312 0.654 0.597 | oracle 0.849 | router params 3300
+  seed 2 done in 115s
+
+== summary (mean±std over seeds; moving packets) ==
+  router          stage 2  mixed 0.766±0.005 photo 0.653±0.004 flat 0.870±0.002 | old 0.849 forget +0.019±0.009 | vel nan
+  router+H        stage 2  mixed 0.770±0.004 photo 0.656±0.007 flat 0.882±0.003 | old 0.803 forget +0.065±0.010 | vel nan
+  router+pc       stage 2  mixed 0.771±0.007 photo 0.654±0.004 flat 0.876±0.001 | old 0.849 forget +0.018±0.000 | vel nan
+  router+H+pc     stage 2  mixed 0.771±0.002 photo 0.659±0.007 flat 0.876±0.007 | old 0.834 forget +0.033±0.005 | vel nan
+  router+qda      stage 2  mixed 0.766±0.004 photo 0.656±0.007 flat 0.872±0.004 | old 0.846 forget +0.021±0.010 | vel nan
+  router+qda+pc   stage 2  mixed 0.773±0.002 photo 0.664±0.006 flat 0.877±0.006 | old 0.848 forget +0.019±0.003 | vel nan
+  router+qda+H+pc stage 2  mixed 0.769±0.002 photo 0.654±0.005 flat 0.878±0.003 | old 0.834 forget +0.033±0.005 | vel nan
