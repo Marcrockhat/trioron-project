@@ -35,7 +35,7 @@ class Developmental:
         self,
         input_dim: int,
         initial_classes: int,
-        stem_pool: int = 64,
+        stem_pool: int = 256,
         guidance: GuidanceConfig | None = None,
     ) -> None:
         self.input_dim = input_dim

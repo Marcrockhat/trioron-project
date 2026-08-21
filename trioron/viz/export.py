@@ -12,7 +12,6 @@ _VIEWER_TEMPLATE = """\
 <meta charset="UTF-8">
 <title>Trioron Substrate Viewer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape-cose-bilkent/4.1.0/cytoscape-cose-bilkent.min.js"></script>
 <style>
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 body {{ font-family: 'Segoe UI', monospace; background: #0d1117; color: #c9d1d9; }}
@@ -200,26 +199,27 @@ function loadSnapshot(idx) {{
         selector: 'edge',
         style: {{
           'width': 0.5,
-          'line-color': function(e) {{
-            return e.data('weight') > 0 ? 'rgba(80,180,80,0.25)' : 'rgba(180,80,80,0.25)';
-          }},
+          'line-color': 'rgba(100,160,100,0.3)',
           'curve-style': 'bezier',
           'target-arrow-shape': 'triangle',
           'target-arrow-color': 'rgba(100,100,100,0.3)',
           'arrow-scale': 0.4,
         }}
+      }},
+      {{
+        selector: 'edge[weight < 0]',
+        style: {{
+          'line-color': 'rgba(180,80,80,0.3)',
+        }}
       }}
     ],
     layout: {{
-      name: 'cose-bilkent',
-      quality: 'draft',
-      nodeDimensionsIncludeLabels: false,
-      idealEdgeLength: 60,
-      nodeRepulsion: 8000,
-      gravity: 0.25,
-      gravityRange: 3.8,
+      name: 'cose',
+      idealEdgeLength: function(e) {{ return 80; }},
+      nodeRepulsion: function(n) {{ return 8000; }},
+      gravity: 0.3,
       animate: false,
-      tile: true,
+      randomize: true,
     }},
     minZoom: 0.1,
     maxZoom: 5,
@@ -260,14 +260,27 @@ def export_html(
     snapshot_dir: str | Path,
     output: str | Path,
     structures: dict | None = None,
+    filter_perception: bool = True,
 ) -> Path:
-    """Bundle snapshots into a Cytoscape.js network viewer."""
+    """Bundle snapshots into a Cytoscape.js network viewer.
+
+    Args:
+        filter_perception: if True, strip perception cells (usually 784)
+            from snapshots to keep the file small and the layout readable.
+    """
     snap_dir = Path(snapshot_dir)
     out_path = Path(output)
 
     snapshots = []
     for f in sorted(snap_dir.glob("*.json")):
-        snapshots.append(json.loads(f.read_text()))
+        snap = json.loads(f.read_text())
+        if filter_perception:
+            perc_ids = {c["id"] for c in snap.get("cells", []) if c["epigenome"] & (1 << 5)}
+            snap["cells"] = [c for c in snap.get("cells", []) if c["id"] not in perc_ids]
+            snap["edges"] = [e for e in snap.get("edges", [])
+                             if e["src"] not in perc_ids and e["dst"] not in perc_ids]
+            snap["_n_perception_filtered"] = len(perc_ids)
+        snapshots.append(snap)
 
     html = _VIEWER_TEMPLATE.format(
         snapshots_json=json.dumps(snapshots),

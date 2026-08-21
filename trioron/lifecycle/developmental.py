@@ -140,8 +140,8 @@ def is_stem(arena: Arena, cell_id: int) -> bool:
 
 @dataclass
 class GuidanceConfig:
-    max_edges: int = 8
-    radius: float = 0.25
+    max_edges: int = 16
+    radius: float = 0.3
     feedforward_frac: float = 1.0
     lateral_frac: float = 0.0
 

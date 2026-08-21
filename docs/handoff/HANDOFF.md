@@ -69,7 +69,17 @@ NEXT-2: continual schedule with replay settle). Done:
   still paste-and-go leaves under a router, not cell-level `absorb()` (s056: +.09 forget).
 
 ## NEXT (priority)
-0. ~~Oracle gap~~ CLOSED as NULL (above): oracle was luck-inflated. New 0: **lift the msil
+0. **CNN REFERENCE BAR (Rocky, end of s057).** The motion arc has NO CNN numbers anywhere
+   (checked: no cnn/conv in outputs/motion_*.log or motion*.py — an earlier in-session claim
+   that s055 had them was wrong). Rocky's target sentence: "linear machinery + correct
+   primitives ≈ convolution layers"; it is UNTESTED until this runs. Build: compact CNN
+   (2–3 conv layers, ~50 K params to match the leaves) on the RAW T=6 packet [6×3×32×32]
+   (and a 3-D/temporal-stack variant) for y_vel (17-way) and y_shape on moving packets,
+   same splits (test / test_photo / test_flat), n=3, 8 ep. Compare against Kinopsis
+   velocity .655 and shape photo .653 / flat .870. Also a CNN fed the SAME primitive
+   (motion_full 656) to separate primitive-vs-architecture. Reference bar only (s054 scope:
+   readers pure trioron); goes in the paper as the reviewer's comparison.
+0b. ~~Oracle gap~~ CLOSED as NULL (above): oracle was luck-inflated. **Lift the msil
    voter** — photo shape-from-motion .658 is the organism's photo ceiling; levers are grouping
    v4 → v5 (per-pixel motion compensation for interiors, s056 NEXT-6) and the silhouette
    descriptor; the velocity-cluster step from multi-object (item 3) may help here too.
