@@ -69,23 +69,31 @@ augmentation / LR schedule for the CNN; fine-tuning may partly overwrite the pre
 was not tried (out of the leaf-budget frame).
 
 ## NEXT SESSION (s059) — LANGUAGE & LOGIC ARC (Rocky, end of s058: "next session will be
-generate language and logic"). Approach agreed in principle (doctrine: logic before language,
-sense→logic→symbol→language, primitives discovered not hand-built at the logic layer):
-- **Stage 0 depth gate (s059 NEXT-0):** bench where required depth scales with input (nested
-  parity/brackets depth k, 2–3-hop relational queries, two-transform ARC-lite). Arms: shallow
-  leaf / fixed 3-layer MLP / grown substrate (same_rank_edges + selective quad) / Axis-7
-  recurrent. PASS = grown tracks k where shallow breaks. If FAIL, fix depth before language.
-- **Stage 1 logic on Kinopsis symbols:** shape log-prob + vel logits + H-codes = symbols; tasks
-  "A toward B", "collide first", "same shape as before" (relational+temporal), world-labelled,
-  continual schedule, zero-forget on the organ.
-- **Stage 2 symbol→language as a code:** generated SVO + negation + 1 nesting over the world,
-  ~50 words; comprehension (sentence+packet→T/F) and production (packet→tokens via satellites);
-  claim = compositional generalisation (held-out combos, longer nestings).
-- **Stage 3 frozen LLM** conditioned by trioron (learn-to-use-not-from); never distil.
+generate language and logic"; "we shouldn't use Kinopsis, it is designed for visuals; build
+another nest of triorons/phasecytes — chained short triorons/phasecytes").
+**Phasecyte = gradient-free PCLL sibling learner (`trioron/pcll/`, spec §10, named s049);
+`PhasecyteNest` = leaves + manifold router; `dream_distill` = nest → trioron leaves.**
+Design (agreed in principle):
+- **The logic nest = a CHAIN of short organisms, separate from Kinopsis, no visuals.**
+  Link 0 = Phasecyte on the symbol stream (phase signature = symbol; division-by-frustration =
+  symbol discovery). Links 1..k = short trioron leaves (quad/relational cells on), each eats
+  previous link output + current symbol. Depth = chain length.
+- **Chain length is NOT fixed by hand** (s058 lesson: hand-built primitive = hand-built depth):
+  a link is added on persistent frustration (Numa axis, growth-trigger discipline). Second arm
+  = weight-tied chain (same link re-applied = recurrence, Axis-7 in another dress) for
+  generalisation to depths longer than trained. Dream = distil a settled chain segment into one
+  link (consolidation of depth).
+- **Stage 0 depth gate (s059 NEXT-0):** abstract symbol sequences whose required depth scales
+  with input (nested parity/brackets depth k, 2–3-hop relational queries, two-transform rules).
+  Arms: shallow leaf / fixed 3-layer MLP / grown chain / tied chain. PASS = grown chain tracks
+  k where shallow breaks, and grows ≈k links. If FAIL, fix depth before language.
+- Stage 1 logic (relational/temporal over symbols, continual, zero-forget on old links);
+  Stage 2 symbol→language as a code (generated SVO+negation+nesting, ~50 words; comprehension
+  and production; compositional-generalisation claim); Stage 3 frozen LLM conditioned by
+  trioron (learn-to-use-not-from, never distil).
 - Every stage: matched-budget reference (fixed MLP / small GRU or transformer), n=3, and a
-  primitive-vs-substrate control like s058 `mlp656`.
-- Open for Rocky before s059: (1) Stage 0 on abstract sequences or on Kinopsis symbols;
-  (2) depth mechanism = Axis-7 recurrence vs spatial same_rank_edges — recommend test both.
+  primitive-vs-substrate control like s058 `mlp656`. Kinopsis returns only later as one more
+  symbol source if the game needs it.
 
 ## NEXT (priority, motion arc — now secondary)
 0. **Paper**: put the table in as the reviewer's comparison with reading 1–3 verbatim; the
