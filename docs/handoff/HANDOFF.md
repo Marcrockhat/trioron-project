@@ -1,274 +1,83 @@
 # Trioron Handoff
 
 **Session date:** 2026-08-21
-**Session number:** 056
-**Session title:** **Motion arc steps 1–4 (Rocky: "start the motion arc"): moving-shape
-world over CIFAR scenery built; the spectral machinery re-aimed at TIME — 2-D
-cross-spectrum PHASE per 8×8 patch + temporal-difference adaptation + population
-velocity read-out — decodes velocity to 0.55–0.60 px (cos .83–.86) on flat AND
-photo backgrounds with zero learning, while the s052 magnitude spectra are motion-
-blind (.056 = chance); wagon-wheel reversal 17 % on alias-tagged textures; common-
-fate grouping v3 beats colour/Otsu on photos (IoU .48 vs .34); a 50 K motion leaf
-reads the 17-way velocity class at .65–.66 (control .12); shape-from-motion-
-grouping on photos .50 vs colour-grouped .39 (chance .33).**
+**Session number:** 057
+**Session title:** **ONE ORGANISM (Rocky: "focus on 2(a)"): s053 organ + motion-silhouette
+leaf + velocity leaf + s056 evidence router folded into a single saveable object
+(`MotionOrganism`) built by the continual schedule old world → moving world → velocity;
+scored after every stage, n=3: router arm photo .653 / flat .870 / mixed .766, old
+world .849 (forget +.019), velocity .655 acquired with ZERO effect on shape; replay-
+settle of the organ heads is not worth it (+.004 photo for +.011 extra forgetting).**
 
 ---
 
 ## READ THIS FIRST
 
-**s056 ROUTER (Rocky: "build the router") — `experiments/progenitor/motion_router.py`,
-log `outputs/motion_router_s056.log`, n=3.** Rocky asked whether arbitration = split
-blur/not: NO — the router never sees bg-kind/blur labels; it weights voters per packet
-from label-free evidence (11-d: motion gate ratio, energy, speed, coherence; colour-
-grouping clutter/separation/area/touch; motion-mask area) + each voter's confidence,
-54 params, trained alone (leaves frozen) on moving train + a FROZEN REPLAY of each packet
-(T copies of the mid frame = "nothing moves", self-generated). The motion voter is
-HARD-MASKED when its motion mask is empty (fires-only-when-moving): a leaf that never
-saw the field classes must not vote against them from an empty input — without this
-the router kept 54 % on msil in the old world (.49). Voters: organ shape + whole
-(colour-grouped, frozen) + msil (motion-grouped, frozen after training).
-| arm | mixed | photo | flat | old world |
-|---|---|---|---|---|
-| uniform vote | .686 | .516 | .844 | .789 |
-| uniform + gate | .686 | .514 | .840 | .867 |
-| learned temperature (packet-independent) | .737 | .611 | .879 | .483 |
-| **router** | **.766** | **.653** | .870 | .849 |
-| msil alone | .715 | .655 | .775 | .201 |
-| colour only | .601 | .370 | .812 | .867 |
-| oracle (any voter right) | .880 | .807 | .957 | .940 |
-Router weights (shape, whole, msil): photo .19/.05/.76, flat .46/.09/.45, old world
-.78/.22/0. Reading: the router recovers the specialist on photos (.653 = msil alone),
-beats every single voter on flat (.870) and mixed (.766), costs −.018 on the old world
-(it leans on the shape leaf .78 instead of the .5/.5 vote). Oracle gap (.81 photo)
-= complementary errors the router can't see from confidence alone — per-class
-calibration / H-space routing is the next lever. Arbitration is no longer the blocker.
-
-
-**s056 FINAL WORLD (Rocky: "photos should be blurred to imitate focus"):** photo
-backgrounds are now DEFOCUSED (depth of field: object sharp, scenery σ=.7 or 1.5,
-50/50, tagged `y_bgblur`); radius 6–14. World rebuilt (RNG draws shifted, scenes
-differ from the earlier sheets), all caches dropped, full chain rerun — these are
-the CURRENT numbers (`*_s056b.log`); older tables below are superseded:
-- diag: photo grouping IoU motion **.70** vs colour .44 (flat .76 vs .86); decode
-  photo cos .90 ≥ flat .84; wagon-wheel unchanged.
-- leaves (n=3): velocity .655 (control .12); shape/mov photo: motion-sil **.66**,
-  colour-sil .44, both .63; flat: .77 / .87 / .89.
-- absorb (n=3): zero-shot .37 photo / .81 flat; +msil voter **.52** photo / .84
-  flat, 0 forget; both_in voter .51/.87; settle naive forget .39; settle+replay
-  .02 (photo .42); graft .08 forget; finetune .43 forget. msil alone .66 photo →
-  the voter dilution (.52) is STILL the blocker → NEXT-0 unchanged.
-Defocus helped motion more than colour (scenery clutter was the colour-grouping
-failure; defocus removes some clutter but the gap widened: +.04 motion, +.03 colour).
-
-
-**s056 addendum (2026-08-21):** Rocky reviewed the sheet and asked for radius
-6–14 (was 4–13); world REBUILT (same seeds, `motion.py:76`), feature caches
-dropped, diag + leaves rerun (`outputs/motion_diag_smoke_s056.log`,
-`motion_leaf_s056.log`). Size was NOT the lever: velocity leaf .658/.660
-(unchanged); colour-silhouette shape +5 pp (photo .41 / flat .88); motion-
-silhouette shape only +2 pp (photo .52 / flat .64); motion grouping IoU .47/.47
-with mask area .20 vs true .29 — bigger bodies have more interior and more
-motion-parallel edge that temporal difference can't see. **Grouping v3's
-interior fill is the bottleneck (mechanism, not data).** Both-silhouettes
-concat now adds slightly on photos (.53). Tables below are the s055 (4–13)
-numbers; the s056 log has the current ones.
-
-**s056 grouping v4 (Rocky: "fix the grouping interior fill first"):** the loss
-was NOT the interior core per se but the SYMMETRY of a pixel's time series —
-"body about to be uncovered" and "background about to be covered" are mirror
-images, so no per-pixel rule (median-bg, counts, endpoint diffs) can separate
-them. The motion DIRECTION breaks it: pixels changed vs the first frame split
-into two equal bands along v̂ (leading band inside / revealed bg behind), keep
-the AHEAD half; changed vs the last frame, keep the BEHIND half; then colour
-refinement + s053 closing/hull for the core that never uncovers. Plus a GLOBAL
-motion gate (colour-energy 99th-pct/median > 1.4: truly-static max 1.32,
-movers from 1.31) replacing v3's per-packet noise floor, which had been
-throwing away weak movers. Two measurement bugs fixed on the way: energy was
-Y-only (iso-luminant movers invisible) and "static" must exclude rotating/
-looming bodies (y_dth, y_dr). `motion_diag.motion_group` (v4) + `motion_gate`.
-**IoU photo .66 (colour .41) / flat .73 (colour .87); static masks exactly
-empty** (`outputs/motion_diag_C_v4_s056.log`). Shape leaves rerun
-(`motion_leaf_v4_s056.log`): motion silhouette photo/mov **.63** (was .52;
-colour .41), flat/mov .79 (colour .88); both silhouettes .61 photo / .88 flat —
-the concat still doesn't pick the better source per packet (gate NEXT-1).
-Velocity leaf unchanged .65–.66.
-
-**s056 ABSORB (Rocky: option 1, "absorb the motion leaf into the nest")** —
-`experiments/progenitor/motion_absorb.py`, log `outputs/motion_absorb_s056.log`
-(n=3; `_naive.log` = first run without replay-settle). Recipient = s053 organ
-(`shape_prefeeder.Organ`, needs `ORGAN_CAP_EXTRA=64` spare cells for grafts —
-new env, default 0 keeps the s054 caches valid), fed the moving world's MID
-frame through its own colour-grouped streams (cached `feat_nest_<split>.pt`).
-Shape = 5-way vote, scored on MOVING packets (shapes 0–2 present); old world =
-shapes test_fresh.
-| arm | mixed | photo | flat | old world | forget |
-|---|---|---|---|---|---|
-| zero-shot nest | .570 | .332 | .812 | .867 | 0 |
-| +vel leaf (paste-and-go) | same | same | same | .867 | 0 (vel .645) |
-| +msil voter (motion-silhouette 103→5) | .664 | .471 | .847 | .867 | 0 |
-| +both_in voter (colour⊕motion sil) | .670 | .458 | **.871** | .867 | 0 |
-| settle naive (heads, moving labels only) | .637 | .451 | .846 | .479 | **+.389** |
-| settle+replay (s054 recipe, archive of old classes) | .620 | .421 | .845 | .845 | +.023 |
-| graft csil (true sibling, no settle) | .624 | .396 | .847 | .778 | +.089 |
-| graft+settle naive | .644 | .447 | .858 | .465 | +.402 |
-| graft+settle+replay | .633 | .423 | .858 | .840 | +.027 |
-| finetune (bound) | .625 | .430 | .830 | .436 | +.431 |
-msil ALONE: .70 mixed / **.62 photo** / .77 flat; both_in alone .77/.60/.89.
-Readings: (1) the organ transfers zero-shot to the moving world on flat bg (.81)
-and fails on photos (.33 = chance) — colour grouping, as designed. (2) Adding
-the motion-silhouette leaf as an equal VOTER is the best zero-forgetting arm
-but photo .47 ≪ msil alone .62: the two colour-based voters DILUTE it — the
-same dilution as nest+pre in s054. Routed arbitration is now the blocking item,
-not a nice-to-have. (3) Naive head settle on a world with 3 of 5 classes
-destroys the field classes (forget .39 ≈ finetune .43); the replay-balanced
-settle holds forgetting to .02 but buys nothing on photos (.42) — the soma's
-input is the colour silhouette, so no head can fix photos. (4) The real
-`absorb()` graft of a sibling colour-stream leaf (Protocol B, head-merged) costs
-.09 old-world with no settle and gains only on flat — absorbing a same-stream
-sibling adds nothing the motion stream didn't already supply. (5) Velocity is
-acquired as a separate head at .645 with zero interaction — the nest's task
-set grew by one task for 50 K params.
-
-
-1. **Rocky's asks:** "start the motion arc" (s054 NEXT-0, scope pinned there and
-   still binding: readers PURE trioron/Phasecyte; CNNs = reference bars only;
-   NOT tabula rasa — the s053 nest / s054 pre-feeder are carried in as frozen
-   organs / absorbed leaves, not equal voters). Mid-session he asked for a
-   rendered training sheet to check — `outputs/motion_train_sheet.png` (16
-   packets × 6 frames) + `motion_train_masks.png`; **he has not yet replied**
-   whether the world matches his intent (small radii 4–13 px, static camera,
-   speed 0.5–3 px/frame, 15 % static, T=6). Ask before scaling the world.
-2. **New files** (all `experiments/progenitor/`, committed):
-   - `motion.py` — generator. Packet = T=6 frames uint8 [N,T,3,32,32] + EXACT
-     per-frame mask of object 0 [N,T,32,32]. Per object: shape/fill/colour/pose
-     as shapes.py + velocity (dx,dy) px/frame, dθ rad/frame (p .3), dr px/frame
-     (loom, p .2). Background: flat colour | CIFAR-100 train photo (static, no
-     camera motion). Labels: y_vel 17-way (0 static | 1..8 octant slow <1.75 |
-     9..16 octant fast), y_dir, y_speed, y_dx/dy/dth/dr, y_shape/fill/hue,
-     y_alias (textured fill displaced > p/2 along its texture normal = wagon-
-     wheel regime, ~5 %), y_bgkind. Splits at `outputs/data/motion/*.pt`
-     (gitignored; `python3 experiments/progenitor/motion.py build`, ~6 min):
-     train 8000 mixed, test 2000 mixed, test_photo 2000, test_flat 2000,
-     train_multi 4000 / test_multi 1000 (maxk=2, unused so far).
-   - `motion_front.py` — the primitive. `motion_phase` 450 (25 regions × 6
-     2-D bins × (cos, sin, coherence)), `motion_energy` 25, `motion_pop` 181
-     (per-region decoded v̂, coherence, log E + global 9×9 population response),
-     `motion_full` = 656; `velocity_map` / `decode_velocity` (no learning).
-   - `motion_diag.py` — parts A (probe + decode), B (wagon-wheel), C (grouping
-     v3 vs colour/Otsu); holds `motion_group()` = common-fate grouping v3.
-   - `motion_leaf.py` — Seeded leaves on cached streams; log
-     `outputs/motion_leaf_s055.log`; feature caches `outputs/data/motion/feat_*`.
-
-## WHAT WAS LEARNED BUILDING THE PRIMITIVE (don't re-derive)
-- **Sign:** content moving +dx ⇒ `F_{t+1} = F_t·e^{−2πi k·v/L}` ⇒ cross-
-  spectrum phase −2π k·v/L. (I flipped this twice; verified on `torch.roll`
-  fields AND rendered shapes: roll +1 → decodes 1.00.)
-- **Temporal adaptation must be a DIFFERENCE, not mean-subtraction.** Mean-
-  subtract kills the signal when the per-frame phase step is small (large
-  apertures). `D_t = F_{t+1} − F_t`, then `conj(D_t)D_{t+1} = |A|²|e^{iω}−1|²e^{iω}`:
-  static background cancels EXACTLY, phase is still exactly ω (magnitude is a
-  temporal band-pass). Photo backgrounds went from 1.65 px error to ≈ flat.
-- **1-D row/column spectra (the literal stereo L/R form) FAIL for 2-D motion:**
-  a square sliding along x makes column profiles appear/disappear → coherent
-  but meaningless vertical phase (decoded dy≈2 for true 0). The 2-D FFT per
-  patch with bins {(1,0),(0,1),(1,1),(1,−1),(2,0),(0,2)} is the right object;
-  bin (0,1) of the 2-D FFT = spectrum of row-SUMS, which is a pure shift.
-- **Read-out = a population of velocity-tuned units** (MT-like): score(v) =
-  Σ_k w_k cos(θ_k + 2π k·v/L) on a 33×33 grid in [−4,4]² (step .25), argmax.
-  Aliasing appears as secondary peaks (wagon-wheel for free).
-- **Aperture:** L=8 patches under-read magnitude ~20 % (gain 1.25) on small
-  bodies; L=16/32 are WORSE (fewer patches see the body, edge effects). Keep L=8.
-- Per-pixel temporal-difference energy lights only EDGES; interiors of uniform
-  bodies and edges PARALLEL to the motion produce nothing (aperture again).
-  Grouping therefore needs the s053 body pipeline (closing + fill) + convex
-  hull, a NOISE FLOOR (max(Otsu, 4×median) — without it a static packet's mask
-  is Otsu-on-noise covering 60 % of the frame, which also inflated moving IoU),
-  and a LOCK-IN baseline: frame spacing chosen from the decoded speed so the
-  body moves ~3 px between the compared frames (slow motion integrates longer).
-  A velocity-AGREEMENT gate (patch v̂ within 1 px of dominant) HALVED the mask —
-  patch decode at edges is too noisy for gating; dropped.
-
-## RESULTS (n=1000 diag smoke `outputs/motion_diag_smoke_s055.log`; leaves n=3 seeds)
-### A. Velocity read-out (17-way y_vel, chance .06; direction 8-way chance .125)
-| features | probe (linear) y_vel | dir | Seeded leaf y_vel test / photo / flat |
-|---|---|---|---|
-| s052 static spectra (mid frame, 800) — magnitude only | **.056** | .122 | .115 / .116 / .124 (≈ "always static" prior .15) |
-| motion_energy 25 | .213 | .164 | — |
-| motion_phase 450 | .346 | .479 | — |
-| motion_block 475 | .369 | .497 | — |
-| motion_full 656 (50.3 K leaf) | — | — | **.652±.010 / .660±.002 / .662±.003** |
-Population decode, no learning: median |v̂−v| 0.55 px flat / 0.60 photo, cos .83/.86,
-octant-acc .68/.63; static packets |v̂| .28. Photo ≈ flat = the HP works.
-### B. Wagon-wheel (population decode on textured fills)
-alias=0 (n=410): err .50 px, cos .84, reversed 4.9 % | **alias=1 (n=46): err .97 px,
-cos .67, reversed 17.4 %** | solid: .68 px, reversed 5.6 %. Illusion present, modest
-(low bins don't alias; population mixes). A clean demo stimulus (stripe field at
-> p/2) is not built yet.
-### C. Grouping, IoU vs exact mid-frame mask (n=600)
-| bg | colour/Otsu (s053) | common-fate v3 | v3 no-hull |
-|---|---|---|---|
-| flat, moving | **.844** | .489 | .451 |
-| photo, moving | .338 | **.478** | .414 |
-| flat/photo static | .82 / .35 | .16 / .11 (mask area .05/.04 — near empty, correct) | |
-### D. Shape-from-motion-grouping (3-way y_shape, chance .33; Seeded leaves, "/mov" = moving packets)
-| stream | test | test_photo/mov | test_flat/mov |
-|---|---|---|---|
-| sil_col (colour-grouped silhouette 92) | .616 | .386 | **.833** |
-| sil_mot (motion-grouped silhouette 92) | .535 | **.500** | .611 |
-| sil_both 184 | **.658** | .491 | .835 |
-| static spectra 800 | .403 | .355 | .460 |
-| motion_full 656 | .439 | .438 | .452 |
-Reading: on photos the colour silhouette is at chance+5 and the motion silhouette
-carries the shape (+11 pp); on flat colour wins by 22 pp. The concat does NOT add
-on photos (the leaf can't tell which silhouette to trust → a per-packet gate from
-motion_energy / bg-kind is the obvious next fix; ties into the router item).
-Velocity leaf unchanged by adding sil_mot (.652 → .652).
+**s057 — `experiments/progenitor/motion_organism.py`, log `outputs/motion_organism_s057.log`.**
+Rocky's ask this session: first "final arc before the showcase game"; when offered
+(a) consolidation / (b) multi-object / (c) oracle gap he said 2(c), then corrected to
+**"forget the game, focus on 2(a) — that's what we are chasing from the previous
+session"** (s056 NEXT-0 remainder: absorb router + msil + vel into one organism object;
+NEXT-2: continual schedule with replay settle). Done:
+- `MotionOrganism(seed)`: `.stage_old()` (shape_prefeeder.Organ, frozen) →
+  `.settle_heads()` (optional, s054 replay recipe) → `.acquire_msil()` → `.fit_router()`
+  (57-param Router, frozen replay, hard motion gate; voters frozen) → `.acquire_vel()`.
+  Inference: `.shape(streams, evidence, mode)` → routed log-prob [N,5];
+  `.velocity(Zmotion)` → [N,17]. `.save(path)` / `MotionOrganism.load(path)`; reload
+  gives identical predictions (checked each seed). All calibration stats (organ std,
+  motion std, evidence μ/σ, empty-mask msil descriptor) travel inside the object.
+- Schedule scored after stage 2 and stage 3 (n=3, moving packets):
+| arm | mixed | photo | flat | old | forget | vel |
+|---|---|---|---|---|---|---|
+| uniform vote | .686 | .516 | .844 | .867 | 0 | .655 |
+| **router (default)** | **.766** | .653 | .870 | .849 | +.019±.009 | .655 |
+| settle+uniform | .739 | .616 | .884 | .847 | +.021 | .655 |
+| settle+router | .765 | .657 | .878 | .837 | +.030 | .655 |
+  Stage 3 leaves every shape number untouched in every arm (velocity = separate head,
+  zero interaction, n=3). Router inside the organism = s056 standalone to 3 decimals.
+  Replay-settle: +.008 flat / +.004 photo for +.011 more forgetting → not default.
+- **Save size:** 14.2 MB for 115,632 trainable params. Inspected: NO data inside; per
+  leaf the arena is ~250 KiB (edges + weights + Fisher/anchor buffers) and the compiled
+  **scheduler plan ~1.6 MB** (vel leaf 7.4 MB because 656-d input). Fix = save arena
+  tensors only and `compile()` on load (~1–1.5 MB; ~500 KiB without EWC buffers). Not
+  done this session (mid-run); it is a format issue, not model size.
+- Rocky's framing questions answered in-session (keep consistent): trioron does NOT beat
+  CNNs on CIFAR-100 (pure 0.31 full / 0.61 task; cortex arm 0.15/0.63 vs ResNet ~0.75);
+  its wins are CL-method comparisons at matched params + zero-forget absorption. For
+  "CNN + trioron = good classifier" the missing experiment is frozen CNN + linear head vs
+  frozen CNN + trioron under a continual schedule (queued, NEXT-4). "Absorbed" here is
+  still paste-and-go leaves under a router, not cell-level `absorb()` (s056: +.09 forget).
 
 ## NEXT (priority)
-0. ~~ROUTED ARBITRATION~~ DONE s056 (table above). Remaining on it: H-space
-   `ManifoldRouter` over leaf H-codes vs the evidence router; close the oracle
-   gap; absorb the router + msil + vel into ONE organism object (`motion_absorb`
-   arms still use the uniform vote — rerun with the router).
-0b. (was 0) **ROUTED ARBITRATION:** the absorb bench shows the motion leaf
-   carries photo shape at .62 alone and .47 in the uniform vote. Per-packet
-   leaf weighting from `motion_gate` / motion_energy / bg-kind evidence (or an
-   H-space ManifoldRouter over leaves); target: photo ≈ .62 AND flat ≈ .87 in
-   one organism with zero forgetting. Then re-run `motion_absorb.py`.
-1. **Gate, don't concat (same item, shape reader level):** the shape leaf should pick colour vs motion silhouette
-   per packet (motion_energy is the fires-only-when-moving signal; s054 NEXT-1
-   routed arbitration). Expect photo shape → ~.50 AND flat → ~.83 in one reader.
-2. ~~Absorb the motion leaf into the nest~~ DONE s056 (table above); remaining:
-   a continual SCHEDULE (old world → moving world → velocity) with the replay
-   settle, and absorb of the msil leaf at the cell level once arbitration exists.
-3. **Multi-object common fate** (`train_multi`/`test_multi`, maxk=2, built, unused):
-   two bodies, different velocities → v3 must split by velocity cluster; this is
-   where the dropped agreement gate comes back as a CLUSTERING step, not a gate.
-4. **Clean wagon-wheel demo** (stripe field, period p, speeds crossing p/2) +
-   render the population response (secondary peak) — "showing the illusion =
-   built the mechanism".
-5. **Emergence control (s019 doctrine):** feed the raw T-frame packet (or per-
-   frame spectra WITHOUT the cross term) to a satellite/recurrent substrate and
-   test whether a Reichardt-like correlator emerges under frustration.
-6. Grouping v3 ceiling: per-pixel motion compensation (shift by v̂, compare) to
-   recover interiors; rotation/looming (dθ, dr) read-out heads (labels exist).
+0. **Oracle gap (Rocky's original 2(c))**: photo .65 vs oracle .81. Arms to add inside
+   `MotionOrganism.fit_router`: leaf H-codes (3×48) as router evidence; per-voter-PER-CLASS
+   weights (K×C); H-space `ManifoldRouter` (full-cov QDA over concatenated H) as a 4th
+   voter or as the router. Score on the same table; old-world forgetting must stay ≤ .02.
+1. Save format: arena-state-only + recompile on load (see above).
+2. Cell-level absorption of msil into the organ's shape leaf once 0 is done (s056 graft
+   cost .09 old-world).
+3. Multi-object common fate (`train_multi`/`test_multi`, maxk=2, unused).
+4. Frozen-CNN + linear head vs frozen-CNN + trioron, continual schedule (the "hardware"
+   claim).
+5. Wagon-wheel demo; emergence control (s019 doctrine) — unchanged from s056.
+Rocky's s056 world-check (radius 6–14, defocus) was accepted implicitly; the showcase
+game is deferred ("forget about the game atm").
 
 ## GOTCHAS (new)
-- `motion.py build` must run as a script from repo root (sys.path fixed in-file);
-  first run cost one failed launch on `ModuleNotFoundError`.
-- `motion_front.HP/L/ST/BINS` are module globals; `velocity_map` returns 4 values
-  (v, coh, E, R) — R is [N,13,13,1089] (the population response), big but fine at
-  chunk 250–500.
-- `motion_diag.py` part A rebuilds train features in-process (~40 s); `motion_leaf`
-  caches them. `motion_group` is per-image Python (~15 ms/packet).
-- Old s053/s054 gotchas (cifar_continual runs on import, 7 GB RAM ≈ 3 leaf procs,
-  ARMS exact-string) still apply.
+- `Organ._train` leaves grad-bearing `last_activations` on the leaves; `stage_old` runs a
+  no-grad forward afterwards or `deepcopy`/pickle fails ("Only Tensors created explicitly
+  by the user support deepcopy").
+- `voters()` with no `mshape` key = nothing-moves path (empty-mask descriptor, gate off).
+- Old gotchas (motion.py build from repo root, 7 GB RAM ≈ 3 leaf procs, python3) apply.
+  Run: `python3 experiments/progenitor/motion_organism.py` (~4.5 min/seed, 6 threads).
 
 ## State of the build / Pointers
-- Commits (`conscience-core`): steps 1–3 commit + this close commit (leaf +
-  handoff). `main` NOT advanced. Pushed.
-- Logs: `outputs/motion_diag_smoke_s055.log`, `outputs/motion_leaf_s055.log`;
-  PNGs `outputs/motion_train_sheet.png`, `motion_train_masks.png`,
-  `motion_group_debug.png` (frame | energy | Otsu | closed | truth).
+- Commit on `conscience-core` (this session): `motion_organism.py` + log + handoff.
+  `main` NOT advanced. Pushed.
+- Saved organisms: `outputs/data/motion/motion_organism_s{0,1,2}.pt` (gitignored, router
+  arm after stage 3).
+- s056 files unchanged: motion.py / motion_front.py / motion_diag.py / motion_leaf.py /
+  motion_absorb.py / motion_router.py; logs `outputs/motion_router_s056.log`, `*_s056b.log`.
 - Package (`trioron/`) untouched.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)

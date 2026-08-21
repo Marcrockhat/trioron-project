@@ -1,0 +1,47 @@
+MOTION ORGANISM s057: seeds 3 epochs 8 router steps 300 settle_n 2000 settle_steps 200
+  organ trained (8 ep, seed 0) in 60s
+  s0 stage 1 old world: shape 0.867 (uniform vote of the organ); zero-shot moving: test 0.601 test_photo 0.374 test_flat 0.810
+  s0 uniform         stage 2   | mixed 0.689 photo 0.526 flat 0.842 | old 0.867 (forget +0.000) | vel nan
+  s0 uniform         stage 3   | mixed 0.689 photo 0.526 flat 0.842 | old 0.867 (forget +0.000) | vel 0.650
+  s0 router          stage 2   | mixed 0.761 photo 0.655 flat 0.873 | old 0.857 (forget +0.010) | vel nan
+  s0 router          stage 3   | mixed 0.761 photo 0.655 flat 0.873 | old 0.857 (forget +0.010) | vel 0.650
+      saved /home/marcrockhat/trioron-project/outputs/data/motion/motion_organism_s0.pt 14232 KiB, 115632 trainable params; reload identical predictions: True; router mean w (shape,whole,msil) photo [0.14425425231456757, 0.03903084993362427, 0.8167150020599365]
+  s0 settle+uniform  stage 2   | mixed 0.739 photo 0.619 flat 0.884 | old 0.844 (forget +0.023) | vel nan
+  s0 settle+uniform  stage 3   | mixed 0.739 photo 0.619 flat 0.884 | old 0.844 (forget +0.023) | vel 0.650
+  s0 settle+router   stage 2   | mixed 0.763 photo 0.658 flat 0.877 | old 0.837 (forget +0.030) | vel nan
+  s0 settle+router   stage 3   | mixed 0.763 photo 0.658 flat 0.877 | old 0.837 (forget +0.030) | vel 0.650
+  seed 0 done in 266s
+  organ trained (8 ep, seed 1) in 63s
+  s1 stage 1 old world: shape 0.870 (uniform vote of the organ); zero-shot moving: test 0.600 test_photo 0.375 test_flat 0.823
+  s1 uniform         stage 2   | mixed 0.685 photo 0.511 flat 0.851 | old 0.870 (forget +0.000) | vel nan
+  s1 uniform         stage 3   | mixed 0.685 photo 0.511 flat 0.851 | old 0.870 (forget +0.000) | vel 0.658
+  s1 router          stage 2   | mixed 0.771 photo 0.649 flat 0.870 | old 0.853 (forget +0.018) | vel nan
+  s1 router          stage 3   | mixed 0.771 photo 0.649 flat 0.870 | old 0.853 (forget +0.018) | vel 0.658
+      saved /home/marcrockhat/trioron-project/outputs/data/motion/motion_organism_s1.pt 14232 KiB, 115632 trainable params; reload identical predictions: True; router mean w (shape,whole,msil) photo [0.14715254306793213, 0.03286726400256157, 0.8199801445007324]
+  s1 settle+uniform  stage 2   | mixed 0.742 photo 0.623 flat 0.886 | old 0.848 (forget +0.022) | vel nan
+  s1 settle+uniform  stage 3   | mixed 0.742 photo 0.623 flat 0.886 | old 0.848 (forget +0.022) | vel 0.658
+  s1 settle+router   stage 2   | mixed 0.767 photo 0.653 flat 0.881 | old 0.840 (forget +0.030) | vel nan
+  s1 settle+router   stage 3   | mixed 0.767 photo 0.653 flat 0.881 | old 0.840 (forget +0.030) | vel 0.658
+  seed 1 done in 267s
+  organ trained (8 ep, seed 2) in 67s
+  s2 stage 1 old world: shape 0.865 (uniform vote of the organ); zero-shot moving: test 0.601 test_photo 0.361 test_flat 0.804
+  s2 uniform         stage 2   | mixed 0.683 photo 0.510 flat 0.838 | old 0.865 (forget +0.000) | vel nan
+  s2 uniform         stage 3   | mixed 0.683 photo 0.510 flat 0.838 | old 0.865 (forget +0.000) | vel 0.656
+  s2 router          stage 2   | mixed 0.765 photo 0.655 flat 0.868 | old 0.836 (forget +0.028) | vel nan
+  s2 router          stage 3   | mixed 0.765 photo 0.655 flat 0.868 | old 0.836 (forget +0.028) | vel 0.656
+      saved /home/marcrockhat/trioron-project/outputs/data/motion/motion_organism_s2.pt 14232 KiB, 115632 trainable params; reload identical predictions: True; router mean w (shape,whole,msil) photo [0.13830061256885529, 0.0387919545173645, 0.8229073882102966]
+  s2 settle+uniform  stage 2   | mixed 0.736 photo 0.605 flat 0.883 | old 0.848 (forget +0.016) | vel nan
+  s2 settle+uniform  stage 3   | mixed 0.736 photo 0.605 flat 0.883 | old 0.848 (forget +0.016) | vel 0.656
+  s2 settle+router   stage 2   | mixed 0.765 photo 0.659 flat 0.877 | old 0.835 (forget +0.030) | vel nan
+  s2 settle+router   stage 3   | mixed 0.765 photo 0.659 flat 0.877 | old 0.835 (forget +0.030) | vel 0.656
+  seed 2 done in 282s
+
+== summary (mean±std over seeds; moving packets) ==
+  uniform         stage 2  mixed 0.686±0.003 photo 0.516±0.009 flat 0.844±0.007 | old 0.867 forget +0.000±0.000 | vel nan
+  uniform         stage 3  mixed 0.686±0.003 photo 0.516±0.009 flat 0.844±0.007 | old 0.867 forget +0.000±0.000 | vel 0.655
+  router          stage 2  mixed 0.766±0.005 photo 0.653±0.004 flat 0.870±0.002 | old 0.849 forget +0.019±0.009 | vel nan
+  router          stage 3  mixed 0.766±0.005 photo 0.653±0.004 flat 0.870±0.002 | old 0.849 forget +0.019±0.009 | vel 0.655
+  settle+uniform  stage 2  mixed 0.739±0.003 photo 0.616±0.010 flat 0.884±0.001 | old 0.847 forget +0.021±0.004 | vel nan
+  settle+uniform  stage 3  mixed 0.739±0.003 photo 0.616±0.010 flat 0.884±0.001 | old 0.847 forget +0.021±0.004 | vel 0.655
+  settle+router   stage 2  mixed 0.765±0.002 photo 0.657±0.003 flat 0.878±0.002 | old 0.837 forget +0.030±0.000 | vel nan
+  settle+router   stage 3  mixed 0.765±0.002 photo 0.657±0.003 flat 0.878±0.002 | old 0.837 forget +0.030±0.000 | vel 0.655
