@@ -1,0 +1,4 @@
+MOTION CNN BAR s058: seeds 3 epochs 30 arms ['cnn2d_strong']; train n=8000; T=6
+  reference (Kinopsis s057, n=3): velocity .655 | shape moving-only photo .653 flat .870 mixed .766; msil voter alone photo .658
+  velocity cnn2d_strong  23.2K | test 0.613±0.042 | test_photo 0.597±0.025 | test_flat 0.641±0.044  [546s/seed]
+  shape    cnn2d_strong  19.6K | test 0.397±0.009 | test/mov 0.406±0.015 | test_photo 0.383±0.012 | test_photo/mov 0.389±0.012 | test_flat 0.409±0.021 | test_flat/mov 0.414±0.020  [666s/seed]
