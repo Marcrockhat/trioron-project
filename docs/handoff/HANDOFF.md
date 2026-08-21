@@ -16,6 +16,34 @@ grouping on photos .50 vs colour-grouped .39 (chance .33).**
 
 ## READ THIS FIRST
 
+**s056 ROUTER (Rocky: "build the router") — `experiments/progenitor/motion_router.py`,
+log `outputs/motion_router_s056.log`, n=3.** Rocky asked whether arbitration = split
+blur/not: NO — the router never sees bg-kind/blur labels; it weights voters per packet
+from label-free evidence (11-d: motion gate ratio, energy, speed, coherence; colour-
+grouping clutter/separation/area/touch; motion-mask area) + each voter's confidence,
+54 params, trained alone (leaves frozen) on moving train + a FROZEN REPLAY of each packet
+(T copies of the mid frame = "nothing moves", self-generated). The motion voter is
+HARD-MASKED when its motion mask is empty (fires-only-when-moving): a leaf that never
+saw the field classes must not vote against them from an empty input — without this
+the router kept 54 % on msil in the old world (.49). Voters: organ shape + whole
+(colour-grouped, frozen) + msil (motion-grouped, frozen after training).
+| arm | mixed | photo | flat | old world |
+|---|---|---|---|---|
+| uniform vote | .686 | .516 | .844 | .789 |
+| uniform + gate | .686 | .514 | .840 | .867 |
+| learned temperature (packet-independent) | .737 | .611 | .879 | .483 |
+| **router** | **.766** | **.653** | .870 | .849 |
+| msil alone | .715 | .655 | .775 | .201 |
+| colour only | .601 | .370 | .812 | .867 |
+| oracle (any voter right) | .880 | .807 | .957 | .940 |
+Router weights (shape, whole, msil): photo .19/.05/.76, flat .46/.09/.45, old world
+.78/.22/0. Reading: the router recovers the specialist on photos (.653 = msil alone),
+beats every single voter on flat (.870) and mixed (.766), costs −.018 on the old world
+(it leans on the shape leaf .78 instead of the .5/.5 vote). Oracle gap (.81 photo)
+= complementary errors the router can't see from confidence alone — per-class
+calibration / H-space routing is the next lever. Arbitration is no longer the blocker.
+
+
 **s056 FINAL WORLD (Rocky: "photos should be blurred to imitate focus"):** photo
 backgrounds are now DEFOCUSED (depth of field: object sharp, scenery σ=.7 or 1.5,
 50/50, tagged `y_bgblur`); radius 6–14. World rebuilt (RNG draws shifted, scenes
@@ -197,7 +225,11 @@ motion_energy / bg-kind is the obvious next fix; ties into the router item).
 Velocity leaf unchanged by adding sil_mot (.652 → .652).
 
 ## NEXT (priority)
-0. **ROUTED ARBITRATION (now blocking):** the absorb bench shows the motion leaf
+0. ~~ROUTED ARBITRATION~~ DONE s056 (table above). Remaining on it: H-space
+   `ManifoldRouter` over leaf H-codes vs the evidence router; close the oracle
+   gap; absorb the router + msil + vel into ONE organism object (`motion_absorb`
+   arms still use the uniform vote — rerun with the router).
+0b. (was 0) **ROUTED ARBITRATION:** the absorb bench shows the motion leaf
    carries photo shape at .62 alone and .47 in the uniform vote. Per-packet
    leaf weighting from `motion_gate` / motion_energy / bg-kind evidence (or an
    H-space ManifoldRouter over leaves); target: photo ≈ .62 AND flat ≈ .87 in

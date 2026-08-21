@@ -1,0 +1,40 @@
+MOTION ROUTER s056: seeds 3 donor epochs 8 router steps 300
+  organ trained (8 ep, seed 0) in 50s
+  s0 uniform      | mixed 0.689 photo 0.526 flat 0.842 | old world 0.795
+  s0 uniform+gate | mixed 0.689 photo 0.524 flat 0.838 | old world 0.867
+  s0 temperature  | mixed 0.737 photo 0.612 flat 0.879 | old world 0.487
+  s0 router       | mixed 0.761 photo 0.655 flat 0.873 | old world 0.857
+  s0 msil alone   | mixed 0.722 photo 0.658 flat 0.791 | old world 0.198
+  s0 colour only  | mixed 0.601 photo 0.374 flat 0.810 | old world 0.867
+  s0 oracle       | mixed 0.882 photo 0.808 flat 0.954 | old world 0.938
+      router mean weight (shape, whole, msil): photo [0.19245018064975739, 0.05627071484923363, 0.7512791752815247] flat [0.469086617231369, 0.09290295094251633, 0.43801039457321167] static [0.6150309443473816, 0.17544089257717133, 0.20952820777893066] old-world [0.6801206469535828, 0.3198793828487396, 0.0]
+      router params 57; |W| by evidence dim: [0.31, 0.67, 0.21, 0.43, 0.3, 0.72, 0.76, 0.41, 0.19, 0.3, 0.9, 0.39, 1.28, 1.03, 1.56, 0.87, 0.36, 1.18]
+  organ trained (8 ep, seed 1) in 55s
+  s1 uniform      | mixed 0.685 photo 0.511 flat 0.851 | old world 0.786
+  s1 uniform+gate | mixed 0.686 photo 0.510 flat 0.848 | old world 0.870
+  s1 temperature  | mixed 0.742 photo 0.609 flat 0.880 | old world 0.483
+  s1 router       | mixed 0.771 photo 0.649 flat 0.870 | old world 0.853
+  s1 msil alone   | mixed 0.713 photo 0.652 flat 0.776 | old world 0.202
+  s1 colour only  | mixed 0.600 photo 0.375 flat 0.823 | old world 0.870
+  s1 oracle       | mixed 0.879 photo 0.808 flat 0.959 | old world 0.947
+      router mean weight (shape, whole, msil): photo [0.19724905490875244, 0.04719272628426552, 0.7555581331253052] flat [0.49157410860061646, 0.08128812164068222, 0.42713773250579834] static [0.6420187950134277, 0.1439281702041626, 0.21405301988124847] old-world [0.7250499725341797, 0.2749500572681427, 0.0]
+      router params 57; |W| by evidence dim: [0.24, 0.5, 0.18, 0.34, 0.22, 0.86, 0.93, 0.37, 0.09, 0.2, 1.03, 0.43, 1.27, 1.11, 1.27, 0.86, 0.44, 1.05]
+  organ trained (8 ep, seed 2) in 63s
+  s2 uniform      | mixed 0.683 photo 0.510 flat 0.838 | old world 0.786
+  s2 uniform+gate | mixed 0.683 photo 0.508 flat 0.834 | old world 0.865
+  s2 temperature  | mixed 0.733 photo 0.611 flat 0.877 | old world 0.479
+  s2 router       | mixed 0.765 photo 0.655 flat 0.868 | old world 0.836
+  s2 msil alone   | mixed 0.709 photo 0.654 flat 0.759 | old world 0.202
+  s2 colour only  | mixed 0.601 photo 0.361 flat 0.804 | old world 0.865
+  s2 oracle       | mixed 0.879 photo 0.804 flat 0.957 | old world 0.934
+      router mean weight (shape, whole, msil): photo [0.18818476796150208, 0.0547032430768013, 0.7571120262145996] flat [0.45876213908195496, 0.09329970926046371, 0.44793814420700073] static [0.6050077676773071, 0.1744389683008194, 0.22055329382419586] old-world [0.7814953327178955, 0.21850460767745972, 0.0]
+      router params 57; |W| by evidence dim: [0.3, 0.53, 0.19, 0.38, 0.16, 0.87, 0.76, 0.49, 0.06, 0.15, 0.85, 0.45, 1.27, 1.04, 1.49, 0.9, 0.43, 1.0]
+
+== summary (mean±std over seeds; moving packets) ==
+  uniform      mixed 0.686±0.003 photo 0.516±0.009 flat 0.844±0.007 | old world 0.789±0.005
+  uniform+gate mixed 0.686±0.003 photo 0.514±0.009 flat 0.840±0.007 | old world 0.867±0.003
+  temperature  mixed 0.737±0.005 photo 0.611±0.002 flat 0.879±0.002 | old world 0.483±0.004
+  router       mixed 0.766±0.005 photo 0.653±0.004 flat 0.870±0.002 | old world 0.849±0.011
+  msil alone   mixed 0.715±0.007 photo 0.655±0.003 flat 0.775±0.016 | old world 0.201±0.002
+  colour only  mixed 0.601±0.001 photo 0.370±0.008 flat 0.812±0.010 | old world 0.867±0.003
+  oracle       mixed 0.880±0.001 photo 0.807±0.002 flat 0.957±0.003 | old world 0.940±0.007
