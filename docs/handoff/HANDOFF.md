@@ -91,6 +91,16 @@ Design (agreed in principle):
   Stage 2 symbol→language as a code (generated SVO+negation+nesting, ~50 words; comprehension
   and production; compositional-generalisation claim); Stage 3 frozen LLM conditioned by
   trioron (learn-to-use-not-from, never distil).
+- **Rocky's decisions (end of s058): Link 0 = Phasecyte ONLY; trioron from Link 1.**
+- **Wiring (agreed):** wire = vector. Link 0 `PhasecyteLeaf.evidence()` → `[N, class_cap]`
+  symbol evidence (fixed slots, zero-padded for unborn symbols, per-slot `Std`), non-
+  differentiable = gradient stops at the symbol layer. Link i≥1 = `Seeded(32+class_cap → 32,
+  48, nonlinear, quad)`, input `concat[h_{i-1}, e_t]` (every link sees the token), task head
+  on the last link only (prefeeder/Organ pattern). Add link = Numa stall (growth-trigger
+  discipline, s021 LR-noise guard) → freeze links 0..k (credit lock) → spawn k+1 → move head
+  → train new link only. Tied arm = one link re-applied, BPTT (Axis-7 satellites). Dream =
+  `dream_distill` a long-frozen segment into one leaf. New code = chain controller + depth-gate
+  world; no package change needed.
 - Every stage: matched-budget reference (fixed MLP / small GRU or transformer), n=3, and a
   primitive-vs-substrate control like s058 `mlp656`. Kinopsis returns only later as one more
   symbol source if the game needs it.
