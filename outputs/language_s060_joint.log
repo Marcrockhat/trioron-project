@@ -1,0 +1,4 @@
+# language joint  N=20000 dtrain=1 ep=20 seeds=[0, 1, 2]
+bow          indist 0.734±0.006  comp 0.726±0.009  depth+1 0.571±0.009  links [1, 1, 1]  77s
+mlp3         indist 0.761±0.008  comp 0.723±0.009  depth+1 0.616±0.004  links [1, 1, 1]  1264s
+gru          indist 0.721±0.016  comp 0.714±0.018  depth+1 0.564±0.017  links [1, 1, 1]  7400s

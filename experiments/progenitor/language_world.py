@@ -24,7 +24,7 @@ sentence -> [L_MAX, CLASS_CAP] one-hot symbol evidence (Link-0 shape), PAD=0.
 Self-test:  python3 experiments/progenitor/language_world.py
 """
 from __future__ import annotations
-import random
+import os, random
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 import torch, torch.nn.functional as F
@@ -40,9 +40,9 @@ FUNC = ["the", "is", "not", "and", "or", "of", "than", "thing"]
 VOCAB = ["<pad>"] + COLORS + SHAPES + SIZES + list(RELS) + FUNC
 WID = {w: i for i, w in enumerate(VOCAB)}
 CLASS_CAP = 32          # slots for the symbol layer (VOCAB is 25; room to grow)
-L_MAX = 24
+L_MAX = int(os.environ.get("L_MAX", 24))
 OBJ_DIM = len(COLORS) + len(SHAPES) + 1 + 2     # color, shape, size, x, y
-MAX_OBJ = 4
+MAX_OBJ = int(os.environ.get("MAX_OBJ", 4))
 DOUBLE_NOT = True     # allow "not not": depth-2 negation = parity over NOTs; a split of its own
 
 # continual acquisition: which words are allowed per stage
@@ -61,7 +61,7 @@ class Obj:
 def sample_scene(rng: random.Random, allowed: set) -> List[Obj]:
     cols = [c for c in COLORS if c in allowed] or COLORS
     shp = [s for s in SHAPES if s in allowed] or SHAPES
-    n = rng.randint(2, MAX_OBJ)
+    n = rng.randint(min(2, MAX_OBJ), MAX_OBJ)
     cells = rng.sample([(x, y) for x in range(4) for y in range(4)], n)
     return [Obj(rng.choice(cols), rng.choice(shp), rng.randint(0, 1), x, y)
             for (x, y) in cells]

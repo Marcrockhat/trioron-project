@@ -370,7 +370,8 @@ def run_curriculum(task, ks, seed, epochs):
 
 
 if __name__ == "__main__" and os.environ.get("CURRICULUM"):
-    seeds = range(int(os.environ.get("SEEDS", 3)))
+    seeds = ([int(x) for x in os.environ["SEED_LIST"].split(",")] if os.environ.get("SEED_LIST")
+             else range(int(os.environ.get("SEEDS", 3))))
     task = os.environ.get("TASKS", "hop")
     ks = [int(x) for x in os.environ.get("KS", "1,2,3,4").split(",")]
     print(f"# curriculum tied  task={task} ks={ks} stage_ep={STAGE_EP}")

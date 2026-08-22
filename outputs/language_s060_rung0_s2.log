@@ -1,0 +1,23 @@
+# language joint  N=20000 dtrain=0 ep=20 seeds=[2]
+    [tied seed2] stage 1: acc 0.637 stalled=True
+    [tied seed2] stage 2: acc 0.828 stalled=True
+    [tied seed2] stage 3: acc 0.899 stalled=True
+    [tied seed2] stage 4: acc 0.908 stalled=True
+/home/marcrockhat/trioron-project/experiments/progenitor/language_chain.py:123: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  print(f"{arm:12} indist {f('indist').mean():.3f}±{f('indist').std():.3f}  "
+/home/marcrockhat/trioron-project/experiments/progenitor/language_chain.py:124: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  f"comp {f('comp').mean():.3f}±{f('comp').std():.3f}  "
+/home/marcrockhat/trioron-project/experiments/progenitor/language_chain.py:125: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  f"depth+1 {f('depth').mean():.3f}±{f('depth').std():.3f}  "
+tied         indist 0.908±nan  comp 0.883±nan  depth+1 0.617±nan  links [4]  3862s
+    [grown_joint seed2] stage 1: acc 0.637 stalled=True
+    [grown_joint seed2] stage 2: acc 0.830 stalled=True
+    [grown_joint seed2] stage 3: acc 0.853 stalled=True
+    [grown_joint seed2] stage 4: acc 0.885 stalled=True
+grown_joint  indist 0.885±nan  comp 0.868±nan  depth+1 0.595±nan  links [4]  3927s
+    [gru seed2] stage 1: acc 0.891 stalled=True
+gru          indist 0.891±nan  comp 0.846±nan  depth+1 0.514±nan  links [1]  184s
+    [mlp3 seed2] stage 1: acc 0.897 stalled=True
+mlp3         indist 0.897±nan  comp 0.859±nan  depth+1 0.573±nan  links [1]  68s
+    [bow seed2] stage 1: acc 0.578 stalled=True
+bow          indist 0.578±nan  comp 0.609±nan  depth+1 0.563±nan  links [1]  5s

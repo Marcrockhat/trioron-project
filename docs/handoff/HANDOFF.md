@@ -7,6 +7,26 @@ GRU .923±.019, tied trioron link .888±.007, MLP3 .816±.029 (all ≈.58–.60 
 side CLEARED: the re-applied link tracks 3-hop composition within .035 of a matched GRU. Lesson:
 run the references at the data scale where the task is learnable BEFORE judging substrate arms.**
 Logs `outputs/logic_chain_s060_{gru,gru40k,tied40k_s0..2}.log`; `gru` arm + `SEED_LIST` env added.
+**LANGUAGE RUNG 0 (s060 afternoon) — SUBSTRATE COMPREHENDS.** `experiments/progenitor/language_chain.py`
+(MODE=joint, MAX_OBJ=2, DTRAIN=0, L_MAX=8, N=20K, 20 ep/stage, MAX_LINKS 4, n=3; logs
+`outputs/language_s060_rung0_s{0,1,2}.log`). Input = concat[scene 44-d, sentence 8×32 one-hot];
+label = truth of sentence in scene (balanced). Tests: in-dist / COMPOSITIONAL (held-out adj-noun
+pairs only) / DEPTH+1 (negation, untrained).
+| arm | in-dist | comp | depth+1 | depth | params |
+|---|---|---|---|---|---|
+| tied (one link re-applied) | **.905±.003** | **.878±.006** | .609±.008 | R=4 | ~16K |
+| grown_joint | .894±.010 | .876±.008 | .610±.018 | 4 links | ~64K |
+| mlp3 ref | .901±.005 | .858±.002 | .596±.025 | — | 19K |
+| gru token-by-token ref | .887±.003 | .837±.010 | .527±.012 | — | 36K |
+| bow leak bar | .583±.004 | .609±.007 | .555±.013 | — | — |
+Tied stage trace (all seeds ≈): R=1 .637 → R=2 .83 → R=3 .89 → R=4 .905 (cap). Readings: ties MLP
+in-dist, beats MLP +.020 / GRU +.041 on compositional (>2σ); re-application > fresh links at 1/4
+params; depth+1 ≈ .60 for all (negation unseen) → rung 1 target. BoW .58 = binding needed.
+**Gotchas found today:** substrate forward on an 844-d input = 407 ms/batch (25× the hop link) —
+keep L_MAX tight (8) or read tokens sequentially; a 4-object/depth-1/L_MAX=24 world is NOT learned by
+ANY reference at 20K (bow .73, mlp .76, gru .72) — climb rungs (Mode E). Never `pkill -f <script>`
+from the assistant shell (kills own shell, exit 144) — kill by PID from /proc environ. 40K hop
+curriculum zero-shot probe was killed for CPU (oversubscription 25 load / 12 CPU); still open.
 Below = the s059 handoff, still current for everything else.
 
 ---
@@ -114,7 +134,13 @@ CHORD-encoded words (synthetic frequency sets per word, numbers not audio) so Li
 Phasecyte discovering the inventory (IPA-free; clicks/nasals are just signatures); one-hot stays as
 the oracle control.
 
-## NEXT (s060, remaining)
+## NEXT (s061)
+A. **Rung 1 — negation:** DTRAIN=1, MAX_OBJ=2, L_MAX=10; test depth+1 = `not not` (DOUBLE_NOT) —
+   the discovered-double-negation case. Then rung 2: MAX_OBJ=3–4 + relations (needs more data —
+   run refs at learnable scale first). Then MODE=continual (3 vocab stages, forgetting matrix).
+B. Sequential token reading for the chain (32-d per step, Axis-7 style) to drop the 300-d input.
+C. Chord-encoded words + Phasecyte Link 0 (Rocky); 40K hop zero-shot probe; hop-3 Phasecyte-
+   between-links only if a rung actually needs it.
 -1. ~~GRU reference~~ DONE (above). Then **Phasecyte-between-links** tied arm
    (no BPTT; per-stage training like grown) on hop-3. Per-channel stall→grow for the parity
    curriculum (expect stage A → 3/3 seeds, stage B → 1.00).
