@@ -61,10 +61,11 @@ WORLDS = {"parity": make_parity, "hop": make_hop}
 
 
 # ----------------------------------------------------------------- models
-def new_link(in_dim, seed):
+def new_link(in_dim, seed, layers=1):
     torch.manual_seed(seed)
-    sub = construct(Seeded(in_dim, H, interior_cells=HID, nonlinear=True),
-                    capacity=in_dim + HID + H + 8)
+    sub = construct(Seeded(in_dim, H, interior_cells=HID, interior_layers=layers,
+                           nonlinear=True),
+                    capacity=in_dim + HID * layers + H + 8)
     sub.prepare_training()
     return sub
 
@@ -117,6 +118,81 @@ class Tied:
 
     def params(self):
         return self.link.trainable_tensors() + list(self.head.parameters())
+
+
+class Channels:
+    """s060-0a: width by partition. E is split into NCH disjoint windows; each
+    window has its own link (no h input); a combiner link eats concat of the
+    channel outputs. Joint training. For parity any partition works."""
+
+    def __init__(self, E, C, seed, nch=None):
+        nch = nch or int(os.environ.get("NCH", 3))
+        self.E, self.C = E, C
+        self.bounds = [(E * i // nch, E * (i + 1) // nch) for i in range(nch)]
+        cd = int(os.environ.get("CH_DEPTH", 1))     # quad layers per channel / combiner
+        self.chan = [new_link(b - a, seed * 100 + i, cd) for i, (a, b) in enumerate(self.bounds)]
+        self.comb = new_link(H * nch, seed * 100 + 50, cd)
+        torch.manual_seed(seed)
+        self.head = nn.Linear(H, C)
+
+    def grow(self): pass
+
+    def forward(self, e, **_):
+        hs = [l(e[:, a:b]) for l, (a, b) in zip(self.chan, self.bounds)]
+        return self.head(self.comb(torch.cat(hs, 1)))
+
+    def params(self):
+        return sum((l.trainable_tensors() for l in self.chan + [self.comb]), []) \
+            + list(self.head.parameters())
+
+
+class TiedWTA(Tied):
+    """s060-0b: discrete state between applications — softmax(h/τ) (soft WTA),
+    the substrate's scratchpad token."""
+    TAU = float(os.environ.get("TAU", 0.3))
+
+    def forward(self, e, **_):
+        h = torch.zeros(len(e), H)
+        for _ in range(self.R):
+            h = torch.softmax(self.link(torch.cat([h, e], 1)) / self.TAU, 1)
+        return self.head(h)
+
+
+class TiedHard(Tied):
+    """Crisp state (Rocky): forward uses the true one-hot argmax of h,
+    backward is straight-through via softmax. Logic states are discrete;
+    softmax only as the gradient path."""
+    TAU = float(os.environ.get("TAU", 1.0))
+
+    def forward(self, e, **_):
+        h = torch.zeros(len(e), H)
+        for _ in range(self.R):
+            z = self.link(torch.cat([h, e], 1))
+            soft = torch.softmax(z / self.TAU, 1)
+            hard = F.one_hot(z.argmax(1), H).float()
+            h = hard + soft - soft.detach()
+        return self.head(h)
+
+
+class TiedGated(Tied):
+    """Gated ambiguity filter (Rocky): clear states (top-2 margin of the
+    softmax > THETA) are snapped to a crisp one-hot (straight-through);
+    ambiguous states pass through soft — doubt is carried, not computed
+    away. In the full architecture the ambiguous branch is the Phasecyte's
+    frustration signal (divide)."""
+    THETA = float(os.environ.get("THETA", 0.3))
+
+    def forward(self, e, **_):
+        h = torch.zeros(len(e), H)
+        for _ in range(self.R):
+            z = self.link(torch.cat([h, e], 1))
+            soft = torch.softmax(z, 1)
+            top2 = soft.topk(2, 1).values
+            clear = ((top2[:, 0] - top2[:, 1]) > self.THETA).float().unsqueeze(1)
+            hard = F.one_hot(z.argmax(1), H).float()
+            crisp = hard + soft - soft.detach()
+            h = clear * crisp + (1 - clear) * soft
+        return self.head(h)
 
 
 class MLP3:
@@ -173,8 +249,9 @@ def run(arm, task, k, seed):
     e, et = evidence(s), evidence(st)
     E = e.shape[1]
     model = (Chain(E, C, seed, joint=True) if arm == "grown_joint" else
-             {"shallow": Chain, "grown": Chain, "tied": Tied, "mlp3": MLP3}[arm](E, C, seed))
-    grows = MAX_LINKS - 1 if arm in ("grown", "grown_joint", "tied") else 0
+             {"shallow": Chain, "grown": Chain, "tied": Tied, "mlp3": MLP3,
+              "channels": Channels, "tied_wta": TiedWTA, "tied_hard": TiedHard, "tied_gated": TiedGated}[arm](E, C, seed))
+    grows = MAX_LINKS - 1 if arm in ("grown", "grown_joint", "tied", "tied_wta", "tied_hard", "tied_gated") else 0
     # shallow / mlp3 get the same TOTAL epoch budget as a fully grown chain
     epochs = STAGE_EP if grows else STAGE_EP * MAX_LINKS
     depth = 1
@@ -187,7 +264,7 @@ def run(arm, task, k, seed):
     return acc, depth, time.time() - t0
 
 
-if __name__ == "__main__" and not os.environ.get("CURRICULUM"):
+if __name__ == "__main__" and not os.environ.get("CURRICULUM") and not os.environ.get("CH_CURRICULUM"):
     torch.set_num_threads(int(os.environ.get("THREADS", 4)))
     seeds = range(int(os.environ.get("SEEDS", 3)))
     tasks = os.environ.get("TASKS", "parity,hop").split(",")
@@ -204,6 +281,52 @@ if __name__ == "__main__" and not os.environ.get("CURRICULUM"):
                 a = torch.tensor([r[0] for r in res]); d = [r[1] for r in res]
                 print(f"{task:7}{k:>3} {arm:9} {a.mean():.3f}±{a.std():.3f} "
                       f"{str(d):>8}  {sum(r[2] for r in res):.0f}", flush=True)
+
+
+# ------------------------------------------------------------ channel curriculum (Mode E)
+def run_channel_curriculum(k, seed, epochs, nch=3):
+    """Stage A: each channel learns the parity of ITS OWN window under its own
+    head (own frustration), then locks. Stage B: combiner + head learn
+    parity-k over the settled channel states. Primitives first, then compose."""
+    g = torch.Generator().manual_seed(1000 * seed + k)
+    s, y, C = make_parity(int(os.environ.get("NTRAIN", 8000)), k, g)
+    st, yt, _ = make_parity(4000, k, g)
+    e, et = evidence(s), evidence(st)
+    m = Channels(e.shape[1], C, seed, nch)
+    w = 12 // nch                                         # bits per window
+    accA = []
+    for i, (a, b) in enumerate(m.bounds):                 # stage A
+        ya, yta = s[:, i * w:(i + 1) * w].sum(1) % 2, st[:, i * w:(i + 1) * w].sum(1) % 2
+
+        class One:                                        # channel + its own head
+            def __init__(self, link):
+                self.link = link; torch.manual_seed(seed + i); self.head = nn.Linear(H, 2)
+            def forward(self, x, **_): return self.head(self.link(x))
+            def params(self): return self.link.trainable_tensors() + list(self.head.parameters())
+        one = One(m.chan[i])
+        _, acc, _ = train_stage(one, e[:, a:b], ya, et[:, a:b], yta, epochs, seed * 7 + i)
+        accA.append(acc)
+        for t in m.chan[i].trainable_tensors(): t.requires_grad_(False)   # lock
+
+    class Comb:                                           # stage B
+        def forward(self, x, **_):
+            with torch.no_grad():
+                hs = torch.cat([l(x[:, a:b]) for l, (a, b) in zip(m.chan, m.bounds)], 1)
+            return m.head(m.comb(hs))
+        def params(self): return m.comb.trainable_tensors() + list(m.head.parameters())
+    _, accB, _ = train_stage(Comb(), e, y, et, yt, epochs, seed * 7 + 99)
+    return accA, accB
+
+
+if __name__ == "__main__" and os.environ.get("CH_CURRICULUM"):
+    seeds = range(int(os.environ.get("SEEDS", 3)))
+    ks = [int(x) for x in os.environ.get("KS", "8,12").split(",")]
+    print(f"# channel curriculum  ks={ks} stage_ep={STAGE_EP} nch={os.environ.get('NCH', 3)}")
+    for k in ks:
+        out = [run_channel_curriculum(k, s, STAGE_EP, int(os.environ.get("NCH", 3))) for s in seeds]
+        A = torch.tensor([o[0] for o in out]); B = torch.tensor([o[1] for o in out])
+        print(f"parity {k:>3} ch_curric  stageA per-channel {A.mean(0).tolist()}  "
+              f"stageB {B.mean():.3f}±{B.std():.3f}", flush=True)
 
 
 # ------------------------------------------------------------ curriculum arm

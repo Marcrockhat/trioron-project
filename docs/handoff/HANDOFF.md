@@ -1,6 +1,6 @@
 # Trioron Handoff
 
-**Session date:** 2026-08-22 (started 2026-08-21)
+**Session date:** 2026-08-22 (started 2026-08-21; s060 arms 0a/0b ALSO RUN in-session, see below)
 **Session number:** 059
 **Session title:** **LOGIC/LANGUAGE ARC, STAGE 0 DEPTH GATE — PARTIAL PASS. A grown chain of
 quad trioron links forms real depth (parity-4: 1-link .50 → 3 links 1.00; hop-2: tied link .92
@@ -73,7 +73,42 @@ continual acquisition STAGES of vocabulary; HOLD_OUT adj–noun pairs for the co
 depth split = deeper nesting than trained; DOUBLE_NOT allowed (Rocky). Encodings: scene 44-d
 float, sentence [24, 32] one-hot evidence (Link-0 shape). No model trained on it yet.
 
+## s060 arms run IN THIS SESSION (Rocky: "let's continue now") — ALL NULL so far
+Logs `outputs/logic_chain_s059_{channels,channels_d2,ch_curric,wta,crisp}.log`; arms added to
+`logic_chain.py`: `channels` (NCH windows + combiner, CH_DEPTH layers per link), `tied_wta`
+(softmax τ=0.3 between applications), `tied_hard` (argmax one-hot, straight-through), `tied_gated`
+(Rocky's gated ambiguity filter: snap to one-hot when top-2 margin > THETA=0.3, else pass soft),
+`CH_CURRICULUM=1` (Mode E: each channel learns parity of its OWN window under its own head, locks;
+then combiner learns parity-k).
+| arm | parity-4 | parity-8 | parity-12 | hop-3 |
+|---|---|---|---|---|
+| channels 1-layer (degree 4 — MY BOUND ERROR for k=8) | 1.00 (60 ep; .50 if early-stopped at patience 10) | .50 | — | — |
+| channels 2-layer, end-to-end | — | .50 | (killed) | — |
+| channel curriculum 2-layer, 60 ep/stage | — | stage A per-channel 1.00/.67/.83, stage B .66±.29 (bimodal) | stage A ≈.66 each, stage B .51 | — |
+| tied_wta | — | — | — | .53 (hop-2 .82 < tied .92) |
+| tied_hard | — | — | — | .52 |
+| tied_gated | — | — | — | .54 |
+| (plain tied, ref) | | | | .59; mlp3 .60 |
+Readings: (i) partition alone does not create intermediate signal — end-to-end channels fail
+parity-8 for the same no-partial-progress reason; (ii) with own-frustration supervision the
+COMPOSITION works on seeds whose channels settled (stage B bimodal), so the blocker is
+seed-chaotic acquisition of the parity-4 primitive within 60 ep (fixed 2-layer channel ≈1/3 of
+seeds) — remedy = the validated stall→grow rule applied per channel, not more hand layers;
+(iii) every state-discretisation between tied applications is null on hop-3 — the wall is not
+crispness of the raw 32 units. Remaining hypotheses for hop-3: the state must be a LEARNED symbol
+(Phasecyte between links, Rocky's gated filter routing the ambiguous branch to Phasecyte
+frustration) or BPTT through ≥3 quad applications is the optimisation limit — run a small GRU
+reference on hop-3 first to know whether the task is even learnable at this budget.
+Rocky's framing to keep: **the core is logic on crisp symbols; a gated ambiguity filter resolves
+vague states into crisp ones; doubt is carried, not computed with.** Also: Stage 2 input should be
+CHORD-encoded words (synthetic frequency sets per word, numbers not audio) so Link 0 = a real
+Phasecyte discovering the inventory (IPA-free; clicks/nasals are just signatures); one-hot stays as
+the oracle control.
+
 ## NEXT (s060)
+-1. **GRU reference on hop-3/4** (learnability control), then **Phasecyte-between-links** tied arm
+   (no BPTT; per-stage training like grown) on hop-3. Per-channel stall→grow for the parity
+   curriculum (expect stage A → 3/3 seeds, stage B → 1.00).
 0a. **Channels (Rocky, end of s059): width by division + depth by frustration.** Parity composes by
    PARTITION: parity(12) = parity(parity(1-4), parity(5-8), parity(9-12)); arm = 3 x k=4 channel
    links on disjoint bit windows + combiner link (any partition works for parity, so division on

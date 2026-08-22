@@ -1,0 +1,4 @@
+# depth gate  seeds=[0, 1, 2] stage_ep=30 max_links=5
+task     k arm                acc    depth  secs
+hop      3 tied_hard 0.523±0.013 [5, 5, 5]  2601
+hop      3 tied_gated 0.542±0.011 [5, 5, 5]  1564
