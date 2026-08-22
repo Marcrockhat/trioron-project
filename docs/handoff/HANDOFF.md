@@ -74,6 +74,13 @@ depth split = deeper nesting than trained; DOUBLE_NOT allowed (Rocky). Encodings
 float, sentence [24, 32] one-hot evidence (Link-0 shape). No model trained on it yet.
 
 ## NEXT (s060)
+0a. **Channels (Rocky, end of s059): width by division + depth by frustration.** Parity composes by
+   PARTITION: parity(12) = parity(parity(1-4), parity(5-8), parity(9-12)); arm = 3 x k=4 channel
+   links on disjoint bit windows + combiner link (any partition works for parity, so division on
+   random subsets suffices). Predict PASS on parity-8/12. Rocky's prime sizes (2,3,5,7,11) =
+   modular-residue/periodicity detectors — keep for the rhythm/temporal tasks, not parity.
+0b. **Discrete state between links:** Phasecyte (a discretiser) or softmax/WTA between tied
+   applications — the substrate's version of the LLM scratchpad token. Decides hop-3.
 0. **Hop-3 wall probe:** tied link + normalised state between applications (softmax/WTA over h
    or a competitive-inhibition primitive); also wider link (interior 96) and a 2-link tied
    block. PASS = hop-3 ≥ .9 and zero-shot hop-4 > chance. Keep patience 8 / joint / lock-after-
