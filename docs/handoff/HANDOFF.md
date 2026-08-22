@@ -36,7 +36,7 @@ jitter .05), numbers not audio; one-hot `encode_sentence` stays the oracle contr
 |---|---|---|---|---|
 | **pure tied** (Phasecyte L0) n=3 | **.868±.010** | .792±.012 | .458±.030 | 20.7K |
 | pure tied, oracle L0 (n=1, s0) | .858 | .780 | .588 | 20.7K |
-| pure grown (n=3) | RUNNING at handoff time — see `outputs/language_s060_rung1_pure_s*.log` `^grown` line | | | |
+| pure grown (fresh links, joint) n=3 | .848±.018 | .776±.017 | .474±.029 | 81K |
 | impure tied (torch head, oracle L0) n=3 | .846±.013 | .780±.011 | .552±.007 | ~16K |
 | impure grown_joint (n=2; seed 2 OOM-killed at final eval, in-dist .822) | .837±.002 | .773±.006 | .538±.006 | ~64K |
 | mlp3 | .855±.010 | .792±.006 | .585±.013 | 19K |
@@ -75,8 +75,8 @@ Tied traces (pure, seeds≈): R=1 .84 → R=2 .86 → R=3 .87 → R=4 .87; train
 - `language_pure.py` std warnings for n=1 are harmless (`std()` on a single seed).
 
 ## NEXT (s062)
-A. Read the pure `grown` line (n=3) from the logs and fill the table above; rerun impure
-   grown_joint seed 2 if its comp/depth are needed (`ARMS=grown_joint SEED_LIST=2`).
+A. (done) pure grown n=3 in table: re-application (tied, 20.7K) beats fresh links (81K) on every
+   axis again, as at rung 0. Rerun impure grown_joint seed 2 only if its comp/depth are needed.
 B. Rung 1 double-negation: run the levers in Finding 4 (start with N=40K pure tied, one seed, to
    see whether depth+1 moves at all); then rung 2 (MAX_OBJ 3–4 + relations) with refs at a
    learnable scale first.

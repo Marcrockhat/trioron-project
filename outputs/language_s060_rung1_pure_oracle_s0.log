@@ -1,0 +1,13 @@
+# language PURE link0=oracle N=20000 dtrain=1 ep=20 L_MAX=10 MAX_OBJ=2 seeds=[0]
+  [link0 oracle] evidence built 0s
+    [tied seed0]    stage 1 depth 1: acc 0.849 loss 0.220 stalled=True
+    [tied seed0]    stage 2 depth 2: acc 0.852 loss 0.129 stalled=True
+    [tied seed0]    stage 3 depth 3: acc 0.864 loss 0.086 stalled=True
+    [tied seed0]    stage 4 depth 4: acc 0.858 loss 0.064 stalled=True
+/home/marcrockhat/trioron-project/experiments/progenitor/language_pure.py:107: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  print(f"{arm:12s} indist {f('indist').mean():.3f}±{f('indist').std():.3f}  "
+/home/marcrockhat/trioron-project/experiments/progenitor/language_pure.py:108: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  f"comp {f('comp').mean():.3f}±{f('comp').std():.3f}  "
+/home/marcrockhat/trioron-project/experiments/progenitor/language_pure.py:109: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  f"depth+1 {f('depth').mean():.3f}±{f('depth').std():.3f}  "
+tied         indist 0.858±nan  comp 0.780±nan  depth+1 0.588±nan  links [4]  params [20714]  8375s
