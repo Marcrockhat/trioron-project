@@ -1,33 +1,93 @@
 # Trioron Handoff
 
-**Session date:** 2026-08-22
-**Session number:** 060
-**Session title (s060, in progress):** **HOP-3 WALL WAS A DATA WALL. At 40K samples (5×) hop-3:
-GRU .923±.019, tied trioron link .888±.007, MLP3 .816±.029 (all ≈.58–.60 at 8K). Depth gate hop
-side CLEARED: the re-applied link tracks 3-hop composition within .035 of a matched GRU. Lesson:
-run the references at the data scale where the task is learnable BEFORE judging substrate arms.**
-Logs `outputs/logic_chain_s060_{gru,gru40k,tied40k_s0..2}.log`; `gru` arm + `SEED_LIST` env added.
-**LANGUAGE RUNG 0 (s060 afternoon) — SUBSTRATE COMPREHENDS.** `experiments/progenitor/language_chain.py`
-(MODE=joint, MAX_OBJ=2, DTRAIN=0, L_MAX=8, N=20K, 20 ep/stage, MAX_LINKS 4, n=3; logs
-`outputs/language_s060_rung0_s{0,1,2}.log`). Input = concat[scene 44-d, sentence 8×32 one-hot];
-label = truth of sentence in scene (balanced). Tests: in-dist / COMPOSITIONAL (held-out adj-noun
-pairs only) / DEPTH+1 (negation, untrained).
-| arm | in-dist | comp | depth+1 | depth | params |
-|---|---|---|---|---|---|
-| tied (one link re-applied) | **.905±.003** | **.878±.006** | .609±.008 | R=4 | ~16K |
-| grown_joint | .894±.010 | .876±.008 | .610±.018 | 4 links | ~64K |
-| mlp3 ref | .901±.005 | .858±.002 | .596±.025 | — | 19K |
-| gru token-by-token ref | .887±.003 | .837±.010 | .527±.012 | — | 36K |
-| bow leak bar | .583±.004 | .609±.007 | .555±.013 | — | — |
-Tied stage trace (all seeds ≈): R=1 .637 → R=2 .83 → R=3 .89 → R=4 .905 (cap). Readings: ties MLP
-in-dist, beats MLP +.020 / GRU +.041 on compositional (>2σ); re-application > fresh links at 1/4
-params; depth+1 ≈ .60 for all (negation unseen) → rung 1 target. BoW .58 = binding needed.
-**Gotchas found today:** substrate forward on an 844-d input = 407 ms/batch (25× the hop link) —
-keep L_MAX tight (8) or read tokens sequentially; a 4-object/depth-1/L_MAX=24 world is NOT learned by
-ANY reference at 20K (bow .73, mlp .76, gru .72) — climb rungs (Mode E). Never `pkill -f <script>`
-from the assistant shell (kills own shell, exit 144) — kill by PID from /proc environ. 40K hop
-curriculum zero-shot probe was killed for CPU (oversubscription 25 load / 12 CPU); still open.
-Below = the s059 handoff, still current for everything else.
+**Session date:** 2026-08-23
+**Session number:** 061
+**Session title (s061 = "run 1+", Rocky):** **PURE-TRIORON LANGUAGE ORGANISM BUILT AND RUN AT RUNG 1
+(negation). Everything that learns is substrate: Phasecyte Link 0 discovers the word inventory
+from CHORD-encoded words (24 internal classes, 21–22/24 named, cluster purity .996), substrate
+chain (`trioron/lifecycle/chain.py`), substrate head. Pure tied n=3: in-dist .868±.010 (ties GRU
+.866, beats impure tied .846 by +.022), comp .792±.012 (GRU .804), depth+1 = `not not` .458±.030
+— BELOW chance for pure tied and GRU alike: double negation is read as single negation. Rung-1
+zero-shot double-negation target NOT met by any arm (best mlp3 .585).**
+
+## READ THIS FIRST
+Rocky's "+" = pure trioron. Scope chosen by Rocky: FULL purity incl. Phasecyte Link 0 (not just
+head + controller). Rocky: "use a math function as initial feeder (like Kinopsis)" → words are
+synthetic chords (K=3 Gaussian partials on 32 bins, `language_world.chord_table`, per-occurrence
+jitter .05), numbers not audio; one-hot `encode_sentence` stays the oracle control (`LINK0=oracle`).
+
+## What was built (commit a35b3d1 + this handoff)
+- `trioron/lifecycle/chain.py` (package, spec §9.6 row added): `new_link` (Seeded quad, optional
+  `fan_in_init`), `LinkChain(mode=tied|grown)` with a SUBSTRATE head link `Seeded(H→C, interior
+  16)`, `StallTrigger` (Numa patience rule, epoch-grained), `fit_stage`, `fit_grow` (stall → grow →
+  joint train, lock-after-settle; no credit lock at spawn).
+- `experiments/progenitor/language_world.py`: `chord_table`, `chords_of`, `ids_of` (env CHORD_BINS 32,
+  CHORD_K 3, CHORD_JITTER .05).
+- `experiments/progenitor/language_pure.py`: `ChordLink0` = PhasecyteLeaf over the token chord
+  stream (WAKE=20000 tokens, WINDOW=1000, class_cap 32, capacity 4096; labels `c{wid}` are naming
+  taps only); evidence = `leaf.evidence()` CENTERED branch → softmax τ=1 (`EV_MODE`, `EV_TAU`) →
+  zero-padded to CLASS_CAP, PAD rows zero. Arms `tied,grown`; env as language_chain.py + LINK0/WAKE/
+  WINDOW/EV_MODE.
+- Logs: `outputs/language_s060_rung1_s{0,1,2}.log` (impure refs), `..._pure_s{0,1,2}.log`,
+  `..._pure_oracle_s0.log`.
+
+## Rung 1 (DTRAIN=1, MAX_OBJ=2, L_MAX=10, N=20K, 20 ep/stage, MAX_LINKS 4, patience 8)
+| arm | in-dist | comp | depth+1 (`not not`) | params |
+|---|---|---|---|---|
+| **pure tied** (Phasecyte L0) n=3 | **.868±.010** | .792±.012 | .458±.030 | 20.7K |
+| pure tied, oracle L0 (n=1, s0) | .858 | .780 | .588 | 20.7K |
+| pure grown (n=3) | RUNNING at handoff time — see `outputs/language_s060_rung1_pure_s*.log` `^grown` line | | | |
+| impure tied (torch head, oracle L0) n=3 | .846±.013 | .780±.011 | .552±.007 | ~16K |
+| impure grown_joint (n=2; seed 2 OOM-killed at final eval, in-dist .822) | .837±.002 | .773±.006 | .538±.006 | ~64K |
+| mlp3 | .855±.010 | .792±.006 | .585±.013 | 19K |
+| gru | .866±.011 | .804±.008 | .479±.038 | 36K |
+| bow | .704±.008 | .720±.003 | .341±.012 | — |
+Tied traces (pure, seeds≈): R=1 .84 → R=2 .86 → R=3 .87 → R=4 .87; train loss .06 at R=4 with test
+.87 ⇒ GENERALISATION-limited at 20K (the hop-3 data-wall shape; N=40K is the obvious next lever).
+
+## Findings
+1. **Substrate head > torch head.** Pure chain + oracle L0 at R=1 = .849 vs .718 with the torch
+   Linear head; the quad head link is load-bearing. BUT two std-.01 substrates in series emit
+   ~1e-5 logits and sit at ln 2 (smoke) — fixed by fan-in-scaled edge init on the HEAD only
+   (`fan_in_init=True`, links unchanged for rung-0 comparability). Substrate output std .002→1.4.
+2. **Phasecyte symbols ≈ oracle symbols** once read out correctly: raw matched-filter evidence is
+   dense (13–30 on EVERY class, argmax word-pure) and the chain can't use it (R=2 .726); the
+   CENTERED evidence (s039 common-mode fix) + softmax gives .993 mean top-1 (crisp symbol, genuinely
+   ambiguous tokens stay soft = doubt carried, Rocky's framing) → pure tied .868 ≥ oracle-pure .858.
+3. Link-0 discovery needs exposure: WAKE=3K tokens → 4 classes; 20K → 24–26 classes, 21–22/24 named,
+   purity .996 (3 words merge into neighbours; chord max cosine .78 between some word pairs).
+4. **Double negation is NOT discovered zero-shot at rung 1.** Pure tied .458 / GRU .479 are
+   below chance = systematic "not not X ⇒ not X"; BoW .34 shows the label-flip structure. The
+   depth+1 split is exactly the test Rocky asked for (DOUBLE_NOT allowed) — it is an open rung,
+   not a bug. Candidate levers (untested): (a) more data (40K) since train loss ≪ test; (b)
+   train on ≤1 NOT but with explicit `not` as a sequential token read (item B) so re-application
+   depth maps onto nesting depth; (c) rung 1b: include `not not` in training at MAX_OBJ=2 and
+   test depth+2 (triple) for the generalisation claim.
+
+## Gotchas (new)
+- OOM: 7 GB RAM. Link-0 build peaks ~2.1 GB (evidence over 200K tokens); 4 language procs +
+  inspection scripts tripped the OOM killer (took the seed-2 impure ref at its final eval). Run
+  ≤3 language processes at once.
+- Load: the impure refs (3×4 threads) + probes pushed load to 20/12 CPUs; every stage ~25 min
+  under that. Sequence runs instead of stacking them.
+- `pgrep -f`/`pkill -f <pattern>` kills the assistant's own shell (exit 144) — hit AGAIN. Kill by
+  PID: `ps -eo pid,args | grep "^ *[0-9]* python3 <script>"` then check `/proc/PID/environ`.
+- `language_pure.py` std warnings for n=1 are harmless (`std()` on a single seed).
+
+## NEXT (s062)
+A. Read the pure `grown` line (n=3) from the logs and fill the table above; rerun impure
+   grown_joint seed 2 if its comp/depth are needed (`ARMS=grown_joint SEED_LIST=2`).
+B. Rung 1 double-negation: run the levers in Finding 4 (start with N=40K pure tied, one seed, to
+   see whether depth+1 moves at all); then rung 2 (MAX_OBJ 3–4 + relations) with refs at a
+   learnable scale first.
+C. MODE=continual (3 vocab stages, forgetting matrix) on the pure organism — `language_pure.py`
+   has no continual main yet; port `run_continual` from `language_chain.py`.
+D. Sequential token reading (Axis-7 style, 32-d/step) to replace the flattened L_MAX×32 input;
+   pairs naturally with nesting depth = re-application depth.
+E. Paper: the rung-0 table in the s060 handoff is IMPURE (torch head, oracle L0); any language
+   number for the paper must come from `language_pure.py`. Rung 0 pure rerun not done.
+
+Below = the s060/s059 handoffs, still current for the depth gate / logic chain / world details.
 
 ---
 **Previous session number:** 059
