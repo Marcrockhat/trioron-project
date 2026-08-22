@@ -135,6 +135,11 @@ Phasecyte discovering the inventory (IPA-free; clicks/nasals are just signatures
 the oracle control.
 
 ## NEXT (s061)
+0. **Purity audit (Rocky asked):** learner = pure substrate (`construct(Seeded(..., nonlinear=True))`).
+   NOT package: linear torch head (66 p), the tied re-application loop (script, not Axis-7
+   satellites), the stall→grow controller (script, not growth-trigger/credit-lock), Link 0 oracle
+   one-hot (not Phasecyte). Promote the chain/tied controller into the package on the existing
+   growth-trigger discipline and swap head+Link 0 BEFORE any language number goes in the paper.
 A. **Rung 1 — negation:** DTRAIN=1, MAX_OBJ=2, L_MAX=10; test depth+1 = `not not` (DOUBLE_NOT) —
    the discovered-double-negation case. Then rung 2: MAX_OBJ=3–4 + relations (needs more data —
    run refs at learnable scale first). Then MODE=continual (3 vocab stages, forgetting matrix).
