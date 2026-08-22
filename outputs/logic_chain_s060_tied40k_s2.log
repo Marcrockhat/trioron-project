@@ -1,0 +1,5 @@
+/home/marcrockhat/trioron-project/experiments/progenitor/logic_chain.py:299: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  print(f"{task:7}{k:>3} {arm:9} {a.mean():.3f}±{a.std():.3f} "
+# depth gate  seeds=[2] stage_ep=30 max_links=5
+task     k arm                acc    depth  secs
+hop      3 tied      0.883±nan      [5]  4831

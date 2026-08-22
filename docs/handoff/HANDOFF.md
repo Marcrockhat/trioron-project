@@ -1,7 +1,16 @@
 # Trioron Handoff
 
-**Session date:** 2026-08-22 (started 2026-08-21; s060 arms 0a/0b ALSO RUN in-session, see below)
-**Session number:** 059
+**Session date:** 2026-08-22
+**Session number:** 060
+**Session title (s060, in progress):** **HOP-3 WALL WAS A DATA WALL. At 40K samples (5×) hop-3:
+GRU .923±.019, tied trioron link .888±.007, MLP3 .816±.029 (all ≈.58–.60 at 8K). Depth gate hop
+side CLEARED: the re-applied link tracks 3-hop composition within .035 of a matched GRU. Lesson:
+run the references at the data scale where the task is learnable BEFORE judging substrate arms.**
+Logs `outputs/logic_chain_s060_{gru,gru40k,tied40k_s0..2}.log`; `gru` arm + `SEED_LIST` env added.
+Below = the s059 handoff, still current for everything else.
+
+---
+**Previous session number:** 059
 **Session title:** **LOGIC/LANGUAGE ARC, STAGE 0 DEPTH GATE — PARTIAL PASS. A grown chain of
 quad trioron links forms real depth (parity-4: 1-link .50 → 3 links 1.00; hop-2: tied link .92
 vs shallow .49) — but only with a PATIENT Numa trigger and JOINT training (lock after settlement).
@@ -105,8 +114,8 @@ CHORD-encoded words (synthetic frequency sets per word, numbers not audio) so Li
 Phasecyte discovering the inventory (IPA-free; clicks/nasals are just signatures); one-hot stays as
 the oracle control.
 
-## NEXT (s060)
--1. **GRU reference on hop-3/4** (learnability control), then **Phasecyte-between-links** tied arm
+## NEXT (s060, remaining)
+-1. ~~GRU reference~~ DONE (above). Then **Phasecyte-between-links** tied arm
    (no BPTT; per-stage training like grown) on hop-3. Per-channel stall→grow for the parity
    curriculum (expect stage A → 3/3 seeds, stage B → 1.00).
 0a. **Channels (Rocky, end of s059): width by division + depth by frustration.** Parity composes by

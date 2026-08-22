@@ -195,6 +195,22 @@ class TiedGated(Tied):
         return self.head(h)
 
 
+class GRURef:
+    """s060 learnability control: torch GRUCell hidden H, same input e re-fed
+    R times (matched to the tied arm), BPTT. R fixed = env R (default k+1 set
+    by caller)."""
+    def __init__(self, E, C, seed):
+        torch.manual_seed(seed)
+        self.cell = nn.GRUCell(E, H); self.head = nn.Linear(H, C)
+        self.R = int(os.environ.get("R", 3))
+    def grow(self): self.R += 1
+    def forward(self, e, **_):
+        h = torch.zeros(len(e), H)
+        for _ in range(self.R): h = self.cell(e, h)
+        return self.head(h)
+    def params(self): return list(self.cell.parameters()) + list(self.head.parameters())
+
+
 class MLP3:
     def __init__(self, E, C, seed):
         torch.manual_seed(seed)
@@ -250,8 +266,8 @@ def run(arm, task, k, seed):
     E = e.shape[1]
     model = (Chain(E, C, seed, joint=True) if arm == "grown_joint" else
              {"shallow": Chain, "grown": Chain, "tied": Tied, "mlp3": MLP3,
-              "channels": Channels, "tied_wta": TiedWTA, "tied_hard": TiedHard, "tied_gated": TiedGated}[arm](E, C, seed))
-    grows = MAX_LINKS - 1 if arm in ("grown", "grown_joint", "tied", "tied_wta", "tied_hard", "tied_gated") else 0
+              "channels": Channels, "tied_wta": TiedWTA, "tied_hard": TiedHard, "tied_gated": TiedGated, "gru": GRURef}[arm](E, C, seed))
+    grows = MAX_LINKS - 1 if arm in ("grown", "grown_joint", "tied", "tied_wta", "tied_hard", "tied_gated", "gru") else 0
     # shallow / mlp3 get the same TOTAL epoch budget as a fully grown chain
     epochs = STAGE_EP if grows else STAGE_EP * MAX_LINKS
     depth = 1
@@ -266,7 +282,8 @@ def run(arm, task, k, seed):
 
 if __name__ == "__main__" and not os.environ.get("CURRICULUM") and not os.environ.get("CH_CURRICULUM"):
     torch.set_num_threads(int(os.environ.get("THREADS", 4)))
-    seeds = range(int(os.environ.get("SEEDS", 3)))
+    seeds = ([int(x) for x in os.environ["SEED_LIST"].split(",")] if os.environ.get("SEED_LIST")
+             else range(int(os.environ.get("SEEDS", 3))))
     tasks = os.environ.get("TASKS", "parity,hop").split(",")
     arms = os.environ.get("ARMS", "shallow,mlp3,grown,tied").split(",")
     KS = {"parity": [2, 4, 8, 12], "hop": [1, 2, 3, 4]}
