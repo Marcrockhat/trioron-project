@@ -178,3 +178,39 @@ if __name__ == "__main__":
     amb = sum(1 for v in bow.values() if 0 < sum(v) < len(v))
     print(f"bag-of-words keys {len(bow)}, keys with BOTH truth values {amb} "
           f"(truth depends on scene, not on words alone: good)")
+
+
+# ------------------------------------------------------------ chord words (s060+, Rocky)
+# Each word = a fixed synthetic CHORD: K partials on an F-bin spectrum (math-generated
+# signal, like the Kinopsis feeder — numbers, not audio; IPA-free). A token occurrence is
+# the chord + per-occurrence jitter. This is the SENSE Link-0 (Phasecyte) must discover
+# an inventory from; one-hot ``encode_sentence`` stays the oracle control.
+CHORD_BINS = int(os.environ.get("CHORD_BINS", 32))
+CHORD_K = int(os.environ.get("CHORD_K", 3))
+CHORD_JITTER = float(os.environ.get("CHORD_JITTER", 0.05))
+
+
+def chord_table(seed: int = 0) -> torch.Tensor:
+    """[CLASS_CAP, CHORD_BINS] chord spectra; row 0 (PAD) = silence."""
+    g = torch.Generator().manual_seed(seed)
+    T = torch.zeros(CLASS_CAP, CHORD_BINS)
+    grid = torch.arange(CHORD_BINS).float()
+    for w in range(1, CLASS_CAP):
+        bins = torch.randperm(CHORD_BINS, generator=g)[:CHORD_K].float()
+        amp = 0.5 + torch.rand(CHORD_K, generator=g)
+        for b, a in zip(bins, amp):          # each partial = Gaussian line, width 0.7 bin
+            T[w] += a * torch.exp(-0.5 * ((grid - b) / 0.7) ** 2)
+        T[w] /= T[w].norm()
+    return T
+
+
+def chords_of(ids: torch.Tensor, table: torch.Tensor, gen: torch.Generator) -> torch.Tensor:
+    """[..., CHORD_BINS] jittered chord per token id; PAD rows stay zero."""
+    X = table[ids]
+    X = X + CHORD_JITTER * torch.randn(X.shape, generator=gen) * (ids != 0).unsqueeze(-1)
+    return X
+
+
+def ids_of(E: torch.Tensor) -> torch.Tensor:
+    """Recover token ids [N, L_MAX] from one-hot evidence (PAD rows are all-zero)."""
+    return E.argmax(-1) * (E.sum(-1) > 0).long()

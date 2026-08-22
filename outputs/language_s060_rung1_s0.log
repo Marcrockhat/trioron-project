@@ -1,0 +1,23 @@
+# language joint  N=20000 dtrain=1 ep=20 seeds=[0]
+    [bow seed0] stage 1: acc 0.712 stalled=True
+/home/marcrockhat/trioron-project/experiments/progenitor/language_chain.py:123: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  print(f"{arm:12} indist {f('indist').mean():.3f}±{f('indist').std():.3f}  "
+/home/marcrockhat/trioron-project/experiments/progenitor/language_chain.py:124: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  f"comp {f('comp').mean():.3f}±{f('comp').std():.3f}  "
+/home/marcrockhat/trioron-project/experiments/progenitor/language_chain.py:125: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /pytorch/aten/src/ATen/native/ReduceOps.cpp:1858.)
+  f"depth+1 {f('depth').mean():.3f}±{f('depth').std():.3f}  "
+bow          indist 0.712±nan  comp 0.718±nan  depth+1 0.335±nan  links [1]  10s
+    [mlp3 seed0] stage 1: acc 0.859 stalled=True
+mlp3         indist 0.859±nan  comp 0.787±nan  depth+1 0.575±nan  links [1]  164s
+    [gru seed0] stage 1: acc 0.877 stalled=True
+gru          indist 0.877±nan  comp 0.797±nan  depth+1 0.514±nan  links [1]  376s
+    [tied seed0] stage 1: acc 0.718 stalled=True
+    [tied seed0] stage 2: acc 0.845 stalled=True
+    [tied seed0] stage 3: acc 0.844 stalled=True
+    [tied seed0] stage 4: acc 0.858 stalled=True
+tied         indist 0.858±nan  comp 0.780±nan  depth+1 0.560±nan  links [4]  6234s
+    [grown_joint seed0] stage 1: acc 0.718 stalled=True
+    [grown_joint seed0] stage 2: acc 0.846 stalled=True
+    [grown_joint seed0] stage 3: acc 0.837 stalled=True
+    [grown_joint seed0] stage 4: acc 0.839 stalled=True
+grown_joint  indist 0.839±nan  comp 0.768±nan  depth+1 0.543±nan  links [4]  9482s

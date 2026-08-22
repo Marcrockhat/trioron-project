@@ -3357,6 +3357,7 @@ trioron/
 | `export.py` | Dense export: fold compiled plan to a fixed buffers-only forward (LINEAR/DENDRITE/TANH), exact, jit-traceable; does not learn | 5.4 / 6.4 |
 | `compact.py` | Recycling pass, saliency-based sort, adaptive defrag threshold | 5.5 |
 | `saliency.py` | `saliency(cell)` composite metric + downstream-impact BFS | 5.5 |
+| `chain.py` | Link chains: substrate links + substrate head in series, `tied` (re-application) / `grown` (spawn) depth, `StallTrigger` patience rule, lock-after-settle (s059/s060 promotion) | 5.1 |
 
 ### 9.7 `viz/` — Observable Growth
 
