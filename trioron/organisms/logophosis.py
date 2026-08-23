@@ -52,7 +52,7 @@ class ChordLink0:
                  wake: int = 20000, window: int = 1000, ev_mode: str = "softmax",
                  ev_tau: float = 1.0, bins: int = 32, k: int = 3, jitter: float = 0.05,
                  capacity: int = 4096, verbose: bool = True) -> None:
-        self.class_cap, self.ev_mode, self.ev_tau, self.jitter = class_cap, ev_mode, ev_tau, jitter
+        self.class_cap, self.ev_mode, self.ev_tau, self.jitter, self.window = class_cap, ev_mode, ev_tau, jitter, window
         self.table = chord_table(class_cap, bins=bins, k=k, seed=seed)
         self.gen = torch.Generator().manual_seed(1000 + seed)
         ids = ids_train.flatten(); ids = ids[ids != 0]
@@ -69,6 +69,19 @@ class ChordLink0:
         self.n_named = len(set(int(v) for v in names if v >= 0))
         if verbose:
             print(f"  [link0] internal classes {self.n_classes}, named {self.n_named} words", flush=True)
+
+    def observe_more(self, ids: torch.Tensor, n: int = 20000) -> None:
+        """Continued inventory discovery on a new token stream (no gradients; new
+        words get new classes, old classes keep their indices). s063 Mode E."""
+        ids = ids.flatten(); ids = ids[ids != 0]
+        ids = ids[torch.randperm(len(ids), generator=self.gen)[:n]]
+        X = chords_of(ids, self.table, self.gen, self.jitter)
+        labels = [f"c{int(i)}" for i in ids]
+        w = self.window
+        for i in range(0, len(X), w):
+            self.leaf.observe(X[i:i + w], labels[i:i + w])
+        names = self.leaf.names()
+        self.n_classes, self.n_named = len(names), len(set(int(v) for v in names if v >= 0))
 
     @torch.no_grad()
     def evidence(self, ids: torch.Tensor, chunk: int = 4000) -> torch.Tensor:
@@ -127,6 +140,30 @@ class Logophosis(Organism):
             self.link0 = ChordLink0(ids_train, self.class_cap, self.seed, **self.link0_kw)
         return self
 
+    def rewake(self, ids_new: torch.Tensor):
+        """Mode E: extend the Link-0 inventory on a new world's tokens (no-op for oracle)."""
+        if self.link0_kind == "phasecyte":
+            self.link0.observe_more(ids_new)
+            print(f"  [link0] after rewake: classes {self.link0.n_classes}, named {self.link0.n_named}", flush=True)
+        return self
+
+    def lock_links(self, strength: float, lam: float = 1.0) -> None:
+        """Epigenetic lock on the chain link(s): anchor now, λ=``lam`` on every cell; the
+        EWC pull ``strength``·penalty is added to the training loss in ``fit``. The head
+        stays free. ``strength=0`` clears the lock. (s063 Mode E transfer.)"""
+        from trioron.learning.epigenetic_lock import anchor, set_lambda
+        self._lock = strength
+        if strength > 0:
+            for l in self.chain.links:
+                a = l.arena
+                anchor(a); set_lambda(a, torch.full_like(a.node_lambda, lam), "absolute")
+
+    def _penalty(self):
+        from trioron.learning.epigenetic_lock import ewc_penalty
+        s = getattr(self, "_lock", 0.0)
+        if not s: return None
+        return lambda: s * sum(ewc_penalty(l.arena) for l in self.chain.links)
+
     def encode(self, scene: torch.Tensor, ids: torch.Tensor) -> torch.Tensor:
         """Chain input: ``[scene | evidence flattened]`` (seq: scene is the context head)."""
         if self.link0 is None:
@@ -153,7 +190,7 @@ class Logophosis(Organism):
         X, Xt = self.encode(scene, ids), self.encode(scene_te, ids_te)
         if self.chain is None: self._build_chain()
         return fit_grow(self.chain, X, y, Xt, y_te, epochs=epochs, seed=self.seed,
-                        patience=patience, target=target, log=log)
+                        patience=patience, target=target, log=log, penalty=self._penalty())
 
     @torch.no_grad()
     def comprehend(self, scene: torch.Tensor, ids: torch.Tensor) -> torch.Tensor:

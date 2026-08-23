@@ -1,0 +1,29 @@
+# Logophosis PURE link0=phasecyte N=40000 dtrain=2 mix=True not_only=True ep=10 L_MAX=10 MAX_OBJ=2 seeds=[0, 1, 2] test_depths=[1, 2, 3] seq_norm=tanh
+  [genesis g0] starved=0 merged=0->0  receptors->32
+  [link0] internal classes 28, named 21 words
+  [link0 phasecyte] woke in 33s
+    [seq seed0]    stage 1 depth 1: acc 0.898 loss 0.140 stalled=True
+    [seq seed0]    stage 2 depth 2: acc 0.925 loss 0.121 stalled=True
+    [seq seed0] depth+1 (3 nest): 0.846
+    [seq seed0] depth+2 (4 nest): 0.658
+    [seq seed0] depth+3 (5 nest): 0.538
+    saved outputs/organisms/logophosis_notonly_seq_tanh_s0.pt 44629 KiB
+  [genesis g0] starved=0 merged=0->0  receptors->32
+  [link0] internal classes 23, named 20 words
+  [link0 phasecyte] woke in 29s
+    [seq seed1]    stage 1 depth 1: acc 0.884 loss 0.222 stalled=True
+    [seq seed1]    stage 2 depth 2: acc 0.908 loss 0.152 stalled=True
+    [seq seed1] depth+1 (3 nest): 0.868
+    [seq seed1] depth+2 (4 nest): 0.602
+    [seq seed1] depth+3 (5 nest): 0.587
+    saved outputs/organisms/logophosis_notonly_seq_tanh_s1.pt 44766 KiB
+  [genesis g0] starved=0 merged=0->0  receptors->32
+  [link0] internal classes 28, named 22 words
+  [link0 phasecyte] woke in 23s
+    [seq seed2]    stage 1 depth 1: acc 0.857 loss 0.246 stalled=True
+    [seq seed2]    stage 2 depth 2: acc 0.917 loss 0.141 stalled=True
+    [seq seed2] depth+1 (3 nest): 0.965
+    [seq seed2] depth+2 (4 nest): 0.980
+    [seq seed2] depth+3 (5 nest): 0.804
+    saved outputs/organisms/logophosis_notonly_seq_tanh_s2.pt 44590 KiB
+seq          indist 0.917±0.009  comp 0.910±0.010  depth+1 0.893±0.063  depth+2 0.747±0.204  depth+3 0.643±0.142  links [2, 2, 2]  params [6602, 6602, 6602]  3308s

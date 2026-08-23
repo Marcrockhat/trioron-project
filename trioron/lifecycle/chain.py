@@ -70,7 +70,7 @@ class LinkChain:
         # final state (R-1 "thinking" steps with a zero token).
         # ctx : (seq) leading ``ctx`` input dims are a per-step context (the scene), fed
         #       with every token; the rest is the token stream.
-        # norm: (seq) state normalisation between steps: 'none' | 'rms'. s062 probe on the
+        # norm: (seq) state squash between steps: 'none' | 'rms' | 'tanh' | 'clip'. s062 probe on the
         #       NOT-only language world: rms HURTS (ln 2 stall persists; it amplifies the
         #       std-.01 init noise), link_fan_in=True breaks the stall (.61 vs .50 in 6 ep).
         # link_fan_in: fan-in-scaled edge init on the links too (the head always has it).
@@ -117,6 +117,10 @@ class LinkChain:
     def _normed(self, h: torch.Tensor) -> torch.Tensor:
         if self.norm == "rms":
             return h * torch.rsqrt(h.pow(2).mean(1, keepdim=True) + 1e-6)
+        if self.norm == "tanh":          # s063: bounded state between seq steps (crisp-state
+            return torch.tanh(h)         # hypothesis; also tames the quad blow-up over L steps)
+        if self.norm == "clip":
+            return h.clamp(-3.0, 3.0)
         return h
 
     def params(self) -> List[torch.Tensor]:
@@ -153,8 +157,10 @@ def accuracy(model, e: torch.Tensor, y: torch.Tensor) -> float:
 
 
 def fit_stage(model, e, y, et, yt, epochs: int, seed: int, *, lr: float = 3e-3,
-              bs: int = 128, trigger: StallTrigger | None = None):
-    """One growth stage. Returns (stalled, test_acc, train_loss)."""
+              bs: int = 128, trigger: StallTrigger | None = None, penalty=None):
+    """One growth stage. Returns (stalled, test_acc, train_loss).
+    ``penalty``: optional callable -> scalar tensor added to the loss (e.g. the
+    epigenetic-lock EWC pull on a transferred link, s063 Mode E)."""
     trig = trigger or StallTrigger()
     opt = torch.optim.Adam(model.params(), lr=lr)
     g = torch.Generator().manual_seed(seed)
@@ -166,6 +172,7 @@ def fit_stage(model, e, y, et, yt, epochs: int, seed: int, *, lr: float = 3e-3,
             idx = perm[i:i + bs]
             opt.zero_grad()
             loss = F.cross_entropy(model.forward(e[idx]), y[idx])
+            if penalty is not None: loss = loss + penalty()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.params(), 1.0)
             opt.step()
@@ -181,14 +188,14 @@ def fit_stage(model, e, y, et, yt, epochs: int, seed: int, *, lr: float = 3e-3,
 
 
 def fit_grow(model, e, y, et, yt, *, epochs: int, seed: int, patience: int = 8,
-             target: float = 0.99, log=print):
+             target: float = 0.99, log=print, penalty=None):
     """stall -> grow -> joint train, until settled or ``max_links``.
     Credit is NOT locked at spawn (lock-after-settlement rule, s059)."""
     stage = 1
     while True:
         stalled, acc, loss = fit_stage(
             model, e, y, et, yt, epochs, seed * 7 + stage,
-            trigger=StallTrigger(patience=patience, target=target))
+            trigger=StallTrigger(patience=patience, target=target), penalty=penalty)
         log(f"    stage {stage} depth {model.depth}: acc {acc:.3f} "
             f"loss {loss:.3f} stalled={stalled}")
         if not stalled or not model.can_grow():

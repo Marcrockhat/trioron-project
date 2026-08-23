@@ -7,7 +7,7 @@ builds the splits, wakes/fits the organism, scores in-dist / compositional / dee
 Env: SEED_LIST/SEEDS, ARMS=tied,grown,seq (chain mode), LINK0=phasecyte|oracle, N, EPOCHS,
      PATIENCE, MAX_LINKS, DTRAIN, L_MAX, MAX_OBJ, THREADS, WAKE, WINDOW, EV_MODE, EV_TAU,
      NOT_ONLY=1 (depth = exact NOT count), DEPTH_MIX=1 (train on depths 0..DTRAIN),
-     TEST_DEPTHS=1,2 (nesting offsets beyond DTRAIN), SEQ_NORM=rms|none, SAVE=path (seed 0).
+     TEST_DEPTHS=1,2 (nesting offsets beyond DTRAIN), SEQ_NORM=none|rms|tanh|clip, SAVE=path (use '{seed}' for per-seed files).
 Run from repo root.
 """
 from __future__ import annotations
@@ -61,8 +61,9 @@ def run(arm, seed):
     for k, (S, I, y) in deeper.items():
         r[f"depth+{k}"] = org.accuracy(S, I, y)
         print(f"    [{arm} seed{seed}] depth+{k} ({DTRAIN + k} nest): {r[f'depth+{k}']:.3f}", flush=True)
-    if os.environ.get("SAVE") and seed == 0:
-        print(f"    saved {os.environ['SAVE']} {org.save(os.environ['SAVE']) / 1024:.0f} KiB", flush=True)
+    if os.environ.get("SAVE"):                       # '{seed}' in the path -> one file per seed
+        path = os.environ["SAVE"].format(seed=seed)
+        print(f"    saved {path} {org.save(path) / 1024:.0f} KiB", flush=True)
     return r
 
 
