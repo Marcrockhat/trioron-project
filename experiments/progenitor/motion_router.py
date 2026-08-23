@@ -68,19 +68,7 @@ def evidence_old(split="test_fresh"):
     for i in range(0, len(Xf), 500): out.append(evidence(Xf[i:i + 500], MD.motion_group(Xf[i:i + 500])))
     Z = torch.cat(out); torch.save(Z.half(), p); log(f"  evidence old/{split} in {time.time() - t:.0f}s"); return Z
 
-def conf(L):   # per voter: max prob, entropy
-    p = F.softmax(L, 1); return torch.stack([p.max(1).values, -(p * torch.log(p + 1e-8)).sum(1)], 1)
-class Router(torch.nn.Module):
-    """softmax over voters; the MOTION voter is hard-masked when its motion mask is empty (fires-only-when-moving):
-    a leaf that has never seen a class cannot be allowed to vote against it from an empty input."""
-    def __init__(self, d, K, gate_col=None, motion_idx=None): super().__init__(); self.lin = torch.nn.Linear(d, K); torch.nn.init.zeros_(self.lin.weight); torch.nn.init.zeros_(self.lin.bias); self.gc, self.mi = gate_col, motion_idx
-    def forward(self, e):
-        z = self.lin(e)
-        if self.gc is not None:
-            off = e[:, self.gc] <= 0; z = z.clone(); z[off, self.mi] = -1e4
-        return F.softmax(z, 1)
-def vote(Ls, w):   # Ls list of [N,C] logits, w [N,K] -> [N,C]
-    return sum(w[:, k:k + 1] * F.log_softmax(L, 1) for k, L in enumerate(Ls))
+from trioron.organisms.kinopsis import conf, Router, vote   # promoted s062 (trioron/organisms)
 
 if __name__ == "__main__":
     log(f"MOTION ROUTER s056: seeds {SEEDS} donor epochs {EPOCHS} router steps {STEPS}")

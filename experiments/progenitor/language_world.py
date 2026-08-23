@@ -44,6 +44,7 @@ L_MAX = int(os.environ.get("L_MAX", 24))
 OBJ_DIM = len(COLORS) + len(SHAPES) + 1 + 2     # color, shape, size, x, y
 MAX_OBJ = int(os.environ.get("MAX_OBJ", 4))
 DOUBLE_NOT = True     # allow "not not": depth-2 negation = parity over NOTs; a split of its own
+NOT_ONLY = os.environ.get("NOT_ONLY", "0") == "1"   # s062: depth d = EXACTLY d NOTs (no and/or); the symmetry rung
 
 # continual acquisition: which words are allowed per stage
 STAGES = [
@@ -88,7 +89,8 @@ def np_(rng, scene, allowed, hold=()):
 def vp_(rng, scene, allowed, depth, subj, hold, no_not=False):
     """Returns (words, truth). depth = remaining nesting budget."""
     if depth > 0:
-        ops = [o for o in ["not", "and", "or"] if o in allowed and not (o == "not" and no_not)]
+        ops = [o for o in (["not"] if NOT_ONLY else ["not", "and", "or"])
+               if o in allowed and not (o == "not" and no_not)]
         if ops:
             op = rng.choice(ops)
             if op == "not":
@@ -190,25 +192,16 @@ CHORD_K = int(os.environ.get("CHORD_K", 3))
 CHORD_JITTER = float(os.environ.get("CHORD_JITTER", 0.05))
 
 
+from trioron.senses.chord import chord_table as _chord_table, chords_of as _chords_of
+
+
 def chord_table(seed: int = 0) -> torch.Tensor:
-    """[CLASS_CAP, CHORD_BINS] chord spectra; row 0 (PAD) = silence."""
-    g = torch.Generator().manual_seed(seed)
-    T = torch.zeros(CLASS_CAP, CHORD_BINS)
-    grid = torch.arange(CHORD_BINS).float()
-    for w in range(1, CLASS_CAP):
-        bins = torch.randperm(CHORD_BINS, generator=g)[:CHORD_K].float()
-        amp = 0.5 + torch.rand(CHORD_K, generator=g)
-        for b, a in zip(bins, amp):          # each partial = Gaussian line, width 0.7 bin
-            T[w] += a * torch.exp(-0.5 * ((grid - b) / 0.7) ** 2)
-        T[w] /= T[w].norm()
-    return T
+    """[CLASS_CAP, CHORD_BINS] chord spectra; row 0 (PAD) = silence (trioron.senses.chord)."""
+    return _chord_table(CLASS_CAP, bins=CHORD_BINS, k=CHORD_K, seed=seed)
 
 
 def chords_of(ids: torch.Tensor, table: torch.Tensor, gen: torch.Generator) -> torch.Tensor:
-    """[..., CHORD_BINS] jittered chord per token id; PAD rows stay zero."""
-    X = table[ids]
-    X = X + CHORD_JITTER * torch.randn(X.shape, generator=gen) * (ids != 0).unsqueeze(-1)
-    return X
+    return _chords_of(ids, table, gen, CHORD_JITTER)
 
 
 def ids_of(E: torch.Tensor) -> torch.Tensor:

@@ -3280,6 +3280,8 @@ trioron/
 ├── learning/                  # credit, frustration, dream, manifold
 ├── pcll/                      # Phasecyte — Phase-Coherent Lock-in Learning (§10, partition §9.15)
 ├── lifecycle/                 # growth, evolution, ship, graft, compact
+├── senses/                    # math-generated input encodings (chord words) (§9.16)
+├── organisms/                 # saveable organisms w/ a stable API: Logophosis, Kinopsis (§9.16)
 ├── viz/                       # recorder, detector, viewer, exporter
 ├── evolution/                 # multi-substrate controller (opt-in)
 ├── compat/                    # v1 ↔ v2 bridge
@@ -3568,6 +3570,31 @@ package dependencies) because the scheduler performs the injection and
 | `nest.py` | nested phasecyte organisms: per-group leaves + full-cov manifold recognition router (`PhasecyteNest`); wake/dream distillation into gradient trioron leaves (`dream_distill`/`dreamed_predict`) — imports `learning/` (router, manifold); s049 promotion, validated vs `outputs/*_s049_*.log` | 10 naming note; s049 |
 
 ---
+
+### 9.16 `organisms/` and `senses/` — Stable Organism API
+
+Added s062. An *organism* is a saveable composition of substrates plus its
+calibration statistics, with a uniform surface (`trioron/organisms/base.py`,
+`API_VERSION = "1.0"`): stage methods return `self` (chainable acquisition
+schedule), inference is `@torch.no_grad` on the organism's native input,
+`save(path) -> bytes` / `load(path)` / `n_params()` / `substrates()` /
+`torch_modules()`. Everything that learns is substrate except the explicitly
+listed tiny torch parts. The WORLD side (data generation, feature extraction,
+splits, scoring) stays under `experiments/progenitor/` and injects native
+tensors; the package never imports from `experiments/`.
+
+| file | responsibility | spec section |
+|---|---|---|
+| `organisms/base.py` | `Organism` base; shared helpers `leaf` (Seeded quad leaf), `train_leaf` (Adam+clip, freezes on exit), `chunked`, `Std` | 5.1 |
+| `organisms/logophosis.py` | **Logophosis** — grounded-language comprehension: `ChordLink0` (PhasecyteLeaf on chord tokens, centered evidence → softmax symbol) / `OracleLink0`; `LinkChain` (`seq` token-per-step w/ scene context + RMS state norm, `tied`, `grown`); `wake` → `fit` (stall→grow→joint) → `comprehend` | 9.6 chain.py, 10.4 |
+| `organisms/kinopsis.py` | **Kinopsis** — motion-sight: frozen shape organ (`from_organ`), `settle_heads` (replay-settle, head rows only), `acquire_msil`, `fit_router` (`Router` ~60 torch params, hard motion gate; optional `QDAVoter`), `acquire_vel`; `shape` / `velocity` | 5.3 |
+| `senses/chord.py` | `chord_table(n_symbols, bins, k, seed)`, `chords_of(ids, table, gen, jitter)` — synthetic word spectra (numbers, not audio) | 10.2 |
+
+Contract notes: `Logophosis` fixes the token length `L` at the first
+`encode`; `Kinopsis.settle_heads` rank is clipped to the stream dimension.
+Pickles are whole-object (`torch.save(self)`); a Phasecyte Link 0 carries its
+capacity-4096 substrate (~40 MB) — `dream_distill`/compaction of Link 0 is
+open work.
 
 ## 10. Phasecyte — Phase-Coherent Lock-in Learning (PCLL)
 

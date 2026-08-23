@@ -59,7 +59,8 @@ class LinkChain:
 
     def __init__(self, E: int, C: int, seed: int, *, H: int = 32,
                  interior: int = 48, head_interior: int = 16,
-                 mode: str = "tied", max_links: int = 4) -> None:
+                 mode: str = "tied", max_links: int = 4, ctx: int = 0,
+                 norm: str = "none") -> None:
         assert mode in ("tied", "grown", "seq")
         # seq: ONE link eats one token per step (Axis-7 style): h_t = link([h_{t-1}, e_t]),
         # e viewed as [N, L, E]. Re-application = token position, so an operator token
@@ -67,9 +68,14 @@ class LinkChain:
         # an involution (s061 not_k: flattened input makes each slot a separate feature,
         # zero-shot parity of unseen slots = exactly 0). Growth = R extra passes over the
         # final state (R-1 "thinking" steps with a zero token).
+        # ctx : (seq) leading ``ctx`` input dims are a per-step context (the scene), fed
+        #       with every token; the rest is the token stream.
+        # norm: (seq) state normalisation between steps: 'none' | 'rms'. seq stalled at
+        #       ln 2 / blew up on 1-2 of 3 seeds without it (s061 not_k).
         self.E, self.C, self.H, self.seed = E, C, H, seed
         self.interior, self.mode, self.max_links = interior, mode, max_links
-        self.links = [new_link(H + E, H, seed * 100, interior=interior)]
+        self.ctx, self.norm = ctx, norm
+        self.links = [new_link(H + ctx + E, H, seed * 100, interior=interior)]
         self.head = new_link(H, C, seed * 100 + 99, interior=head_interior,
                              fan_in_init=True)
         self.R = 1                       # applications (tied) / links (grown)
@@ -85,24 +91,29 @@ class LinkChain:
         if self.mode in ("tied", "seq"):
             self.R += 1
         else:
-            self.links.append(new_link(self.H + self.E, self.H,
+            self.links.append(new_link(self.H + self.ctx + self.E, self.H,
                                        self.seed * 100 + len(self.links),
                                        interior=self.interior))
 
     def forward(self, e: torch.Tensor, **_) -> torch.Tensor:
         h = torch.zeros(len(e), self.H)
         if self.mode == "seq":
-            toks = e.view(len(e), -1, self.E)
+            c, toks = e[:, :self.ctx], e[:, self.ctx:].reshape(len(e), -1, self.E)
             link = self.links[0]
-            for t in range(toks.shape[1]):
-                h = link(torch.cat([h, toks[:, t]], 1))
-            for _ in range(self.R - 1):
-                h = link(torch.cat([h, torch.zeros(len(e), self.E)], 1))
+            steps = [toks[:, t] for t in range(toks.shape[1])]
+            steps += [torch.zeros(len(e), self.E)] * (self.R - 1)
+            for x in steps:
+                h = self._normed(link(torch.cat([h, c, x], 1)))
             return self.head(h)
         seq = [self.links[0]] * self.R if self.mode == "tied" else self.links
         for link in seq:
             h = link(torch.cat([h, e], 1))
         return self.head(h)
+
+    def _normed(self, h: torch.Tensor) -> torch.Tensor:
+        if self.norm == "rms":
+            return h * torch.rsqrt(h.pow(2).mean(1, keepdim=True) + 1e-6)
+        return h
 
     def params(self) -> List[torch.Tensor]:
         return (sum((l.trainable_tensors() for l in self.links), [])

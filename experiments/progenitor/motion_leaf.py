@@ -44,15 +44,8 @@ def feats(stream, split):
         t = time.time(); Z = _build(stream, split); torch.save(Z.half(), p); log(f"  built {stream}/{split} {tuple(Z.shape)} in {time.time() - t:.0f}s")
     return torch.load(p).float()
 
-class Std:
-    def __init__(self, Z): self.mu, self.sd = Z.mean(0), Z.std(0) + 1e-6
-    def __call__(self, Z): return (Z - self.mu) / self.sd
-
-def leaf(d, n_out, seed):
-    torch.manual_seed(seed)
-    sub = construct(base=Seeded(d, n_out, interior_cells=HIDDEN, nonlinear=True), envelope=Envelope(max_parameter_bytes=400_000), dispatch_table=default_dispatch_table(),
-                    capacity=max(d + HIDDEN + n_out + 8, (d * HIDDEN + HIDDEN * n_out) * 5 // (4 * 64) + 8), sparsity_k=0)
-    sub.compile(); sub.prepare_training(); return sub
+from trioron.organisms.base import Std, leaf as _leaf   # promoted s062
+def leaf(d, n_out, seed): return _leaf(d, n_out, seed, interior=HIDDEN)
 def train_eval(Ztr, ytr, tests, n_out, seed):
     sub = leaf(Ztr.shape[1], n_out, seed); params = sub.trainable_tensors(); opt = torch.optim.Adam(params, lr=1e-3); g = torch.Generator().manual_seed(seed)
     for ep in range(EPOCHS):
