@@ -1,0 +1,21 @@
+# Logophosis transfer FULL world N=40000 dtrain=1 ep=10 L_MAX=10 MAX_OBJ=2 seeds=[0, 1, 2] seq_norm=tanh lock=1.0 init=outputs/organisms/logophosis_notonly_seq_tanh_s{seed}.pt
+    [warm_nowake seed0] loaded: home 0.925 not3 0.845 full-world zero-shot 0.690
+    [warm_nowake seed0]    stage 1 depth 2: acc 0.964 loss 0.075 stalled=True
+    [warm_nowake seed0] indist 0.965 comp 0.941 notnot 0.632 | retained home 0.891 not3 0.723
+    [warm_nowake seed1] loaded: home 0.907 not3 0.868 full-world zero-shot 0.633
+    [warm_nowake seed1]    stage 1 depth 2: acc 0.946 loss 0.104 stalled=True
+    [warm_nowake seed1] indist 0.946 comp 0.921 notnot 0.610 | retained home 0.856 not3 0.440
+    [warm_nowake seed2] loaded: home 0.917 not3 0.965 full-world zero-shot 0.730
+    [warm_nowake seed2]    stage 1 depth 2: acc 0.957 loss 0.089 stalled=True
+    [warm_nowake seed2] indist 0.956 comp 0.936 notnot 0.813 | retained home 0.915 not3 0.854
+warm_nowake indist 0.956±0.009  comp 0.932±0.010  notnot 0.685±0.111  | retained home 0.887±0.029  not3 0.672±0.212  links [2, 2, 2]  params [6602, 6602, 6602]  796s
+    [lock_nowake seed0] loaded: home 0.925 not3 0.845 full-world zero-shot 0.690
+    [lock_nowake seed0]    stage 1 depth 2: acc 0.875 loss 0.315 stalled=True
+    [lock_nowake seed0] indist 0.874 comp 0.823 notnot 0.593 | retained home 0.903 not3 0.769
+    [lock_nowake seed1] loaded: home 0.907 not3 0.868 full-world zero-shot 0.633
+    [lock_nowake seed1]    stage 1 depth 2: acc 0.821 loss 0.376 stalled=True
+    [lock_nowake seed1] indist 0.822 comp 0.790 notnot 0.743 | retained home 0.871 not3 0.709
+    [lock_nowake seed2] loaded: home 0.917 not3 0.965 full-world zero-shot 0.730
+    [lock_nowake seed2]    stage 1 depth 2: acc 0.847 loss 0.402 stalled=True
+    [lock_nowake seed2] indist 0.842 comp 0.779 notnot 0.626 | retained home 0.878 not3 0.539
+lock_nowake indist 0.846±0.026  comp 0.797±0.023  notnot 0.654±0.079  | retained home 0.884±0.017  not3 0.672±0.119  links [2, 2, 2]  params [6602, 6602, 6602]  751s
