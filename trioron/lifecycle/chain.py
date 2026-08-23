@@ -60,7 +60,13 @@ class LinkChain:
     def __init__(self, E: int, C: int, seed: int, *, H: int = 32,
                  interior: int = 48, head_interior: int = 16,
                  mode: str = "tied", max_links: int = 4) -> None:
-        assert mode in ("tied", "grown")
+        assert mode in ("tied", "grown", "seq")
+        # seq: ONE link eats one token per step (Axis-7 style): h_t = link([h_{t-1}, e_t]),
+        # e viewed as [N, L, E]. Re-application = token position, so an operator token
+        # (NOT) is the SAME weights at every depth — the precondition for learning it as
+        # an involution (s061 not_k: flattened input makes each slot a separate feature,
+        # zero-shot parity of unseen slots = exactly 0). Growth = R extra passes over the
+        # final state (R-1 "thinking" steps with a zero token).
         self.E, self.C, self.H, self.seed = E, C, H, seed
         self.interior, self.mode, self.max_links = interior, mode, max_links
         self.links = [new_link(H + E, H, seed * 100, interior=interior)]
@@ -70,13 +76,13 @@ class LinkChain:
 
     @property
     def depth(self) -> int:
-        return self.R if self.mode == "tied" else len(self.links)
+        return self.R if self.mode in ("tied", "seq") else len(self.links)
 
     def can_grow(self) -> bool:
         return self.depth < self.max_links
 
     def grow(self) -> None:
-        if self.mode == "tied":
+        if self.mode in ("tied", "seq"):
             self.R += 1
         else:
             self.links.append(new_link(self.H + self.E, self.H,
@@ -85,6 +91,14 @@ class LinkChain:
 
     def forward(self, e: torch.Tensor, **_) -> torch.Tensor:
         h = torch.zeros(len(e), self.H)
+        if self.mode == "seq":
+            toks = e.view(len(e), -1, self.E)
+            link = self.links[0]
+            for t in range(toks.shape[1]):
+                h = link(torch.cat([h, toks[:, t]], 1))
+            for _ in range(self.R - 1):
+                h = link(torch.cat([h, torch.zeros(len(e), self.E)], 1))
+            return self.head(h)
         seq = [self.links[0]] * self.R if self.mode == "tied" else self.links
         for link in seq:
             h = link(torch.cat([h, e], 1))

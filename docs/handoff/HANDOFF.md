@@ -11,14 +11,43 @@ chain (`trioron/lifecycle/chain.py`), substrate head. Pure tied n=3: in-dist .86
 zero-shot double-negation target NOT met by any arm (best mlp3 .585).**
 
 ## READ THIS FIRST
-**The pure language organism is named LOGOPHOSIS (Rocky, s061): logo- (word/reason) + -phosis
-(a becoming) — language formed by growth. Runner `experiments/progenitor/logophosis.py`.
-40K double-negation probe LAUNCHED 2026-08-23 ~05:00 WIB: `outputs/logophosis_rung1_40k_s{0,1,2}.log`
-(tied only, n=3, 4 threads each, expect ~2–2.5 h). Read its `^tied` lines first.**
-Rocky's "+" = pure trioron. Scope chosen by Rocky: FULL purity incl. Phasecyte Link 0 (not just
-head + controller). Rocky: "use a math function as initial feeder (like Kinopsis)" → words are
-synthetic chords (K=3 Gaussian partials on 32 bins, `language_world.chord_table`, per-occurrence
-jitter .05), numbers not audio; one-hot `encode_sentence` stays the oracle control (`LINK0=oracle`).
+**The pure language organism is LOGOPHOSIS (Rocky, s061): logo- (word/reason) + -phosis (a
+becoming). Runner `experiments/progenitor/logophosis.py`.**
+
+### s061 late results (after the first handoff write)
+**40K Logophosis, tied, n=3** (`outputs/logophosis_rung1_40k_s{0,1,2}.log`): in-dist **.930±.002**,
+comp **.896±.009**, `not not` **.519±.024** (chance). vs 20K: +.06/+.10/+.06. Data lifts fit and
+composition, NOT the symmetry. (seed 1 OOM-killed once at Link-0 build with 3 concurrent builds;
+rerun alone. Rule: ≤2 concurrent Link-0 builds at 40K.)
+
+**Rocky's diagnosis: double negation = a SYMMETRY primitive (NOT as an involution) never taught.**
+Tested in `logic_chain.py` new world `not` (`make_not`: truth symbol + m NOT tokens, label =
+truth XOR m%2, train m≤k, zero-shot m=k+1,k+2; arms `pure` = package LinkChain tied on the
+FLATTENED input, `pure_seq` = new `LinkChain(mode="seq")`: one link eats one token per step,
+Axis-7 style). Logs `outputs/logic_chain_s061_not_k{,_seq}.log`, n=3, 20 ep, patience 8.
+| input | k | in-dist | zero-shot k+1 | k+2 |
+|---|---|---|---|---|
+| flattened (pure, mlp3, gru) | 1,2,3 | 1.000 at depth 1 (lookup) | **exactly 0.000** (3/3, all k) | 1.000 / 0.000 alternating |
+| sequential (pure_seq) | 1 | .83±.29 (s1 stuck ln2, s2 loss exploded 1.6e5) | 1.0 / .51 / .50 | ~.5 |
+| sequential | 2 | 1.000 | .00 / .48 / .50 | .49 / .50 / 1.0 |
+| sequential | 3 | 1.000 | **1.0 / 1.0 / 1.0** | 1.0 / .50 / 1.0 |
+Readings: (i) flattened input makes each NOT slot a SEPARATE feature; unseen slots get no
+gradient → the chain answers parity(min(m,k)) → exactly 0 at k+1. This is Logophosis's `not not`
+failure, mechanistically (it reads the sentence flattened). (ii) With sequential reading the NOT
+operator is the SAME weights at every depth; shown composing ≥3 times it generalises parity to
+unseen depth 4 on 3/3 seeds, depth 5 on 2/3 — the involution is learnable as a primitive. At
+k=1 it is under-determined (1/3 seeds). (iii) seq mode is optimisation-fragile (ln-2 stall, quad
+blow-up over 6+ applications) — the hop-3 "normalise/crisp the state between applications"
+hypothesis again; untested fix = normalisation or Rocky's gated snap between steps.
+
+### NEXT (s062) — supersedes the list below
+1. **Logophosis-seq:** feed Link-0 evidence token-by-token into `LinkChain(mode="seq")` (scene
+   concatenated per step or as step 0); train rung 1 WITH `not not` (DTRAIN=2 equivalent, k=2–3
+   NOTs), test triple/quadruple negation. Predict: symmetry generalises like `not_k` k=3.
+   Add state normalisation between steps first (seq stalls/explodes on 1–2 of 3 seeds).
+2. Mode E variant: lock the `not_k` seq link, compose into Logophosis, retest `not not` at 20K —
+   tells whether the primitive TRANSFERS rather than being relearned.
+3. MODE=continual + paper-facing pure rung-0 rerun remain (below).
 
 ## What was built (commit a35b3d1 + this handoff)
 - `trioron/lifecycle/chain.py` (package, spec §9.6 row added): `new_link` (Seeded quad, optional

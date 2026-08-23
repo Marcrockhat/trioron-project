@@ -1,0 +1,47 @@
+# depth gate  seeds=[0, 1, 2] stage_ep=20 max_links=4
+task     k arm                acc    depth  secs
+    [pure s0]    stage 1 depth 1: acc 1.000 loss 0.607 stalled=False
+    [pure s0] zero-shot m=2: 0.000
+    [pure s0] zero-shot m=3: 1.000
+    [pure s0] zero-shot m=4: 0.000
+    [pure s1]    stage 1 depth 1: acc 1.000 loss 0.692 stalled=False
+    [pure s1] zero-shot m=2: 0.000
+    [pure s1] zero-shot m=3: 1.000
+    [pure s1] zero-shot m=4: 0.000
+    [pure s2]    stage 1 depth 1: acc 1.000 loss 0.491 stalled=False
+    [pure s2] zero-shot m=2: 0.000
+    [pure s2] zero-shot m=3: 1.000
+    [pure s2] zero-shot m=4: 0.000
+not      1 pure      1.000±0.000 [1, 1, 1]  40
+not      1 mlp3      1.000±0.000 [1, 1, 1]  5
+not      1 gru       1.000±0.000 [1, 1, 1]  8
+    [pure s0]    stage 1 depth 1: acc 1.000 loss 0.086 stalled=False
+    [pure s0] zero-shot m=3: 0.000
+    [pure s0] zero-shot m=4: 1.000
+    [pure s0] zero-shot m=5: 0.000
+    [pure s1]    stage 1 depth 1: acc 1.000 loss 0.370 stalled=False
+    [pure s1] zero-shot m=3: 0.000
+    [pure s1] zero-shot m=4: 1.000
+    [pure s1] zero-shot m=5: 0.000
+    [pure s2]    stage 1 depth 1: acc 1.000 loss 0.466 stalled=False
+    [pure s2] zero-shot m=3: 0.000
+    [pure s2] zero-shot m=4: 1.000
+    [pure s2] zero-shot m=5: 0.000
+not      2 pure      1.000±0.000 [1, 1, 1]  34
+not      2 mlp3      1.000±0.000 [1, 1, 1]  5
+not      2 gru       1.000±0.000 [1, 1, 1]  15
+    [pure s0]    stage 1 depth 1: acc 1.000 loss 0.266 stalled=False
+    [pure s0] zero-shot m=4: 0.000
+    [pure s0] zero-shot m=5: 1.000
+    [pure s0] zero-shot m=6: 0.000
+    [pure s1]    stage 1 depth 1: acc 1.000 loss 0.370 stalled=False
+    [pure s1] zero-shot m=4: 0.000
+    [pure s1] zero-shot m=5: 1.000
+    [pure s1] zero-shot m=6: 0.000
+    [pure s2]    stage 1 depth 1: acc 1.000 loss 0.424 stalled=False
+    [pure s2] zero-shot m=4: 0.000
+    [pure s2] zero-shot m=5: 1.000
+    [pure s2] zero-shot m=6: 0.000
+not      3 pure      1.000±0.000 [1, 1, 1]  66
+not      3 mlp3      1.000±0.000 [1, 1, 1]  7
+not      3 gru       1.000±0.000 [1, 1, 1]  15

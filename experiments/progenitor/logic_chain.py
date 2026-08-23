@@ -57,7 +57,22 @@ def evidence(sym: torch.Tensor) -> torch.Tensor:
     return F.one_hot(sym, CLASS_CAP).float().flatten(1)
 
 
-WORLDS = {"parity": make_parity, "hop": make_hop}
+def make_not(n, k, g, exact=None):
+    """Operator world (s061, Rocky's symmetry primitive): slot 0 = truth symbol
+    (1=F, 2=T), then m NOT tokens (symbol 3), PAD 0. Label = truth XOR (m mod 2).
+    m ~ U[0, k] (train), or m = exact (zero-shot depth probe). L = 6 slots."""
+    L = 6
+    t = torch.randint(0, 2, (n,), generator=g)
+    m = (torch.full((n,), exact) if exact is not None
+         else torch.randint(0, k + 1, (n,), generator=g))
+    s = torch.zeros(n, L, dtype=torch.long)
+    s[:, 0] = t + 1
+    for i in range(1, L):
+        s[:, i] = torch.where(m >= i, torch.tensor(3), torch.tensor(0))
+    return s, t ^ (m % 2), 2
+
+
+WORLDS = {"parity": make_parity, "hop": make_hop, "not": make_not}
 
 
 # ----------------------------------------------------------------- models
@@ -264,6 +279,19 @@ def run(arm, task, k, seed):
     st, yt, _ = WORLDS[task](4000, k, g)
     e, et = evidence(s), evidence(st)
     E = e.shape[1]
+    if arm in ("pure", "pure_seq"):         # package chain (Logophosis organism)
+        from trioron.lifecycle.chain import LinkChain, fit_grow, accuracy as acc_
+        model = (LinkChain(CLASS_CAP, C, seed, mode="seq", max_links=MAX_LINKS) if arm == "pure_seq"
+                 else LinkChain(E, C, seed, mode="tied", max_links=MAX_LINKS))
+        t0 = time.time()
+        depth = fit_grow(model, e, y, et, yt, epochs=STAGE_EP, seed=seed, patience=PATIENCE,
+                         target=TARGET, log=lambda m: print(f"    [{arm} s{seed}]{m}", flush=True))
+        acc = acc_(model, et, yt)
+        if task == "not":
+            for m_ in range(k + 1, k + 3):
+                sz, yz, _ = make_not(2000, k, g, exact=m_)
+                print(f"    [{arm} s{seed}] zero-shot m={m_}: {acc_(model, evidence(sz), yz):.3f}", flush=True)
+        return acc, depth, time.time() - t0
     model = (Chain(E, C, seed, joint=True) if arm == "grown_joint" else
              {"shallow": Chain, "grown": Chain, "tied": Tied, "mlp3": MLP3,
               "channels": Channels, "tied_wta": TiedWTA, "tied_hard": TiedHard, "tied_gated": TiedGated, "gru": GRURef}[arm](E, C, seed))
@@ -286,7 +314,7 @@ if __name__ == "__main__" and not os.environ.get("CURRICULUM") and not os.enviro
              else range(int(os.environ.get("SEEDS", 3))))
     tasks = os.environ.get("TASKS", "parity,hop").split(",")
     arms = os.environ.get("ARMS", "shallow,mlp3,grown,tied").split(",")
-    KS = {"parity": [2, 4, 8, 12], "hop": [1, 2, 3, 4]}
+    KS = {"parity": [2, 4, 8, 12], "hop": [1, 2, 3, 4], "not": [1, 2, 3]}
     if os.environ.get("KS"):
         KS = {t: [int(x) for x in os.environ["KS"].split(",")] for t in tasks}
     print(f"# depth gate  seeds={list(seeds)} stage_ep={STAGE_EP} max_links={MAX_LINKS}")
