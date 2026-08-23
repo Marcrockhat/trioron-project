@@ -60,7 +60,7 @@ class LinkChain:
     def __init__(self, E: int, C: int, seed: int, *, H: int = 32,
                  interior: int = 48, head_interior: int = 16,
                  mode: str = "tied", max_links: int = 4, ctx: int = 0,
-                 norm: str = "none") -> None:
+                 norm: str = "none", link_fan_in: bool = False) -> None:
         assert mode in ("tied", "grown", "seq")
         # seq: ONE link eats one token per step (Axis-7 style): h_t = link([h_{t-1}, e_t]),
         # e viewed as [N, L, E]. Re-application = token position, so an operator token
@@ -70,12 +70,16 @@ class LinkChain:
         # final state (R-1 "thinking" steps with a zero token).
         # ctx : (seq) leading ``ctx`` input dims are a per-step context (the scene), fed
         #       with every token; the rest is the token stream.
-        # norm: (seq) state normalisation between steps: 'none' | 'rms'. seq stalled at
-        #       ln 2 / blew up on 1-2 of 3 seeds without it (s061 not_k).
+        # norm: (seq) state normalisation between steps: 'none' | 'rms'. s062 probe on the
+        #       NOT-only language world: rms HURTS (ln 2 stall persists; it amplifies the
+        #       std-.01 init noise), link_fan_in=True breaks the stall (.61 vs .50 in 6 ep).
+        # link_fan_in: fan-in-scaled edge init on the links too (the head always has it).
+        #       Needed in seq mode: 10 std-.01 applications in series vanish the signal.
         self.E, self.C, self.H, self.seed = E, C, H, seed
         self.interior, self.mode, self.max_links = interior, mode, max_links
-        self.ctx, self.norm = ctx, norm
-        self.links = [new_link(H + ctx + E, H, seed * 100, interior=interior)]
+        self.ctx, self.norm, self.link_fan_in = ctx, norm, link_fan_in
+        self.links = [new_link(H + ctx + E, H, seed * 100, interior=interior,
+                               fan_in_init=link_fan_in)]
         self.head = new_link(H, C, seed * 100 + 99, interior=head_interior,
                              fan_in_init=True)
         self.R = 1                       # applications (tied) / links (grown)
@@ -93,7 +97,7 @@ class LinkChain:
         else:
             self.links.append(new_link(self.H + self.ctx + self.E, self.H,
                                        self.seed * 100 + len(self.links),
-                                       interior=self.interior))
+                                       interior=self.interior, fan_in_init=self.link_fan_in))
 
     def forward(self, e: torch.Tensor, **_) -> torch.Tensor:
         h = torch.zeros(len(e), self.H)

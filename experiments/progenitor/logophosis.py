@@ -27,7 +27,7 @@ LINK0_KW = dict(wake=int(os.environ.get("WAKE", 20000)), window=int(os.environ.g
                 ev_mode=os.environ.get("EV_MODE", "softmax"), ev_tau=float(os.environ.get("EV_TAU", 1.0)),
                 bins=LW.CHORD_BINS, k=LW.CHORD_K, jitter=LW.CHORD_JITTER)
 DEPTH_MIX = os.environ.get("DEPTH_MIX", "0") == "1"
-SEQ_NORM = os.environ.get("SEQ_NORM", "rms")
+SEQ_NORM = os.environ.get("SEQ_NORM", "none")
 TEST_DEPTHS = [int(x) for x in os.environ.get("TEST_DEPTHS", "1").split(",")]
 SD = LW.MAX_OBJ * LW.OBJ_DIM
 
@@ -52,7 +52,7 @@ def run(arm, seed):
     deeper = {k: sets(2, DTRAIN + k, 400 + seed + k, 4000, LW.HOLD_OUT) for k in TEST_DEPTHS}
     t0 = time.time()
     org = Logophosis(SD, LW.CLASS_CAP, seed, mode=arm, link0=LINK0, max_links=MAX_LINKS,
-                     seq_norm=SEQ_NORM, link0_kw=LINK0_KW).wake(Itr)
+                     seq_norm=SEQ_NORM, link_fan_in=os.environ.get("LINK_FAN_IN", "1") == "1", link0_kw=LINK0_KW).wake(Itr)
     print(f"  [link0 {LINK0}] woke in {time.time() - t0:.0f}s", flush=True)
     d = org.fit(Str, Itr, ytr, Ste, Ite, yte, epochs=STAGE_EP, patience=PATIENCE, target=0.99,
                 log=lambda s: print(f"    [{arm} seed{seed}]{s}", flush=True))

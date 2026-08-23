@@ -9,7 +9,7 @@ Everything that learns is substrate:
   symbol; genuinely ambiguous tokens stay soft = doubt carried). ``link0="oracle"``
   keeps the one-hot control.
 * **Chain** — ``trioron.lifecycle.chain.LinkChain``: ``seq`` (one token per step,
-  scene as per-step context, RMS-normalised state; the NOT operator is the SAME
+  scene as per-step context, fan-in link init; the NOT operator is the SAME
   weights at every nesting depth), ``tied`` (flattened sentence, one link
   re-applied), ``grown`` (fresh links on stall). Substrate head link.
 * **Growth** — ``StallTrigger`` -> grow -> joint train (``fit_grow``),
@@ -71,19 +71,22 @@ class ChordLink0:
             print(f"  [link0] internal classes {self.n_classes}, named {self.n_named} words", flush=True)
 
     @torch.no_grad()
-    def evidence(self, ids: torch.Tensor) -> torch.Tensor:
-        """``[N, L, class_cap]`` per-token symbol evidence; PAD rows zero."""
+    def evidence(self, ids: torch.Tensor, chunk: int = 4000) -> torch.Tensor:
+        """``[N, L, class_cap]`` per-token symbol evidence; PAD rows zero. Chunked over
+        sentences: the whole-set chord tensor was the ~2.9 GB Link-0 peak (OOM, s062)."""
         N, L = ids.shape
-        X = chords_of(ids, self.table, self.gen, self.jitter).flatten(0, 1)
-        ev_p, ev_c = self.leaf.evidence(_identity, X)
-        ev = (ev_c if self.ev_mode != "plain" else ev_p).float()
-        if self.ev_mode == "softmax":
-            ev = torch.softmax(ev / self.ev_tau, 1)
-        ev = ev * (ids.flatten() != 0).unsqueeze(1)
-        out = torch.zeros(len(ev), self.class_cap)
+        out = torch.zeros(N, L, self.class_cap)
         c = min(self.n_classes, self.class_cap)
-        out[:, :c] = ev[:, :c]
-        return out.view(N, L, self.class_cap)
+        for i in range(0, N, chunk):
+            sub = ids[i:i + chunk]
+            X = chords_of(sub, self.table, self.gen, self.jitter).flatten(0, 1)
+            ev_p, ev_c = self.leaf.evidence(_identity, X)
+            ev = (ev_c if self.ev_mode != "plain" else ev_p).float()
+            if self.ev_mode == "softmax":
+                ev = torch.softmax(ev / self.ev_tau, 1)
+            ev = ev * (sub.flatten() != 0).unsqueeze(1)
+            out[i:i + chunk, :, :c] = ev[:, :c].view(len(sub), L, c)
+        return out
 
 
 class OracleLink0:
@@ -104,13 +107,15 @@ class Logophosis(Organism):
 
     def __init__(self, scene_dim: int, class_cap: int, seed: int, *, n_out: int = 2,
                  mode: str = "seq", link0: str = "phasecyte", max_links: int = 4,
-                 H: int = 32, interior: int = 48, seq_norm: str = "rms",
+                 H: int = 32, interior: int = 48, seq_norm: str = "none",
+                 link_fan_in: Optional[bool] = None,
                  link0_kw: Optional[dict] = None) -> None:
         super().__init__(seed)
         assert mode in ("seq", "tied", "grown") and link0 in ("phasecyte", "oracle")
         self.scene_dim, self.class_cap, self.n_out, self.mode = scene_dim, class_cap, n_out, mode
         self.link0_kind, self.link0_kw = link0, dict(link0_kw or {})
         self.max_links, self.H, self.interior, self.seq_norm = max_links, H, interior, seq_norm
+        self.link_fan_in = (mode == "seq") if link_fan_in is None else link_fan_in   # s062 probe
         self.link0 = OracleLink0(class_cap) if link0 == "oracle" else None
         self.chain: Optional[LinkChain] = None
         self.L: Optional[int] = None
@@ -135,7 +140,8 @@ class Logophosis(Organism):
         if self.mode == "seq":
             self.chain = LinkChain(self.class_cap, self.n_out, self.seed, H=self.H,
                                    interior=self.interior, mode="seq", max_links=self.max_links,
-                                   ctx=self.scene_dim, norm=self.seq_norm)
+                                   ctx=self.scene_dim, norm=self.seq_norm,
+                                   link_fan_in=self.link_fan_in)
         else:
             self.chain = LinkChain(self.scene_dim + self.L * self.class_cap, self.n_out, self.seed,
                                    H=self.H, interior=self.interior, mode=self.mode,
