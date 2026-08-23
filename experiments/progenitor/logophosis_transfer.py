@@ -3,6 +3,8 @@
 Arms (chain mode seq, same budget):
   scratch  fresh organism on the full world (NEXT-2 of s062: does seq keep the tied 40K
            .93/.90 and add `not not`?)
+  *_nowake  skip the Link-0 rewake: unseen words (and/or) read as their consistent
+           soft projection on the existing matched filters (no Link-0 drift)
   warm     organism transferred from the NOT-only world (INIT), Link-0 rewoken on the
            new tokens, all links free
   lock     as warm, but the NOT link is epigenetically locked (anchor + lambda, EWC pull
@@ -61,9 +63,10 @@ def run(arm, seed):
         r0 = dict(home0=org.accuracy(*home), not3_0=org.accuracy(*not3))
         log(f" loaded: home {r0['home0']:.3f} not3 {r0['not3_0']:.3f} "
             f"full-world zero-shot {org.accuracy(Ste, Ite, yte):.3f}")
-        org.rewake(Itr)
-        log(f" after rewake: home {org.accuracy(*home):.3f} not3 {org.accuracy(*not3):.3f}")
-        org.lock_links(LOCK if arm == "lock" else 0.0)
+        if not arm.endswith("_nowake"):        # s063: rewake DRIFTS existing classes
+            org.rewake(Itr)                    # (2/3 seeds -> retained ~chance); nowake
+            log(f" after rewake: home {org.accuracy(*home):.3f} not3 {org.accuracy(*not3):.3f}")
+        org.lock_links(LOCK if arm.startswith("lock") else 0.0)
     d = org.fit(Str, Itr, ytr, Ste, Ite, yte, epochs=STAGE_EP, patience=PATIENCE, target=0.99, log=log)
     r = dict(indist=org.accuracy(Ste, Ite, yte), comp=org.accuracy(Sc, Ic, yc),
              notnot=org.accuracy(Sd, Id, yd), home=org.accuracy(*home), not3=org.accuracy(*not3),

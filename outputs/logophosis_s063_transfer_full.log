@@ -1,0 +1,49 @@
+# Logophosis transfer FULL world N=40000 dtrain=1 ep=10 L_MAX=10 MAX_OBJ=2 seeds=[0, 1, 2] seq_norm=tanh lock=1.0 init=outputs/organisms/logophosis_notonly_seq_tanh_s{seed}.pt
+  [genesis g0] starved=0 merged=0->0  receptors->32
+  [link0] internal classes 26, named 21 words
+    [scratch seed0]    stage 1 depth 1: acc 0.945 loss 0.100 stalled=True
+    [scratch seed0]    stage 2 depth 2: acc 0.954 loss 0.087 stalled=True
+    [scratch seed0] indist 0.954 comp 0.938 notnot 0.412 | retained home 0.611 not3 0.263
+  [genesis g0] starved=0 merged=0->0  receptors->32
+  [link0] internal classes 23, named 20 words
+    [scratch seed1]    stage 1 depth 1: acc 0.934 loss 0.133 stalled=True
+    [scratch seed1]    stage 2 depth 2: acc 0.949 loss 0.094 stalled=True
+    [scratch seed1] indist 0.948 comp 0.933 notnot 0.342 | retained home 0.611 not3 0.247
+  [genesis g0] starved=0 merged=0->0  receptors->32
+  [link0] internal classes 25, named 21 words
+    [scratch seed2]    stage 1 depth 1: acc 0.933 loss 0.111 stalled=True
+    [scratch seed2]    stage 2 depth 2: acc 0.948 loss 0.091 stalled=True
+    [scratch seed2] indist 0.948 comp 0.936 notnot 0.351 | retained home 0.631 not3 0.457
+scratch  indist 0.950±0.003  comp 0.936±0.003  notnot 0.368±0.038  | retained home 0.618±0.011  not3 0.322±0.117  links [2, 2, 2]  params [6602, 6602, 6602]  1637s
+    [warm seed0] loaded: home 0.925 not3 0.845 full-world zero-shot 0.690
+  [link0] after rewake: classes 32, named 23
+    [warm seed0] after rewake: home 0.614 not3 0.548
+    [warm seed0]    stage 1 depth 2: acc 0.953 loss 0.090 stalled=True
+    [warm seed0] indist 0.953 comp 0.932 notnot 0.361 | retained home 0.778 not3 0.550
+    [warm seed1] loaded: home 0.907 not3 0.868 full-world zero-shot 0.633
+  [link0] after rewake: classes 25, named 23
+    [warm seed1] after rewake: home 0.509 not3 0.496
+    [warm seed1]    stage 1 depth 2: acc 0.844 loss 0.294 stalled=True
+    [warm seed1] indist 0.841 comp 0.779 notnot 0.593 | retained home 0.650 not3 0.393
+    [warm seed2] loaded: home 0.917 not3 0.965 full-world zero-shot 0.730
+  [link0] after rewake: classes 32, named 24
+    [warm seed2] after rewake: home 0.503 not3 0.518
+    [warm seed2]    stage 1 depth 2: acc 0.928 loss 0.123 stalled=True
+    [warm seed2] indist 0.927 comp 0.910 notnot 0.379 | retained home 0.640 not3 0.551
+warm     indist 0.907±0.059  comp 0.873±0.082  notnot 0.444±0.129  | retained home 0.689±0.077  not3 0.498±0.091  links [2, 2, 2]  params [6602, 6602, 6602]  851s
+    [lock seed0] loaded: home 0.925 not3 0.845 full-world zero-shot 0.690
+  [link0] after rewake: classes 32, named 23
+    [lock seed0] after rewake: home 0.615 not3 0.545
+    [lock seed0]    stage 1 depth 2: acc 0.751 loss 0.535 stalled=True
+    [lock seed0] indist 0.751 comp 0.709 notnot 0.496 | retained home 0.703 not3 0.615
+    [lock seed1] loaded: home 0.907 not3 0.868 full-world zero-shot 0.633
+  [link0] after rewake: classes 25, named 23
+    [lock seed1] after rewake: home 0.510 not3 0.496
+    [lock seed1]    stage 1 depth 2: acc 0.687 loss 0.621 stalled=True
+    [lock seed1] indist 0.687 comp 0.686 notnot 0.511 | retained home 0.509 not3 0.499
+    [lock seed2] loaded: home 0.917 not3 0.965 full-world zero-shot 0.730
+  [link0] after rewake: classes 32, named 24
+    [lock seed2] after rewake: home 0.504 not3 0.518
+    [lock seed2]    stage 1 depth 2: acc 0.686 loss 0.617 stalled=True
+    [lock seed2] indist 0.687 comp 0.687 notnot 0.429 | retained home 0.516 not3 0.507
+lock     indist 0.708±0.037  comp 0.694±0.013  notnot 0.479±0.044  | retained home 0.576±0.110  not3 0.540±0.065  links [2, 2, 2]  params [6602, 6602, 6602]  828s
