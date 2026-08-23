@@ -1,0 +1,68 @@
+# PUBLIC trioron manual (textbook). Internal docs (spec, handoff, TRIORON_MANUAL) are NOT part of this site.
+site_name: "Trioron: a growing substrate — the manual"
+docs_dir: manual
+site_dir: .site
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      toggle: { icon: material/weather-night, name: Dark }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      toggle: { icon: material/weather-sunny, name: Light }
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+markdown_extensions:
+  - admonition
+  - tables
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: true
+extra_javascript:
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+  - javascripts/katex-init.js
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css
+plugins:
+  - search
+  - mkdocs-jupyter:
+      include_source: true
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            show_source: true
+            docstring_section_style: table
+            members_order: source
+            show_signature_annotations: true
+nav:
+  - Home: index.md
+  - The book:
+      - 1. What is a trioron?: book/01-what-is-trioron.md
+      - 2. Your first substrate: book/02-first-substrate.ipynb
+      - 3. Growth: book/03-growth.md
+      - 4. Continual learning: book/04-continual-learning.md
+      - 5. Organisms: book/05-organisms.md
+  - How-to & tips: howto/tips.md
+  - API reference:
+      - Overview: reference/index.md
+      - core.construct: reference/core.construct.md
+      - bases.seeded: reference/bases.seeded.md
+      - learning.epigenetic_lock: reference/learning.epigenetic_lock.md
+      - learning.manifold: reference/learning.manifold.md
+      - lifecycle.chain: reference/lifecycle.chain.md
+      - organisms: reference/organisms.md
+  - Conventions: conventions.md
