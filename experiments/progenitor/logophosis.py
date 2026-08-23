@@ -1,4 +1,4 @@
-"""s060+ — language comprehension, PURE trioron ("run 1+", Rocky).
+"""Logophosis — the pure-trioron language organism ("run 1+", Rocky; named s061).
 
 Everything that learns is substrate:
   Link 0  : PhasecyteLeaf over CHORD-encoded tokens (math-generated spectra, language_world
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     seeds = ([int(x) for x in os.environ["SEED_LIST"].split(",")] if os.environ.get("SEED_LIST")
              else range(int(os.environ.get("SEEDS", 3))))
     arms = os.environ.get("ARMS", "tied,grown").split(",")
-    print(f"# language PURE link0={LINK0} N={N} dtrain={DTRAIN} ep={STAGE_EP} "
+    print(f"# Logophosis PURE link0={LINK0} N={N} dtrain={DTRAIN} ep={STAGE_EP} "
           f"L_MAX={LW.L_MAX} MAX_OBJ={LW.MAX_OBJ} seeds={list(seeds)}", flush=True)
     for arm in arms:
         rs = [run(arm, s) for s in seeds]

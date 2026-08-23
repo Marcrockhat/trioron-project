@@ -11,6 +11,10 @@ chain (`trioron/lifecycle/chain.py`), substrate head. Pure tied n=3: in-dist .86
 zero-shot double-negation target NOT met by any arm (best mlp3 .585).**
 
 ## READ THIS FIRST
+**The pure language organism is named LOGOPHOSIS (Rocky, s061): logo- (word/reason) + -phosis
+(a becoming) — language formed by growth. Runner `experiments/progenitor/logophosis.py`.
+40K double-negation probe LAUNCHED 2026-08-23 ~05:00 WIB: `outputs/logophosis_rung1_40k_s{0,1,2}.log`
+(tied only, n=3, 4 threads each, expect ~2–2.5 h). Read its `^tied` lines first.**
 Rocky's "+" = pure trioron. Scope chosen by Rocky: FULL purity incl. Phasecyte Link 0 (not just
 head + controller). Rocky: "use a math function as initial feeder (like Kinopsis)" → words are
 synthetic chords (K=3 Gaussian partials on 32 bins, `language_world.chord_table`, per-occurrence
@@ -23,7 +27,7 @@ jitter .05), numbers not audio; one-hot `encode_sentence` stays the oracle contr
   joint train, lock-after-settle; no credit lock at spawn).
 - `experiments/progenitor/language_world.py`: `chord_table`, `chords_of`, `ids_of` (env CHORD_BINS 32,
   CHORD_K 3, CHORD_JITTER .05).
-- `experiments/progenitor/language_pure.py`: `ChordLink0` = PhasecyteLeaf over the token chord
+- `experiments/progenitor/logophosis.py`: `ChordLink0` = PhasecyteLeaf over the token chord
   stream (WAKE=20000 tokens, WINDOW=1000, class_cap 32, capacity 4096; labels `c{wid}` are naming
   taps only); evidence = `leaf.evidence()` CENTERED branch → softmax τ=1 (`EV_MODE`, `EV_TAU`) →
   zero-padded to CLASS_CAP, PAD rows zero. Arms `tied,grown`; env as language_chain.py + LINK0/WAKE/
@@ -72,7 +76,7 @@ Tied traces (pure, seeds≈): R=1 .84 → R=2 .86 → R=3 .87 → R=4 .87; train
   under that. Sequence runs instead of stacking them.
 - `pgrep -f`/`pkill -f <pattern>` kills the assistant's own shell (exit 144) — hit AGAIN. Kill by
   PID: `ps -eo pid,args | grep "^ *[0-9]* python3 <script>"` then check `/proc/PID/environ`.
-- `language_pure.py` std warnings for n=1 are harmless (`std()` on a single seed).
+- `logophosis.py` std warnings for n=1 are harmless (`std()` on a single seed).
 
 ## NEXT (s062)
 A. (done) pure grown n=3 in table: re-application (tied, 20.7K) beats fresh links (81K) on every
@@ -80,12 +84,12 @@ A. (done) pure grown n=3 in table: re-application (tied, 20.7K) beats fresh link
 B. Rung 1 double-negation: run the levers in Finding 4 (start with N=40K pure tied, one seed, to
    see whether depth+1 moves at all); then rung 2 (MAX_OBJ 3–4 + relations) with refs at a
    learnable scale first.
-C. MODE=continual (3 vocab stages, forgetting matrix) on the pure organism — `language_pure.py`
+C. MODE=continual (3 vocab stages, forgetting matrix) on the pure organism — `logophosis.py`
    has no continual main yet; port `run_continual` from `language_chain.py`.
 D. Sequential token reading (Axis-7 style, 32-d/step) to replace the flattened L_MAX×32 input;
    pairs naturally with nesting depth = re-application depth.
 E. Paper: the rung-0 table in the s060 handoff is IMPURE (torch head, oracle L0); any language
-   number for the paper must come from `language_pure.py`. Rung 0 pure rerun not done.
+   number for the paper must come from `logophosis.py`. Rung 0 pure rerun not done.
 
 Below = the s060/s059 handoffs, still current for the depth gate / logic chain / world details.
 
