@@ -1,0 +1,9 @@
+# Logophosis PURE link0=phasecyte N=40000 dtrain=2 mix=True not_only=True ep=10 L_MAX=10 MAX_OBJ=2 seeds=[2] test_depths=[1, 2] seq_norm=none
+  [genesis g0] starved=0 merged=0->0  receptors->32
+  [link0] internal classes 28, named 22 words
+  [link0 phasecyte] woke in 22s
+    [seq seed2]    stage 1 depth 1: acc 0.911 loss 0.166 stalled=True
+    [seq seed2]    stage 2 depth 2: acc 0.933 loss 142.593 stalled=True
+    [seq seed2] depth+1 (3 nest): 0.929
+    [seq seed2] depth+2 (4 nest): 0.820
+seq          indist 0.933±n/a  comp 0.923±n/a  depth+1 0.929±n/a  depth+2 0.820±n/a  links [2]  params [6602]  3135s

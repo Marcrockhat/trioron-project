@@ -1,54 +1,119 @@
 # Trioron Handoff
 
 **Session date:** 2026-08-23
-**Session number:** 061
-**Session title (s061 = "run 1+", Rocky):** **PURE-TRIORON LANGUAGE ORGANISM BUILT AND RUN AT RUNG 1
-(negation). Everything that learns is substrate: Phasecyte Link 0 discovers the word inventory
-from CHORD-encoded words (24 internal classes, 21–22/24 named, cluster purity .996), substrate
-chain (`trioron/lifecycle/chain.py`), substrate head. Pure tied n=3: in-dist .868±.010 (ties GRU
-.866, beats impure tied .846 by +.022), comp .792±.012 (GRU .804), depth+1 = `not not` .458±.030
-— BELOW chance for pure tied and GRU alike: double negation is read as single negation. Rung-1
-zero-shot double-negation target NOT met by any arm (best mlp3 .585).**
+**Session number:** 062
+**Session title (s062, Rocky: "not not not", then "wrap up all and produce a stable API"):**
+**TRIPLE NEGATION GENERALISES ZERO-SHOT IN SEQ MODE. Logophosis `seq` (one token per step, scene
+as per-step context, NOT = same weights at every depth) trained on 0–2 NOTs: not³ .873±.052,
+not⁴ .688±.118 (n=3, 6.6K params) vs flattened `tied` .550±.026 / .521±.052 (in-dist .838, comp .773, 20.7K params). STABLE ORGANISM API
+SHIPPED: `trioron/organisms/` (Logophosis + Kinopsis, `API_VERSION 1.0`, spec §9.16, 5 tests).**
 
 ## READ THIS FIRST
-**The pure language organism is LOGOPHOSIS (Rocky, s061): logo- (word/reason) + -phosis (a
-becoming). Runner `experiments/progenitor/logophosis.py`.**
+- The organisms are PACKAGE classes now: `from trioron.organisms import Logophosis, Kinopsis`.
+  `experiments/progenitor/{logophosis,kinopsis}.py` are world-side wrappers (data, splits,
+  scoring). Edit the package class, never the runner, for organism behaviour.
+- Seq mode has TWO init gotchas (below). Don't re-add RMS norm; it hurts.
+- OOM rule tightened: a Link-0 build (2.8–2.9 GB) OOMs if ANY other 40K language process is
+  training at the same time (3 kills this session, all the `tied` arm). Run one language process
+  at a time, or gate launches on the other's "woke in" line. `ChordLink0.evidence` is now chunked
+  (4000 sentences) — the whole-set chord tensor was part of the peak.
 
-### s061 late results (after the first handoff write)
-**40K Logophosis, tied, n=3** (`outputs/logophosis_rung1_40k_s{0,1,2}.log`): in-dist **.930±.002**,
-comp **.896±.009**, `not not` **.519±.024** (chance). vs 20K: +.06/+.10/+.06. Data lifts fit and
-composition, NOT the symmetry. (seed 1 OOM-killed once at Link-0 build with 3 concurrent builds;
-rerun alone. Rule: ≤2 concurrent Link-0 builds at 40K.)
+## Not-not-not experiment (this session)
+World: `language_world.py` `NOT_ONLY=1` — depth d = EXACTLY d NOTs (no and/or), so nesting
+depth = NOT count. Runner `logophosis.py` with `DEPTH_MIX=1` (train uniform over depths 0..2,
+40K), `TEST_DEPTHS=1,2` (zero-shot 3 and 4 NOTs, 4K each), MAX_OBJ=2, L_MAX=10, comp split as
+rung 1. Budget matched across arms: 10 ep/stage, patience 6, MAX_LINKS 2 (seq: 1 thinking step).
+Logs `outputs/logophosis_s062_notnotnot_seq_s{0,1,2}.log`, `..._tied.log`.
 
-**Rocky's diagnosis: double negation = a SYMMETRY primitive (NOT as an involution) never taught.**
-Tested in `logic_chain.py` new world `not` (`make_not`: truth symbol + m NOT tokens, label =
-truth XOR m%2, train m≤k, zero-shot m=k+1,k+2; arms `pure` = package LinkChain tied on the
-FLATTENED input, `pure_seq` = new `LinkChain(mode="seq")`: one link eats one token per step,
-Axis-7 style). Logs `outputs/logic_chain_s061_not_k{,_seq}.log`, n=3, 20 ep, patience 8.
-| input | k | in-dist | zero-shot k+1 | k+2 |
-|---|---|---|---|---|
-| flattened (pure, mlp3, gru) | 1,2,3 | 1.000 at depth 1 (lookup) | **exactly 0.000** (3/3, all k) | 1.000 / 0.000 alternating |
-| sequential (pure_seq) | 1 | .83±.29 (s1 stuck ln2, s2 loss exploded 1.6e5) | 1.0 / .51 / .50 | ~.5 |
-| sequential | 2 | 1.000 | .00 / .48 / .50 | .49 / .50 / 1.0 |
-| sequential | 3 | 1.000 | **1.0 / 1.0 / 1.0** | 1.0 / .50 / 1.0 |
-Readings: (i) flattened input makes each NOT slot a SEPARATE feature; unseen slots get no
-gradient → the chain answers parity(min(m,k)) → exactly 0 at k+1. This is Logophosis's `not not`
-failure, mechanistically (it reads the sentence flattened). (ii) With sequential reading the NOT
-operator is the SAME weights at every depth; shown composing ≥3 times it generalises parity to
-unseen depth 4 on 3/3 seeds, depth 5 on 2/3 — the involution is learnable as a primitive. At
-k=1 it is under-determined (1/3 seeds). (iii) seq mode is optimisation-fragile (ln-2 stall, quad
-blow-up over 6+ applications) — the hop-3 "normalise/crisp the state between applications"
-hypothesis again; untested fix = normalisation or Rocky's gated snap between steps.
+| arm | in-dist | comp | **not³ (zero-shot)** | **not⁴** | params |
+|---|---|---|---|---|---|
+| **seq** n=3 | .941±.014 | .927±.015 | **.873±.052** (.825/.865/.929) | .688±.118 (.591/.654/.820) | 6,602 |
+| tied (flattened) n=3 | .838±.009 | .773±.012 | .550±.026 (.549/.525/.577) | .521±.052 (.580/.492/.489) | 20,714 |
 
-### NEXT (s062) — supersedes the list below
-1. **Logophosis-seq:** feed Link-0 evidence token-by-token into `LinkChain(mode="seq")` (scene
-   concatenated per step or as step 0); train rung 1 WITH `not not` (DTRAIN=2 equivalent, k=2–3
-   NOTs), test triple/quadruple negation. Predict: symmetry generalises like `not_k` k=3.
-   Add state normalisation between steps first (seq stalls/explodes on 1–2 of 3 seeds).
-2. Mode E variant: lock the `not_k` seq link, compose into Logophosis, retest `not not` at 20K —
-   tells whether the primitive TRANSFERS rather than being relearned.
-3. MODE=continual + paper-facing pure rung-0 rerun remain (below).
+Readings:
+1. **The involution is learned as a primitive only when re-application depth = nesting depth**
+   (Rocky's s061 diagnosis confirmed on the real language world, not just `not_k`). Flattened
+   reading stays at chance on unseen depth as in s061; seq carries parity one depth beyond
+   training on 3/3 seeds and two depths on 2/3 (seed 2: .82).
+2. Seq is also BETTER in-distribution (.94 vs .84) at 1/3 the params — the flattened chain's
+   .84 shows it can't even fit 0–2 NOTs at this budget.
+3. Decay with depth (not⁴ < not³) = the state drifts per application; Rocky's crisp-state
+   hypothesis again. NOT RMS norm (tested, harmful). Untested: tanh/clip squash between steps,
+   the gated snap, Phasecyte-between-steps.
 
+### Seq-mode gotchas (s062 probe, `scratchpad/probe_seq.py`, oracle L0, 6K, 6 ep)
+| link init | state norm | acc | loss |
+|---|---|---|---|
+| std .01 (default) | none | .503 | .693 (ln 2 stall) |
+| std .01 | rms | .500 | .694 |
+| **fan-in** | **none** | **.609** | **.631** |
+| fan-in | rms | .497 | .694 |
+(i) 10 std-.01 applications in series vanish the signal → `LinkChain(link_fan_in=True)` (the head
+already had it since s061); `Logophosis` defaults it on for seq. (ii) RMS norm rescales the
+init noise to unit and kills it. (iii) Quad σ(z)=z+z² over 11 applications BLOWS UP the train
+loss at stage 2 (1.4e3 / 1.5e5 / 1.4e2 across seeds) while test acc still rises (.92→.95) —
+the optimiser survives via grad-clip; this is the s061 "loss exploded" fragility, untreated.
+The first seq launch (rms, 8 ep) = `..._seq_s{0,1}_rmsnorm.log`, chance everywhere.
+
+## Stable organism API (commit 6fd4d9e + 1e7c965)
+`trioron/organisms/base.py`: `Organism` (`save(path)->bytes`, `load` with type check,
+`n_params`, `substrates`, `torch_modules`), helpers `leaf`, `train_leaf`, `chunked`, `Std`.
+`trioron/organisms/logophosis.py`: `ChordLink0` (PhasecyteLeaf on chord tokens; `ev_mode`
+plain|centered|softmax), `OracleLink0`, `Logophosis(scene_dim, class_cap, seed, mode=seq|tied|grown,
+link0=phasecyte|oracle, max_links, H, interior, seq_norm, link_fan_in, link0_kw)` →
+`.wake(ids) .fit(S,ids,y,S_te,ids_te,y_te, epochs, patience, target) .comprehend(S,ids)
+.accuracy .depth`. Token length L is fixed at first encode.
+`trioron/organisms/kinopsis.py`: `Kinopsis(seed, leaves, std, empty_mshape)` /
+`.from_organ(organ, empty_mshape, seed)` → `.settle_heads .acquire_msil .fit_router
+.acquire_vel` (chainable) → `.shape(S, E, mode) .velocity(Zm)`; `Router`, `QDAVoter`, `conf`,
+`vote` live here (`motion_router.py`/`motion_leaf.py` re-export). `settle_heads` rank clipped
+to stream dim (was NaN for d ≤ 32). `trioron/senses/chord.py`: `chord_table(n, bins, k, seed)`,
+`chords_of(ids, table, gen, jitter)` — bit-identical to the s060 tables (verified).
+`LinkChain` new kwargs: `ctx` (per-step context dims, seq), `norm` (none|rms), `link_fan_in`.
+Spec §9.16 + top-level tree updated. Tests `tests/test_v2/test_organisms.py` (5, ~70 s).
+Pre-existing failures NOT touched: `test_lifecycle.py::TestDreamCycle` ×2 (fail on the parent
+commit too).
+Caveats: Kinopsis pickles from before s062 won't load (class path moved); Logophosis save is
+~42 MB (Phasecyte Link-0 capacity-4096 substrate) — Link-0 compaction/dream_distill is open.
+`logic_chain.py` `pure_seq` arm untouched (no ctx, no fan-in) — its s061 numbers stand.
+
+## NEXT (s063)
+1. **not⁴ and beyond:** state squash between seq steps (tanh or clip — NOT rms), re-run n=3;
+   also the loss blow-up should go away with it. Then depth+3 (not⁵).
+2. Rung 1 FULL world (and/or + not) in seq mode — does seq keep the .93/.90 of the 40K tied run
+   and add `not not`? Expect yes; this replaces the s061 headline table.
+3. Mode E transfer: lock the NOT-only seq link, compose into the full world.
+4. Kinopsis end-to-end regression through the package class (`kinopsis.py` runner, n=1) — the
+   refactor is covered by synthetic tests only; the real-world numbers (s057) not re-verified.
+5. Link-0 compaction for `Logophosis.save`; MODE=continual for Logophosis (port `run_continual`).
+
+## Gotchas (cumulative, new first)
+- `pgrep -f` is fine to LIST; `pkill -f` kills this shell. Kill by PID via `/proc/PID/environ`.
+- One 40K language process at a time (see READ THIS FIRST). Seq costs ~10× tied per epoch
+  (L=10 token steps): ~25 min/stage at 40K with 4 threads.
+- `git stash` while background runs are live is safe (they've imported already) but don't.
+
+## State of the build / Pointers
+- Commits on `conscience-core`: 6fd4d9e (API), 1e7c965 (seq fix + seq logs), + final handoff commit.
+  `main` NOT advanced. Pushed at session end.
+- Memory: `logophosis_seq_triple_negation.md`, `logophosis_organism_api.md`.
+
+## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
+`trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
+`trioron/viz/export.py`; `.claude/`, `runs/`, `archive/runs/`,
+`trioron/legacy/outputs/`, `notebooks/` checkpoints, output PNGs / uncommitted
+logs untracked; `outputs/data/**` caches.
+
+## Environment notes
+- `/home/marcrockhat/trioron-project/`, branch `conscience-core`, Python
+  3.10.12, torch 2.11.0, WSL2, `python3` (NOT `python`), 12 CPUs, 7 GB RAM (Rocky is
+  considering a new laptop — RAM is the binding constraint, not CPU).
+
+---
+Below = the s061 handoff body, still current for rung-1 (impure/pure flattened) tables, Link-0
+findings and the logic-chain depth gate.
+
+---
 ## What was built (commit a35b3d1 + this handoff)
 - `trioron/lifecycle/chain.py` (package, spec §9.6 row added): `new_link` (Seeded quad, optional
   `fan_in_init`), `LinkChain(mode=tied|grown)` with a SUBSTRATE head link `Seeded(H→C, interior
