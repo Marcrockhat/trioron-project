@@ -129,6 +129,16 @@ Multiple expression genes co-fire (e.g. `attention|conv`): the scheduler runs th
 once per expressed gene and **adds** contributions. The six shipped phenotypes are
 **linear / attention / conv / recurrent / dendrite / tanh** (spec §3.2–3.6, §3.10;
 tanh added s030 — bounded |y|≤1, the anti-detonation counterpart to the quad).
+
+**Quad cross-terms are PER DENDRITIC BRANCH (spec §3.6, found s063 — easy to
+forget):** σ(z)=z+z² of a branch sum gives products only of inputs sharing that
+branch. `Seeded(nonlinear=True)` splits fan-in into two contiguous halves by
+input order, so a 1-layer substrate has NO interaction across the halfway line
+(2-d XOR is provably unlearnable; feature ORDER silently decides learnability).
+Fix at composition level: duplicate interacting blocks into both halves
+(`LinkChain(dup=True)`); principled fix (open): Axis-5 field-driven branch
+membership. Suspect this FIRST for 1-layer nulls on relational tasks and for
+ln-2 stalls that fan-in init doesn't cure.
 Marker genes (not expression): PERCEPTION, OUTPUT, …, MIRROR (10, experimental),
 **RECEPTOR (11, s030)** — PCLL phase injection, and **PCLL itself is spec §10**:
 the gradient-free streaming layer (lock-in + matched filter + signatures) living

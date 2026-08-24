@@ -1,52 +1,47 @@
 # Trioron Handoff
 
 **Session date:** 2026-08-24
-**Session number:** 063
-**Session title (s063, Rocky: "run next 1-3, finally the closing arc for our Logophosis"):**
-**MODE E TRANSFER WORKS — WITH A FIXED LINK-0. `warm_nowake` (NOT-only seq organism loaded into
-the full not/and/or world, Link-0 untouched, all links free) matches scratch on the new world
-(in-dist .956±.009, comp .932±.010) AND flips `not not` from systematically inverted (.368) to
-learned (.685±.111), retaining the home NOT-world (.887±.029). The killer was Link-0 rewake
-drift: `observe_more` merges/moves existing Phasecyte classes → retained falls to ~chance on 2/3
-seeds BEFORE any gradient. Also: tanh state squash kills the seq loss blow-up (not⁵ .643±.142
-three depths beyond training; bimodal — seed 2 found the involution: not³ .965 / not⁴ .980 /
-not⁵ .804).**
+**Session number:** 063 (final rewrite — supersedes the mid-session s063 handoff at aa0aeef)
+**Session title (s063: Logophosis closing arc → public manual → BRANCH-PARTITION FINDING):**
+**(1) MODE E TRANSFER WORKS — WITH A FIXED LINK-0 (warm_nowake .956/.932, `not not` .368→.685,
+retained .887; rewake drift = the dominant forgetting channel). (2) PUBLIC TRIORON MANUAL
+(textbook, mkdocs) shipped; writing its XOR tutorial exposed (3) THE BRANCH-PARTITION LIMIT:
+quad cross-terms exist only WITHIN a dendritic branch; `Seeded`'s blind half-split makes 2-d
+XOR unlearnable and the seq in-step h×token product unrepresentable. `LinkChain(dup=True)`
+([h,c,x,h,x]) COLLAPSES the not⁴ seed variance 8×: .747±.204 → .769±.025 (n=3). The s062
+"crisp-state" story was two problems: findability (SOLVED by dup) + per-depth decay (remains).**
 
 ## READ THIS FIRST
-- **Transfer recipe:** load organism + do NOT rewake + train free. Unseen words (`and`/`or`)
-  are readable as their consistent soft projection on the existing matched filters — Link-0
-  never needs to see them. Rewake (continued Phasecyte observation) is DESTRUCTIVE to the
-  downstream chain (class merge/index drift); a receptor-freeze-on-rewake (grow new classes
-  only) is the open substrate fix.
-- The λ-lock now exists at the organism surface: `Logophosis.lock_links(strength)` (anchor +
-  `set_lambda` on the chain links, `ewc_penalty` added to the loss via a new `penalty` hook in
-  `fit_stage`/`fit_grow`). It protects the fragile seed but costs acquisition (below).
-- `LinkChain(norm="tanh")` is the seq default choice now (runner env `SEQ_NORM=tanh`); `clip`
-  also exists, both probed vs none (tanh best). Do not use rms (s062).
-- One 40K language process at a time (7 GB RAM); seq stage ≈ 25 min at 4 threads.
+- **Quad cross-terms are per dendritic branch** (spec §3.6 note added; TRIORON_MANUAL updated).
+  1-layer learnability depends on input feature ORDER. Suspect this FIRST for any 1-layer null
+  on a relational task and any ln-2 stall fan-in init doesn't cure.
+- **Fix policy (Rocky's decision):** document + opt-in `dup` NOW; do NOT flip `Seeded`'s
+  default split (breaks structural reproducibility of every past run + paper numbers);
+  principled fix = Axis-5 field-driven branch membership, gated, s064.
+- Transfer recipe (unchanged): load organism + do NOT rewake + train free; lock only fragile
+  primitives. Rewake (`observe_more`) drifts/merges Phasecyte classes → retained → chance
+  BEFORE any gradient.
+- Public manual: `manual/` + root `mkdocs.yml` (`python3 -m mkdocs serve`). Notebook chapters
+  are committed EXECUTED. Aldarof's game wiki (`~/aldarof/wiki/`) is separate, owned by the
+  other Claude session.
+- One 40K language process at a time (7 GB RAM). dup seq ≈ 1.5× edges but ran FASTER wall-clock
+  (1618s vs 3308s n=3 — less CPU contention this time; don't trust either as a per-epoch cost).
 
-## Item 1 — NOT-only world, tanh squash, n=3 (`outputs/logophosis_s063_notnotnot_seq_tanh.log`)
-Same protocol as s062 (NOT_ONLY, DEPTH_MIX 0–2, 40K, 10 ep/stage, MAX_LINKS 2), SEQ_NORM=tanh,
-TEST_DEPTHS=1,2,3:
-
+## Arc 1 — Logophosis closing (items 1–3 of s062 NEXT)
+### NOT-only, tanh squash n=3 (`outputs/logophosis_s063_notnotnot_seq_tanh.log`)
 | arm | in-dist | comp | not³ | not⁴ | not⁵ | params |
 |---|---|---|---|---|---|---|
-| seq tanh n=3 | .917±.009 | .910±.010 | .893±.063 | .747±.204 | .643±.142 | 6,602 |
+| seq tanh | .917±.009 | .910±.010 | .893±.063 | .747±.204 | .643±.142 | 6,602 |
+| seq tanh **dup** (see Arc 3) | .877±.015 | .830±.029 | .863±.037 | **.769±.025** | .644±.099 | 9,738 |
 | (s062 seq none, ref) | .941±.014 | .927±.015 | .873±.052 | .688±.118 | — | 6,602 |
 
-Readings: (i) the s062 quad loss blow-up (train loss 1433 at stage 2) is GONE — tanh bounds the
-state; (ii) depth generalisation up on mean but **bimodal**: seed 2 = .965/.980/.804 (found the
-involution nearly exactly — not⁴ above its own in-dist), seeds 0/1 = .60–.66 at not⁴; (iii)
-per-application decay persists for non-involution seeds — tanh bounds but does not crisp; the
-gated snap / Phasecyte-between-steps remain untested. Per-seed organisms saved:
-`outputs/organisms/logophosis_notonly_seq_tanh_s{0,1,2}.pt` (~44 MB each, untracked).
+tanh kills the s062 loss blow-up (1433 → .12–.21). No-dup is bimodal (not⁴ .658/.602/.980 —
+seed 2 found the involution: .965/.980/.804); dup puts all seeds on one smooth curve
+(.743/.773/.792) at a matched-epoch in-dist/comp cost (wider input converges slower; NOT
+budget-matched by convergence). Saved organisms:
+`outputs/organisms/logophosis_notonly_seq_{tanh,tanhdup}_s{0,1,2}.pt` (~45 MB, untracked).
 
-## Items 2+3 — full world (not/and/or) seq + Mode E transfer
-Runner `experiments/progenitor/logophosis_transfer.py` (new): arms scratch / warm / lock /
-warm_nowake / lock_nowake; INIT=the item-1 saves; LOCK=1.0; DTRAIN=1, N=40K, 10 ep/stage,
-MAX_LINKS 2, n=3. RETAINED = the NOT-only home world (0–2 NOTs) + not³ zero-shot after
-full-world training. Logs `outputs/logophosis_s063_transfer_{full,nowake}.log`.
-
+### Full world (not/and/or) seq + Mode E transfer (`logophosis_transfer.py`, logs `..._transfer_{full,nowake}.log`)
 | arm | in-dist | comp | `not not` | ret. home | ret. not³ |
 |---|---|---|---|---|---|
 | scratch | .950±.003 | .936±.003 | .368±.038 | .618±.011 | .322±.117 |
@@ -55,68 +50,86 @@ full-world training. Logs `outputs/logophosis_s063_transfer_{full,nowake}.log`.
 | **warm_nowake** | **.956±.009** | **.932±.010** | **.685±.111** | **.887±.029** | .672±.212 |
 | lock_nowake | .846±.026 | .797±.023 | .654±.079 | .884±.017 | .672±.119 |
 
-Readings:
-1. **Item 2 answered:** scratch seq on the full world beats the s061 tied-40K headline
-   (.950/.936 vs .930/.896) at 1/3 the params — but `not not` is BELOW chance (.368): trained
-   with ≤1 NOT, the seq link reads every NOT as odd. Depth data (or transfer) is required; seq
-   alone does not discover the involution from shallow data.
-2. **Item 3 (Mode E) answered:** warm_nowake = full acquisition + involution transfer +
-   retention, all without the lock. The involution partially survives free full-world training
-   (notnot .685, seed 2 .813) — locality of the seq link does most of the protecting.
-3. **The λ-lock is real but situational:** on the fragile seed 1 it lifts notnot .610→.743 and
-   ret-not³ .440→.709; on means it only costs (in-dist −.11). Use when the primitive matters
-   more than the new world.
-4. **Link-0 drift is the dominant forgetting channel** — retained → chance at rewake, before
-   any gradient (seed 1 also MERGED 28→25 classes). Locking the link while Link-0 drifts is
-   worst of all (lock+rewake .708): the link defends weights tuned to moved symbol indices.
-   This is the s063 headline gotcha: **in a stacked organism, protect the SYMBOL LAYER first.**
+Readings: scratch seq beats s061 tied 40K (.930/.896) at 1/3 params but reads `not not` as
+"odd" (below chance) — the involution needs depth-varied data or transfer. warm_nowake = full
+acquisition + involution transfer + retention, no lock needed (link locality protects). λ-lock
+(`Logophosis.lock_links`) is situational: on the fragile seed +.13 notnot/+.27 ret-not³, on
+means costs −.11 in-dist. Rewake drift: 2/3 seeds retained → chance pre-gradient (seed 1 merged
+28→25 classes); lock+rewake is the worst arm (defends weights tuned to moved symbol indices) →
+**in a stacked organism, protect the symbol layer first.**
 
-## What was built (commits f00a096, 5a10a6d, + this handoff)
-- `trioron/lifecycle/chain.py`: `norm="tanh"|"clip"` squash options; `penalty` hook in
-  `fit_stage`/`fit_grow` (optional callable added to the loss).
-- `trioron/organisms/logophosis.py`: `ChordLink0.observe_more`, `Logophosis.rewake`,
-  `Logophosis.lock_links(strength, lam)` + `_penalty` (epigenetic lock on chain links, head
-  free); window stored on ChordLink0.
-- `experiments/progenitor/logophosis_transfer.py` (new runner, 5 arms as above).
-- `experiments/progenitor/logophosis.py`: SAVE takes `{seed}` per-seed paths.
-- Tests: `tests/test_v2/test_organisms.py` 5/5 pass. Pre-existing `test_lifecycle.py::
-  TestDreamCycle` ×2 failures untouched (fail on parent too).
+## Arc 2 — Public trioron manual (Rocky: tsinfer-style textbook; commit b2ee108)
+`manual/` + root `mkdocs.yml`: mkdocs-material + KaTeX (arithmatex) + mkdocs-jupyter +
+mkdocstrings (pip --user installed). Ch1 concepts w/ formulas (λ row-sum+floor, EWC pull,
+|w·g| vs Fisher, σ(z)=z+z²); Ch2 = EXECUTED notebook tutorial (XOR: fan-in init formula →
+fail at chance → per-branch lesson → dup fix → 1.000, linear control ~.5, figure embedded);
+Ch3–5 skeletons (growth protocol, lock/manifold formulas, organisms); how-to/tips; API
+reference over construct/seeded/epigenetic_lock/manifold/chain/organisms; conventions
+(notebooks committed executed; docstrings = the reference; internal docs never linked).
+Re-execute after substrate changes: `python3 -m jupyter nbconvert --to notebook --execute
+--inplace manual/book/*.ipynb`. Publishing venue undecided (GH Pages candidate).
+Aldarof manual: `~/aldarof/wiki/` (mkdocs + mkdocs-public.yml two-build public split) — built
+this session but owned by the other Claude session ("other Chloe") going forward.
+
+## Arc 3 — Branch-partition finding (commit 655d525 + spec/manual notes)
+Mechanism: §3.6 dendrite = fan-in split into K=2 CONTIGUOUS HALVES by input order (same for
+every cell); σ per branch ⇒ cross-terms only within a branch. Proofs/evidence:
+- 2-d XOR: quad substrate = chance forever (torch quad MLP = 1.0); zero-pad to 8-d or
+  duplicate input `[x1,x2,x1,x2]` → 1.000. (Manual Ch2 demonstrates it live.)
+- Seq layout `[h|ctx|x]`: h fills branch 1, token branch 2 ⇒ in-step h×x (gated NOT)
+  unrepresentable; only a two-step echo via h². Predicted → tested → confirmed: dup n=3 above
+  (σ collapse 8×, fragile seeds +.09/+.17, lucky seed regresses — landscape reshaped).
+- 6K oracle probe: dup .752/.683/.547 vs no-dup .661/.589/.484.
+Conclusions ALTERED: parity-8 "SQ-hard optimisation wall" and hop-3 wall explanations reopened
+(same suspect); "crisp-state drift" split into findability (solved) + decay (open); "depth buys
+degree" partially "depth crosses the partition". Comparative headlines (CL benches, competitor
+sweeps, Mode E) unaffected — both arms shared the limitation.
+
+## What was built (commits f00a096, 5a10a6d, aa0aeef, b2ee108, 655d525, + this handoff)
+- `trioron/lifecycle/chain.py`: `norm=tanh|clip`; `penalty` hook in fit_stage/fit_grow;
+  `LinkChain(dup=True)` seq input `[h,c,x,h,x]`.
+- `trioron/organisms/logophosis.py`: `observe_more`/`rewake`, `lock_links(strength, lam)`,
+  `seq_dup` param.
+- `experiments/progenitor/logophosis_transfer.py` (5 arms); `logophosis.py`: SAVE `{seed}`,
+  SEQ_DUP env.
+- `manual/` (public textbook) + root `mkdocs.yml`; spec §3.6 limitation note;
+  TRIORON_MANUAL quad-branch entry.
+- Tests: `tests/test_v2/test_organisms.py` 5/5. Pre-existing TestDreamCycle ×2 failures
+  untouched.
 
 ## NEXT (s064)
-1. **Receptor-freeze-on-rewake**: Phasecyte grows NEW classes without touching existing
-   receptors/filters (controller change — habituation/merge currently mutates them). Then
-   re-run warm_nowake vs warm_freezewake; expect freezewake ≥ nowake with truly crisp and/or
-   symbols.
-2. Crisp-state for the non-involution seeds: gated snap (top-2 margin) or Phasecyte between
-   seq steps; target = not⁴ ≥ .9 on 3/3 seeds (seed 2 proves the solution exists in this
-   parametrisation).
-3. Continual MODE for Logophosis (3 vocab stages + forgetting matrix, port `run_continual`) —
-   now directly the warm_nowake recipe chained.
-4. Link-0 compaction for `Logophosis.save` (44 MB → target < 1 MB; dream_distill a settled
-   segment).
-5. Kinopsis end-to-end regression through the package class (unchanged from s062 NEXT-4).
+0. **hop-k with dup** — the remaining altered conclusion awaiting its test: `logic_chain.py`
+   tied arm with state+symbol duplicated into both halves; does the hop-3 wall (.59) move?
+   Cheap, decisive.
+1. **Axis-5 branch membership by field** (the principled fix): grow_branch/branch re-assignment
+   under relational frustration instead of the blind half-split; gate = 2-d XOR learnable
+   without dup + no regression on a standard bench. Then revisit Seeded default.
+2. **Residual per-depth decay** (now a clean monotone target on all seeds): gated snap /
+   Phasecyte-between-steps on the dup arm; also a convergence-matched dup rerun (in-dist/comp
+   dropped at matched epochs — try 15 ep/stage).
+3. Receptor-freeze-on-rewake (Phasecyte grows new classes without touching existing receptors);
+   then warm_freezewake vs warm_nowake.
+4. Continual MODE for Logophosis (3 vocab stages = chained warm_nowake); Link-0 compaction
+   (45 MB → <1 MB); Kinopsis real-world regression (s062 NEXT-4, still open).
+5. Manual: worked notebooks for Ch3 (growth on parity) and Ch4 (lock+manifold demo); publishing
+   venue decision (GH Pages off trioron-project?).
 
 ## Gotchas (cumulative, new first)
-- **Rewake destroys downstream symbol mappings** (this session, above). Never call
-  `observe_more`/`rewake` on a deployed organism until item 1 ships.
+- **Branch partition** (see READ THIS FIRST — the new #1 diagnostic).
+- Rewake destroys downstream symbol mappings; never on a deployed organism.
 - `pgrep -f` LIST ok; `pkill -f` kills this shell. Kill by PID via `/proc/PID/environ`.
 - One 40K language process at a time; Link-0 build ~2.9 GB peak.
-- `git stash` while background runs live: don't.
+- Manual notebooks must be re-executed (not hand-edited) after substrate changes.
 
 ## State of the build / Pointers
-- Commits on `conscience-core`: f00a096 (tanh + lock_links + transfer runner + item-1 log),
-  5a10a6d (round-1 transfer log + nowake arms), + final handoff commit. `main` NOT advanced.
-  Pushed at session end.
-- Untracked keepers: `outputs/organisms/*.pt` (per-seed NOT-only organisms, 44 MB each — the
-  transfer INIT files; regenerate via item-1 command below if lost).
-- Repro item 1: `NOT_ONLY=1 DEPTH_MIX=1 DTRAIN=2 MAX_OBJ=2 L_MAX=10 N=40000 EPOCHS=10
-  MAX_LINKS=2 PATIENCE=6 SEEDS=3 ARMS=seq SEQ_NORM=tanh TEST_DEPTHS=1,2,3
-  SAVE='outputs/organisms/logophosis_notonly_seq_tanh_s{seed}.pt' python3
-  experiments/progenitor/logophosis.py`
-- Repro items 2+3: `MAX_OBJ=2 L_MAX=10 N=40000 EPOCHS=10 MAX_LINKS=2 PATIENCE=6 SEEDS=3
-  SEQ_NORM=tanh LOCK=1.0 ARMS=scratch,warm,lock,warm_nowake,lock_nowake python3
-  experiments/progenitor/logophosis_transfer.py`
-- Memory: `logophosis_mode_e_transfer.md`.
+- Branch `conscience-core`, commits this session: f00a096, 5a10a6d, aa0aeef (mid-session
+  handoff), b2ee108 (manual), 655d525 (dup), + this final handoff. `main` NOT advanced. Pushed.
+- Untracked keepers: `outputs/organisms/*.pt` (transfer INIT files; repro commands in git
+  history at aa0aeef).
+- Memory: `logophosis_mode_e_transfer.md`, `branch_partition_finding.md`,
+  `trioron_public_manual.md`.
+- `~/aldarof` (separate repo, local-only, no remote): wiki commits ab3d016 + 8f72f7a — the
+  other session's territory now.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
@@ -126,10 +139,10 @@ logs untracked; `outputs/data/**` caches.
 
 ## Environment notes
 - `/home/marcrockhat/trioron-project/`, branch `conscience-core`, Python 3.10.12, torch 2.11.0,
-  WSL2, `python3` (NOT `python`), 12 CPUs, 7 GB RAM (Rocky considering a new laptop — RAM is
-  the binding constraint).
+  WSL2, `python3` (NOT `python`), 12 CPUs, 7 GB RAM. New pip --user deps this session:
+  mkdocs-material, mkdocstrings[python], mkdocs-jupyter (+ mkdocs-exclude in aldarof's venv).
 
 ---
-Below = pointers into git history (no dated archives kept): s062 handoff (seq gotchas, organism
-API, OOM rules) at c4ac3db; s061 (rung-1 flattened tables, Link-0 findings) and s059/s060
-(depth gate, logic chain) inside it.
+History pointers (no dated archives): s062 handoff at c4ac3db (seq gotchas, organism API, OOM
+rules); s061 (rung-1 flattened tables, Link-0 findings) and s059/s060 (depth gate, logic
+chain) within it.

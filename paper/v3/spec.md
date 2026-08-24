@@ -929,6 +929,24 @@ When $K = 1$ the dendrite phenotype is byte-identical to linear (the
 quad nonlinearity reduces to a per-cell affine if $\alpha$ collapses to
 $1$). This preserves the v1.1 backward-compatibility guarantee.
 
+**Representational limit (branch partition; found s063).** Cross-terms
+$a_u a_{u'}$ exist **only for inputs sharing a branch**: expanding
+$\sigma$ of a branch sum yields products within $B_k$ and never across
+branches. With the `Seeded` default (fan-in split into two contiguous
+halves by input order, identical for every cell), a single dendrite
+layer can represent **no interaction between features on opposite
+sides of the halfway line** — XOR on a 2-d input is provably outside
+the function class (each branch holds one edge; the basis
+$(x_1, x_2, x_1^2, x_2^2)$ cannot separate it). Consequences: (i)
+learnability at depth 1 depends on *input feature order* — an
+undeclared inductive bias; (ii) compositions must place interacting
+features in one branch — duplicating the input block into both halves
+(`LinkChain(dup=True)`: `[h,c,x] -> [h,c,x,h,x]`) restores the
+products at ~1.5× edge cost and collapsed the seq not$^4$ seed
+variance 8× (s063: .747±.204 -> .769±.025); (iii) the principled fix
+is branch membership chosen by the field (Axis 5 `grow_branch` under
+relational frustration), not a blind half-split — open, gated.
+
 **Lineage convention:** dendrite cells use `phenotype_data` to store
 the branch partition (`branch_id: int[fan_in]`) and the per-branch
 weights (`alpha: float[K]`). A new branch is added with `grow_branch`,
