@@ -94,10 +94,16 @@ sweeps, Mode E) unaffected — both arms shared the limitation.
   SEQ_DUP env.
 - `manual/` (public textbook) + root `mkdocs.yml`; spec §3.6 limitation note;
   TRIORON_MANUAL quad-branch entry.
-- Tests: `tests/test_v2/test_organisms.py` 5/5. Pre-existing TestDreamCycle ×2 failures
-  untouched.
+- Tests: v1 CI gate 7/7, organisms 5/5. Pre-existing v2 failures are FOUR (TestCredit ×2,
+  TestGrowth ×1, TestDreamCycle ×1 — all reproduce at c4ac3db; s062 handoff undercounted as 2).
+  Candidate s064 fix item.
 
 ## NEXT (s064)
+-1. **Manual improvement (Rocky, end of session: "we need to improve the manual soon")** —
+   priority: worked notebooks for Ch3 (growth on parity) + Ch4 (lock + manifold demo),
+   flesh Ch5 with a Logophosis walk, expand docstrings feeding the API reference, decide the
+   publishing venue (GH Pages off trioron-project). The manual is also a bug-finder — Ch2
+   caught the branch partition; write chapters as experiments.
 0. **hop-k with dup** — the remaining altered conclusion awaiting its test: `logic_chain.py`
    tied arm with state+symbol duplicated into both halves; does the hop-3 wall (.59) move?
    Cheap, decisive.
@@ -122,8 +128,12 @@ sweeps, Mode E) unaffected — both arms shared the limitation.
 - Manual notebooks must be re-executed (not hand-edited) after substrate changes.
 
 ## State of the build / Pointers
-- Branch `conscience-core`, commits this session: f00a096, 5a10a6d, aa0aeef (mid-session
-  handoff), b2ee108 (manual), 655d525 (dup), + this final handoff. `main` NOT advanced. Pushed.
+- Branch `conscience-core`, commits: f00a096, 5a10a6d, aa0aeef, b2ee108 (manual), 655d525
+  (dup), 52153a6 (handoff), d1f131a (**release v0.3.3**). **MERGED TO MAIN AND PUSHED**
+  (main = d1f131a). **PyPI 0.3.3 LIVE**: wheel gains trioron.organisms + trioron.senses
+  (missing from 0.3.2's explicit packages list — the 0.3.0-pcll bug class: new subpackage
+  ⇒ pyproject packages entry). API_VERSION 1.1 (additive); `LinkChain.__setstate__` loads
+  1.0-era pickles (verified on a real save). Spec §9.16 updated.
 - Untracked keepers: `outputs/organisms/*.pt` (transfer INIT files; repro commands in git
   history at aa0aeef).
 - Memory: `logophosis_mode_e_transfer.md`, `branch_partition_finding.md`,
