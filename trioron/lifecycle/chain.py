@@ -107,6 +107,11 @@ class LinkChain:
                                        self.seed * 100 + len(self.links),
                                        interior=self.interior, fan_in_init=self.link_fan_in))
 
+    def __setstate__(self, state):     # pickles from before dup/norm/ctx (API 1.0)
+        self.__dict__.update(state)
+        for k, v in (("dup", False), ("norm", "none"), ("ctx", 0), ("link_fan_in", False)):
+            self.__dict__.setdefault(k, v)
+
     def forward(self, e: torch.Tensor, **_) -> torch.Tensor:
         h = torch.zeros(len(e), self.H)
         if self.mode == "seq":

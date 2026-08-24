@@ -26,7 +26,7 @@ from trioron.bases.seeded import Seeded
 from trioron.core import Envelope, construct
 from trioron.phenotype import default_dispatch_table
 
-API_VERSION = "1.0"
+API_VERSION = "1.1"   # s063: +LinkChain(norm,dup,penalty), Logophosis(seq_dup,rewake,lock_links); additive, 1.0 pickles load
 
 
 class Std:

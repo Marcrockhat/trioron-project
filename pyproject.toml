@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "trioron"
-version = "0.3.2"
+version = "0.3.3"
 description = "Continual-learning architecture with archive-routed multi-branch absorption"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -84,6 +84,8 @@ packages = [
   "trioron.evolution",
   "trioron.compat",
   "trioron.pcll",
+  "trioron.organisms",
+  "trioron.senses",
   "trioron.legacy",
   "trioron.legacy.bridge",
   "trioron.legacy.bridge.encoders",

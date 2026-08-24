@@ -3591,9 +3591,9 @@ package dependencies) because the scheduler performs the injection and
 
 ### 9.16 `organisms/` and `senses/` — Stable Organism API
 
-Added s062. An *organism* is a saveable composition of substrates plus its
-calibration statistics, with a uniform surface (`trioron/organisms/base.py`,
-`API_VERSION = "1.0"`): stage methods return `self` (chainable acquisition
+Added s062; extended s063 (`API_VERSION = "1.1"`, additive). An *organism* is a
+saveable composition of substrates plus its calibration statistics, with a
+uniform surface (`trioron/organisms/base.py`): stage methods return `self` (chainable acquisition
 schedule), inference is `@torch.no_grad` on the organism's native input,
 `save(path) -> bytes` / `load(path)` / `n_params()` / `substrates()` /
 `torch_modules()`. Everything that learns is substrate except the explicitly
@@ -3604,12 +3604,16 @@ tensors; the package never imports from `experiments/`.
 | file | responsibility | spec section |
 |---|---|---|
 | `organisms/base.py` | `Organism` base; shared helpers `leaf` (Seeded quad leaf), `train_leaf` (Adam+clip, freezes on exit), `chunked`, `Std` | 5.1 |
-| `organisms/logophosis.py` | **Logophosis** — grounded-language comprehension: `ChordLink0` (PhasecyteLeaf on chord tokens, centered evidence → softmax symbol) / `OracleLink0`; `LinkChain` (`seq` token-per-step w/ scene context + RMS state norm, `tied`, `grown`); `wake` → `fit` (stall→grow→joint) → `comprehend` | 9.6 chain.py, 10.4 |
+| `organisms/logophosis.py` | **Logophosis** — grounded-language comprehension: `ChordLink0` (PhasecyteLeaf on chord tokens, centered evidence → softmax symbol; `observe_more` = continued discovery, DRIFTS existing classes — s063) / `OracleLink0`; `LinkChain` (`seq` token-per-step w/ scene context, `norm=none|rms|tanh|clip` state squash, `dup` branch-partition duplication §3.6, `tied`, `grown`); `wake` → `fit` (stall→grow→joint, optional `penalty`) → `comprehend`; s063 adds `rewake(ids)` (use with care) and `lock_links(strength, lam)` (epigenetic lock on chain links via §5.x `anchor`/`set_lambda`/`ewc_penalty`; head stays free) | 9.6 chain.py, 3.6, 10.4 |
 | `organisms/kinopsis.py` | **Kinopsis** — motion-sight: frozen shape organ (`from_organ`), `settle_heads` (replay-settle, head rows only), `acquire_msil`, `fit_router` (`Router` ~60 torch params, hard motion gate; optional `QDAVoter`), `acquire_vel`; `shape` / `velocity` | 5.3 |
 | `senses/chord.py` | `chord_table(n_symbols, bins, k, seed)`, `chords_of(ids, table, gen, jitter)` — synthetic word spectra (numbers, not audio) | 10.2 |
 
 Contract notes: `Logophosis` fixes the token length `L` at the first
 `encode`; `Kinopsis.settle_heads` rank is clipped to the stream dimension.
+API 1.1 (s063, additive — 1.0 pickles load via `LinkChain.__setstate__`
+defaults): `LinkChain(norm=, dup=, penalty hook in fit_stage/fit_grow)`,
+`Logophosis(seq_dup=)`, `.rewake`, `.lock_links`. Transfer recipe: load +
+do NOT rewake + train free; lock only fragile primitives (s063 handoff).
 Pickles are whole-object (`torch.save(self)`); a Phasecyte Link 0 carries its
 capacity-4096 substrate (~40 MB) — `dream_distill`/compaction of Link 0 is
 open work.
