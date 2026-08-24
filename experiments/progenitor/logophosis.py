@@ -52,7 +52,8 @@ def run(arm, seed):
     deeper = {k: sets(2, DTRAIN + k, 400 + seed + k, 4000, LW.HOLD_OUT) for k in TEST_DEPTHS}
     t0 = time.time()
     org = Logophosis(SD, LW.CLASS_CAP, seed, mode=arm, link0=LINK0, max_links=MAX_LINKS,
-                     seq_norm=SEQ_NORM, link_fan_in=os.environ.get("LINK_FAN_IN", "1") == "1", link0_kw=LINK0_KW).wake(Itr)
+                     seq_norm=SEQ_NORM, link_fan_in=os.environ.get("LINK_FAN_IN", "1") == "1",
+                     seq_dup=os.environ.get("SEQ_DUP", "0") == "1", link0_kw=LINK0_KW).wake(Itr)
     print(f"  [link0 {LINK0}] woke in {time.time() - t0:.0f}s", flush=True)
     d = org.fit(Str, Itr, ytr, Ste, Ite, yte, epochs=STAGE_EP, patience=PATIENCE, target=0.99,
                 log=lambda s: print(f"    [{arm} seed{seed}]{s}", flush=True))
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     arms = os.environ.get("ARMS", "tied,grown").split(",")
     print(f"# Logophosis PURE link0={LINK0} N={N} dtrain={DTRAIN} mix={DEPTH_MIX} not_only={LW.NOT_ONLY} "
           f"ep={STAGE_EP} L_MAX={LW.L_MAX} MAX_OBJ={LW.MAX_OBJ} seeds={list(seeds)} "
-          f"test_depths={TEST_DEPTHS} seq_norm={SEQ_NORM}", flush=True)
+          f"test_depths={TEST_DEPTHS} seq_norm={SEQ_NORM} dup={os.environ.get('SEQ_DUP','0')}", flush=True)
     for arm in arms:
         rs = [run(arm, s) for s in seeds]
         f = lambda k: torch.tensor([r[k] for r in rs])

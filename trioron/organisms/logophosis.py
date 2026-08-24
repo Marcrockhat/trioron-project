@@ -121,13 +121,14 @@ class Logophosis(Organism):
     def __init__(self, scene_dim: int, class_cap: int, seed: int, *, n_out: int = 2,
                  mode: str = "seq", link0: str = "phasecyte", max_links: int = 4,
                  H: int = 32, interior: int = 48, seq_norm: str = "none",
-                 link_fan_in: Optional[bool] = None,
+                 link_fan_in: Optional[bool] = None, seq_dup: bool = False,
                  link0_kw: Optional[dict] = None) -> None:
         super().__init__(seed)
         assert mode in ("seq", "tied", "grown") and link0 in ("phasecyte", "oracle")
         self.scene_dim, self.class_cap, self.n_out, self.mode = scene_dim, class_cap, n_out, mode
         self.link0_kind, self.link0_kw = link0, dict(link0_kw or {})
         self.max_links, self.H, self.interior, self.seq_norm = max_links, H, interior, seq_norm
+        self.seq_dup = seq_dup
         self.link_fan_in = (mode == "seq") if link_fan_in is None else link_fan_in   # s062 probe
         self.link0 = OracleLink0(class_cap) if link0 == "oracle" else None
         self.chain: Optional[LinkChain] = None
@@ -178,7 +179,7 @@ class Logophosis(Organism):
             self.chain = LinkChain(self.class_cap, self.n_out, self.seed, H=self.H,
                                    interior=self.interior, mode="seq", max_links=self.max_links,
                                    ctx=self.scene_dim, norm=self.seq_norm,
-                                   link_fan_in=self.link_fan_in)
+                                   link_fan_in=self.link_fan_in, dup=self.seq_dup)
         else:
             self.chain = LinkChain(self.scene_dim + self.L * self.class_cap, self.n_out, self.seed,
                                    H=self.H, interior=self.interior, mode=self.mode,

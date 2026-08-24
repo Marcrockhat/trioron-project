@@ -60,7 +60,8 @@ class LinkChain:
     def __init__(self, E: int, C: int, seed: int, *, H: int = 32,
                  interior: int = 48, head_interior: int = 16,
                  mode: str = "tied", max_links: int = 4, ctx: int = 0,
-                 norm: str = "none", link_fan_in: bool = False) -> None:
+                 norm: str = "none", link_fan_in: bool = False,
+                 dup: bool = False) -> None:
         assert mode in ("tied", "grown", "seq")
         # seq: ONE link eats one token per step (Axis-7 style): h_t = link([h_{t-1}, e_t]),
         # e viewed as [N, L, E]. Re-application = token position, so an operator token
@@ -75,10 +76,16 @@ class LinkChain:
         #       std-.01 init noise), link_fan_in=True breaks the stall (.61 vs .50 in 6 ep).
         # link_fan_in: fan-in-scaled edge init on the links too (the head always has it).
         #       Needed in seq mode: 10 std-.01 applications in series vanish the signal.
+        # dup : (seq) duplicate state+token in the step input, [h,c,x] -> [h,c,x,h,x].
+        #       The quad acts PER DENDRITIC BRANCH (fan-in split in half, spec s3.6); in the
+        #       plain layout h fills branch 1 and the token branch 2, so the in-step product
+        #       h*x (a gated operator like NOT) is unrepresentable. Duplication puts a full
+        #       copy of h and x in BOTH halves (s063/s064 branch-partition finding).
         self.E, self.C, self.H, self.seed = E, C, H, seed
         self.interior, self.mode, self.max_links = interior, mode, max_links
-        self.ctx, self.norm, self.link_fan_in = ctx, norm, link_fan_in
-        self.links = [new_link(H + ctx + E, H, seed * 100, interior=interior,
+        self.ctx, self.norm, self.link_fan_in, self.dup = ctx, norm, link_fan_in, dup
+        in_dim = H + ctx + E + ((H + E) if dup else 0)
+        self.links = [new_link(in_dim, H, seed * 100, interior=interior,
                                fan_in_init=link_fan_in)]
         self.head = new_link(H, C, seed * 100 + 99, interior=head_interior,
                              fan_in_init=True)
@@ -95,7 +102,8 @@ class LinkChain:
         if self.mode in ("tied", "seq"):
             self.R += 1
         else:
-            self.links.append(new_link(self.H + self.ctx + self.E, self.H,
+            self.links.append(new_link(self.H + self.ctx + self.E
+                                       + ((self.H + self.E) if self.dup else 0), self.H,
                                        self.seed * 100 + len(self.links),
                                        interior=self.interior, fan_in_init=self.link_fan_in))
 
@@ -107,7 +115,9 @@ class LinkChain:
             steps = [toks[:, t] for t in range(toks.shape[1])]
             steps += [torch.zeros(len(e), self.E)] * (self.R - 1)
             for x in steps:
-                h = self._normed(link(torch.cat([h, c, x], 1)))
+                inp = (torch.cat([h, c, x, h, x], 1) if self.dup
+                       else torch.cat([h, c, x], 1))
+                h = self._normed(link(inp))
             return self.head(h)
         seq = [self.links[0]] * self.R if self.mode == "tied" else self.links
         for link in seq:
