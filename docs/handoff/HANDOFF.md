@@ -54,6 +54,9 @@ Honest reading:
 - Load: 197 → 2,164 facts costs every arm ~.2 at 1 % false override (.98 → .90 at 5 %).
 - State ablation (3 splits): last token alone ≈ both (organism .865/.649, best cache .852/.630 —
   there the learned key buys only compression); mean alone weaker (.718/.615 vs cache .464/.352).
+- Key-size sweep (Rocky asked whether the quad leaf stores less per fact; 3 splits for 8 and 16):
+  linear / quad at 8 = .626 / .598, at 16 = .834 / .817, at 32 = .892 / .907 (crowded .407/.365,
+  .616/.643, .718/.681). No packing advantage. A learned 16-number key equals the full cache.
 - Thresholds were set on the test negatives, identically for all arms (an arm comparison, not a
   deployable number).
 - s064's early worry is retired: a question's nearest neighbour is rarely its sibling, but that
@@ -68,7 +71,8 @@ Honest reading:
   `answer()` invalidates it). `stage2_collect.py` (resumable), `stage2_memory.py` (gate).
 - Spec §9.16 rows for vee.py and base.py; design §3 stage-2 result; test
   `tests/test_v2/test_organisms.py::test_vee_fact_memory_roundtrip` (organism tests 7/7).
-- Logs committed: `outputs/incubator/stage2_memory_s065.log`, `..._state_last.log`, `..._state_mean.log`.
+- Logs committed: `outputs/incubator/stage2_memory_s065.log`, `..._state_last.log`, `..._state_mean.log`,
+  `..._e8.log`, `..._e16.log`.
 
 ## Environment facts (s064, still true)
 - Qwen GGUF already on disk: `~/models/qwen2.5-1.5b-instruct-gguf/qwen2.5-1.5b-instruct-q4_k_m.gguf`
@@ -118,7 +122,8 @@ Honest reading:
 ## Open questions for Rocky
 1. Review the stage-2 reading: is "beats the cache, ties linear" a pass for you, or does stage 2
    stay open until trioron-specific machinery (growth, λ firmness, per-fact σ) shows a gain?
-2. `/usage` weekly % now, to measure what this session's helper jobs cost against the 50 % cap.
+2. ANSWERED: Fable weekly bar 12 % after s065 (8 % after s064) → this session ≈ 4 points. Still
+   unknown whether the Sonnet helpers (~590 K tokens) count on that bar or a separate one.
 3. Terms check before any matron-written data is committed (carried from s064).
 
 ## NEXT (s066)

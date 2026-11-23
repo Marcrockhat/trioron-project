@@ -1,0 +1,24 @@
+# stage 2 memory  questions=2808  articles=1495  state=both d=3072  seeds=[0, 1, 2] k=256 e=8 epochs=30
+# split 0: train rows 5907  taught 203  pos 406  neg hard 672  easy 1236
+  seed 0 done
+  seed 1 done
+  seed 2 done
+arm                                        mem          top1        hit@1%        hit@5%  hardshare@1%  params
+NN raw                                     197   0.993±0.004   0.785±0.020   0.925±0.022   0.500±0.132
+NN raw | crowded                          2164   0.981±0.010   0.604±0.005   0.799±0.028   0.350±0.100
+NN centred                                 197   0.995±0.002   0.841±0.014   0.967±0.010   0.717±0.029
+NN centred | crowded                      2164   0.986±0.009   0.608±0.003   0.872±0.028   0.467±0.189
+NN whitened k=256                          197   0.997±0.002   0.790±0.033   0.949±0.011   0.783±0.029
+NN whitened k=256 | crowded               2164   0.986±0.007   0.440±0.034   0.769±0.012   0.483±0.126
+NN PCA-8 of centred                        197   0.758±0.039   0.333±0.016   0.462±0.014   0.283±0.115
+NN PCA-8 of centred | crowded             2164   0.569±0.018   0.215±0.025   0.316±0.017   0.233±0.275
+NN whitened k=8                            197   0.631±0.015   0.299±0.019   0.368±0.008   0.367±0.058
+NN whitened k=8 | crowded                 2164   0.444±0.008   0.206±0.006   0.268±0.014   0.233±0.104
+NN random projection 8                     197   0.736±0.036   0.389±0.034   0.508±0.027   0.383±0.202
+NN random projection 8 | crowded          2164   0.526±0.030   0.244±0.019   0.342±0.021   0.483±0.126
+linear key k=256 e=8                       197   0.904±0.018   0.626±0.042   0.758±0.003   0.450±0.050  2056
+linear key k=256 e=8 | crowded            2164   0.766±0.002   0.407±0.035   0.569±0.017   0.500±0.087  2056
+organism key k=256 e=8                     197   0.924±0.010   0.598±0.029   0.781±0.009   0.383±0.115  39744
+organism key k=256 e=8 | crowded          2164   0.796±0.003   0.365±0.020   0.551±0.010   0.383±0.076  39744
+GATE: organism hit@1% 0.598 vs best NN cache 0.841 -> FAIL (-0.243); vs best cache at 8 numbers/fact 0.389 (+0.209); vs linear key 0.626 (-0.028)
+GATE | crowded: organism hit@1% 0.365 vs best NN cache 0.608 -> FAIL (-0.243); vs best cache at 8 numbers/fact 0.244 (+0.122); vs linear key 0.407 (-0.042)

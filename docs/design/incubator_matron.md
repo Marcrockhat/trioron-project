@@ -268,6 +268,19 @@ Reading:
   .649 crowded; best cache .852 / .630 — there the learned key only buys the
   96× compression, not accuracy). The mean over question tokens alone is weaker
   (organism .718 / .615; cache .464 / .352). Both together is best.
+- Does the quad leaf pack a fact into a SMALLER key (Rocky's question, s065)?
+  No. Recall at 1 % false override, 197 / 2,164 facts (key sizes 8 and 16 on
+  3 splits, `stage2_memory_s065_e{8,16}.log`; 32 on 5):
+
+  | key size | linear key | quad key leaf |
+  |---|---|---|
+  | 8 | .626±.042 / .407±.035 | .598±.029 / .365±.020 |
+  | 16 | .834±.036 / .616±.017 | .817±.009 / .643±.025 |
+  | 32 | .892±.023 / .718±.019 | .907±.019 / .681±.035 |
+
+  The two track each other at every size, within the spread. A 16-number
+  learned key already equals the full 3,072-number cache (.841 / .608); 8 is
+  too small for either.
 - Not yet tested: (a) retention when the key leaf keeps learning after facts
   are stored (keys are stored embedded, so drift would be real forgetting);
   (b) a per-fact threshold (each fact's own spread — the manifold σ the design
