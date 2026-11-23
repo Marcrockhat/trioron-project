@@ -35,6 +35,16 @@ def pick(source: str, h_pre, h_post) -> torch.Tensor:
     return {"h_pre": h_pre, "h_post": h_post, "both": torch.cat([h_pre, h_post], -1)}[source]
 
 
+STOP = set("a an the of in on at to for is was were are be been do does did who whom whose what "
+           "which when where why how many much and or with by from as it its this that".split())
+
+
+def keywords(question: str) -> str:
+    """Full questions search badly; keep the content words."""
+    ws = [w.strip("?.,!\"'()") for w in question.split()]
+    return " ".join(w for w in ws if w and w.lower() not in STOP)
+
+
 def graded_data():
     """Stage-1 collection + console verdicts -> (h_pre, h_post, wrong)."""
     rows = [json.loads(l) for l in open(f"{OUT}/stage1_answers.jsonl")]
@@ -103,12 +113,13 @@ def main() -> None:
                   + (f"; correct answer: {arg.strip()}" if arg.strip() else "") + "]")
             continue
         if cmd == "/learn":
+            print("[retraining, about half a minute...]", flush=True)
             org = train(); continue
         if cmd == "/look":
             if wiki is None:
                 from wiki import Wiki
                 wiki = Wiki()
-            q = arg.strip() or (last["q"] if last else "")
+            q = arg.strip() or keywords(last["q"] if last else "")
             hits = wiki.search(q, 1) if q else []
             if not hits:
                 print("[nothing found]"); continue
@@ -117,7 +128,13 @@ def main() -> None:
             print(f"[{e.title}] {ps[0][:500] if ps else '(no text)'}")
             continue
         t = time.time()
-        a = reflex.answer(chat_prompt(line))
+        if len(reflex.tokens(chat_prompt(line))) > 480:
+            print("[question too long for the reflex (limit ~400 words)]"); continue
+        print("[thinking...]", end="\r", flush=True)
+        try:
+            a = reflex.answer(chat_prompt(line))
+        except Exception as e:                       # keep the session alive
+            print(f"[reflex failed: {e!r}]"); continue
         d = float(org.doubt(pick(org.source, a["h_pre"], a["h_post"]).unsqueeze(0))[0])
         pct = float((org.doubt_sorted < d).float().mean()) * 100
         conf = float(np.exp(np.mean(a["logprobs"]))) if a["logprobs"] else 0.0
