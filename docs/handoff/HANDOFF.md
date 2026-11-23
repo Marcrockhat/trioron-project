@@ -91,6 +91,14 @@ Qwen's confidence after answering.
 - Console for Rocky (own terminal): `python3 experiments/incubator/console.py` — ask, see
   answer + Qwen confidence + organism doubt; `/right`, `/wrong [answer]`, `/look [query]`,
   `/learn`, `/quit`. Verdicts are stored and used on `/learn`.
+- **Console, after Rocky's first session (commit b11992e):** it froze once on him; NOT
+  reproduced (replay ran clean, no OOM kill). Hardened anyway: reflex errors are caught,
+  `[thinking...]` / retraining notices, long-question guard, `/look` searches content words
+  (whole questions searched badly). If it freezes again, ask for the last input and whether
+  `[thinking...]` was showing. Rocky stored no verdicts (Qwen was mostly right on his
+  questions); told him `/right` is training data too. **He prefers typed commands over
+  one-key shortcuts (fewer errors) — do not add shortcuts.** His questions are easier than
+  the training set (29 % correct), so his verdicts are a different distribution.
 
 ## Environment facts found this session
 - Qwen GGUF already on disk: `~/models/qwen2.5-1.5b-instruct-gguf/qwen2.5-1.5b-instruct-q4_k_m.gguf`
