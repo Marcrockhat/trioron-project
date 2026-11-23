@@ -4,6 +4,8 @@
 **Owner:** Rocky (direction) / Chloe (engineering; also plays the matron).
 **Name (Rocky, s064): the organism is Vee** — from Eve and Veda. Code: `trioron/organisms/vee.py`.
 
+**Matron budget (Rocky, s064): up to 50 % of the weekly subscription limit (Max 5×).** The loop must log tokens and stop at the cap.
+
 **Question:** can a trioron organism, grown on top of a small frozen language
 model and raised by a stronger model, show that *growth pays* — that as its
 parameter count rises, measurable awareness, logic depth, vocabulary and

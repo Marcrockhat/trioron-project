@@ -110,7 +110,10 @@ Qwen's confidence after answering.
   system writes blocked. Time/memory limits per run NOT set up yet.
 - Host disk has ~65 GB free (the 907 GB WSL reports is the virtual disk ceiling).
 - `sudo` cannot run through the `!` prefix; Rocky runs it in a separate terminal.
-- Rocky's plan: Max 5× ($100). Matron budget cap proposed (20 % of weekly), not yet confirmed.
+- Rocky's plan: Max 5× ($100). **Matron budget DECIDED: up to 50 % of the weekly limit.**
+  Not yet calibrated in tokens: ask Rocky for the weekly % from `/usage`. Measured s064 use:
+  Fable 131 K out / 365 K new in / 18.0 M cached; Sonnet question job (2,985 questions)
+  166 K out / 635 K new in / 2.7 M cached.
 
 ## Gotchas (cumulative, new first)
 - **llama_cpp:** never build `Llama(embedding=True)` — it inflates the context to 256
@@ -126,7 +129,8 @@ Qwen's confidence after answering.
 
 ## Open questions for Rocky
 1. ~~Name~~ DECIDED: the organism is **Vee** (from Eve and Veda); code renamed, old .pt retrained.
-2. Matron daily/weekly token budget (proposed 20 % of weekly limit).
+2. ~~Matron budget~~ DECIDED: 50 % of the weekly limit (Max 5×). Open: Rocky's `/usage`
+   weekly % to convert that into tokens / lessons per week.
 3. Terms check before any matron-written data is committed. Until then the question files and
    answers stay UNCOMMITTED in `outputs/incubator/` (see below).
 
