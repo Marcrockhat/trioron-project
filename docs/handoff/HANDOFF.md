@@ -114,6 +114,10 @@ Qwen's confidence after answering.
   Not yet calibrated in tokens: ask Rocky for the weekly % from `/usage`. Measured s064 use:
   Fable 131 K out / 365 K new in / 18.0 M cached; Sonnet question job (2,985 questions)
   166 K out / 635 K new in / 2.7 M cached.
+  Calibration (Rocky's `/usage`, 2026-11-24): the Fable weekly bar read 8 % after s064, so
+  one s064-sized day ≈ 8 % and the 50 % cap ≈ 6 such days/week ≈ 0.8 M Fable output tokens
+  (rough: assumes s064 was the week's only Fable use; how Sonnet helpers count is unknown —
+  re-read `/usage` before and after the first loop run to measure it).
 
 ## Gotchas (cumulative, new first)
 - **llama_cpp:** never build `Llama(embedding=True)` — it inflates the context to 256
