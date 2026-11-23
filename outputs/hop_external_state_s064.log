@@ -1,0 +1,23 @@
+# external-state hop  seeds=[0, 1, 2] epochs<=40 ntrain=8000
+  step1 s0: single-step acc 0.9983 after 10 ep, params 16272
+  step1 s1: single-step acc 0.9983 after 12 ep, params 16272
+  step1 s2: single-step acc 0.9987 after 10 ep, params 16272
+step1: single-step p = 0.9984±0.0003   (78s)
+    k          snap          soft  p^(k/step)
+    1 0.999±0.001   0.999±0.001       0.998
+    2 0.998±0.002   0.997±0.002       0.997
+    3 0.998±0.002   0.995±0.003       0.995
+    4 0.997±0.002   0.991±0.004       0.994
+    5 0.997±0.002   0.990±0.003       0.992
+    6 0.997±0.002   0.989±0.004       0.991
+    7 0.998±0.002   0.989±0.004       0.989
+    8 0.998±0.002   0.987±0.006       0.987
+  step2 s0: single-step acc 0.6447 after 40 ep, params 19584
+  step2 s1: single-step acc 0.6465 after 40 ep, params 19584
+  step2 s2: single-step acc 0.6320 after 40 ep, params 19584
+step2: single-step p = 0.6411±0.0079   (344s)
+    k          snap          soft  p^(k/step)
+    2 0.643±0.038   0.643±0.038       0.641
+    4 0.609±0.038   0.540±0.024       0.411
+    6 0.606±0.037   0.506±0.031       0.263
+    8 0.602±0.027   0.495±0.022       0.169

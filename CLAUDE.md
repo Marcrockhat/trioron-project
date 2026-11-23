@@ -85,6 +85,10 @@ pass and are part of the CI gate.
 
 - Maximum 50K parameters per substrate during Phase 1 (enforced at
   the API surface)
+  - **Exemption (s064, Rocky):** the incubator organism
+    (`docs/design/incubator_matron.md`, spec §6.1) has no parameter
+    cap; its limit is 85% of host RAM (swap excluded). Benches and CI
+    keep the 50K cap.
 - CPU only — GPU is optional and non-contractual
 - Full-fidelity recording (snapshot every growth event)
 - CI hard-ceiling on bench targets = release blocker

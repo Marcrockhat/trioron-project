@@ -88,3 +88,26 @@ def test_helpers():
     assert vote([torch.randn(5, 3), torch.randn(5, 3)], torch.ones(5, 2) / 2).shape == (5, 3)
     s = Std(H); assert s(H).mean().abs() < 1e-5
     sub = leaf(6, 3, 0); assert chunked(sub, H, n=7).shape == (60, 3)
+
+
+def test_syneidesis_doubt_roundtrip(tmp_path):
+    """s064: hidden-state sense + doubt leaf learn a planted signal, save/load exact."""
+    from trioron.organisms import Syneidesis
+    from trioron.senses import HiddenStateSense
+    torch.manual_seed(0)
+    basis = torch.randn(6, 96)                      # states live near a 6-d subspace
+    code = torch.randn(600, 6)
+    H = code @ basis + 0.05 * torch.randn(600, 96)
+    wrong = (code[:, 0] * code[:, 1] > 0).long()    # a product: needs the quad leaf
+    sense = HiddenStateSense(H[:450], 8)
+    assert sense(H).shape == (600, 16) and sense.out_dim == 16
+    o = Syneidesis(0, k=8).fit(H[:450], wrong[:450], epochs=150, lr=1e-2)
+    d = o.doubt(H[450:])
+    assert d.shape == (150,) and float(d.min()) >= 0 and float(d.max()) <= 1
+    acc = ((d > 0.5).long() == wrong[450:]).float().mean().item()
+    assert acc > 0.8, acc
+    p = tmp_path / "syn.pt"
+    assert o.save(str(p)) > 0
+    o2 = Syneidesis.load(str(p))
+    assert torch.equal(o2.doubt(H[450:]), d)
+    assert o.n_params() == sum(int(t.numel()) for t in o.doubt_leaf.trainable_tensors())

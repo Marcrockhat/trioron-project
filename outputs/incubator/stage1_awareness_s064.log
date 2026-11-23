@@ -1,0 +1,23 @@
+# stage 1 awareness  items=2808  reflex accuracy=0.292  seeds=[0, 1, 2] ks=[32, 64, 128] epochs=30
+arm                                      AUROC mean±std   per-seed
+lp_mean                                0.767±0.029      0.800 0.755 0.746
+lp_min                                 0.783±0.021      0.806 0.765 0.777
+lp_first                               0.686±0.022      0.704 0.661 0.692
+linear h_pre                           0.696±0.005      0.696 0.692 0.701
+linear h_post                          0.784±0.019      0.805 0.769 0.776
+organism h_pre k=32                    0.782±0.013      0.793 0.767 0.786
+organism h_post k=32                   0.744±0.017      0.750 0.724 0.757
+combined h_post k=32 + lp_mean         0.802±0.025      0.827 0.778 0.800
+  (params k=32)                                    8418
+organism both k=32                     0.804±0.024      0.827 0.780 0.804
+organism h_pre k=64                    0.774±0.011      0.786 0.772 0.765
+organism h_post k=64                   0.763±0.008      0.770 0.754 0.765
+combined h_post k=64 + lp_mean         0.797±0.017      0.815 0.782 0.794
+  (params k=64)                                   12834
+organism both k=64                     0.815±0.008      0.823 0.809 0.814
+organism h_pre k=128                   0.756±0.014      0.759 0.769 0.740
+organism h_post k=128                  0.761±0.005      0.766 0.757 0.761
+combined h_post k=128 + lp_mean        0.792±0.011      0.804 0.782 0.790
+  (params k=128)                                  21666
+organism both k=128                    0.799±0.011      0.811 0.788 0.796
+GATE: best organism arm [organism both k=64] 0.815 vs best log-prob baseline 0.783 -> PASS (margin +0.033)

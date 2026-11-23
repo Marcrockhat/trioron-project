@@ -1,0 +1,391 @@
+# The incubator: a reflex brain, a growing organism, and a matron (design, s064)
+
+**Status:** DRAFT for Rocky's sign-off (s064). No code yet. No spec change yet.
+**Owner:** Rocky (direction) / Chloe (engineering; also plays the matron).
+**Question:** can a trioron organism, grown on top of a small frozen language
+model and raised by a stronger model, show that *growth pays* — that as its
+parameter count rises, measurable awareness, logic depth, vocabulary and
+creativity rise with it?
+
+**Budget (Rocky, s064, APPROVED): no parameter cap.** The organism may grow
+until it would threaten the machine, i.e. up to a **memory ceiling** of 85 % of
+the WSL RAM allocation (§5.1), not a parameter count. The incubator organism is
+**exempt from the Phase 1 contract** (spec §6: 50 K params per substrate). The
+Phase 1 cap stays binding for the existing benches and CI, so past results stay
+comparable. The envelope already supports this: it is uncapped by default
+(spec §1.2) and enforces whatever cap it is given.
+
+**Why the cap had to go: memory.** 50 K is enough for stage 1 (a readout of a
+1536-d hidden state) and for the stage-3 policy. It is not enough for stage 2:
+each remembered fact needs a key in hidden-state space — ~3,000 numbers at full
+width (μ and σ), ~130 compressed to 64-d — so 50 K holds roughly 16 to 400
+facts. Memory grows in proportion to what the organism knows; any fixed cap is
+a ceiling on knowledge. (Arithmetic, not measurement.)
+
+**Expected return on size, per axis (to be tested, §5):**
+- Memory / vocabulary: scales with parameters almost directly. The axis where
+  "growth pays" should be easiest to show.
+- Awareness: saturates early.
+- Logic depth: not bought by parameters; depends on §2.1.
+- Creativity: unknown.
+
+## 0. Where this comes from
+
+- Rocky, s064: stop trying to make trioron itself a smart edge model. Pair it
+  with a tiny model that is fast and often wrong, and let trioron be the part
+  that grows.
+- `device_conscience_pattern`, `learn_to_use_not_from_principle`: trioron as a
+  memory / meta-policy layer over a frozen LLM, not a distilled clone.
+- Mode E (s016): primitives + curriculum from a teacher, composed by the
+  organism, outlasted its masters (92.1 vs 87.4). Holistic imitation capped
+  below the master (s015).
+- s021: growth to cap for zero gain. s059: depth forms only under a protocol.
+  Growth has to be judged, not assumed.
+
+## 1. Roles
+
+| Part | What it is | What it does | Learns? |
+|---|---|---|---|
+| **Reflex brain** | Qwen2.5-1.5B-Instruct, q4_k_m GGUF, frozen | Answers every query fast. Need not be correct. Supplies language, binding and working memory (its context window). | No |
+| **Organism** | Trioron nest (gradient leaves + Phasecyte) | Reads the reflex's internal state. Learns when the reflex is wrong, remembers corrections, steers the reflex, later chains it. | Yes, continually |
+| **Matron** | Fable via headless Claude Code (`claude -p`) from Python | Designs lessons, grades what the environment cannot grade, supplies corrections, judges whether a growth event paid. | No (logs only) |
+| **Environment** | A sandbox on Rocky's PC | The world the organism senses and acts in. Grades for free (exit codes, file state). | — |
+| **Higher intelligence** | Web lookup (Wikipedia), stronger model | What the organism may escalate to, at a cost. | — |
+
+Measured on this PC (s064): Qwen loads in 3 s, ~1.8 GB RSS, ~21 tok/s on CPU,
+exposes final-layer per-token hidden states (1536-d) through `llama_cpp`.
+
+## 2. What trioron is missing (the limbs), and who supplies them
+
+| Missing limb | Evidence | In this design |
+|---|---|---|
+| Binding / working memory | Satellites give delayed recall only | **Borrowed** from the reflex brain's context. Not built. |
+| Open-ended output | Trioron emits a class, not text | **Borrowed**: the reflex writes; the organism chooses among discrete actions. |
+| Fact memory (key → content) | Manifold stores per-class (μ,σ), not content | **To build** (stage 2): manifold key in hidden-state space → stored text. Entity archive (s2026-05-06) is the precedent. |
+| A sense for the reflex's state | None exists | **To build** (stage 1): `trioron/senses/` module turning 1536-d hidden states into leaf input. |
+| Growth that pays | s021 inert growth; arena `divide()` depth never lifted a task | **To build**: growth settled by evidence (§5), judged per event. |
+| Crisp state across steps | not³ .86 → not⁴ .77 → not⁵ .64 (s063) | **Open.** Only stage 4 needs it. |
+| Depth past ~3 links | hop-3 wall .59–.65, cause unconfirmed | **Open.** Only stage 4 needs it; hop-k with dup is its prerequisite test. |
+
+Reading: two limbs are borrowed, three are engineering on proven mechanisms,
+two are genuinely open. Deferring them is not a plan; §2.1 is.
+
+### 2.1 Plan for the two open limbs (and the borrowed one)
+
+The principle: **do not ask the network to be deep. Make each step shallow and
+the state between steps discrete.** Analog state decays under iteration;
+digital state is restored at every step. Trioron already does one or two hops
+well (hop-2 .92, s059); what fails is carrying an analog state through many.
+
+| Limb | Fix | Test | Pass | If it fails |
+|---|---|---|---|---|
+| Depth past ~3 links | First find out whether the wall is wiring: tied arm with state and evidence duplicated into both dendritic halves (`tied_dup`, s064) | hop-2/3/4, tied vs tied_dup, n=3 | hop-3 moves well above .59–.65 | Wall is not the branch partition; rely on the next two rows |
+| Crisp state (internal) | Snap the state to the nearest Phasecyte symbol between steps | notᵏ curve on the dup arm, with and without snap | curve flat: not⁵ ≈ not³ | Internal state cannot be made crisp; use external state only. Caveat: s059 WTA/gated variants were null, but that was before dup, so confounded |
+| Crisp state (external) | The intermediate result is written out as a symbol (a token in the reflex's context or a line in the sandbox) and read back in; each step is one hop | hop-k as k single hops with written intermediates | accuracy ≈ p^k for 1-hop accuracy p; flat when each step is checked against the environment | Trioron cannot conduct multi-step logic; stage 4 goes to the reflex brain alone, trioron stays judge and memory |
+| Binding (own, later) | A rewritable slot is the stage-2 fact memory used within a task: write key → value, read it back | Falls out of stage 2 | — | Stays borrowed from the reflex |
+
+**Row 1 result (s064, n=3, `outputs/logic_chain_s064_hop_dup.log`):**
+
+| task | tied | tied_dup |
+|---|---|---|
+| hop-2 | .935±.018 (5 applications, 571 s) | **.982±.007 (1 application, 45 s)** |
+| hop-3 | .583±.007 | .706±.015 |
+| hop-4 | .573±.005 | .608±.005 |
+
+Reading: the partition was hiding a real capability and is not the wall. With
+every slot pair in-branch, hop-2 (a degree-2 polynomial in the evidence) is
+solved in ONE quad application, 13× faster. hop-3 moves +.12 but stays far from
+solved; hop-4 barely moves. Composing by re-applying a learned step is still
+not learned. So the plan leans on the external-state row, and that row now has
+a strong, checkable prediction: a 2-hop step at p≈.98 iterated over written
+symbols should give hop-4 ≈ .96 and hop-6 ≈ .94, against .61 today.
+
+**Row 3 result — external state PASSES (s064, n=3,
+`experiments/progenitor/hop_external_state.py`,
+`outputs/hop_external_state_s064.log`):**
+
+A 1-hop organ (start one-hot + map, duplicated input, ONE quad link, 16,272
+params) trained on random starts reaches p = .9984±.0003 in 10–12 epochs. Frozen
+and iterated with no further training:
+
+| depth k | snap (written symbol) | soft (probabilities) | end-to-end tied_dup |
+|---|---|---|---|
+| 2 | .998±.002 | .997±.002 | .982 |
+| 3 | .998±.002 | .995±.003 | .706 |
+| 4 | .997±.002 | .991±.004 | .608 |
+| 6 | .997±.002 | .989±.004 | — |
+| 8 | .998±.002 | .987±.006 | — |
+
+A 2-hop organ from an arbitrary start (two quad layers, 19,584 params) does NOT
+settle: p = .641±.008 after 40 epochs.
+
+Reading:
+- Depth is a step count once the state between steps is a symbol. Flat to
+  depth 8.
+- Snap vs soft: the analog hand-over decays (.999 → .987), the written symbol
+  does not. Small here because the step is nearly perfect; the gap is the
+  per-depth decay of s063 in miniature.
+- **Design rule: one product per step.** A step that needs a two-way product
+  (state × evidence) settles in one quad layer; a three-way product does not
+  settle even with the depth to express it.
+- Caveats: oracle symbols, synthetic task; random 8-slot maps fall into cycles,
+  so deep targets are partly forgiving (errors can re-merge), which is why snap
+  sits at or above p^k. And the decomposition into 1-hop steps was GIVEN by the
+  trainer (intermediate targets) — the organism did not discover it. That is
+  the matron's job in this design (Mode E: teach the primitive), and S5 is where
+  the organism would have to find decompositions itself.
+
+Consequence: serial grafting (a settled organ's output symbol wired to the next
+organ's start input) is now worth making a real substrate operation; this test
+is its function-level proof.
+
+Order: `tied_dup` done, external state done (s064); snap on the Logophosis notᵏ
+curve after stage 1. The external-state row is the one the incubator design depends
+on, because it replaces network depth with iteration plus verification.
+
+## 3. Developmental stages and their gates
+
+Each stage is one of Rocky's axes. A stage passes only against its baseline;
+thresholds below are proposals to fix at sign-off.
+
+### Stage 1 — Awareness: predict when the reflex is wrong
+- Reflex answers a question. The organism reads the hidden state and predicts
+  right / wrong.
+- Labels: gold answers from the environment or a QA set. The matron is not
+  needed for grading here.
+- **Baseline that must be beaten:** the reflex's own confidence (mean token
+  log-probability of its answer). If that predicts errors as well as the
+  organism does, the organism adds nothing.
+- **Gate:** error-prediction AUROC beats the log-prob baseline on held-out
+  questions, n ≥ 3 seeds, with the per-seed spread reported.
+
+**Stage 1 RESULT — PASS, modest (s064).** Data: 2,808 questions written by the
+matron (four Sonnet helpers, ~635 K tokens) from 1,600 Simple English Wikipedia
+leads; the reflex answered closed-book at 29.2 % correct (~1.6 s/item); graded
+by gold-string match (audit of 30: ~1 doubtful grade). Scored by AUROC for "the
+reflex is wrong" on held-out articles
+(`experiments/incubator/stage1_awareness.py`, `stage1_controls.py`; logs
+`outputs/incubator/stage1_{awareness,controls}_s064.log`).
+
+| arm (10 article-level splits unless noted) | AUROC |
+|---|---|
+| reflex's own confidence, min token log-prob (best baseline) | .780±.015 |
+| **organism, [h_pre, h_post], k=64, 12,834 params** | **.817±.010** |
+| paired difference organism − baseline | **+.037±.009, 10/10 splits** |
+| linear readout on the same 64 components | .810±.011 |
+| organism + the reflex's log-probs combined | .841±.011 |
+| no-brain control (writer, question length, answer length) | .590±.020 |
+| organism on h_pre alone (before the reflex answers; 3 splits) | .774±.011 |
+| organism on h_post alone (3 splits) | .763±.008 |
+
+Reading:
+- The gate passes on every split, by a small margin. Inside each writer pair it
+  holds too (.824 vs .788, .810 vs .772), so it is not a question-style
+  shortcut.
+- The arm that passes uses both states. h_pre or h_post alone does NOT beat the
+  baseline; the arm was chosen after seeing 3-split results, then confirmed on
+  10 fresh splits of the same data.
+- **The quad leaf adds nothing over a linear readout here** (.817 vs .810). The
+  signal is linear in the hidden state. Trioron earns its place in later stages
+  (memory, growth), not in this readout.
+- The state BEFORE answering already predicts the error about as well as the
+  reflex's confidence after answering (.774 vs .780): doubt is available early
+  enough to decide whether to look up first.
+- The two signals are complementary: combined .841.
+- Final layer only (GGUF). Middle layers are reported in the literature to carry
+  more; untested here.
+
+Console: `python3 experiments/incubator/console.py` — ask, see answer + reflex
+confidence + organism doubt, `/right` `/wrong` to teach by hand, `/look` for
+offline Wikipedia, `/learn` to retrain.
+
+**Expectation (Rocky, s064): humans hallucinate too.** A person can state a
+wrong fact confidently and only finds out when something does not fit or
+someone says so. So an inner doubt signal is expected to be partial, in the
+organism as in people, and the design must not depend on it being strong. The
+three ways an error gets caught, in order of reliability:
+1. **Told** — the matron or a lookup contradicts it (stage 2 stores it).
+2. **Something does not fit** — a consequence fails in the environment, or the
+   answer conflicts with a stored fact (stages 2–4).
+3. **Inner doubt** — this stage. Useful mainly for deciding when a check is
+   worth its cost (stage 3), not as a verdict.
+A stage-1 pass means "better than the reflex's own confidence", not "knows
+when it is wrong".
+
+### Stage 2 — Memory: keep corrections (vocabulary axis)
+- When wrong, the matron or the environment supplies the correction. The
+  organism stores it and overrides the reflex on a repeat or paraphrase.
+- **Gate:** corrected items stay corrected after N later lessons (retention),
+  paraphrases are caught, and unrelated questions are not hijacked (false
+  override rate). Compared with a plain nearest-neighbour cache on the same
+  hidden states.
+
+### Stage 3 — Steering and escalation
+- The organism picks an action: trust reflex / recall memory / look up /
+  ask the stronger model. Steering is at text level (inject recalled memory
+  into the reflex's prompt); soft-prompt injection is a later option.
+- **Gate:** system accuracy beats Qwen alone, and beats always-escalate on
+  cost at matched accuracy.
+
+### Stage 4 — Logic: chain reflexes and check consequences
+- The organism sequences several reflex calls and verifies each step against
+  the environment.
+- **Prerequisite:** hop-k with dup (s063 NEXT-0) — done s064, see §2.1.
+- **Gate:** accuracy vs chain depth, compared with the reflex doing the same
+  task in one shot.
+
+**Concrete form: the self-check (Rocky, s064).** "I said X. If X then Y. Y
+holds, and so does Z. But Z cannot hold with X. I am very sure of Z, so X must
+be wrong — I need to check." As steps over written symbols (§2.1):
+1. *Derive:* from claim X, write down a consequence Y (the reflex proposes it,
+   or a stored rule supplies it).
+2. *Compare:* does Y, or X itself, clash with a stored fact Z? One claim
+   against one fact is a two-way comparison — one product per step.
+3. *Weigh:* which is held more firmly? Firmness is a per-fact strength, the
+   natural use of λ (how locked a memory is) and of how often it was confirmed.
+4. *Act:* weaken the less firm one and raise the "check it out" action
+   (stage 3).
+Start with facts where a clash is checkable by rule (one value per subject:
+birth year, capital, author), then free text. Gate: planted false claims that
+contradict a firm stored fact one or two steps away are caught, at a low false
+alarm rate, more often than the reflex catches them when asked "is this
+consistent?". Risk: step 1 depends on a 1.5B reflex producing sound
+consequences.
+
+### 3.1 Self-hosting milestones (Rocky, s064: "how Linux was compiled on Minix")
+
+The reflex brain and the matron are the host the organism is built on. The aim
+is that it comes to stand on its own, one borrowed part at a time, the way
+early Linux replaced its Minix parts.
+
+| # | Borrowed today | Replaced by | Milestone reached when |
+|---|---|---|---|
+| S1 | Reflex's knowledge of facts | Organism's fact memory (stage 2) | Taught items are answered from memory with the reflex's answer ignored |
+| S2 | Matron's grading | Organism's own error prediction (stage 1) + environment checks | Lessons run with no matron grading call and the same learning curve |
+| S3 | Reflex's context as working memory | Rewritable slot (§2.1 binding row) | A value written in step 1 is used correctly in step k without being in the reflex's prompt |
+| S4 | Reflex's multi-step reasoning | Organism's stepwise chain over crisp state (§2.1) | Stage-4 tasks solved with the reflex called only to read input and write output |
+| S5 | Matron's curriculum | Organism choosing what to study next (curiosity / learning progress, cf. s019 arm B) | Unbuilt; listed so it is not forgotten |
+
+**Standing measure: the Qwen-off test.** At each checkpoint, rerun the held-out
+set with the reflex's answers withheld (the reflex still tokenises input and
+renders output). Report the fraction of items still handled correctly. Plotted
+over lifetime beside parameter count, this is the "outgrow" curve.
+
+**Expected limit:** language itself. The organism has no language faculty and
+no path to one at RAM-bounded sizes, so reading and writing text stay with the
+reflex. Self-hosting is expected for memory, judgment and possibly logic.
+
+### Stage 5 — Creativity (Rocky's definition, s064)
+
+**Definition:** the ability to create a thing that did not exist before, by
+finding an action along one of the SCAMPER routes: **S**ubstitute, **C**ombine,
+**A**dapt, **M**odify, **P**ut to another use, **E**liminate, **R**everse.
+
+- The seven routes are the organism's creative **action set** (a discrete
+  choice, which is what trioron emits). The reflex carries the route out in
+  text or code; the organism chooses the route and the material from memory.
+- **Task form:** a known thing (a working snippet, a remembered fact, a tool)
+  and a goal it does not meet. The organism picks a route (and, for Combine, a
+  second item from memory); the reflex produces the result.
+- **Valid** = the environment accepts it (code runs and meets the goal's
+  check), or the matron judges it where no check exists.
+- **New** = not in the organism's memory or lesson history. Its own fact
+  memory supplies the test: distance from every stored key. New means new to
+  the organism, not to the world.
+- **Gate:** rate of valid-and-new products per attempt beats (a) a random
+  route choice and (b) the reflex asked to "be creative" with no route.
+- **Expected to scale with memory:** Combine and Substitute need stored
+  material, so this axis should rise with what the organism knows. That is a
+  testable form of "growth pays".
+- Honest limit: the created content is the reflex's writing. The organism's
+  contribution is choosing the route and the material, and recognising what is
+  new. Depends on stages 2 and 3.
+
+## 4. The environment (sandbox)
+
+The PC is structured state natively: paths, text, markup, exit codes. That
+avoids the pixel ceiling trioron hit on Atari and CIFAR.
+
+- **Where:** a sandbox inside WSL (Rocky, s064).
+- **Senses:** read-only, on a whitelist of folders.
+- **Actions:** confined to a scratch directory; a fixed small action set.
+- **Running code:** the reflex writes it; the organism decides whether to run
+  it and reads the outcome (exit code, output, files changed). Each run is
+  isolated with bubblewrap: no network, time and memory limits, write access
+  to the scratch directory only, home folder not visible. (bubblewrap is not
+  installed yet: `sudo apt install bubblewrap`.)
+- **Wikipedia: offline.** Simple English, text only
+  (`~/data/wikipedia/wikipedia_en-simple_all_nopic_2026-09.zim`, 1.0 GB, read
+  with `libzim`). Offline keeps the sandbox fully network-free, makes runs
+  repeatable, and has no rate limits. Plain language suits a 1.5B reflex. Full
+  English (~50 GB) does not fit comfortably: the host disk has 65 GB free
+  (the 907 GB WSL reports is the virtual disk's ceiling).
+- **Lookup is an action with a cost** (stage 3); what it returns can be stored
+  as a corrected fact (stage 2).
+- **Out of reach:** mail, credentials, browser profiles, anything private.
+  Whatever the organism reads can reach logs, matron calls and the public repo.
+- Access widens only by Rocky's decision.
+
+## 5. Growth must pay
+
+- A growth event (new leaf, new link, new Phasecyte class) is provisional.
+- It settles only if a held-out measure improves and the improvement persists
+  (Numa, not Mima). Otherwise it is reverted or left unlocked.
+- Standing record per event: params before/after, which axis moved, by how
+  much. The headline figure is each axis against total parameter count over
+  the organism's lifetime.
+
+### 5.1 The memory ceiling (the only size limit)
+
+- The limit is **resident memory of the whole incubator**, measured, not a
+  parameter count. WSL has 7.6 GB RAM + 2 GB swap (s064).
+- Standing costs measured s064: system ~1.6 GB, reflex brain ~1.8 GB. The
+  matron's Claude Code process and a safety margin are still to be measured.
+- Rule (approved s064): growth is refused when projected total use would exceed
+  85 % of RAM; swap is never counted as budget (swapping stalls the PC, which
+  is the system-level threat). A watchdog checkpoints and pauses the organism
+  if actual use crosses the line.
+- The ceiling converts to parameters only by measurement: bytes per parameter
+  in training (weights, edge indices, λ buffers, anchors, gradients, optimiser
+  state) is unmeasured for a large arena. Measure it in stage 1 before quoting
+  a parameter figure.
+- **Expected real limit: time, not memory.** The arena forward is ~485 µs at
+  27 K params on this CPU (s050); a sparse edge list at millions of parameters
+  will be slow to train long before RAM runs out. Dense export serves fast but
+  does not learn.
+- Raising the WSL allocation (`.wslconfig`) raises the ceiling with no design
+  change.
+- No cap does not mean free growth: §5 still applies. Size is allowed, not
+  rewarded.
+
+## 6. The matron loop
+
+- One matron call per **lesson**, never per sample (seconds of latency).
+- Lesson = (a) matron writes a batch of items for the current stage, (b) the
+  reflex answers, (c) environment grades what it can, matron grades the rest in
+  one call, (d) organism trains, (e) matron reads the summary and decides:
+  repeat, advance, or approve / reject a growth event.
+- Every matron output is logged and replayable; a rerun can use the log
+  instead of new calls.
+- The loop checkpoints and resumes, so a subscription rate limit pauses it
+  without loss.
+- The matron teaches primitives and curriculum (Mode E). The organism is not
+  trained to reproduce matron text.
+
+## 7. Decisions for Rocky
+
+1. Stage-1 data: an existing QA set with gold answers, sandbox-generated
+   questions, or both? (Recommended: both; QA set first because it is fastest.)
+2. Where the code lives: a new organism under `trioron/organisms/` plus a sense
+   under `trioron/senses/`, with the incubator loop world-side in
+   `experiments/`. This needs a spec §9 partition update before code.
+3. DECIDED s064: creativity = SCAMPER routes (stage 5).
+3b. DECIDED s064: incubator organism exempt from the Phase 1 cap; 85 % RAM
+   ceiling. Spec §6 and the project CLAUDE.md carry the exemption line.
+4. Check Anthropic's terms on using model output as training signal before any
+   matron-authored data is committed to the public repo.
+
+## 8. First build step (after sign-off)
+
+Stage 1 only: the hidden-state sense, one leaf, the log-prob baseline, the
+gate. No matron loop, no growth, no sandbox actions until stage 1 passes.

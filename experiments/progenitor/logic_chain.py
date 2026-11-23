@@ -210,6 +210,24 @@ class TiedGated(Tied):
         return self.head(h)
 
 
+class TiedDup(Tied):
+    """s064 (s063 NEXT-0): tied arm with state+evidence duplicated into both
+    dendritic halves ([h,e,h,e]) so every h_i*e_j product is in-branch. Plain
+    Tied's [h|e] split at (H+E)/2 leaves only the first slots of e sharing a
+    branch with h (branch-partition finding, spec §3.6)."""
+    def __init__(self, E, C, seed):
+        self.link = new_link(2 * (H + E), seed * 100)
+        torch.manual_seed(seed)
+        self.head = nn.Linear(H, C)
+        self.R = 1
+
+    def forward(self, e, **_):
+        h = torch.zeros(len(e), H)
+        for _ in range(self.R):
+            h = self.link(torch.cat([h, e, h, e], 1))
+        return self.head(h)
+
+
 class GRURef:
     """s060 learnability control: torch GRUCell hidden H, same input e re-fed
     R times (matched to the tied arm), BPTT. R fixed = env R (default k+1 set
@@ -294,8 +312,8 @@ def run(arm, task, k, seed):
         return acc, depth, time.time() - t0
     model = (Chain(E, C, seed, joint=True) if arm == "grown_joint" else
              {"shallow": Chain, "grown": Chain, "tied": Tied, "mlp3": MLP3,
-              "channels": Channels, "tied_wta": TiedWTA, "tied_hard": TiedHard, "tied_gated": TiedGated, "gru": GRURef}[arm](E, C, seed))
-    grows = MAX_LINKS - 1 if arm in ("grown", "grown_joint", "tied", "tied_wta", "tied_hard", "tied_gated", "gru") else 0
+              "channels": Channels, "tied_wta": TiedWTA, "tied_hard": TiedHard, "tied_gated": TiedGated, "gru": GRURef, "tied_dup": TiedDup}[arm](E, C, seed))
+    grows = MAX_LINKS - 1 if arm in ("grown", "grown_joint", "tied", "tied_dup", "tied_wta", "tied_hard", "tied_gated", "gru") else 0
     # shallow / mlp3 get the same TOTAL epoch budget as a fully grown chain
     epochs = STAGE_EP if grows else STAGE_EP * MAX_LINKS
     depth = 1

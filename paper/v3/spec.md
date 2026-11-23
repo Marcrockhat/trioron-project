@@ -2531,6 +2531,16 @@ profiling is interactive. Locking the upper bound at 50K also
 prevents the substrate from being optimized for a scale it cannot yet
 defend at multi-seed reproducibility.
 
+**Exemption: the incubator organism (s064, Rocky).** The organism
+raised in the incubator (`docs/design/incubator_matron.md`) is not
+bound by the 50K cap. Its only size limit is a memory ceiling: growth
+is refused when the incubator's total resident memory would exceed
+85% of the host's RAM allocation (swap excluded). The reason is fact
+memory, which grows in proportion to what the organism knows, so any
+fixed parameter cap is a ceiling on knowledge. The exemption covers
+that organism only: every existing bench, the CI gate and the bench
+targets in this section stay at the Phase 1 binding scale.
+
 ### 6.2 Memory Budget
 
 Memory budgets are reported at the Phase 1 binding scale (50K params)
@@ -3298,8 +3308,8 @@ trioron/
 ├── learning/                  # credit, frustration, dream, manifold
 ├── pcll/                      # Phasecyte — Phase-Coherent Lock-in Learning (§10, partition §9.15)
 ├── lifecycle/                 # growth, evolution, ship, graft, compact
-├── senses/                    # math-generated input encodings (chord words) (§9.16)
-├── organisms/                 # saveable organisms w/ a stable API: Logophosis, Kinopsis (§9.16)
+├── senses/                    # input encodings: chord words, LLM hidden state (§9.16)
+├── organisms/                 # saveable organisms w/ a stable API: Logophosis, Kinopsis, Syneidesis (§9.16)
 ├── viz/                       # recorder, detector, viewer, exporter
 ├── evolution/                 # multi-substrate controller (opt-in)
 ├── compat/                    # v1 ↔ v2 bridge
@@ -3599,7 +3609,10 @@ schedule), inference is `@torch.no_grad` on the organism's native input,
 `torch_modules()`. Everything that learns is substrate except the explicitly
 listed tiny torch parts. The WORLD side (data generation, feature extraction,
 splits, scoring) stays under `experiments/progenitor/` and injects native
-tensors; the package never imports from `experiments/`.
+tensors; the package never imports from `experiments/`. The incubator's world
+side (s064) is `experiments/incubator/`: the reflex brain (`reflex.py`, frozen
+Qwen via `llama_cpp`), the offline library (`wiki.py`), data collection and the
+stage gates. `llama_cpp` and `libzim` are world-side dependencies only.
 
 | file | responsibility | spec section |
 |---|---|---|
@@ -3607,6 +3620,8 @@ tensors; the package never imports from `experiments/`.
 | `organisms/logophosis.py` | **Logophosis** — grounded-language comprehension: `ChordLink0` (PhasecyteLeaf on chord tokens, centered evidence → softmax symbol; `observe_more` = continued discovery, DRIFTS existing classes — s063) / `OracleLink0`; `LinkChain` (`seq` token-per-step w/ scene context, `norm=none|rms|tanh|clip` state squash, `dup` branch-partition duplication §3.6, `tied`, `grown`); `wake` → `fit` (stall→grow→joint, optional `penalty`) → `comprehend`; s063 adds `rewake(ids)` (use with care) and `lock_links(strength, lam)` (epigenetic lock on chain links via §5.x `anchor`/`set_lambda`/`ewc_penalty`; head stays free) | 9.6 chain.py, 3.6, 10.4 |
 | `organisms/kinopsis.py` | **Kinopsis** — motion-sight: frozen shape organ (`from_organ`), `settle_heads` (replay-settle, head rows only), `acquire_msil`, `fit_router` (`Router` ~60 torch params, hard motion gate; optional `QDAVoter`), `acquire_vel`; `shape` / `velocity` | 5.3 |
 | `senses/chord.py` | `chord_table(n_symbols, bins, k, seed)`, `chords_of(ids, table, gen, jitter)` — synthetic word spectra (numbers, not audio) | 10.2 |
+| `senses/hidden_state.py` | `HiddenStateSense(H, k, dup)` — a frozen language model's hidden state as leaf input: z-score → top-`k` principal directions → whiten → duplicate into both dendritic halves (§3.6). Fitted once, unsupervised; knows nothing of the model that produced the vectors (s064) | 3.6 |
+| `organisms/syneidesis.py` | **Syneidesis** (working name) — the incubator organism, stage 1: `wake(H)` fits the sense, `fit(H, wrong)` trains one quad leaf on graded reflex answers, `doubt(H)` → P(reflex is wrong). Exempt from the Phase 1 parameter cap (§6.1). Design: `docs/design/incubator_matron.md` (s064) | 6.1 |
 
 Contract notes: `Logophosis` fixes the token length `L` at the first
 `encode`; `Kinopsis.settle_heads` rank is clipped to the stream dimension.

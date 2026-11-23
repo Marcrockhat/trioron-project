@@ -1,0 +1,11 @@
+items 2808  accuracy by writer: [0.281, 0.251, 0.315, 0.317]
+organism both k=64                                   +0.817±0.010
+lp_min                                               +0.780±0.015
+PAIRED organism - lp_min                             +0.037±0.009   wins 10/10
+linear on same PCA-64 (both)                         +0.810±0.011
+no-brain control: writer+q length+answer length      +0.590±0.020
+combined organism + lp_min + lp_mean                 +0.841±0.011
+  within writers 0-1: organism                       +0.824±0.017
+  within writers 0-1: lp_min                         +0.788±0.019
+  within writers 2-3: organism                       +0.810±0.018
+  within writers 2-3: lp_min                         +0.772±0.029
