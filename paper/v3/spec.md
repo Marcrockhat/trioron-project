@@ -3309,7 +3309,7 @@ trioron/
 ├── pcll/                      # Phasecyte — Phase-Coherent Lock-in Learning (§10, partition §9.15)
 ├── lifecycle/                 # growth, evolution, ship, graft, compact
 ├── senses/                    # input encodings: chord words, LLM hidden state (§9.16)
-├── organisms/                 # saveable organisms w/ a stable API: Logophosis, Kinopsis, Syneidesis (§9.16)
+├── organisms/                 # saveable organisms w/ a stable API: Logophosis, Kinopsis, Vee (§9.16)
 ├── viz/                       # recorder, detector, viewer, exporter
 ├── evolution/                 # multi-substrate controller (opt-in)
 ├── compat/                    # v1 ↔ v2 bridge
@@ -3621,7 +3621,7 @@ stage gates. `llama_cpp` and `libzim` are world-side dependencies only.
 | `organisms/kinopsis.py` | **Kinopsis** — motion-sight: frozen shape organ (`from_organ`), `settle_heads` (replay-settle, head rows only), `acquire_msil`, `fit_router` (`Router` ~60 torch params, hard motion gate; optional `QDAVoter`), `acquire_vel`; `shape` / `velocity` | 5.3 |
 | `senses/chord.py` | `chord_table(n_symbols, bins, k, seed)`, `chords_of(ids, table, gen, jitter)` — synthetic word spectra (numbers, not audio) | 10.2 |
 | `senses/hidden_state.py` | `HiddenStateSense(H, k, dup)` — a frozen language model's hidden state as leaf input: z-score → top-`k` principal directions → whiten → duplicate into both dendritic halves (§3.6). Fitted once, unsupervised; knows nothing of the model that produced the vectors (s064) | 3.6 |
-| `organisms/syneidesis.py` | **Syneidesis** (working name) — the incubator organism, stage 1: `wake(H)` fits the sense, `fit(H, wrong)` trains one quad leaf on graded reflex answers, `doubt(H)` → P(reflex is wrong). Exempt from the Phase 1 parameter cap (§6.1). Design: `docs/design/incubator_matron.md` (s064) | 6.1 |
+| `organisms/vee.py` | **Vee** (named by Rocky, s064: from Eve and Veda; first called Syneidesis) — the incubator organism, stage 1: `wake(H)` fits the sense, `fit(H, wrong)` trains one quad leaf on graded reflex answers, `doubt(H)` → P(reflex is wrong). Exempt from the Phase 1 parameter cap (§6.1). Design: `docs/design/incubator_matron.md` (s064) | 6.1 |
 
 Contract notes: `Logophosis` fixes the token length `L` at the first
 `encode`; `Kinopsis.settle_heads` rank is clipped to the stream dimension.

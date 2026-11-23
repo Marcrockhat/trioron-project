@@ -80,13 +80,13 @@ Qwen's confidence after answering.
 ## What was built (all in this session's commit)
 - `docs/design/incubator_matron.md` — the design.
 - `trioron/senses/hidden_state.py` — `HiddenStateSense` (z-score → PCA-k → whiten → dup).
-- `trioron/organisms/syneidesis.py` — `Syneidesis` (working name): `wake` / `fit` / `doubt`.
+- `trioron/organisms/vee.py` — `Vee` (named by Rocky: from Eve and Veda; was Syneidesis): `wake` / `fit` / `doubt`.
 - `experiments/incubator/`: `stage1_leads.py` (seeded article sampler), `reflex.py` (Qwen via llama_cpp: answer + log-probs + hidden state
   in ONE pass), `wiki.py` (offline Wikipedia: search, paragraphs), `stage1_collect.py`
   (resumable), `stage1_awareness.py` (gate), `stage1_controls.py`, `console.py`.
 - `experiments/progenitor/logic_chain.py` (+`tied_dup`), `hop_external_state.py`.
 - Spec: §6.1 exemption paragraph; §9.16 rows + tree lines for the new files. CLAUDE.md:
-  exemption bullet. Test: `tests/test_v2/test_organisms.py::test_syneidesis_doubt_roundtrip`
+  exemption bullet. Test: `tests/test_v2/test_organisms.py::test_vee_doubt_roundtrip`
   (organism tests 6/6).
 - Console for Rocky (own terminal): `python3 experiments/incubator/console.py` — ask, see
   answer + Qwen confidence + organism doubt; `/right`, `/wrong [answer]`, `/look [query]`,
@@ -125,7 +125,7 @@ Qwen's confidence after answering.
   shell — kill by PID. One heavy process at a time on 7.6 GB RAM.
 
 ## Open questions for Rocky
-1. Name: keep `Syneidesis`?
+1. ~~Name~~ DECIDED: the organism is **Vee** (from Eve and Veda); code renamed, old .pt retrained.
 2. Matron daily/weekly token budget (proposed 20 % of weekly limit).
 3. Terms check before any matron-written data is committed. Until then the question files and
    answers stay UNCOMMITTED in `outputs/incubator/` (see below).
@@ -152,7 +152,7 @@ Qwen's confidence after answering.
   at e8e7b40 (v0.3.3); nothing merged or released this session.
 - **Deliberately uncommitted (local to this PC):** `outputs/incubator/` data —
   `stage1_leads*.{jsonl,txt}`, `stage1_qa_part*.jsonl` (matron-written questions),
-  `stage1_answers.jsonl`, `stage1_hidden.npz` (17 MB), `syneidesis_stage1.pt`. Rebuildable:
+  `stage1_answers.jsonl`, `stage1_hidden.npz` (17 MB), `vee_stage1.pt`. Rebuildable:
   leads via `experiments/incubator/stage1_leads.py` (seeded), questions need
   the matron again, answers via `stage1_collect.py`. The result logs ARE committed.
 - Memory (this PC only): `incubator_matron_arc.md`, `external_state_depth_result.md`,

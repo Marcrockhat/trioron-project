@@ -1,6 +1,6 @@
 """Incubator console — talk to the reflex and see the organism's doubt (s064).
 
-You ask; the reflex brain (Qwen) answers; the organism (Syneidesis) shows how
+You ask; the reflex brain (Qwen) answers; the organism (Vee) shows how
 much it doubts that answer.  You can mark the answer right or wrong: every
 verdict is stored and becomes training data, so you teach it by hand.
 
@@ -14,7 +14,7 @@ Commands (anything else is a question):
     /quit
 
 Env: SOURCE=both|h_post|h_pre  K=64  EPOCHS=30   (used when (re)training)
-Files: outputs/incubator/syneidesis_stage1.pt, console_verdicts.jsonl/.npz
+Files: outputs/incubator/vee_stage1.pt, console_verdicts.jsonl/.npz
 """
 from __future__ import annotations
 import json, os, sys, time
@@ -22,11 +22,11 @@ import numpy as np
 import torch
 sys.path.insert(0, os.getcwd())
 sys.path.insert(0, os.path.dirname(__file__))
-from trioron.organisms import Syneidesis
+from trioron.organisms import Vee
 from reflex import Reflex, chat_prompt
 
 OUT = "outputs/incubator"
-ORG = f"{OUT}/syneidesis_stage1.pt"
+ORG = f"{OUT}/vee_stage1.pt"
 VJ, VH = f"{OUT}/console_verdicts.jsonl", f"{OUT}/console_verdicts.npz"
 
 
@@ -61,11 +61,11 @@ def graded_data():
     return np.concatenate(hp), np.concatenate(hq), torch.tensor(wrong)
 
 
-def train() -> Syneidesis:
+def train() -> Vee:
     source = os.environ.get("SOURCE", "both")
     hp, hq, wrong = graded_data()
     t = time.time()
-    o = Syneidesis(0, k=int(os.environ.get("K", 64)))
+    o = Vee(0, k=int(os.environ.get("K", 64)))
     H = pick(source, hp, hq)
     o.fit(H, wrong, epochs=int(os.environ.get("EPOCHS", 30)))
     o.source = source
@@ -87,7 +87,7 @@ def save_verdict(rec: dict, h_pre, h_post) -> None:
 
 
 def main() -> None:
-    org = Syneidesis.load(ORG) if os.path.exists(ORG) else train()
+    org = Vee.load(ORG) if os.path.exists(ORG) else train()
     print("[loading the reflex brain...]", flush=True)
     reflex = Reflex()
     wiki = None

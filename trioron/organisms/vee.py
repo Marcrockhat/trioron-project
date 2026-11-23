@@ -1,6 +1,6 @@
-"""Syneidesis — the organism that grows on a reflex brain (s064, stage 1).
+"""Vee — the organism that grows on a reflex brain (s064, stage 1).
 
-Working name (Greek *syneidesis*, "knowing-with": conscience / awareness).
+Working name (Greek *vee*, "knowing-with": conscience / awareness).
 Stage 1 of docs/design/incubator_matron.md: read the reflex brain's hidden
 state for a query and predict whether the reflex's answer is WRONG.  That
 prediction is the organism's awareness signal and, later, its escalation
@@ -18,8 +18,8 @@ from trioron.senses.hidden_state import HiddenStateSense
 from .base import Organism, chunked, leaf, train_leaf
 
 
-class Syneidesis(Organism):
-    name = "syneidesis"
+class Vee(Organism):
+    name = "vee"
 
     def __init__(self, seed: int, *, k: int = 64, interior: int = 48, dup: bool = True) -> None:
         super().__init__(seed)
@@ -28,13 +28,13 @@ class Syneidesis(Organism):
         self.doubt_leaf = None
 
     # ---- acquisition schedule (each returns self) ---------------------------
-    def wake(self, H: torch.Tensor) -> "Syneidesis":
+    def wake(self, H: torch.Tensor) -> "Vee":
         """Fit the sense on an unlabeled stream of reflex hidden states."""
         self.sense = HiddenStateSense(H, self.k, dup=self.dup)
         return self
 
     def fit(self, H: torch.Tensor, wrong: torch.Tensor, *, epochs: int = 30,
-            lr: float = 1e-3) -> "Syneidesis":
+            lr: float = 1e-3) -> "Vee":
         """Learn right/wrong from graded reflex answers (1 = the reflex was wrong)."""
         if self.sense is None:
             self.wake(H)

@@ -1,6 +1,6 @@
 """Stage 1 controls (s064) — is the gate pass real?
 
-10 article-level splits, fixed arm (Syneidesis on [h_pre, h_post], k=64):
+10 article-level splits, fixed arm (Vee on [h_pre, h_post], k=64):
   PAIRED organism - lp_min      same split, same test items
   linear on same PCA-64         does the quad leaf add anything over linear?
   no-brain control              writer id + question length + answer length only
@@ -13,7 +13,7 @@ Run from repo root:  python3 experiments/incubator/stage1_controls.py
 import json, os, sys, numpy as np, torch
 sys.path.insert(0, os.getcwd()); sys.path.insert(0, "experiments/incubator")
 from stage1_awareness import auroc, logistic
-from trioron.organisms import Syneidesis
+from trioron.organisms import Vee
 from trioron.senses import HiddenStateSense
 OUT = "outputs/incubator"
 rows = [json.loads(l) for l in open(f"{OUT}/stage1_answers.jsonl")]
@@ -31,7 +31,7 @@ for seed in range(10):
     g = torch.Generator().manual_seed(100 + seed)
     ids = torch.unique(art); te = torch.isin(art, ids[torch.randperm(len(ids), generator=g)[:int(len(ids) * .3)]]); tr = ~te
     yt = wrong[te]
-    o = Syneidesis(seed, k=64).fit(B[tr], wrong[tr], epochs=30); d = o.doubt(B[te]); dtr = o.doubt(B[tr])
+    o = Vee(seed, k=64).fit(B[tr], wrong[tr], epochs=30); d = o.doubt(B[te]); dtr = o.doubt(B[tr])
     a_org, a_lp = auroc(d, yt), auroc(-lpmin[te], yt)
     add("organism both k=64", a_org); add("lp_min", a_lp); add("PAIRED organism - lp_min", a_org - a_lp)
     s = HiddenStateSense(B[tr], 64, dup=False)

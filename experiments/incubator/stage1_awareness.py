@@ -6,7 +6,7 @@ Arms (all scored by AUROC for "the reflex is wrong" on held-out ARTICLES):
   baselines   mean / min / first-token log-prob of the reflex's answer
   linear      logistic regression on the raw 1536-d hidden state (reference:
               what a plain linear readout gets)
-  organism    Syneidesis (PCA-k sense + one quad leaf) on h_pre, h_post, both
+  organism    Vee (PCA-k sense + one quad leaf) on h_pre, h_post, both
   combined    organism doubt + mean log-prob (2-feature logistic)
 GATE: best organism arm > best log-prob baseline, n>=3 seeds, spread reported.
 
@@ -18,7 +18,7 @@ import json, os, sys
 import numpy as np
 import torch
 sys.path.insert(0, os.getcwd())
-from trioron.organisms import Syneidesis
+from trioron.organisms import Vee
 
 OUT = "outputs/incubator"
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         add("linear h_post", auroc(logistic(Hpost[tr], wrong[tr], Hpost[te], seed), yt))
         for k in ks:
             for tag, H in (("h_pre", Hpre), ("h_post", Hpost), ("both", torch.cat([Hpre, Hpost], 1))):
-                o = Syneidesis(seed, k=k).fit(H[tr], wrong[tr], epochs=epochs)
+                o = Vee(seed, k=k).fit(H[tr], wrong[tr], epochs=epochs)
                 d = o.doubt(H[te])
                 add(f"organism {tag} k={k}", auroc(d, yt))
                 if tag == "h_post":

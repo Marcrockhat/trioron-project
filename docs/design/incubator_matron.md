@@ -2,6 +2,8 @@
 
 **Status:** DRAFT for Rocky's sign-off (s064). No code yet. No spec change yet.
 **Owner:** Rocky (direction) / Chloe (engineering; also plays the matron).
+**Name (Rocky, s064): the organism is Vee** — from Eve and Veda. Code: `trioron/organisms/vee.py`.
+
 **Question:** can a trioron organism, grown on top of a small frozen language
 model and raised by a stronger model, show that *growth pays* — that as its
 parameter count rises, measurable awareness, logic depth, vocabulary and
