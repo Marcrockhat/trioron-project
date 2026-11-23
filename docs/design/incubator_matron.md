@@ -1,6 +1,6 @@
 # The incubator: a reflex brain, a growing organism, and a matron (design, s064)
 
-**Status:** DRAFT for Rocky's sign-off (s064). No code yet. No spec change yet.
+**Status:** signed off in the main (s064); stage 1 passed (s064); stage 2 first cut run (s065).
 **Owner:** Rocky (direction) / Chloe (engineering; also plays the matron).
 **Name (Rocky, s064): the organism is Vee** — from Eve and Veda. Code: `trioron/organisms/vee.py`.
 
@@ -223,6 +223,58 @@ when it is wrong".
   paraphrases are caught, and unrelated questions are not hijacked (false
   override rate). Compared with a plain nearest-neighbour cache on the same
   hidden states.
+
+**Stage 2 RESULT, first cut — PASS against the cache, NOT against a linear
+key (s065).** Data: the 2,808 stage-1 questions, each rewritten twice by the
+matron (four Sonnet helpers: a light and a heavy rewording; audit: no answer
+leaks, 85 verbatim copies redone). The reflex READS each wording without
+answering (0.53 s) and gives two states: the last prompt token and the mean
+over the question's tokens (3,072 numbers together). Protocol
+(`experiments/incubator/stage2_memory.py`, log
+`outputs/incubator/stage2_memory_s065.log`): 30 % of articles held out; one
+question from each of half of them is taught in its original wording;
+positives are its two rewordings; negatives are the OTHER question of the same
+article (hard) and all questions of untaught articles (easy), in all three
+wordings. "Recalled" = the right fact is nearest AND above the threshold that
+lets 1 % of negatives through. "Crowded" = memory also holds the ~1,970
+training questions. 5 splits.
+
+| key (numbers per fact) | recalled, 197 facts | recalled, 2,164 facts |
+|---|---|---|
+| cache, raw states (3,072) | .782±.026 | .600±.029 |
+| cache, centred states (3,072) — best cache | .833±.030 | .620±.024 |
+| cache, random projection (32) — best small cache | .766±.049 | .557±.060 |
+| cache, PCA-32 (32) | .552±.015 | .380±.017 |
+| learned LINEAR key (32), 8,224 params | .892±.023 | **.718±.019** |
+| **organism quad key leaf (32), 41,400 params** | **.907±.019** | .681±.035 |
+
+Reading:
+- The gate as written passes: the organism's key beats the best cache (+.074,
+  +.062 crowded) while storing 96× fewer numbers per fact (64 bytes at
+  float16), and beats a cache of its own size by +.14 / +.12.
+- **The quad leaf again adds nothing over a linear map** (.907 vs .892; crowded
+  .681 vs .718, linear ahead). Same finding as stage 1. What pays is LEARNING
+  the key, not the trioron leaf. Trioron has still not earned its place.
+- The right fact is the nearest one almost always (.986–.997 for every
+  full-size arm). The whole difficulty is the threshold: telling "a taught
+  fact, reworded" from "a different question". At 1 % false override half to three
+  quarters of the false overrides are the sibling question of the same article
+  (siblings are a third of the negatives).
+- Load costs every arm about the same: 197 → 2,164 facts drops recall by
+  ~.2 at 1 % false override (less at 5 %: .98 → .90). The threshold, not the
+  ranking, is what crowds.
+- Which state carries the key (3 splits, `stage2_memory_s065_state_{last,mean}.log`):
+  the last prompt token alone does nearly as well as both (organism .865 /
+  .649 crowded; best cache .852 / .630 — there the learned key only buys the
+  96× compression, not accuracy). The mean over question tokens alone is weaker
+  (organism .718 / .615; cache .464 / .352). Both together is best.
+- Not yet tested: (a) retention when the key leaf keeps learning after facts
+  are stored (keys are stored embedded, so drift would be real forgetting);
+  (b) a per-fact threshold (each fact's own spread — the manifold σ the design
+  names); (c) end-to-end override accuracy with the reflex (stage 3's number);
+  (d) bytes per parameter for the memory ceiling. Thresholds here were set on
+  the test negatives, the same for every arm; a deployed threshold must be set
+  on training articles.
 
 ### Stage 3 — Steering and escalation
 - The organism picks an action: trust reflex / recall memory / look up /

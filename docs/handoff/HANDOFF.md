@@ -1,106 +1,76 @@
 # Trioron Handoff
 
-**Session date:** 2026-11-23
-**Session number:** 064
-**Session title (s064: THE INCUBATOR — reflex brain + growing organism + matron):**
-**Rocky's new direction: stop making trioron itself a smart edge model. A frozen Qwen2.5-1.5B is
-the fast, often-wrong REFLEX brain; a trioron ORGANISM grows on top of it; a Fable MATRON (via
-Claude Code on Rocky's subscription) raises it in a sandbox. Design drafted and largely signed
-off; the two "dead limb" questions were tested (depth = step count over written symbols: .998
-flat to hop-8); stage 1 (awareness) built and PASSED its gate modestly (.817 vs .780).**
+**Session date:** 2026-11-24
+**Session number:** 065
+**Session title (s065: INCUBATOR STAGE 2 — fact memory, first cut):**
+**Vee got a key leaf and a memory (`learn_keys` / `remember` / `recall`). The matron wrote two
+rewordings of each of the 2,808 stage-1 questions. A learned 32-number key recalls a taught fact
+from a rewording better than a nearest-neighbour cache holding 3,072 numbers per fact (.907 vs
+.833 at 1 % false override). But a learned LINEAR key does as well as the quad leaf — the second
+stage in a row where trioron itself has not earned its place.**
 
 ## READ THIS FIRST
-- **Design of record: `docs/design/incubator_matron.md`.** Read it before anything else this
-  arc touches. Roles, the missing-limb plan (§2.1), five stages with gates (§3), self-hosting
-  milestones (§3.1), sandbox (§4), growth-must-pay + memory ceiling (§5), matron loop (§6).
-- **Decisions Rocky made this session (binding):**
-  - The incubator organism has **no parameter cap**; limit = 85 % of WSL RAM, swap excluded.
-    Spec §6.1 and CLAUDE.md carry the exemption. Benches and CI keep the 50 K cap.
-  - **Paper is published in the repo only.** No ArXiv, venue, endorsement outreach or Reddit.
-    Do not size experiments to venue requirements.
-  - Environment = sandbox in WSL; it runs code and has offline Simple English Wikipedia.
-  - Creativity = finding an action along a SCAMPER route (stage 5).
-  - Stage-1 data = Wikipedia-derived questions; code in `trioron/organisms` + `trioron/senses`
-    (package) and `experiments/incubator/` (world side).
-- **Rocky's framings to keep:** humans hallucinate too (inner doubt is the weakest error
-  channel: told > doesn't-fit > doubt); the self-check monologue is stage 4's concrete form;
-  "how Linux was compiled on Minix" = self-hosting milestones; most humans are ~4–5 steps deep.
-- Suspect the branch partition first for 1-layer relational nulls (s063 rule, still #1).
+- **Design of record: `docs/design/incubator_matron.md`** (stage-2 result is in §3). Binding
+  decisions from s064 stand: incubator organism has no parameter cap (85 % of WSL RAM, swap
+  excluded; benches/CI keep 50 K); paper is repo-only; sandbox in WSL with offline Simple English
+  Wikipedia; creativity = SCAMPER routes; matron budget = up to 50 % of the weekly limit (Max 5×).
+- Rocky's framings to keep: humans hallucinate too (told > doesn't-fit > inner doubt); the
+  self-check monologue is stage 4; self-hosting milestones ("Linux on Minix").
+- **Always carry a linear control in incubator gates.** "Beats the cache" is not "trioron pays".
+- Suspect the branch partition first for 1-layer relational nulls (s063 rule).
+- Rocky was NOT asked anything this session; nothing here is newly signed off by him. The stage-2
+  protocol and the "PASS" reading below are Chloe's and await his review.
 
-## Arc 1 — The limb question (is the monkey paralysed?)
-Both tests in `experiments/progenitor/`, n=3.
+## Stage 2 — fact memory, first cut (n=5 article-level splits)
+Pipeline: 2,808 questions × (original + light rewording p1 + heavy rewording p2), written by four
+Sonnet helpers (+1 small fix job; ~590 K subagent tokens in total) → the reflex READS each text
+without answering (`Reflex.read`, 0.53–0.69 s/text, 8,424 texts) → two states per text: last
+prompt token and mean over the question's tokens (3,072 numbers together) → gate
+`experiments/incubator/stage2_memory.py`.
 
-### hop-k with duplicated inputs (`logic_chain.py`, new arm `tied_dup`; log `outputs/logic_chain_s064_hop_dup.log`)
-| task | tied | tied_dup |
+Protocol: 30 % of articles held out. One question from each of half of them is taught (original
+wording stored). Positives = its two rewordings. Negatives = the other question of the same
+article (hard) + every question of untaught held-out articles (easy), all three wordings.
+"Recalled" = right fact is nearest AND above the threshold that lets 1 % of negatives through.
+"Crowded" = memory also holds the ~1,970 training questions.
+
+| key (numbers per fact) | recalled, 197 facts | recalled, 2,164 facts |
 |---|---|---|
-| hop-2 | .935±.018 (5 applications, 571 s) | **.982±.007 (1 application, 45 s)** |
-| hop-3 | .583±.007 | .706±.015 |
-| hop-4 | .573±.005 | .608±.005 |
+| cache, raw states (3,072) | .782±.026 | .600±.029 |
+| cache, centred states (3,072) — best cache | .833±.030 | .620±.024 |
+| cache, random projection (32) — best small cache | .766±.049 | .557±.060 |
+| cache, PCA-32 (32) | .552±.015 | .380±.017 |
+| learned LINEAR key (32), 8,224 params | .892±.023 | **.718±.019** |
+| **organism quad key leaf (32), 41,400 params** | **.907±.019** | .681±.035 |
 
-The partition hid a real ability (hop-2 in ONE quad step) but is NOT the wall: re-applying a
-learned step end-to-end is still not learned.
+Honest reading:
+- Gate as written (vs a nearest-neighbour cache) passes: +.074 / +.062 with 96× fewer numbers
+  per fact; +.14 / +.12 over a cache of the same size.
+- Quad leaf = linear key (ahead by .015 uncrowded, behind by .037 crowded). Learning the key
+  pays; the trioron leaf does not, yet.
+- Ranking is nearly solved for every full-size arm (right fact nearest .986–.997). The
+  difficulty is the THRESHOLD; half to three quarters of false overrides are the same-article
+  sibling question.
+- Load: 197 → 2,164 facts costs every arm ~.2 at 1 % false override (.98 → .90 at 5 %).
+- State ablation (3 splits): last token alone ≈ both (organism .865/.649, best cache .852/.630 —
+  there the learned key buys only compression); mean alone weaker (.718/.615 vs cache .464/.352).
+- Thresholds were set on the test negatives, identically for all arms (an arm comparison, not a
+  deployable number).
+- s064's early worry is retired: a question's nearest neighbour is rarely its sibling, but that
+  does not hurt retrieval of the same question reworded.
 
-### External state (`hop_external_state.py`; log `outputs/hop_external_state_s064.log`)
-1-hop organ (start one-hot + map, dup input, one quad link, 16,272 params), p = .9984; frozen,
-then iterated with no further training:
-| depth | snap (argmax→one-hot) | soft (probabilities) |
-|---|---|---|
-| 2 | .998±.002 | .997±.002 |
-| 4 | .997±.002 | .991±.004 |
-| 8 | .998±.002 | .987±.006 |
+## What was built (this session's commit)
+- `trioron/organisms/vee.py`: stage 2 — `learn_keys(H, group, block, k, e)`, `remember(H, texts)`,
+  `key(H)`, `recall(H)` → (index, cosine), `memory_bytes()`. Keys are stored EMBEDDED, so the key
+  leaf must not drift after facts are stored (untested).
+- `trioron/organisms/base.py`: `group_contrast`, `train_contrastive`.
+- `experiments/incubator/reflex.py`: `Reflex.read(question)` (keeps the prompt head decoded;
+  `answer()` invalidates it). `stage2_collect.py` (resumable), `stage2_memory.py` (gate).
+- Spec §9.16 rows for vee.py and base.py; design §3 stage-2 result; test
+  `tests/test_v2/test_organisms.py::test_vee_fact_memory_roundtrip` (organism tests 7/7).
+- Logs committed: `outputs/incubator/stage2_memory_s065.log`, `..._state_last.log`, `..._state_mean.log`.
 
-A 2-hop-from-any-start organ (three-way product, two quad layers) does NOT settle (.641±.008).
-**Design rule: one product per step; depth is a step count once the state between steps is a
-written symbol.** Caveats: decomposition was GIVEN (intermediate targets), oracle symbols,
-cyclic maps forgive errors. Serial graft (organ output symbol → next organ's start input) is
-justified but unbuilt; today's `graft()` is side-by-side only.
-
-## Arc 2 — Stage 1, awareness (PASS, modest)
-Pipeline: 1,600 Simple English Wikipedia leads → 2,985 questions written by four Sonnet helper
-agents (~635 K tokens; the first matron job) → de-duplicated by article to 2,808 → Qwen answers
-closed-book (29.2 % correct, ~1.6 s/item, 86 min) → gold-string grading (audit of 30: ~1
-doubtful) → organism trained on Qwen's hidden states.
-
-| arm (10 article-level splits unless noted) | AUROC, "reflex is wrong" |
-|---|---|
-| Qwen's own confidence (min token log-prob, best baseline) | .780±.015 |
-| **organism [h_pre,h_post], k=64, 12,834 params** | **.817±.010** |
-| paired organism − baseline | **+.037±.009, 10/10** |
-| linear readout on the same 64 components | .810±.011 |
-| organism + log-probs combined | .841±.011 |
-| no-brain control (writer, question/answer length) | .590±.020 |
-| organism h_pre only / h_post only (3 splits) | .774 / .763 (do not pass alone) |
-
-Honest reading: passes on every split and within each question-writer pair, but (a) the quad
-leaf adds nothing over a linear readout — trioron is not yet earning its place; (b) the passing
-arm was chosen after 3-split results, then confirmed on 10 new splits of the same data;
-(c) final layer only. Useful: the state BEFORE answering predicts the error about as well as
-Qwen's confidence after answering.
-
-## What was built (all in this session's commit)
-- `docs/design/incubator_matron.md` — the design.
-- `trioron/senses/hidden_state.py` — `HiddenStateSense` (z-score → PCA-k → whiten → dup).
-- `trioron/organisms/vee.py` — `Vee` (named by Rocky: from Eve and Veda; was Syneidesis): `wake` / `fit` / `doubt`.
-- `experiments/incubator/`: `stage1_leads.py` (seeded article sampler), `reflex.py` (Qwen via llama_cpp: answer + log-probs + hidden state
-  in ONE pass), `wiki.py` (offline Wikipedia: search, paragraphs), `stage1_collect.py`
-  (resumable), `stage1_awareness.py` (gate), `stage1_controls.py`, `console.py`.
-- `experiments/progenitor/logic_chain.py` (+`tied_dup`), `hop_external_state.py`.
-- Spec: §6.1 exemption paragraph; §9.16 rows + tree lines for the new files. CLAUDE.md:
-  exemption bullet. Test: `tests/test_v2/test_organisms.py::test_vee_doubt_roundtrip`
-  (organism tests 6/6).
-- Console for Rocky (own terminal): `python3 experiments/incubator/console.py` — ask, see
-  answer + Qwen confidence + organism doubt; `/right`, `/wrong [answer]`, `/look [query]`,
-  `/learn`, `/quit`. Verdicts are stored and used on `/learn`.
-- **Console, after Rocky's first session (commit b11992e):** it froze once on him; NOT
-  reproduced (replay ran clean, no OOM kill). Hardened anyway: reflex errors are caught,
-  `[thinking...]` / retraining notices, long-question guard, `/look` searches content words
-  (whole questions searched badly). If it freezes again, ask for the last input and whether
-  `[thinking...]` was showing. Rocky stored no verdicts (Qwen was mostly right on his
-  questions); told him `/right` is training data too. **He prefers typed commands over
-  one-key shortcuts (fewer errors) — do not add shortcuts.** His questions are easier than
-  the training set (29 % correct), so his verdicts are a different distribution.
-
-## Environment facts found this session
+## Environment facts (s064, still true)
 - Qwen GGUF already on disk: `~/models/qwen2.5-1.5b-instruct-gguf/qwen2.5-1.5b-instruct-q4_k_m.gguf`
   (0.5B sibling at `~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf`). ~1.8 GB RSS, ~21 tok/s read
   on this Ryzen 5 PRO 4650U (6 cores; use 6 threads, not 12).
@@ -131,40 +101,52 @@ Qwen's confidence after answering.
 - Branch partition (s063). Rewake destroys downstream symbol mappings. `pkill -f` kills this
   shell — kill by PID. One heavy process at a time on 7.6 GB RAM.
 
-## Open questions for Rocky
-1. ~~Name~~ DECIDED: the organism is **Vee** (from Eve and Veda); code renamed, old .pt retrained.
-2. ~~Matron budget~~ DECIDED: 50 % of the weekly limit (Max 5×). Open: Rocky's `/usage`
-   weekly % to convert that into tokens / lessons per week.
-3. Terms check before any matron-written data is committed. Until then the question files and
-   answers stay UNCOMMITTED in `outputs/incubator/` (see below).
+## Gotchas (cumulative, new first)
+- **`Reflex.read` keys match `answer()`'s h_pre only to cos ~.999** (different batch chunking).
+  Compare read-keys only with read-keys; the console must call `read` for memory and `answer`
+  for doubt.
+- Sonnet writers copy the original for ~12–19 % of "light" rewordings on the first pass; three of
+  four fixed themselves, one needed a fix job. Always audit for verbatim copies and answer leaks.
+  Parallel helpers share the scratchpad: tell them to use unique scratch file names.
+- llama_cpp: never `Llama(embedding=True)`; use `llama_set_embeddings(ctx, True)` on a plain
+  context. `logits_all=True` is slow. Extract hidden states the same way every time.
+- The lead sampler draws with replacement → de-dup by title/id. Question writers differ in
+  difficulty: report within-writer and a no-brain control.
+- Branch partition (s063). Rewake destroys downstream symbol mappings. `pkill -f` / `pgrep -f`
+  hit this shell — kill by PID. One heavy process at a time on 7.6 GB RAM.
 
-## NEXT (s065)
-0. **Stage 2 — fact memory** (design §3): key in hidden-state space → stored text; override
-   the reflex on repeats and paraphrases; gates = retention after N later lessons, paraphrase
-   hits, false-override rate, vs a nearest-neighbour cache. This is where trioron must start to
-   earn its place (stage 1 was linear) and where "growth pays" is first measurable; measure
-   bytes per parameter here to turn the 85 % RAM ceiling into a parameter figure.
-1. Wire console verdicts into a standing loop (the first incubator loop): checkpoint/resume,
-   token logging, daily budget stop.
-2. Serial graft as a substrate op (`lifecycle/graft.py` wiring="serial") + the external-state
-   test rerun through it.
+## Open questions for Rocky
+1. Review the stage-2 reading: is "beats the cache, ties linear" a pass for you, or does stage 2
+   stay open until trioron-specific machinery (growth, λ firmness, per-fact σ) shows a gain?
+2. `/usage` weekly % now, to measure what this session's helper jobs cost against the 50 % cap.
+3. Terms check before any matron-written data is committed (carried from s064).
+
+## NEXT (s066)
+0. Stage 2, where trioron could earn its place (pick with Rocky):
+   a. per-fact threshold from each fact's own spread (manifold σ; needs ≥2 wordings per fact);
+   b. retention when the key leaf keeps learning after facts are stored (lock with λ / credit vs
+      free drift) — the real "after N later lessons" test;
+   c. growth-pays curve: recall vs key-leaf size and vs facts stored; bytes per parameter;
+   d. deployable threshold set on training articles; end-to-end override accuracy with the reflex.
+1. Wire memory into the console (`/wrong <answer>` → `remember`; recall before the reflex
+   answers) and into a standing loop: checkpoint/resume, token logging, budget stop.
+2. Serial graft as a substrate op + external-state rerun through it.
 3. Snap on the Logophosis notᵏ curve (design §2.1 row 2).
-4. Sandbox: per-run time and memory limits; the code-running action (stage 3).
-5. Carried from s063, lower priority now: public manual chapters (Ch3–5), Axis-5 field-driven
-   branch membership, receptor-freeze-on-rewake, Logophosis continual mode, Link-0 compaction,
-   Kinopsis regression, four pre-existing v2 test failures (TestCredit ×2, TestGrowth ×1,
-   TestDreamCycle ×1).
+4. Sandbox per-run time and memory limits; the code-running action (stage 3).
+5. Carried: public manual Ch3–5, Axis-5 field-driven branch membership, receptor-freeze-on-rewake,
+   Logophosis continual mode, Link-0 compaction, Kinopsis regression, four pre-existing v2 test
+   failures (TestCredit ×2, TestGrowth ×1, TestDreamCycle ×1).
 
 ## State of the build / Pointers
-- Branch `conscience-core`; s064 work committed and pushed (see `git log -3`). `main` is still
-  at e8e7b40 (v0.3.3); nothing merged or released this session.
-- **Deliberately uncommitted (local to this PC):** `outputs/incubator/` data —
-  `stage1_leads*.{jsonl,txt}`, `stage1_qa_part*.jsonl` (matron-written questions),
-  `stage1_answers.jsonl`, `stage1_hidden.npz` (17 MB), `vee_stage1.pt`. Rebuildable:
-  leads via `experiments/incubator/stage1_leads.py` (seeded), questions need
-  the matron again, answers via `stage1_collect.py`. The result logs ARE committed.
-- Memory (this PC only): `incubator_matron_arc.md`, `external_state_depth_result.md`,
-  `paper_repo_only_publication.md`; ArXiv pathway + endorsement-outreach memories deleted.
+- Branch `conscience-core`; s065 work committed and pushed (see `git log -3`). `main` still at
+  e8e7b40 (v0.3.3).
+- **Deliberately uncommitted (local to this PC):** everything matron-written or derived in
+  `outputs/incubator/`: s064's `stage1_*` data and `vee_stage1.pt`; s065's
+  `stage2_para_in_part*.tsv`, `stage2_para_part*_c*.jsonl` (paraphrases; part9 = the fix job),
+  `stage2_keys.jsonl`, `stage2_keys.npz` (52 MB), collect logs. Rebuild: paraphrases need the
+  matron again; keys via `stage2_collect.py` (~75 min).
+- Memory (this PC only): `stage2_fact_memory_result.md`, `incubator_matron_arc.md`,
+  `external_state_depth_result.md`.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
@@ -179,5 +161,5 @@ logs untracked; `outputs/data/**` caches.
   `transformers` 5.8.0.
 
 ---
-History pointers (no dated archives): s063 handoff at e8e7b40 (Logophosis Mode E transfer,
+History pointers (no dated archives): s064 handoff at e67b6ce (incubator design, limb tests, stage 1); s063 handoff at e8e7b40 (Logophosis Mode E transfer,
 public manual, branch-partition finding); s062 at c4ac3db (seq gotchas, organism API).

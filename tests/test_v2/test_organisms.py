@@ -111,3 +111,30 @@ def test_vee_doubt_roundtrip(tmp_path):
     o2 = Vee.load(str(p))
     assert torch.equal(o2.doubt(H[450:]), d)
     assert o.n_params() == sum(int(t.numel()) for t in o.doubt_leaf.trainable_tensors())
+
+
+def test_vee_fact_memory_roundtrip(tmp_path):
+    """s065: key leaf learns 'same question, other words' from groups; remember/recall
+    finds taught facts from unseen wordings; memory survives save/load."""
+    from trioron.organisms import Vee
+    torch.manual_seed(0)
+    basis = torch.randn(12, 96)
+    fact = torch.randn(80, 12)                       # 80 questions, 3 wordings each
+    code = fact.repeat_interleave(3, 0)
+    code[:, 6:] = torch.randn(240, 6)                # wording noise lives in half the subspace
+    H = code @ basis + 0.05 * torch.randn(240, 96)
+    group = torch.arange(80).repeat_interleave(3)
+    block = group // 2                               # two questions per subject
+    tr = group < 50
+    o = Vee(0).learn_keys(H[tr], group[tr], block[tr], k=12, e=8, epochs=40, lr=1e-2)
+    te = ~tr
+    o.remember(H[te][0::3], [f"fact {i}" for i in range(30)])
+    idx, score = o.recall(H[te][1::3])
+    assert idx.shape == (30,) and float(score.max()) <= 1.0 + 1e-5
+    assert (idx == torch.arange(30)).float().mean().item() > 0.8
+    assert o.facts[int(idx[0])].startswith("fact") and o.memory_bytes() > 0
+    p = tmp_path / "vee2.pt"
+    o.save(str(p))
+    o2 = Vee.load(str(p))
+    i2, s2 = o2.recall(H[te][1::3])
+    assert torch.equal(i2, idx) and torch.equal(s2, score)

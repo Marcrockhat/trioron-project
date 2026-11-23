@@ -12,7 +12,8 @@ its calibration statistics. The contract:
 
 Shared helpers: ``leaf`` (a Seeded quad leaf), ``train_leaf`` (Adam + clip,
 freezes on exit), ``chunked`` (no-grad batched forward with optional H-codes),
-``Std`` (z-score calibration carried with the organism).
+``Std`` (z-score calibration carried with the organism), ``group_contrast`` /
+``train_contrastive`` (pull same-group rows together; s065 fact-memory keys).
 """
 from __future__ import annotations
 
@@ -69,6 +70,38 @@ def train_leaf(sub, Z: torch.Tensor, y: torch.Tensor, seed: int, epochs: int, *,
     for p in params: p.requires_grad_(False)
     with torch.no_grad(): sub(Z[:1])
     return sub
+
+
+def group_contrast(E: torch.Tensor, group: torch.Tensor, temp: float = 0.1) -> torch.Tensor:
+    """Supervised-contrastive loss: rows sharing a ``group`` id are pulled
+    together, every other row in the batch is pushed away (cosine, ``temp``)."""
+    S = F.normalize(E, dim=1) @ F.normalize(E, dim=1).T / temp
+    eye = torch.eye(len(E), dtype=torch.bool)
+    pos = (group[:, None] == group[None, :]) & ~eye
+    S = S.masked_fill(eye, float("-inf"))
+    has = pos.any(1)
+    num = S.masked_fill(~pos, float("-inf")).logsumexp(1)
+    return (S.logsumexp(1) - num)[has].mean()
+
+
+def train_contrastive(fwd, params, Z: torch.Tensor, group: torch.Tensor, block: torch.Tensor,
+                      seed: int, epochs: int, *, lr: float = 1e-3, blocks_per_batch: int = 96,
+                      temp: float = 0.1):
+    """Adam + grad-clip on ``group_contrast`` of ``fwd(Z)``.  A batch is every
+    row of ``blocks_per_batch`` blocks, so rows that share a block but not a
+    group (hard negatives) always meet.  Params are FROZEN on return."""
+    for p in params: p.requires_grad_(True)
+    opt = torch.optim.Adam(params, lr=lr)
+    g = torch.Generator().manual_seed(seed)
+    ids = torch.unique(block)
+    for _ in range(epochs):
+        for bi in ids[torch.randperm(len(ids), generator=g)].split(blocks_per_batch):
+            m = torch.isin(block, bi)
+            opt.zero_grad()
+            group_contrast(fwd(Z[m]), group[m], temp).backward()
+            torch.nn.utils.clip_grad_norm_(params, 1.0)
+            opt.step()
+    for p in params: p.requires_grad_(False)
 
 
 @torch.no_grad()
