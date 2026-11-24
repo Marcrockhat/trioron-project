@@ -1,0 +1,116 @@
+# stage 2 dream  questions=2808  seeds=[0, 1, 2, 3, 4] lessons=5 epochs/lesson=60 k=256 e=32 strengths=[30.0]  domain rows=[1029, 2508, 1173, 2070, 1644]
+  seed 0: first domain 2  lesson rows [864, 1095, 750, 1413, 1785]  facts old 29 new 174
+    linear frozen (= by day)      old 0.845 (top1 1.000)  new 0.874 (top1 0.991)
+    linear free, stale            old 0.000 (top1 0.086)  new 0.862 (top1 0.986)
+    linear free + dream           old 0.931 (top1 0.983)  new 0.836 (top1 0.986)
+    linear free + replay dream 15 old 0.931 (top1 0.983)  new 0.899 (top1 0.986)
+    linear free + replay dream 60 old 0.931 (top1 1.000)  new 0.914 (top1 0.986)
+    linear lock s=30, stale       old 0.862 (top1 0.983)  new 0.885 (top1 0.997)
+    linear lock s=30 + dream      old 0.897 (top1 1.000)  new 0.885 (top1 0.997)
+    linear nightly replay 15      old 0.983 (top1 1.000)  new 0.917 (top1 0.991)
+    linear joint (ceiling)        old 0.931 (top1 0.983)  new 0.905 (top1 0.989)
+    quad   frozen (= by day)      old 0.897 (top1 1.000)  new 0.851 (top1 0.986)
+    quad   free, stale            old 0.000 (top1 0.121)  new 0.851 (top1 0.977)
+    quad   free + dream           old 0.897 (top1 1.000)  new 0.842 (top1 0.977)
+    quad   free + replay dream 15 old 0.931 (top1 1.000)  new 0.842 (top1 0.983)
+    quad   free + replay dream 60 old 0.931 (top1 1.000)  new 0.836 (top1 0.977)
+    quad   lock s=30, stale       old 0.828 (top1 1.000)  new 0.865 (top1 0.989)
+    quad   lock s=30 + dream      old 0.897 (top1 1.000)  new 0.865 (top1 0.989)
+    quad   nightly replay 15      old 1.000 (top1 1.000)  new 0.885 (top1 0.977)
+    quad   joint (ceiling)        old 0.948 (top1 1.000)  new 0.914 (top1 0.986)
+  seed 1: first domain 2  lesson rows [846, 750, 1083, 1413, 1809]  facts old 26 new 170
+    linear frozen (= by day)      old 0.885 (top1 1.000)  new 0.835 (top1 1.000)
+    linear free, stale            old 0.000 (top1 0.154)  new 0.894 (top1 0.997)
+    linear free + dream           old 0.885 (top1 1.000)  new 0.894 (top1 0.997)
+    linear free + replay dream 15 old 0.904 (top1 1.000)  new 0.912 (top1 1.000)
+    linear free + replay dream 60 old 0.923 (top1 1.000)  new 0.944 (top1 1.000)
+    linear lock s=30, stale       old 0.846 (top1 1.000)  new 0.821 (top1 1.000)
+    linear lock s=30 + dream      old 0.865 (top1 1.000)  new 0.812 (top1 1.000)
+    linear nightly replay 15      old 0.962 (top1 1.000)  new 0.929 (top1 0.997)
+    linear joint (ceiling)        old 0.904 (top1 1.000)  new 0.906 (top1 1.000)
+    quad   frozen (= by day)      old 0.865 (top1 1.000)  new 0.832 (top1 1.000)
+    quad   free, stale            old 0.000 (top1 0.019)  new 0.859 (top1 0.988)
+    quad   free + dream           old 0.865 (top1 1.000)  new 0.829 (top1 0.988)
+    quad   free + replay dream 15 old 0.923 (top1 1.000)  new 0.871 (top1 0.994)
+    quad   free + replay dream 60 old 0.923 (top1 1.000)  new 0.871 (top1 0.991)
+    quad   lock s=30, stale       old 0.865 (top1 1.000)  new 0.844 (top1 1.000)
+    quad   lock s=30 + dream      old 0.904 (top1 1.000)  new 0.844 (top1 1.000)
+    quad   nightly replay 15      old 0.808 (top1 1.000)  new 0.835 (top1 0.991)
+    quad   joint (ceiling)        old 0.904 (top1 1.000)  new 0.885 (top1 1.000)
+  seed 2: first domain 2  lesson rows [801, 669, 1230, 1374, 1821]  facts old 29 new 165
+    linear frozen (= by day)      old 0.897 (top1 1.000)  new 0.873 (top1 0.994)
+    linear free, stale            old 0.000 (top1 0.121)  new 0.891 (top1 0.988)
+    linear free + dream           old 0.966 (top1 1.000)  new 0.888 (top1 0.985)
+    linear free + replay dream 15 old 0.948 (top1 1.000)  new 0.894 (top1 0.991)
+    linear free + replay dream 60 old 0.966 (top1 1.000)  new 0.894 (top1 0.994)
+    linear lock s=30, stale       old 0.879 (top1 1.000)  new 0.891 (top1 0.994)
+    linear lock s=30 + dream      old 0.931 (top1 1.000)  new 0.894 (top1 0.997)
+    linear nightly replay 15      old 0.948 (top1 1.000)  new 0.891 (top1 0.994)
+    linear joint (ceiling)        old 0.931 (top1 1.000)  new 0.903 (top1 0.997)
+    quad   frozen (= by day)      old 0.879 (top1 1.000)  new 0.879 (top1 0.994)
+    quad   free, stale            old 0.000 (top1 0.172)  new 0.867 (top1 0.970)
+    quad   free + dream           old 0.897 (top1 0.983)  new 0.864 (top1 0.970)
+    quad   free + replay dream 15 old 0.914 (top1 1.000)  new 0.882 (top1 0.982)
+    quad   free + replay dream 60 old 0.914 (top1 1.000)  new 0.873 (top1 0.985)
+    quad   lock s=30, stale       old 0.879 (top1 1.000)  new 0.885 (top1 0.994)
+    quad   lock s=30 + dream      old 0.879 (top1 1.000)  new 0.876 (top1 0.994)
+    quad   nightly replay 15      old 0.897 (top1 1.000)  new 0.842 (top1 0.985)
+    quad   joint (ceiling)        old 0.948 (top1 1.000)  new 0.861 (top1 0.991)
+  seed 3: first domain 1  lesson rows [1782, 747, 1446, 753, 1149]  facts old 65 new 137
+    linear frozen (= by day)      old 0.862 (top1 1.000)  new 0.807 (top1 0.993)
+    linear free, stale            old 0.000 (top1 0.285)  new 0.792 (top1 0.993)
+    linear free + dream           old 0.823 (top1 1.000)  new 0.774 (top1 0.993)
+    linear free + replay dream 15 old 0.877 (top1 1.000)  new 0.799 (top1 0.996)
+    linear free + replay dream 60 old 0.869 (top1 1.000)  new 0.832 (top1 0.996)
+    linear lock s=30, stale       old 0.854 (top1 1.000)  new 0.825 (top1 0.993)
+    linear lock s=30 + dream      old 0.869 (top1 1.000)  new 0.796 (top1 0.993)
+    linear nightly replay 15      old 0.869 (top1 1.000)  new 0.807 (top1 1.000)
+    linear joint (ceiling)        old 0.900 (top1 1.000)  new 0.839 (top1 1.000)
+    quad   frozen (= by day)      old 0.885 (top1 1.000)  new 0.821 (top1 0.996)
+    quad   free, stale            old 0.000 (top1 0.185)  new 0.745 (top1 0.993)
+    quad   free + dream           old 0.823 (top1 1.000)  new 0.697 (top1 0.996)
+    quad   free + replay dream 15 old 0.846 (top1 1.000)  new 0.825 (top1 1.000)
+    quad   free + replay dream 60 old 0.846 (top1 1.000)  new 0.788 (top1 0.993)
+    quad   lock s=30, stale       old 0.862 (top1 1.000)  new 0.799 (top1 1.000)
+    quad   lock s=30 + dream      old 0.900 (top1 1.000)  new 0.799 (top1 0.996)
+    quad   nightly replay 15      old 0.915 (top1 1.000)  new 0.814 (top1 0.989)
+    quad   joint (ceiling)        old 0.892 (top1 1.000)  new 0.785 (top1 0.996)
+  seed 4: first domain 2  lesson rows [804, 1143, 1449, 1815, 708]  facts old 36 new 158
+    linear frozen (= by day)      old 0.917 (top1 1.000)  new 0.842 (top1 1.000)
+    linear free, stale            old 0.000 (top1 0.083)  new 0.870 (top1 0.997)
+    linear free + dream           old 0.875 (top1 1.000)  new 0.854 (top1 0.997)
+    linear free + replay dream 15 old 0.958 (top1 0.986)  new 0.946 (top1 0.994)
+    linear free + replay dream 60 old 0.917 (top1 0.986)  new 0.905 (top1 0.994)
+    linear lock s=30, stale       old 0.903 (top1 1.000)  new 0.839 (top1 1.000)
+    linear lock s=30 + dream      old 0.917 (top1 1.000)  new 0.835 (top1 1.000)
+    linear nightly replay 15      old 0.917 (top1 0.986)  new 0.940 (top1 0.997)
+    linear joint (ceiling)        old 0.875 (top1 0.986)  new 0.905 (top1 0.997)
+    quad   frozen (= by day)      old 0.806 (top1 0.986)  new 0.791 (top1 0.997)
+    quad   free, stale            old 0.000 (top1 0.167)  new 0.842 (top1 0.987)
+    quad   free + dream           old 0.875 (top1 1.000)  new 0.835 (top1 0.987)
+    quad   free + replay dream 15 old 0.889 (top1 0.972)  new 0.835 (top1 0.994)
+    quad   free + replay dream 60 old 0.875 (top1 0.986)  new 0.861 (top1 0.987)
+    quad   lock s=30, stale       old 0.792 (top1 0.986)  new 0.797 (top1 1.000)
+    quad   lock s=30 + dream      old 0.833 (top1 0.986)  new 0.791 (top1 1.000)
+    quad   nightly replay 15      old 0.889 (top1 0.972)  new 0.851 (top1 0.997)
+    quad   joint (ceiling)        old 0.903 (top1 0.972)  new 0.905 (top1 0.997)
+
+condition                           old hit  old top1      new hit  new top1
+linear frozen (= by day)        0.881±0.028     1.000  0.846±0.028     0.996
+linear free, stale              0.000±0.000     0.146  0.862±0.041     0.992
+linear free + dream             0.896±0.055     0.997  0.849±0.048     0.991
+linear free + replay dream 15   0.924±0.033     0.994  0.890±0.055     0.993
+linear free + replay dream 60   0.921±0.035     0.997  0.898±0.041     0.994
+linear lock s=30, stale         0.869±0.023     0.997  0.852±0.034     0.997
+linear lock s=30 + dream        0.896±0.029     1.000  0.844±0.044     0.997
+linear nightly replay 15        0.936±0.044     0.997  0.897±0.054     0.996
+linear joint (ceiling)          0.908±0.024     0.994  0.892±0.029     0.996
+quad   frozen (= by day)        0.866±0.036     0.997  0.835±0.033     0.995
+quad   free, stale              0.000±0.000     0.133  0.832±0.050     0.983
+quad   free + dream             0.871±0.030     0.997  0.814±0.066     0.984
+quad   free + replay dream 15   0.901±0.034     0.994  0.851±0.024     0.990
+quad   free + replay dream 60   0.898±0.036     0.997  0.846±0.035     0.987
+quad   lock s=30, stale         0.845±0.035     0.997  0.838±0.039     0.996
+quad   lock s=30 + dream        0.883±0.029     0.997  0.835±0.038     0.996
+quad   nightly replay 15        0.902±0.069     0.994  0.846±0.026     0.988
+quad   joint (ceiling)          0.919±0.027     0.994  0.870±0.052     0.994

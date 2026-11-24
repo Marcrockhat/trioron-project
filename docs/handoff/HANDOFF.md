@@ -41,7 +41,7 @@ article (hard) + every question of untaught held-out articles (easy), all three 
 | cache, random projection (32) — best small cache | .766±.049 | .557±.060 |
 | cache, PCA-32 (32) | .552±.015 | .380±.017 |
 | learned LINEAR key (32), 8,224 params | .892±.023 | **.718±.019** |
-| **organism quad key leaf (32), 41,400 params** | **.907±.019** | .681±.035 |
+| **organism quad key leaf (32), 26,112 live weights (41,400 allocated slots)** | **.907±.019** | .681±.035 |
 
 Honest reading:
 - Gate as written (vs a nearest-neighbour cache) passes: +.074 / +.062 with 96× fewer numbers
@@ -72,6 +72,15 @@ Honest reading:
   needs only question text. Domain shift opens headroom (joint − frozen on new = +.045±.020
   linear, 5/5 splits) but sequential no-replay learning does not reach it (free + dream +.003±.040
   over frozen). Re-key-only dream = safety, no accuracy; the gain needs REPLAY in the dream.
+- **Replay dream** (log `stage2_dream_replay_s065.log`): dream = retrain the shadow on ALL kept
+  lessons together, then re-key. Linear: 15 passes once .924/.890, 60 passes .921/.898, nightly
+  (after every lesson, 15 passes) .936/.897, vs frozen .881/.846 and joint .908/.892 → reaches the
+  ceiling; per-split gain on new facts +.044±.046 / +.052±.036 / +.051±.044. Quad: .901/.851,
+  .898/.846, .902/.846 vs frozen .866/.835, joint .919/.870 → gain inside the noise.
+- **PARAM COUNT CORRECTION:** `Organism.n_params()` counts ALLOCATED arena slots (cells × 69), not
+  live weights. Quad key leaf = 26,112 live (not 41,400; ~3× linear, not 5×); stage 1 leaf = 6,240
+  (not 12,834). Conclusions unchanged. `n_params` itself NOT changed (shared with Logophosis /
+  Kinopsis) — decide with Rocky whether it should count live weights.
 - Thresholds were set on the test negatives, identically for all arms (an arm comparison, not a
   deployable number).
 - s064's early worry is retired: a question's nearest neighbour is rarely its sibling, but that
@@ -111,6 +120,12 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
   stored keys untouched), `dream(H_cues)` swaps it in and re-keys every fact from re-read states
   of `vee.cues` (`remember(..., cues=)`). Test `test_vee_study_and_dream` (organism tests 8/8).
   `experiments/incubator/stage2_dream.py`, log `outputs/incubator/stage2_dream_s065.log`.
+- Replay: `dream(H_cues, H_lessons, epochs=15)`; `learn_keys(..., texts=)` / `study(..., texts=)`
+  keep lesson questions (`lesson_cues`, `lesson_group`, `lesson_block`; ids unique across lessons).
+  `leaf(max_bytes=)`. Console: `/exit`, `/q` leave; unknown `/command` no longer goes to the reflex.
+- Rocky ran a console session (10 verdicts, `console_verdicts.*`, local): doubt sensible on fact
+  questions, but .91–.98 on all four ordering puzzles right or wrong (out of distribution);
+  reflex failed 2 of 4 ordering puzzles; `/wrong` given without the right answer 3 times.
 
 ## Environment facts (s064, still true)
 - Qwen GGUF already on disk: `~/models/qwen2.5-1.5b-instruct-gguf/qwen2.5-1.5b-instruct-q4_k_m.gguf`
@@ -170,8 +185,8 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    b. DONE s065 (drift test): lock works, freeze works as well. Open: a regime where later
       lessons improve the key (new domain / tiny first lesson) so lock vs freeze can separate;
       DONE s065 (dream test): domain shift gives +.045 headroom, reached only by joint training.
-      NEXT: replay in the dream — `study` keeps lesson questions (text), `dream` retrains the
-      shadow on all kept lessons, then re-keys. Expect the joint row; measure cost per night;
+      DONE s065 (replay dream): linear reaches the joint row with 15 passes; quad does not gain.
+      Not done: the dream end to end through the reflex (re-read ~0.5 s per kept question);
    c. growth-pays curve: recall vs key-leaf size and vs facts stored; bytes per parameter;
    d. deployable threshold set on training articles; end-to-end override accuracy with the reflex.
 1. Wire memory into the console (`/wrong <answer>` → `remember`; recall before the reflex

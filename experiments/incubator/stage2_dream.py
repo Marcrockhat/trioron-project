@@ -18,10 +18,13 @@ Conditions (LINEAR trioron leaf and QUAD leaf, same sense, same loss):
                     (= shadow copy swapped in + re-key)
   lock s, stale     epigenetic lock (uniform lambda, pull s) while learning; no re-key
   lock s + dream    lock while learning, then re-key
+  free + replay dream n   the free leaf, then ONE dream at the end: n passes over all
+                    kept lessons together, then re-key
+  nightly replay n  a dream after every lesson: n passes over all lessons so far, re-key
   joint (ceiling)   one leaf trained on all domains at once, same number of passes
 
 Run from repo root:  python3 experiments/incubator/stage2_dream.py
-Env: SEEDS=5 LESSONS=5 EPOCHS=60 K=256 E=32 STRENGTHS=1,30 TEST_FRAC=0.3
+Env: SEEDS=5 LESSONS=5 EPOCHS=60 K=256 E=32 STRENGTHS=1,30 REPLAY=15,60 TEST_FRAC=0.3
 """
 from __future__ import annotations
 import copy, os, sys
@@ -66,6 +69,7 @@ if __name__ == "__main__":
     k, e = int(os.environ.get("K", 256)), int(os.environ.get("E", 32))
     strengths = [float(x) for x in os.environ.get("STRENGTHS", "1,30").split(",")]
     frac = float(os.environ.get("TEST_FRAC", 0.3))
+    replay = [int(x) for x in os.environ.get("REPLAY", "15,60").split(",")]
     dom = domains(H[:, H.shape[1] // 2:], block, L)
     print(f"# stage 2 dream  questions={len(H) // 3}  seeds={list(seeds)} lessons={L} epochs/lesson={epochs} "
           f"k={k} e={e} strengths={strengths}  domain rows={torch.bincount(dom).tolist()}", flush=True)
@@ -86,8 +90,8 @@ if __name__ == "__main__":
             Z = torch.cat([P, P], 1) if nonlinear else P          # dup only matters to the quad
             key = lambda sub: F.normalize(chunked(sub, Z), dim=1)
 
-            def teach(sub, rows, s, penalty=None):
-                train_contrastive(sub, sub.trainable_tensors(), Z[rows], group[rows], block[rows], s, epochs,
+            def teach(sub, rows, s, penalty=None, ep=None):
+                train_contrastive(sub, sub.trainable_tensors(), Z[rows], group[rows], block[rows], s, ep or epochs,
                                   blocks_per_batch=48, penalty=penalty)
                 with torch.no_grad(): sub(Z[:1])                    # drop grad-bearing activations
 
@@ -113,6 +117,20 @@ if __name__ == "__main__":
                 E = key(sub)
                 record(f"{tag}, stale", E, K_old)
                 record(f"{tag} + dream", E, E[mem_old])
+                if not s:
+                    for ep in replay:
+                        r = copy.deepcopy(sub)
+                        teach(r, m["train"], seed * 100 + 50, ep=ep)
+                        E = key(r)
+                        record(f"free + replay dream {ep}", E, E[mem_old])
+            for ep in replay[:1]:
+                sub, seen = copy.deepcopy(base), lesson[0].clone()
+                for t in range(1, L):
+                    teach(sub, lesson[t], seed * 100 + t)               # day: the shadow learns the new lesson
+                    seen |= lesson[t]
+                    teach(sub, seen, seed * 100 + 50 + t, ep=ep)        # night: replay everything kept
+                E = key(sub)
+                record(f"nightly replay {ep}", E, E[mem_old])
             joint = leaf(Z.shape[1], e, seed, nonlinear=nonlinear)
             teach(joint, m["train"], seed * 100)
             E = key(joint)

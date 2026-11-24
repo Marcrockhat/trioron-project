@@ -174,7 +174,7 @@ reflex is wrong" on held-out articles
 | arm (10 article-level splits unless noted) | AUROC |
 |---|---|
 | reflex's own confidence, min token log-prob (best baseline) | .780±.015 |
-| **organism, [h_pre, h_post], k=64, 12,834 params** | **.817±.010** |
+| **organism, [h_pre, h_post], k=64, 6,240 live weights (12,834 allocated slots)** | **.817±.010** |
 | paired difference organism − baseline | **+.037±.009, 10/10 splits** |
 | linear readout on the same 64 components | .810±.011 |
 | organism + the reflex's log-probs combined | .841±.011 |
@@ -246,7 +246,7 @@ training questions. 5 splits.
 | cache, random projection (32) — best small cache | .766±.049 | .557±.060 |
 | cache, PCA-32 (32) | .552±.015 | .380±.017 |
 | learned LINEAR key (32), 8,224 params | .892±.023 | **.718±.019** |
-| **organism quad key leaf (32), 41,400 params** | **.907±.019** | .681±.035 |
+| **organism quad key leaf (32), 26,112 live weights (41,400 allocated slots)** | **.907±.019** | .681±.035 |
 
 Reading:
 - The gate as written passes: the organism's key beats the best cache (+.074,
@@ -339,9 +339,26 @@ Reading:
   question text, not the 3,072-number state.
   Built: `Vee.study` (shadow copy learns by day, live leaf frozen), `Vee.dream`
   (swap + re-key), `remember(..., cues=)`.
-- Not yet tested: (a) a dream that replays kept lesson questions (expected to
-  reach the joint row; costs ~0.5 s re-read per kept question or 32–256 kept
-  numbers each);
+- **Replay dream (s065, same test, log `stage2_dream_replay_s065.log`).**
+  The dream now replays every kept lesson together before the re-key. Old /
+  new, linear | quad: replay 15 passes once at the end .924 / .890 | .901 /
+  .851; 60 passes .921 / .898 | .898 / .846; a dream after EVERY lesson (15
+  passes over all lessons so far) .936 / .897 | .902 / .846; joint ceiling
+  .908 / .892 | .919 / .870; frozen .881 / .846 | .866 / .835. Per-split gain
+  over the frozen leaf, linear: new +.044 ± .046 (15 passes), +.052 ± .036 (60),
+  +.051 ± .044 (nightly); old +.04 to +.055. So for the LINEAR leaf the replay
+  dream reaches the joint ceiling, 15 passes are enough, and nightly dreams
+  lose nothing against one big dream. For the QUAD leaf the gain on new facts
+  is +.01 to +.02, inside the noise, and below its own joint row (+.035 ±
+  .062): the quad leaf benefits less from replay and is no better than linear
+  anywhere in this test. Built: `Vee.dream(H_cues, H_lessons)`; `learn_keys`
+  and `study` keep lesson questions when given `texts=`.
+- **Parameter counts corrected (s065).** `Organism.n_params()` counts the
+  arena's ALLOCATED slots (cells × 69), not live weights. The quad key leaf has
+  26,112 live weights (not 41,400), about 3× the linear key, not 5×; the stage 1
+  leaf has 6,240 (not 12,834). No conclusion changes.
+- Not yet tested: (a) the replay dream end to end through the reflex (re-read
+  cost ~0.5 s per kept question: ~50 min for the 5,900 lesson rows here);
   (b) a per-fact threshold (each fact's own spread — the manifold σ the design
   names); (c) end-to-end override accuracy with the reflex (stage 3's number);
   (d) bytes per parameter for the memory ceiling. Thresholds here were set on

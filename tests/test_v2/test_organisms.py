@@ -152,10 +152,11 @@ def test_vee_study_and_dream():
     group = torch.arange(80).repeat_interleave(3)
     block = group // 2
     day1, day2, te = group < 25, (group >= 25) & (group < 50), group >= 50
-    o = Vee(0).learn_keys(H[day1], group[day1], block[day1], k=12, e=8, epochs=40, lr=1e-2)
+    txt = lambda m: [f"lesson q {i}" for i in range(int(m.sum()))]
+    o = Vee(0).learn_keys(H[day1], group[day1], block[day1], k=12, e=8, epochs=40, lr=1e-2, texts=txt(day1))
     o.remember(H[te][0::3], [f"fact {i}" for i in range(30)], cues=[f"q {i}" for i in range(30)])
     keys, (idx, score) = o.keys.clone(), o.recall(H[te][1::3])
-    o.study(H[day2], group[day2], block[day2], epochs=40, lr=1e-2)
+    o.study(H[day2], group[day2], block[day2], epochs=40, lr=1e-2, texts=txt(day2))
     i2, s2 = o.recall(H[te][1::3])
     assert o.key_shadow is not None and torch.equal(o.keys, keys)
     assert torch.equal(i2, idx) and torch.equal(s2, score)       # by day nothing moves
@@ -164,6 +165,11 @@ def test_vee_study_and_dream():
     i3, _ = o.recall(H[te][1::3])
     assert (i3 == torch.arange(30)).float().mean().item() > 0.8
     assert len(o.cues) == len(o.facts) == 30
+    assert len(o.lesson_cues) == len(o.lesson_group) == int((day1 | day2).sum())
+    k3 = o.keys.clone()
+    o.dream(H[te][0::3], H[day1 | day2], epochs=20, lr=1e-2)     # replay dream: both lessons together
+    i4, _ = o.recall(H[te][1::3])
+    assert not torch.allclose(o.keys, k3) and (i4 == torch.arange(30)).float().mean().item() > 0.8
     try:
         o.dream(H[te][0::6]); assert False
     except ValueError:

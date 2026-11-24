@@ -16,10 +16,12 @@ per fact), so the key leaf must not drift after facts are stored: free learning
 on the live leaf takes old facts from ~.89 recall to ~.02 (stage2_drift.py).
 
 Day and night (s065): ``study`` teaches a SHADOW copy of the key leaf while the
-live leaf stays frozen, so stored facts keep working.  ``dream`` swaps the
-shadow in and re-keys every stored fact.  The organism cannot read the reflex
-itself, so the world re-reads ``self.cues`` (the stored questions) and passes
-the fresh states to ``dream``.
+live leaf stays frozen, so stored facts keep working.  ``dream`` replays every
+kept lesson into the shadow (learning lessons one at a time without replay does
+not add up: stage2_dream.py), swaps the shadow in and re-keys every stored
+fact.  The organism cannot read the reflex itself, so the world re-reads
+``self.lesson_cues`` (kept lesson questions) and ``self.cues`` (the stored
+questions) and passes the fresh states to ``dream``.
 
 The package side holds only the sense and the leaf.  The reflex brain, the
 questions and the grading are world-side (``experiments/incubator/``) and
@@ -50,6 +52,9 @@ class Vee(Organism):
         self.facts: list[str] = []
         self.cues: list[str] = []                # the question each fact was stored under
         self.key_shadow = None                   # copy of the key leaf that learns by day
+        self.lesson_cues: list[str] = []         # kept lesson questions, replayed in the dream
+        self.lesson_group = torch.empty(0, dtype=torch.long)
+        self.lesson_block = torch.empty(0, dtype=torch.long)
 
     # ---- acquisition schedule (each returns self) ---------------------------
     def wake(self, H: torch.Tensor) -> "Vee":
@@ -67,11 +72,22 @@ class Vee(Organism):
         train_leaf(self.doubt_leaf, self.sense(H), wrong.long(), self.seed, epochs, lr=lr)
         return self
 
+    def _keep(self, texts, group, block) -> None:
+        if texts is None:
+            return
+        self.lesson_cues += list(texts)
+        self.lesson_group = torch.cat([self.lesson_group, group.long()])
+        self.lesson_block = torch.cat([self.lesson_block, block.long()])
+
     def learn_keys(self, H: torch.Tensor, group: torch.Tensor, block: torch.Tensor, *,
-                   k: int = 256, e: int = 32, epochs: int = 30, lr: float = 1e-3) -> "Vee":
+                   k: int = 256, e: int = 32, epochs: int = 30, lr: float = 1e-3,
+                   texts: list[str] | None = None) -> "Vee":
         """Learn the key space from questions seen in several wordings.
         ``group``: same id = the same question reworded; ``block``: same id =
-        same subject (other questions of a block are the hard negatives)."""
+        same subject (other questions of a block are the hard negatives).
+        ``texts`` (one per row) keeps the lesson for replay in ``dream``; group
+        and block ids must then be unique across lessons."""
+        self._keep(texts, group, block)
         if self.key_sense is None:
             self.key_sense = HiddenStateSense(H, k, dup=self.dup)
             self.key_leaf = leaf(self.key_sense.out_dim, e, self.seed, interior=self.interior)
@@ -90,9 +106,10 @@ class Vee(Organism):
         return self
 
     def study(self, H: torch.Tensor, group: torch.Tensor, block: torch.Tensor, *,
-              epochs: int = 30, lr: float = 1e-3) -> "Vee":
+              epochs: int = 30, lr: float = 1e-3, texts: list[str] | None = None) -> "Vee":
         """Day-time key learning on a shadow copy.  The live key leaf and the
-        stored keys are untouched until ``dream``."""
+        stored keys are untouched until ``dream``.  ``texts``: as in ``learn_keys``."""
+        self._keep(texts, group, block)
         if self.key_shadow is None:
             self.key_shadow = copy.deepcopy(self.key_leaf)
         Z = self.key_sense(H)
@@ -101,12 +118,25 @@ class Vee(Organism):
         with torch.no_grad(): self.key_shadow(Z[:1])
         return self
 
-    def dream(self, H_cues: torch.Tensor) -> "Vee":
-        """Night: the shadow becomes the live key leaf and every stored fact is
-        re-keyed.  ``H_cues``: the reflex's states for ``self.cues``, re-read now,
-        one row per stored fact in order."""
+    def dream(self, H_cues: torch.Tensor, H_lessons: torch.Tensor | None = None, *,
+              epochs: int = 15, lr: float = 1e-3) -> "Vee":
+        """Night: replay, swap, re-key.  ``H_lessons``: states for
+        ``self.lesson_cues`` re-read now; the shadow is trained on ALL kept
+        lessons together (skipped when None).  Then the shadow becomes the live
+        key leaf and every stored fact is re-keyed from ``H_cues``: states for
+        ``self.cues``, one row per stored fact in order."""
         if len(H_cues) != len(self.facts):
             raise ValueError(f"dream needs one state per stored fact: got {len(H_cues)}, have {len(self.facts)}")
+        if H_lessons is not None:
+            if len(H_lessons) != len(self.lesson_cues):
+                raise ValueError(f"dream needs one state per kept lesson question: got {len(H_lessons)}, "
+                                 f"have {len(self.lesson_cues)}")
+            if self.key_shadow is None:
+                self.key_shadow = copy.deepcopy(self.key_leaf)
+            Z = self.key_sense(H_lessons)
+            train_contrastive(self.key_shadow, self.key_shadow.trainable_tensors(), Z,
+                              self.lesson_group, self.lesson_block, self.seed, epochs, lr=lr)
+            with torch.no_grad(): self.key_shadow(Z[:1])
         if self.key_shadow is not None:
             self.key_leaf, self.key_shadow = self.key_shadow, None
         if self.facts:

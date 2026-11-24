@@ -11,7 +11,7 @@ Commands (anything else is a question):
     /wrong [answer]     it was wrong (optionally give the right answer)
     /look [query]       look the last question (or a query) up in offline Wikipedia
     /learn              retrain the organism on all graded data + your verdicts
-    /quit
+    /quit               leave (/exit and Ctrl-D also work)
 
 Env: SOURCE=both|h_post|h_pre  K=64  EPOCHS=30   (used when (re)training)
 Files: outputs/incubator/vee_stage1.pt, console_verdicts.jsonl/.npz
@@ -101,8 +101,10 @@ def main() -> None:
         if not line:
             continue
         cmd, _, arg = line.partition(" ")
-        if cmd == "/quit":
+        if cmd in ("/quit", "/exit", "/q"):
             break
+        if cmd.startswith("/") and cmd not in ("/right", "/wrong", "/learn", "/look"):
+            print("[unknown command; use /right /wrong [answer] /look [query] /learn /quit]"); continue
         if cmd in ("/right", "/wrong"):
             if last is None:
                 print("nothing to grade yet"); continue

@@ -40,12 +40,14 @@ class Std:
         return ((Z - self.mu) / self.sd).float()
 
 
-def leaf(d: int, n_out: int, seed: int, *, interior: int = 48, nonlinear: bool = True):
+def leaf(d: int, n_out: int, seed: int, *, interior: int = 48, nonlinear: bool = True,
+         max_bytes: int = 400_000):
     """One ``Seeded(d -> n_out)`` leaf (quad by default; ``nonlinear=False`` = the
-    plain linear phenotype), compiled and ready to train."""
+    plain linear phenotype), compiled and ready to train.  ``max_bytes``: the
+    parameter envelope (raise it for the uncapped incubator organism)."""
     torch.manual_seed(seed)
     sub = construct(base=Seeded(d, n_out, interior_cells=interior, nonlinear=nonlinear),
-                    envelope=Envelope(max_parameter_bytes=400_000),
+                    envelope=Envelope(max_parameter_bytes=max_bytes),
                     dispatch_table=default_dispatch_table(),
                     capacity=max(d + interior + n_out + 8,
                                  (d * interior + interior * n_out) * 5 // (4 * 64) + 8),
