@@ -1,0 +1,120 @@
+# pilot night  facts=40 window=50 kp=64 hold=10 seeds=3 nper=40 qwen rewordings/fact mean 41.5 min 0
+  seed 0 matron: phasecyte                after wave 0: w0 0.90/0.89   classes 11 facts covered 9 spawned 0
+  seed 0 matron: phasecyte                after wave 1: w0 0.89/0.88  w1 1.00/1.00   classes 25 facts covered 20 spawned 0
+  seed 0 matron: phasecyte                after wave 2: w0 0.92/0.91  w1 1.00/1.00  w2 1.00/1.00   classes 37 facts covered 30 spawned 0
+  seed 0 matron: phasecyte                after wave 3: w0 0.87/0.86  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 52 facts covered 40 spawned 0
+  seed 0 matron: class mean               after wave 0: w0 0.98/0.98   
+  seed 0 matron: class mean               after wave 1: w0 0.98/0.98  w1 1.00/1.00   
+  seed 0 matron: class mean               after wave 2: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00   
+  seed 0 matron: class mean               after wave 3: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   
+  seed 0 qwen: phasecyte                  after wave 0: w0 0.90/0.89   classes 11 facts covered 10 spawned 0
+  seed 0 qwen: phasecyte                  after wave 1: w0 0.91/0.89  w1 0.99/0.96   classes 31 facts covered 20 spawned 0
+  seed 0 qwen: phasecyte                  after wave 2: w0 0.90/0.89  w1 0.98/0.95  w2 0.90/0.90   classes 43 facts covered 29 spawned 0
+  seed 0 qwen: phasecyte                  after wave 3: w0 0.90/0.87  w1 0.98/0.95  w2 1.00/0.99  w3 0.90/0.89   classes 75 facts covered 39 spawned 0
+  seed 0 qwen: class mean                 after wave 0: w0 0.91/0.90   
+  seed 0 qwen: class mean                 after wave 1: w0 0.91/0.90  w1 0.99/0.97   
+  seed 0 qwen: class mean                 after wave 2: w0 0.91/0.90  w1 0.99/0.97  w2 1.00/1.00   
+  seed 0 qwen: class mean                 after wave 3: w0 0.91/0.90  w1 0.99/0.97  w2 1.00/0.99  w3 0.95/0.95   
+  seed 0 noise: phasecyte                 after wave 0: w0 0.99/0.98   classes 10 facts covered 10 spawned 0
+  seed 0 noise: phasecyte                 after wave 1: w0 0.92/0.91  w1 0.94/0.91   classes 23 facts covered 20 spawned 0
+  seed 0 noise: phasecyte                 after wave 2: w0 0.96/0.95  w1 0.94/0.91  w2 0.90/0.89   classes 33 facts covered 29 spawned 0
+  seed 0 noise: phasecyte                 after wave 3: w0 0.92/0.91  w1 0.94/0.91  w2 0.95/0.94  w3 0.97/0.96   classes 49 facts covered 40 spawned 0
+  seed 0 noise: class mean                after wave 0: w0 0.98/0.98   
+  seed 0 noise: class mean                after wave 1: w0 0.98/0.98  w1 0.94/0.92   
+  seed 0 noise: class mean                after wave 2: w0 0.98/0.98  w1 0.93/0.92  w2 0.99/0.99   
+  seed 0 noise: class mean                after wave 3: w0 0.98/0.98  w1 0.93/0.91  w2 0.99/0.99  w3 0.96/0.96   
+  seed 0 repeat: phasecyte                after wave 0: w0 0.79/0.79   classes 8 facts covered 8 spawned 0
+  seed 0 repeat: phasecyte                after wave 1: w0 0.89/0.89  w1 0.95/0.91   classes 20 facts covered 19 spawned 0
+  seed 0 repeat: phasecyte                after wave 2: w0 0.88/0.88  w1 0.94/0.91  w2 1.00/0.99   classes 38 facts covered 29 spawned 0
+  seed 0 repeat: phasecyte                after wave 3: w0 0.88/0.88  w1 0.94/0.91  w2 1.00/0.99  w3 0.97/0.97   classes 49 facts covered 39 spawned 0
+  seed 0 repeat: class mean               after wave 0: w0 0.97/0.97   
+  seed 0 repeat: class mean               after wave 1: w0 0.97/0.97  w1 0.95/0.93   
+  seed 0 repeat: class mean               after wave 2: w0 0.97/0.97  w1 0.94/0.93  w2 0.99/0.99   
+  seed 0 repeat: class mean               after wave 3: w0 0.97/0.97  w1 0.94/0.92  w2 0.99/0.99  w3 0.95/0.95   
+  seed 0 one-shot key table (no night)    after wave 0: w0 0.95/0.95   
+  seed 0 one-shot key table (no night)    after wave 1: w0 0.95/0.95  w1 1.00/0.99   
+  seed 0 one-shot key table (no night)    after wave 2: w0 0.95/0.95  w1 0.99/0.99  w2 0.98/0.97   
+  seed 0 one-shot key table (no night)    after wave 3: w0 0.95/0.95  w1 0.98/0.97  w2 0.98/0.97  w3 1.00/1.00   
+  seed 1 matron: phasecyte                after wave 0: w0 0.94/0.93   classes 11 facts covered 10 spawned 0
+  seed 1 matron: phasecyte                after wave 1: w0 0.94/0.93  w1 1.00/1.00   classes 24 facts covered 20 spawned 0
+  seed 1 matron: phasecyte                after wave 2: w0 0.93/0.92  w1 0.99/0.99  w2 0.90/0.90   classes 36 facts covered 29 spawned 0
+  seed 1 matron: phasecyte                after wave 3: w0 0.94/0.93  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 56 facts covered 40 spawned 0
+  seed 1 matron: class mean               after wave 0: w0 0.96/0.96   
+  seed 1 matron: class mean               after wave 1: w0 0.96/0.96  w1 1.00/1.00   
+  seed 1 matron: class mean               after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00   
+  seed 1 matron: class mean               after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   
+  seed 1 qwen: phasecyte                  after wave 0: w0 0.90/0.89   classes 10 facts covered 10 spawned 0
+  seed 1 qwen: phasecyte                  after wave 1: w0 0.89/0.88  w1 0.99/0.98   classes 25 facts covered 20 spawned 0
+  seed 1 qwen: phasecyte                  after wave 2: w0 0.89/0.88  w1 0.99/0.98  w2 0.90/0.90   classes 37 facts covered 29 spawned 0
+  seed 1 qwen: phasecyte                  after wave 3: w0 0.89/0.89  w1 0.99/0.98  w2 1.00/1.00  w3 0.89/0.89   classes 49 facts covered 39 spawned 0
+  seed 1 qwen: class mean                 after wave 0: w0 0.92/0.91   
+  seed 1 qwen: class mean                 after wave 1: w0 0.92/0.91  w1 0.99/0.98   
+  seed 1 qwen: class mean                 after wave 2: w0 0.92/0.91  w1 0.99/0.98  w2 0.98/0.98   
+  seed 1 qwen: class mean                 after wave 3: w0 0.92/0.91  w1 0.99/0.98  w2 0.98/0.98  w3 0.96/0.96   
+  seed 1 noise: phasecyte                 after wave 0: w0 0.96/0.96   classes 10 facts covered 10 spawned 0
+  seed 1 noise: phasecyte                 after wave 1: w0 0.97/0.95  w1 0.96/0.95   classes 20 facts covered 20 spawned 0
+  seed 1 noise: phasecyte                 after wave 2: w0 0.96/0.94  w1 0.96/0.95  w2 1.00/1.00   classes 31 facts covered 30 spawned 0
+  seed 1 noise: phasecyte                 after wave 3: w0 0.96/0.94  w1 0.96/0.95  w2 0.99/0.99  w3 0.98/0.97   classes 46 facts covered 40 spawned 0
+  seed 1 noise: class mean                after wave 0: w0 0.97/0.97   
+  seed 1 noise: class mean                after wave 1: w0 0.97/0.97  w1 0.97/0.96   
+  seed 1 noise: class mean                after wave 2: w0 0.97/0.97  w1 0.97/0.96  w2 0.97/0.97   
+  seed 1 noise: class mean                after wave 3: w0 0.97/0.97  w1 0.97/0.96  w2 0.97/0.96  w3 0.96/0.96   
+  seed 1 repeat: phasecyte                after wave 0: w0 0.97/0.97   classes 10 facts covered 10 spawned 0
+  seed 1 repeat: phasecyte                after wave 1: w0 0.90/0.89  w1 0.80/0.80   classes 18 facts covered 18 spawned 0
+  seed 1 repeat: phasecyte                after wave 2: w0 0.98/0.95  w1 0.98/0.97  w2 1.00/1.00   classes 31 facts covered 30 spawned 0
+  seed 1 repeat: phasecyte                after wave 3: w0 0.98/0.95  w1 0.98/0.97  w2 0.99/0.99  w3 0.88/0.86   classes 47 facts covered 39 spawned 0
+  seed 1 repeat: class mean               after wave 0: w0 0.97/0.97   
+  seed 1 repeat: class mean               after wave 1: w0 0.97/0.97  w1 0.97/0.96   
+  seed 1 repeat: class mean               after wave 2: w0 0.97/0.97  w1 0.97/0.96  w2 0.97/0.97   
+  seed 1 repeat: class mean               after wave 3: w0 0.97/0.97  w1 0.97/0.96  w2 0.97/0.96  w3 0.97/0.97   
+  seed 1 one-shot key table (no night)    after wave 0: w0 0.96/0.96   
+  seed 1 one-shot key table (no night)    after wave 1: w0 0.96/0.96  w1 1.00/1.00   
+  seed 1 one-shot key table (no night)    after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99   
+  seed 1 one-shot key table (no night)    after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   
+  seed 2 matron: phasecyte                after wave 0: w0 0.96/0.96   classes 10 facts covered 10 spawned 0
+  seed 2 matron: phasecyte                after wave 1: w0 0.91/0.91  w1 0.99/0.99   classes 28 facts covered 20 spawned 0
+  seed 2 matron: phasecyte                after wave 2: w0 0.90/0.90  w1 0.99/0.99  w2 0.98/0.98   classes 47 facts covered 30 spawned 0
+  seed 2 matron: phasecyte                after wave 3: w0 0.96/0.96  w1 0.98/0.98  w2 0.99/0.99  w3 1.00/1.00   classes 94 facts covered 40 spawned 0
+  seed 2 matron: class mean               after wave 0: w0 0.97/0.97   
+  seed 2 matron: class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00   
+  seed 2 matron: class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00   
+  seed 2 matron: class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   
+  seed 2 qwen: phasecyte                  after wave 0: w0 0.91/0.91   classes 11 facts covered 10 spawned 0
+  seed 2 qwen: phasecyte                  after wave 1: w0 0.94/0.94  w1 0.99/0.97   classes 28 facts covered 20 spawned 0
+  seed 2 qwen: phasecyte                  after wave 2: w0 0.93/0.93  w1 0.98/0.98  w2 0.90/0.90   classes 47 facts covered 29 spawned 0
+  seed 2 qwen: phasecyte                  after wave 3: w0 0.92/0.91  w1 0.98/0.98  w2 0.90/0.90  w3 0.90/0.90   classes 64 facts covered 38 spawned 0
+  seed 2 qwen: class mean                 after wave 0: w0 0.91/0.91   
+  seed 2 qwen: class mean                 after wave 1: w0 0.91/0.91  w1 0.99/0.99   
+  seed 2 qwen: class mean                 after wave 2: w0 0.91/0.91  w1 0.99/0.99  w2 1.00/1.00   
+  seed 2 qwen: class mean                 after wave 3: w0 0.91/0.91  w1 0.99/0.99  w2 1.00/1.00  w3 1.00/1.00   
+  seed 2 noise: phasecyte                 after wave 0: w0 0.98/0.98   classes 10 facts covered 10 spawned 0
+  seed 2 noise: phasecyte                 after wave 1: w0 0.97/0.95  w1 0.86/0.83   classes 19 facts covered 19 spawned 0
+  seed 2 noise: phasecyte                 after wave 2: w0 0.98/0.95  w1 0.94/0.92  w2 0.90/0.89   classes 32 facts covered 29 spawned 0
+  seed 2 noise: phasecyte                 after wave 3: w0 0.97/0.95  w1 0.94/0.91  w2 0.92/0.91  w3 1.00/1.00   classes 53 facts covered 40 spawned 0
+  seed 2 noise: class mean                after wave 0: w0 0.97/0.97   
+  seed 2 noise: class mean                after wave 1: w0 0.97/0.97  w1 0.97/0.97   
+  seed 2 noise: class mean                after wave 2: w0 0.97/0.97  w1 0.97/0.97  w2 0.97/0.97   
+  seed 2 noise: class mean                after wave 3: w0 0.97/0.97  w1 0.97/0.96  w2 0.97/0.97  w3 0.99/0.99   
+  seed 2 repeat: phasecyte                after wave 0: w0 0.98/0.98   classes 10 facts covered 10 spawned 0
+  seed 2 repeat: phasecyte                after wave 1: w0 0.92/0.91  w1 0.96/0.93   classes 22 facts covered 20 spawned 0
+  seed 2 repeat: phasecyte                after wave 2: w0 0.92/0.91  w1 0.95/0.93  w2 0.98/0.98   classes 35 facts covered 30 spawned 0
+  seed 2 repeat: phasecyte                after wave 3: w0 0.92/0.91  w1 0.95/0.93  w2 0.98/0.98  w3 0.90/0.90   classes 44 facts covered 39 spawned 0
+  seed 2 repeat: class mean               after wave 0: w0 0.97/0.97   
+  seed 2 repeat: class mean               after wave 1: w0 0.97/0.97  w1 0.98/0.98   
+  seed 2 repeat: class mean               after wave 2: w0 0.97/0.97  w1 0.98/0.98  w2 0.96/0.96   
+  seed 2 repeat: class mean               after wave 3: w0 0.97/0.97  w1 0.98/0.97  w2 0.96/0.96  w3 1.00/1.00   
+  seed 2 one-shot key table (no night)    after wave 0: w0 0.95/0.95   
+  seed 2 one-shot key table (no night)    after wave 1: w0 0.95/0.95  w1 1.00/1.00   
+  seed 2 one-shot key table (no night)    after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99   
+  seed 2 one-shot key table (no night)    after wave 3: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   
+
+# after the last wave, 3 splits: top1 per wave, mean ± sd over splits of the wave mean; hit at 5% false
+matron: phasecyte                w0 0.92  w1 0.99  w2 1.00  w3 1.00   mean 0.978 ± 0.009   hit 0.977
+matron: class mean               w0 0.97  w1 1.00  w2 1.00  w3 1.00   mean 0.993 ± 0.003   hit 0.993
+qwen: phasecyte                  w0 0.90  w1 0.98  w2 0.97  w3 0.90   mean 0.937 ± 0.011   hit 0.929
+qwen: class mean                 w0 0.91  w1 0.99  w2 0.99  w3 0.97   mean 0.967 ± 0.007   hit 0.962
+noise: phasecyte                 w0 0.95  w1 0.95  w2 0.95  w3 0.98   mean 0.958 ± 0.014   hit 0.945
+noise: class mean                w0 0.97  w1 0.96  w2 0.98  w3 0.97   mean 0.969 ± 0.005   hit 0.965
+repeat: phasecyte                w0 0.93  w1 0.96  w2 0.99  w3 0.92   mean 0.948 ± 0.010   hit 0.937
+repeat: class mean               w0 0.97  w1 0.96  w2 0.97  w3 0.97   mean 0.970 ± 0.008   hit 0.966
+one-shot key table (no night)    w0 0.95  w1 0.99  w2 0.99  w3 1.00   mean 0.983 ± 0.005   hit 0.982

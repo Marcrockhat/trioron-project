@@ -1,0 +1,36 @@
+# vee memory self-test  childhood 40 facts, then 20 nights x 1 fact(s) heard once; later facts tested on their 2 other wordings; seeds=3
+  seed 0 after childhood        childhood recall w0 0.90 all 0.97  false recall 0.05  classes 48
+  seed 0 after 20 more nights   childhood recall w0 0.91 all 0.97  false recall 0.06  classes 83
+  seed 0 later facts: recalled 0.98 (from leaf 0.98, from day table 0.00)  moved into leaf 1.00  false recall 0.12  all-in-table reference 0.93 (false 0.05)  sleep 0.2s
+  seed 1 after childhood        childhood recall w0 0.96 all 0.90  false recall 0.06  classes 72
+  seed 1 after 20 more nights   childhood recall w0 0.94 all 0.98  false recall 0.03  classes 120
+  seed 1 later facts: recalled 0.88 (from leaf 0.88, from day table 0.00)  moved into leaf 1.00  false recall 0.10  all-in-table reference 0.85 (false 0.04)  sleep 0.3s
+  seed 2 after childhood        childhood recall w0 0.91 all 0.98  false recall 0.00  classes 49
+  seed 2 after 20 more nights   childhood recall w0 0.92 all 0.94  false recall 0.03  classes 81
+  seed 2 later facts: recalled 0.95 (from leaf 0.90, from day table 0.05)  moved into leaf 0.95  false recall 0.14  all-in-table reference 0.95 (false 0.06)  sleep 0.2s
+
+# mean of 3: childhood w0 0.92 -> 0.92, all 0.95 -> 0.96, false 0.04 -> 0.04;  later facts recalled 0.93, moved into leaf 0.98, false recall 0.12, all-in-table reference 0.91 (false 0.05)
+# vee memory self-test  childhood 40 facts, then 20 nights x 3 fact(s) heard once; later facts tested on their 2 other wordings; seeds=3
+  seed 0 after childhood        childhood recall w0 0.90 all 0.97  false recall 0.05  classes 48
+  seed 0 after 20 more nights   childhood recall w0 0.90 all 0.96  false recall 0.03  classes 171
+  seed 0 later facts: recalled 0.96 (from leaf 0.96, from day table 0.00)  moved into leaf 1.00  false recall 0.09  all-in-table reference 0.91 (false 0.03)  sleep 0.5s
+  seed 1 after childhood        childhood recall w0 0.96 all 0.90  false recall 0.06  classes 72
+  seed 1 after 20 more nights   childhood recall w0 0.95 all 0.98  false recall 0.02  classes 276
+  seed 1 later facts: recalled 0.88 (from leaf 0.88, from day table 0.00)  moved into leaf 1.00  false recall 0.08  all-in-table reference 0.81 (false 0.03)  sleep 0.7s
+  seed 2 after childhood        childhood recall w0 0.91 all 0.98  false recall 0.00  classes 49
+  seed 2 after 20 more nights   childhood recall w0 0.94 all 0.98  false recall 0.05  classes 138
+  seed 2 later facts: recalled 0.93 (from leaf 0.93, from day table 0.00)  moved into leaf 1.00  false recall 0.07  all-in-table reference 0.88 (false 0.04)  sleep 0.6s
+
+# mean of 3: childhood w0 0.92 -> 0.93, all 0.95 -> 0.97, false 0.04 -> 0.03;  later facts recalled 0.92, moved into leaf 1.00, false recall 0.08, all-in-table reference 0.86 (false 0.03)
+# vee memory self-test  childhood 40 facts, then 100 nights x 1 fact(s) heard once; later facts tested on their 2 other wordings; seeds=3
+  seed 0 after childhood        childhood recall w0 0.90 all 0.97  false recall 0.05  classes 48
+  seed 0 after 100 more nights  childhood recall w0 0.90 all 0.96  false recall 0.04  classes 239
+  seed 0 later facts: recalled 0.90 (from leaf 0.90, from day table 0.00)  moved into leaf 1.00  false recall 0.07  all-in-table reference 0.85 (false 0.03)  sleep 0.4s
+  seed 1 after childhood        childhood recall w0 0.96 all 0.90  false recall 0.06  classes 72
+  seed 1 after 100 more nights  childhood recall w0 0.92 all 0.97  false recall 0.01  classes 406
+  seed 1 later facts: recalled 0.88 (from leaf 0.88, from day table 0.00)  moved into leaf 1.00  false recall 0.07  all-in-table reference 0.82 (false 0.03)  sleep 0.7s
+  seed 2 after childhood        childhood recall w0 0.91 all 0.98  false recall 0.00  classes 49
+  seed 2 after 100 more nights  childhood recall w0 0.92 all 0.96  false recall 0.10  classes 226
+  seed 2 later facts: recalled 0.88 (from leaf 0.88, from day table 0.00)  moved into leaf 1.00  false recall 0.05  all-in-table reference 0.80 (false 0.05)  sleep 0.5s
+
+# mean of 3: childhood w0 0.92 -> 0.91, all 0.95 -> 0.96, false 0.04 -> 0.05;  later facts recalled 0.89, moved into leaf 1.00, false recall 0.07, all-in-table reference 0.82 (false 0.04)

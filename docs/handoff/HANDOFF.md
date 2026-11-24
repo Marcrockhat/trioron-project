@@ -2,13 +2,15 @@
 
 **Session date:** 2026-11-24
 **Session number:** 066
-**Session title (s066: recovery after a shutdown; training-regime correction; PHASECYTE PILOT):**
+**Session title (s066: recovery after a shutdown; training-regime correction; PHASECYTE PILOT; night test; Vee's memory in the console):**
 **s065 ended in an unplanned shutdown (~14:50) with the consolidation test in flight; s066 reran
 it. Rocky then corrected the training regime — the organism is never batch-trained, it is a baby
 that keeps absorbing — and named the Phasecyte as the fact-memory learner. A 40-fact streaming
 pilot shows the phasecyte keeps old facts while learning new ones (.95–.98 with the class cap
 off), that overfeeding per boundary destroys it, and that it does not beat a running class mean
-(.993) or the s065 one-shot key table (.983).**
+(.993) or the s065 one-shot key table (.983). A night test then showed that only helper-written
+rewordings beat no rewording at all, and the fact memory (day table + phasecyte fed at night) was
+wired into the console: Vee answers the 40 pilot facts from memory and can be taught new ones.**
 
 ## s066 — READ THIS FIRST
 - **Rocky's ruling (binding): never batch-train the organism.** A fixed-size leaf trained on
@@ -21,6 +23,57 @@ off), that overfeeding per boundary destroys it, and that it does not beat a run
 - Consolidation test + readout check: see the two bullets in the s065 body below. Net: facts in
   weights do not beat the table; the leaf lost to softmax-classifier TRAINING; quad = linear
   under a cosine objective.
+
+- Later in s066 Rocky: helper-token cost of rewordings is acceptable; "forgetting when you're old
+  is normal but when you're a child, I think some memories hold almost for a lifetime" → report
+  the EARLIEST wave separately in every memory test, its loss is the serious failure; he asked
+  for the memory to be wired into the console after the night test (done, below).
+
+## Night test (s066) — `pilot_reword.py`, `pilot_night.py`, log `pilot_night_s066.log`
+Same stream, held-out helper wordings and scoring as the pilot (W=50, no cap, 3 splits); only the
+SOURCE of a fact's night material changes (original wording always included). Top-1 after wave 3.
+
+| night material | phasecyte w0 | phasecyte mean | class mean of same feed |
+|---|---|---|---|
+| helper rewordings (the pilot) | .92 | .978 ± .009 | .993 ± .003 |
+| Qwen's own rewordings (41.5 per fact, one fact got 0; free; meaning often drifts) | .90 | .937 ± .011 | .967 ± .007 |
+| original + borrowed wording noise (no text written) | .95 | .958 ± .014 | .969 ± .005 |
+| original only, repeated | .93 | .948 ± .010 | .970 ± .008 |
+| reference: one-shot key table, no night | .95 | .983 ± .005 | |
+
+Reading (Chloe's): only helper rewordings beat no rewording (+.02–.03). Qwen's rewordings are
+the worst source. ONE wording through the plain 64-number sense already gives .97, so this
+40-fact test is near its ceiling and cannot separate much. The phasecyte is 1–3 points under the
+class mean of the same feed in every source.
+
+## Vee's memory in the console (s066) — `vee_memory.py`, `console.py`
+- `FactMemory`: day table (one read state per fact, cosine in the 64-number sense) + ONE
+  phasecyte leaf fed by `sleep()` (original + 40 noise copies per fact, ~50 samples per boundary,
+  no class cap, earlier nights never replayed). A fact the leaf recalls from its original wording
+  leaves the day table; otherwise it stays for the next night. Both answer only above the
+  threshold that lets 5 % of 2,000 untaught stage-2 questions through. Classes are named from
+  current members (`mixed.tags`), not `PhasecyteLeaf.names()`.
+- Childhood = the 40 pilot facts (four nights, helper rewordings). The leaf is NOT saved:
+  `wake()` rebuilds it by replaying the childhood and the user's nights (`vee_facts.jsonl/.npz`)
+  in order (a few seconds now; grows with life — a state file via `mixed.state_dict()` is open).
+- Console: recall before the reflex; `/teach <answer>`, `/wrong <answer>` (teaches), `/sleep`,
+  `/reflex` (ask Qwen anyway), `/facts`. `MEMORY=0` turns it off. Scripted check: taught "name of
+  my cat → Miso", recalled from "What is my cat called?" same day, after `/sleep`, and after a
+  restart; "What is my dog called?" ALSO returned Miso (a false recall).
+- Self-test (`python3 experiments/incubator/vee_memory.py`, log `vee_memory_selftest_s066.log`,
+  3 splits): after the childhood, N more nights of facts heard once (stage-2 questions, tested on
+  their 2 other wordings; false recall on 300 untaught questions from the same articles):
+
+| later nights | childhood w0 before → after | later facts recalled (false) | all facts in a plain sense table (false) | classes |
+|---|---|---|---|---|
+| 20 × 1 fact | .92 → .92 | .93 (.12) | .91 (.05) | 81–120 |
+| 20 × 3 facts | .92 → .93 | .92 (.08) | .86 (.03) | 138–276 |
+| 100 × 1 fact | .92 → .91 | .89 (.07) | .82 (.04) | 226–406 |
+
+  Reading (Chloe's): the earliest facts hold through 100 further nights; one or three facts per
+  night works. The leaf recalls more than the plain table but with about twice the false recall,
+  so the two are NOT compared at a matched false rate, and the table here is the plain sense,
+  not the stronger s065 learned key. Classes: ~2 per later fact, never merged.
 
 ## Phasecyte pilot (s066) — `experiments/incubator/pilot_stream.py`
 40 facts (20 articles × 2 questions), 50 matron rewordings each, 10 held out per fact, 20 untaught
@@ -257,7 +310,12 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    c. scale past 40 facts; feed-rate rule from the sweep (W ≈ 50–100 for 10 new facts);
    d. where could it BEAT the class mean? candidates: untold discovery (no labels), per-fact σ
       from the manifold sketch as the threshold, far fewer wordings per fact;
-   e. fix or replace `PhasecyteLeaf.names()` (buffer-tag naming) — needs Rocky's decision.
+   e. fix or replace `PhasecyteLeaf.names()` (buffer-tag naming) — needs Rocky's decision;
+   f. console memory: compare leaf vs table at a MATCHED false rate and against the s065 learned
+      key; false recall on near questions ("my dog" → the cat's name) — sibling-aware threshold;
+      save the leaf (`mixed.state_dict()`) instead of replaying life at wake; Rocky to try it:
+      `python3 experiments/incubator/console.py`;
+   g. a harder night test (hundreds of facts) — the 40-fact one is at its ceiling.
 0. Stage 2, where trioron could earn its place (pick with Rocky):
    a. per-fact threshold from each fact's own spread (manifold σ; needs ≥2 wordings per fact);
    b. DONE s065 (drift test): lock works, freeze works as well. Open: a regime where later
@@ -269,8 +327,8 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
       behind because of softmax training (readout check); quad = linear under a cosine objective;
    c. growth-pays curve: recall vs key-leaf size and vs facts stored; bytes per parameter;
    d. deployable threshold set on training articles; end-to-end override accuracy with the reflex.
-1. Wire memory into the console (`/wrong <answer>` → `remember`; recall before the reflex
-   answers) and into a standing loop: checkpoint/resume, token logging, budget stop.
+1. DONE s066: memory wired into the console (phasecyte + day table, `vee_memory.py`). Open: the
+   standing loop: checkpoint/resume, token logging, budget stop.
 2. Serial graft as a substrate op + external-state rerun through it.
 3. Snap on the Logophosis notᵏ curve (design §2.1 row 2).
 4. Sandbox per-run time and memory limits; the code-running action (stage 3).
@@ -287,7 +345,7 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
   `outputs/incubator/`: s064's `stage1_*` data and `vee_stage1.pt`; s065's
   `stage2_para_in_part*.tsv`, `stage2_para_part*_c*.jsonl` (paraphrases; part9 = the fix job),
   `stage2_keys.jsonl`, `stage2_keys.npz` (52 MB), collect logs; s066's `pilot_in_*.tsv`, `pilot_para_*.jsonl`
-  (2,100 rewordings, ~330 K helper tokens), `pilot_keys.jsonl`, `pilot_keys.npz` (`pilot_collect.py`, 25 min). Rebuild: paraphrases need the
+  (2,100 rewordings, ~330 K helper tokens), `pilot_keys.jsonl`, `pilot_keys.npz` (`pilot_collect.py`, 25 min), `pilot_qwen_para.jsonl`, `pilot_qwen_keys.*` (`pilot_reword.py`, 70 min, Qwen-written), `vee_facts.*` (what the user taught Vee). Rebuild: paraphrases need the
   matron again; keys via `stage2_collect.py` (~75 min).
 - Memory (this PC only): `stage2_fact_memory_result.md`, `incubator_matron_arc.md`,
   `external_state_depth_result.md`.

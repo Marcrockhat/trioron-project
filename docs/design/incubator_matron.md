@@ -439,6 +439,28 @@ Reading:
   the test negatives, the same for every arm; a deployed threshold must be set
   on training articles.
 
+- **Night test (s066; `pilot_reword.py`, `pilot_night.py`, log
+  `pilot_night_s066.log`; 3 splits, W=50, no cap).** Day = a fact is heard
+  once; night = it is replayed to the phasecyte. Only the source of the night
+  material changes; test wordings stay the helper's. Top-1 after wave 3,
+  phasecyte / class mean of the same feed: helper rewordings .978 / .993;
+  Qwen's own rewordings (free, meaning often drifts) .937 / .967; original +
+  borrowed wording noise .958 / .969; original only, repeated .948 / .970;
+  one-shot key table with no night .983. Only helper rewordings beat no
+  rewording; one wording through the plain sense already gives .97, so the
+  40-fact test is at its ceiling.
+- **Vee's memory in the console (s066; `vee_memory.py`, `console.py`, log
+  `vee_memory_selftest_s066.log`).** Day table (one read state per fact) +
+  one phasecyte leaf fed by `sleep()` with the original and 40 noise copies
+  per fact; a fact the leaf recalls leaves the day table. Childhood = the 40
+  pilot facts; the leaf is rebuilt at wake by replaying life (not saved).
+  Console: recall before the reflex, `/teach`, `/sleep`, `/reflex`, `/facts`.
+  Self-test, facts heard once on later nights: childhood wave 0 .92 → .91
+  after 100 further single-fact nights (Rocky: early memories should hold for
+  life); later facts recalled .89–.93 against .82–.91 for a plain sense table
+  holding every fact, but at about twice the false recall (.07–.12 against
+  .03–.05) — not a matched comparison. About two classes per later fact,
+  never merged.
 ### Stage 3 — Steering and escalation
 - The organism picks an action: trust reflex / recall memory / look up /
   ask the stronger model. Steering is at text level (inject recalled memory
