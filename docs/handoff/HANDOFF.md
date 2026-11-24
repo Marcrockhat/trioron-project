@@ -41,6 +41,39 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   (majority tag of current members) added beside `names()` (lifetime ledger, unchanged); test
   in `tests/test_v2/test_pcll.py`; spec §9 `nest.py` row; **v0.3.4 released** (see State).
 
+- **Rocky's first console session (s066) gave weird replies — cause found and fixed.** After ONE
+  taught fact ("What is your name? → Vee") nearly every short question answered "Vee" (capital of
+  France, 2 plus 2, Hello). The day-table threshold was calibrated only on encyclopedia questions;
+  against a short everyday fact it fell to cosine .30 while unrelated short questions sit at
+  .34–.48. Fix: the day table also needs cosine ≥ `floor` = 5th percentile of a real rewording's
+  cosine to its original (.62, measured on the pilot in `childhood()`). After the fix unrelated
+  questions go to the reflex; near ones ("What is my name?", "What is your favorite color?")
+  still answer "Vee". The leaf side was not affected.
+- **Correction test, several wordings per fact (`correction_test.py`, log
+  `correction_test_s066.log`, 3 seeds; cat → Miso, then dog → Rex; test = 4 untaught sentence
+  forms × 2 animals).** Right animal, day table only: 1 wording in different forms .50; same
+  forms 1 wording .75, 2–4 wordings .88, 6 wordings 1.00. **Phasecyte (both slept): .50 at every
+  count** — one name for both animals; the never-taught hamster gets a name 83–100 % of the
+  time. Mixed stage (cat slept, dog in the table) is also .50 because the day table speaks first
+  with no competitor. So: wordings teach the TABLE which token matters; the phasecyte does not
+  separate two near facts at all in this sense. Not diagnosed further (candidates: pocket
+  quantisation too coarse for a one-token difference in a 64-number sense fitted on
+  encyclopedia questions; the second fact's samples join the first fact's class).
+- Multi-wording teaching: `FactMemory.teach(same_as=i)`; console `/teach` with an answer equal to
+  an existing user fact's answer is kept as another wording of that fact. User teaching is now
+  stored as an ordered log (`vee_facts.jsonl`, one row per wording, `same_as_q`).
+- Typo check (12 questions with typos / no capitals): 10 right, 1 wrong fact ("how many states
+  does malaysia hav" → "3"), 1 fell to the reflex. She reads Qwen's token states, not words;
+  her ANSWERS are whole stored strings (she cannot compose).
+- Rocky pointed to arXiv 2606.09861 (UniTok, "Time Series as Language: A Universal Tokenizer…",
+  Zhang et al., SJTU/Huawei, 2026) as possibly suiting the phasecyte. Chloe read it through a
+  helper (sections 1–4.2 verbatim, results partly, limitations not read). It is a gradient-trained
+  causal autoencoder with finite scalar quantisation for univariate time series; relevance and
+  caveats are in the chat reply, nothing built.
+- Housekeeping: Chloe's scripted console test at 05:24 on 2026-11-25 ran while Rocky's console was
+  open and wrote one verdict row (dog/Rex) into `console_verdicts.*`; removed. Do not run the
+  console scripted with the default files while Rocky may be using it.
+
 ## Night test (s066) — `pilot_reword.py`, `pilot_night.py`, log `pilot_night_s066.log`
 Same stream, held-out helper wordings and scoring as the pilot (W=50, no cap, 3 splits); only the
 SOURCE of a fact's night material changes (original wording always included). Top-1 after wave 3.
@@ -323,8 +356,9 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    d. where could it BEAT the class mean? candidates: untold discovery (no labels), per-fact σ
       from the manifold sketch as the threshold, far fewer wordings per fact;
    e. DONE s066: `member_names()` added, v0.3.4;
-   e2. teaching which word matters: a correction with several wordings (helper or user) so cat
-      and dog separate by animal, not by sentence form;
+   e2. DONE s066 (correction test): wordings fix the table, the PHASECYTE stays at .50 — diagnose
+      why it cannot separate two near facts (pocket resolution? class joining?); let the leaf and
+      the day table compete instead of table-first;
    f. console memory: compare leaf vs table at a MATCHED false rate and against the s065 learned
       key; false recall on near questions ("my dog" → the cat's name) — sibling-aware threshold;
       save the leaf (`mixed.state_dict()`) instead of replaying life at wake; Rocky to try it:

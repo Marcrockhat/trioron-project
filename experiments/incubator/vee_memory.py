@@ -11,6 +11,14 @@ Night  ``sleep()`` replays every fact still in the day table to ONE phasecyte
        it does not stays and is replayed the next night.
 Recall the day table first, then the leaf; both answer only above the
        threshold that lets FALSE_RATE of known-untaught questions through.
+       The day table also needs cosine >= ``floor`` (set in ``childhood`` to
+       the 5th percentile of a real rewording's cosine to its original, ~.6):
+       the untaught questions are encyclopedia questions, and against a short
+       everyday fact ("What is your name?") their threshold fell to .30, so
+       every short question matched it (s066, Rocky's first session).
+Wordings  a fact may be taught in several wordings (``teach(same_as=i)``);
+       each is a day-table row and is replayed at night with its own noise
+       copies under the fact's one label.
 
 The phasecyte is never batch-trained and nothing is frozen (Rocky s066).
 Nothing of the leaf is saved: ``wake()`` rebuilds it by replaying the
@@ -49,13 +57,25 @@ class FactMemory:
         self.facts: list[dict] = []                                 # q, answer, born (night count when heard), kept (in the leaf)
         self.H: list[torch.Tensor] = []
         self.S = torch.zeros(0, kp)
+        self.W: list[list[torch.Tensor]] = []                       # every wording heard, per fact
+        self.log: list[dict] = []                                   # the user's teaching, in order (for wake)
+        self.floor = 0.6
         self.leaf, self.names, self.tau_leaf, self.night = None, None, float("inf"), 0
 
     # ---- day ---------------------------------------------------------------
-    def teach(self, q: str, answer: str, h: torch.Tensor, **extra) -> int:
+    def teach(self, q: str, answer: str, h: torch.Tensor, same_as: int | None = None, **extra) -> int:
+        """Hear a fact once.  ``same_as`` = this is another wording of fact ``same_as``."""
+        h = h.float()
+        if not extra.get("pilot"):
+            self.log.append({"q": q, "answer": answer, "born": self.night, "h": h,
+                             "same_as_q": None if same_as is None else self.facts[same_as]["q"]})
+        if same_as is not None:
+            self.W[same_as].append(h)
+            self.facts[same_as]["kept"] = False                     # back into today's memory, replayed tonight
+            return same_as
         self.facts.append({"q": q, "answer": answer, "born": self.night, "kept": False, **extra})
-        self.H.append(h.float())
-        self.S = torch.cat([self.S, self.sense(h.float()[None])])
+        self.H.append(h); self.W.append([h])
+        self.S = torch.cat([self.S, self.sense(h[None])])
         return len(self.facts) - 1
 
     def day(self) -> list[int]:
@@ -69,10 +89,12 @@ class FactMemory:
         X, y = [], []
         for i in todo:
             rows = (material or {}).get(i)
-            if rows is None:
-                rows = self.H[i] + self.resid[torch.randint(len(self.resid), (self.nper,), generator=self.g)]
-            X.append(self.sense(torch.cat([self.H[i][None], rows.float()])))
-            y += [i] * (len(rows) + 1)
+            W = torch.stack(self.W[i])
+            if rows is None:                                        # noise copies, shared among the wordings
+                src = torch.arange(self.nper) % len(W)
+                rows = W[src] + self.resid[torch.randint(len(self.resid), (self.nper,), generator=self.g)]
+            X.append(self.sense(torch.cat([W, rows.float()])))
+            y += [i] * (len(rows) + len(W))
         X, y = torch.cat(X), torch.tensor(y)
         p = torch.randperm(len(X), generator=self.g)
         X, y = X[p], y[p]
@@ -108,11 +130,12 @@ class FactMemory:
             fact, where = f, torch.where(f >= 0, 2, 0)
         day = self.day()
         if day:                                                     # the day table speaks first
-            D = F.normalize(self.S[day], dim=1)
+            own = torch.tensor([i for i in day for _ in self.W[i]])
+            D = F.normalize(self.sense(torch.stack([w for i in day for w in self.W[i]])), dim=1)
             tau = torch.quantile((F.normalize(self.negS, dim=1) @ D.T).max(1).values, 1 - self.false_rate)
             c, j = (F.normalize(S, dim=1) @ D.T).max(1)
-            hit = c > tau
-            fact = torch.where(hit, torch.tensor(day)[j], fact)
+            hit = c > max(float(tau), self.floor)
+            fact = torch.where(hit, own[j], fact)
             where = torch.where(hit, 1, where)
         return fact, where
 
@@ -143,6 +166,11 @@ def childhood(mem: FactMemory, held: torch.Tensor | None = None) -> dict[str, in
     """Four nights of 10 pilot facts, fed with the helper's rewordings."""
     H, qid, wave, orig, qa = pilot()
     ids: dict[str, int] = {}
+    S, cos = F.normalize(mem.sense(H), dim=1), []
+    for q in set(qa):                                               # how close is a real rewording to its original?
+        m = torch.tensor([x == q for x in qid])
+        cos.append(S[m & ~orig] @ S[(m & orig).nonzero()[0, 0]])
+    mem.floor = float(torch.quantile(torch.cat(cos), 0.05))
     for w in range(4):
         material = {}
         for q in dict.fromkeys(q for q, v in zip(qid, wave) if v == w):
@@ -153,8 +181,8 @@ def childhood(mem: FactMemory, held: torch.Tensor | None = None) -> dict[str, in
     return ids
 
 
-def wake(seed: int = 0) -> FactMemory:
-    """The console's memory: childhood, then the user's own nights replayed in order."""
+def wake(seed: int = 0, user: bool = True) -> FactMemory:
+    """The console's memory: childhood, then the user's own teaching and nights replayed in order."""
     H2, group2, block2, variant2, texts2 = stage2()
     _, _, _, _, qa = pilot()
     pq = {q for q, _ in qa.values()}
@@ -162,26 +190,27 @@ def wake(seed: int = 0) -> FactMemory:
     neg = H2[other & (variant2 == 0)]
     mem = FactMemory(H2[other], group2[other], neg[torch.randperm(len(neg), generator=torch.Generator().manual_seed(seed))[:2000]], seed=seed)
     childhood(mem)
-    if os.path.exists(USER + ".jsonl"):
+    if user and os.path.exists(USER + ".jsonl"):
         rows = [json.loads(l) for l in open(USER + ".jsonl")]
         Hu = torch.tensor(np.load(USER + ".npz")["H"][:len(rows)].astype(np.float32))
-        last = max([r["born"] for r in rows] + [mem.night - 1])
-        for n in range(mem.night, last + 2):                        # the last group may not have slept yet
-            for r, h in zip(rows, Hu):
-                if r["born"] == n: mem.teach(r["q"], r["answer"], h)
-            if n <= last and any(r.get("slept", True) for r in rows if r["born"] == n):
-                mem.sleep()
+        for r, h in zip(rows, Hu):
+            while mem.night < r["born"]:                            # the nights slept before this was heard
+                if not mem.day(): mem.night += 1
+                else: mem.sleep()
+            same = next((i for i, f in enumerate(mem.facts) if f["q"] == r.get("same_as_q")), None)
+            mem.teach(r["q"], r["answer"], h, same_as=same)
+        if rows and rows[-1].get("slept"):
+            mem.sleep()
     return mem
 
 
 def save_user(mem: FactMemory) -> None:
-    mine = [(f, h) for f, h in zip(mem.facts, mem.H) if not f.get("pilot")]
-    if not mine: return
-    np.savez(USER + ".tmp.npz", H=np.stack([h.numpy() for _, h in mine]).astype(np.float16))
+    if not mem.log: return
+    np.savez(USER + ".tmp.npz", H=np.stack([r["h"].numpy() for r in mem.log]).astype(np.float16))
     os.replace(USER + ".tmp.npz", USER + ".npz")
     with open(USER + ".jsonl", "w") as f:
-        for r, _ in mine:
-            f.write(json.dumps({"q": r["q"], "answer": r["answer"], "born": r["born"],
+        for r in mem.log:
+            f.write(json.dumps({"q": r["q"], "answer": r["answer"], "born": r["born"], "same_as_q": r["same_as_q"],
                                 "slept": mem.night > r["born"]}, ensure_ascii=False) + "\n")
 
 

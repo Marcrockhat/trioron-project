@@ -461,6 +461,17 @@ Reading:
   holding every fact, but at about twice the false recall (.07–.12 against
   .03–.05) — not a matched comparison. About two classes per later fact,
   never merged.
+- **Console fixes and the correction test (s066; `correction_test.py`, log
+  `correction_test_s066.log`).** (1) After one everyday fact nearly every
+  short question matched it: the day-table threshold came from encyclopedia
+  questions only. The table now also needs cosine ≥ the 5th percentile of a
+  real rewording's cosine to its original (.62). (2) A fact can be taught in
+  several wordings (`teach(same_as=)`). (3) Two near facts (cat → Miso, then
+  dog → Rex), tested on 4 untaught sentence forms each: the day table gets
+  the right animal .75 with one matched wording, .88 with 2–4, 1.00 with 6;
+  the phasecyte gets .50 at every count (one name for both). Rocky's frame:
+  the near answer is generalisation for a young organism; the measure is
+  whether teaching separates — for the phasecyte it does not yet.
 ### Stage 3 — Steering and escalation
 - The organism picks an action: trust reflex / recall memory / look up /
   ask the stronger model. Steering is at text level (inject recalled memory

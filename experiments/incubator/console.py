@@ -107,9 +107,12 @@ def main() -> None:
     last = None
 
     def teach(answer: str) -> None:
-        mem.teach(last["q"], answer, last["h"])
+        same = next((i for i, f in enumerate(mem.facts)              # same answer = another wording of that fact
+                     if not f.get("pilot") and f["answer"].casefold() == answer.casefold()), None)
+        mem.teach(last["q"], answer, last["h"], same_as=same)
         vee_memory.save_user(mem)
-        print(f"[heard once: \"{last['q']}\" -> {answer}. In today's memory; /sleep moves it to long-term]")
+        print(f"[heard once: \"{last['q']}\" -> {answer}. In today's memory; /sleep moves it to long-term]"
+              + (f"\n[kept as another wording of: \"{mem.facts[same]['q']}\"]" if same is not None else ""))
 
     def ask_reflex(line: str, h) -> dict | None:
         t = time.time()
