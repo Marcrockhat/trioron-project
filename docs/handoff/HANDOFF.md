@@ -89,8 +89,12 @@ Honest reading:
   +.036±.010, −.019±.030); trioron quad leaf with one output cell per fact, top probability
   .030 / .082 / .469 (right fact nearest .395 / .661 / .901 vs table .766 / .946 / .986).
   Reading: weights do not beat the one-shot table; the leaf fails mostly at the threshold.
-  CAVEAT: the leaf arm changes the readout too (softmax / raw logit vs cosine), so leaf and
-  readout are confounded. Not reviewed by Rocky.
+  The leaf arm changed the readout too, so s066 separated them (`stage2_consolidate_cos.py`,
+  log `stage2_consolidate_cos_s066.log`): same softmax-trained leaf read by cosine codes
+  .108 / .310 / .473; quad cells trained contrastively as a table .389 / .600 / .726 (ties
+  linear, paired −.018±.069 / −.016±.049 / −.001±.044); quad rows + trunk, cosine classifier
+  .355 / .606 / .706. Cause = softmax-classifier TRAINING over ~2,170 output cells, not the
+  quad cell and not the readout alone.
 - **PARAM COUNT CORRECTION:** `Organism.n_params()` counts ALLOCATED arena slots (cells × 69), not
   live weights. Quad key leaf = 26,112 live (not 41,400; ~3× linear, not 5×); stage 1 leaf = 6,240
   (not 12,834). Conclusions unchanged. `n_params` itself NOT changed (shared with Logophosis /
@@ -202,7 +206,7 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
       DONE s065 (replay dream): linear reaches the joint row with 15 passes; quad does not gain.
       Not done: the dream end to end through the reflex (re-read ~0.5 s per kept question);
       DONE s066 (consolidation test): facts in weights do not beat the table; trioron leaf far
-      behind. Open: the leaf with a cosine readout (separates leaf from readout);
+      behind because of softmax training (readout check); quad = linear under a cosine objective;
    c. growth-pays curve: recall vs key-leaf size and vs facts stored; bytes per parameter;
    d. deployable threshold set on training articles; end-to-end override accuracy with the reflex.
 1. Wire memory into the console (`/wrong <answer>` → `remember`; recall before the reflex

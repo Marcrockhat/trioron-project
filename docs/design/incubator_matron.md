@@ -375,7 +375,20 @@ Reading:
   unstored questions. Caveat: the leaf arm differs from the row arms in two
   things at once — the quad leaf and the readout (unnormalised logits /
   softmax, against a cosine score for the rows) — so this run does not say
-  which one costs the recall. Untested: the leaf with a cosine readout.
+  which one costs the recall.
+- **Readout check (s066; `stage2_consolidate_cos.py`, log
+  `stage2_consolidate_cos_s066.log`, same 3 splits).** Readout held at cosine,
+  trunk varied; h = 8 / 16 / 32. Linear table .407 / .616 / .727. The SAME
+  softmax-trained leaf read by cosine over its interior codes: .108 / .310 /
+  .473 (softmax top probability .030 / .082 / .469). Quad cells trained like
+  the linear key (contrastive), row = code: .389 / .600 / .726 (paired vs
+  linear −.018 ± .069, −.016 ± .049, −.001 ± .044). Quad rows + trunk trained
+  with the cosine classifier: .355 / .606 / .706. Reading: the loss was neither
+  the quad cell nor the readout alone — it was TRAINING the leaf as a softmax
+  classifier over ~2,170 output cells. Trained with a cosine objective the
+  quad cells tie the linear key at every size; swapping only the readout on
+  the softmax-trained weights recovers little. All of this is batch training
+  of a fixed-size leaf (Rocky s066: not how the organism is meant to learn).
 - Not yet tested: (a) the replay dream end to end through the reflex (re-read
   cost ~0.5 s per kept question: ~50 min for the 5,900 lesson rows here);
   (b) a per-fact threshold (each fact's own spread — the manifold σ the design
