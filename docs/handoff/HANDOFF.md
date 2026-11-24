@@ -59,6 +59,18 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   separate two near facts at all in this sense. Not diagnosed further (candidates: pocket
   quantisation too coarse for a one-token difference in a 64-number sense fitted on
   encyclopedia questions; the second fact's samples join the first fact's class).
+- **Why the phasecyte cannot separate cat from dog — DIAGNOSED (s066, scratch scripts, not
+  committed).** (1) The sense: cat vs dog in the SAME sentence has cosine .97 (plain 64), .91
+  (plain 256), .93 / .90 (s065 learned key 32 / 64), while cat vs cat in ANOTHER sentence has
+  only .59–.70 — Qwen's read state carries sentence form far more strongly than the one content
+  token, in every sense we have. A noise copy sits at .95, as far as the dog. (2) The phasecyte
+  discovers classes along the dominant variation: after both nights two classes held the pet
+  questions, split by SENTENCE FORM, each with both animals (class 34: cat 20 / dog 15; class
+  35: dog 27), and each class got one name. Labels only NAME classes; they do not split them.
+  (3) Bound for a label-driven split: one template per taught fact (mean of its wordings + noise
+  copies, cosine) gets the right animal .72 / .84 / .86 / .87 with 1 / 2 / 3 / 4 wordings
+  (20 noise seeds), against the phasecyte's .50. Open decision for Rocky: let a class that holds
+  two well-supported labels DIVIDE by label (a change to `trioron/pcll/mixed.py` + spec §10.7).
 - Multi-wording teaching: `FactMemory.teach(same_as=i)`; console `/teach` with an answer equal to
   an existing user fact's answer is kept as another wording of that fact. User teaching is now
   stored as an ordered log (`vee_facts.jsonl`, one row per wording, `same_as_q`).
