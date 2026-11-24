@@ -1,0 +1,15 @@
+# thorough test  seeds=3  thorough = 6 nights x 4 new wordings; thin = 1 night x 6
+  seed 0 thin cat, thin dog          cat alone: right 1.00 classes 2 purity 0.46 | after dog: cat 0.25 dog 0.75 hamster named 1.00  cat classes 2 purity 0.46  dog classes 1 purity 0.59
+  seed 0 thorough cat, thin dog      cat alone: right 1.00 classes 6 purity 1.00 | after dog: cat 1.00 dog 0.00 hamster named 1.00  cat classes 7 purity 1.00  dog classes 0 purity 0.00
+  seed 0 thorough cat, thorough dog  cat alone: right 1.00 classes 6 purity 1.00 | after dog: cat 0.50 dog 0.50 hamster named 1.00  cat classes 5 purity 0.62  dog classes 3 purity 0.41
+  seed 1 thin cat, thin dog          cat alone: right 1.00 classes 4 purity 0.52 | after dog: cat 0.00 dog 1.00 hamster named 1.00  cat classes 3 purity 0.07  dog classes 3 purity 0.96
+  seed 1 thorough cat, thin dog      cat alone: right 1.00 classes 6 purity 1.00 | after dog: cat 1.00 dog 0.00 hamster named 1.00  cat classes 8 purity 1.00  dog classes 0 purity 0.00
+  seed 1 thorough cat, thorough dog  cat alone: right 1.00 classes 6 purity 1.00 | after dog: cat 0.50 dog 0.50 hamster named 1.00  cat classes 7 purity 0.72  dog classes 5 purity 0.33
+  seed 2 thin cat, thin dog          cat alone: right 1.00 classes 3 purity 0.54 | after dog: cat 0.00 dog 1.00 hamster named 1.00  cat classes 2 purity 0.09  dog classes 2 purity 1.00
+  seed 2 thorough cat, thin dog      cat alone: right 1.00 classes 7 purity 1.00 | after dog: cat 1.00 dog 0.00 hamster named 1.00  cat classes 10 purity 1.00  dog classes 0 purity 0.00
+  seed 2 thorough cat, thorough dog  cat alone: right 1.00 classes 7 purity 1.00 | after dog: cat 0.75 dog 0.50 hamster named 1.00  cat classes 10 purity 0.71  dog classes 5 purity 0.46
+
+teaching                    | cat alone: right classes purity | after dog: cat right  dog right  hamster named | cat classes purity | dog classes purity
+thin cat, thin dog          |             1.00     3.0   0.51 |                 0.08       0.92           1.00 |         2.3   0.20 |         2.0   0.85
+thorough cat, thin dog      |             1.00     6.3   1.00 |                 1.00       0.00           1.00 |         8.3   1.00 |         0.0   0.00
+thorough cat, thorough dog  |             1.00     6.3   1.00 |                 0.58       0.50           1.00 |         7.3   0.68 |         4.3   0.40

@@ -71,6 +71,24 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   copies, cosine) gets the right animal .72 / .84 / .86 / .87 with 1 / 2 / 3 / 4 wordings
   (20 noise seeds), against the phasecyte's .50. Open decision for Rocky: let a class that holds
   two well-supported labels DIVIDE by label (a change to `trioron/pcll/mixed.py` + spec §10.7).
+- **Rocky's teaching idea (s066): "have it learn one class thoroughly and move the other based on
+  that class" — trioron is not a language-only design, the way we taught was probably wrong.
+  Then: "let's start to teach her about herself first."** Tested with the phasecyte unchanged
+  (`thorough_test.py`, log `thorough_test_s066.log`, 3 seeds; thorough = 6 nights × 4 new
+  wordings, thin = 1 night × 6; 4 untaught test forms; PHASECYTE-ONLY readout):
+
+  | teaching | cat alone: right / purity | after dog: cat right | dog right | cat purity | dog classes |
+  |---|---|---|---|---|---|
+  | thin cat, thin dog | 1.00 / .51 | .08 | .92 | .20 | 2.0 |
+  | thorough cat, thin dog | 1.00 / 1.00 | 1.00 | .00 | 1.00 | 0 |
+  | thorough cat, thorough dog | 1.00 / 1.00 | .58 | .50 | .68 | 4.3 |
+
+  Reading (Chloe's): the first half of the idea holds — a thoroughly taught fact owns clean
+  classes (purity 1.00) and is NOT overwritten by a near fact taught thinly, whereas a thinly
+  taught one is overwritten (.08). The second half does not happen yet: the dog is absorbed into
+  the cat (no dog class) or the two tangle; cat + dog right always sums to ~1.0, i.e. one name per
+  pet question. The never-taught hamster is always given a name. NEXT per Rocky: teach her about
+  HERSELF first, thoroughly — the self-facts are his to set (asked in chat, not yet answered).
 - Multi-wording teaching: `FactMemory.teach(same_as=i)`; console `/teach` with an answer equal to
   an existing user fact's answer is kept as another wording of that fact. User teaching is now
   stored as an ordered log (`vee_facts.jsonl`, one row per wording, `same_as_q`).
