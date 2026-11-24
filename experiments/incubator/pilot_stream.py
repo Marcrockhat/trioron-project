@@ -14,7 +14,7 @@ Arms (same stream, same held-out wordings):
                        readouts of the same organism: "ledger" = the shipped
                        PhasecyteLeaf.names() (lifetime label counts per class),
                        "tags" = majority label of the class's CURRENT buffer
-                       members (mixed.tags; exact, no division inheritance)
+                       members (PhasecyteLeaf.member_names(); exact, no division inheritance)
   phasecyte, untold    same, no labels; classes are named afterwards by the
                        majority fact of the training samples they claim
                        (an eval-side map: measures discovery, not a deployable readout)
@@ -98,10 +98,7 @@ def phasecyte(S, fact, order_by_wave, told, seed, emit):
         readouts = {}
         if told:
             readouts["phasecyte, told ledger"] = leaf.names()
-            lab = {v: int(k[1:]) for k, v in leaf.mixed.label_taps.vocab.items()}
-            leaf.mixed._sync_tags()
-            readouts["phasecyte, told tags"] = torch.tensor(
-                [lab[int(t[t >= 0].mode().values)] if (t >= 0).any() else -1 for t in leaf.mixed.tags])
+            readouts["phasecyte, told tags"] = leaf.member_names()
         else:                                           # eval-side: class -> majority fact of claimed training samples
             tr = torch.cat(seen)
             names = torch.full((len(leaf.mixed.classes),), -1)

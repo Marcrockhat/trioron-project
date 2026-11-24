@@ -417,3 +417,25 @@ class TestD20Membership:
         assert marg_k.shape == (10,)
         pred_j, marg_j = m.classify(x_junk, k_reject=float(marg_k.min()))
         assert (pred_j == -1).any() or marg_j.min() >= marg_k.min()
+
+
+def test_member_names_reads_current_members_not_ledger():
+    """s066: PhasecyteLeaf.member_names() = majority tag of each class's
+    current buffer members; names() stays the lifetime-ledger readout."""
+    from trioron.pcll import PhasecyteLeaf
+    g = torch.Generator().manual_seed(0)
+    centers = torch.randn(4, 16, generator=g) * 3
+    y = torch.arange(4).repeat_interleave(60)
+    X = centers[y] + 0.3 * torch.randn(len(y), 16, generator=g)
+    p = torch.randperm(len(y), generator=g)
+    X, y = X[p], y[p]
+    leaf = PhasecyteLeaf(lambda x: x, X[:60], 0, 0, window=60, class_cap=None, verbose=False)
+    assert (leaf.member_names() == -1).all()            # nothing told yet
+    for i in range(0, len(X), 60):
+        leaf.observe(X[i:i + 60], [f"g{int(f)}" for f in y[i:i + 60]])
+    names = leaf.member_names()
+    assert names.shape == (len(leaf.mixed.classes),) and names.dtype == torch.long
+    assert leaf.names().shape == names.shape
+    best, _ = leaf.mixed.classify(X)
+    ok = best >= 0
+    assert (names[best[ok]] == y[ok]).float().mean() > 0.8

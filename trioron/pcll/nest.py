@@ -68,14 +68,33 @@ class PhasecyteLeaf:
         self.sub.end_task()
 
     def names(self) -> torch.Tensor:
-        """Per-class global label from the internal count majority
-        (-1 = unnamed). Organism-internal — no eval-side mapping."""
+        """Per-class global label from the internal count majority of
+        the LIFETIME ledger (-1 = unnamed). Organism-internal — no
+        eval-side mapping. For the label a class holds now, see
+        ``member_names()``."""
         out = []
         for c in self.mixed.classes:
             comp = (self.mixed.label_taps.composition_of(c.name)
                     if self.mixed.label_taps else {})
             out.append(int(max(comp, key=comp.get)[1:]) if comp else -1)
         return torch.tensor(out, dtype=torch.long)
+
+    def member_names(self) -> torch.Tensor:
+        """Per-class global label from the majority tag of the class's
+        CURRENT buffer members (-1 = no tagged member). A different
+        question from ``names()``: that one reads the lifetime ledger
+        (everything ever deposited, inherited through divisions) and
+        smears when classes are many and small (s066: .54 vs .90 top-1
+        on the same organism, 40 labels over ~46 classes). Use this to
+        ask "which label does this class hold NOW"."""
+        m = self.mixed
+        if not m.label_taps:
+            return torch.full((len(m.classes),), -1, dtype=torch.long)
+        lab = {v: int(k[1:]) for k, v in m.label_taps.vocab.items()}
+        m._sync_tags()
+        return torch.tensor(
+            [lab[int(t[t >= 0].mode().values)] if bool((t >= 0).any())
+             else -1 for t in m.tags], dtype=torch.long)
 
     def evidence(self, sense, X: torch.Tensor, *, chunk: int = 2000
                  ) -> tuple[torch.Tensor, torch.Tensor]:

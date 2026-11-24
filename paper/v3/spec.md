@@ -3595,7 +3595,7 @@ package dependencies) because the scheduler performs the injection and
 | `labels.py` | label tap bank: labels as reference carriers — per-label demodulation taps over receptor pockets (write-only from learning's side; naming/mixture readout) | s034 first cut; spec § pending gates |
 | `manifold.py` | per-class pocket-space μ/σ sketches on class astrocyte rows: annealing, σ-readout, replay, persistence | 10.9 |
 | `eye.py` | the eye — retina-pooled, foveated, opponent-colour receptor body (`Eye`, `fixations`, `retina_layout`); no convolution; s051 exploratory | 10.11 |
-| `nest.py` | nested phasecyte organisms: per-group leaves + full-cov manifold recognition router (`PhasecyteNest`); wake/dream distillation into gradient trioron leaves (`dream_distill`/`dreamed_predict`) — imports `learning/` (router, manifold); s049 promotion, validated vs `outputs/*_s049_*.log` | 10 naming note; s049 |
+| `nest.py` | nested phasecyte organisms: per-group leaves + full-cov manifold recognition router (`PhasecyteNest`); wake/dream distillation into gradient trioron leaves (`dream_distill`/`dreamed_predict`); `PhasecyteLeaf` class naming: `names()` = lifetime-ledger majority, `member_names()` = majority tag of current buffer members (s066, v0.3.4 — use for many small classes) — imports `learning/` (router, manifold); s049 promotion, validated vs `outputs/*_s049_*.log` | 10 naming note; s049 |
 
 ---
 

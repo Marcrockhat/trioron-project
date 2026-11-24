@@ -83,10 +83,8 @@ class FactMemory:
         for xb, yb in zip(X.tensor_split(n_win), y.tensor_split(n_win)):
             self.leaf.mixed.observe(xb, labels=[f"g{int(f)}" for f in yb])
             self.leaf.sub.end_task()
-        m = self.leaf.mixed                                         # name each class from its CURRENT members
-        lab = {v: int(k[1:]) for k, v in m.label_taps.vocab.items()}
-        m._sync_tags()
-        self.names = torch.tensor([lab[int(t[t >= 0].mode().values)] if (t >= 0).any() else -1 for t in m.tags])
+        m = self.leaf.mixed
+        self.names = self.leaf.member_names()                       # each class named from its CURRENT members
         self.tau_leaf = float(torch.quantile(m.classify(self.negS)[1], 1 - self.false_rate))
         got, _ = self._leaf(self.S[todo])
         for j, i in enumerate(todo):

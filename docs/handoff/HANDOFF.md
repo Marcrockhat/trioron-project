@@ -29,6 +29,18 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   the EARLIEST wave separately in every memory test, its loss is the serious failure; he asked
   for the memory to be wired into the console after the night test (done, below).
 
+- Rocky on near questions (cat/dog): for an organism that does not know cat from dog, answering
+  the cat's name for the dog is generalisation, not an error; what counts depends on what we
+  expect of her age. Chloe agreed: stop calling it "false recall" for near questions; measure
+  whether CORRECTION separates them. Checked in the console: taught "name of my cat → Miso",
+  then "What is my dog called? → Rex" (one wording each, both slept). Result: she split by
+  WORDING, not by animal — "What is my X called?" → Rex and "What is the name of my X?" → Miso
+  for cat, dog and hamster alike. One wording per fact + noise copies does not teach which word
+  matters; several real wordings per fact probably would (untested).
+- Rocky on `names()`: different purpose → different name. DONE: `PhasecyteLeaf.member_names()`
+  (majority tag of current members) added beside `names()` (lifetime ledger, unchanged); test
+  in `tests/test_v2/test_pcll.py`; spec §9 `nest.py` row; **v0.3.4 released** (see State).
+
 ## Night test (s066) — `pilot_reword.py`, `pilot_night.py`, log `pilot_night_s066.log`
 Same stream, held-out helper wordings and scoring as the pilot (W=50, no cap, 3 splits); only the
 SOURCE of a fact's night material changes (original wording always included). Top-1 after wave 3.
@@ -310,7 +322,9 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    c. scale past 40 facts; feed-rate rule from the sweep (W ≈ 50–100 for 10 new facts);
    d. where could it BEAT the class mean? candidates: untold discovery (no labels), per-fact σ
       from the manifold sketch as the threshold, far fewer wordings per fact;
-   e. fix or replace `PhasecyteLeaf.names()` (buffer-tag naming) — needs Rocky's decision;
+   e. DONE s066: `member_names()` added, v0.3.4;
+   e2. teaching which word matters: a correction with several wordings (helper or user) so cat
+      and dog separate by animal, not by sentence form;
    f. console memory: compare leaf vs table at a MATCHED false rate and against the s065 learned
       key; false recall on near questions ("my dog" → the cat's name) — sibling-aware threshold;
       save the leaf (`mixed.state_dict()`) instead of replaying life at wake; Rocky to try it:
@@ -339,8 +353,8 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    failures (TestCredit ×2, TestGrowth ×1, TestDreamCycle ×1).
 
 ## State of the build / Pointers
-- Branch `conscience-core`; s065 and s066 work committed and pushed (see `git log -3`). `main` still at
-  e8e7b40 (v0.3.3).
+- Branch `conscience-core`; s065 and s066 work committed and pushed (see `git log -3`). **v0.3.4 on PyPI** (s066: `PhasecyteLeaf.member_names()`, plus everything on the branch since
+  v0.3.3: `organisms.Vee`, `senses.hidden_state`); `main` fast-forwarded to the release commit.
 - **Deliberately uncommitted (local to this PC):** everything matron-written or derived in
   `outputs/incubator/`: s064's `stage1_*` data and `vee_stage1.pt`; s065's
   `stage2_para_in_part*.tsv`, `stage2_para_part*_c*.jsonl` (paraphrases; part9 = the fix job),
