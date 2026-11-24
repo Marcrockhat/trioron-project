@@ -117,6 +117,31 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   the chat / ask again before building. Rocky also worries this is a long, costly training;
   Chloe told him plainly the architecture is NOT yet proven (phasecyte has not beaten the table,
   cannot split near facts) and that these are small tests, not the long investment.
+- **Teaching by INTERACTION (Rocky s066, binding direction):** humans learn because they imagine
+  and mix things; Vee must talk with the matron, be answered on what she actually says, and learn
+  to say nothing. "As a human, I won't be able to accompany Vee. But in assisted simulation, you
+  will always be there for her." `experiments/incubator/vee_life.py`: a life = ordered events
+  (matron replies, nights), replayed at every call; ops ask / teach / lesson / sleep / test;
+  "do not know" (`?`) and saying nothing (`-`) are LEARNED replies, not thresholds. Life file
+  `outputs/incubator/vee_life.jsonl` (+ `.pt` read states, local). Chloe taught days 1–3; exam
+  after day 3 on untaught wordings: self facts .83 right (3–4 wordings per fact; list-feeding
+  got .89 with 24); unrelated small talk: says she does not know .27, silent .07, another fact
+  .67; questions about someone else: another fact 1.00. A Sonnet helper acting as matron was
+  launched for days 4–15 (curriculum: herself, Chloe, her world, numbers to five, three shapes,
+  greetings, unknowns, silences; reactive to her misses; log `vee_life_days.log`). **If this
+  handoff is read before its result was added: check that log and rerun `vee_life.py test`.**
+- **Environment sense (Rocky s066): the phasecyte's fed vector should carry her ENVIRONMENT, as
+  the s049 world percept did; Vee's has only 64 language numbers.** Built, NOT yet connected:
+  `experiments/incubator/environment.py` — 33 readings in [-1, 1]: clock, RAM/swap, CPU, process
+  counts, disk, network, place (host name and address HASHED to 4 numbers each, never raw), self,
+  and an OUTSIDE window (daylight, temperature, rain, someone here; closed = 0 unless shown).
+  `simulate(**over)` replaces any raw reading so the matron can show her a night, a full machine,
+  another place, the outside. Next: join to the language sense; teach facts only the environment
+  can answer (day or night? machine busy? same place?); watch for class splitting from readings
+  that change without mattering. Compare against the language-only helper run.
+- **ROLE RULE (Rocky s066, binding): Chloe is Vee's matron and stays in role with her; do NOT
+  tell Vee that anything is a simulation until Rocky says she is ready.** No lesson line, taught
+  reply or reading name may say so. Out-of-role explanation goes to Rocky / handoff / code only.
 - Multi-wording teaching: `FactMemory.teach(same_as=i)`; console `/teach` with an answer equal to
   an existing user fact's answer is kept as another wording of that fact. User teaching is now
   stored as an ordered log (`vee_facts.jsonl`, one row per wording, `same_as_q`).
