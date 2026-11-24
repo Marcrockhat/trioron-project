@@ -1,0 +1,75 @@
+# stage 2 drift  questions=2808  seeds=[0, 1, 2] lessons=5 epochs/lesson=60 k=256 e=32 strengths=[1.0, 30.0, 1000.0]
+  seed 0 linear frozen                 old after each lesson 0.876 0.876 0.876 0.876 0.876 | new 0.917 | key cos 1.000
+  seed 0 linear free                   old after each lesson 0.876 0.416 0.104 0.050 0.020 | new 0.926 | key cos 0.311
+  seed 0 linear re-key (reference)     old after each lesson 0.876 nan nan nan 0.921 | new 0.926 | key cos 1.000
+  seed 0 linear lock uniform s=1       old after each lesson 0.876 0.926 0.901 0.906 0.896 | new 0.931 | key cos 0.968
+  seed 0 linear lock uniform s=30      old after each lesson 0.876 0.891 0.891 0.886 0.906 | new 0.922 | key cos 0.997
+  seed 0 linear lock uniform s=1000    old after each lesson 0.876 0.876 0.876 0.876 0.876 | new 0.917 | key cos 1.000
+  seed 0 linear lock saliency s=1      old after each lesson 0.876 0.931 0.911 0.906 0.906 | new 0.926 | key cos 0.961
+  seed 0 linear lock saliency s=30     old after each lesson 0.876 0.901 0.896 0.881 0.901 | new 0.912 | key cos 0.996
+  seed 0 linear lock saliency s=1000   old after each lesson 0.876 0.881 0.876 0.876 0.876 | new 0.917 | key cos 1.000
+  seed 0 quad   frozen                 old after each lesson 0.871 0.871 0.871 0.871 0.871 | new 0.912 | key cos 1.000
+  seed 0 quad   free                   old after each lesson 0.871 0.332 0.163 0.045 0.025 | new 0.922 | key cos 0.344
+  seed 0 quad   re-key (reference)     old after each lesson 0.871 nan nan nan 0.871 | new 0.922 | key cos 1.000
+  seed 0 quad   lock uniform s=1       old after each lesson 0.871 0.856 0.866 0.842 0.851 | new 0.922 | key cos 0.958
+  seed 0 quad   lock uniform s=30      old after each lesson 0.871 0.861 0.871 0.856 0.851 | new 0.907 | key cos 0.992
+  seed 0 quad   lock uniform s=1000    old after each lesson 0.871 0.871 0.866 0.861 0.856 | new 0.907 | key cos 0.995
+  seed 0 quad   lock saliency s=1      old after each lesson 0.871 0.861 0.832 0.837 0.866 | new 0.926 | key cos 0.950
+  seed 0 quad   lock saliency s=30     old after each lesson 0.871 0.861 0.876 0.856 0.851 | new 0.907 | key cos 0.991
+  seed 0 quad   lock saliency s=1000   old after each lesson 0.871 0.871 0.866 0.861 0.856 | new 0.907 | key cos 0.995
+  seed 1 linear frozen                 old after each lesson 0.944 0.944 0.944 0.944 0.944 | new 0.908 | key cos 1.000
+  seed 1 linear free                   old after each lesson 0.944 0.444 0.163 0.092 0.020 | new 0.929 | key cos 0.328
+  seed 1 linear re-key (reference)     old after each lesson 0.944 nan nan nan 0.857 | new 0.929 | key cos 1.000
+  seed 1 linear lock uniform s=1       old after each lesson 0.944 0.913 0.923 0.949 0.949 | new 0.878 | key cos 0.965
+  seed 1 linear lock uniform s=30      old after each lesson 0.944 0.939 0.949 0.949 0.934 | new 0.903 | key cos 0.996
+  seed 1 linear lock uniform s=1000    old after each lesson 0.944 0.944 0.944 0.944 0.944 | new 0.908 | key cos 1.000
+  seed 1 linear lock saliency s=1      old after each lesson 0.944 0.903 0.918 0.934 0.949 | new 0.878 | key cos 0.958
+  seed 1 linear lock saliency s=30     old after each lesson 0.944 0.929 0.949 0.954 0.939 | new 0.888 | key cos 0.995
+  seed 1 linear lock saliency s=1000   old after each lesson 0.944 0.939 0.944 0.939 0.939 | new 0.908 | key cos 1.000
+  seed 1 quad   frozen                 old after each lesson 0.893 0.893 0.893 0.893 0.893 | new 0.883 | key cos 1.000
+  seed 1 quad   free                   old after each lesson 0.893 0.347 0.122 0.061 0.041 | new 0.888 | key cos 0.348
+  seed 1 quad   re-key (reference)     old after each lesson 0.893 nan nan nan 0.852 | new 0.888 | key cos 1.000
+  seed 1 quad   lock uniform s=1       old after each lesson 0.893 0.857 0.842 0.898 0.857 | new 0.908 | key cos 0.962
+  seed 1 quad   lock uniform s=30      old after each lesson 0.893 0.888 0.888 0.883 0.893 | new 0.888 | key cos 0.993
+  seed 1 quad   lock uniform s=1000    old after each lesson 0.893 0.888 0.908 0.898 0.898 | new 0.898 | key cos 0.996
+  seed 1 quad   lock saliency s=1      old after each lesson 0.893 0.857 0.842 0.903 0.872 | new 0.908 | key cos 0.955
+  seed 1 quad   lock saliency s=30     old after each lesson 0.893 0.883 0.888 0.878 0.893 | new 0.893 | key cos 0.993
+  seed 1 quad   lock saliency s=1000   old after each lesson 0.893 0.893 0.908 0.898 0.898 | new 0.893 | key cos 0.996
+  seed 2 linear frozen                 old after each lesson 0.845 0.845 0.845 0.845 0.845 | new 0.923 | key cos 1.000
+  seed 2 linear free                   old after each lesson 0.845 0.428 0.175 0.036 0.026 | new 0.923 | key cos 0.326
+  seed 2 linear re-key (reference)     old after each lesson 0.845 nan nan nan 0.887 | new 0.923 | key cos 1.000
+  seed 2 linear lock uniform s=1       old after each lesson 0.845 0.856 0.856 0.851 0.876 | new 0.928 | key cos 0.970
+  seed 2 linear lock uniform s=30      old after each lesson 0.845 0.825 0.825 0.840 0.845 | new 0.923 | key cos 0.997
+  seed 2 linear lock uniform s=1000    old after each lesson 0.845 0.840 0.840 0.845 0.845 | new 0.923 | key cos 1.000
+  seed 2 linear lock saliency s=1      old after each lesson 0.845 0.851 0.835 0.851 0.887 | new 0.933 | key cos 0.963
+  seed 2 linear lock saliency s=30     old after each lesson 0.845 0.825 0.830 0.856 0.845 | new 0.918 | key cos 0.996
+  seed 2 linear lock saliency s=1000   old after each lesson 0.845 0.845 0.840 0.845 0.845 | new 0.923 | key cos 1.000
+  seed 2 quad   frozen                 old after each lesson 0.856 0.856 0.856 0.856 0.856 | new 0.907 | key cos 1.000
+  seed 2 quad   free                   old after each lesson 0.856 0.454 0.113 0.015 0.021 | new 0.907 | key cos 0.348
+  seed 2 quad   re-key (reference)     old after each lesson 0.856 nan nan nan 0.907 | new 0.907 | key cos 1.000
+  seed 2 quad   lock uniform s=1       old after each lesson 0.856 0.835 0.851 0.820 0.861 | new 0.923 | key cos 0.960
+  seed 2 quad   lock uniform s=30      old after each lesson 0.856 0.887 0.851 0.840 0.861 | new 0.897 | key cos 0.991
+  seed 2 quad   lock uniform s=1000    old after each lesson 0.856 0.866 0.845 0.840 0.851 | new 0.897 | key cos 0.994
+  seed 2 quad   lock saliency s=1      old after each lesson 0.856 0.840 0.856 0.820 0.840 | new 0.923 | key cos 0.954
+  seed 2 quad   lock saliency s=30     old after each lesson 0.856 0.887 0.835 0.845 0.866 | new 0.892 | key cos 0.990
+  seed 2 quad   lock saliency s=1000   old after each lesson 0.856 0.876 0.845 0.840 0.856 | new 0.897 | key cos 0.994
+
+condition                       old @start      old @end      new @end  key cos
+linear frozen                        0.888   0.888±0.050   0.916±0.007    1.000
+linear free                          0.888   0.022±0.003   0.926±0.003    0.322
+linear re-key (reference)            0.888   0.888±0.032   0.926±0.003    1.000
+linear lock uniform s=1              0.888   0.907±0.038   0.912±0.030    0.968
+linear lock uniform s=30             0.888   0.895±0.045   0.916±0.011    0.997
+linear lock uniform s=1000           0.888   0.888±0.050   0.916±0.007    1.000
+linear lock saliency s=1             0.888   0.914±0.032   0.912±0.030    0.961
+linear lock saliency s=30            0.888   0.895±0.047   0.906±0.016    0.995
+linear lock saliency s=1000          0.888   0.887±0.048   0.916±0.007    1.000
+quad   frozen                        0.873   0.873±0.019   0.901±0.016    1.000
+quad   free                          0.873   0.029±0.011   0.906±0.017    0.347
+quad   re-key (reference)            0.873   0.877±0.028   0.906±0.017    1.000
+quad   lock uniform s=1              0.873   0.856±0.005   0.917±0.008    0.960
+quad   lock uniform s=30             0.873   0.868±0.022   0.897±0.010    0.992
+quad   lock uniform s=1000           0.873   0.868±0.026   0.901±0.005    0.995
+quad   lock saliency s=1             0.873   0.860±0.017   0.919±0.010    0.953
+quad   lock saliency s=30            0.873   0.870±0.021   0.897±0.008    0.991
+quad   lock saliency s=1000          0.873   0.870±0.024   0.899±0.007    0.995

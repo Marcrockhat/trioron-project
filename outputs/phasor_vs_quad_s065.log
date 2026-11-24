@@ -1,0 +1,17 @@
+# phasor vs quad  N=16 M=8 steps=3000 seeds=[0, 1, 2, 3, 4]
+  seed 0 done
+  seed 1 done
+  seed 2 done
+  seed 3 done
+  seed 4 done
+task                           arm            params        train         test
+binding, 100 train samples     phasor            146 1.000±0.000  0.907±0.027
+binding, 100 train samples     quad re/im        154 1.000±0.000  0.785±0.048
+binding, 4000 train samples    phasor            146 0.996±0.001  0.993±0.003
+binding, 4000 train samples    quad re/im        154 0.994±0.001  0.988±0.005
+offset (held-out pairs)        phasor            176 1.000±0.000  1.000±0.000
+offset (held-out pairs)        quad cos/sin      184 1.000±0.000  0.978±0.018
+offset (held-out pairs)        quad one-hot      408 1.000±0.000  0.025±0.016
+same/diff (held-out symbols)   phasor             50 1.000±0.000  1.000±0.000
+same/diff (held-out symbols)   quad cos/sin       58 1.000±0.000  0.987±0.030
+same/diff (held-out symbols)   quad one-hot      282 1.000±0.000  0.426±0.108

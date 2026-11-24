@@ -57,10 +57,34 @@ Honest reading:
 - Key-size sweep (Rocky asked whether the quad leaf stores less per fact; 3 splits for 8 and 16):
   linear / quad at 8 = .626 / .598, at 16 = .834 / .817, at 32 = .892 / .907 (crowded .407/.365,
   .616/.643, .718/.681). No packing advantage. A learned 16-number key equals the full cache.
+- **Drift test** (`stage2_drift.py`, 3 splits, 5 lessons, no replay; old facts stored after
+  lesson 0, new after lesson 5; linear / quad): free learning destroys old facts (.888→.022 /
+  .873→.029, key cosine .32); epigenetic lock holds them at every strength (old .86–.91, new
+  .90–.92), uniform λ = saliency λ; but FROZEN after lesson 0 does as well (old .888/.873, new
+  .916/.901 vs free new .926/.906) — one fifth of the data already gives a full-quality key, so
+  the lock buys no plasticity here. Critical period (learn early, freeze) suffices.
 - Thresholds were set on the test negatives, identically for all arms (an arm comparison, not a
   deployable number).
 - s064's early worry is retired: a question's nearest neighbour is rarely its sibling, but that
   does not hurt retrieval of the same question reworded.
+
+## Side test — phasor cell vs quad (Rocky's resonance question)
+`experiments/progenitor/phasor_vs_quad.py`, standalone torch (NOT the arena), 5 seeds, 8 cells,
+log `outputs/phasor_vs_quad_s065.log`. Phasor cell: complex weights, h = |Σ w x|²; sees only
+relative phase by construction. Test accuracy:
+
+| task | quad one-hot | quad cos/sin | phasor |
+|---|---|---|---|
+| same/different, held-out symbols | .426±.108 | .987±.030 | 1.000±.000 |
+| offset (b−a mod 16), held-out pairs | .025±.016 | .978±.018 | 1.000±.000 |
+| binding by phase tag, 100 samples | — | .785±.048 | .907±.027 |
+| binding by phase tag, 4,000 samples | — | .988±.005 | .993±.003 |
+
+Reading: the big effect is the phase ENCODING (one-hot cannot generalise a relation to unseen
+symbols; any phase code can). The phasor CELL adds a smaller, real gain: exact generalisation and
+better sample efficiency (+.12 at 100 samples), no gain with plenty of data. Caveats: toy tasks,
+phases handed to the network (nothing here discovers the encoding), not on the substrate. Upgrade
+path noted, unverified: activation Re(z)+|z|² with real weights equals the quad z+z².
 
 ## What was built (this session's commit)
 - `trioron/organisms/vee.py`: stage 2 — `learn_keys(H, group, block, k, e)`, `remember(H, texts)`,
@@ -72,7 +96,8 @@ Honest reading:
 - Spec §9.16 rows for vee.py and base.py; design §3 stage-2 result; test
   `tests/test_v2/test_organisms.py::test_vee_fact_memory_roundtrip` (organism tests 7/7).
 - Logs committed: `outputs/incubator/stage2_memory_s065.log`, `..._state_last.log`, `..._state_mean.log`,
-  `..._e8.log`, `..._e16.log`.
+  `..._e8.log`, `..._e16.log`, `stage2_drift_s065.log`, `outputs/phasor_vs_quad_s065.log`.
+- `experiments/incubator/stage2_drift.py`; `base.py`: `leaf(nonlinear=)`, `train_contrastive(penalty=, after_backward=)`.
 
 ## Environment facts (s064, still true)
 - Qwen GGUF already on disk: `~/models/qwen2.5-1.5b-instruct-gguf/qwen2.5-1.5b-instruct-q4_k_m.gguf`
@@ -129,8 +154,8 @@ Honest reading:
 ## NEXT (s066)
 0. Stage 2, where trioron could earn its place (pick with Rocky):
    a. per-fact threshold from each fact's own spread (manifold σ; needs ≥2 wordings per fact);
-   b. retention when the key leaf keeps learning after facts are stored (lock with λ / credit vs
-      free drift) — the real "after N later lessons" test;
+   b. DONE s065 (drift test): lock works, freeze works as well. Open: a regime where later
+      lessons improve the key (new domain / tiny first lesson) so lock vs freeze can separate;
    c. growth-pays curve: recall vs key-leaf size and vs facts stored; bytes per parameter;
    d. deployable threshold set on training articles; end-to-end override accuracy with the reflex.
 1. Wire memory into the console (`/wrong <answer>` → `remember`; recall before the reflex
@@ -138,7 +163,9 @@ Honest reading:
 2. Serial graft as a substrate op + external-state rerun through it.
 3. Snap on the Logophosis notᵏ curve (design §2.1 row 2).
 4. Sandbox per-run time and memory limits; the code-running action (stage 3).
-5. Carried: public manual Ch3–5, Axis-5 field-driven branch membership, receptor-freeze-on-rewake,
+5. Phasor cell: if Rocky wants it, next is a phasor phenotype on the arena (verify the
+   Re(z)+|z|² = quad upgrade path) and a task where phase must be DISCOVERED, not given.
+6. Carried: public manual Ch3–5, Axis-5 field-driven branch membership, receptor-freeze-on-rewake,
    Logophosis continual mode, Link-0 compaction, Kinopsis regression, four pre-existing v2 test
    failures (TestCredit ×2, TestGrowth ×1, TestDreamCycle ×1).
 

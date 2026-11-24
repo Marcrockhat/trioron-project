@@ -281,8 +281,35 @@ Reading:
   The two track each other at every size, within the spread. A 16-number
   learned key already equals the full 3,072-number cache (.841 / .608); 8 is
   too small for either.
-- Not yet tested: (a) retention when the key leaf keeps learning after facts
-  are stored (keys are stored embedded, so drift would be real forgetting);
+- **Drift test (s065, 3 splits, `experiments/incubator/stage2_drift.py`, log
+  `outputs/incubator/stage2_drift_s065.log`).** Training articles cut into 5
+  lessons taught in order, no replay. ~100 "old" facts stored after lesson 0
+  with the keys of that moment; ~100 "new" facts stored after lesson 5. Recall
+  at 1 % false override; "key cos" = cosine between an old fact's key as stored
+  and as the final leaf would compute it. Both arms are trioron leaves here
+  (linear phenotype vs quad).
+
+  | condition | linear: old / new / key cos | quad: old / new / key cos |
+  |---|---|---|
+  | frozen after lesson 0 | .888 / .916 / 1.00 | .873 / .901 / 1.00 |
+  | free (keeps learning) | **.022** / .926 / .32 | **.029** / .906 / .35 |
+  | lock, λ = 1 everywhere, strength 1 | .907 / .912 / .97 | .856 / .917 / .96 |
+  | lock, strength 30 | .895 / .916 / 1.00 | .868 / .897 / .99 |
+  | lock, λ from saliency, strength 1 | .914 / .912 / .96 | .860 / .919 / .95 |
+  | free + old facts re-keyed (needs raw states) | .888 / .926 / 1.00 | .877 / .906 / 1.00 |
+
+  Reading: (1) drift is real and total — four lessons of free learning take old
+  facts from .89 to .02. (2) The epigenetic lock prevents it at every strength
+  tried, in both arms. (3) But simply FREEZING the key leaf after lesson 0 does
+  as well: later lessons add almost nothing (new facts .916 frozen vs .926
+  free), because one fifth of the data already gives a full-quality key. So the
+  lock is not buying plasticity here; a critical period (learn the key early,
+  then freeze) is enough. (4) Saliency-driven λ = uniform λ. (5) Linear = quad,
+  again. Spread across splits is ±.01–.05, larger than the differences between
+  lock settings.
+- Not yet tested: (a) a regime where later lessons DO improve the key (a new
+  domain, or a much smaller first lesson), which is where lock vs freeze could
+  separate;
   (b) a per-fact threshold (each fact's own spread — the manifold σ the design
   names); (c) end-to-end override accuracy with the reflex (stage 3's number);
   (d) bytes per parameter for the memory ceiling. Thresholds here were set on

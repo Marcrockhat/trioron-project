@@ -40,10 +40,11 @@ class Std:
         return ((Z - self.mu) / self.sd).float()
 
 
-def leaf(d: int, n_out: int, seed: int, *, interior: int = 48):
-    """One ``Seeded(d -> n_out)`` quad leaf, compiled and ready to train."""
+def leaf(d: int, n_out: int, seed: int, *, interior: int = 48, nonlinear: bool = True):
+    """One ``Seeded(d -> n_out)`` leaf (quad by default; ``nonlinear=False`` = the
+    plain linear phenotype), compiled and ready to train."""
     torch.manual_seed(seed)
-    sub = construct(base=Seeded(d, n_out, interior_cells=interior, nonlinear=True),
+    sub = construct(base=Seeded(d, n_out, interior_cells=interior, nonlinear=nonlinear),
                     envelope=Envelope(max_parameter_bytes=400_000),
                     dispatch_table=default_dispatch_table(),
                     capacity=max(d + interior + n_out + 8,
@@ -86,10 +87,12 @@ def group_contrast(E: torch.Tensor, group: torch.Tensor, temp: float = 0.1) -> t
 
 def train_contrastive(fwd, params, Z: torch.Tensor, group: torch.Tensor, block: torch.Tensor,
                       seed: int, epochs: int, *, lr: float = 1e-3, blocks_per_batch: int = 96,
-                      temp: float = 0.1):
+                      temp: float = 0.1, penalty=None, after_backward=None):
     """Adam + grad-clip on ``group_contrast`` of ``fwd(Z)``.  A batch is every
     row of ``blocks_per_batch`` blocks, so rows that share a block but not a
-    group (hard negatives) always meet.  Params are FROZEN on return."""
+    group (hard negatives) always meet.  ``penalty()`` (e.g. an epigenetic-lock
+    pull) is added to the loss; ``after_backward()`` runs before each step
+    (e.g. saliency accumulation).  Params are FROZEN on return."""
     for p in params: p.requires_grad_(True)
     opt = torch.optim.Adam(params, lr=lr)
     g = torch.Generator().manual_seed(seed)
@@ -98,7 +101,10 @@ def train_contrastive(fwd, params, Z: torch.Tensor, group: torch.Tensor, block: 
         for bi in ids[torch.randperm(len(ids), generator=g)].split(blocks_per_batch):
             m = torch.isin(block, bi)
             opt.zero_grad()
-            group_contrast(fwd(Z[m]), group[m], temp).backward()
+            loss = group_contrast(fwd(Z[m]), group[m], temp)
+            if penalty is not None: loss = loss + penalty()
+            loss.backward()
+            if after_backward is not None: after_backward()
             torch.nn.utils.clip_grad_norm_(params, 1.0)
             opt.step()
     for p in params: p.requires_grad_(False)
