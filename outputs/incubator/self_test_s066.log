@@ -1,0 +1,11 @@
+# self test  seeds=3  thorough = 6 nights x 4 wordings, thin = 1 night x 6
+  seed 0 thin      after self: right 0.75 near 1.00 other 0.73 purity 0.78 classes 9 | after 40 later facts: right 0.72 near 0.80 other 0.47 purity 1.00 | later w0 0.89
+  seed 0 thorough  after self: right 0.89 near 0.93 other 0.73 purity 1.00 classes 28 | after 40 later facts: right 0.86 near 0.87 other 0.53 purity 1.00 | later w0 0.92
+  seed 1 thin      after self: right 0.67 near 1.00 other 0.73 purity 0.68 classes 8 | after 40 later facts: right 0.81 near 0.87 other 0.40 purity 1.00 | later w0 0.88
+  seed 1 thorough  after self: right 0.89 near 0.93 other 0.67 purity 1.00 classes 38 | after 40 later facts: right 0.86 near 0.87 other 0.53 purity 1.00 | later w0 0.87
+  seed 2 thin      after self: right 0.58 near 1.00 other 0.73 purity 0.59 classes 6 | after 40 later facts: right 0.83 near 0.80 other 0.40 purity 0.93 | later w0 0.92
+  seed 2 thorough  after self: right 0.89 near 1.00 other 0.73 purity 1.00 classes 57 | after 40 later facts: right 0.89 near 0.87 other 0.53 purity 1.00 | later w0 0.94
+
+teaching  | after self: right  near  other purity classes | after 40 later facts: right  near  other purity | later w0 | all classes
+thin      |              0.67  1.00   0.73   0.68     7.7 |                        0.79  0.82   0.42   0.98 |     0.90 |     72
+thorough  |              0.89  0.96   0.71   1.00    41.0 |                        0.87  0.87   0.53   1.00 |     0.91 |     99

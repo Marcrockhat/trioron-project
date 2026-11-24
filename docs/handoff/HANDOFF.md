@@ -89,6 +89,34 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   the cat (no dog class) or the two tangle; cat + dog right always sums to ~1.0, i.e. one name per
   pet question. The never-taught hamster is always given a name. NEXT per Rocky: teach her about
   HERSELF first, thoroughly — the self-facts are his to set (asked in chat, not yet answered).
+- **Self first (s066; `self_test.py`, log `self_test_s066.log`, 3 seeds; Rocky approved six
+  self-facts: name Vee / a trioron organism / Rocky made her / Chloe is her matron / remembers
+  what she is taught and sleeps to keep it / born November 2026).** The self-facts are the FIRST
+  thing the leaf hears (24 helper wordings each, `outputs/incubator/self_wordings.jsonl`, local);
+  the 40 pilot facts follow. Phasecyte alone, 6 untaught wordings per fact:
+
+  | teaching | self right, after self | after 40 later facts | purity | near answered | unrelated small talk answered | later facts w0 |
+  |---|---|---|---|---|---|---|
+  | thin (1 night × 6) | .67 | .79 | .68 → .98 | 1.00 → .82 | .73 → .42 | .90 |
+  | thorough (6 nights × 4) | .89 | .87 | 1.00 | .96 → .87 | .71 → .53 | .91 |
+
+  Reading (Chloe's): thorough self-teaching holds through the later facts and the later facts
+  still fit. **Failure: unrelated small talk ("How are you?", "capital of France") is answered
+  with a self fact half the time** — the leaf's global threshold comes from encyclopedia
+  questions (margin tau 10.0; true wordings 10.4–11.3; small talk 8.5–10.6). Tried a per-class
+  threshold from the class's OWN buffer members (low quantile of `_margins(bufs[c])`), 2 seeds:
+  q=.05 cuts small talk to .07–.20 but self right falls .86 → .72 and pilot held .89–.94 →
+  .81–.89; q=.2 gives 0 small talk at self right .53–.64. A trade, not a fix; NOT adopted.
+  The self-facts are NOT yet wired into the console's `wake()`.
+- **Rocky's direction after the self test (s066, not started):** curriculum = herself, Chloe, her
+  environment (the digital world), simple numbers and shapes; "if we find these results
+  promising, we can continue". And INTERNALISATION: "it will help the matron to teach the
+  organism if the organism can learn by itself … assist her with her internalization which
+  requires probably a couple of simple facts". Chloe asked what he means by internalisation
+  (her reading: she rehearses and extends what she knows by herself between lessons) — check
+  the chat / ask again before building. Rocky also worries this is a long, costly training;
+  Chloe told him plainly the architecture is NOT yet proven (phasecyte has not beaten the table,
+  cannot split near facts) and that these are small tests, not the long investment.
 - Multi-wording teaching: `FactMemory.teach(same_as=i)`; console `/teach` with an answer equal to
   an existing user fact's answer is kept as another wording of that fact. User teaching is now
   stored as an ordered log (`vee_facts.jsonl`, one row per wording, `same_as_q`).
@@ -423,7 +451,7 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
   `outputs/incubator/`: s064's `stage1_*` data and `vee_stage1.pt`; s065's
   `stage2_para_in_part*.tsv`, `stage2_para_part*_c*.jsonl` (paraphrases; part9 = the fix job),
   `stage2_keys.jsonl`, `stage2_keys.npz` (52 MB), collect logs; s066's `pilot_in_*.tsv`, `pilot_para_*.jsonl`
-  (2,100 rewordings, ~330 K helper tokens), `pilot_keys.jsonl`, `pilot_keys.npz` (`pilot_collect.py`, 25 min), `pilot_qwen_para.jsonl`, `pilot_qwen_keys.*` (`pilot_reword.py`, 70 min, Qwen-written), `vee_facts.*` (what the user taught Vee). Rebuild: paraphrases need the
+  (2,100 rewordings, ~330 K helper tokens), `pilot_keys.jsonl`, `pilot_keys.npz` (`pilot_collect.py`, 25 min), `pilot_qwen_para.jsonl`, `pilot_qwen_keys.*` (`pilot_reword.py`, 70 min, Qwen-written), `vee_facts.*` (what the user taught Vee). Also local: `self_wordings.jsonl` (210 helper-written wordings), `self_keys.pt`. Rebuild: paraphrases need the
   matron again; keys via `stage2_collect.py` (~75 min).
 - Memory (this PC only): `stage2_fact_memory_result.md`, `incubator_matron_arc.md`,
   `external_state_depth_result.md`.
