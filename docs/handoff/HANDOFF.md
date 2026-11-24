@@ -63,6 +63,15 @@ Honest reading:
   .90–.92), uniform λ = saliency λ; but FROZEN after lesson 0 does as well (old .888/.873, new
   .916/.901 vs free new .926/.906) — one fifth of the data already gives a full-quality key, so
   the lock buys no plasticity here. Critical period (learn early, freeze) suffices.
+- **Dream test** (Rocky: "we have the dreaming phase"; `stage2_dream.py`, 5 splits, lessons = 5
+  topic DOMAINS by k-means on mean read-state, no replay; old facts = first domain, new = later
+  domains; one memory; old / new, linear | quad): frozen .881/.846 | .866/.835; free stale
+  .000/.862 | .000/.832; free + dream re-key .896/.849 | .871/.814; lock s=30 + dream .896/.844 |
+  .883/.835; joint all-domains ceiling .908/.892 | .919/.870. Reading: re-key works (.000 → .896)
+  and re-reading a question reproduces its state exactly (cos 1.000000, 40 texts), so the dream
+  needs only question text. Domain shift opens headroom (joint − frozen on new = +.045±.020
+  linear, 5/5 splits) but sequential no-replay learning does not reach it (free + dream +.003±.040
+  over frozen). Re-key-only dream = safety, no accuracy; the gain needs REPLAY in the dream.
 - Thresholds were set on the test negatives, identically for all arms (an arm comparison, not a
   deployable number).
 - s064's early worry is retired: a question's nearest neighbour is rarely its sibling, but that
@@ -98,6 +107,10 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
 - Logs committed: `outputs/incubator/stage2_memory_s065.log`, `..._state_last.log`, `..._state_mean.log`,
   `..._e8.log`, `..._e16.log`, `stage2_drift_s065.log`, `outputs/phasor_vs_quad_s065.log`.
 - `experiments/incubator/stage2_drift.py`; `base.py`: `leaf(nonlinear=)`, `train_contrastive(penalty=, after_backward=)`.
+- Day/night on Vee: `study(H, group, block)` trains a SHADOW copy of the key leaf (live leaf and
+  stored keys untouched), `dream(H_cues)` swaps it in and re-keys every fact from re-read states
+  of `vee.cues` (`remember(..., cues=)`). Test `test_vee_study_and_dream` (organism tests 8/8).
+  `experiments/incubator/stage2_dream.py`, log `outputs/incubator/stage2_dream_s065.log`.
 
 ## Environment facts (s064, still true)
 - Qwen GGUF already on disk: `~/models/qwen2.5-1.5b-instruct-gguf/qwen2.5-1.5b-instruct-q4_k_m.gguf`
@@ -156,6 +169,9 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    a. per-fact threshold from each fact's own spread (manifold σ; needs ≥2 wordings per fact);
    b. DONE s065 (drift test): lock works, freeze works as well. Open: a regime where later
       lessons improve the key (new domain / tiny first lesson) so lock vs freeze can separate;
+      DONE s065 (dream test): domain shift gives +.045 headroom, reached only by joint training.
+      NEXT: replay in the dream — `study` keeps lesson questions (text), `dream` retrains the
+      shadow on all kept lessons, then re-keys. Expect the joint row; measure cost per night;
    c. growth-pays curve: recall vs key-leaf size and vs facts stored; bytes per parameter;
    d. deployable threshold set on training articles; end-to-end override accuracy with the reflex.
 1. Wire memory into the console (`/wrong <answer>` → `remember`; recall before the reflex

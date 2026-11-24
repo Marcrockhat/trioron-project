@@ -138,3 +138,33 @@ def test_vee_fact_memory_roundtrip(tmp_path):
     o2 = Vee.load(str(p))
     i2, s2 = o2.recall(H[te][1::3])
     assert torch.equal(i2, idx) and torch.equal(s2, score)
+
+
+def test_vee_study_and_dream():
+    """s065: study() teaches a shadow, so stored keys and recall are unchanged by day;
+    dream() swaps the shadow in and re-keys every stored fact from re-read states."""
+    from trioron.organisms import Vee
+    torch.manual_seed(0)
+    basis = torch.randn(12, 96)
+    code = torch.randn(80, 12).repeat_interleave(3, 0)
+    code[:, 6:] = torch.randn(240, 6)
+    H = code @ basis + 0.05 * torch.randn(240, 96)
+    group = torch.arange(80).repeat_interleave(3)
+    block = group // 2
+    day1, day2, te = group < 25, (group >= 25) & (group < 50), group >= 50
+    o = Vee(0).learn_keys(H[day1], group[day1], block[day1], k=12, e=8, epochs=40, lr=1e-2)
+    o.remember(H[te][0::3], [f"fact {i}" for i in range(30)], cues=[f"q {i}" for i in range(30)])
+    keys, (idx, score) = o.keys.clone(), o.recall(H[te][1::3])
+    o.study(H[day2], group[day2], block[day2], epochs=40, lr=1e-2)
+    i2, s2 = o.recall(H[te][1::3])
+    assert o.key_shadow is not None and torch.equal(o.keys, keys)
+    assert torch.equal(i2, idx) and torch.equal(s2, score)       # by day nothing moves
+    o.dream(H[te][0::3])
+    assert o.key_shadow is None and not torch.allclose(o.keys, keys)
+    i3, _ = o.recall(H[te][1::3])
+    assert (i3 == torch.arange(30)).float().mean().item() > 0.8
+    assert len(o.cues) == len(o.facts) == 30
+    try:
+        o.dream(H[te][0::6]); assert False
+    except ValueError:
+        pass

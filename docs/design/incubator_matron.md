@@ -307,9 +307,41 @@ Reading:
   then freeze) is enough. (4) Saliency-driven λ = uniform λ. (5) Linear = quad,
   again. Spread across splits is ±.01–.05, larger than the differences between
   lock settings.
-- Not yet tested: (a) a regime where later lessons DO improve the key (a new
-  domain, or a much smaller first lesson), which is where lock vs freeze could
-  separate;
+- **Dream test (s065, 5 splits, `experiments/incubator/stage2_dream.py`, log
+  `outputs/incubator/stage2_dream_s065.log`).** Rocky's point: the dreaming
+  phase can re-key stale facts. Lessons are now five topic DOMAINS (cosine
+  k-means on each article's mean read-state), one domain per lesson, no replay,
+  sense fitted on the first domain only. Old facts (26–65) belong to the first
+  domain, new facts (137–174) to the later ones; one memory, one threshold.
+  Recall at 1 % false override, old / new:
+
+  | condition | linear | quad |
+  |---|---|---|
+  | frozen after the first domain (= live leaf by day) | .881 / .846 | .866 / .835 |
+  | free, keys left stale | .000 / .862 | .000 / .832 |
+  | free + dream (re-key) | .896 / .849 | .871 / .814 |
+  | lock s=1, stale | .793 / .861 | .735 / .841 |
+  | lock s=1 + dream | .890 / .834 | .872 / .833 |
+  | lock s=30, stale | .869 / .852 | .845 / .838 |
+  | lock s=30 + dream | .896 / .844 | .883 / .835 |
+  | joint: all domains at once (ceiling) | .908 / .892 | .919 / .870 |
+
+  Reading: (1) the dream re-key works: stale keys go from .000 to the level of
+  a never-drifted leaf, and it also repairs the small staleness a weak lock
+  leaves (.793 → .890). (2) The domain shift did open headroom: joint training
+  beats the frozen leaf on new facts by +.045 ± .020 (linear, 5 of 5 splits).
+  (3) Learning the later domains ONE AT A TIME without replay does not reach
+  it: free + dream is +.003 ± .040 over frozen on new facts, lock + dream −.002.
+  So a re-key-only dream buys safety but no accuracy; the gain needs the dream
+  to REPLAY earlier lessons (the joint row is what a full-replay dream would
+  give). (4) Linear = quad again. Re-reading a stored question reproduces its
+  state exactly (cosine 1.000000 on 40 texts), so the dream needs only the
+  question text, not the 3,072-number state.
+  Built: `Vee.study` (shadow copy learns by day, live leaf frozen), `Vee.dream`
+  (swap + re-key), `remember(..., cues=)`.
+- Not yet tested: (a) a dream that replays kept lesson questions (expected to
+  reach the joint row; costs ~0.5 s re-read per kept question or 32–256 kept
+  numbers each);
   (b) a per-fact threshold (each fact's own spread — the manifold σ the design
   names); (c) end-to-end override accuracy with the reflex (stage 3's number);
   (d) bytes per parameter for the memory ceiling. Thresholds here were set on
