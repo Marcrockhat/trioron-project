@@ -1,0 +1,336 @@
+# pilot stream  rows=2160 facts=40 untaught rows=120 window=25 repeats=1 kp=64 cap=0 hold=10 composer=1 seeds=3
+  seed 0 phasecyte, told ledger   after wave 0: w0 0.90/0.89   classes 10 facts covered 9 spawned 0
+  seed 0 phasecyte, told tags     after wave 0: w0 0.90/0.89   classes 10 facts covered 10 spawned 0
+  seed 0 phasecyte, told ledger   after wave 1: w0 0.90/0.89  w1 1.00/1.00   classes 31 facts covered 19 spawned 0
+  seed 0 phasecyte, told tags     after wave 1: w0 0.93/0.92  w1 1.00/1.00   classes 31 facts covered 20 spawned 0
+  seed 0 phasecyte, told ledger   after wave 2: w0 0.80/0.79  w1 0.70/0.70  w2 1.00/1.00   classes 73 facts covered 26 spawned 0
+  seed 0 phasecyte, told tags     after wave 2: w0 0.94/0.93  w1 1.00/1.00  w2 1.00/1.00   classes 73 facts covered 30 spawned 0
+  seed 0 phasecyte, told ledger   after wave 3: w0 0.79/0.78  w1 0.70/0.70  w2 1.00/1.00  w3 1.00/1.00   classes 163 facts covered 36 spawned 0
+  seed 0 phasecyte, told tags     after wave 3: w0 0.89/0.88  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 163 facts covered 40 spawned 0
+  seed 0 phasecyte, untold        after wave 0: w0 0.90/0.89   classes 10 facts covered 10 spawned 0
+  seed 0 phasecyte, untold        after wave 1: w0 0.91/0.90  w1 1.00/1.00   classes 31 facts covered 20 spawned 0
+  seed 0 phasecyte, untold        after wave 2: w0 0.90/0.89  w1 1.00/1.00  w2 1.00/1.00   classes 69 facts covered 30 spawned 0
+  seed 0 phasecyte, untold        after wave 3: w0 0.88/0.87  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 122 facts covered 40 spawned 0
+  seed 0 class mean               after wave 0: w0 0.98/0.98   numbers per fact 64
+  seed 0 class mean               after wave 1: w0 0.98/0.98  w1 1.00/1.00   numbers per fact 64
+  seed 0 class mean               after wave 2: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 0 class mean               after wave 3: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 0 one-shot key table       after wave 0: w0 0.95/0.95   numbers per fact 32
+  seed 0 one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/0.99   numbers per fact 32
+  seed 0 one-shot key table       after wave 2: w0 0.95/0.95  w1 0.99/0.99  w2 0.98/0.97   numbers per fact 32
+  seed 0 one-shot key table       after wave 3: w0 0.95/0.95  w1 0.98/0.97  w2 0.98/0.97  w3 1.00/1.00   numbers per fact 32
+  seed 1 phasecyte, told ledger   after wave 0: w0 0.94/0.93   classes 10 facts covered 10 spawned 0
+  seed 1 phasecyte, told tags     after wave 0: w0 0.94/0.93   classes 10 facts covered 10 spawned 0
+  seed 1 phasecyte, told ledger   after wave 1: w0 0.94/0.93  w1 1.00/1.00   classes 26 facts covered 20 spawned 0
+  seed 1 phasecyte, told tags     after wave 1: w0 0.94/0.93  w1 1.00/1.00   classes 26 facts covered 20 spawned 0
+  seed 1 phasecyte, told ledger   after wave 2: w0 0.84/0.83  w1 0.90/0.90  w2 0.99/0.99   classes 56 facts covered 28 spawned 0
+  seed 1 phasecyte, told tags     after wave 2: w0 0.94/0.93  w1 1.00/1.00  w2 0.99/0.99   classes 56 facts covered 30 spawned 0
+  seed 1 phasecyte, told ledger   after wave 3: w0 0.82/0.81  w1 0.70/0.70  w2 0.79/0.79  w3 1.00/1.00   classes 104 facts covered 34 spawned 0
+  seed 1 phasecyte, told tags     after wave 3: w0 0.91/0.90  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   classes 104 facts covered 40 spawned 0
+  seed 1 phasecyte, untold        after wave 0: w0 0.88/0.87   classes 10 facts covered 10 spawned 0
+  seed 1 phasecyte, untold        after wave 1: w0 0.90/0.89  w1 1.00/1.00   classes 30 facts covered 20 spawned 0
+  seed 1 phasecyte, untold        after wave 2: w0 0.86/0.85  w1 0.93/0.93  w2 1.00/1.00   classes 60 facts covered 30 spawned 0
+  seed 1 phasecyte, untold        after wave 3: w0 0.86/0.85  w1 1.00/1.00  w2 0.96/0.96  w3 0.93/0.93   classes 109 facts covered 40 spawned 0
+  seed 1 class mean               after wave 0: w0 0.96/0.96   numbers per fact 64
+  seed 1 class mean               after wave 1: w0 0.96/0.96  w1 1.00/1.00   numbers per fact 64
+  seed 1 class mean               after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 1 class mean               after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 1 one-shot key table       after wave 0: w0 0.96/0.96   numbers per fact 32
+  seed 1 one-shot key table       after wave 1: w0 0.96/0.96  w1 1.00/1.00   numbers per fact 32
+  seed 1 one-shot key table       after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99   numbers per fact 32
+  seed 1 one-shot key table       after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   numbers per fact 32
+  seed 2 phasecyte, told ledger   after wave 0: w0 0.90/0.90   classes 13 facts covered 9 spawned 0
+  seed 2 phasecyte, told tags     after wave 0: w0 0.91/0.91   classes 13 facts covered 10 spawned 0
+  seed 2 phasecyte, told ledger   after wave 1: w0 0.90/0.90  w1 0.99/0.99   classes 36 facts covered 19 spawned 0
+  seed 2 phasecyte, told tags     after wave 1: w0 0.93/0.93  w1 0.99/0.99   classes 36 facts covered 20 spawned 0
+  seed 2 phasecyte, told ledger   after wave 2: w0 0.80/0.80  w1 0.70/0.70  w2 0.99/0.99   classes 80 facts covered 25 spawned 0
+  seed 2 phasecyte, told tags     after wave 2: w0 0.94/0.94  w1 0.99/0.99  w2 0.99/0.99   classes 80 facts covered 30 spawned 0
+  seed 2 phasecyte, told ledger   after wave 3: w0 0.70/0.70  w1 0.70/0.70  w2 0.92/0.92  w3 1.00/1.00   classes 159 facts covered 35 spawned 0
+  seed 2 phasecyte, told tags     after wave 3: w0 0.94/0.94  w1 0.99/0.99  w2 0.99/0.99  w3 1.00/1.00   classes 159 facts covered 40 spawned 0
+  seed 2 phasecyte, untold        after wave 0: w0 0.90/0.90   classes 13 facts covered 9 spawned 0
+  seed 2 phasecyte, untold        after wave 1: w0 0.90/0.90  w1 0.99/0.99   classes 36 facts covered 20 spawned 0
+  seed 2 phasecyte, untold        after wave 2: w0 0.87/0.87  w1 0.99/0.99  w2 0.98/0.98   classes 81 facts covered 30 spawned 0
+  seed 2 phasecyte, untold        after wave 3: w0 0.90/0.90  w1 0.99/0.99  w2 0.99/0.99  w3 1.00/1.00   classes 139 facts covered 40 spawned 0
+  seed 2 class mean               after wave 0: w0 0.97/0.97   numbers per fact 64
+  seed 2 class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00   numbers per fact 64
+  seed 2 class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 2 class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 2 one-shot key table       after wave 0: w0 0.95/0.95   numbers per fact 32
+  seed 2 one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/1.00   numbers per fact 32
+  seed 2 one-shot key table       after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99   numbers per fact 32
+  seed 2 one-shot key table       after wave 3: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   numbers per fact 32
+
+# mean over 3 splits: top1/hit per wave column (rows: after wave)
+phasecyte, told ledger   after wave 0: w0 0.91/0.91
+phasecyte, told tags     after wave 0: w0 0.92/0.91
+phasecyte, told ledger   after wave 1: w0 0.91/0.91  w1 1.00/1.00
+phasecyte, told tags     after wave 1: w0 0.93/0.93  w1 1.00/1.00
+phasecyte, told ledger   after wave 2: w0 0.81/0.81  w1 0.77/0.77  w2 0.99/0.99
+phasecyte, told tags     after wave 2: w0 0.94/0.93  w1 1.00/1.00  w2 0.99/0.99
+phasecyte, told ledger   after wave 3: w0 0.77/0.76  w1 0.70/0.70  w2 0.90/0.90  w3 1.00/1.00
+phasecyte, told tags     after wave 3: w0 0.91/0.91  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00
+phasecyte, untold        after wave 0: w0 0.89/0.89
+phasecyte, untold        after wave 1: w0 0.90/0.90  w1 1.00/1.00
+phasecyte, untold        after wave 2: w0 0.88/0.87  w1 0.97/0.97  w2 0.99/0.99
+phasecyte, untold        after wave 3: w0 0.88/0.87  w1 1.00/1.00  w2 0.98/0.98  w3 0.98/0.98
+class mean               after wave 0: w0 0.97/0.97
+class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00
+class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00
+class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00
+one-shot key table       after wave 0: w0 0.95/0.95
+one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/1.00
+one-shot key table       after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.98
+one-shot key table       after wave 3: w0 0.95/0.95  w1 0.99/0.99  w2 0.99/0.98  w3 1.00/1.00
+
+# pilot stream  rows=2160 facts=40 untaught rows=120 window=50 repeats=1 kp=64 cap=0 hold=10 composer=1 seeds=3
+  seed 0 phasecyte, told ledger   after wave 0: w0 0.90/0.89   classes 11 facts covered 10 spawned 0
+  seed 0 phasecyte, told tags     after wave 0: w0 0.90/0.89   classes 11 facts covered 9 spawned 0
+  seed 0 phasecyte, told ledger   after wave 1: w0 0.90/0.89  w1 1.00/1.00   classes 25 facts covered 19 spawned 0
+  seed 0 phasecyte, told tags     after wave 1: w0 0.89/0.88  w1 1.00/1.00   classes 25 facts covered 20 spawned 0
+  seed 0 phasecyte, told ledger   after wave 2: w0 0.80/0.79  w1 0.70/0.70  w2 1.00/1.00   classes 37 facts covered 26 spawned 0
+  seed 0 phasecyte, told tags     after wave 2: w0 0.92/0.91  w1 1.00/1.00  w2 1.00/1.00   classes 37 facts covered 30 spawned 0
+  seed 0 phasecyte, told ledger   after wave 3: w0 0.55/0.55  w1 0.70/0.70  w2 0.90/0.90  w3 1.00/1.00   classes 52 facts covered 34 spawned 0
+  seed 0 phasecyte, told tags     after wave 3: w0 0.87/0.86  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 52 facts covered 40 spawned 0
+  seed 0 phasecyte, untold        after wave 0: w0 0.90/0.89   classes 11 facts covered 9 spawned 0
+  seed 0 phasecyte, untold        after wave 1: w0 0.88/0.87  w1 1.00/1.00   classes 25 facts covered 20 spawned 0
+  seed 0 phasecyte, untold        after wave 2: w0 0.89/0.88  w1 1.00/1.00  w2 1.00/1.00   classes 38 facts covered 30 spawned 0
+  seed 0 phasecyte, untold        after wave 3: w0 0.89/0.88  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 51 facts covered 40 spawned 0
+  seed 0 class mean               after wave 0: w0 0.98/0.98   numbers per fact 64
+  seed 0 class mean               after wave 1: w0 0.98/0.98  w1 1.00/1.00   numbers per fact 64
+  seed 0 class mean               after wave 2: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 0 class mean               after wave 3: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 0 one-shot key table       after wave 0: w0 0.95/0.95   numbers per fact 32
+  seed 0 one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/0.99   numbers per fact 32
+  seed 0 one-shot key table       after wave 2: w0 0.95/0.95  w1 0.99/0.99  w2 0.98/0.97   numbers per fact 32
+  seed 0 one-shot key table       after wave 3: w0 0.95/0.95  w1 0.98/0.97  w2 0.98/0.97  w3 1.00/1.00   numbers per fact 32
+  seed 1 phasecyte, told ledger   after wave 0: w0 0.94/0.93   classes 11 facts covered 10 spawned 0
+  seed 1 phasecyte, told tags     after wave 0: w0 0.94/0.93   classes 11 facts covered 10 spawned 0
+  seed 1 phasecyte, told ledger   after wave 1: w0 0.84/0.83  w1 1.00/1.00   classes 24 facts covered 19 spawned 0
+  seed 1 phasecyte, told tags     after wave 1: w0 0.94/0.93  w1 1.00/1.00   classes 24 facts covered 20 spawned 0
+  seed 1 phasecyte, told ledger   after wave 2: w0 0.73/0.72  w1 0.70/0.70  w2 1.00/1.00   classes 36 facts covered 25 spawned 0
+  seed 1 phasecyte, told tags     after wave 2: w0 0.93/0.92  w1 0.99/0.99  w2 0.90/0.90   classes 36 facts covered 29 spawned 0
+  seed 1 phasecyte, told ledger   after wave 3: w0 0.56/0.55  w1 0.70/0.70  w2 0.80/0.80  w3 1.00/1.00   classes 56 facts covered 32 spawned 0
+  seed 1 phasecyte, told tags     after wave 3: w0 0.94/0.93  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 56 facts covered 40 spawned 0
+  seed 1 phasecyte, untold        after wave 0: w0 0.88/0.87   classes 11 facts covered 10 spawned 0
+  seed 1 phasecyte, untold        after wave 1: w0 0.90/0.89  w1 1.00/1.00   classes 24 facts covered 20 spawned 0
+  seed 1 phasecyte, untold        after wave 2: w0 0.86/0.85  w1 0.97/0.97  w2 1.00/1.00   classes 41 facts covered 30 spawned 0
+  seed 1 phasecyte, untold        after wave 3: w0 0.86/0.85  w1 0.97/0.97  w2 1.00/1.00  w3 0.90/0.90   classes 63 facts covered 39 spawned 0
+  seed 1 class mean               after wave 0: w0 0.96/0.96   numbers per fact 64
+  seed 1 class mean               after wave 1: w0 0.96/0.96  w1 1.00/1.00   numbers per fact 64
+  seed 1 class mean               after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 1 class mean               after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 1 one-shot key table       after wave 0: w0 0.96/0.96   numbers per fact 32
+  seed 1 one-shot key table       after wave 1: w0 0.96/0.96  w1 1.00/1.00   numbers per fact 32
+  seed 1 one-shot key table       after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99   numbers per fact 32
+  seed 1 one-shot key table       after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   numbers per fact 32
+  seed 2 phasecyte, told ledger   after wave 0: w0 0.96/0.96   classes 10 facts covered 10 spawned 0
+  seed 2 phasecyte, told tags     after wave 0: w0 0.96/0.96   classes 10 facts covered 10 spawned 0
+  seed 2 phasecyte, told ledger   after wave 1: w0 0.80/0.80  w1 0.99/0.99   classes 28 facts covered 18 spawned 0
+  seed 2 phasecyte, told tags     after wave 1: w0 0.91/0.91  w1 0.99/0.99   classes 28 facts covered 20 spawned 0
+  seed 2 phasecyte, told ledger   after wave 2: w0 0.60/0.60  w1 0.79/0.79  w2 0.98/0.98   classes 47 facts covered 25 spawned 0
+  seed 2 phasecyte, told tags     after wave 2: w0 0.90/0.90  w1 0.99/0.99  w2 0.98/0.98   classes 47 facts covered 30 spawned 0
+  seed 2 phasecyte, told ledger   after wave 3: w0 0.56/0.56  w1 0.69/0.69  w2 0.82/0.82  w3 0.90/0.90   classes 94 facts covered 33 spawned 0
+  seed 2 phasecyte, told tags     after wave 3: w0 0.96/0.96  w1 0.98/0.98  w2 0.99/0.99  w3 1.00/1.00   classes 94 facts covered 40 spawned 0
+  seed 2 phasecyte, untold        after wave 0: w0 0.90/0.90   classes 10 facts covered 9 spawned 0
+  seed 2 phasecyte, untold        after wave 1: w0 0.90/0.90  w1 0.80/0.80   classes 17 facts covered 17 spawned 0
+  seed 2 phasecyte, untold        after wave 2: w0 0.88/0.88  w1 1.00/1.00  w2 0.99/0.99   classes 36 facts covered 30 spawned 0
+  seed 2 phasecyte, untold        after wave 3: w0 0.89/0.89  w1 1.00/1.00  w2 0.98/0.98  w3 0.90/0.90   classes 58 facts covered 39 spawned 0
+  seed 2 class mean               after wave 0: w0 0.97/0.97   numbers per fact 64
+  seed 2 class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00   numbers per fact 64
+  seed 2 class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 2 class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 2 one-shot key table       after wave 0: w0 0.95/0.95   numbers per fact 32
+  seed 2 one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/1.00   numbers per fact 32
+  seed 2 one-shot key table       after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99   numbers per fact 32
+  seed 2 one-shot key table       after wave 3: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   numbers per fact 32
+
+# mean over 3 splits: top1/hit per wave column (rows: after wave)
+phasecyte, told ledger   after wave 0: w0 0.93/0.93
+phasecyte, told tags     after wave 0: w0 0.93/0.93
+phasecyte, told ledger   after wave 1: w0 0.85/0.84  w1 1.00/1.00
+phasecyte, told tags     after wave 1: w0 0.91/0.91  w1 1.00/1.00
+phasecyte, told ledger   after wave 2: w0 0.71/0.70  w1 0.73/0.73  w2 0.99/0.99
+phasecyte, told tags     after wave 2: w0 0.92/0.91  w1 0.99/0.99  w2 0.96/0.96
+phasecyte, told ledger   after wave 3: w0 0.56/0.55  w1 0.70/0.70  w2 0.84/0.84  w3 0.97/0.97
+phasecyte, told tags     after wave 3: w0 0.92/0.92  w1 0.99/0.99  w2 1.00/1.00  w3 1.00/1.00
+phasecyte, untold        after wave 0: w0 0.89/0.89
+phasecyte, untold        after wave 1: w0 0.89/0.89  w1 0.93/0.93
+phasecyte, untold        after wave 2: w0 0.88/0.87  w1 0.99/0.99  w2 1.00/1.00
+phasecyte, untold        after wave 3: w0 0.88/0.87  w1 0.99/0.99  w2 0.99/0.99  w3 0.93/0.93
+class mean               after wave 0: w0 0.97/0.97
+class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00
+class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00
+class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00
+one-shot key table       after wave 0: w0 0.95/0.95
+one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/1.00
+one-shot key table       after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.98
+one-shot key table       after wave 3: w0 0.95/0.95  w1 0.99/0.99  w2 0.99/0.98  w3 1.00/1.00
+
+# pilot stream  rows=2160 facts=40 untaught rows=120 window=100 repeats=1 kp=64 cap=0 hold=10 composer=1 seeds=3
+  seed 0 phasecyte, told ledger   after wave 0: w0 0.50/0.50   classes 8 facts covered 5 spawned 0
+  seed 0 phasecyte, told tags     after wave 0: w0 0.80/0.79   classes 8 facts covered 8 spawned 0
+  seed 0 phasecyte, told ledger   after wave 1: w0 0.09/0.09  w1 0.80/0.80   classes 20 facts covered 10 spawned 0
+  seed 0 phasecyte, told tags     after wave 1: w0 0.91/0.90  w1 0.90/0.90   classes 20 facts covered 19 spawned 0
+  seed 0 phasecyte, told ledger   after wave 2: w0 0.10/0.10  w1 0.50/0.50  w2 0.85/0.85   classes 34 facts covered 19 spawned 0
+  seed 0 phasecyte, told tags     after wave 2: w0 0.90/0.89  w1 1.00/1.00  w2 0.85/0.85   classes 34 facts covered 29 spawned 0
+  seed 0 phasecyte, told ledger   after wave 3: w0 0.05/0.05  w1 0.40/0.40  w2 0.69/0.69  w3 0.90/0.90   classes 44 facts covered 25 spawned 0
+  seed 0 phasecyte, told tags     after wave 3: w0 0.92/0.91  w1 1.00/1.00  w2 0.99/0.99  w3 0.90/0.90   classes 44 facts covered 39 spawned 0
+  seed 0 phasecyte, untold        after wave 0: w0 0.80/0.79   classes 8 facts covered 8 spawned 0
+  seed 0 phasecyte, untold        after wave 1: w0 0.91/0.90  w1 0.90/0.90   classes 20 facts covered 19 spawned 0
+  seed 0 phasecyte, untold        after wave 2: w0 0.90/0.89  w1 1.00/1.00  w2 0.80/0.80   classes 34 facts covered 28 spawned 0
+  seed 0 phasecyte, untold        after wave 3: w0 0.95/0.94  w1 1.00/1.00  w2 0.88/0.88  w3 1.00/1.00   classes 45 facts covered 40 spawned 0
+  seed 0 class mean               after wave 0: w0 0.98/0.98   numbers per fact 64
+  seed 0 class mean               after wave 1: w0 0.98/0.98  w1 1.00/1.00   numbers per fact 64
+  seed 0 class mean               after wave 2: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 0 class mean               after wave 3: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 0 one-shot key table       after wave 0: w0 0.95/0.95   numbers per fact 32
+  seed 0 one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/0.99   numbers per fact 32
+  seed 0 one-shot key table       after wave 2: w0 0.95/0.95  w1 0.99/0.99  w2 0.98/0.97   numbers per fact 32
+  seed 0 one-shot key table       after wave 3: w0 0.95/0.95  w1 0.98/0.97  w2 0.98/0.97  w3 1.00/1.00   numbers per fact 32
+  seed 1 phasecyte, told ledger   after wave 0: w0 0.50/0.49   classes 8 facts covered 5 spawned 0
+  seed 1 phasecyte, told tags     after wave 0: w0 0.80/0.79   classes 8 facts covered 8 spawned 0
+  seed 1 phasecyte, told ledger   after wave 1: w0 0.18/0.18  w1 0.80/0.80   classes 20 facts covered 12 spawned 0
+  seed 1 phasecyte, told tags     after wave 1: w0 0.96/0.95  w1 0.80/0.80   classes 20 facts covered 18 spawned 0
+  seed 1 phasecyte, told ledger   after wave 2: w0 0.18/0.18  w1 0.50/0.50  w2 0.90/0.90   classes 31 facts covered 20 spawned 0
+  seed 1 phasecyte, told tags     after wave 2: w0 0.93/0.92  w1 1.00/1.00  w2 0.80/0.80   classes 31 facts covered 29 spawned 0
+  seed 1 phasecyte, told ledger   after wave 3: w0 0.17/0.17  w1 0.50/0.50  w2 0.70/0.70  w3 1.00/1.00   classes 50 facts covered 29 spawned 0
+  seed 1 phasecyte, told tags     after wave 3: w0 0.90/0.89  w1 1.00/1.00  w2 0.95/0.95  w3 1.00/1.00   classes 50 facts covered 40 spawned 0
+  seed 1 phasecyte, untold        after wave 0: w0 0.80/0.79   classes 8 facts covered 8 spawned 0
+  seed 1 phasecyte, untold        after wave 1: w0 0.95/0.94  w1 0.90/0.90   classes 21 facts covered 19 spawned 0
+  seed 1 phasecyte, untold        after wave 2: w0 0.94/0.93  w1 1.00/1.00  w2 0.85/0.85   classes 31 facts covered 29 spawned 0
+  seed 1 phasecyte, untold        after wave 3: w0 0.87/0.86  w1 0.99/0.99  w2 0.91/0.91  w3 0.83/0.83   classes 50 facts covered 39 spawned 0
+  seed 1 class mean               after wave 0: w0 0.96/0.96   numbers per fact 64
+  seed 1 class mean               after wave 1: w0 0.96/0.96  w1 1.00/1.00   numbers per fact 64
+  seed 1 class mean               after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 1 class mean               after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 1 one-shot key table       after wave 0: w0 0.96/0.96   numbers per fact 32
+  seed 1 one-shot key table       after wave 1: w0 0.96/0.96  w1 1.00/1.00   numbers per fact 32
+  seed 1 one-shot key table       after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99   numbers per fact 32
+  seed 1 one-shot key table       after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   numbers per fact 32
+  seed 2 phasecyte, told ledger   after wave 0: w0 0.40/0.40   classes 8 facts covered 4 spawned 0
+  seed 2 phasecyte, told tags     after wave 0: w0 0.80/0.80   classes 8 facts covered 8 spawned 0
+  seed 2 phasecyte, told ledger   after wave 1: w0 0.38/0.38  w1 0.70/0.70   classes 21 facts covered 11 spawned 0
+  seed 2 phasecyte, told tags     after wave 1: w0 0.91/0.91  w1 0.90/0.90   classes 21 facts covered 19 spawned 0
+  seed 2 phasecyte, told ledger   after wave 2: w0 0.38/0.38  w1 0.40/0.40  w2 0.89/0.89   classes 30 facts covered 19 spawned 0
+  seed 2 phasecyte, told tags     after wave 2: w0 0.89/0.89  w1 0.90/0.90  w2 0.89/0.89   classes 30 facts covered 28 spawned 0
+  seed 2 phasecyte, told ledger   after wave 3: w0 0.28/0.28  w1 0.30/0.30  w2 0.79/0.79  w3 0.90/0.90   classes 44 facts covered 26 spawned 0
+  seed 2 phasecyte, told tags     after wave 3: w0 0.90/0.90  w1 0.90/0.90  w2 0.99/0.99  w3 1.00/1.00   classes 44 facts covered 38 spawned 0
+  seed 2 phasecyte, untold        after wave 0: w0 0.80/0.80   classes 8 facts covered 8 spawned 0
+  seed 2 phasecyte, untold        after wave 1: w0 0.92/0.92  w1 0.90/0.90   classes 21 facts covered 19 spawned 0
+  seed 2 phasecyte, untold        after wave 2: w0 0.89/0.89  w1 0.90/0.90  w2 0.87/0.87   classes 30 facts covered 28 spawned 0
+  seed 2 phasecyte, untold        after wave 3: w0 0.89/0.89  w1 0.90/0.90  w2 0.96/0.96  w3 0.90/0.90   classes 43 facts covered 38 spawned 0
+  seed 2 class mean               after wave 0: w0 0.97/0.97   numbers per fact 64
+  seed 2 class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00   numbers per fact 64
+  seed 2 class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 2 class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 2 one-shot key table       after wave 0: w0 0.95/0.95   numbers per fact 32
+  seed 2 one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/1.00   numbers per fact 32
+  seed 2 one-shot key table       after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99   numbers per fact 32
+  seed 2 one-shot key table       after wave 3: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   numbers per fact 32
+
+# mean over 3 splits: top1/hit per wave column (rows: after wave)
+phasecyte, told ledger   after wave 0: w0 0.47/0.46
+phasecyte, told tags     after wave 0: w0 0.80/0.79
+phasecyte, told ledger   after wave 1: w0 0.22/0.22  w1 0.77/0.77
+phasecyte, told tags     after wave 1: w0 0.93/0.92  w1 0.87/0.87
+phasecyte, told ledger   after wave 2: w0 0.22/0.22  w1 0.47/0.47  w2 0.88/0.88
+phasecyte, told tags     after wave 2: w0 0.91/0.90  w1 0.97/0.97  w2 0.85/0.85
+phasecyte, told ledger   after wave 3: w0 0.17/0.17  w1 0.40/0.40  w2 0.73/0.73  w3 0.93/0.93
+phasecyte, told tags     after wave 3: w0 0.91/0.90  w1 0.97/0.97  w2 0.98/0.98  w3 0.97/0.97
+phasecyte, untold        after wave 0: w0 0.80/0.79
+phasecyte, untold        after wave 1: w0 0.93/0.92  w1 0.90/0.90
+phasecyte, untold        after wave 2: w0 0.91/0.90  w1 0.97/0.97  w2 0.84/0.84
+phasecyte, untold        after wave 3: w0 0.90/0.90  w1 0.96/0.96  w2 0.92/0.92  w3 0.91/0.91
+class mean               after wave 0: w0 0.97/0.97
+class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00
+class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00
+class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00
+one-shot key table       after wave 0: w0 0.95/0.95
+one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/1.00
+one-shot key table       after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.98
+one-shot key table       after wave 3: w0 0.95/0.95  w1 0.99/0.99  w2 0.99/0.98  w3 1.00/1.00
+
+# pilot stream  rows=2160 facts=40 untaught rows=120 window=100 repeats=3 kp=64 cap=0 hold=10 composer=1 seeds=3
+  seed 0 phasecyte, told ledger   after wave 0: w0 0.90/0.90   classes 35 facts covered 10 spawned 0
+  seed 0 phasecyte, told tags     after wave 0: w0 0.90/0.90   classes 35 facts covered 10 spawned 0
+  seed 0 phasecyte, told ledger   after wave 1: w0 0.88/0.87  w1 1.00/1.00   classes 70 facts covered 20 spawned 0
+  seed 0 phasecyte, told tags     after wave 1: w0 0.92/0.91  w1 1.00/1.00   classes 70 facts covered 20 spawned 0
+  seed 0 phasecyte, told ledger   after wave 2: w0 0.87/0.86  w1 0.99/0.99  w2 1.00/1.00   classes 112 facts covered 30 spawned 0
+  seed 0 phasecyte, told tags     after wave 2: w0 0.92/0.91  w1 1.00/1.00  w2 1.00/1.00   classes 112 facts covered 30 spawned 0
+  seed 0 phasecyte, told ledger   after wave 3: w0 0.83/0.83  w1 0.99/0.99  w2 0.99/0.99  w3 1.00/1.00   classes 164 facts covered 40 spawned 0
+  seed 0 phasecyte, told tags     after wave 3: w0 0.93/0.93  w1 0.99/0.99  w2 0.99/0.99  w3 1.00/1.00   classes 164 facts covered 40 spawned 0
+  seed 0 phasecyte, untold        after wave 0: w0 0.90/0.90   classes 34 facts covered 10 spawned 0
+  seed 0 phasecyte, untold        after wave 1: w0 0.89/0.88  w1 1.00/1.00   classes 78 facts covered 20 spawned 0
+  seed 0 phasecyte, untold        after wave 2: w0 0.87/0.86  w1 1.00/1.00  w2 1.00/1.00   classes 137 facts covered 30 spawned 0
+  seed 0 phasecyte, untold        after wave 3: w0 0.88/0.87  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 179 facts covered 40 spawned 0
+  seed 0 class mean               after wave 0: w0 0.98/0.98   numbers per fact 64
+  seed 0 class mean               after wave 1: w0 0.98/0.98  w1 1.00/1.00   numbers per fact 64
+  seed 0 class mean               after wave 2: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 0 class mean               after wave 3: w0 0.98/0.98  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 0 one-shot key table       after wave 0: w0 0.95/0.95   numbers per fact 32
+  seed 0 one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/0.99   numbers per fact 32
+  seed 0 one-shot key table       after wave 2: w0 0.95/0.95  w1 0.99/0.99  w2 0.98/0.97   numbers per fact 32
+  seed 0 one-shot key table       after wave 3: w0 0.95/0.95  w1 0.98/0.97  w2 0.98/0.97  w3 1.00/1.00   numbers per fact 32
+  seed 1 phasecyte, told ledger   after wave 0: w0 0.96/0.95   classes 31 facts covered 10 spawned 0
+  seed 1 phasecyte, told tags     after wave 0: w0 0.96/0.95   classes 31 facts covered 10 spawned 0
+  seed 1 phasecyte, told ledger   after wave 1: w0 0.95/0.94  w1 1.00/1.00   classes 79 facts covered 20 spawned 0
+  seed 1 phasecyte, told tags     after wave 1: w0 0.95/0.94  w1 1.00/1.00   classes 79 facts covered 20 spawned 0
+  seed 1 phasecyte, told ledger   after wave 2: w0 0.95/0.94  w1 0.98/0.98  w2 1.00/1.00   classes 121 facts covered 30 spawned 0
+  seed 1 phasecyte, told tags     after wave 2: w0 0.95/0.94  w1 1.00/1.00  w2 1.00/1.00   classes 121 facts covered 30 spawned 0
+  seed 1 phasecyte, told ledger   after wave 3: w0 0.93/0.92  w1 0.99/0.99  w2 1.00/1.00  w3 1.00/1.00   classes 160 facts covered 40 spawned 0
+  seed 1 phasecyte, told tags     after wave 3: w0 0.94/0.93  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   classes 160 facts covered 40 spawned 0
+  seed 1 phasecyte, untold        after wave 0: w0 0.86/0.85   classes 28 facts covered 10 spawned 0
+  seed 1 phasecyte, untold        after wave 1: w0 0.87/0.87  w1 1.00/1.00   classes 61 facts covered 20 spawned 0
+  seed 1 phasecyte, untold        after wave 2: w0 0.91/0.91  w1 1.00/1.00  w2 0.96/0.96   classes 111 facts covered 30 spawned 0
+  seed 1 phasecyte, untold        after wave 3: w0 0.88/0.88  w1 1.00/1.00  w2 0.97/0.97  w3 1.00/1.00   classes 164 facts covered 40 spawned 0
+  seed 1 class mean               after wave 0: w0 0.96/0.96   numbers per fact 64
+  seed 1 class mean               after wave 1: w0 0.96/0.96  w1 1.00/1.00   numbers per fact 64
+  seed 1 class mean               after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 1 class mean               after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 1 one-shot key table       after wave 0: w0 0.96/0.96   numbers per fact 32
+  seed 1 one-shot key table       after wave 1: w0 0.96/0.96  w1 1.00/1.00   numbers per fact 32
+  seed 1 one-shot key table       after wave 2: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99   numbers per fact 32
+  seed 1 one-shot key table       after wave 3: w0 0.96/0.96  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   numbers per fact 32
+  seed 2 phasecyte, told ledger   after wave 0: w0 0.94/0.94   classes 26 facts covered 10 spawned 0
+  seed 2 phasecyte, told tags     after wave 0: w0 0.94/0.94   classes 26 facts covered 10 spawned 0
+  seed 2 phasecyte, told ledger   after wave 1: w0 0.96/0.96  w1 0.90/0.90   classes 44 facts covered 19 spawned 0
+  seed 2 phasecyte, told tags     after wave 1: w0 0.96/0.96  w1 0.90/0.90   classes 44 facts covered 19 spawned 0
+  seed 2 phasecyte, told ledger   after wave 2: w0 0.95/0.95  w1 0.88/0.88  w2 0.99/0.99   classes 71 facts covered 29 spawned 0
+  seed 2 phasecyte, told tags     after wave 2: w0 0.95/0.95  w1 0.90/0.90  w2 0.99/0.99   classes 71 facts covered 29 spawned 0
+  seed 2 phasecyte, told ledger   after wave 3: w0 0.93/0.93  w1 0.88/0.88  w2 0.99/0.99  w3 0.90/0.90   classes 92 facts covered 38 spawned 0
+  seed 2 phasecyte, told tags     after wave 3: w0 0.95/0.95  w1 0.90/0.90  w2 0.99/0.99  w3 0.90/0.90   classes 92 facts covered 38 spawned 0
+  seed 2 phasecyte, untold        after wave 0: w0 0.88/0.88   classes 19 facts covered 10 spawned 0
+  seed 2 phasecyte, untold        after wave 1: w0 0.89/0.89  w1 0.80/0.80   classes 39 facts covered 18 spawned 0
+  seed 2 phasecyte, untold        after wave 2: w0 0.89/0.89  w1 0.80/0.80  w2 0.96/0.96   classes 76 facts covered 28 spawned 0
+  seed 2 phasecyte, untold        after wave 3: w0 0.88/0.88  w1 0.90/0.90  w2 0.96/0.96  w3 0.90/0.90   classes 101 facts covered 38 spawned 0
+  seed 2 class mean               after wave 0: w0 0.97/0.97   numbers per fact 64
+  seed 2 class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00   numbers per fact 64
+  seed 2 class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00   numbers per fact 64
+  seed 2 class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00   numbers per fact 64
+  seed 2 one-shot key table       after wave 0: w0 0.95/0.95   numbers per fact 32
+  seed 2 one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/1.00   numbers per fact 32
+  seed 2 one-shot key table       after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99   numbers per fact 32
+  seed 2 one-shot key table       after wave 3: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.99  w3 1.00/1.00   numbers per fact 32
+
+# mean over 3 splits: top1/hit per wave column (rows: after wave)
+phasecyte, told ledger   after wave 0: w0 0.93/0.93
+phasecyte, told tags     after wave 0: w0 0.93/0.93
+phasecyte, told ledger   after wave 1: w0 0.93/0.92  w1 0.97/0.97
+phasecyte, told tags     after wave 1: w0 0.94/0.94  w1 0.97/0.97
+phasecyte, told ledger   after wave 2: w0 0.92/0.92  w1 0.95/0.95  w2 1.00/1.00
+phasecyte, told tags     after wave 2: w0 0.94/0.93  w1 0.97/0.97  w2 1.00/1.00
+phasecyte, told ledger   after wave 3: w0 0.90/0.89  w1 0.95/0.95  w2 0.99/0.99  w3 0.97/0.97
+phasecyte, told tags     after wave 3: w0 0.94/0.94  w1 0.96/0.96  w2 0.99/0.99  w3 0.97/0.97
+phasecyte, untold        after wave 0: w0 0.88/0.88
+phasecyte, untold        after wave 1: w0 0.88/0.88  w1 0.93/0.93
+phasecyte, untold        after wave 2: w0 0.89/0.89  w1 0.93/0.93  w2 0.97/0.97
+phasecyte, untold        after wave 3: w0 0.88/0.88  w1 0.97/0.97  w2 0.98/0.98  w3 0.97/0.97
+class mean               after wave 0: w0 0.97/0.97
+class mean               after wave 1: w0 0.97/0.97  w1 1.00/1.00
+class mean               after wave 2: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00
+class mean               after wave 3: w0 0.97/0.97  w1 1.00/1.00  w2 1.00/1.00  w3 1.00/1.00
+one-shot key table       after wave 0: w0 0.95/0.95
+one-shot key table       after wave 1: w0 0.95/0.95  w1 1.00/1.00
+one-shot key table       after wave 2: w0 0.95/0.95  w1 1.00/1.00  w2 0.99/0.98
+one-shot key table       after wave 3: w0 0.95/0.95  w1 0.99/0.99  w2 0.99/0.98  w3 1.00/1.00
+

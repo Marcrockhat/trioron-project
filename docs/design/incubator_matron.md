@@ -389,6 +389,48 @@ Reading:
   quad cells tie the linear key at every size; swapping only the readout on
   the softmax-trained weights recovers little. All of this is batch training
   of a fixed-size leaf (Rocky s066: not how the organism is meant to learn).
+- **Training-regime correction (Rocky, s066).** Every leaf above was trained
+  as a fixed-size network on shuffled batches of the whole set. That tests the
+  quad cell as a static layer, not the organism: "it is never a batch at the
+  beginning — it is an embryo and a baby that keeps absorbing". A batch-trained
+  leaf is from now on a CONTROL arm. For fact memory Rocky names the Phasecyte
+  (spec §10) as the learner; feed rate against the boundary (manifold / dream
+  trigger) is a first-class setting, because overfeeding loses information.
+- **Phasecyte pilot (s066; `pilot_collect.py`, `pilot_stream.py`, logs
+  `pilot_stream_s066.log`, `pilot_stream_nocap_s066.log`; 3 splits).** 40 facts
+  (20 articles × 2 questions, so each has a same-subject sibling), 50 matron
+  rewordings each (12 % are > .9 similar to another wording of the same fact),
+  10 held out per fact; 20 untaught questions as negatives. Facts arrive in
+  four waves of 10; nothing is frozen and earlier waves are never shown again.
+  One `PhasecyteLeaf` on a 64-number PCA sense of the reflex's read state
+  (sense fitted on other articles). Top-1 on held-out wordings after wave 3,
+  per wave w0..w3, mean; W = questions per boundary:
+  - class cap 43 (default): W=25 .92 .77 .53 .31 (.63); W=50 .92 .87 .80 .50
+    (.77); W=100 .93 .93 .98 .77 (.90); W=200 .89 .86 .99 .67 (.85); W=400
+    (a whole wave in one boundary) .00 .20 .43 .17 (.20), 8 classes for 40
+    facts; W=100 heard 3× .92 .60 .23 .43 (.55).
+  - no cap: W=25 .91 1.00 .99 1.00 (.976 ± .004), 142 classes; W=50 .92 .99
+    1.00 1.00 (.978 ± .009), 67 classes; W=100 .91 .97 .98 .97 (.954 ± .008),
+    46 classes; W=100 heard 3× .94 .96 .99 .97 (.966 ± .027), 139 classes.
+    Untold (no labels, classes named afterwards by majority) .92–.96.
+  - controls: running class mean (64 numbers per fact) .993 ± .003; s065
+    one-shot key table (32 numbers, ONE stored wording) .983 ± .005.
+  Reading: (1) the phasecyte KEEPS LEARNING — wave 0 stays at .91–.94 after
+  three later waves at every working feed rate, and all 40 facts get a class;
+  (2) overfeeding is real — one boundary per 400 questions leaves 8 classes;
+  (3) underfeeding per boundary is not harmful by itself, but every boundary
+  divides, so classes multiply (3.5 per fact at W=25) and the default 43-class
+  cap then blocks LATE facts, not early ones; (4) false recall is not the
+  problem (threshold at 5 % of untaught questions costs < .01); (5) it does
+  not beat either control, and its store is larger than both (per class a
+  template plus a rolling buffer of member samples); (6) the shipped
+  `PhasecyteLeaf.names()` is wrong for this use — it reads the lifetime label
+  ledger, which inherits counts through divisions (W=100: .54 against .90 for
+  the same organism named by its current buffer tags; the weakness is recorded
+  in `mixed._majorities`, s034b). Caveats: 40 facts, one sense size, matron
+  wordings with near-duplicates, thresholds set on the test negatives, class
+  count still rising when the stream ends (no self-arrest seen). Not done: the
+  two-leaf nest arm; a merge of same-fact classes; larger fact counts.
 - Not yet tested: (a) the replay dream end to end through the reflex (re-read
   cost ~0.5 s per kept question: ~50 min for the 5,900 lesson rows here);
   (b) a per-fact threshold (each fact's own spread — the manifold σ the design

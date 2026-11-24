@@ -2,10 +2,63 @@
 
 **Session date:** 2026-11-24
 **Session number:** 066
-**Session title (s066: RECOVERY after a system shutdown — consolidation test finished):**
-**s065 ended in an unplanned shutdown at ~14:50 with one run in flight (the consolidation test).
-s066 checked the repo (clean, pushed, fsck clean), reran that test, and recorded it below. Nothing
-else changed; the s065 body is kept because it is still the current state.**
+**Session title (s066: recovery after a shutdown; training-regime correction; PHASECYTE PILOT):**
+**s065 ended in an unplanned shutdown (~14:50) with the consolidation test in flight; s066 reran
+it. Rocky then corrected the training regime — the organism is never batch-trained, it is a baby
+that keeps absorbing — and named the Phasecyte as the fact-memory learner. A 40-fact streaming
+pilot shows the phasecyte keeps old facts while learning new ones (.95–.98 with the class cap
+off), that overfeeding per boundary destroys it, and that it does not beat a running class mean
+(.993) or the s065 one-shot key table (.983).**
+
+## s066 — READ THIS FIRST
+- **Rocky's ruling (binding): never batch-train the organism.** A fixed-size leaf trained on
+  shuffled batches is a CONTROL arm, not "the trioron arm". The s064/s065 lines "trioron has not
+  earned its place" tested the quad cell as a static layer only. For fact memory the learner is
+  the Phasecyte; feed rate vs the boundary (manifold / dream trigger) must be set with care —
+  overfeeding loses information. Rocky's concern for the pilot: "that it can keep learning".
+- Rocky confirmed: phasecyte is canon (v0.3.3); the eye (§10.11) "is just a limb". He approved
+  option 2 (one class per fact by repeated exposure) and the 40 × 50 pilot size.
+- Consolidation test + readout check: see the two bullets in the s065 body below. Net: facts in
+  weights do not beat the table; the leaf lost to softmax-classifier TRAINING; quad = linear
+  under a cosine objective.
+
+## Phasecyte pilot (s066) — `experiments/incubator/pilot_stream.py`
+40 facts (20 articles × 2 questions), 50 matron rewordings each, 10 held out per fact, 20 untaught
+questions as negatives; four waves of 10 facts, nothing frozen, old waves never shown again; one
+`PhasecyteLeaf` on a 64-number PCA sense of the read state; 3 splits. Top-1 on held-out wordings
+after wave 3 (w0..w3, mean). W = questions per boundary. Phasecyte rows = told, named by buffer tags.
+
+| setting | w0 | w1 | w2 | w3 | mean | classes |
+|---|---|---|---|---|---|---|
+| cap 43, W=25 | .92 | .77 | .53 | .31 | .63 | 43 |
+| cap 43, W=50 | .92 | .87 | .80 | .50 | .77 | 43 |
+| cap 43, W=100 | .93 | .93 | .98 | .77 | .90 | 43 |
+| cap 43, W=200 | .89 | .86 | .99 | .67 | .85 | 42 |
+| cap 43, W=400 (whole wave per boundary) | .00 | .20 | .43 | .17 | .20 | 8 |
+| cap 43, W=100, heard 3× | .92 | .60 | .23 | .43 | .55 | 43 |
+| no cap, W=25 | .91 | 1.00 | .99 | 1.00 | .976±.004 | 142 |
+| no cap, W=50 | .92 | .99 | 1.00 | 1.00 | .978±.009 | 67 |
+| no cap, W=100 | .91 | .97 | .98 | .97 | .954±.008 | 46 |
+| no cap, W=100, heard 3× | .94 | .96 | .99 | .97 | .966±.027 | 139 |
+| control: running class mean (64 numbers) | .97 | 1.00 | 1.00 | 1.00 | .993±.003 | — |
+| control: s065 one-shot key table (32 numbers, 1 wording) | .95 | .99 | .99 | 1.00 | .983±.005 | — |
+
+Reading (Chloe's, not reviewed by Rocky):
+- Keeps learning: wave 0 holds .91–.94 after three later waves; all 40 facts get a class (no cap).
+  Untold arm (no labels, named afterwards) .92–.96.
+- Overfeeding confirmed: 400 per boundary → 8 classes for 40 facts. One division sitting per
+  boundary; too much per sitting blurs facts together.
+- The cap-43 failures at small W are LATE facts blocked by the class cap (classes multiply with
+  the number of boundaries: 3.5 per fact at W=25), not forgetting.
+- Does not beat either control, and stores more (template + rolling member buffer per class).
+- **`PhasecyteLeaf.names()` is wrong for many small classes** (lifetime label ledger inherits
+  counts through divisions): .54 vs .90 on the same organism at W=100. The driver names from
+  `mixed.tags` instead. `names()` itself NOT changed (shared with the nest benches) — decide
+  with Rocky.
+- Caveats: 40 facts; one sense size; 12 % of wordings are near-duplicates (> .9 similar);
+  thresholds set on test negatives; class count still rising at the end (no self-arrest seen).
+- First smoke on synthetic wordings was misleadingly easy (all 1.00); do not use SYNTH=1 for
+  anything but mechanics.
 
 **s065 summary (INCUBATOR STAGE 2 — fact memory, first cut):**
 **Vee got a key leaf and a memory (`learn_keys` / `remember` / `recall`). The matron wrote two
@@ -198,6 +251,13 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
 3. Terms check before any matron-written data is committed (carried from s064).
 
 ## NEXT (s067)
+00. Phasecyte fact memory (Rocky's direction, s066):
+   a. merge consumer for same-fact classes / self-arrest (class count must stop rising);
+   b. two-leaf nest arm (crossing the 43-class leaf boundary) — planned in s066, not run;
+   c. scale past 40 facts; feed-rate rule from the sweep (W ≈ 50–100 for 10 new facts);
+   d. where could it BEAT the class mean? candidates: untold discovery (no labels), per-fact σ
+      from the manifold sketch as the threshold, far fewer wordings per fact;
+   e. fix or replace `PhasecyteLeaf.names()` (buffer-tag naming) — needs Rocky's decision.
 0. Stage 2, where trioron could earn its place (pick with Rocky):
    a. per-fact threshold from each fact's own spread (manifold σ; needs ≥2 wordings per fact);
    b. DONE s065 (drift test): lock works, freeze works as well. Open: a regime where later
@@ -226,7 +286,8 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
 - **Deliberately uncommitted (local to this PC):** everything matron-written or derived in
   `outputs/incubator/`: s064's `stage1_*` data and `vee_stage1.pt`; s065's
   `stage2_para_in_part*.tsv`, `stage2_para_part*_c*.jsonl` (paraphrases; part9 = the fix job),
-  `stage2_keys.jsonl`, `stage2_keys.npz` (52 MB), collect logs. Rebuild: paraphrases need the
+  `stage2_keys.jsonl`, `stage2_keys.npz` (52 MB), collect logs; s066's `pilot_in_*.tsv`, `pilot_para_*.jsonl`
+  (2,100 rewordings, ~330 K helper tokens), `pilot_keys.jsonl`, `pilot_keys.npz` (`pilot_collect.py`, 25 min). Rebuild: paraphrases need the
   matron again; keys via `stage2_collect.py` (~75 min).
 - Memory (this PC only): `stage2_fact_memory_result.md`, `incubator_matron_arc.md`,
   `external_state_depth_result.md`.
