@@ -357,6 +357,25 @@ Reading:
   arena's ALLOCATED slots (cells × 69), not live weights. The quad key leaf has
   26,112 live weights (not 41,400), about 3× the linear key, not 5×; the stage 1
   leaf has 6,240 (not 12,834). No conclusion changes.
+- **Consolidation test (s065 script, run finished s066; `stage2_consolidate.py`,
+  log `stage2_consolidate_s065.log`, 3 splits).** Question: is a fact cheaper
+  in trained WEIGHTS than as a row in the key table? ~2,170 facts in memory,
+  same h numbers per fact in every arm, recall at 1 % false override (right
+  fact nearest in brackets). Table (learned linear key, one stored row per
+  fact): h=8 .407 ± .035 (.766), h=16 .616 ± .017 (.946), h=32 .727 ± .013
+  (.986). Rows trained as cosine prototypes, key leaf frozen: .320 / .607 /
+  .701. Rows + key leaf trained: .338 / .652 / .707; paired against the table
+  −.069 ± .036, +.036 ± .010, −.019 ± .030. Trioron quad leaf with one output
+  cell per fact (h interior cells), scored by top probability: .030 / .082 /
+  .469 (right fact nearest .395 / .661 / .901); by top logit .017 / .027 /
+  .139. Reading: consolidating facts into weights does not beat the one-shot
+  table (a small gain at 16 numbers only, 3/3 splits; a loss at 8). The trioron
+  leaf is far behind, mostly at the THRESHOLD: at h=32 it ranks the right fact
+  first .901 of the time but its confidence does not separate stored from
+  unstored questions. Caveat: the leaf arm differs from the row arms in two
+  things at once — the quad leaf and the readout (unnormalised logits /
+  softmax, against a cosine score for the rows) — so this run does not say
+  which one costs the recall. Untested: the leaf with a cosine readout.
 - Not yet tested: (a) the replay dream end to end through the reflex (re-read
   cost ~0.5 s per kept question: ~50 min for the 5,900 lesson rows here);
   (b) a per-fact threshold (each fact's own spread — the manifold σ the design

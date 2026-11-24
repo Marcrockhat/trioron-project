@@ -1,8 +1,13 @@
 # Trioron Handoff
 
 **Session date:** 2026-11-24
-**Session number:** 065
-**Session title (s065: INCUBATOR STAGE 2 — fact memory, first cut):**
+**Session number:** 066
+**Session title (s066: RECOVERY after a system shutdown — consolidation test finished):**
+**s065 ended in an unplanned shutdown at ~14:50 with one run in flight (the consolidation test).
+s066 checked the repo (clean, pushed, fsck clean), reran that test, and recorded it below. Nothing
+else changed; the s065 body is kept because it is still the current state.**
+
+**s065 summary (INCUBATOR STAGE 2 — fact memory, first cut):**
 **Vee got a key leaf and a memory (`learn_keys` / `remember` / `recall`). The matron wrote two
 rewordings of each of the 2,808 stage-1 questions. A learned 32-number key recalls a taught fact
 from a rewording better than a nearest-neighbour cache holding 3,072 numbers per fact (.907 vs
@@ -77,6 +82,15 @@ Honest reading:
   (after every lesson, 15 passes) .936/.897, vs frozen .881/.846 and joint .908/.892 → reaches the
   ceiling; per-split gain on new facts +.044±.046 / +.052±.036 / +.051±.044. Quad: .901/.851,
   .898/.846, .902/.846 vs frozen .866/.835, joint .919/.870 → gain inside the noise.
+- **Consolidation test** (run finished s066; `stage2_consolidate.py`, log
+  `stage2_consolidate_s065.log`, 3 splits, ~2,170 facts, same h numbers per fact; recall at 1 %
+  false override, h = 8 / 16 / 32): table .407 / .616 / .727; rows trained, key leaf frozen
+  .320 / .607 / .701; rows + key leaf trained .338 / .652 / .707 (paired vs table −.069±.036,
+  +.036±.010, −.019±.030); trioron quad leaf with one output cell per fact, top probability
+  .030 / .082 / .469 (right fact nearest .395 / .661 / .901 vs table .766 / .946 / .986).
+  Reading: weights do not beat the one-shot table; the leaf fails mostly at the threshold.
+  CAVEAT: the leaf arm changes the readout too (softmax / raw logit vs cosine), so leaf and
+  readout are confounded. Not reviewed by Rocky.
 - **PARAM COUNT CORRECTION:** `Organism.n_params()` counts ALLOCATED arena slots (cells × 69), not
   live weights. Quad key leaf = 26,112 live (not 41,400; ~3× linear, not 5×); stage 1 leaf = 6,240
   (not 12,834). Conclusions unchanged. `n_params` itself NOT changed (shared with Logophosis /
@@ -179,7 +193,7 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    unknown whether the Sonnet helpers (~590 K tokens) count on that bar or a separate one.
 3. Terms check before any matron-written data is committed (carried from s064).
 
-## NEXT (s066)
+## NEXT (s067)
 0. Stage 2, where trioron could earn its place (pick with Rocky):
    a. per-fact threshold from each fact's own spread (manifold σ; needs ≥2 wordings per fact);
    b. DONE s065 (drift test): lock works, freeze works as well. Open: a regime where later
@@ -187,6 +201,8 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
       DONE s065 (dream test): domain shift gives +.045 headroom, reached only by joint training.
       DONE s065 (replay dream): linear reaches the joint row with 15 passes; quad does not gain.
       Not done: the dream end to end through the reflex (re-read ~0.5 s per kept question);
+      DONE s066 (consolidation test): facts in weights do not beat the table; trioron leaf far
+      behind. Open: the leaf with a cosine readout (separates leaf from readout);
    c. growth-pays curve: recall vs key-leaf size and vs facts stored; bytes per parameter;
    d. deployable threshold set on training articles; end-to-end override accuracy with the reflex.
 1. Wire memory into the console (`/wrong <answer>` → `remember`; recall before the reflex
@@ -201,7 +217,7 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    failures (TestCredit ×2, TestGrowth ×1, TestDreamCycle ×1).
 
 ## State of the build / Pointers
-- Branch `conscience-core`; s065 work committed and pushed (see `git log -3`). `main` still at
+- Branch `conscience-core`; s065 and s066 work committed and pushed (see `git log -3`). `main` still at
   e8e7b40 (v0.3.3).
 - **Deliberately uncommitted (local to this PC):** everything matron-written or derived in
   `outputs/incubator/`: s064's `stage1_*` data and `vee_stage1.pt`; s065's
