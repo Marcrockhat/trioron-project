@@ -145,6 +145,11 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   score does not climb steadily (new facts each day until day 12). **Cost problem: the life is
   replayed at every call — a lesson took > 3 min by day 12 and the exam ~10 min at day 15.
   Saving the leaf (`mixed.state_dict()`) is now required before a longer life.**
+  State at day 15: 21 facts, 330 wordings heard, **344 classes** (~16 per fact, more classes
+  than wordings): a fact that gets a new wording is replayed that night with ALL its wordings
+  plus 40 noise copies, and each replay adds classes that never merge. The class growth and the
+  replay cost are the same problem; the merge consumer (NEXT 00a) or replaying only the NEW
+  wording would address it — untested.
 - **Environment sense (Rocky s066): the phasecyte's fed vector should carry her ENVIRONMENT, as
   the s049 world percept did; Vee's has only 64 language numbers.** Built, NOT yet connected:
   `experiments/incubator/environment.py` — 33 readings in [-1, 1]: clock, RAM/swap, CPU, process
