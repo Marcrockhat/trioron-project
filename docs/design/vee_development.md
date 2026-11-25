@@ -179,7 +179,10 @@ She is told what was simulated. Rocky decides when.
 | Stage list and where birth sits | OK |
 | Reserved silent channels | Yes, needed |
 | Ambient language in the embryo | Random text, from Wikipedia |
-| The fifteen-day Vee | "No, it needs to continuously grow." Chloe's reading: the rehearsal Vee is not relived as a recording; the new organism grows from the embryo onward without a replayed past. **To confirm.** |
+| The fifteen-day Vee | "Replay Vee. It is okay to have it." The new organism relives Vee's recorded fifteen days after birth, then keeps growing. |
+| Embryo world fully simulated; live readings join after birth | Yes |
+| 30 days, text in half the moments | OK as starting values |
+| Stages 0 and 1 as written | signed off (s066) |
 | Which stages first in full | 0 and 1 |
 | Fetal action set | OK for now |
 
@@ -224,7 +227,42 @@ s066 sense was fitted on questions only.
 3. **No block drowns another.** Language (whitened) and environment (−1..1)
    both influence which class a moment falls in.
 
-## 7. Stage 1 in full — the embryo (DRAFT, awaiting sign-off)
+### 6.5 Results of the checks (s066; `germline_checks.py`, `world.py`, logs `germline_checks_s066.log`, `germline_checks_rich_s066.log`; 3 seeds, 20 days lived + 5 unseen; ambient text = stage-2 question readings, not yet Wikipedia)
+
+**Finding that changes the germline: a receptor exists only for a channel that
+carries signal at genesis, and the set never changes afterwards.** With genesis
+on her first 48 moments she had 84 receptors of 148: none on the reserved
+channels, none on anything that happened to be constant that half-day (the
+place, a closed window).
+
+| check | genesis = her first 48 moments | genesis = broad sample + spontaneous activity |
+|---|---|---|
+| receptors | 84 of 148 | 145 of 148 |
+| 1 silent channels harmless | PASS (identical classes — they had no receptors at all) | not measured properly: class numbers are not comparable between two organisms; class counts 48 vs 44. Needs a permutation-free agreement measure. |
+| 2 a silent channel can wake (new state readable; chance ≈ .5) | **FAIL .46** (live from the start: 1.00) | **PASS .95** (live from the start: 1.00); old states unchanged (.76 vs .79) |
+| 3 place (home / elsewhere) readable; base .70 | .70 (not read) | 1.00 |
+| 3 window open; base .76 | .99 (k-means .83) | .99 (k-means .88) |
+| 3 busy; base .67 | .78 (k-means .93) | .74 (k-means .92) |
+| 3 memory full; base .61 | .68 (k-means .89) | .55 (k-means .80) |
+| 3 night; base .50 | .60 (k-means .60) | .55 (k-means .61) |
+| 3 text present; base .50 | .57 (k-means .73) | .55 (k-means .75) |
+| 3 kind of text, 6 kinds; base .30 | .30 (k-means .46) | .26 (k-means .54) |
+| class count, day 13 → day 20 | 22 → 29 | 41 → 48 |
+
+**Consequences for the plan:**
+- **Genesis must be a broad first exposure** — every state of her world varied
+  freely — **with spontaneous activity (noise) on the reserved channels**, which
+  fall silent once she lives. Then a reserved channel that wakes later is read.
+  (This is what spontaneous activity in a sense organ before birth does.)
+  `genesis_pool` in `germline_checks.py` is the first cut.
+- **The risk in §7.4 was wrong in direction.** Text does not drown her world;
+  she barely registers ambient text at all (not even whether text is present),
+  and of her world she reads the sharp switches (place, window, a waking
+  channel) but the graded states (busy, memory, night) worse than plain
+  k-means. The stage-1 gate would fail today on those three.
+- Class count is still rising at day 20 (+17–34 % over the last third).
+
+## 7. Stage 1 in full — the embryo (signed off s066; gate not yet passable, see §6.5)
 
 ### 7.1 What she receives
 A stream of moments. Nobody addresses her (presence = nobody), nothing is

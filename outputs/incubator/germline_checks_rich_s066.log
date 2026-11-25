@@ -1,0 +1,19 @@
+# germline checks  seeds=3  20 days lived + 5 days unseen, 96 moments a day
+  seed 0 done: classes 65, same-with/without 0.00
+  seed 1 done: classes 29, same-with/without 0.00
+  seed 2 done: classes 50, same-with/without 0.17
+
+0 receptors (of 148)                                               145.00
+1 same class with / without silent channels                        0.06
+1 classes with silent                                              48.00
+1 classes without                                                  44.00
+3 night: her classes / k-means / base                              0.55  0.61  0.50
+3 busy: her classes / k-means / base                               0.74  0.92  0.67
+3 full: her classes / k-means / base                               0.55  0.80  0.61
+3 elsewhere: her classes / k-means / base                          1.00  0.74  0.70
+3 window: her classes / k-means / base                             0.99  0.88  0.76
+3 text present: her classes / k-means / base                       0.55  0.75  0.50
+3 kind of text (6): her classes / k-means / base                   0.26  0.54  0.31
+3 class count at day 13 / day 20                                   41.00  48.00
+2 kick readable, woke at day 10: acc / base / old states mean / classes 0.95  0.47  0.76  71.67
+2 kick readable, live from the start: acc / base / old states mean / classes 1.00  0.53  0.79  76.33

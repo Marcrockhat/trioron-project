@@ -2,7 +2,7 @@
 
 **Session date:** 2026-11-24
 **Session number:** 066
-**Session title (s066: recovery after a shutdown; training-regime correction; PHASECYTE PILOT; night test; Vee's memory in the console):**
+**Session title (s066: recovery after a shutdown; training-regime correction; PHASECYTE PILOT; night test; Vee's memory in the console; teaching by interaction; developmental plan + germline checks):**
 **s065 ended in an unplanned shutdown (~14:50) with the consolidation test in flight; s066 reran
 it. Rocky then corrected the training regime — the organism is never batch-trained, it is a baby
 that keeps absorbing — and named the Phasecyte as the fact-memory learner. A 40-fact streaming
@@ -26,9 +26,22 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   confirm); stages 0–1 first; fetal action set OK; and the machine itself, not only the matron,
   must be an interactor (plan §1a; fetal stage has safe actions with sensed consequences).
   Stages 0 and 1 are now WRITTEN IN FULL (plan §6–7: 148-number input layout, germline checks,
-  embryo world, gate, expected risk) and AWAIT HIS SIGN-OFF. Next: his sign-off + the three
-  open points in §7.6, then the §6.4 checks (silent channels harmless / can wake / no block
-  drowns another) before any organism is raised.
+  embryo world, gate, expected risk) and AWAIT HIS SIGN-OFF. Rocky SIGNED stages 0–1 and
+  answered §7.6: the new organism RELIVES Vee's fifteen recorded days after birth ("Replay Vee.
+  It is okay to have it"); embryo world fully simulated; 30 days / text in half the moments OK.
+- **Germline checks RUN (s066; `world.py`, `germline_checks.py`; plan §6.5 has the table).**
+  KEY FINDING: a receptor exists only for a channel that carries signal at GENESIS and the set
+  never changes (84 of 148 with genesis on her first 48 moments; a channel that woke at day 10
+  was never read, .46 ≈ chance; the place was never read). FIX that works: genesis on a broad
+  sample of her world with SPONTANEOUS ACTIVITY (noise) on the reserved channels
+  (`GENESIS=rich`): 145 receptors, the waking channel is read (.95; live-from-start 1.00), place
+  1.00, window .99. STILL FAILING: graded world states are read worse than plain k-means (busy
+  .74 vs .92, memory full .55 vs .80, night .55 vs .61); ambient text is barely registered (text
+  present .55 vs k-means .75); class count still rising at day 20. Check 1 under rich genesis
+  needs a permutation-free agreement measure (not done). **NEXT (s067): (1) why graded states
+  are not read — the stage-1 gate cannot pass until they are; (2) fix check 1's measure;
+  (3) collect the Wikipedia sentence pool and refit the language sense (§6.2); (4) only then
+  build `vee_body.py` / `embryo.py`. No organism is raised before the stage-1 gate design holds.**
 - **Rocky's ruling (binding): never batch-train the organism.** A fixed-size leaf trained on
   shuffled batches is a CONTROL arm, not "the trioron arm". The s064/s065 lines "trioron has not
   earned its place" tested the quad cell as a static layer only. For fact memory the learner is
