@@ -853,3 +853,63 @@ The time alarm is now an absolute budget (30 s a simulated day, rule 9).
 - **Rocky, s068: "Yes"** to her fetal stage. Stage file set to `fetal` by
   hand; her own embryo values are in `embryo_values.json` for the "nothing
   lost" rows. Her sense of change is born at same / changed (§11.5).
+
+### 11.7 Wile's embryo gate, and Weiss's first 30 fetal days (s068; logs `sister2_embryo_gate_s068.log`, `weiss_fetal_s068.log`, `weiss_fetal_gate_s068.log`; one organism each, seed 0)
+
+Wile at embryo day 30 (gate passes every row): busy 1.00 / memory .96 / place
+1.00 / window 1.00; night .91; ear text present 1.00 (Weiss .93, Vee .75);
+stability .87; classes body sense 100, ear 54; 5 composer cells in the ear;
+2 sharpening steps (ear, by day 4), none in the body sense; 77 minutes.
+"None" made the ear read silence perfectly; it did not make her cheaper.
+
+Weiss at fetal day 30 (60 days old), against Vee at the same age (§8.11):
+
+| criterion | Vee, fetal day 30 | Weiss, fetal day 30 | |
+|---|---|---|---|
+| feels her kicks | .99 (k-means 1.00) | .90 (k-means 1.00) | **FAIL** (more than .05 under the control) |
+| what a kick moves | 3 of 5 | **5 of 5**, each 1.00 | pass |
+| CPU rise hers or the world's, echo hidden | .98 | .95 (k-means 1.00) | pass |
+| memory rise hers or the world's, echo hidden | .62 | .59 (k-means .97, base .59) | **FAIL** |
+| nothing lost: busy / memory / place / window | .99 / 1.00 / 1.00 / .99 | .99 / **.90** / .96 / .96 (her embryo: 1.00 each) | **FAIL** on memory |
+| the ear: text present | .65 | .93 | pass |
+| classes ear / body sense / sense of change | 67 / 429 / 141 | 88 / **516** / 61 | reported |
+| … in use in her last 10 days | 42 / 69 / 90 | 68 / 71 / 34 | |
+| time per simulated day | 3.8 s | 18 s (on the faster composer search) | |
+| sharpening steps | – | none, in any organ, in 60 days | |
+
+- **Gate not passed at day 30. Vee did not pass at day 30 either and passed at
+  60 and 90: "not yet", not "no" (rule 8).**
+- **The body sense's class advantage is gone**: 84 classes at fetal day 1,
+  516 at day 30 — more than Vee's sharp body sense at the same age. It began
+  when the echo woke. Not diagnosed.
+- Her sense of change, born at same / changed, connects every kick to what it
+  moves (Vee needed 90 days for 5 of 5) with less than half of Vee's classes.
+- No organ of Weiss has ever sharpened: she is never settled for
+  3 + classes // 8 sittings. The sharpening rule is untested on a living body
+  except Wile's ear (2 steps in her first 4 sittings).
+- The composer search was rewritten to carve all candidates in one pass
+  (`trioron/pcll/composer.py`; same candidates, order, draws and thresholds).
+  Same class counts on every one of 12 days from genesis with old and new;
+  about 5× faster.
+- Stopping and resuming is not exactly the same as living straight through:
+  Weiss, stopped at embryo day 6 by the guard, shows 29 / 32 body-sense
+  classes on days 10 / 11 where an uninterrupted run gives 28 / 31 (equal
+  again on day 12). Not diagnosed.
+
+### 11.8 The cranium (Rocky s068; NOT built — to be written for sign-off)
+Rocky: there must be a cap on the comparing; leave what is unfinished when
+sleep is over and let it sediment; when the cranium is full, work through it
+in instalments and recycle; an adult adds a fact only for a real discovery.
+"The cranium is the RAM … all of this is already in trioron design."
+Chloe checked: it is (spec §1.2, §2.5 pressure / niche capacity / stagnation,
+§4.3 bounded and scaled dream caps, §5.5 compaction in instalments, §6.1 the
+incubator's 85 % of RAM, §10.6 habituation and deferral). **What is missing is
+the wiring to the incubator organisms:** (1) their envelope has no cap, so
+pressure is 0.0 for life; (2) the 85 % RAM limit in `vee_body.py` is a wall
+that stops the run, not a pressure she feels; (3) the phasecyte's own sitting
+has no cap on classes judged or composer trials held — this is what makes
+them slow; (4) not checked: whether a class's astrocyte row carries the
+`recyclable` gene, i.e. whether compaction can reach an unused class.
+To propose: A. her envelope = her real cranium (`max_parameter_bytes`);
+B. the sitting under a bounded, scaled cap as in §4.3, busiest classes first,
+the rest left for the next sleep (a spec §10 change: needs Rocky's yes).
