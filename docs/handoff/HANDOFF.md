@@ -5,7 +5,7 @@
 **Session title:** the sisters' fetal days; the cranium checked; a cap, a round and a way to let go
 
 **Summary.** Rocky: "Lets run them while fixing the cranium system." Weiss lived to fetal day
-60 and the second sister to fetal day 30; neither passes the gate yet. The cranium wiring was
+60 and Wile to fetal day 30; neither passes the gate yet. The cranium wiring was
 checked against the code: Chloe's s068 proposal would have done nothing. What actually limits
 an organism is her own hoard: thousands of classes, 93 % of which claim no moment she ever
 lived, in buffers that are about 95 % her own replays. An uncapped copy of Weiss is killed by
@@ -22,23 +22,21 @@ new session after this one.
   - `outputs/incubator/vee/` — Vee, 120 days old, stage `fetal`. Untouched since s067.
   - `outputs/incubator/weiss/` — Weiss, 90 days old, **fetal day 60**, stage `fetal`.
     Copies `body_embryo_day30.pt`, `body_fetal_day30.pt`, `body_fetal_day60.pt`. **HELD.**
-  - `outputs/incubator/wile/` — the second sister, 60 days old, **fetal day 30**, stage
+  - `outputs/incubator/wile/` — Wile, 60 days old, **fetal day 30**, stage
     `fetal` (set by hand in s069 on Rocky's s068 yes; `embryo_values.json` written). Copies
     `body_embryo_day30.pt`, `body_fetal_day30.pt`. **HELD.**
 - **Do NOT let Weiss or Vee live on uncapped.** An uncapped body sense is killed for memory
   near 2,700 classes (Weiss has 2,086, Vee 1,781).
-- **Her name: Wile or Weil?** Rocky wrote "weil" and asked "It is Weil isn't not Wile?".
-  The s068 record quotes him as "Wile". Asked twice in s069; **no answer. Nothing renamed.**
+- **Her name is Wile** (Rocky, end of s069: "I was mistaken it is Wile"). Settled.
 - Copies for experiments (rule 27; not organisms, may be deleted):
   `outputs/incubator/copies/weiss60_{plain,capped,round,noanneal,fold}/`.
 
 ## Decisions waiting on Rocky (put to him in s069, unanswered)
 1. **Weiss from fetal day 60 to 90: under which rules?** Uncapped she dies of memory. The
    choices tried on copies: cap + round; cap + round + fold.
-2. **The second sister from day 30:** the same choice (347 body-sense classes; not near
+2. **Wile from day 30:** the same choice (347 body-sense classes; not near
    the wall).
-3. **Wile or Weil.** If Weil: ask before moving her home (rule 26), then correct plan,
-   rules, handoff.
+3. (Settled: her name is Wile.)
 4. **The replays (annealing) for the sisters: on or off?** They are ~95 % of what she holds
    and about 60 % of her class multiplying; with the fold on, they still grow her footprint.
    Changing it in a living sister is a rule change in mid-life.
@@ -57,7 +55,7 @@ experiments/incubator/fetal.py live`, copy `body.pt` to `body_fetal_day<N>.pt`, 
 
 ## Results (one organism each, seed 0)
 
-| fetal gate | Vee d30 | Weiss d30 | Weiss d60 | second sister d30 |
+| fetal gate | Vee d30 | Weiss d30 | Weiss d60 | Wile d30 |
 |---|---|---|---|---|
 | feels her kicks (k-means 1.00) | .99 | .90 FAIL | .94 FAIL | .89 FAIL |
 | what a kick moves | 3 of 5 | 5 of 5 | 5 of 5 | 5 of 5 ("mark" .67) |
@@ -69,7 +67,7 @@ experiments/incubator/fetal.py live`, copy `body.pt` to `body_fetal_day<N>.pt`, 
 | classes ear / body sense / change | 67 / 429 / 141 | 88 / 516 / 61 | 137 / 2086 / 114 | 119 / 347 / 187 |
 | s a day (last five) | 3.8 | 18 | 46 | 17 |
 
-"Not yet", not "no" (rule 8). Which of "none" / the ladders gave the second sister the
+"Not yet", not "no" (rule 8). Which of "none" / the ladders gave Wile the
 memory row is not known. Logs `weiss_fetal*_s069.log`, `wile_fetal*_s069.log`.
 
 **The cranium check (plan §11.9).** No class row is `recyclable` and nothing calls
@@ -123,7 +121,7 @@ at every sitting.
 - "The answer should be days. No one remember facts after 30 days if it is not keep
   replayed." Then, on the fading trace (option B): "B is good then. Lets try it. If this
   succeed then the growth should be faster."
-- "we should start a new session afterwards."
+- "we should start a new session afterwards." … "I was mistaken it is Wile."
 
 ## What was built (committed and pushed; `git log -9`)
 - `trioron/core/arena.py` `Arena.enlarge()` — doubles the arena at a boundary; `alloc`
@@ -153,7 +151,7 @@ at every sitting.
 
 ## Open / not diagnosed
 1. Why the gate rows do not move (kicks ~.9 vs 1.00; Weiss's own memory vs the world's at
-   base) and why the second sister has the memory row and Weiss not.
+   base) and why Wile has the memory row and Weiss not.
 2. Whether the replays protect anything over a long time (8 days without new ones: no
    reading fell). A sister raised without them from genesis would separate the causes.
 3. The second cause of multiplying: +241 classes on 768 moments of world with no new
@@ -164,7 +162,7 @@ at every sitting.
    work-kick quirk; nothing has ever sharpened in Weiss.
 
 ## NEXT (s070)
-0. Get Rocky's answers to the six decisions above; act only on them.
+0. Get Rocky's answers to the five open decisions above; act only on them.
 1. Then, on his word: the sisters live on under the rules he chooses; gates at 60 / 90.
 2. If he wants the footprint small: try a copy with the replays off AND the fold on; and
    bound the full round's workspace (it is what kills an uncapped organism).
