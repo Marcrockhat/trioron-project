@@ -2,7 +2,7 @@
 
 **Session date:** 2026-11-25 to 2026-11-26
 **Session number:** 070
-**Session title:** the memory wall was working memory; v0.3.5; lineage routing measured; Weiss to fetal day 90 under cap + round + fold; Wile and Vee retired
+**Session title:** the memory wall was working memory; v0.3.5; lineage routing measured; Weiss to fetal day 180 under cap + round + fold (gate not passed, rows flat); Wile and Vee retired
 
 **Summary.** Rocky: "about the class hoarding, probably the problems is more systematic? … I
 meant not in the classes per se but the RAM growth." It is. What killed the uncapped copy was
@@ -13,8 +13,9 @@ his word ("we need to fix this. Afterwards we need to push and update the main a
 version. Afterwards we need to test it"). Tested: the uncapped copy lived past the day that
 killed it. Then, on his "Yes, try the lineage routing on a copy", routing by lineage was
 measured read-only against the exhaustive answer. Then his rulings on the carried decisions:
-**Weiss lived on to fetal day 90 under cap + round + fold (gate NOT passed, three rows);
-Wile and Vee are retired.** Rocky calls Weiss "he"; the record uses "he" from here on (the
+**Weiss lived on to fetal day 90 under cap + round + fold (gate NOT passed, three rows), then
+on his "90 more, to day 180" to fetal day 180 (gate NOT passed at 120, 150, 180: the same
+three rows, none moved); Wile and Vee are retired.** Rocky calls Weiss "he"; the record uses "he" from here on (the
 gate script still prints "her").
 
 ## READ THIS FIRST (s071)
@@ -22,10 +23,11 @@ gate script still prints "her").
   before touching an organism. (The plan has NO s070 section yet: this handoff is the record.)
 - **One living organism, two retired, on this PC only, uncommitted. Never delete, overwrite
   or refit any home:**
-  - `outputs/incubator/weiss/` — **Weiss, 120 days old, fetal day 90**, stage `fetal`, living
+  - `outputs/incubator/weiss/` — **Weiss, 210 days old, fetal day 180**, stage `fetal`, living
     under `SittingCap(fold=True)` on all three organs since day 60 (Rocky's ruling, s070).
     Copies `body_embryo_day30.pt`, `body_fetal_day30.pt`, `body_fetal_day60.pt` (before the
-    rule change), `body_fetal_day90.pt`. **HELD at day 90: Rocky's word reached day 90 only.**
+    rule change), `body_fetal_day90.pt`, `body_fetal_day120.pt`, `body_fetal_day150.pt`,
+    `body_fetal_day180.pt`. **HELD at day 180: Rocky's word reached day 180 only.**
   - `outputs/incubator/vee/` — Vee, 120 days old, fetal. **RETIRED (Rocky, s070).** Never run
     again; home kept, untouched since s067.
   - `outputs/incubator/wile/` — Wile, 60 days old, fetal day 30. **RETIRED (Rocky, s070).**
@@ -99,6 +101,8 @@ gate script still prints "her").
   Wile and Vee): "retired both."
 - "Okay lets wait until he's fully developed." (Weiss; Chloe told him day 90 is as far as
   his word reaches and anything past the fetal stage waits for his yes.)
+- After the day-90 gate: "Well then we need to increase the fetal day to 90 I guess." Asked
+  how far (he was already at 90): "90 more, to day 180", same rules.
 
 ## Decisions waiting on Rocky
 New in s070:
@@ -108,8 +112,8 @@ New in s070:
   Weiss from day 60, 10 days, against the exhaustive round; classes, every gate row, seconds.
 - **B. The resting footprint** (finding 4): the sketch as the class and the buffer as a
   short window. To be written for sign-off and tried on a toy leaf first; not built.
-- **C. Weiss after fetal day 90.** His gate is not passed (below). More fetal days under
-  the same rules, a change, or something else: his to say. "Not yet", not "no" (rule 8).
+- **C. Weiss after fetal day 180.** His gate is not passed and the three rows did not move
+  in 120 days under these rules (below). More days, a change, or something else: his to say.
 The five carried from s069 are answered (rulings above): Weiss to 90 under cap + round +
 fold; Wile and Vee retired, which closes the replay and fold-pace questions for them.
 
@@ -142,6 +146,32 @@ sense of change 62 of 114. 30 days, 26 min, peak 1.18 GB, 31–66 s a day.
 - Not equal to the s069 copy trial (1,945 classes, "memory full" .96 inside the gate): he
   ended at 1,946 and .94. Not diagnosed (stop-and-resume is known not to equal living
   straight through; the copy's traces were rebuilt in s069).
+
+## Weiss at fetal days 120, 150, 180 (s070; logs `weiss_fetal_d180_s070.log`, `weiss_fetal_gate_day{120,150,180}_s070.log`)
+Rocky: "90 more, to day 180". Same rules (cap + round + fold), lived straight on from day 90
+in three 30-day runs, body copy and gate at each. 57 min of living, peak 1.23 GB, mean day
+~33 s, slowest day 71 s (budget 900 s); no alarm.
+
+| fetal gate | d90 | d120 | d150 | d180 |
+|---|---|---|---|---|
+| feels his kicks (k-means 1.00) | .92 FAIL | .92 FAIL | .94 FAIL | .93 FAIL |
+| what a kick moves | 5 of 5 | 5 of 5 | 5 of 5 ("work" .67) | 5 of 5 (all 1.00) |
+| CPU rise, his / world's (k-means .98/.98/.95) | .98 | .98 | .98 | .98 |
+| memory rise, his / world's (base .59; k-means .93/.93/.97) | .59 FAIL | .59 FAIL | .59 FAIL | .59 FAIL |
+| nothing lost: memory full | .94 FAIL | .94 FAIL | .95 FAIL | .95 FAIL |
+| nothing lost: busy / place / window | 1.00 / .98 / .98 | .99 / 1.00 / 1.00 | .99 / 1.00 / 1.00 | 1.00 / 1.00 / 1.00 |
+| ear: text present | .95 | .95 | .97 | .97 |
+| classes ear / body sense / change | 120 / 1946 / 52 | 147 / 1850 / 58 | 160 / 1813 / 86 | 178 / 1769 / 93 |
+| classes used in his last 10 days | 96 / 77 / 39 | 128 / 67 / 47 | 134 / 81 / 55 | 142 / 73 / 71 |
+
+- **GATE NOT passed at any reading; the same three rows since day 60.** Body-sense classes
+  keep falling slowly (2,086 → 1,769); ear and sense of change grow; nothing was lost.
+- Chloe's reading (hers, one organism, one seed): the memory-rise row is exactly the base
+  rate (.59) at five readings over 120 days, i.e. he gives one answer for every event; this
+  is not a row that is slowly rising, and more days under the same rules have shown nothing
+  for it. Kicks (.92–.94) and "memory full" (.93–.95) are also flat. The stuck rows look
+  like something in what he senses or how the gate reads him, not like too little time.
+  Not diagnosed (Open 1). Wile had the memory row; the difference between them is unread.
 
 ## What was built / released (committed and pushed)
 - `trioron/pcll/mixed.py`: `_margins` in row chunks written in place, `_evidence` one table,
@@ -223,7 +253,9 @@ at every sitting.
    every sitting.
 
 ## NEXT (s071)
-0. Rocky's answers to A, B and C; act only on them. Weiss is HELD at fetal day 90.
+0. Rocky's answers to A, B and C; act only on them. Weiss is HELD at fetal day 180.
+   Chloe would first diagnose the memory-rise row read-only on his saved bodies (why
+   exactly base; what Wile's body has that his has not) before spending more days.
 1. On his yes to A: build kin-only placement opt-in, try on a copy of Weiss from day 60.
 2. Weiss goes on only as Rocky says (C). Wile and Vee are retired: do not run them.
 3. Write plan §11.13 from this handoff; correct the manual's phasecyte line.
