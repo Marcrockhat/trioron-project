@@ -913,3 +913,76 @@ them slow; (4) not checked: whether a class's astrocyte row carries the
 To propose: A. her envelope = her real cranium (`max_parameter_bytes`);
 B. the sitting under a bounded, scaled cap as in §4.3, busiest classes first,
 the rest left for the next sleep (a spec §10 change: needs Rocky's yes).
+
+### 11.9 The cranium wiring: checked, and written for sign-off (s069; NOT built)
+
+Read from saved copies only (Weiss fetal day 30, Vee fetal day 90; nothing changed):
+
+| organ | classes | rows used of 8192 | retired rows | rows with `recyclable` | bytes the envelope counts | held in class buffers | classes under 60 / under 25 members |
+|---|---|---|---|---|---|---|---|
+| Weiss ear | 88 | 378 | 197 | 0 | 2 KB | 2.6 MB | 78 / 0 |
+| Weiss body sense | 516 | 1170 | 548 | 0 | 5 KB | 22.3 MB | 405 / 132 |
+| Weiss sense of change | 61 | 201 | 77 | 0 | 1 KB | 1.9 MB | 44 / 13 |
+| Vee ear | 344 | 1502 | 1069 | 0 | 6 KB | 38.2 MB | 142 / 68 |
+| Vee body sense | 1781 | 3918 | 2031 | 0 | 16 KB | 92.0 MB | 1444 / 616 |
+| Vee sense of change | 550 | 1283 | 670 | 0 | 5 KB | 45.8 MB | 159 / 46 |
+
+**What the check found.**
+1. **No class row carries the `recyclable` gene** (0 of every row in six organs). A class's row is
+   born with an empty epigenome (`mixed.py _refresh`, `controller.py _sync_astrocytes`), and nothing
+   on the phasecyte's path calls `compact()`. A retired row (a divided parent, a husk) is kept for
+   life: about half of all rows are retired ones.
+2. **There is a wall nobody chose: 8192 rows per organ** (`PhasecyteLeaf(capacity=8192)`, a fixed
+   arena). A class costs about 2.2 rows over its history, so an organ runs out near 3,600 classes.
+   Vee's body sense has used 3918. Past the wall a class is born without a row (`cell_id = -2`),
+   silently: it still works, but it is no longer visible in the arena.
+3. **The envelope's byte count cannot see her.** `arena.param_bytes` = 4 bytes a row + 4 an edge:
+   16 KB for Vee's body sense. What she holds is in her classes' buffers (up to 400 members a
+   class): 176 MB of Vee's 230 MB, 27 MB of Weiss's 72 MB. With `max_parameter_bytes` set from RAM
+   as §11.8 proposed, pressure would read 0.00 for life. **Chloe was wrong to propose A in that
+   form (s068).**
+4. **Counted rightly, her cranium is still almost empty.** 85 % of this PC's 7.6 GB is 6.5 GB; Vee
+   at 120 days holds 0.18 GB, about 3 %. Pressure .85 lies tens of thousands of classes away. RAM
+   is not what makes the sisters slow, and "work through it in instalments and recycle at full
+   cranium" will not be called on for a long time. Time is the wall she meets first: B below.
+5. **Her organs almost never have a settled sitting.** Consolidation (the round that re-settles
+   members and retires husks), annealing and the skeptical gate run only at a sitting with no
+   division and no spawn (spec §10.7). With hundreds of classes some class divides at nearly every
+   sitting: the settled streak is 0 in all six organs as saved, and the class count stood still
+   over a day on 2 of Vee's 90 fetal days (body sense) and 1 of Weiss's 30. The result is crumbs:
+   405 of the 516 classes of Weiss's body sense hold under 60 members, too few to be judged at
+   all. Sharpening waits on the same stillness, which is why Weiss never sharpens. Chloe's reading
+   for open point 1 (84 → 516), from saved state and logs; divisions per sitting are not logged, so
+   it is not tested.
+6. **The merge is not switched on in her organs** (`PhasecyteLeaf` never passes `merge=True`). The
+   s066 note "the merge has never fired" should read "is off".
+7. **Every class is judged at every sitting**: every buffer for division (4 readings each), and
+   every buffer of 100+ members with low coherence for a composer trial, whether or not it received
+   a single new member since it was last judged.
+
+**To build, on Rocky's yes (decisions D1–D5).**
+- **A. Her cranium, counted truly.** One cranium for the whole body = 85 % of host RAM. Her
+  pressure = everything her organs hold (class buffers, tags, sketches, lock-in rows, parameters)
+  over that. The arena's byte count takes in what astrocyte rows hold (one sentence added to spec
+  §2.5; §2.11 already says an astrocyte holds parameters). The present stop at 85 % stays as the
+  last guard. It will read about .03 today.
+- **A2. No hidden wall.** The arena grows when its rows run out (doubling), so the cranium is her
+  only limit. Core code (`core/arena.py`).
+- **B. The sitting under a cap (changes spec §10.7; rule 25).**
+  - B1. A class that received no new member since it was last judged is not judged again.
+  - B2. Of the rest, the council judges at most `max(4, ceil(sqrt(classes) · 0.5 · φ))` classes a
+    sitting (spec §4.3's form, the lock rate; φ as there, from her growth at the last sitting),
+    the busiest first (most new members this sitting; ties to the one unjudged longest). The others
+    are left for the next sleep. At 516 classes that is 12 a sitting at rest; at 1781, 22.
+  - Work is logged per sitting (classes judged, trials held, divisions, spawns, retirements), and
+    sleep is measured in work, not seconds. The floor of 4 and the rate .5 are Chloe's values.
+- **C. Recycling, made possible but not called.** Class rows are born with `recyclable`. Before
+  compaction may ever run on her, its re-packing must carry her own references along (class row
+  ids, lineage, composer cells, receptors): today it would break them. Not urgent (finding 4).
+- **How it is tried.** On copies first (rule 27): a copy of Weiss at fetal day 60 lives 10 days
+  with and without B; classes, every gate row and work are compared. Only then, on a further yes,
+  on a living organism. A rule changed in mid-life is a new variable in Vee against her sisters.
+
+**Decisions for Rocky.** D1 A as corrected. D2 A2. D3 B1 and B2 with these values. D4 C now or
+later. D5 finding 5 is not the cranium: should the never-settling (and the merge being off) be
+diagnosed on copies next, before or after B?
