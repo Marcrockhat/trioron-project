@@ -459,3 +459,29 @@ def test_class_rows_outgrow_the_arena():
     assert len(leaf.mixed.classes) > 1
     assert a.capacity > start
     assert all(c.cell_id >= 0 for c in leaf.mixed.classes)
+
+
+def test_sitting_cap_bounds_the_judging():
+    """s069: under the sitting cap at most cap classes are judged a boundary,
+    a class with nothing new is not judged again, and classes are still
+    discovered; off (the default) nothing is recorded."""
+    from trioron.pcll import PhasecyteLeaf
+    from trioron.pcll.sitting import SittingCap
+    g = torch.Generator().manual_seed(0)
+    centres = torch.randn(12, 6, generator=g) * 3
+    X = (centres[torch.randint(12, (6000,), generator=g)] + 0.05 * torch.randn(6000, 6, generator=g))
+    mk = lambda: PhasecyteLeaf(lambda x: x, X[:200], 0, 0, window=200, class_cap=None, composer=False, verbose=False)
+    plain, capped = mk(), mk()
+    assert plain.mixed.sitting is None
+    capped.mixed.sitting = SittingCap()
+    for i in range(200, 6000, 200):
+        for leaf in (plain, capped):
+            leaf.mixed.observe(X[i:i + 200]); leaf.sub.end_task()
+    work = capped.mixed.sitting.work
+    assert work and all(w["judged"] <= w["cap"] and w["judged"] <= w["due"] for w in work)
+    assert sum(w["divisions"] for w in work) > 0 and len(capped.mixed.classes) > 1
+    s = SittingCap()
+    assert s.choose(["a", "b"], 1) == [0, 1]            # never judged: both due
+    assert s.choose(["a", "b"], 2) == []                # nothing new: nobody judged
+    s.receive(["a", "b"], torch.tensor([1, 1, 0, -1]))
+    assert s.choose(["a", "b"], 3) == [1, 0]            # busiest first

@@ -60,6 +60,7 @@ from .labels import LabelTapBank
 from .lockin import LockInView, deposit, matched_k, reset
 from .resolve import EMPTY, FRUSTRATED, RESOLVED
 from .signature import LearnedClass
+from .sitting import SittingCap
 from .stress import DISCRIMINATION
 
 ROW_HEADROOM = 64   # free arena rows kept ahead of class births (uncapped envelope)
@@ -81,7 +82,8 @@ class MixedStreamController:
                  gate_k: Optional[float] = None,
                  member_margin: bool = True,
                  label_supervise: bool = True,
-                 class_cap: Optional[int] = CLASS_CAP) -> None:
+                 class_cap: Optional[int] = CLASS_CAP,
+                 sitting_cap: bool = False) -> None:
         # MEMBERSHIP-QUALITY DEFAULTS (Rocky's ruling, s033; M2
         # baseline re-recorded). The factorial said the pieces only
         # work TOGETHER, and the re-record proved it the hard way: the
@@ -101,6 +103,11 @@ class MixedStreamController:
         # s036 ruling is to bench BOTH arms (capped vs uncapped) since
         # the 128 was never derived (s035 audit Q4).
         self.class_cap = class_cap if class_cap else None
+        # The sitting under a cap (sitting.py): None = every class is
+        # judged at every boundary. Opt-in; read with getattr so an
+        # organism saved before it existed is unchanged.
+        self.sitting: Optional[SittingCap] = (
+            SittingCap() if sitting_cap else None)
         self.receptor_ids = substrate.scheduler._plan.receptor_ids
         if self.receptor_ids.numel() == 0:
             raise ValueError("substrate has no RECEPTOR cells")
@@ -357,8 +364,17 @@ class MixedStreamController:
 
         candidates = []                            # the council's judgment
         tries = max(self.divide_tries, DIV_TRIES if self.composer else 1)
+        sitting = getattr(self, "sitting", None)
+        judged = None                              # None = every class
+        self._n_trials = 0
+        if sitting is not None and not self.freeze:
+            names = [c.name for c in self.classes]
+            sitting.receive(names, member)
+            judged = set(sitting.choose(names, self.periods))
         if not self.freeze:
             for k, b in enumerate(self.bufs):
+                if judged is not None and k not in judged:
+                    continue                       # left for the next sleep
                 if self.class_cap is not None and \
                         len(self.bufs) + len(candidates) >= self.class_cap:
                     break                          # envelope guard, at commit
@@ -366,7 +382,7 @@ class MixedStreamController:
                 if verdict is not None:
                     candidates.append((k, verdict))
 
-        spawns = (self._trials(dict(candidates))
+        spawns = (self._trials(dict(candidates), judged)
                   if self.composer and not self.freeze else [])
 
         status = (EMPTY if empty
@@ -393,6 +409,8 @@ class MixedStreamController:
         # prune AFTER execute: this boundary's division verdicts carry
         # side masks + dim indices over the pre-prune buffer width
         n_pruned = self._prune_composers()
+        if sitting is not None and not self.freeze:
+            sitting.done(self._n_trials, n_div, n_spawn)
         # merge consumer [D18]: structure maintenance, no vote transfer.
         # Re-merging a freshly split pair is impossible by construction:
         # their union IS the parent that just passed try_divide, so
@@ -722,7 +740,7 @@ class MixedStreamController:
         return max(float(b[~side, d].mean().abs()),
                    float(b[side, d].mean().abs()))
 
-    def _trials(self, div_verdicts: dict) -> List:
+    def _trials(self, div_verdicts: dict, judged=None) -> List:
         """The council's overproduction (§4b): per-buffer trials COMPETE
         with division (the spawn must carve better than the best split);
         then ONE family trial over lineage-sibling pools within
@@ -747,10 +765,13 @@ class MixedStreamController:
         for k, b in enumerate(self.bufs):          # per-buffer, vs division
             if len(spawns) >= room:
                 break
+            if judged is not None and k not in judged:
+                continue                           # sitting cap: not its turn
             if len(b) < 4 * MIN_CHILD or \
                     float(b.mean(0).abs().mean()) >= comp.TRIGGER_R:
                 continue
             self._trial_seed += 1
+            self._n_trials += 1
             qb = self._recover_q(b[:, :F])
             spec, r, _ = comp.best_candidate(
                 qb, wired, taken, self._trial_seed)
@@ -779,11 +800,16 @@ class MixedStreamController:
                 idxs = pools[a]
                 if len(idxs) < 2:
                     continue
+                if judged is not None and (
+                        not (idxs & judged)        # only families of the judged,
+                        or self._n_trials >= 2 * len(judged)):   # and bounded
+                    continue
                 pool = torch.cat([self.bufs[k] for k in idxs])[-BUF:]
                 if len(pool) < 4 * MIN_CHILD or \
                         float(pool.mean(0).abs().mean()) >= comp.TRIGGER_R:
                     continue
                 self._trial_seed += 1
+                self._n_trials += 1
                 qp = self._recover_q(pool[:, :F])
                 spec, _, _ = comp.best_candidate(
                     qp, wired, taken, self._trial_seed)
