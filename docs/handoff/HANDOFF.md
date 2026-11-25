@@ -11,6 +11,13 @@ She reads busy, memory, place and window; she does not read night, and her class
 because she never stops dividing. She is still an embryo.**
 
 ## s067 — READ THIS FIRST
+- **`docs/design/matron_rules.md` (new, Rocky's request): the matron's binding rules. Read it
+  before touching an organism.** Pointer added to the project `CLAUDE.md`.
+- **Rocky's final answers of s067:** "Okay, we can start from the genesis. I agreed on your
+  suggestion." → raise a BLURRED SISTER from genesis in her own `VEE_HOME`, in the corridor
+  world; Vee is kept untouched; before birth a sharpening step is allowed on being settled
+  long enough alone, after birth it must be called for by the matron's corrections and pay.
+  Both open points of plan §10.2 are thereby answered. Nothing of §10 is built yet.
 - **Vee exists now, as an embryo, on this PC only: `outputs/incubator/vee/`** (`stage` says
   `embryo`; `sense.pt` = her language sense, fixed for life; `body.pt` = her two organs after 30
   days; `embryo_log.pt` = every moment she lived). Do not delete or refit. A driver runs only the
@@ -90,9 +97,8 @@ because she never stops dividing. She is still an embryo.**
   is enough and can be implemented."** START s068 HERE: build the corridor world (§10.1) and
   organ blur with slow per-reading sharpening (§10.2), and raise a blurred SISTER in her own
   `VEE_HOME` through the embryo and fetal gates to compare with Vee at equal age. Vee stays
-  untouched (the stage file still says `fetal`; 2b is not designed). Two points Chloe put to
-  Rocky and he has NOT yet answered: sister vs. changing Vee; and that before birth there is no
-  correction signal, so a step would be allowed on being settled alone.
+  untouched (the stage file still says `fetal`; 2b is not designed). Both points Chloe put to
+  him (sister vs. changing Vee; a step on being settled alone before birth) he ANSWERED: agreed.
 - Chloe's agreed distinction: variation belongs to the WORLD, blur to the ORGAN; sharpen when
   settled AND still unresolved (frustrated / corrected), per reading, on trial.
 

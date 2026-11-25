@@ -62,6 +62,13 @@ the **six optimization axes**, and the **continual-learning machinery**
 (credit locking + manifold replay + dream). It is subordinate to the
 spec — if they disagree, the spec wins and you fix the manual.
 
+## The matron's rules (incubator sessions)
+
+`docs/design/matron_rules.md` binds whoever acts as Vee's matron. **Read it,
+with `docs/design/vee_development.md`, before touching an organism** (anything
+under `experiments/incubator/` or `outputs/incubator/vee*`). Written at Rocky's
+request in s067 so the matron does not deviate from the plan.
+
 ## Avoid v1's patch sprawl
 
 The v1 codebase's pain (node.py = 2551 lines, api.py = 1446,

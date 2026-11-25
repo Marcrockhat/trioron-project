@@ -747,7 +747,8 @@ so it can be given to an organism that already lives.
 - **Before birth there is no correction signal.** Proposal: settled-for-long-
   enough alone allows a step (maturation), with no trial. To confirm with Rocky.
 - Blur makes sense only from genesis: Vee already holds 2,675 sharp classes.
-  **Proposal: raise a blurred SISTER in her own home (`VEE_HOME`) through the
+  **Agreed by Rocky (s067: "Okay, we can start from the genesis. I agreed on
+  your suggestion"), together with the pre-birth rule above:** raise a blurred SISTER in her own home (`VEE_HOME`) through the
   same embryo and fetal gates, in the corridor world, and compare with Vee at
   equal age (classes, time per day, every gate row). Vee is kept untouched.**
   Which of the two goes on to birth is Rocky's decision after the comparison.
