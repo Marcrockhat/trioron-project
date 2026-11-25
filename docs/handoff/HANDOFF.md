@@ -1,8 +1,8 @@
 # Trioron Handoff
 
-**Session date:** 2026-11-25
+**Session date:** 2026-11-25 to 2026-11-26
 **Session number:** 070
-**Session title:** the memory wall was working memory, not what she holds; v0.3.5; lineage routing measured
+**Session title:** the memory wall was working memory; v0.3.5; lineage routing measured; Weiss to fetal day 90 under cap + round + fold; Wile and Vee retired
 
 **Summary.** Rocky: "about the class hoarding, probably the problems is more systematic? … I
 meant not in the classes per se but the RAM growth." It is. What killed the uncapped copy was
@@ -12,17 +12,26 @@ table, three copies alive at once, growing with the square of the class count. F
 his word ("we need to fix this. Afterwards we need to push and update the main and the pypi
 version. Afterwards we need to test it"). Tested: the uncapped copy lived past the day that
 killed it. Then, on his "Yes, try the lineage routing on a copy", routing by lineage was
-measured read-only against the exhaustive answer. **No living organism was touched.**
+measured read-only against the exhaustive answer. Then his rulings on the carried decisions:
+**Weiss lived on to fetal day 90 under cap + round + fold (gate NOT passed, three rows);
+Wile and Vee are retired.** Rocky calls Weiss "he"; the record uses "he" from here on (the
+gate script still prints "her").
 
 ## READ THIS FIRST (s071)
 - Read `docs/design/matron_rules.md` and `docs/design/vee_development.md` **§11.9–11.12**
   before touching an organism. (The plan has NO s070 section yet: this handoff is the record.)
-- **Three organisms, on this PC only, uncommitted. Never delete, overwrite or refit:**
-  - `outputs/incubator/vee/` — Vee, 120 days old, stage `fetal`. Untouched since s067.
-  - `outputs/incubator/weiss/` — Weiss, 90 days old, **fetal day 60**. Copies
-    `body_embryo_day30.pt`, `body_fetal_day30.pt`, `body_fetal_day60.pt`. **HELD.**
-  - `outputs/incubator/wile/` — Wile, 60 days old, **fetal day 30**. Copies
-    `body_embryo_day30.pt`, `body_fetal_day30.pt`. **HELD.**
+- **One living organism, two retired, on this PC only, uncommitted. Never delete, overwrite
+  or refit any home:**
+  - `outputs/incubator/weiss/` — **Weiss, 120 days old, fetal day 90**, stage `fetal`, living
+    under `SittingCap(fold=True)` on all three organs since day 60 (Rocky's ruling, s070).
+    Copies `body_embryo_day30.pt`, `body_fetal_day30.pt`, `body_fetal_day60.pt` (before the
+    rule change), `body_fetal_day90.pt`. **HELD at day 90: Rocky's word reached day 90 only.**
+  - `outputs/incubator/vee/` — Vee, 120 days old, fetal. **RETIRED (Rocky, s070).** Never run
+    again; home kept, untouched since s067.
+  - `outputs/incubator/wile/` — Wile, 60 days old, fetal day 30. **RETIRED (Rocky, s070).**
+    Never run again; home kept.
+  - "Retired" is Chloe's reading of his answer "retired both." to a question naming Wile
+    and Vee; told to him, not contradicted. Nothing was done to either home.
 - **The s069 warning "do not let Weiss or Vee live on uncapped — killed near 2,700 classes"
   no longer holds for memory** (fixed in v0.3.5, tested to 3,419 classes at 1.49 GB). Time is
   now the wall: an uncapped day with a full round took 200–288 s and is rising.
@@ -85,6 +94,11 @@ measured read-only against the exhaustive answer. **No living organism was touch
   version. Afterwards we need to test it. And anyway why it need to compare each class to
   each table and not takingthe important table afterall."
 - "Yes, try the lineage routing on a copy."
+- On the five carried decisions: "1. 90. 2-5. Put the sister to rest." Asked which rules for
+  Weiss: cap + round + fold. Asked which organisms rest and what rest means (options named
+  Wile and Vee): "retired both."
+- "Okay lets wait until he's fully developed." (Weiss; Chloe told him day 90 is as far as
+  his word reaches and anything past the fetal stage waits for his yes.)
 
 ## Decisions waiting on Rocky
 New in s070:
@@ -94,15 +108,10 @@ New in s070:
   Weiss from day 60, 10 days, against the exhaustive round; classes, every gate row, seconds.
 - **B. The resting footprint** (finding 4): the sketch as the class and the buffer as a
   short window. To be written for sign-off and tried on a toy leaf first; not built.
-Carried from s069, unanswered:
-1. **Weiss from fetal day 60 to 90: under which rules?** Memory no longer forces the cap;
-   time still argues for it. Tried on copies: plain (now possible), cap + round, cap + round
-   + fold.
-2. **Wile from day 30:** the same choice (347 body-sense classes).
-3. **The replays (annealing) for the sisters: on or off?** ~95 % of what she holds, ~60 % of
-   her class multiplying.
-4. **The fold's pace** (5 a sitting leaves 1,704 body-sense classes due after 30 days).
-5. Vee: nothing may change in her without his word. (v0.3.5 is bit-identical for her.)
+- **C. Weiss after fetal day 90.** His gate is not passed (below). More fetal days under
+  the same rules, a change, or something else: his to say. "Not yet", not "no" (rule 8).
+The five carried from s069 are answered (rulings above): Weiss to 90 under cap + round +
+fold; Wile and Vee retired, which closes the replay and fold-pace questions for them.
 
 To switch the opt-in rules on in a living organism (ONLY on his yes): load her body, set
 `l.mixed.sitting = SittingCap()` or `SittingCap(fold=True)` on each organ, save. For the
@@ -111,6 +120,28 @@ experiments/incubator/trace_rebuild.py`.
 Run: `VEE_HOME=outputs/incubator/<name> DAYS=<total fetal days> DAY_BUDGET=900 python3
 experiments/incubator/fetal.py live`, copy `body.pt` to `body_fetal_day<N>.pt`, then
 `fetal.py gate`.
+
+## Weiss at fetal day 90 (s070; one organism, seed 0; logs `weiss_trace_rebuild_s070.log`, `weiss_fetal_d90_s070.log`, `weiss_fetal_gate_day90_s070.log`)
+Before the run: day-60 copy byte-identical to his body; traces rebuilt from his own 90-day
+log (`trace_rebuild.py APPLY=1`): due for folding ear 50 of 137, body sense 1,976 of 2,086,
+sense of change 62 of 114. 30 days, 26 min, peak 1.18 GB, 31–66 s a day.
+
+| fetal gate | Weiss d60 | Weiss d90 (cap + round + fold) |
+|---|---|---|
+| feels his kicks (k-means 1.00) | .94 FAIL | .92 FAIL |
+| what a kick moves | 5 of 5 | 5 of 5 ("work" .78, was 1.00) |
+| CPU rise, his / world's (k-means .93) | .95 | .98 |
+| memory rise, his / world's (base .59, k-means .97) | .59 FAIL | .59 FAIL |
+| nothing lost: memory full | .93 FAIL | .94 FAIL |
+| nothing lost: busy / place / window | 1.00 / .98 / .98 | 1.00 / .98 / .98 |
+| ear: text present | .91 | .95 |
+| classes ear / body sense / change | 137 / 2086 / 114 | 120 / 1946 / 52 |
+| classes used in his last 10 days | 97 / 89 / 51 | 96 / 77 / 39 |
+
+- **GATE NOT passed: the same three rows as at day 60.** Class count fell; no row was lost.
+- Not equal to the s069 copy trial (1,945 classes, "memory full" .96 inside the gate): he
+  ended at 1,946 and .94. Not diagnosed (stop-and-resume is known not to equal living
+  straight through; the copy's traces were rebuilt in s069).
 
 ## What was built / released (committed and pushed)
 - `trioron/pcll/mixed.py`: `_margins` in row chunks written in place, `_evidence` one table,
@@ -192,9 +223,9 @@ at every sitting.
    every sitting.
 
 ## NEXT (s071)
-0. Rocky's answers to A, B and the five carried decisions; act only on them.
+0. Rocky's answers to A, B and C; act only on them. Weiss is HELD at fetal day 90.
 1. On his yes to A: build kin-only placement opt-in, try on a copy of Weiss from day 60.
-2. Then the sisters live on under the rules he chooses; gates at 60 / 90.
+2. Weiss goes on only as Rocky says (C). Wile and Vee are retired: do not run them.
 3. Write plan §11.13 from this handoff; correct the manual's phasecyte line.
 4. Carried, untouched: stage 2b not designed; the join of the organs; guards (token budget,
    sandbox limits); the s066 fact-memory list (s067 handoff at `d22ebd2`).
