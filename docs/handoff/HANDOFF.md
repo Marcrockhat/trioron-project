@@ -28,8 +28,17 @@ because she never stops dividing. She is still an embryo.**
   those 17 days (plan §8.10): feels her kicks .98 pass; own CPU burst vs busy world with the
   echo hidden 1.00 pass (k-means .93); nothing lost pass; **FAIL: knows what a kick moves 2 of 5
   (work, hold yes; let go, mark, wipe no); own memory use vs the world's .59 = base; ear "text
-  present" .66 (was .75)**. Body-sense classes 143 → 287 in 17 days. **Do not run `fetal.py
-  live` again until Rocky decides about the alarm and the failed rows** (running it resumes her).
+  present" .66 (was .75)**. Body-sense classes 143 → 287 in 17 days. 
+- **Rocky then ruled "Let it finish 30 days" and she did (plan §8.11).** Alarm is now an absolute
+  budget (`DAY_BUDGET`=30 s a simulated day). She is 60 days old; `body_fetal_day17.pt` kept.
+  Day-30 gate: feels kicks .99 pass; CPU hers/world .98 pass; nothing lost pass; **FAIL: what a
+  kick moves 3 of 5 and UNSTABLE (work 1.00 → .11, mark .00 → .87 between day 17 and 30); own
+  memory vs the world's .62 (base .59, k-means .97); ear text present .65.** Classes ear 67,
+  body sense 429, sense of change 141; 3.8 s a day. She stays fetal; `fetal.py live` with
+  DAYS=30 now does nothing (she has lived them).
+- Rocky, on Chloe's stopping her at the alarm: "It is frustrating for more intelligent being to
+  become a mother." Chloe's reading: let her live out a signed stage; do not interrupt on small
+  cost signals — measure at the end.
 - **Stress state (Rocky asked, s067):** the phasecyte has a per-sitting status (empty /
   frustrated / resolved), a stress router (empty → reach for sensation, with habituation;
   frustrated → discriminate) and per-growth settlement; Numa/Mima by name exist only in
@@ -102,8 +111,7 @@ because she never stops dividing. She is still an embryo.**
   `G.WINDOW` varied, columns zeroed.
 
 ## NEXT (s068)
-1. **Rocky to decide on the stopped fetal run** (plan §8.10): finish the 30 days or not; the
-   time alarm; the three failed rows. Then diagnose: why let go / mark / wipe are not connected
+1. **Diagnose the three failed fetal rows on COPIES of her** (plan §8.11): why let go / mark / wipe are not connected
    to what they move; why her own memory use is not told from the world's; why the ear got worse.
    Then stage 2b (choosing by stress) to be designed for sign-off.
 2. DONE s067 (plan §6.10): her classes never mix world states (98 % pure, switch combination

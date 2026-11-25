@@ -10,9 +10,10 @@ The stage file (vee_body.HOME/stage) must say ``fetal``.  She continues from the
 embryo (body.pt): same world, same ambient text stream.
 Log: HOME/fetal_log.pt — every moment's input, hidden world state, sentence index, kick,
 and per-day class counts and wall time.
-Alarm (stop, state kept): a day takes more than twice the fifth fetal day's time.
+Alarm (stop, state kept): a simulated day takes more than DAY_BUDGET seconds (Rocky s067:
+let her finish; the first alarm, twice day 5's 0.3 s, stopped her on day 17 at 2.1 s).
 
-Env: DAYS=30 TEST_DAYS=5 P_TEXT=0.5 P_KICK=0.1667
+Env: DAYS=30 TEST_DAYS=5 P_TEXT=0.5 P_KICK=0.1667 DAY_BUDGET=30
 """
 from __future__ import annotations
 import os, sys, time
@@ -26,6 +27,7 @@ from world import ACTIONS, HIDDEN, PER_DAY, World
 
 E = lambda k, d: type(d)(os.environ.get(k, d))
 DAYS, TEST, P_TEXT, P_KICK = E("DAYS", 30), E("TEST_DAYS", 5), E("P_TEXT", 0.5), E("P_KICK", 1 / 6)
+DAY_BUDGET = E("DAY_BUDGET", 30.0)
 LOG = f"{vb.HOME}/fetal_log.pt"
 EMBRYO = {"busy": 0.99, "full": 0.95, "elsewhere": 1.00, "window": 1.00}     # her embryo gate values (plan §7.3a)
 EAR_EMBRYO = 0.75
@@ -67,9 +69,8 @@ def live(ambient):
         log["classes"].append(dict(body.classes)); log["secs"].append(time.time() - t0)
         body.save(); torch.save(log, LOG + ".tmp"); os.replace(LOG + ".tmp", LOG)
         print(f"  fetal day {ex['fetal_day']:3}: classes {body.classes}, {log['secs'][-1]:.1f} s", flush=True)
-        if ex["fetal_day"] > 5 and log["secs"][-1] > 2 * max(log["secs"][4], 1.0):
-            raise SystemExit(f"ALARM: fetal day {ex['fetal_day']} took {log['secs'][-1]:.1f} s, more than twice day 5 ({log['secs'][4]:.1f} s); stopped, state kept")
-
+        if log["secs"][-1] > DAY_BUDGET:
+            raise SystemExit(f"ALARM: fetal day {ex['fetal_day']} took {log['secs'][-1]:.1f} s, over the budget of {DAY_BUDGET:.0f} s; stopped, state kept")
 
 def probe(ambient, seed):
     """Days she never lives (another world run, with kicks); she is elsewhere from the third day."""

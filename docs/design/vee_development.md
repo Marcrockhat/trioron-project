@@ -596,3 +596,26 @@ Reading (Chloe's, one organism, 17 days, 10–18 unseen kicks per action):
 **Gate not passed. She stays fetal, stopped at day 17, until Rocky decides**
 whether to let her finish the 30 days (raise or replace the time alarm) and
 what to do about the three failed rows.
+
+### 8.11 The full 30 fetal days (Rocky s067: "Let it finish 30 days"; log `fetal_gate_s067.log`; day-17 gate kept as `fetal_gate_day17_s067.log`)
+
+The time alarm is now an absolute budget (30 s per simulated day). She is
+60 days old; states kept: `body_embryo_day30.pt`, `body_fetal_day17.pt`, `body.pt`.
+
+| criterion | day 17 | day 30 | |
+|---|---|---|---|
+| feels her kicks | .98 | .99 (k-means 1.00) | pass |
+| knows what a kick moves: work / hold / let go / mark / wipe | 1.00 / .78 / .00 / .00 / .20 | .11 / .61 / .36 / .87 / 1.00 → 3 of 5 | **FAIL** |
+| CPU rise hers or the world's, echo hidden | 1.00 | .98 (k-means .98, base .57) | pass |
+| memory rise hers or the world's, echo hidden | .59 | .62 (k-means .97, base .59) | **FAIL** |
+| nothing lost: busy / memory / place / window | 1.00 / .97 / 1.00 / .97 | .99 / 1.00 / 1.00 / .99 | pass |
+| the ear: text present | .66 | .65 (embryo .75) | **FAIL** |
+| classes: ear / body sense / sense of change | 37 / 287 / 80 | 67 / 429 / 141 (in use 42 / 69 / 90) | reported |
+| time per day | 1.5 s | 3.8 s | reported |
+
+- More days did not settle it. "What a kick moves" changed from kick to kick
+  between day 17 and day 30 (work 1.00 → .11, mark .00 → .87): what she
+  connects to a kick depends on how her classes happen to be split that day.
+  With 10–18 unseen kicks per action the measure is also coarse.
+- Her own memory use is still not told from the world's; the ear is no better.
+- The gate is not passed. She stays fetal.
