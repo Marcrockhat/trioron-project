@@ -162,6 +162,26 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
 - **ROLE RULE (Rocky s066, binding): Chloe is Vee's matron and stays in role with her; do NOT
   tell Vee that anything is a simulation until Rocky says she is ready.** No lesson line, taught
   reply or reading name may say so. Out-of-role explanation goes to Rocky / handoff / code only.
+- **Numa/Mima and the dream (Rocky s066: "I think those are already built in the dreaming
+  phase" — he was right).** Design §5 "growth must pay" names new phasecyte classes; Chloe had
+  proposed separate bookkeeping. The boundary meeting already has per-class settlement [D13],
+  consolidation + retirement of emptied classes [D20a], annealing [D15], PATIENCE retirement of
+  composer cells [D16] and a merge consumer [D18]. Measured on Vee's childhood (40 boundaries):
+  consolidation and annealing ran at 9 (only growth-free boundaries), moved 792 members, retired
+  2 classes; sceptical phase at 2; merge NEVER (opt-in `merge=False`, `PhasecyteLeaf` cannot
+  pass it). Tried (`vee_memory.py` env, default off): `MERGE=1` → numbers identical, zero merges
+  (its criterion is statistical, blind to labels). `QUIET=n` (n boundaries with nothing new at
+  the end of a night): scepticism engages and classes hold during the quiet, but annealing adds
+  ~450 synthesized buffer rows per boundary; over a short life (8 nights × 3 facts, 1 seed)
+  QUIET=1 gave 179 classes vs 89, night 3.8 s vs 1.2 s, recall equal (.96). QUIET=3 over 20
+  nights was stopped after 65 min without finishing one seed (baseline: 3 seeds in ~4 min). So
+  quiet time as added does NOT help speed or class count. Still open: matron's right/wrong as
+  testimony in the existing settlement; replay only the NEW wording at night; saving the leaf
+  after sleep (Rocky: state is saved after she sleeps; saving is not freezing).
+- **Mirror (Rocky s066, later stage):** "at certain stages, she might need a mirror to see
+  herself" — a sense of her own state and behaviour (what she just said, how sure, how many
+  facts/classes, confirmed or corrected). Links to the s011 roadmap (mirror cells,
+  self-observation). Not built; Rocky decides when.
 - Multi-wording teaching: `FactMemory.teach(same_as=i)`; console `/teach` with an answer equal to
   an existing user fact's answer is kept as another wording of that fact. User teaching is now
   stored as an ordered log (`vee_facts.jsonl`, one row per wording, `same_as_q`).

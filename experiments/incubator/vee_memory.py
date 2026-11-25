@@ -27,6 +27,10 @@ order — deterministic, but it grows with life; a state file is future work.
 
 Needs the local stage-2 and pilot collections in outputs/incubator/.
 
+Env (experimental, default off; s066 found neither helps): MERGE=1 turns on the
+phasecyte's own merge consumer (no merges happened); QUIET=n adds n boundaries
+with nothing new at the end of a night (classes doubled, nights 3x slower).
+
 Self-test (console regime: a few facts per night after the childhood):
     python3 experiments/incubator/vee_memory.py
 Env: NIGHTS=20 PER=1 (facts per night) SEEDS=3 HOLD=10
@@ -101,9 +105,13 @@ class FactMemory:
         if self.leaf is None:
             self.leaf = PhasecyteLeaf(lambda x: x, X[:self.window], self.seed, 0, window=min(self.window, len(X)),
                                       class_cap=None, manifold=True, composer=True, verbose=False)
+        self.leaf.mixed.merge = bool(int(os.environ.get("MERGE", 0)))   # the phasecyte's own merge consumer [D18], opt-in
         n_win = max(1, round(len(X) / self.window))                 # ~window samples per boundary, no tiny tail
         for xb, yb in zip(X.tensor_split(n_win), y.tensor_split(n_win)):
             self.leaf.mixed.observe(xb, labels=[f"g{int(f)}" for f in yb])
+            self.leaf.sub.end_task()
+        for _ in range(int(os.environ.get("QUIET", 0))):            # quiet boundaries: nothing new arrives, so the
+            self.leaf.mixed.period_boundary()                       # phasecyte's own consolidation / annealing can run
             self.leaf.sub.end_task()
         m = self.leaf.mixed
         self.names = self.leaf.member_names()                       # each class named from its CURRENT members
