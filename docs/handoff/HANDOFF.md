@@ -1,59 +1,134 @@
 # Trioron Handoff
 
 **Session date:** 2026-11-25
-**Session number:** 069
-**Session title:** the sisters' fetal days; the cranium checked; a cap, a round and a way to let go
+**Session number:** 070
+**Session title:** the memory wall was working memory, not what she holds; v0.3.5; lineage routing measured
 
-**Summary.** Rocky: "Lets run them while fixing the cranium system." Weiss lived to fetal day
-60 and Wile to fetal day 30; neither passes the gate yet. The cranium wiring was
-checked against the code: Chloe's s068 proposal would have done nothing. What actually limits
-an organism is her own hoard: thousands of classes, 93 % of which claim no moment she ever
-lived, in buffers that are about 95 % her own replays. An uncapped copy of Weiss is killed by
-the kernel for lack of memory near 2,700 classes. Built on Rocky's rulings, all opt-in: the
-arena grows when rows run out; a square-root cap on the sitting; the consolidation round in
-instalments; a fading trace of use with a fold of faded classes into their kin. All tried on
-copies only. **No living organism uses any of it. Vee was not touched.** Rocky asked for a
-new session after this one.
+**Summary.** Rocky: "about the class hoarding, probably the problems is more systematic? … I
+meant not in the classes per se but the RAM growth." It is. What killed the uncapped copy was
+not what she holds (236 MB) but the workspace of the membership step: a members × classes
+table, three copies alive at once, growing with the square of the class count. Fixed exactly
+(bit-identical), released as **v0.3.5** (branch pushed, `main` fast-forwarded, tag, PyPI) on
+his word ("we need to fix this. Afterwards we need to push and update the main and the pypi
+version. Afterwards we need to test it"). Tested: the uncapped copy lived past the day that
+killed it. Then, on his "Yes, try the lineage routing on a copy", routing by lineage was
+measured read-only against the exhaustive answer. **No living organism was touched.**
 
-## READ THIS FIRST (s070)
+## READ THIS FIRST (s071)
 - Read `docs/design/matron_rules.md` and `docs/design/vee_development.md` **§11.9–11.12**
-  before touching an organism.
+  before touching an organism. (The plan has NO s070 section yet: this handoff is the record.)
 - **Three organisms, on this PC only, uncommitted. Never delete, overwrite or refit:**
   - `outputs/incubator/vee/` — Vee, 120 days old, stage `fetal`. Untouched since s067.
-  - `outputs/incubator/weiss/` — Weiss, 90 days old, **fetal day 60**, stage `fetal`.
-    Copies `body_embryo_day30.pt`, `body_fetal_day30.pt`, `body_fetal_day60.pt`. **HELD.**
-  - `outputs/incubator/wile/` — Wile, 60 days old, **fetal day 30**, stage
-    `fetal` (set by hand in s069 on Rocky's s068 yes; `embryo_values.json` written). Copies
+  - `outputs/incubator/weiss/` — Weiss, 90 days old, **fetal day 60**. Copies
+    `body_embryo_day30.pt`, `body_fetal_day30.pt`, `body_fetal_day60.pt`. **HELD.**
+  - `outputs/incubator/wile/` — Wile, 60 days old, **fetal day 30**. Copies
     `body_embryo_day30.pt`, `body_fetal_day30.pt`. **HELD.**
-- **Do NOT let Weiss or Vee live on uncapped.** An uncapped body sense is killed for memory
-  near 2,700 classes (Weiss has 2,086, Vee 1,781).
-- **Her name is Wile** (Rocky, end of s069: "I was mistaken it is Wile"). Settled.
+- **The s069 warning "do not let Weiss or Vee live on uncapped — killed near 2,700 classes"
+  no longer holds for memory** (fixed in v0.3.5, tested to 3,419 classes at 1.49 GB). Time is
+  now the wall: an uncapped day with a full round took 200–288 s and is rising.
 - Copies for experiments (rule 27; not organisms, may be deleted):
   `outputs/incubator/copies/weiss60_{plain,capped,round,noanneal,fold}/`.
+  **`weiss60_plain` is now at fetal day 75** (it lived on in s070), no longer day 68.
 
-## Decisions waiting on Rocky (put to him in s069, unanswered)
-1. **Weiss from fetal day 60 to 90: under which rules?** Uncapped she dies of memory. The
-   choices tried on copies: cap + round; cap + round + fold.
-2. **Wile from day 30:** the same choice (347 body-sense classes; not near
-   the wall).
-3. (Settled: her name is Wile.)
-4. **The replays (annealing) for the sisters: on or off?** They are ~95 % of what she holds
-   and about 60 % of her class multiplying; with the fold on, they still grow her footprint.
-   Changing it in a living sister is a rule change in mid-life.
-5. **The fold's pace** (5 a sitting leaves 1,704 body-sense classes due after 30 days).
-6. Vee: the same wall is ahead of her; nothing may change in her without his word.
+## What s070 found (one organism, seed 0; saved bodies read, nothing changed)
+1. **The kill was working memory.** `_margins` built E (members × classes), `_evidence`
+   returned it through list + `cat` (two copies), then `E / sig` (a third). Measured on
+   Weiss's day-60 body sense (172,812 × 2,086; she holds 177 MB): **+4.23 GB**. On the killed
+   copy (258,259 × 2,738) that is about 8.5 GB on a 7.6 GB PC (arithmetic, not run).
+2. **The fix** (`trioron/pcll/mixed.py`): the best class and its margin are taken inside each
+   row chunk and written in place; `_evidence` fills one table; chunk budget
+   `EVIDENCE_ELEMS`. Bit-identical on all 172,812 day-60 members; test
+   `test_margins_in_chunks_equal_the_whole_table`. Day-60 membership now +0.32 GB; a whole
+   `_consolidate()` on the killed copy (in memory) peaks 1.15 GB, 168 s.
+   - Allocator note: appending many small results between megabyte temporaries fragments the
+     heap and looked like a leak (+2 GB); writing in place is what bounds it.
+3. **Tested alive** (`cap_probe_plain_fix_s070.log`): `weiss60_plain`, uncapped, fetal day 68
+   → 75. Body-sense classes 2,738 → 3,419; days 45–50 s without a full round, 200–288 s with
+   one; peak RSS 1.49 GB; clean exit. No gate was read on it.
+4. **What she holds at rest is the second, unfixed cause.** A class IS its members: up to
+   400 × 648 bytes (81 complex numbers) = 259 KB a class, against ~1 KB for its sketch;
+   replays fill every class toward 400 (83 a class at day 60, 130 on the fold copy at day
+   90). At saturation Weiss's 2,086 body-sense classes hold ~540 MB whatever she lives. This
+   contradicts the manual's "sufficient-statistics state, constant in samples seen". Arena
+   rows, lineage, tags, logs, sketches together stay under 40 MB.
+5. **Lineage routing against the exhaustive membership** (`experiments/incubator/
+   lineage_route_probe.py`, logs `lineage_route_probe*_s070.log`; Weiss day 60, read only).
+   Her lineage is a comb, not a balanced tree: 23 divisions deep on average at 2,086 classes.
+   - *Descent from the root* (pooled template per side): **fails**. Body sense .17 same class
+     as exhaustive at 28 comparisons; .92 only at 44 % of the exhaustive comparisons.
+   - *From the class a member is already in, compared with kin under the ancestor k
+     divisions up* (the consolidation round's case), body sense:
+
+     | k up | same class as exhaustive | comparisons a member (of 2,086) |
+     |---|---|---|
+     | 0 (stay) | .863 | 0 |
+     | 2 | .912 | 18 |
+     | 4 | .937 | 49 (2.3 %) |
+     | 8 | .964 | 166 (7.9 %) |
+
+     Where it differs the chosen class keeps .995 of the best class's evidence (near-ties).
+     Sense of change (settled, ranks by margin): .977 at 0, .995 at 3 up.
+   - **The ear is different:** only .289 of its buffered members are in their best class at
+     all; kin 8 up gives .95 for 54 % of the comparisons and the misses keep only .88 of the
+     evidence. Not examined further; the ear is small (137 classes).
+   - NOT tested: what kin-only placement does to her over days (classes, gate rows). The
+     probe measures agreement at one instant only.
+6. A unimodal blob divides (toy check, `try_divide`, not on an organism): a single Gaussian
+   mode wider than ~0.55 rad on one dimension is split in most trials, and a blob wide on 4
+   dimensions tiled into 31 classes. Chloe's reading, untested on her: on continuous senses
+   division quantises a continuum, which would explain classes that claim no lived moment.
+
+## Rocky's rulings this session (his words)
+- "about the class hoarding, probably the problems is more systematic?" … "I meant not in the
+  classes per se but the RAM growth".
+- "Okay, we need to fix this. Afterwards we need to ush and update the main and the pypi
+  version. Afterwards we need to test it. And anyway why it need to compare each class to
+  each table and not takingthe important table afterall."
+- "Yes, try the lineage routing on a copy."
+
+## Decisions waiting on Rocky
+New in s070:
+- **A. Kin-only placement in the round, tried alive on a copy?** Opt-in (a rule change,
+  rule 25): in the consolidation round a member is compared only with kin k divisions up
+  from its class (Chloe would start at k = 4), new moments stay exhaustive. Trial: a copy of
+  Weiss from day 60, 10 days, against the exhaustive round; classes, every gate row, seconds.
+- **B. The resting footprint** (finding 4): the sketch as the class and the buffer as a
+  short window. To be written for sign-off and tried on a toy leaf first; not built.
+Carried from s069, unanswered:
+1. **Weiss from fetal day 60 to 90: under which rules?** Memory no longer forces the cap;
+   time still argues for it. Tried on copies: plain (now possible), cap + round, cap + round
+   + fold.
+2. **Wile from day 30:** the same choice (347 body-sense classes).
+3. **The replays (annealing) for the sisters: on or off?** ~95 % of what she holds, ~60 % of
+   her class multiplying.
+4. **The fold's pace** (5 a sitting leaves 1,704 body-sense classes due after 30 days).
+5. Vee: nothing may change in her without his word. (v0.3.5 is bit-identical for her.)
 
 To switch the opt-in rules on in a living organism (ONLY on his yes): load her body, set
 `l.mixed.sitting = SittingCap()` or `SittingCap(fold=True)` on each organ, save. For the
-fold, rebuild her traces from her logs first: `VEE_HOME=<home> [APPLY=1] python3
-experiments/incubator/trace_rebuild.py` (report only without APPLY; her home needs
-`embryo_log.pt` and `fetal_log.pt`). Without that every class starts from its buffer size
-and nothing folds for 30–56 days.
+fold, rebuild her traces first: `VEE_HOME=<home> [APPLY=1] python3
+experiments/incubator/trace_rebuild.py`.
 Run: `VEE_HOME=outputs/incubator/<name> DAYS=<total fetal days> DAY_BUDGET=900 python3
 experiments/incubator/fetal.py live`, copy `body.pt` to `body_fetal_day<N>.pt`, then
 `fetal.py gate`.
 
-## Results (one organism each, seed 0)
+## What was built / released (committed and pushed)
+- `trioron/pcll/mixed.py`: `_margins` in row chunks written in place, `_evidence` one table,
+  `EVIDENCE_ELEMS`. Spec §9 partition row for `mixed.py` notes it. Test added.
+- **v0.3.5**: `pyproject.toml`, `trioron/__init__.py`; `main` fast-forwarded to the release
+  commit `b4b6789`; tag `v0.3.5`; https://pypi.org/project/trioron/0.3.5/. The wheel also
+  carries s068–s069 (`Arena.enlarge`, `pcll/sitting.py`, `mixed.no_anneal`).
+- `experiments/incubator/lineage_route_probe.py` (read-only probe;
+  `BODY=… [ORGANS=ear,soma,kin] [N=40000]`).
+- Tests: 168 pass; the same **four v2 tests fail as before** (not looked at):
+  `test_learning.py::TestCredit::test_lock_after_sustained_engagement`,
+  `::test_cooldown_prevents_immediate_relock`, `test_lifecycle.py::TestGrowth::
+  test_growth_trigger_logic`, `::TestDreamCycle::test_dream_locks_eligible_cells`.
+- NOT done: plan (`vee_development.md`) has no §11.13 for s070; the manual's phasecyte line
+  ("constant in samples seen") is not corrected; `mixed.py` is ~1,500 lines (over the
+  500-line discipline, not split).
+
+## The s069 results, carried (unchanged)
 
 | fetal gate | Vee d30 | Weiss d30 | Weiss d60 | Wile d30 |
 |---|---|---|---|---|
@@ -102,71 +177,26 @@ at every sitting.
 - Under the fold her ear's and sense of change's earliest classes were folded (all 76 and
   all 66 folds among their first 400 names); body sense 5 of 236.
 
-## Rocky's rulings this session (binding; his words)
-- "Lets run them while fixing the cranium system."
-- Cranium: "It is for them in this environment. It is not the default so no specs changes
-  is required." → everything built in s069 is opt-in; spec untouched.
-- Rows: "Yes and remove the class limit." (The organisms already had `class_cap=None`; the
-  benches' 43 / 128 defaults were left — Chloe told him.)
-- The cap: "Square root". On a day's time: "we accept that as a day for the sisters."
-- Compaction: "if the cranium is not problem, compaction will make things slower isn't?"
-  → not built.
-- Merge: off because it confused the organism before (record agrees: D18, s033).
-- The round: "Yes on the round it should run on the sittings. Sediment can be dug up but
-  occasionally."
-- "that's not how suppose the triorons work. It should have very small footprint."
-- "It is like some dude with photoghraphic memory but accompanied with schizophrenia."
-- "it is a missing piece that need to be sewn to the triorons itself the unforgettfulness
-  actually a double edge sword".
-- "The answer should be days. No one remember facts after 30 days if it is not keep
-  replayed." Then, on the fading trace (option B): "B is good then. Lets try it. If this
-  succeed then the growth should be faster."
-- "we should start a new session afterwards." … "I was mistaken it is Wile."
-
-## What was built (committed and pushed; `git log -9`)
-- `trioron/core/arena.py` `Arena.enlarge()` — doubles the arena at a boundary; `alloc`
-  unchanged; refused past `envelope.max_cells`. Used by `mixed.py _refresh` when an
-  uncapped organism has under `ROW_HEADROOM = 64` rows left. (The only change that is not
-  opt-in; neutral below 8,128 rows.)
-- `trioron/pcll/sitting.py` (new) `SittingCap` — opt-in via `mixed.sitting`:
-  - not judged if nothing new; at most `max(4, ceil(sqrt(classes) · 0.5 · φ))` judged a
-    sitting, busiest first; φ from growth at the previous sitting only;
-  - the consolidation round at every sitting over the judged classes + `max(1, cap // 4)`
-    dug from the sediment (`mixed.py _consolidate_some`);
-  - `fold=True`: trace × `FADE = 25^(−1/60)` a sitting + world members; under 1.0 the class
-    is folded into its nearest kin (`mixed.py _fold_stale`), at most
-    `max(1, ceil(sqrt(classes) · 0.1))` a sitting; survivor's members kept in front,
-    sketches pooled exactly;
-  - `work` (per sitting) and `folds` are recorded. Not in `state_dict` (ship / wake).
-  - 4, .5, the quarter, and "nearest kin by template" are Chloe's values / choices.
-- `mixed.no_anneal` — probe switch for the replays (attribute on a saved organ).
-- Tests added in `tests/test_v2/test_core.py`, `test_pcll.py` (arena enlarging, rows
-  outgrowing the arena, the cap, the fold). Phasecyte tests pass.
-- Plan §11.9–11.12.
-- NOT built: the cranium's true byte count; compaction / `recyclable`.
-- **Four v2 tests fail on this branch with or without the s069 changes** (not looked at):
-  `test_learning.py::TestCredit::test_lock_after_sustained_engagement`,
-  `::test_cooldown_prevents_immediate_relock`, `test_lifecycle.py::TestGrowth::
-  test_growth_trigger_logic`, `::TestDreamCycle::test_dream_locks_eligible_cells`.
-
 ## Open / not diagnosed
 1. Why the gate rows do not move (kicks ~.9 vs 1.00; Weiss's own memory vs the world's at
    base) and why Wile has the memory row and Weiss not.
-2. Whether the replays protect anything over a long time (8 days without new ones: no
-   reading fell). A sister raised without them from genesis would separate the causes.
-3. The second cause of multiplying: +241 classes on 768 moments of world with no new
-   replays.
-4. Where a capped day's 35–65 s go (not profiled); the ear spawning a composer cell at
+2. Whether the replays protect anything over a long time; a sister raised without them from
+   genesis would separate the causes.
+3. The second cause of multiplying: +241 classes on 768 moments with no new replays (see
+   s070 finding 6 for a candidate).
+4. Why only .29 of the ear's members sit in their best class (s070).
+5. Where a day's time goes now that memory is bounded (the full round is 168 s at 2,738
+   classes; `for k in range(classes): member == k` loops are members × classes in time).
+6. Carried: stop-and-resume not exactly equal to living straight through; the `world.py`
+   work-kick quirk; nothing has ever sharpened in Weiss; the ear spawning a composer cell at
    every sitting.
-5. Carried: stop-and-resume not exactly equal to living straight through; the `world.py`
-   work-kick quirk; nothing has ever sharpened in Weiss.
 
-## NEXT (s070)
-0. Get Rocky's answers to the five open decisions above; act only on them.
-1. Then, on his word: the sisters live on under the rules he chooses; gates at 60 / 90.
-2. If he wants the footprint small: try a copy with the replays off AND the fold on; and
-   bound the full round's workspace (it is what kills an uncapped organism).
-3. Carried, untouched: stage 2b not designed; the join of the organs; guards (token budget,
+## NEXT (s071)
+0. Rocky's answers to A, B and the five carried decisions; act only on them.
+1. On his yes to A: build kin-only placement opt-in, try on a copy of Weiss from day 60.
+2. Then the sisters live on under the rules he chooses; gates at 60 / 90.
+3. Write plan §11.13 from this handoff; correct the manual's phasecyte line.
+4. Carried, untouched: stage 2b not designed; the join of the organs; guards (token budget,
    sandbox limits); the s066 fact-memory list (s067 handoff at `d22ebd2`).
 
 ## Standing rules (carried)
@@ -175,7 +205,7 @@ at every sitting.
   yes, stage file changed by hand. Gates are not relaxed. Every gate carries a plain
   control. One organism on one seed is said to be so.
 - Incubator organism: no parameter cap, 85 % of host RAM, swap excluded; benches / CI keep
-  50 K. Paper is repo-only. Helper budget ≤ 50 % of the weekly limit (none spent in s069).
+  50 K. Paper is repo-only. Helper budget ≤ 50 % of the weekly limit (none spent in s069–s070).
 - One heavy process at a time on this PC (6 cores, 7.6 GB). `python3`, not `python`.
   `pkill -f` / `pgrep -f` hit the shell — kill by PID.
 - While a chain of organism runs is going, do not edit `experiments/incubator/` or
@@ -184,7 +214,7 @@ at every sitting.
   last day before trusting "finished".
 
 ## State of the build / pointers
-- Branch `conscience-core`, pushed. v0.3.4 on PyPI (nothing from s068–s069 is released).
+- Branch `conscience-core`, pushed. `main` = `conscience-core` at the v0.3.5 release; **v0.3.5 on PyPI** (the s070 fix + the s068–s069 opt-in work).
 - Local to this PC, uncommitted by rule: the three homes, `copies/`, `outputs/incubator/
   wiki_sent.*`, the s064–s066 matron-written data, `*.err`. Logs `*_s069.log` committed.
 - A new organism's language sense: copy `outputs/incubator/vee/sense.pt` into her home
@@ -198,5 +228,6 @@ at every sitting.
 `notebooks/` checkpoints, output PNGs / uncommitted logs untracked; `outputs/data/**` caches.
 
 ---
-History pointers (no dated archives): s068 handoff at fc11bd9 (the sisters' genesis, the
+History pointers (no dated archives): s069 handoff at 05a3ef1 (the cranium check, the cap, the
+round, the fold; Rocky's s069 rulings in his words); s068 handoff at fc11bd9 (the sisters' genesis, the
 ladders, "none", the composer search); s067 at d22ebd2; s066 at b7aff0e; s064 at e67b6ce.
