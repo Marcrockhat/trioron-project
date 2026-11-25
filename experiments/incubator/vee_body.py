@@ -29,6 +29,14 @@ Her senses form at genesis on a broad sample of her world with spontaneous activ
 (noise) on the reserved channels: a receptor exists only for a channel that carries
 signal at genesis (s066 germline checks).
 
+Organ blur (s068, plan §11.2; blur.py): a body made with ``blur=True`` sees each reading
+of an organ in a few steps (2 at first).  Before birth an organ takes one rung for one
+reading when it has not gained or lost a class for PATIENCE_BASE + classes // PATIENCE_PER
+sittings ("relative to her size").  After birth a step must be called for by the matron's
+corrections and pay — NOT built, so nothing sharpens once the stage file leaves
+embryo / fetal.  Vee has no blur; a body's blur is set at genesis for life.  Ladders (Rocky s068): a level
+2 -> 3 -> 5 steps; a change (kin's 35 change numbers) 2 -> 3 -> 5 -> 7, same / changed first.
+
 State: the whole body is saved (torch pickle, atomic) — saving is not freezing.
 The stage file HOME/stage names the stage she is in; a driver may only run the stage
 it is written for (the plan's gates are signed by Rocky, never promoted by code).
@@ -40,6 +48,7 @@ import torch
 sys.path.insert(0, os.getcwd())
 sys.path.insert(0, os.path.dirname(__file__))
 import environment
+from blur import Blur
 from world import PER_DAY, World
 from trioron.pcll import PhasecyteLeaf
 from trioron.senses.hidden_state import HiddenStateSense
@@ -53,6 +62,8 @@ LANG_SCALE = 1.0            # the ear has the language block to itself, so it is
 WINDOW = int(os.environ.get("VEE_WINDOW", 48))   # moments per sitting (boundary); 48 = half a simulated day
 NOBODY, MATRON, ROCKY = ([1.0, -1.0, -1.0], [-1.0, 1.0, -1.0], [-1.0, -1.0, 1.0])
 RAM_CEILING = 0.85          # of host RAM, swap never counted (incubator design §5.1)
+PATIENCE_BASE, PATIENCE_PER = 3, 8   # sittings settled before an organ may sharpen: BASE + classes // PER (the s067 probe's values)
+RECENT = 10                 # sittings of what the world showed, kept to choose which reading sharpens
 
 
 # ---- the language sense (germline) -------------------------------------------
@@ -87,6 +98,16 @@ def moment(lang: torch.Tensor | None, raw: dict, presence=NOBODY, action: int | 
     return x
 
 
+def can_be_silent(organ: str) -> torch.Tensor:
+    """Which of an organ's numbers read exactly zero when there is nothing to read ("none"):
+    the language block, the four readings through the window, the echo flags and the reserved
+    channels.  Not what she holds or her marks (zero there is a real amount)."""
+    x = torch.zeros(WIDTH, dtype=torch.bool)
+    x[:LANG] = True; x[92:96] = True; x[100:106] = True; x[108:] = True
+    if organ == "kin": return torch.cat([x[100:108], torch.zeros(35, dtype=torch.bool)])
+    return x[:LANG] if organ == "ear" else x[LANG:]
+
+
 def changes(X: torch.Tensor, prev: torch.Tensor | None = None) -> torch.Tensor:
     """What the kin organ reads from a run of consecutive moments: echo (8) | change of the 33
     environment readings | change of held and marks.  [N, 43].  ``prev`` = the moment before X[0]."""
@@ -94,11 +115,11 @@ def changes(X: torch.Tensor, prev: torch.Tensor | None = None) -> torch.Tensor:
     return torch.cat([X[:, 100:108], X[:, 64:97] - P[:, 64:97], X[:, 106:108] - P[:, 106:108]], 1)
 
 
-def kin_pool(seed: int, n: int = 10 * WINDOW) -> torch.Tensor:
+def kin_pool(seed: int, n: int = 10 * WINDOW, corridor: float = 0.0) -> torch.Tensor:
     """What the kin organ's senses form on: a stretch of world in which kicks fire in half the
     moments and the world's switches flip often (spontaneous activity, as at genesis)."""
     from world import ACTIONS
-    w, g = World(600 + seed), np.random.default_rng(3600 + seed)
+    w, g = World(600 + seed, corridor=corridor), np.random.default_rng(3600 + seed)
     rows = []
     for _ in range(n + 1):
         if g.random() < 0.2: w.busy, w.full, w.window = (bool(g.random() < 0.5) for _ in range(3))
@@ -109,10 +130,10 @@ def kin_pool(seed: int, n: int = 10 * WINDOW) -> torch.Tensor:
     return changes(X[1:], X[0])
 
 
-def genesis_pool(seed: int, ambient: torch.Tensor, n: int = 10 * WINDOW, p_text: float = 0.5) -> torch.Tensor:
+def genesis_pool(seed: int, ambient: torch.Tensor, n: int = 10 * WINDOW, p_text: float = 0.5, corridor: float = 0.0) -> torch.Tensor:
     """What her senses form on: every state of her world toggled freely, any presence,
     spontaneous activity on the reserved channels (they fall silent once she lives)."""
-    w, g = World(500 + seed), np.random.default_rng(3000 + seed)
+    w, g = World(500 + seed, corridor=corridor), np.random.default_rng(3000 + seed)
     rows = []
     for _ in range(n):
         w.busy, w.full, w.elsewhere, w.window = (bool(g.random() < 0.5) for _ in range(4))
@@ -143,13 +164,20 @@ def ram_used() -> float:
 
 # ---- the body ----------------------------------------------------------------------
 class Body:
-    def __init__(self, seed: int, pool: torch.Tensor):
+    blur = mature = None        # a body saved before organ blur existed (Vee) has none
+
+    def __init__(self, seed: int, pool: torch.Tensor, blur: bool | str = False):
+        """``blur``: False = sharp organs (Vee); True = blurred (the first sister); "none" = blurred,
+        and a silent reading is a state of its own (Rocky s068)."""
         self.seed, self.moments, self.born = seed, 0, time.time()
         mk = lambda P, k: PhasecyteLeaf(lambda x: x, P, seed, k, window=WINDOW, class_cap=None,
                                         manifold=True, composer=True, verbose=False)
         self.ear, self.soma = mk(pool[:, :LANG], 0), mk(pool[:, LANG:], 1)
         self.receptors = {k: int(l.sub.scheduler._plan.receptor_ids.numel()) for k, l in self.organs().items()}
         self.extra: dict = {}                       # what a driver must carry across saves (world, logs, …)
+        if blur:                                    # senses formed on the full readings above; she sees them blurred from now on
+            self.blur = {k: Blur(self.part(k, pool), none=can_be_silent(k) if blur == "none" else None) for k in ("ear", "soma")}
+            self.mature = {k: {"quiet": 0, "n": 0, "sittings": 0, "recent": []} for k in self.blur}
 
     def organs(self) -> dict:
         o = {"ear": self.ear, "soma": self.soma}
@@ -161,6 +189,10 @@ class Body:
         self.kin = PhasecyteLeaf(lambda x: x, pool, self.seed, 2, window=WINDOW, class_cap=None,
                                  manifold=True, composer=True, verbose=False)
         self.receptors["kin"] = int(self.kin.sub.scheduler._plan.receptor_ids.numel())
+        if self.blur is not None:                   # the echo (8) is levels; the 35 changes start at same / changed (Rocky s068)
+            self.blur["kin"] = Blur(pool, change=torch.arange(pool.shape[1]) >= 8,
+                                    none=can_be_silent("kin") if self.blur["soma"].none is not None else None)
+            self.mature["kin"] = {"quiet": 0, "n": 0, "sittings": 0, "recent": []}
         self.prev = None                            # the moment before the next one she lives
 
     def part(self, organ: str, X: torch.Tensor, prev: torch.Tensor | None = None) -> torch.Tensor:
@@ -178,14 +210,31 @@ class Body:
         if ram_used() > RAM_CEILING:
             raise SystemExit(f"memory ceiling: host RAM {ram_used():.0%} used > {RAM_CEILING:.0%}; she is not fed")
         for k, l in self.organs().items():
-            l.mixed.observe(self.part(k, X, getattr(self, "prev", None)), labels=labels if k == "ear" else None)
+            P = self.part(k, X, getattr(self, "prev", None))
+            l.mixed.observe(self.seen(k, P), labels=labels if k == "ear" else None)
             l.sub.end_task()
+            if self.blur is not None and k in self.blur: self._mature(k, P, len(l.mixed.classes))
         self.prev = X[-1].clone()
         self.moments += len(X)
 
+    def seen(self, organ: str, P: torch.Tensor) -> torch.Tensor:
+        """What the organ sees of its numbers ``P``: blurred if this body has blur."""
+        return self.blur[organ].see(P) if self.blur is not None and organ in self.blur else P
+
+    def _mature(self, organ: str, P: torch.Tensor, n: int) -> None:
+        """Before birth: settled long enough for her size -> one reading one step sharper (no trial)."""
+        m = self.mature[organ]
+        m["sittings"] += 1
+        m["recent"] = (m["recent"] + [P])[-RECENT:]
+        m["quiet"] = m["quiet"] + 1 if n == m["n"] else 0
+        m["n"] = n
+        if m["quiet"] >= PATIENCE_BASE + n // PATIENCE_PER and stage() in ("embryo", "fetal"):
+            self.blur[organ].sharpen(torch.cat(m["recent"]), m["sittings"])
+            m["quiet"] = 0
+
     def read(self, X: torch.Tensor, organ: str = "soma") -> tuple[torch.Tensor, torch.Tensor]:
         """(class index, margin) per moment from one organ — no learning."""
-        return self.organs()[organ].mixed.classify(self.part(organ, X))
+        return self.organs()[organ].mixed.classify(self.seen(organ, self.part(organ, X)))
 
     def class_names(self, organ: str = "soma") -> list[str]:
         return [c.name for c in self.organs()[organ].mixed.classes]

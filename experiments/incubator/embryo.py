@@ -12,10 +12,16 @@ World: world.py (fully simulated).  Ambient language: in P_TEXT of the moments a
 Wikipedia sentence is present (outputs/incubator/wiki_sent.*, read by the reflex).
 Log: HOME/embryo_log.pt — every moment's input, hidden world state (for the gate only;
 never in her input), sentence index, and per-day class count and wall time.
-Alarm (stop, state kept): a day takes more than twice day 5's time.  The class count is
-reported, not gated (Rocky s067: it need not settle now; cost and classes in use are watched).
+Alarm (stop, state kept): a simulated day takes more than DAY_BUDGET seconds (an absolute
+budget, matron's rule 9).  The class count is reported, not gated (Rocky s067: it need not
+settle now; cost and classes in use are watched).
 
-Env: DAYS=30 TEST_DAYS=5 P_TEXT=0.5 SEED=0  VEE_HOME=outputs/incubator/vee
+Set at genesis only, then carried by her body for life (s068, plan §11):
+    CORRIDOR=0.6   her world varies inside a corridor (world.py); 0 = Vee's world
+    BLUR=1         her organs start blurred and sharpen slowly (blur.py); 0 = Vee's organs;
+                   2 = blurred, and a silent reading ("none") is a state of its own
+
+Env: DAYS=30 TEST_DAYS=5 P_TEXT=0.5 SEED=0 DAY_BUDGET=30  VEE_HOME=outputs/incubator/vee
 """
 from __future__ import annotations
 import os, sys, time
@@ -29,6 +35,7 @@ from world import HIDDEN, PER_DAY, World
 
 E = lambda k, d: type(d)(os.environ.get(k, d))
 DAYS, TEST, P_TEXT, SEED = E("DAYS", 30), E("TEST_DAYS", 5), E("P_TEXT", 0.5), E("SEED", 0)
+CORRIDOR, BLUR, DAY_BUDGET = E("CORRIDOR", 0.0), E("BLUR", 0), E("DAY_BUDGET", 30.0)
 LOG = f"{vb.HOME}/embryo_log.pt"
 
 
@@ -47,10 +54,10 @@ def live(ambient):
     if os.path.exists(f"{vb.HOME}/body.pt"):
         body, log = vb.Body.load(), torch.load(LOG, weights_only=False)
     else:
-        body = vb.Body(SEED, vb.genesis_pool(SEED, ambient, p_text=P_TEXT))
-        body.extra = {"world": World(SEED), "rng": np.random.default_rng(1000 + SEED), "day": 0}
+        body = vb.Body(SEED, vb.genesis_pool(SEED, ambient, p_text=P_TEXT, corridor=CORRIDOR), blur={0: False, 1: True, 2: "none"}[BLUR])
+        body.extra = {"world": World(SEED, corridor=CORRIDOR), "rng": np.random.default_rng(1000 + SEED), "day": 0}
         log = {"X": [], "hidden": [], "text": [], "classes": [], "ear": [], "secs": [], "names": []}
-        print(f"[genesis: {body.receptors} receptors of {vb.WIDTH}]", flush=True)
+        print(f"[genesis: {body.receptors} receptors of {vb.WIDTH}; world corridor {CORRIDOR}; organs {('sharp', 'blurred', 'blurred, with none')[BLUR]}]", flush=True)
     ex = body.extra
     while ex["day"] < DAYS:
         t0 = time.time()
@@ -62,18 +69,22 @@ def live(ambient):
         log["classes"].append(body.classes["soma"]); log["ear"].append(body.classes["ear"]); log["secs"].append(time.time() - t0)
         if ex["day"] in (20, DAYS): log["names"].append((ex["day"], probe_names(body, ambient)))
         body.save(); torch.save(log, LOG + ".tmp"); os.replace(LOG + ".tmp", LOG)
-        print(f"  day {ex['day']:3}: classes {body.classes}, {log['secs'][-1]:.1f} s", flush=True)
-        d = ex["day"]
-        if d > 5 and log["secs"][-1] > 2 * max(log["secs"][4], 1.0):
-            raise SystemExit(f"ALARM: day {d} took {log['secs'][-1]:.1f} s, more than twice day 5 ({log['secs'][4]:.1f} s); stopped, state kept")
+        print(f"  day {ex['day']:3}: classes {body.classes}, {log['secs'][-1]:.1f} s{sharpness(body)}", flush=True)
+        if log["secs"][-1] > DAY_BUDGET:
+            raise SystemExit(f"ALARM: day {ex['day']} took {log['secs'][-1]:.1f} s, over the budget of {DAY_BUDGET:.0f} s; stopped, state kept")
     return body, log
 
 
-def probe(ambient):
+def sharpness(body) -> str:
+    if body.blur is None: return ""
+    return ", steps taken " + str({k: len(b.history) for k, b in body.blur.items()})
+
+
+def probe(ambient, corridor: float = 0.0):
     """A fixed set of moments she never lives (another world run), for stability and the gate.
     The rare state is made to occur: she is elsewhere from the start of the third day
     (it then lasts as long as the world lets it), so home / elsewhere can be scored."""
-    w, g = World(9000 + SEED), np.random.default_rng(9500 + SEED)
+    w, g = World(9000 + SEED, corridor=corridor), np.random.default_rng(9500 + SEED)
     days = []
     for d in range(TEST):
         if d == 2: w.elsewhere = True
@@ -83,19 +94,26 @@ def probe(ambient):
 
 def probe_names(body, ambient) -> list[str]:
     names = body.class_names()
-    return [names[int(c)] if c >= 0 else "-" for c in body.read(probe(ambient)[0])[0]]
+    return [names[int(c)] if c >= 0 else "-" for c in body.read(probe(ambient, body.extra["world"].corridor)[0])[0]]
 
 
 def gate(ambient):
     body, log = vb.Body.load(), torch.load(LOG, weights_only=False)
     X, Hd = torch.cat(log["X"]), torch.cat(log["hidden"])
-    Xp, Hp, Tp = probe(ambient)
+    Xp, Hp, Tp = probe(ambient, body.extra["world"].corridor)
     n, k = len(X), body.classes["soma"]
     cls = body.read(torch.cat([X, Xp]))[0]
     km = torch.cdist(torch.cat([X, Xp])[:, vb.LANG:], kmeans(X[:, vb.LANG:], k, SEED)).argmin(1)   # control on the numbers the soma reads
     Hall = torch.cat([Hd, Hp])
     print(f"# embryo gate: {body.extra['day']} days lived, {TEST} unseen days; soma {k} classes, ear {body.classes['ear']}; receptors {body.receptors}; "
-          f"{vb.WINDOW} moments a sitting, text in {P_TEXT} of moments")
+          f"{vb.WINDOW} moments a sitting, text in {P_TEXT} of moments; world corridor {body.extra['world'].corridor}")
+    if body.blur is not None:
+        import environment
+        for o, b in body.blur.items():
+            name = (lambda j: j) if o == "ear" else (lambda j: environment.NAMES[j - 64 + vb.LANG] if j < 33 else f"channel {j + vb.LANG}")
+            st = b.steps[b.varies]
+            print(f"blur, {o}: {len(b.history)} steps taken; readings at 2 / 3 / more steps: {int((st == 2).sum())} / {int((st == 3).sum())} / {int((st > 3).sum())}; "
+                  f"sharpened (sitting, reading, steps): {[(s, name(j), k) for s, j, k in b.history]}")
     print(f"{'state':22} {'her classes':>11} {'k-means':>8} {'base':>6}   verdict (clearly above base, and not more than .05 under k-means)")
     ok = True
     for j, h in enumerate(HIDDEN):

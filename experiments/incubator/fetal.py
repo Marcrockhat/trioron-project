@@ -28,6 +28,7 @@ from world import ACTIONS, HIDDEN, PER_DAY, World
 E = lambda k, d: type(d)(os.environ.get(k, d))
 DAYS, TEST, P_TEXT, P_KICK = E("DAYS", 30), E("TEST_DAYS", 5), E("P_TEXT", 0.5), E("P_KICK", 1 / 6)
 DAY_BUDGET = E("DAY_BUDGET", 30.0)
+CORRIDOR = 0.0              # set from her own world in gate(): unseen days come from the same kind of world
 LOG = f"{vb.HOME}/fetal_log.pt"
 EMBRYO = {"busy": 0.99, "full": 0.95, "elsewhere": 1.00, "window": 1.00}     # her embryo gate values (plan §7.3a)
 EAR_EMBRYO = 0.75
@@ -53,7 +54,7 @@ def live(ambient):
     body = vb.Body.load()
     ex = body.extra
     if "kin" not in body.organs():
-        body.grow_kin(vb.kin_pool(body.seed))
+        body.grow_kin(vb.kin_pool(body.seed, corridor=ex["world"].corridor))
         ex["kicks"], ex["fetal_day"] = np.random.default_rng(4000 + body.seed), 0
         log = {"X": [], "hidden": [], "text": [], "action": [], "classes": [], "secs": []}
         print(f"[kin is born: {body.receptors['kin']} receptors of 43; she is {ex['day']} days old]", flush=True)
@@ -74,7 +75,7 @@ def live(ambient):
 
 def probe(ambient, seed):
     """Days she never lives (another world run, with kicks); she is elsewhere from the third day."""
-    w, g, k = World(9100 + seed), np.random.default_rng(9600 + seed), np.random.default_rng(9700 + seed)
+    w, g, k = World(9100 + seed, corridor=CORRIDOR), np.random.default_rng(9600 + seed), np.random.default_rng(9700 + seed)
     days = []
     for d in range(TEST):
         if d == 2: w.elsewhere = True
@@ -96,12 +97,16 @@ def vote(cls_tr, y_tr, cls_te, n_values):
 
 
 def gate(ambient):
+    global CORRIDOR
     body, log = vb.Body.load(), torch.load(LOG, weights_only=False)
+    CORRIDOR = body.extra["world"].corridor
     X, Hd, T, A = (torch.cat(log[k]) for k in ("X", "hidden", "text", "action"))
     Xp, Hp, Tp, Ap = probe(ambient, body.seed)
     n = len(X)
     K, Kp = vb.changes(X), vb.changes(Xp)                         # what kin reads
-    kin = body.kin.mixed
+    class kin:                                                    # her sense of change, read as she sees it (through her blur, if any)
+        classes = body.kin.mixed.classes
+        classify = staticmethod(lambda M: body.kin.mixed.classify(body.seen("kin", M)))
     kk = len(kin.classes)
     C = kmeans(K, kk, body.seed)
     km = lambda M: torch.cdist(M, C).argmin(1)

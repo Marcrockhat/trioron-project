@@ -752,3 +752,78 @@ so it can be given to an organism that already lives.
   same embryo and fetal gates, in the corridor world, and compare with Vee at
   equal age (classes, time per day, every gate row). Vee is kept untouched.**
   Which of the two goes on to birth is Rocky's decision after the comparison.
+
+## 11. The sister: a new genesis (s068; Rocky: "lets start with a new genesis")
+
+A second organism, raised from genesis in her own home, `outputs/incubator/sister/`
+(`VEE_HOME`; the directory name is a placeholder — **her name is Rocky's to give**).
+Vee is not touched. Same germline as Vee except the two things under test: the
+same 148-number layout, the same language sense (Vee's `sense.pt`, copied), the
+same seed (0), so she lives the same course of world events and hears the same
+sentences as Vee did, day for day.
+
+### 11.1 The corridor world (BUILT, `world.py`, `World(seed, corridor=c)`)
+A reading that tells a state (RAM, swap, load, CPU busy, processes, traffic)
+wanders inside a band around that state's typical value and is clipped at the
+band's edge. With 0 = the quiet value and 1 = the other, the bands are
+[−c/2, c/2] and [1 − c/2, 1 + c/2]; **c = 0.6** (Chloe's value, from the s067
+probe: variation .3 taught, .6 drowned): the bands never touch. Each moment
+keeps half of where the reading was (it wanders, it does not jump). Measured on
+her readings (−1..1): spread .13–.23 within a state for CPU and memory, .08 for
+traffic; Vee's world had .1–.2 for CPU, .1 for memory, less for traffic.
+Checked: with the corridor off the world is identical to Vee's, number for
+number, over 40 days with kicks; with it on, the hidden course is the same.
+
+### 11.2 Organ blur (BUILT, `blur.py`, `vee_body.Body(blur=True)`)
+- Senses form at genesis on the full readings. From her first moment each organ
+  sees each reading in **2 steps** over the range it showed at genesis.
+- **When an organ sharpens (before birth):** it has not gained or lost a class
+  for 3 + classes // 8 sittings (the probe's values). Then one reading gets one
+  more step. No trial, as agreed.
+- **Which reading:** the one whose present steps hide the most of what the
+  world showed in her last 10 sittings (spread inside a step, as a share of the
+  reading's range). Chloe's reading of "hiding the most detail". Known
+  weakness: before birth she cannot tell detail from noise, so a reading that
+  merely wanders may be sharpened.
+- **After birth:** a step must be called for by corrections and pay. NOT
+  built; the code takes no step once the stage file leaves embryo / fetal.
+
+### 11.3 Embryo gate
+Unchanged (§7.3 with Rocky's s067 rulings): busy, memory, place, window against
+k-means on the full, unblurred numbers; night, class count, stability reported.
+The time alarm is now an absolute budget (30 s a simulated day, rule 9).
+
+### 11.5 The ladders, and her sense of change (Rocky's rulings s068; BUILT, not yet run on her fetal stage)
+- Rocky: "Three states is mandatory", then "probably start at 2, go to 3, to
+  5, then to 7", then to Chloe's two questions: "1. yes. 2. 2>3>5".
+- **A level** (ear, body sense, the echo flags): **2 → 3 → 5** steps, then no
+  further. This replaces "one step at a time" in §11.2. No step had been
+  taken when it was changed (sister, embryo day 17+), so nothing she lived
+  is rewritten.
+- **A change** (the 35 numbers of her sense of change that say how a reading
+  moved): **2 → 3 → 5 → 7**. 2 = same / changed (how much it moved, either
+  way), 3 = down / same / up, then finer grades. The range is symmetric about
+  zero and "same" is its middle third at every rung, so "did not move" is a
+  state of its own from the first moment and no cut ever lies on zero.
+- Chloe's choices inside the ruling: the 8 echo numbers in that organ are
+  levels (at same / changed "I did this" and "I did not" would look alike);
+  "same" = the middle third of the range seen at genesis.
+- **"None"** (Rocky s068: "I meant yes add none"; BUILT, `Blur(none=…)`,
+  `embryo.py BLUR=2`): a reading that can be silent — the 64 language numbers,
+  the four readings through the window, the echo flags, the reserved channels —
+  is seen as exactly zero when it reads zero, a state of its own. What she
+  holds and her marks are not in the list (zero there is a real amount).
+- Found while building it: 16 of the body sense's 81 readings showed 7 or
+  fewer distinct values at genesis (day of week, place, rain, someone here,
+  window open, presence). They are already in steps, and blurring them did
+  harm: the first sister sees "window closed" and "raining" as one value, and
+  hears silence as a fixed pattern of step centres. In a body born with
+  "none" such a reading passes unchanged.
+- **"None" changes what she sees from her first moment, so it applies only to
+  a body born with it.** The first sister (`outputs/incubator/sister/`) was
+  born without it and is read as she was made.
+- `fetal.py`: her sense of change is formed in her corridor world, the gate
+  reads it through her blur, and the unseen days come from a corridor world.
+- Her fetal stage is NOT entered: the embryo gate is read by Rocky first.
+- `world.py`, old quirk: a work kick in an already busy world lowers the CPU
+  reading to .85. Left as is so Vee's world stays identical.

@@ -50,7 +50,9 @@ Read this at the start of every session that touches an organism.
 16. Her world may vary, inside a corridor, never at random (s067).
 17. An organ starts blurred and sharpens very slowly, relative to her size:
     before birth when she has been settled long enough; after birth only when
-    the matron's corrections call for it and the step pays (s067).
+    the matron's corrections call for it and the step pays (s067). A level
+    sharpens 2 → 3 → 5 steps; a change 2 → 3 → 5 → 7, starting at same /
+    changed, and "did not move" is always a state of its own (s068).
 
 ## 5. Teaching (from birth)
 18. By interaction: the matron replies to what she actually said (s066).
