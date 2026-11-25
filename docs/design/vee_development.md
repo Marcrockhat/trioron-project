@@ -619,3 +619,34 @@ The time alarm is now an absolute budget (30 s per simulated day). She is
   With 10–18 unseen kicks per action the measure is also coarse.
 - Her own memory use is still not told from the world's; the ear is no better.
 - The gate is not passed. She stays fetal.
+
+### 8.12 Ninety fetal days (Rocky s067: "Try 90"; logs `fetal_gate_day60_s067.log`, `fetal_gate_day90_s067.log`; daily budget raised to 180 s for this run)
+
+| criterion | day 17 | day 30 | day 60 | day 90 |
+|---|---|---|---|---|
+| feels her kicks | .98 | .99 | .98 | 1.00 |
+| what a kick moves: work / hold / let go / mark / wipe | 1.00 / .78 / .00 / .00 / .20 | .11 / .61 / .36 / .87 / 1.00 | .50 / .78 / 1.00 / 1.00 / 1.00 | .78 / 1.00 / 1.00 / 1.00 / .90 |
+| … right for | 2 of 5 | 3 of 5 | 4 of 5 | **5 of 5** |
+| CPU rise hers or the world's, echo hidden | 1.00 | .98 | .98 | .95 (k-means 1.00) |
+| memory rise hers or the world's, echo hidden | .59 | .62 | .90 | **.93** (k-means .97, base .59) |
+| nothing lost: busy / memory / place / window | pass | pass | pass | 1.00 / 1.00 / 1.00 / 1.00 |
+| the ear: text present | .66 | .65 | .74 | .75 (embryo .75) |
+| classes: ear / body sense / sense of change | 37 / 287 / 80 | 67 / 429 / 141 | 201 / 877 / 392 | 344 / 1,781 / 550 |
+| … in use in her last 10 days | | 42 / 69 / 90 | 86 / 115 / 146 | 97 / 125 / 141 |
+| time per simulated day | 1.5 s | 3.8 s | 19 s | 41 s (last five days) |
+| saved body | 54 MB | 69 MB | 132 MB | 231 MB |
+
+- **The fetal gate (2a) passes at day 60 and again, more firmly, at day 90.**
+  Rocky was right that she needed time: Chloe's reading at day 30 ("more
+  days did not settle it") was wrong. The same unseen probe days were used
+  at every reading, so the rise is hers.
+- She is still at or under the plain control on every row (k-means reads the
+  same numbers as well or better). The gate asked for "clearly above chance
+  and not far under the control", and that is what she does.
+- Not read at any age: whether she holds something, whether a mark exists
+  (from the body sense; .87 / .72 against base .90 / .71).
+- **The cost is the open problem.** Classes in use stay near 100–150 per
+  organ while the total passes 1,700; time per day grew 100-fold and the
+  saved body 5-fold. At this rate a longer life is not affordable on this PC.
+- One organism, one seed. She is 120 days old and stays in the fetal stage:
+  2b (choosing) is not designed, and the stage file is not changed by code.

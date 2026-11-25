@@ -2,7 +2,7 @@
 
 **Session date:** 2026-11-25
 **Session number:** 067
-**Session title (s067: the body gets organs; Vee's embryo gate holds by ruling; fetal stage stopped by an alarm at day 17, gate not passed):**
+**Session title (s067: the body gets organs; Vee's embryo gate holds by ruling; fetal stage: gate failed at day 17 and 30, PASSES at day 60 and 90 — at a steep cost in classes and time):**
 **The s066 work list was worked through. A language block turned down does NOT keep facts after
 birth; in one leaf, text and world compete for the same classes. Two phasecyte leaves in one body
 (an ear on the language block, a body sense on the rest) give facts .98 and busy / memory 1.00 /
@@ -36,6 +36,13 @@ because she never stops dividing. She is still an embryo.**
   memory vs the world's .62 (base .59, k-means .97); ear text present .65.** Classes ear 67,
   body sense 429, sense of change 141; 3.8 s a day. She stays fetal; `fetal.py live` with
   DAYS=30 now does nothing (she has lived them).
+- **Rocky then said "Try 90" and at fetal day 60 and day 90 THE FETAL GATE (2a) PASSES EVERY ROW
+  (plan §8.12):** what a kick moves 4 of 5 → 5 of 5; own memory use vs the world's .90 → .93;
+  ear .74 → .75; CPU .98 → .95; nothing lost. Chloe's day-30 reading "more days did not settle
+  it" was WRONG — do not call a developmental stage early. She is 120 days old;
+  `body_fetal_day{17,30,60,90}.pt` kept (231 MB now). **Cost is the open problem: 1,781 / 550 /
+  344 classes (about 100–150 per organ in use), 41 s a simulated day, up from 0.3 s.**
+  `fetal.py` default budget is 30 s a day; the 90-day run used `DAY_BUDGET=180`.
 - Rocky, on Chloe's stopping her at the alarm: "It is frustrating for more intelligent being to
   become a mother." Chloe's reading: let her live out a signed stage; do not interrupt on small
   cost signals — measure at the end.
@@ -111,7 +118,10 @@ because she never stops dividing. She is still an embryo.**
   `G.WINDOW` varied, columns zeroed.
 
 ## NEXT (s068)
-1. **Diagnose the three failed fetal rows on COPIES of her** (plan §8.11): why let go / mark / wipe are not connected
+0. **Ask Rocky: is fetal 2a passed for him (plan §8.12)?** Then, in his order: the cost of her
+   classes (unused classes: 1,781 held, ~125 used — retire, archive or make a division pay;
+   a spec §10 change needs his yes), and stage 2b (choosing by her stress state) for sign-off.
+1. (superseded by the day-60/90 result; kept for the record) the three rows that failed at day 30 (plan §8.11): why let go / mark / wipe are not connected
    to what they move; why her own memory use is not told from the world's; why the ear got worse.
    Then stage 2b (choosing by stress) to be designed for sign-off.
 2. DONE s067 (plan §6.10): her classes never mix world states (98 % pure, switch combination
