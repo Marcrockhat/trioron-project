@@ -18,7 +18,11 @@ days she has not lived.  base = always guessing the commoner value.
 Control = k-means with the same number of clusters on the same vectors.
 
 Run from repo root:  python3 experiments/incubator/germline_checks.py
+Check 1 is scored with the adjusted Rand index (1 = the same grouping of moments, 0 =
+chance): class numbers of two organisms are not comparable, groupings are.
+
 Env: SEEDS=3 DAYS=20 TEST_DAYS=5  GENESIS=first|rich (first = her first 48 moments; rich = see genesis_pool)
+     P_TEXT=0.5  LANG_SCALE=1.0 (the language block is multiplied by this, §6.6)  AMBIENT=q|wiki
 """
 from __future__ import annotations
 import os, sys
@@ -35,6 +39,7 @@ E = lambda k, d: int(os.environ.get(k, d))
 SEEDS, DAYS, TEST = E("SEEDS", 3), E("DAYS", 20), E("TEST_DAYS", 5)
 LANG, RES, WINDOW = 64, 48, 48
 P_TEXT = float(os.environ.get("P_TEXT", 0.5))                  # share of moments with a text present
+LANG_SCALE = float(os.environ.get("LANG_SCALE", 1.0))          # loudness of the language block (plan §6.6)
 
 
 def stream(seed, S2, topic, kick_from=None):
@@ -45,7 +50,7 @@ def stream(seed, S2, topic, kick_from=None):
         raw, hid = w.step()
         lang, kind = torch.zeros(LANG), -1
         if g.random() < P_TEXT:
-            i = int(g.integers(len(S2))); lang, kind = S2[i], int(topic[i])
+            i = int(g.integers(len(S2))); lang, kind = LANG_SCALE * S2[i], int(topic[i])
         k = (not k) if gk.random() < 1 / 10 else k
         res = torch.zeros(RES)
         if kick_from is not None and t >= kick_from:               # the action-echo channels come alive
@@ -67,7 +72,7 @@ def genesis_pool(seed, S2, width):
         w.busy, w.full, w.elsewhere, w.window = (bool(g.random() < 0.5) for _ in range(4))
         w.t = int(g.integers(PER_DAY * 7))
         raw, _ = w.step()
-        lang = S2[int(g.integers(len(S2)))] if g.random() < P_TEXT else torch.zeros(LANG)
+        lang = LANG_SCALE * S2[int(g.integers(len(S2)))] if g.random() < P_TEXT else torch.zeros(LANG)
         pres = torch.tensor(g.choice([-1.0, 1.0], 3)).float()
         res = torch.tensor(g.standard_normal(RES)).float()
         rows.append(torch.cat([lang, torch.tensor(environment.vector(raw)).float(), pres, res])[:width])
@@ -96,6 +101,17 @@ def kmeans(X, k, seed, iters=30):
     return C
 
 
+def adjusted_rand(a, b) -> float:
+    """Agreement of two groupings of the same moments, blind to how the groups are numbered."""
+    a, b = a.unique(return_inverse=True)[1], b.unique(return_inverse=True)[1]
+    M = torch.zeros(int(a.max()) + 1, int(b.max()) + 1, dtype=torch.float64)
+    M.index_put_((a, b), torch.ones(len(a), dtype=torch.float64), accumulate=True)
+    c2 = lambda x: (x * (x - 1) / 2).sum()
+    s, sa, sb, tot = c2(M), c2(M.sum(1)), c2(M.sum(0)), len(a) * (len(a) - 1) / 2
+    exp = sa * sb / tot
+    return float((s - exp) / ((sa + sb) / 2 - exp))
+
+
 def readable(cls, y, n):
     """accuracy on moments after n when each class votes its majority value before n; and the base rate."""
     tr, te, ytr, yte = cls[:n], cls[n:], y[:n], y[n:]
@@ -111,7 +127,12 @@ def readable(cls, y, n):
 if __name__ == "__main__":
     from stage2_memory import load
     H2, group2, block2, _, _ = load("both")
-    S2 = HiddenStateSense(H2, LANG, dup=False)(H2)
+    if os.environ.get("AMBIENT", "q") == "wiki":                 # §6.2 sense (sentences + questions), Wikipedia ambient text
+        import birth_check
+        Hw = birth_check.wiki_states()
+        S2 = HiddenStateSense(torch.cat([Hw, H2]), LANG, dup=False)(Hw)
+    else:
+        S2 = HiddenStateSense(H2, LANG, dup=False)(H2)
     topic = (kmeans(S2, 6, 0)[None] - S2[:, None]).norm(dim=2).argmin(1)     # six kinds of text, for check 3
     n = DAYS * PER_DAY
     print(f"# germline checks  seeds={SEEDS}  {DAYS} days lived + {TEST} days unseen, {PER_DAY} moments a day", flush=True)
@@ -123,8 +144,10 @@ if __name__ == "__main__":
         leaf, cls, counts = grow(X, seed, pool)
         _, cls0, _ = grow(X[:, :-RES], seed, pool[:, :-RES] if rich else None)   # the same life without the reserved channels
         R.setdefault("0 receptors (of 148)", []).append(leaf.sub.scheduler._plan.receptor_ids.numel())
-        same = (cls == cls0).float().mean().item()
-        R.setdefault("1 same class with / without silent channels", []).append(same)
+        same = adjusted_rand(cls, cls0)
+        _, cls_b, _ = grow(X, seed + 100, genesis_pool(seed + 100, S2, X.shape[1]) if rich else None)   # yardstick: another genesis draw
+        R.setdefault("1 agreement (adjusted Rand) with / without silent channels", []).append(same)
+        R.setdefault("1 agreement between two genesis draws, both with silent channels", []).append(adjusted_rand(cls, cls_b))
         R.setdefault("1 classes with silent", []).append(len(leaf.mixed.classes))
         R.setdefault("1 classes without", []).append(int(cls0.max()) + 1)
         k = len(leaf.mixed.classes)
@@ -145,7 +168,7 @@ if __name__ == "__main__":
             a, b = readable(ck, kk, n)
             olds = np.mean([readable(ck, Hk[:, j], n)[0] for j in range(len(HIDDEN))])
             R.setdefault(f"2 kick readable, {name}: acc / base / old states mean / classes", []).append([a, b, olds, len(lf.mixed.classes)])
-        print(f"  seed {seed} done: classes {k}, same-with/without {same:.2f}", flush=True)
+        print(f"  seed {seed} done: classes {k}, agreement with/without {same:.2f}", flush=True)
     print()
     for name, v in R.items():
         m = np.array(v, float).mean(0)

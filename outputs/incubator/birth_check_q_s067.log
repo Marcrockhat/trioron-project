@@ -1,0 +1,15 @@
+# birth check  seeds=3  embryo 20 days, text in 0.5 of moments; then 40 facts in 4 waves; sense=q ambient=q (8304 texts)
+  seed 0 language x1.0: classes 34 -> 77  facts top1 w0 0.91 all 0.83  hit w0 0.90 all 0.80  class mean 1.00 (language only 1.00)  busy 0.81->0.81  full 0.63->0.61
+  seed 0 language x0.5: classes 101 -> 251  facts top1 w0 0.90 all 0.75  hit w0 0.87 all 0.71  class mean 1.00 (language only 1.00)  busy 0.99->1.00  full 0.97->0.99
+  seed 0 language x0.25: classes 89 -> 314  facts top1 w0 0.83 all 0.56  hit w0 0.78 all 0.48  class mean 0.95 (language only 1.00)  busy 1.00->1.00  full 0.99->0.99
+  seed 1 language x1.0: classes 59 -> 122  facts top1 w0 0.90 all 0.61  hit w0 0.89 all 0.50  class mean 1.00 (language only 0.99)  busy 0.68->0.71  full 0.59->0.60
+  seed 1 language x0.5: classes 75 -> 193  facts top1 w0 0.85 all 0.54  hit w0 0.84 all 0.41  class mean 0.99 (language only 0.99)  busy 0.90->0.91  full 0.77->0.85
+  seed 1 language x0.25: classes 56 -> 205  facts top1 w0 0.78 all 0.48  hit w0 0.70 all 0.38  class mean 0.93 (language only 0.99)  busy 0.92->0.98  full 0.93->0.94
+  seed 2 language x1.0: classes 51 -> 122  facts top1 w0 0.91 all 0.79  hit w0 0.91 all 0.75  class mean 0.99 (language only 0.99)  busy 0.77->0.71  full 0.62->0.62
+  seed 2 language x0.5: classes 77 -> 173  facts top1 w0 0.91 all 0.69  hit w0 0.91 all 0.66  class mean 0.98 (language only 0.99)  busy 0.79->0.79  full 0.78->0.89
+  seed 2 language x0.25: classes 75 -> 315  facts top1 w0 0.80 all 0.59  hit w0 0.74 all 0.54  class mean 0.87 (language only 0.99)  busy 0.88->1.00  full 0.96->0.97
+
+language  | classes embryo -> after facts | facts top-1: w0  all | hit: w0  all | untaught answered | class mean 148 / language | world after embryo, hers/k-means: busy  full  night  window | world after facts, hers: busy full night window
+x1.0      |             48 -> 107         |            0.91 0.74 |    0.90 0.68 |              0.04 |           0.99 / 0.99     | 0.75/0.91  0.61/0.82  0.59/0.67  0.99/0.85 | 0.74  0.61  0.59  0.97
+x0.5      |             84 -> 206         |            0.89 0.66 |    0.87 0.59 |              0.02 |           0.99 / 0.99     | 0.90/0.98  0.84/0.93  0.69/0.80  0.93/0.91 | 0.90  0.91  0.74  0.98
+x0.25     |             73 -> 278         |            0.80 0.54 |    0.74 0.46 |              0.04 |           0.92 / 0.99     | 0.93/1.00  0.96/0.93  0.57/0.84  0.99/0.95 | 0.99  0.97  0.56  0.99

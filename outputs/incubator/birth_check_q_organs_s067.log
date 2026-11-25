@@ -1,0 +1,7 @@
+# birth check  seeds=3  embryo 20 days, text in 0.5 of moments; then 40 facts in 4 waves; sense=q ambient=q (8304 texts)
+  seed 0 language xorgans: classes 2 -> 45  facts top1 w0 0.90 all 0.98  hit w0 0.89 all 0.97  class mean 1.00 (language only 1.00)  busy 1.00->1.00  full 1.00->1.00
+  seed 1 language xorgans: classes 3 -> 45  facts top1 w0 0.90 all 0.94  hit w0 0.89 all 0.94  class mean 1.00 (language only 0.99)  busy 0.99->1.00  full 0.96->0.97
+  seed 2 language xorgans: classes 3 -> 59  facts top1 w0 0.91 all 0.98  hit w0 0.91 all 0.98  class mean 0.99 (language only 0.99)  busy 1.00->1.00  full 0.98->0.98
+
+language  | classes embryo -> after facts | facts top-1: w0  all | hit: w0  all | untaught answered | class mean 148 / language | world after embryo, hers/k-means: busy  full  night  window | world after facts, hers: busy full night window
+organs    |              3 -> 50          |            0.90 0.97 |    0.90 0.96 |              0.02 |           0.99 / 0.99     | 1.00/0.87  0.98/0.82  0.60/0.69  0.97/0.87 | 1.00  0.98  0.63  0.97

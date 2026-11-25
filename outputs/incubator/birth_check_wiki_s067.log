@@ -1,0 +1,11 @@
+# birth check  seeds=3  embryo 20 days, text in 0.5 of moments; then 40 facts in 4 waves; sense=both ambient=wiki (3600 texts)
+  seed 0 language x0.5: classes 53 -> 157  facts top1 w0 0.97 all 0.85  hit w0 0.96 all 0.83  class mean 1.00 (language only 1.00)  busy 0.96->0.98  full 0.88->0.86
+  seed 0 language xorgans: classes 8 -> 61  facts top1 w0 0.93 all 0.98  hit w0 0.92 all 0.98  class mean 1.00 (language only 1.00)  busy 1.00->1.00  full 1.00->1.00
+  seed 1 language x0.5: classes 77 -> 197  facts top1 w0 0.91 all 0.65  hit w0 0.90 all 0.45  class mean 0.99 (language only 0.99)  busy 0.97->0.95  full 0.80->0.83
+  seed 1 language xorgans: classes 7 -> 85  facts top1 w0 0.94 all 0.99  hit w0 0.93 all 0.98  class mean 1.00 (language only 0.99)  busy 0.93->0.99  full 0.93->0.97
+  seed 2 language x0.5: classes 71 -> 182  facts top1 w0 0.91 all 0.69  hit w0 0.90 all 0.65  class mean 0.98 (language only 0.99)  busy 0.78->0.79  full 0.84->0.77
+  seed 2 language xorgans: classes 12 -> 64  facts top1 w0 0.92 all 0.96  hit w0 0.92 all 0.95  class mean 0.99 (language only 0.99)  busy 1.00->1.00  full 0.93->0.97
+
+language  | classes embryo -> after facts | facts top-1: w0  all | hit: w0  all | untaught answered | class mean 148 / language | world after embryo, hers/k-means: busy  full  night  window | world after facts, hers: busy full night window
+x0.5      |             67 -> 179         |            0.93 0.73 |    0.92 0.64 |              0.03 |           0.99 / 0.99     | 0.90/0.97  0.84/0.88  0.67/0.75  0.97/0.92 | 0.91  0.82  0.67  0.97
+organs    |              9 -> 70          |            0.93 0.98 |    0.92 0.97 |              0.04 |           1.00 / 0.99     | 0.98/1.00  0.95/0.96  0.61/0.85  0.99/0.95 | 1.00  0.98  0.59  0.98

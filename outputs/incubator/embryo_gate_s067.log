@@ -1,0 +1,17 @@
+# embryo gate: 30 days lived, 5 unseen days; soma 141 classes, ear 13; receptors {'ear': 64, 'soma': 81}; 48 moments a sitting, text in 0.5 of moments
+state                  her classes  k-means   base   verdict (clearly above base, and not more than .05 under k-means)
+night                         0.55     0.89   0.50   FAIL
+busy                          0.99     1.00   0.74   pass
+full                          0.95     0.99   0.62   pass
+elsewhere                     1.00     0.93   0.87   pass
+window                        1.00     0.99   0.86   pass
+night, window open            0.52     0.85   0.31   (reported, not in the gate as written)
+text present (ear)            0.75            0.49   (reported)
+class count (reported, not gated — Rocky s067): 86 at day 20 -> 141 at day 30 = +64%; ear 13
+stability: probe moments in the same class at day 20 and day 30: 0.43   FAIL (>= .90); same grouping (adjusted Rand) 0.61
+classes used on unseen days: 60 of 141; share of unseen moments in her 3 biggest classes 0.18
+silent channels: all 48 reserved channels read exactly zero through the embryo: True
+classes she used in her last 10 days: 74 of 141
+mean day 0.5 s (first 5: 0.3, last 5: 0.7)
+
+GATE: NOT passed — for Rocky to read; no stage is promoted by code

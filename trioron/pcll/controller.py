@@ -387,21 +387,28 @@ class PCLLController:
             self.stress.pending = [tuple(p) for p in pend]
 
 
+class _Codec:
+    """Raw level values → level indices for discrete columns. A class,
+    not a closure, so an organism that holds one can be pickled whole
+    (s067: saving Vee's body)."""
+
+    def __init__(self, bounds: dict) -> None:
+        self.bounds = bounds
+
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.clone()
+        for c, b in self.bounds.items():
+            x[:, c] = torch.bucketize(x[:, c].contiguous(), b).to(x.dtype)
+        return x
+
+
 def _build_codec(levels_sorted: dict) -> Optional[Callable]:
     """Raw level values → level indices for discrete columns (the
     scheduler's labeled-line contract, spec §10.2). Bucketize on midpoints
     so the mapping is robust to float jitter."""
     if not levels_sorted:
         return None
-    bounds = {
+    return _Codec({
         c: torch.tensor([(lv[j] + lv[j + 1]) / 2 for j in range(len(lv) - 1)])
         for c, lv in levels_sorted.items()
-    }
-
-    def codec(x: torch.Tensor) -> torch.Tensor:
-        x = x.clone()
-        for c, b in bounds.items():
-            x[:, c] = torch.bucketize(x[:, c].contiguous(), b).to(x.dtype)
-        return x
-
-    return codec
+    })

@@ -3612,7 +3612,12 @@ splits, scoring) stays under `experiments/progenitor/` and injects native
 tensors; the package never imports from `experiments/`. The incubator's world
 side (s064) is `experiments/incubator/`: the reflex brain (`reflex.py`, frozen
 Qwen via `llama_cpp`), the offline library (`wiki.py`), data collection and the
-stage gates. `llama_cpp` and `libzim` are world-side dependencies only.
+stage gates. Since s067 it also holds the developmental drivers of
+`docs/design/vee_development.md`: `vee_body.py` (her 148-number input, the
+fixed language sense, a body of two phasecyte leaves — an ear on the language
+block and a body sense on the rest — and her saved state), `world.py` (the
+scripted world) and `embryo.py` (stage 1 and its gate). `llama_cpp` and
+`libzim` are world-side dependencies only.
 
 | file | responsibility | spec section |
 |---|---|---|

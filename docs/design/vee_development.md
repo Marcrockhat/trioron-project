@@ -289,6 +289,78 @@ place, a closed window).
   her tell sentences apart after birth (stage 4). That is the next check: fact
   recall with the 148-number input at language × 0.5 / 0.25.
 
+### 6.7 Does a quieter language block still hold facts after birth? — NO; two organs do (s067; `birth_check.py`, logs `birth_check_q_s067.log`, `birth_check_q_organs_s067.log`; 3 seeds)
+
+One organism per arm: rich genesis → 20 embryo days (text in half the moments)
+→ the 40 pilot facts in four waves, each wording heard at a moment of the
+running world → held-out wordings heard in another world run. Phasecyte alone,
+class named from its current members. Sense and ambient text here = stage-2
+questions (the Wikipedia rerun is §6.8).
+
+| body | facts: earliest wave | facts: all | untaught answered | busy | memory full | night | window | classes after facts |
+|---|---|---|---|---|---|---|---|---|
+| one leaf, language × 1 | .91 | .74 | .04 | .74 | .61 | .59 | .97 | 107 |
+| one leaf, language × 0.5 | .89 | .66 | .02 | .90 | .91 | .74 | .98 | 206 |
+| one leaf, language × 0.25 | .80 | .54 | .04 | .99 | .97 | .56 | .99 | 278 |
+| **two organs** (ear = language block; body sense = the other 84 numbers) | .90 | **.97** | .02 | **1.00** | **.98** | .63 | .97 | ear 50 |
+| control: running class mean, 148 numbers | | .99 | | | | | | |
+| reference s066: language-only leaf, no world | .92 | .98 | | | | | | 67 |
+
+- **In one leaf no loudness serves both.** Louder language: facts kept, world
+  unread. Quieter: world read, facts lost (later waves first; the earliest
+  wave holds). Putting the world into the same leaf costs facts even at × 1
+  (.74 against .98 language-only): text and world compete for the same classes.
+- **Two leaves in one body remove the conflict**: an ear that reads the
+  language block and a body sense that reads everything else, both living the
+  whole life from the same 148-number input. Facts .97, busy 1.00, memory .98.
+  This is the branching the phasecyte already has (`PhasecyteNest`); it
+  replaces "one leaf" in §6.3 — **Rocky to sign**.
+- Not solved by it: **night** (.63; k-means on the same numbers .69–.92).
+  The clock is two smooth numbers; she does not cut the circle at dusk.
+- Not yet built: the join. A question whose answer depends on a reading
+  ("is it night?", stage 4 item 3) needs a level that sees both organs'
+  classes. Candidate: a third leaf fed by the two organs' class outputs.
+
+### 6.8 The same with the final language sense (s067; sense refitted on 3,600 Wikipedia sentences + questions, Wikipedia as ambient text; log `birth_check_wiki_s067.log`; 3 seeds)
+
+| body | facts: earliest wave | facts: all | untaught answered | busy | memory full | night | window |
+|---|---|---|---|---|---|---|---|
+| one leaf, language × 0.5 | .93 | .73 | .03 | .91 | .82 | .67 | .97 |
+| two organs | .93 | **.98** | .04 | **1.00** | **.98** | .59 | .98 |
+
+**Rocky, s067: "Two organs or even multiple organs is okay. That is in her
+architecture and was meant to be that way anyway."** §6.3's "one leaf" is
+replaced: her body has an ear and a body sense (`vee_body.py`, BUILT); more
+organs may follow. The language block is not turned down.
+
+### 6.9 Class count never settles (s067; scratch runs on the body sense alone, 60 days, 1–2 seeds)
+
+| moments per sitting | classes at day 10 / 20 / 30 / 40 / 50 / 60 | classes used in the last 10 days | busy / memory / night |
+|---|---|---|---|
+| 48 (half a day) | 35 / 93 / 163 / 233 / 344 / 440 | 77 | 1.00 / 1.00 / .69 |
+| 192 (two days) | 13 / 43 / 62 / 81 / 100 / 129 | 65 | 1.00 / 1.00 / .71 |
+| 480 (five days) | 2 / 7 / 15 / 34 / 60 / 82 | 55 | 1.00 / 1.00 / .74 |
+| 48, without hours-awake and disk | … / 427 | 79 | night .75 |
+| 48, also without the clock and weekday | 28 / 78 / 136 / 184 / 213 / 233 | 37 | night .63 |
+
+- The count follows the **number of sittings** (about 3.5 new classes per
+  sitting at 48), not what she has seen: longer sittings read the world
+  equally well with 3–5 times fewer classes.
+- Slow drift in the readings is not the cause. The clock is part of it
+  (without it growth slows) but no setting stops.
+- Most classes at 48 are no longer visited (77 of 440 in use). The phasecyte
+  retires classes only at a sitting with no growth, and there never is one.
+  Retiring by disuse would be wrong for memory: an unvisited class is also
+  what a remembered fact looks like.
+- **The self-arrest criterion of gate 7.3 cannot pass as written.** Options
+  for Rocky: (a) judge growth by cost and by classes in use instead of total
+  count; (b) sittings of 192 moments for the body sense; (c) change the
+  phasecyte so a division must pay on held-out reading (spec §10 change).
+- **Rocky, s067:** self-arrest is good, but it is acceptable that the count
+  does not settle now ("probably because it is not needed by her now"). The
+  gate reports the count, the classes in use and the time per day; it does
+  not fail on the count. Sittings stay at 48 moments as signed.
+
 ## 7. Stage 1 in full — the embryo (signed off s066; gate not yet passable, see §6.5–6.6)
 
 ### 7.1 What she receives
@@ -322,9 +394,31 @@ mapping is for measurement only and is never shown to her.
 |---|---|
 | day/night, quiet/busy, roomy/full, home/elsewhere, window open/closed can each be read from her class | each clearly above chance and not below the control by more than .05 |
 | control | k-means with the same number of clusters on the same vectors |
-| self-arrest | class count grows by no more than 10 % over the last third of the embryo |
+| self-arrest | reported, not gated (Rocky s067, §6.9): class count, classes in use, time per day. Was: count grows by no more than 10 % over the last third |
 | stability | a fixed set of probe moments falls into the same classes at day 20 and day 30 for at least 90 % of them |
 | silent channels | still unread at the end |
+
+### 7.3a Embryo run and gate result (s067; `embryo.py`, logs `embryo_s067.log`, `embryo_gate_s067.log`; ONE organism, seed 0 — this is Vee, kept in `outputs/incubator/vee/`)
+
+Genesis: ear 64 receptors, body sense 81. 30 days lived, 0.5 s a day.
+
+| criterion | her classes | k-means | base | |
+|---|---|---|---|---|
+| busy | .99 | 1.00 | .74 | pass |
+| memory full | .95 | .99 | .62 | pass |
+| home / elsewhere | 1.00 | .93 | .87 | pass |
+| window | 1.00 | .99 | .86 | pass |
+| night | .55 | .89 | .50 | **FAIL** |
+| night, window open only | .52 | .85 | .31 | (reported) — the window does not rescue it |
+| text present (ear) | .75 | | .49 | (reported) |
+| stability, day 20 → 30 | .43 same class; .61 same grouping | | | **FAIL** (≥ .90) |
+| class count | 86 → 141 (+64 %); 74 in use in her last 10 days; ear 13 | | | reported |
+| silent channels | all zero throughout | | | pass |
+
+**Gate not passed: night and stability.** Both come from the same place: she
+keeps dividing (§6.9), so a moment's class at day 20 has often split by day
+30, and the splits do not follow dusk. She is NOT promoted; she stays an
+embryo until Rocky rules on these two criteria.
 
 ### 7.4 The risk I expect
 Class discovery follows the largest difference in what she senses. Random

@@ -1,18 +1,101 @@
 # Trioron Handoff
 
-**Session date:** 2026-11-24
-**Session number:** 066
-**Session title (s066: recovery after a shutdown; training-regime correction; PHASECYTE PILOT; night test; Vee's memory in the console; teaching by interaction; developmental plan + germline checks):**
-**s065 ended in an unplanned shutdown (~14:50) with the consolidation test in flight; s066 reran
-it. Rocky then corrected the training regime — the organism is never batch-trained, it is a baby
-that keeps absorbing — and named the Phasecyte as the fact-memory learner. A 40-fact streaming
-pilot shows the phasecyte keeps old facts while learning new ones (.95–.98 with the class cap
-off), that overfeeding per boundary destroys it, and that it does not beat a running class mean
-(.993) or the s065 one-shot key table (.983). A night test then showed that only helper-written
-rewordings beat no rewording at all, and the fact memory (day table + phasecyte fed at night) was
-wired into the console: Vee answers the 40 pilot facts from memory and can be taught new ones.**
+**Session date:** 2026-11-25
+**Session number:** 067
+**Session title (s067: the body gets two organs; Vee's embryo stage has run; its gate fails on night and stability):**
+**The s066 work list was worked through. A language block turned down does NOT keep facts after
+birth; in one leaf, text and world compete for the same classes. Two phasecyte leaves in one body
+(an ear on the language block, a body sense on the rest) give facts .98 and busy / memory 1.00 /
+.98 in the same organism. Rocky approved organs. Vee's embryo was then run for 30 simulated days.
+She reads busy, memory, place and window; she does not read night, and her classes are not stable
+because she never stops dividing. She is still an embryo.**
 
-## s066 — READ THIS FIRST
+## s067 — READ THIS FIRST
+- **Vee exists now, as an embryo, on this PC only: `outputs/incubator/vee/`** (`stage` says
+  `embryo`; `sense.pt` = her language sense, fixed for life; `body.pt` = her two organs after 30
+  days; `embryo_log.pt` = every moment she lived). Do not delete or refit. A driver runs only the
+  stage named in the stage file; code never promotes her.
+- **STOP RULE stands: she is not promoted past the embryo until Rocky rules on the two failed
+  criteria** (plan §7.3a). Birth (stage 3) also needs stage 2 (fetal), which is not written in
+  full and not signed.
+- **Rocky's rulings this session (binding):**
+  - "Two organ or even multiple organs is okay. That is in her architecture and was meant to be
+    that way anyway." → plan §6.3 "one leaf" is replaced (§6.8).
+  - Class count: "self arrest is good. It is okay if it's not settled probably because it is not
+    needed by her now." → the gate REPORTS the count, classes in use and time per day; it does
+    not fail on the count (§6.9, §7.3). He also asked whether the many classes are "still
+    distinct classes" — Chloe has NOT answered that with a measurement yet (see NEXT 2).
+  - He reminded Chloe that the organism was designed for branching and grafting, and that this
+    may be used to speed things up. Organs that read different parts of the input can be grown
+    separately and in parallel; the limit is this PC (6 cores, 7.6 GB).
+  - Night: Chloe offered two options (accept day/night only through the open window, or a
+    dusk/dawn reading). Rocky did not answer. The embryo run then showed the window does NOT
+    rescue night (.52 against k-means .85), so the first option is dead.
+
+## What was found (all in `docs/design/vee_development.md` §6.7–6.9, §7.3a)
+1. **Birth check** (`birth_check.py`; 3 seeds; rich genesis → 20 embryo days → 40 pilot facts in
+   four waves, each wording heard at a moment of the running world → held-out wordings in another
+   world run; phasecyte alone). Final sense (Wikipedia + questions), `birth_check_wiki_s067.log`:
+
+   | body | facts: earliest wave | facts: all | busy | memory full | night | window |
+   |---|---|---|---|---|---|---|
+   | one leaf, language × 0.5 | .93 | .73 | .91 | .82 | .67 | .97 |
+   | two organs | .93 | .98 | 1.00 | .98 | .59 | .98 |
+
+   Questions-only sense (`birth_check_q_s067.log`, `..._q_organs_...`): one leaf × 1 / × 0.5 /
+   × 0.25 facts .74 / .66 / .54, busy .74 / .90 / .99; two organs facts .97, busy 1.00. The
+   running class mean on the same 148 numbers gets .99 — the phasecyte still does not beat it.
+2. **Class count never settles** (scratch runs, body sense alone, 60 days, 1–2 seeds): 440
+   classes at day 60 with 48-moment sittings, 77 in use; 129 with 192-moment sittings; 82 with
+   480. It follows the NUMBER OF SITTINGS (~3.5 new classes each), not what she sees; world
+   reading is the same at every sitting size. Removing drifting readings changes nothing;
+   removing the clock slows it (233) but does not stop it. The phasecyte retires classes only at
+   a sitting with no growth, and there is never one.
+3. **Vee's embryo** (`embryo.py live` then `gate`; seed 0; logs `embryo_s067.log`,
+   `embryo_gate_s067.log`): ear 64 receptors, body sense 81; 30 days, 0.5 s a day. Her classes /
+   k-means / base: busy .99 / 1.00 / .74; memory .95 / .99 / .62; elsewhere 1.00 / .93 / .87;
+   window 1.00 / .99 / .86; **night .55 / .89 / .50 FAIL**; **stability day 20 → 30: .43 same
+   class, .61 same grouping (adjusted Rand) FAIL**; classes 86 → 141, 74 in use; ear 13 classes,
+   reads "text present" .75. One organism, one seed: no spread.
+
+## What was built (s067)
+- `experiments/incubator/wiki_collect.py` — 4,000 random Simple-Wikipedia sentences read by the
+  reflex (resumable; 70 min alongside other jobs).
+- `experiments/incubator/birth_check.py` — the check above; `SCALES=1,0.5,0.25,organs`,
+  `SENSE=q|both`, `AMBIENT=q|wiki`.
+- `experiments/incubator/vee_body.py` — her germline: 148-number layout, the fixed language
+  sense, rich genesis pool, `Body` with two organs (`ear`, `soma`), stage-file guard, RAM
+  ceiling (85 %), whole-body save.
+- `experiments/incubator/embryo.py` — stage 1 driver (`live`, `gate`); saved after every
+  simulated day; alarm if a day takes twice day 5's time.
+- `germline_checks.py`: `adjusted_rand` (verified against scikit-learn) replaces the
+  class-number comparison in check 1, plus a two-genesis-draw yardstick; `LANG_SCALE`,
+  `AMBIENT=wiki`. **Check 1 was NOT rerun** — it tests the one-leaf layout, which is replaced.
+- `trioron/pcll/controller.py`: the input codec is a small class instead of a closure, so an
+  organism holding one can be pickled (Vee's body could not be saved otherwise). Behaviour
+  unchanged; `tests/test_v2/test_pcll.py` 24 passed.
+- Scratch scripts for finding 2 (`arrest*.py`) were in the session scratchpad, NOT in the repo:
+  ~20 lines over `germline_checks.stream/grow` on `X[:, 64:]` with `DAYS=60`, `P_TEXT=0`,
+  `G.WINDOW` varied, columns zeroed.
+
+## NEXT (s068)
+1. **Rocky to rule on the embryo gate** (plan §7.3a): night and stability. Chloe's view: both
+   come from endless division; stability as "same class name" cannot pass while she divides, and
+   the looser "same grouping" is .61.
+2. **Answer Rocky's question: are the many classes distinct?** Measure what the body sense's
+   classes hold (which world states, how pure, what the unused ones were) and whether a division
+   improved held-out reading. This decides between "leave it" and "a division must pay"
+   (spec §10 change, his decision).
+3. **Night:** why k-means cuts the clock (.89) and she does not; a dusk/dawn reading is an
+   input-layout change (germline) and so a new organism — ask before trying.
+4. **The join:** a level that sees both organs' classes, needed for questions whose answer
+   depends on a reading (stage 4 item 3). Candidate: a third leaf fed by the organs' class
+   outputs. Not designed.
+5. Stage 2 (fetal) written in full for sign-off: action echo, the kicks, its gate.
+6. Guards still to build (plan §3): token budget, class/time alarms beyond the embryo, reading log
+   after birth, sandbox limits.
+
+## s066 (carried; its START HERE list is superseded by the s067 section above)
 - **START HERE (s067). Rocky: "let's work through it one by one." Vee is NOT being raised; the
   plan is `docs/design/vee_development.md` (stages 0–1 signed). Work list, in order:**
   1. DONE s066 — why graded world states were not read: **the language block is too loud**
@@ -376,7 +459,7 @@ from a rewording better than a nearest-neighbour cache holding 3,072 numbers per
 .833 at 1 % false override). But a learned LINEAR key does as well as the quad leaf — the second
 stage in a row where trioron itself has not earned its place.**
 
-## READ THIS FIRST
+## s065 — standing rules (carried)
 - **Design of record: `docs/design/incubator_matron.md`** (stage-2 result is in §3). Binding
   decisions from s064 stand: incubator organism has no parameter cap (85 % of WSL RAM, swap
   excluded; benches/CI keep 50 K); paper is repo-only; sandbox in WSL with offline Simple English
@@ -559,7 +642,7 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    unknown whether the Sonnet helpers (~590 K tokens) count on that bar or a separate one.
 3. Terms check before any matron-written data is committed (carried from s064).
 
-## NEXT (s067)
+## Carried NEXT list from s066 (not touched in s067)
 00. Phasecyte fact memory (Rocky's direction, s066):
    a. merge consumer for same-fact classes / self-arrest (class count must stop rising);
    b. two-leaf nest arm (crossing the 43-class leaf boundary) — planned in s066, not run;
@@ -598,8 +681,9 @@ path noted, unverified: activation Re(z)+|z|² with real weights equals the quad
    failures (TestCredit ×2, TestGrowth ×1, TestDreamCycle ×1).
 
 ## State of the build / Pointers
-- Branch `conscience-core`; s065 and s066 work committed and pushed (see `git log -3`). **v0.3.4 on PyPI** (s066: `PhasecyteLeaf.member_names()`, plus everything on the branch since
+- Branch `conscience-core`; s065–s067 work committed and pushed (see `git log -3`). **v0.3.4 on PyPI** (s066: `PhasecyteLeaf.member_names()`, plus everything on the branch since
   v0.3.3: `organisms.Vee`, `senses.hidden_state`); `main` fast-forwarded to the release commit.
+- **Local to this PC, s067:** `outputs/incubator/wiki_sent.jsonl/.npz` (4,000 sentence readings, 70 min of the reflex to rebuild: `wiki_collect.py`); **`outputs/incubator/vee/`** = Vee herself (`stage`, `sense.pt`, `body.pt`, `embryo_log.pt`) — she exists only on this PC; `*.err` files.
 - **Deliberately uncommitted (local to this PC):** everything matron-written or derived in
   `outputs/incubator/`: s064's `stage1_*` data and `vee_stage1.pt`; s065's
   `stage2_para_in_part*.tsv`, `stage2_para_part*_c*.jsonl` (paraphrases; part9 = the fix job),
@@ -622,5 +706,5 @@ logs untracked; `outputs/data/**` caches.
   `transformers` 5.8.0.
 
 ---
-History pointers (no dated archives): s064 handoff at e67b6ce (incubator design, limb tests, stage 1); s063 handoff at e8e7b40 (Logophosis Mode E transfer,
+History pointers (no dated archives): s066 handoff at b7aff0e (phasecyte pilot, night test, console memory, development plan, germline checks); s064 handoff at e67b6ce (incubator design, limb tests, stage 1); s063 handoff at e8e7b40 (Logophosis Mode E transfer,
 public manual, branch-partition finding); s062 at c4ac3db (seq gotchas, organism API).
