@@ -1,168 +1,172 @@
 # Trioron Handoff
 
 **Session date:** 2026-11-25
-**Session number:** 068
-**Session title:** a new genesis — Vee's two blurred sisters, Weiss and Wile
+**Session number:** 069
+**Session title:** the sisters' fetal days, and the cranium checked: a cap on the sitting
 
-**Summary.** Rocky: "lets start with a new genesis." The corridor world and organ blur of
-plan §10 were built and two sisters of Vee were raised from genesis, each in her own home,
-same germline / seed / course of events as Vee. **Weiss** (blurred, corridor world) and
-**Wile** (the same plus "none" and the ladders) both pass the embryo gate on every row with
-fewer body-sense classes than Vee and a better ear and stability, but cost far more time:
-the blurred ear's composer now holds trials (it never did in Vee). Weiss then lived 30 fetal
-days: gate NOT passed yet, and her body sense went from 84 to 516 classes. Rocky's cap /
-cranium design was checked against the spec: it is all there, but not wired to the incubator
-organisms. Vee was not touched.
+**Summary.** Rocky: "Lets run them while fixing the cranium system." Weiss lived on to fetal
+day 60 (gate not passed, same three rows) and Wile lived her first 30 fetal days (gate not
+passed, two rows; she tells her own memory use from the world's at .93 where Weiss stays at
+base). The cranium wiring was checked against the code: what was proposed in s068 would have
+done nothing. Built on Rocky's rulings: the arena grows when rows run out, and an opt-in
+square-root cap on the sitting with the consolidation round in instalments. Tried on three
+copies of Weiss: the uncapped copy is killed by the kernel (out of memory) on day 69; the
+capped ones live on with flat days and unchanged gate rows. No living organism uses the cap
+yet. Vee was not touched.
 
-## READ THIS FIRST (s069)
-- Read `docs/design/matron_rules.md` and `docs/design/vee_development.md` **§11** (all of
-  this session) before touching an organism.
-- **Three organisms exist, on this PC only, uncommitted. Never delete, overwrite or refit:**
-  - `outputs/incubator/vee/` — Vee, 120 days old, stage `fetal` (2a passed by Rocky's ruling
-    s067; 2b not designed). Untouched in s068.
-  - `outputs/incubator/weiss/` — **Weiss** (Rocky's name; first sister; logs are named
-    `sister_*` and `weiss_*`). Blurred organs, corridor world, born WITHOUT "none". 60 days
-    old, stage `fetal` (Rocky: "Yes"), 30 fetal days lived. Copies: `body_embryo_day30.pt`,
-    `body_fetal_day30.pt`. `embryo_values.json` = her own embryo values for the fetal gate.
-  - `outputs/incubator/wile/` — **Wile** (Rocky's name; second sister; logs `sister2_*`).
-    As Weiss, plus "none" and the ladders from her first moment. 30 days old, stage `embryo`,
-    embryo gate passes; **Rocky said yes to her fetal stage at the end of s068; the stage file
-    still says `embryo` — change it by hand first (NEXT 0b).**
-- Each is run with `VEE_HOME=outputs/incubator/<name>`; corridor and blur were set at
-  genesis and are carried by the body. A driver runs only the stage the stage file names.
+## READ THIS FIRST (s070)
+- Read `docs/design/matron_rules.md` and `docs/design/vee_development.md` **§11.9–11.10**
+  before touching an organism.
+- **Three organisms, on this PC only, uncommitted. Never delete, overwrite or refit:**
+  - `outputs/incubator/vee/` — Vee, 120 days old, stage `fetal`. Untouched since s067.
+  - `outputs/incubator/weiss/` — Weiss, 90 days old, **fetal day 60**, stage `fetal`. Copies
+    `body_embryo_day30.pt`, `body_fetal_day30.pt`, `body_fetal_day60.pt`. **HELD at day 60.**
+  - `outputs/incubator/wile/` — the second sister, 60 days old, **fetal day 30**, stage
+    `fetal` (set by hand in s069 on Rocky's s068 yes; `embryo_values.json` written). Copies
+    `body_embryo_day30.pt`, `body_fetal_day30.pt`.
+- **Do NOT let Weiss or Vee live on without the cap before Rocky decides.** An uncapped body
+  sense is killed for lack of memory near 2,700 classes (Weiss has 2,086, Vee 1,781).
+- **Her name: Wile or Weil?** Rocky wrote "weil" at the start of s069 and asked "It is Weil
+  isn't not Wile?". The s068 record quotes him as "Wile". Chloe asked him to confirm; **no
+  answer yet. Nothing was renamed.**
+- Copies for experiments: `outputs/incubator/copies/weiss60_{plain,capped,round}/` (rule 27;
+  may be deleted, they are not organisms).
 
-## Results (one organism each, seed 0; plan §11.6–11.7 has the tables)
+## Results (one organism each, seed 0)
 
-| embryo day 30 | Vee | Weiss | Wile |
+| fetal gate | Vee d30 | Weiss d30 | Weiss d60 | Wile d30 |
+|---|---|---|---|---|
+| feels her kicks (k-means 1.00) | .99 | .90 FAIL | .94 FAIL | .89 FAIL |
+| what a kick moves | 3 of 5 | 5 of 5 | 5 of 5 | 5 of 5 ("mark" .67) |
+| CPU rise, hers / world's | .98 | .95 | .95 | .98 |
+| memory rise, hers / world's (base .59) | .62 | .59 FAIL | .59 FAIL | **.93** |
+| nothing lost: memory full | 1.00 | .90 FAIL | .93 FAIL | .85 FAIL (embryo .96) |
+| nothing lost: busy / place / window | .99 / 1.00 / .99 | .99 / .96 / .96 | 1.00 / .98 / .98 | 1.00 / 1.00 / .99 |
+| ear: text present | .65 | .93 | .91 | 1.00 |
+| classes ear / body sense / change | 67 / 429 / 141 | 88 / 516 / 61 | 137 / 2086 / 114 | 119 / 347 / 187 |
+| s a day (last five) | 3.8 | 18 | 46 | 17 |
+
+Logs: `weiss_fetal_s069.log`, `weiss_fetal_gate_day60_s069.log`, `wile_fetal_s069.log`,
+`wile_fetal_gate_day30_s069.log`. "Not yet", not "no" (rule 8). Which of "none" / the
+ladders gave Wile the memory row is not known.
+
+**The cranium check (plan §11.9; read from saved copies):**
+1. No class row carries `recyclable`; nothing on the phasecyte's path calls `compact()`;
+   about half of all rows are retired ones kept for life.
+2. A wall nobody chose: 8192 fixed arena rows per organ (`PhasecyteLeaf(capacity=8192)`),
+   out near 3,600 classes; past it a class is born rowless, silently. **Fixed in s069.**
+3. `arena.param_bytes` counts 4 bytes a row / edge (16 KB for Vee's body sense); what she
+   holds is class buffers (176 MB of Vee's 230 MB). A RAM-sized `max_parameter_bytes` would
+   read 0.00 for life. **Chloe's s068 proposal A was wrong in that form.**
+4. Counted truly she holds ~3 % of 85 % of RAM.
+5. Her organs almost never have a settled sitting (class count still on 2 of Vee's 90 fetal
+   days), so the consolidation round, annealing, the skeptical gate and sharpening hardly
+   run; small classes pile up (405 of 516 under 60 members in Weiss's body sense at d30).
+   Chloe's reading for the 84 → 516 jump; not tested.
+6. The merge is off in her organs (never passed `merge=True`), not "never fired".
+7. Every class was judged at every sitting.
+
+**Trial on copies of Weiss from fetal day 60 (plan §11.10; logs `cap_probe_*_s069.log`):**
+
+| | no cap | cap only | cap + round |
 |---|---|---|---|
-| busy / memory / place / window | .99 / .95 / 1.00 / 1.00 | 1.00 each | 1.00 / .96 / 1.00 / 1.00 |
-| night (reported only) | .55 | .92 | .91 |
-| ear: text present | .75 | .93 | 1.00 |
-| stability day 20 → 30, same grouping | .61 | .89 | .87 |
-| classes body sense / ear | 141 / 13 | 82 / 44 | 100 / 54 |
-| composer cells in the ear (trials) | 0 (0) | 4 (55) | 5 (51) |
-| sharpening steps | – | 0 | 2 (ear, by sitting 7) |
-| time for 30 days | 15 s | 47 min | 77 min (both on the old composer search) |
+| days lived | 8, **killed on day 69 (out of memory, 7.0 GB), three attempts** | 10 | 10 |
+| body-sense classes (from 2086) | 2738 | 2097 | 2106 |
+| s a day | 27–156 | 15–188 | 24–58 |
+| gate rows | as Weiss d60 (±.03) | same | same |
 
-Weiss, fetal day 30 (Vee at the same age in brackets): feels her kicks .90, k-means 1.00
-**FAIL** (.99); what a kick moves 5 of 5 (3 of 5); CPU hers / world .95 pass (.98); memory
-hers / world .59 = base **FAIL** (.62); nothing lost: busy .99, **memory .90 FAIL**, place
-.96, window .96; ear .93 pass (.65); classes ear / body sense / sense of change
-88 / **516** / 61 (67 / 429 / 141); 18 s a day on the faster search (3.8 s).
-Vee also failed at fetal day 30 and passed at 60 and 90: **"not yet", not "no" (rule 8).**
-
-Chloe's readings (hers, not reviewed):
-- Corridor and blur were tested together; which gave what is unknown (no sharp organism was
-  raised in the corridor).
-- Night at .9 is partly luck of the cut: one clock number cut in the middle splits the day
-  at 06:00 / 18:00.
-- The blur's class advantage in the body sense vanished in the fetal stage (84 → 516, more
-  than Vee). It began when the echo woke. NOT diagnosed.
-- Weiss has never sharpened any reading in 60 days: never settled for 3 + classes // 8
-  sittings. The sharpening rule is effectively untested (only Wile's ear, 2 steps).
-- "None" fixed the ear's silence (1.00) but Wile is not cheaper than Weiss.
+Chloe's reading of the kill, not profiled: the full consolidation round compares every
+buffered member with every class at once. The 85 % guard in `vee_body.py` is read only
+before a sitting and did not see it. Under cap + round: sediment not shrinking yet (1545 of
+2106 classes under 60 members; 23 judged and 27 settled a sitting; 1920 classes still
+awaiting their first judgment); the ear spawns a composer cell at every sitting (not
+examined).
 
 ## Rocky's rulings this session (binding; his words)
-- "lets start with a new genesis" → the sisters.
-- "Okay we can raise the daily bdget" (the 30 s guard stopped Weiss on embryo day 6; runs
-  used `DAY_BUDGET=900`).
-- "Three states is mandatory." then "probably start at 2, go to 3, to 5, then to 7", then to
-  Chloe's two questions "1. yes. 2. 2>3>5" and "I meant yes add none" →
-  **a level sharpens 2 → 3 → 5; a change 2 (same / changed) → 3 (down / same / up) → 5 → 7;
-  "did not move" is always a state of its own; a silent reading is "none", a state of its
-  own.** In matron's rule 17 and plan §11.5.
-- "Yes" → Weiss's fetal stage. "The first sister is Weiss. The second is Wile."
-- **The cranium** (plan §11.8): cap the comparing; leave what is unfinished when sleep is
-  over, let it sediment; at full cranium work through it in instalments and recycle; an
-  adult adds a fact only for a real discovery. "The cranium is the RAM … all of this is
-  already in trioron design. Can you check it again?" — Chloe checked: he is right (spec
-  §1.2, §2.5, §4.3, §5.5, §6.1, §10.6). Chloe had wrongly presented it as a new design.
+- "Lets run them while fixing the cranium system."
+- Cranium: "It is for them in this environment. It is not the default so no specs changes
+  is required."
+- Rows: "I thought there's no limit" … "Yes and remove the class limit." (The organisms
+  already had `class_cap=None`; the benches' 43 / 128 defaults were left — Chloe told him.)
+- The cap: "Square root". On a day's time levelling off: "we accept that as a day for the
+  sisters."
+- Compaction: "if the cranium is not problem, compaction will make things slower isn't?"
+  → not built.
+- Merge: off because it confused the organism before (record agrees: design doc D18, s033).
+- Retirement: "retirement happened in neurons not in the husks" — Chloe had used "husk" for
+  a CLASS emptied by the round (the code's word); neurons (composer cells) are pruned as
+  designed.
+- The round: "Yes on the round it should run on the sittings. Sediment can be dug up but
+  occasionally."
 
-## What was built (all committed; `git log -4`)
-- `experiments/incubator/world.py` — `World(seed, corridor=c)`: state readings wander inside
-  non-overlapping bands (c = 0.6, Chloe's value). corridor=0 is number-for-number Vee's
-  world (checked over 40 days with kicks); with one seed the hidden course is the same.
-- `experiments/incubator/blur.py` (new) — `Blur`: steps per reading, the two ladders,
-  "none", readings already in steps (≤ 7 distinct values at genesis) pass unchanged,
-  `sharpen` picks the reading hiding the most detail. A blur saved before "none" / the
-  ladders (Weiss's ear and body sense) is read as it was made.
-- `experiments/incubator/vee_body.py` — `Body(blur=False | True | "none")`, `seen`,
-  `_mature` (a step before birth after 3 + classes // 8 settled sittings; nothing sharpens
-  once the stage leaves embryo / fetal — the post-birth "called for and pays" rule is NOT
-  built), `can_be_silent`, kin's blur in `grow_kin` (echo = levels, 35 changes = changes).
-- `experiments/incubator/embryo.py` — `CORRIDOR=`, `BLUR=0|1|2` at genesis; absolute
-  `DAY_BUDGET` (rule 9); gate prints the blur state. `fetal.py` — kin formed in her own
-  corridor world, gate reads kin through her blur, own embryo values from
-  `HOME/embryo_values.json`.
-- `trioron/pcll/composer.py` — `best_candidate` carves all candidates in one pass
-  (`_carve_cols`, `_carve_many`, `_null_r`); same candidates, order, random draws and
-  thresholds. Checked: same winner on 12 synthetic buffers (scores differ ≤ 8e-6, float
-  summation order — NOT bit-identical); same class counts on each of 12 days from genesis in
-  both organs; ~5× faster. `tests/test_v2/test_pcll.py` 24 passed. Not a rule change; spec
-  §10 text untouched. Vee and the sisters' embryo days ran on the OLD search; Weiss's fetal
-  days on the new one.
-- Plan `docs/design/vee_development.md` §11 (new); `docs/design/matron_rules.md` rule 17.
+## What was built (committed: `91b6136`, `79cf31e`, `fab0c41`, `46cb36e` + this handoff)
+- `trioron/core/arena.py` `Arena.enlarge()` — doubles the arena at a boundary; `alloc`
+  unchanged (commitment 3); refused past `envelope.max_cells`. Called from
+  `mixed.py _refresh` when an uncapped organism has under `ROW_HEADROOM = 64` rows left.
+- `trioron/pcll/sitting.py` (new) `SittingCap` — opt-in: `MixedStreamController(
+  sitting_cap=True)` or set `mixed.sitting = SittingCap()` on a saved organ. Not judged if
+  nothing new; at most `max(4, ceil(sqrt(classes) · 0.5 · φ))` judged a sitting, busiest
+  first; the round at every sitting over the judged classes + `max(1, cap // 4)` dug from
+  the sediment (`mixed.py _consolidate_some`). φ from growth at the previous sitting only.
+  4, .5 and the quarter are Chloe's values. `sitting.work` records every sitting.
+  Not in `state_dict` (ship / wake); the incubator bodies are pickled whole.
+- Tests: `test_core.py::test_arena_enlarge_keeps_everything`, `test_pcll.py::
+  test_class_rows_outgrow_the_arena`, `::test_sitting_cap_bounds_the_judging`.
+- Plan §11.9 (the check, proposal) and §11.10 (rulings, build, trial).
+- NOT built: the cranium's true byte count (A); compaction / `recyclable` (C).
+- **Four v2 tests fail on this branch with or without the s069 changes** (not looked into):
+  `test_learning.py::TestCredit::test_lock_after_sustained_engagement`,
+  `::test_cooldown_prevents_immediate_relock`, `test_lifecycle.py::TestGrowth::
+  test_growth_trigger_logic`, `::TestDreamCycle::test_dream_locks_eligible_cells`.
 
 ## Open / not diagnosed
-1. Why Weiss's body sense multiplied its classes in the fetal stage (84 → 516).
-2. Why she does not tell her own memory use from the world's (.59 = base; Vee needed 60+
-   days), and why "memory full" fell to .90.
-3. Stop-and-resume is not exactly the same as living straight through: Weiss (stopped at
-   embryo day 6) shows 29 / 32 body-sense classes on days 10 / 11; an uninterrupted run
-   gives 28 / 31; equal again on day 12. Saving should be exact.
-4. `world.py` old quirk: a work kick in an already busy world lowers the CPU reading to .85.
-   Left so Vee's world stays identical.
-5. Cost: the time is per-class work at every sitting (for Weiss 97 % was the composer
-   search, profiled; for Vee it is Chloe's reading of the code, not profiled).
+1. Why the three gate rows do not move (kicks .9 vs 1.00; Weiss's own memory vs the world's
+   at base; "memory full" lost) — and why Wile has the memory row and Weiss not.
+2. The sediment under the cap: does it shrink over 40+ days, or is the dig too rare?
+3. The ear's composer spawning at every sitting.
+4. Where a capped day's 35–40 s go (not profiled).
+5. Carried from s068: stop-and-resume not exactly equal to living straight through; the
+   `world.py` work-kick quirk; nothing has ever sharpened in Weiss.
 
-## NEXT (s069)
-0. **Rocky answered at the very end of s068: "Yes on all three but lets start a new
-   session."** The three, as put to him, in this order:
-   a. **Weiss lives on to fetal day 60 and 90**, as Vee did (`VEE_HOME=outputs/incubator/weiss
-      DAYS=60 DAY_BUDGET=900 python3 experiments/incubator/fetal.py live`, keep a copy and
-      read the gate at 60, then the same with DAYS=90). ~18 s a day at day 30, rising.
-   b. **Wile enters her fetal stage**: change `outputs/incubator/wile/stage` to `fetal` BY
-      HAND (not done in s068), write her `embryo_values.json` from
-      `sister2_embryo_gate_s068.log` (busy 1.00, full .96, elsewhere 1.00, window 1.00,
-      ear 1.00), then `fetal.py live` for 30 days and the gate. One heavy process at a time.
-   c. **The cranium wiring is to be checked and WRITTEN for his sign-off** (item 1 below).
-      His yes covers writing parts A and B into the plan, not building B.
-1. **The cranium wiring, for sign-off before building (plan §11.8).** First check whether a
-   class's astrocyte row carries the `recyclable` gene (can compaction reach an unused
-   class?). Then write: A. the incubator organism's envelope = her real cranium
-   (`max_parameter_bytes` from 85 % of RAM) so pressure rises as she fills; B. the
-   phasecyte's sitting under a bounded, scaled cap as in spec §4.3, busiest classes first,
-   the rest left for the next sleep. B changes spec §10: needs Rocky's yes. Measure sleep in
-   work, not seconds. Remember s066: a hard class cap of 43 blocked late facts; the
-   recycling step is what must work, and the phasecyte's merge has never fired.
-2. Diagnose open points 1–3.
-3. Carried, untouched: stage 2b (choosing by her stress state: frustrated → act, resolved →
-   stay still) not designed; the join of the organs; guards (token budget, sandbox limits);
-   the s066 fact-memory list. See the s067 handoff at `d22ebd2`.
+## NEXT (s070) — all waiting on Rocky
+0. **Three decisions put to him at the end of s069, unanswered:**
+   a. Weiss from day 60 to 90: with the cap and the round, or without as Vee did (without,
+      she will be killed for memory near 2,700 body-sense classes).
+   b. The same for the second sister from day 30 (to 60 / 90).
+   c. Wile or Weil. If Weil: rename her home and correct plan, rules, handoff (ask before
+      moving the home; rule 26).
+   To switch the cap on in a living organism (ONLY on his yes): load her body, set
+   `l.mixed.sitting = SittingCap()` for each organ, save — as done for the copies.
+   Run: `VEE_HOME=outputs/incubator/<name> DAYS=<total fetal days> DAY_BUDGET=900 python3
+   experiments/incubator/fetal.py live`, copy `body.pt` to `body_fetal_day<N>.pt`, then
+   `fetal.py gate`.
+1. Vee: the same memory wall is ahead of her (1,781 classes); nothing may be changed in her
+   without Rocky's word.
+2. The cranium's true byte count (A), if he still wants pressure as a reading she has.
+3. Carried, untouched: stage 2b not designed; the join of the organs; guards (token budget,
+   sandbox limits); the s066 fact-memory list (s067 handoff at `d22ebd2`).
 
 ## Standing rules (carried)
-- `docs/design/matron_rules.md` binds the matron. Role rule: in role with her, no word of
-  simulation until Rocky says so. Never batch-train an organism. A stage is entered only on
-  Rocky's yes, stage file changed by hand. Gates are not relaxed by the matron. Every gate
-  carries a plain control. One organism on one seed is said to be so.
+- `docs/design/matron_rules.md` binds the matron. In role with her, no word of simulation
+  until Rocky says so. Never batch-train an organism. A stage is entered only on Rocky's
+  yes, stage file changed by hand. Gates are not relaxed. Every gate carries a plain
+  control. One organism on one seed is said to be so.
 - Incubator organism: no parameter cap, 85 % of host RAM, swap excluded; benches / CI keep
-  50 K. Paper is repo-only. Matron helper budget ≤ 50 % of the weekly limit (no helper
-  tokens were spent in s068).
+  50 K. Paper is repo-only. Helper budget ≤ 50 % of the weekly limit (none spent in s069).
 - One heavy process at a time on this PC (6 cores, 7.6 GB). `python3`, not `python`.
   `pkill -f` / `pgrep -f` hit the shell — kill by PID.
+- While a chain of organism runs is going, do not edit `experiments/incubator/` or
+  `trioron/pcll/` unless the change is neutral for them: later stages import the new code.
 
 ## State of the build / pointers
-- Branch `conscience-core`; s068 commits `8f22309`, `0b8a9e7`, `d3e03e0` + this handoff,
-  pushed. v0.3.4 on PyPI (unchanged; the composer speed-up is not released).
-- Local to this PC, uncommitted by rule: the three homes above; `outputs/incubator/
-  wiki_sent.*` (4,000 sentence readings, `wiki_collect.py`, 70 min to rebuild); the s064–
-  s066 matron-written data (see `d22ebd2`); `*.err` files. Logs `*_s068.log` are committed.
+- Branch `conscience-core`, pushed. v0.3.4 on PyPI (unchanged; the composer speed-up, the
+  arena enlarging and the sitting cap are not released).
+- Local to this PC, uncommitted by rule: the three homes, `copies/`, `outputs/incubator/
+  wiki_sent.*`, the s064–s066 matron-written data, `*.err`. Logs `*_s069.log` committed.
 - A new organism's language sense: copy `outputs/incubator/vee/sense.pt` into her home
-  before genesis (both sisters did), so the germline is the same.
+  before genesis.
 - Environment: Qwen GGUF at `~/models/qwen2.5-1.5b-instruct-gguf/`; Simple-Wikipedia ZIM at
   `~/data/wikipedia/`; bubblewrap installed; Python 3.10.12, torch 2.11.0, WSL2.
-- llama_cpp gotchas, the full s064–s067 results and the older NEXT lists are in the s067
-  handoff (`git show d22ebd2:docs/handoff/HANDOFF.md`).
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
@@ -170,6 +174,5 @@ Chloe's readings (hers, not reviewed):
 `notebooks/` checkpoints, output PNGs / uncommitted logs untracked; `outputs/data/**` caches.
 
 ---
-History pointers (no dated archives): s067 handoff at d22ebd2 (organs, Vee's embryo and
-fetal stages, flat classes, blur and composer probes, the matron's rules); s066 at b7aff0e;
-s064 at e67b6ce; s063 at e8e7b40; s062 at c4ac3db.
+History pointers (no dated archives): s068 handoff at fc11bd9 (the sisters' genesis, the
+ladders, "none", the composer search); s067 at d22ebd2; s066 at b7aff0e; s064 at e67b6ce.

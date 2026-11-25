@@ -986,3 +986,52 @@ Read from saved copies only (Weiss fetal day 30, Vee fetal day 90; nothing chang
 **Decisions for Rocky.** D1 A as corrected. D2 A2. D3 B1 and B2 with these values. D4 C now or
 later. D5 finding 5 is not the cranium: should the never-settling (and the merge being off) be
 diagnosed on copies next, before or after B?
+
+### 11.10 Rocky's rulings on §11.9, what was built, and the trial on copies (s069)
+
+**Rulings (his words).** On the cranium: "It is for them in this environment. It is not the
+default so no specs changes is required." On the 8192 rows: "Yes and remove the class limit"
+(the organisms already had none: `class_cap=None`; the benches' 43 / 128 defaults were left).
+On the cap: "Square root". On compaction: "if the cranium is not problem, compaction will make
+things slower isn't?" (left unbuilt). On the merge: off because an earlier experiment confused
+the organism (the record agrees: design doc `mixed_stream_growth.md` D18, s033, −.265 then
+−.147 with the loose merge; the strict one fired zero times). On the consolidation round:
+"Yes on the round it should run on the sittings. Sediment can be dug up but occasionally."
+
+**Built (all opt-in or behaviour-neutral for a living organism).**
+- `core/arena.py` `Arena.enlarge()`: the arena doubles at a boundary when an uncapped
+  organism's class rows run out (`mixed.py _refresh`, 64 rows of headroom). `alloc` unchanged.
+- `trioron/pcll/sitting.py` `SittingCap` (off unless `mixed.sitting` is set): a class with
+  nothing new since it was last judged is not judged; of the rest at most
+  `max(4, ceil(sqrt(classes) · 0.5 · φ))` a sitting, busiest first; the consolidation round at
+  every sitting over the judged classes plus `max(1, cap // 4)` dug from the sediment (longest
+  without a round). φ from growth at the previous sitting only. Floor 4, rate .5 and the
+  quarter are Chloe's values. Work is recorded per sitting (`sitting.work`).
+- NOT built: the cranium's byte count (A), compaction / `recyclable` (C).
+
+**Trial on three copies of Weiss from fetal day 60** (`outputs/incubator/copies/weiss60_*`;
+logs `cap_probe_*_s069.log`; one organism, seed 0; 10 days each):
+
+| | no cap | cap only | cap + round |
+|---|---|---|---|
+| days lived | **8: killed on day 69, three times** | 10 | 10 |
+| body-sense classes (from 2086) | 2738 | 2097 | 2106 |
+| ear / sense of change | 148 / 127 | 150 / 116 | 156 / 115 |
+| seconds a day | 27–156 | 15–188 | 24–58 (eight of ten 34–44) |
+| feels her kicks (k-means 1.00) | .94 | .94 | .94 |
+| CPU / memory rise, hers or the world's | .98 / .59 | .95 / .59 | .95 / .59 |
+| nothing lost: busy / memory / place / window | 1.00 / .93 / .98 / .98 | .99 / .93 / .98 / .98 | 1.00 / .93 / .98 / .98 |
+| the ear: text present | .95 | .93 | .98 |
+
+- **The uncapped organism meets a real memory wall near 2,700 body-sense classes.** The kernel
+  killed her (out of memory, 7.0 GB resident) on day 69 at every attempt. Chloe's reading, not
+  profiled: the full consolidation round, which compares every buffered member with every
+  class at once on a settled sitting. Her state is saved after each day, so nothing was lost,
+  but she cannot go on. The 85 % guard in `vee_body.py` is read only before a sitting and did
+  not see it. Vee (1781) and Weiss (2086) are both close to this wall without the cap.
+- The cap stops the class explosion; no gate row moved by more than .03 in 10 days.
+- The cap alone leaves spikes (98, 113, 188 s); with the round in instalments the worst day
+  was 58 s.
+- The sediment is not shrinking yet: 1545 of 2106 body-sense classes under 60 members; 23
+  judged and 27 settled a sitting; 1920 classes still waiting to be judged for the first time.
+- Her ear spawns a composer cell at every sitting (1.0 a sitting over 20). Not examined.
