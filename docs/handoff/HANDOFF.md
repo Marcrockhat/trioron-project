@@ -26,7 +26,8 @@ organisms. Vee was not touched.
     `body_fetal_day30.pt`. `embryo_values.json` = her own embryo values for the fetal gate.
   - `outputs/incubator/wile/` — **Wile** (Rocky's name; second sister; logs `sister2_*`).
     As Weiss, plus "none" and the ladders from her first moment. 30 days old, stage `embryo`,
-    embryo gate passes; **her fetal stage is NOT entered — needs Rocky's yes.**
+    embryo gate passes; **Rocky said yes to her fetal stage at the end of s068; the stage file
+    still says `embryo` — change it by hand first (NEXT 0b).**
 - Each is run with `VEE_HOME=outputs/incubator/<name>`; corridor and blur were set at
   genesis and are carried by the body. A driver runs only the stage the stage file names.
 
@@ -115,9 +116,17 @@ Chloe's readings (hers, not reviewed):
    search, profiled; for Vee it is Chloe's reading of the code, not profiled).
 
 ## NEXT (s069)
-0. **Bring Weiss's fetal gate to Rocky as it is** (reported in chat at the end of s068; he
-   had not answered). His choices: let her live to fetal day 60 / 90 as Vee did (cheap now:
-   18 s a day), and whether Wile enters her fetal stage.
+0. **Rocky answered at the very end of s068: "Yes on all three but lets start a new
+   session."** The three, as put to him, in this order:
+   a. **Weiss lives on to fetal day 60 and 90**, as Vee did (`VEE_HOME=outputs/incubator/weiss
+      DAYS=60 DAY_BUDGET=900 python3 experiments/incubator/fetal.py live`, keep a copy and
+      read the gate at 60, then the same with DAYS=90). ~18 s a day at day 30, rising.
+   b. **Wile enters her fetal stage**: change `outputs/incubator/wile/stage` to `fetal` BY
+      HAND (not done in s068), write her `embryo_values.json` from
+      `sister2_embryo_gate_s068.log` (busy 1.00, full .96, elsewhere 1.00, window 1.00,
+      ear 1.00), then `fetal.py live` for 30 days and the gate. One heavy process at a time.
+   c. **The cranium wiring is to be checked and WRITTEN for his sign-off** (item 1 below).
+      His yes covers writing parts A and B into the plan, not building B.
 1. **The cranium wiring, for sign-off before building (plan §11.8).** First check whether a
    class's astrocyte row carries the `recyclable` gene (can compaction reach an unused
    class?). Then write: A. the incubator organism's envelope = her real cranium
