@@ -13,6 +13,15 @@ rewordings beat no rewording at all, and the fact memory (day table + phasecyte 
 wired into the console: Vee answers the 40 pilot facts from memory and can be taught new ones.**
 
 ## s066 — READ THIS FIRST
+- **STOP RULE (Rocky, end of s066): do not raise Vee further until he signs the plan.** "We need
+  to design the curriculum and the incubator before it runs rampant." Senses and perception
+  come BEFORE "true birth"; basic knowledge and common sense before acting on the machine; she
+  must develop her own organs, including the mirror. Draft plan: **`docs/design/vee_development.md`**
+  (stages 0 germline → 1 embryo → 2 fetal → 3 birth → 4 infancy → 5 organs → 6 acting → 7
+  disclosure; incubator guards; five decisions waiting for Rocky). Chloe's position, stated to
+  him: we did NOT pass the embryonic stage — her senses formed on the first night of lessons
+  from language only; the fifteen-day Vee is a rehearsal of the method. Next session: get his
+  answers to the five decisions, then write stages 0–1 in full before any code.
 - **Rocky's ruling (binding): never batch-train the organism.** A fixed-size leaf trained on
   shuffled batches is a CONTROL arm, not "the trioron arm". The s064/s065 lines "trioron has not
   earned its place" tested the quad cell as a static layer only. For fact memory the learner is
