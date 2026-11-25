@@ -29,7 +29,7 @@ yet. Vee was not touched.
 - **Her name: Wile or Weil?** Rocky wrote "weil" at the start of s069 and asked "It is Weil
   isn't not Wile?". The s068 record quotes him as "Wile". Chloe asked him to confirm; **no
   answer yet. Nothing was renamed.**
-- Copies for experiments: `outputs/incubator/copies/weiss60_{plain,capped,round}/` (rule 27;
+- Copies for experiments: `outputs/incubator/copies/weiss60_{plain,capped,round,noanneal}/` (rule 27;
   may be deleted, they are not organisms).
 
 ## Results (one organism each, seed 0)
@@ -82,6 +82,22 @@ before a sitting and did not see it. Under cap + round: sediment not shrinking y
 awaiting their first judgment); the ear spawns a composer cell at every sitting (not
 examined).
 
+**Her buffers are mostly her own replays (plan §11.11).** The killed copy lived 9,408
+moments but its body sense holds 258,259 buffered members in 2,738 classes: about 95 % did
+not come from the world. The only step that adds members is annealing (40 synthetic members
+per class from its own sketch at a settled sitting). A copy with no NEW synthetic members
+(`copies/weiss60_noanneal`, switch `mixed.no_anneal`, no cap, 8 days): 2,086 → 2,327
+classes against 2,738 plain; gate rows equal. So new replays are roughly 60 % of the
+multiplying, and she still gains 241 classes on 768 moments of world. Not a clean test:
+the synthetic members made before day 60 stayed in her buffers. Rocky: "like some dude
+with photographic memory but accompanied with schizophrenia"; "it is a missing piece that
+need to be sewn to the triorons itself the unforgettfulness actually a double edge sword";
+"that's not how suppose the triorons work. It should have very small footprint."
+Chloe's proposal, NOT signed, NOT built: fold a long-unused class back into the sibling /
+parent it was split from (sketches pool exactly); copy first; earliest classes reported
+separately (rule 22). Not repeated on the sisters: the s067 measurement that surplus
+classes are thin slices of known states (plan §6.10, Vee at 30 days).
+
 ## Rocky's rulings this session (binding; his words)
 - "Lets run them while fixing the cranium system."
 - Cranium: "It is for them in this environment. It is not the default so no specs changes
@@ -99,7 +115,7 @@ examined).
 - The round: "Yes on the round it should run on the sittings. Sediment can be dug up but
   occasionally."
 
-## What was built (committed: `91b6136`, `79cf31e`, `fab0c41`, `46cb36e` + this handoff)
+## What was built (committed: `91b6136`, `79cf31e`, `fab0c41`, `46cb36e`, `5115bf3` + this handoff)
 - `trioron/core/arena.py` `Arena.enlarge()` — doubles the arena at a boundary; `alloc`
   unchanged (commitment 3); refused past `envelope.max_cells`. Called from
   `mixed.py _refresh` when an uncapped organism has under `ROW_HEADROOM = 64` rows left.
@@ -140,6 +156,8 @@ examined).
    Run: `VEE_HOME=outputs/incubator/<name> DAYS=<total fetal days> DAY_BUDGET=900 python3
    experiments/incubator/fetal.py live`, copy `body.pt` to `body_fetal_day<N>.pt`, then
    `fetal.py gate`.
+   d. Put to him at the very end, unanswered: the fold of long-unused classes (above), and
+      whether annealing should stay on for the sisters at all.
 1. Vee: the same memory wall is ahead of her (1,781 classes); nothing may be changed in her
    without Rocky's word.
 2. The cranium's true byte count (A), if he still wants pressure as a reading she has.
