@@ -418,13 +418,20 @@ class MixedStreamController:
         n_merge = 0
         if self.merge and not self.freeze:
             n_merge = self._merges(arena, tries)
-        if n_div == 0 and n_spawn == 0:            # post-quiescence
-            self._settled += 1                     # skepticism approaches
-            if self.consolidate:
+        quiet = n_div == 0 and n_spawn == 0        # post-quiescence
+        # skepticism approaches; growth → stay credulous
+        self._settled = self._settled + 1 if quiet else 0
+        if self.consolidate:
+            if sitting is not None and not self.freeze:
+                # under the sitting cap the round runs at EVERY sitting,
+                # in instalments (Rocky s069): the judged classes plus a
+                # few dug from the sediment
+                self._consolidate_some(sitting.settle(
+                    [c.name for c in self.classes], self.periods))
+            elif quiet:
                 self._consolidate()                # settle membership [D20a]
+        if quiet:
             self._anneal()                         # then re-anchor [D15]
-        else:
-            self._settled = 0                      # growth → stay credulous
 
         return self._report(arena, "match", None, status, grow, n_div,
                             spawns=n_spawn, pruned=n_pruned,
@@ -1070,6 +1077,49 @@ class MixedStreamController:
             self._retire_classes(dead)
         self._rebuild_sketches()       # membership changed everywhere
         return moved
+
+    def _consolidate_some(self, idxs: List[int]) -> int:
+        """The consolidation round in instalments (sitting cap): only the
+        members of classes ``idxs`` are reassigned, against EVERY current
+        template; a mover joins its new class's buffer; an emptied class
+        retires. Same laws as `_consolidate` (a low-margin member returns
+        home; labels supervise). Only touched sketches rebuild. Returns
+        members moved."""
+        if len(self.bufs) < 2 or not idxs:
+            return 0
+        self._sync_tags()
+        sizes = torch.tensor([len(self.bufs[k]) for k in idxs])
+        M = torch.cat([self.bufs[k] for k in idxs])
+        tagM = torch.cat([self.tags[k] for k in idxs])
+        if not len(M):
+            return 0
+        member, marg = self._margins(M)
+        home = torch.repeat_interleave(torch.tensor(idxs), sizes)
+        floor = self._gate_floor(M.shape[1])
+        if floor > 0:
+            member = torch.where(marg >= floor, member, home)
+        member = self._supervise(M, member, tagM)
+        moved = member != home
+        if not bool(moved.any()):
+            return 0
+        touched = set(idxs)
+        for k in idxs:                             # what stays, in order
+            keep = (home == k) & ~moved
+            self.bufs[k], self.tags[k] = M[keep], tagM[keep]
+        for k in member[moved].unique().tolist():  # movers arrive
+            m = moved & (member == k)
+            self.bufs[k] = torch.cat([self.bufs[k], M[m]])[-BUF:]
+            self.tags[k] = torch.cat([self.tags[k], tagM[m]])[-BUF:]
+            touched.add(k)
+        if self.manifold is not None:
+            for k in touched:
+                c = self.classes[k]
+                self.manifold.rebuild(c.name, c.cell_id,
+                                      self._recover_q(self.bufs[k]))
+        dead = [k for k in idxs if len(self.bufs[k]) < 5]
+        if dead:
+            self._retire_classes(dead)
+        return int(moved.sum())
 
     def _retire_classes(self, idxs: List[int]) -> None:
         """Drop classes consolidation emptied: astrocyte row DORMANT,

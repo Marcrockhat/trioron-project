@@ -480,6 +480,7 @@ def test_sitting_cap_bounds_the_judging():
     work = capped.mixed.sitting.work
     assert work and all(w["judged"] <= w["cap"] and w["judged"] <= w["due"] for w in work)
     assert sum(w["divisions"] for w in work) > 0 and len(capped.mixed.classes) > 1
+    assert all(w["settled"] >= 1 for w in work[1:])      # the round ran at every sitting, in instalments
     s = SittingCap()
     assert s.choose(["a", "b"], 1) == [0, 1]            # never judged: both due
     assert s.choose(["a", "b"], 2) == []                # nothing new: nobody judged

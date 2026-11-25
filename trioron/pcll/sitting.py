@@ -20,6 +20,12 @@ The form is spec §4.3's scaled, dynamic cap; RATE is its lock rate and
 spawns committed at the previous boundary (no frustration term: a
 phasecyte period's status is exclusive, not a multiplier).
 
+The consolidation round follows the same cap (Rocky s069: "it should run
+on the sittings. Sediment can be dug up but occasionally"): at every
+boundary it runs over the classes just judged plus DIG = max(1, cap // 4)
+classes dug from the sediment — those longest without a round, never-
+settled first (`settle`). DIG's quarter is Chloe's value.
+
 State is keyed by class NAME (indices move on division / retirement).
 ``work`` keeps one record per boundary: sleep is measured in work.
 """
@@ -41,6 +47,8 @@ class SittingCap:
         self.rate, self.floor, self.beta = rate, floor, beta
         self.fresh: Dict[str, int] = {}    # members received since last judged
         self.last: Dict[str, int] = {}     # boundary at which last judged
+        self.settled: Dict[str, int] = {}  # boundary of the class's last round
+        self.judged: List[str] = []        # names judged at this boundary
         self.growth = 0                    # divisions + spawns, previous boundary
         self.work: List[dict] = []
 
@@ -69,11 +77,29 @@ class SittingCap:
         for k in chosen:
             self.fresh[names[k]] = 0
             self.last[names[k]] = period
+        self.judged = [names[k] for k in chosen]
         self.work.append({"period": period, "classes": len(names),
                           "cap": self.cap(len(names)), "due": len(due),
                           "judged": len(chosen), "trials": 0,
                           "divisions": 0, "spawns": 0})
         return chosen
+
+    def settle(self, names: List[str], period: int) -> List[int]:
+        """Class indices for this boundary's consolidation instalment
+        (called after divisions, so by the names as they now stand)."""
+        live = set(names)
+        settled = getattr(self, "settled", {})     # a cap saved before it
+        self.settled = {k: v for k, v in settled.items() if k in live}
+        judged = set(getattr(self, "judged", []))
+        out = [k for k, nm in enumerate(names) if nm in judged]
+        rest = [k for k, nm in enumerate(names) if nm not in judged]
+        rest.sort(key=lambda k: self.settled.get(names[k], -1))
+        out += rest[:max(1, self.cap(len(names)) // 4)]
+        for k in out:
+            self.settled[names[k]] = period
+        if self.work:
+            self.work[-1]["settled"] = len(out)
+        return sorted(out)
 
     def done(self, trials: int, divisions: int, spawns: int) -> None:
         """Close this boundary's record; its growth sets the next φ."""
