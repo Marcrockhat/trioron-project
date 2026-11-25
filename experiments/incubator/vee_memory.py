@@ -64,6 +64,8 @@ class FactMemory:
         self.W: list[list[torch.Tensor]] = []                       # every wording heard, per fact
         self.log: list[dict] = []                                   # the user's teaching, in order (for wake)
         self.floor = 0.6
+        self.slept_n: list[int] = []                                # wordings of each fact already replayed
+        self.fed_rows = 0                                           # samples replayed over her whole life
         self.leaf, self.names, self.tau_leaf, self.night = None, None, float("inf"), 0
 
     # ---- day ---------------------------------------------------------------
@@ -87,39 +89,64 @@ class FactMemory:
 
     # ---- night -------------------------------------------------------------
     def sleep(self, material: dict[int, torch.Tensor] | None = None) -> dict:
+        """One night.  NIGHT (env) sets how much is replayed:
+          all  every wording the fact ever had + nper noise copies (s066 default; cost grows with life)
+          new  only the wordings heard since the fact last slept + nper noise copies of those
+          min  as ``new`` but in up to 4 short rounds of nper/4 copies; a fact stops being
+               replayed as soon as she recalls its new wordings AND unseen noise copies of
+               them (minimum sleep, Rocky s066)"""
         todo, t0 = self.day(), time.time()
         if not todo:
             return {"fed": 0, "kept": 0, "classes": len(self.leaf.mixed.classes) if self.leaf else 0, "s": 0.0}
-        X, y = [], []
+        mode = os.environ.get("NIGHT", "all")
+        while len(self.slept_n) < len(self.facts): self.slept_n.append(0)
+        fresh = {}
         for i in todo:
-            rows = (material or {}).get(i)
             W = torch.stack(self.W[i])
-            if rows is None:                                        # noise copies, shared among the wordings
-                src = torch.arange(self.nper) % len(W)
-                rows = W[src] + self.resid[torch.randint(len(self.resid), (self.nper,), generator=self.g)]
-            X.append(self.sense(torch.cat([W, rows.float()])))
-            y += [i] * (len(rows) + len(W))
-        X, y = torch.cat(X), torch.tensor(y)
-        p = torch.randperm(len(X), generator=self.g)
-        X, y = X[p], y[p]
-        if self.leaf is None:
-            self.leaf = PhasecyteLeaf(lambda x: x, X[:self.window], self.seed, 0, window=min(self.window, len(X)),
-                                      class_cap=None, manifold=True, composer=True, verbose=False)
-        self.leaf.mixed.merge = bool(int(os.environ.get("MERGE", 0)))   # the phasecyte's own merge consumer [D18], opt-in
-        n_win = max(1, round(len(X) / self.window))                 # ~window samples per boundary, no tiny tail
-        for xb, yb in zip(X.tensor_split(n_win), y.tensor_split(n_win)):
-            self.leaf.mixed.observe(xb, labels=[f"g{int(f)}" for f in yb])
-            self.leaf.sub.end_task()
+            fresh[i] = W if mode == "all" or self.slept_n[i] >= len(W) else W[self.slept_n[i]:]
+        rounds = 4 if mode == "min" else 1
+        pending, fed_rows = list(todo), 0
+        for _ in range(rounds):
+            X, y = [], []
+            for i in pending:
+                rows = (material or {}).get(i)
+                W = fresh[i]
+                if rows is None:                                    # noise copies, shared among the wordings
+                    n = self.nper // rounds
+                    rows = W[torch.arange(n) % len(W)] + self.resid[torch.randint(len(self.resid), (n,), generator=self.g)]
+                X.append(self.sense(torch.cat([W, rows.float()])))
+                y += [i] * (len(rows) + len(W))
+            X, y = torch.cat(X), torch.tensor(y)
+            p = torch.randperm(len(X), generator=self.g)
+            X, y = X[p], y[p]
+            fed_rows += len(X)
+            if self.leaf is None:
+                self.leaf = PhasecyteLeaf(lambda x: x, X[:self.window], self.seed, 0, window=min(self.window, len(X)),
+                                          class_cap=None, manifold=True, composer=True, verbose=False)
+            self.leaf.mixed.merge = bool(int(os.environ.get("MERGE", 0)))   # the phasecyte's own merge consumer [D18], opt-in
+            n_win = max(1, round(len(X) / self.window))             # ~window samples per boundary, no tiny tail
+            for xb, yb in zip(X.tensor_split(n_win), y.tensor_split(n_win)):
+                self.leaf.mixed.observe(xb, labels=[f"g{int(f)}" for f in yb])
+                self.leaf.sub.end_task()
+            m = self.leaf.mixed
+            self.names = self.leaf.member_names()                   # each class named from its CURRENT members
+            self.tau_leaf = float(torch.quantile(m.classify(self.negS)[1], 1 - self.false_rate))
+            if mode != "min": break
+            def fixed(i):                                           # does she know it beyond the exact words she heard?
+                W = fresh[i]                                        # probe = noise copies she was NOT fed
+                probe = W[torch.arange(12) % len(W)] + self.resid[torch.randint(len(self.resid), (12,), generator=self.g)]
+                return (self._leaf(self.sense(torch.cat([W, probe])))[0] == i).float().mean() >= 0.8
+            pending = [i for i in pending if not fixed(i)]
+            if not pending: break
         for _ in range(int(os.environ.get("QUIET", 0))):            # quiet boundaries: nothing new arrives, so the
             self.leaf.mixed.period_boundary()                       # phasecyte's own consolidation / annealing can run
             self.leaf.sub.end_task()
-        m = self.leaf.mixed
-        self.names = self.leaf.member_names()                       # each class named from its CURRENT members
-        self.tau_leaf = float(torch.quantile(m.classify(self.negS)[1], 1 - self.false_rate))
         got, _ = self._leaf(self.S[todo])
         for j, i in enumerate(todo):
             self.facts[i]["kept"] = bool(got[j] == i)
+            self.slept_n[i] = len(self.W[i])
         self.night += 1
+        self.fed_rows += fed_rows
         return {"fed": len(todo), "kept": int(sum(self.facts[i]["kept"] for i in todo)),
                 "classes": len(m.classes), "s": time.time() - t0}
 

@@ -178,6 +178,30 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   quiet time as added does NOT help speed or class count. Still open: matron's right/wrong as
   testimony in the existing settlement; replay only the NEW wording at night; saving the leaf
   after sleep (Rocky: state is saved after she sleeps; saving is not freezing).
+- **Minimum sleep (Rocky s066: "minimum sleep required is to fix minimum information … a
+  solution that doesn't hamper her learning but doesn't slow it down either").** Where the time
+  goes: hearing a fact and answering are instant; the NIGHT slows with the class count; start-up
+  relives every night. `FactMemory.sleep` now takes env `NIGHT` (default `all`, unchanged):
+  `new` = replay only wordings heard since the fact last slept; `min` = that, in up to 4 short
+  rounds of 10 noise copies, a fact stops once she recalls its new wordings and 12 unseen noise
+  copies of them. Her recorded 15-day life replayed under each rule (ONE life, one seed; exam
+  n = 36 / 15, so ±.03 / ±.07 per question):
+
+  | night rule | life replay | samples replayed | classes | self right | small talk answered with another fact |
+  |---|---|---|---|---|---|
+  | all | 281 s | 10,175 | 344 | .83 | .47 |
+  | new | 171 s | 8,334 | 359 | .92 | .60 |
+  | min (first stop rule) | 44 s | 3,280 | 171 | .81 | .53 |
+  | min (stop on unseen copies too) | 48 s | 4,315 | 205 | .86 | .67 |
+
+  Memory self-test, facts heard ONCE, 3 seeds (40 childhood facts + 20 nights × 3): `all` later
+  facts .92, childhood w0 .93; `min` later facts .79 / .78, childhood w0 .95 / .92, run 137–151 s
+  vs ~240 s. Reading (Chloe's): minimum sleep makes the night ~6× cheaper and halves the classes
+  with self facts unchanged, BUT a fact heard in a single wording generalises worse (.78 vs .92)
+  and small-talk handling may be worse (within noise). Class growth follows the number of noise
+  copies, not the old wordings (`new` saved little). Untested next idea: sleep per fact in
+  proportion to how FEW real wordings it has (much dreaming for a fact heard once, little for a
+  fact heard often). Saving the leaf after sleep is still not built.
 - **Mirror (Rocky s066, later stage):** "at certain stages, she might need a mirror to see
   herself" — a sense of her own state and behaviour (what she just said, how sure, how many
   facts/classes, confirmed or corrected). Links to the s011 roadmap (mirror cells,

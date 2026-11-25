@@ -112,8 +112,12 @@ if __name__ == "__main__":
         print(f"[slept: night {mem.night}, {len(mem.facts)} facts, {len(mem.day())} still in today's memory, "
               f"{len(mem.leaf.mixed.classes)} classes]")
     elif op == "test":
+        import time
         rows = [json.loads(l) for l in open("outputs/incubator/self_wordings.jsonl")]
+        t0 = time.time()
         mem = wake()
+        print(f"night rule {os.environ.get('NIGHT', 'all')}: life replayed in {time.time() - t0:.0f}s, {mem.night} nights, "
+              f"{mem.fed_rows} samples replayed, {len(mem.leaf.mixed.classes)} classes, {len(mem.day())} facts still only in today's memory")
         for kind in ("test", "near", "other"):
             rs = [r for r in rows if r["kind"] == kind]
             got = answers(mem, [r["text"] for r in rs])
