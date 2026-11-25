@@ -128,8 +128,23 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   got .89 with 24); unrelated small talk: says she does not know .27, silent .07, another fact
   .67; questions about someone else: another fact 1.00. A Sonnet helper acting as matron was
   launched for days 4–15 (curriculum: herself, Chloe, her world, numbers to five, three shapes,
-  greetings, unknowns, silences; reactive to her misses; log `vee_life_days.log`). **If this
-  handoff is read before its result was added: check that log and rerun `vee_life.py test`.**
+  greetings, unknowns, silences; reactive to her misses; log `vee_life_days.log`). RESULT below.
+- **Fifteen days by conversation — RESULT (helper days 4–15, 24 turns a day, ~77 K helper tokens,
+  log `vee_life_days.log` local).** Right before the matron replied, per day (new wordings every
+  day): 12, 9, 12, 15, 12, 19, 14, 11, 11, 13, 14, 17 of 24. Exam on wordings never used in
+  lessons (`vee_life.py test`), day 3 → day 15: self facts right .83 → .83; unrelated small talk
+  answered with another fact .67 → .47 (says she does not know .27 → .47); questions about
+  someone else answered with another fact 1.00 → .73. Helper's observations: six self facts
+  mostly stable after day 9 with lapses; Chloe-is-an-AI, lives-in-a-computer, digital-world,
+  Hello/Goodbye mostly right; **numbers Two–Five stayed scrambled and the three shapes collapsed
+  into one another**; maker vs matron crossed on days 4–8 then settled; she latches onto the most
+  recently taught fact (each new shape took over shape and number questions); `?` and `-` turns
+  rarely missed from day 7 (none on day 15). Reading (Chloe's): interaction teaches "I do not
+  know" and silence, and holds the self facts, with ~5× fewer wordings than list-feeding; it does
+  NOT yet teach near facts apart (numbers, shapes — the cat/dog problem again), and the daily
+  score does not climb steadily (new facts each day until day 12). **Cost problem: the life is
+  replayed at every call — a lesson took > 3 min by day 12 and the exam ~10 min at day 15.
+  Saving the leaf (`mixed.state_dict()`) is now required before a longer life.**
 - **Environment sense (Rocky s066): the phasecyte's fed vector should carry her ENVIRONMENT, as
   the s049 world percept did; Vee's has only 64 language numbers.** Built, NOT yet connected:
   `experiments/incubator/environment.py` — 33 readings in [-1, 1]: clock, RAM/swap, CPU, process
