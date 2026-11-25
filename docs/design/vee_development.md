@@ -392,10 +392,10 @@ mapping is for measurement only and is never shown to her.
 
 | criterion | pass |
 |---|---|
-| day/night, quiet/busy, roomy/full, home/elsewhere, window open/closed can each be read from her class | each clearly above chance and not below the control by more than .05 |
+| ~~day/night~~ (reported only, Rocky s067), quiet/busy, roomy/full, home/elsewhere, window open/closed can each be read from her class | each clearly above chance and not below the control by more than .05 |
 | control | k-means with the same number of clusters on the same vectors |
 | self-arrest | reported, not gated (Rocky s067, §6.9): class count, classes in use, time per day. Was: count grows by no more than 10 % over the last third |
-| stability | a fixed set of probe moments falls into the same classes at day 20 and day 30 for at least 90 % of them |
+| stability | reported: same GROUPING of a fixed set of probe moments at day 20 and day 30 (adjusted Rand); Rocky s067 accepted this in place of "same class ≥ 90 %", no bar set |
 | silent channels | still unread at the end |
 
 ### 7.3a Embryo run and gate result (s067; `embryo.py`, logs `embryo_s067.log`, `embryo_gate_s067.log`; ONE organism, seed 0 — this is Vee, kept in `outputs/incubator/vee/`)
@@ -417,8 +417,16 @@ Genesis: ear 64 receptors, body sense 81. 30 days lived, 0.5 s a day.
 
 **Gate not passed: night and stability.** Both come from the same place: she
 keeps dividing (§6.9), so a moment's class at day 20 has often split by day
-30, and the splits do not follow dusk. She is NOT promoted; she stays an
-embryo until Rocky rules on these two criteria.
+30, and the splits do not follow dusk.
+
+**Rocky's ruling (s067):** (1) stability — accept "same grouping" in place of
+"same class" (measured .61; no numeric bar was set). (2) Night — "night is
+not meaningful for her at the moment. We evolved from a nocturnal ancestor
+until someone decided that sunlight and being eaten is a good trade-off":
+night is dropped from the embryo gate and reported only. **With these two
+rulings the embryo gate holds** (busy, memory, place, window pass; silent
+channels silent). She stays in the embryo stage until stage 2 (fetal) is
+written in full and signed.
 
 ### 7.4 The risk I expect
 Class discovery follows the largest difference in what she senses. Random

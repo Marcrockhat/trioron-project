@@ -100,7 +100,10 @@ def gate(ambient):
     ok = True
     for j, h in enumerate(HIDDEN):
         a, b = readable(cls, Hall[:, j], n); c, _ = readable(km, Hall[:, j], n)
-        v = a > b + 0.05 and a >= c - 0.05; ok &= v
+        v = a > b + 0.05 and a >= c - 0.05
+        if h == "night":                                          # Rocky s067: night is not meaningful for her yet
+            print(f"{h:22} {a:>11.2f} {c:>8.2f} {b:>6.2f}   (reported, not gated — Rocky s067)"); continue
+        ok &= v
         print(f"{h:22} {a:>11.2f} {c:>8.2f} {b:>6.2f}   {'pass' if v else 'FAIL'}")
     win = Hall[:, HIDDEN.index("window")] == 1                    # night, seen through the open window only
     nw = int(win[:n].sum())
@@ -118,11 +121,10 @@ def gate(ambient):
         same = np.mean([x == y for x, y in zip(a0, a1)])
         u = {s: i for i, s in enumerate(dict.fromkeys(a0 + a1))}
         ari = adjusted_rand(torch.tensor([u[s] for s in a0]), torch.tensor([u[s] for s in a1]))
-        v = same >= 0.90; ok &= v
-        print(f"stability: probe moments in the same class at day {d0} and day {d1}: {same:.2f}   {'pass' if v else 'FAIL'} (>= .90); "
-              f"same grouping (adjusted Rand) {ari:.2f}")
+        print(f"stability (reported; Rocky s067 accepted 'same grouping' in place of 'same class', no bar set): probe moments day {d0} -> day {d1}: "
+              f"same grouping (adjusted Rand) {ari:.2f}; same class {same:.2f}")
     else:
-        ok = False; print("stability: not measured (needs day 20 and the last day)")
+        print("stability: not measured (needs day 20 and the last day)")
     used = cls[n:].unique().numel(); top3 = torch.bincount(cls[n:].clamp(min=0)).topk(min(3, k)).values.sum().item() / len(Xp)
     print(f"classes used on unseen days: {used} of {k}; share of unseen moments in her 3 biggest classes {top3:.2f}")
     print(f"silent channels: all {vb.RES} reserved channels read exactly zero through the embryo: {bool((X[:, vb.WIDTH - vb.RES:] == 0).all())}")

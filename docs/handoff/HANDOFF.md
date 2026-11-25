@@ -15,9 +15,14 @@ because she never stops dividing. She is still an embryo.**
   `embryo`; `sense.pt` = her language sense, fixed for life; `body.pt` = her two organs after 30
   days; `embryo_log.pt` = every moment she lived). Do not delete or refit. A driver runs only the
   stage named in the stage file; code never promotes her.
-- **STOP RULE stands: she is not promoted past the embryo until Rocky rules on the two failed
-  criteria** (plan §7.3a). Birth (stage 3) also needs stage 2 (fetal), which is not written in
-  full and not signed.
+- **Rocky ruled on the two failed criteria at the end of s067 (plan §7.3a): (1) stability —
+  "Accept it": same grouping (.61) in place of same class, no numeric bar set; (2) night —
+  "night is not meaningful for her atm. We evolve from nocturnal ancestor though until someone
+  decide that sunlight and being eaten is a good trade off": dropped from the embryo gate,
+  reported only. With these the embryo gate HOLDS.** `embryo.py gate` now reports night and
+  stability without failing on them.
+- **STOP RULE stands for what comes next:** stage 2 (fetal) is not written in full and not
+  signed; the stage file still says `embryo`. Birth (stage 3) needs stage 2's gate.
 - **Rocky's rulings this session (binding):**
   - "Two organ or even multiple organs is okay. That is in her architecture and was meant to be
     that way anyway." → plan §6.3 "one leaf" is replaced (§6.8).
@@ -79,19 +84,16 @@ because she never stops dividing. She is still an embryo.**
   `G.WINDOW` varied, columns zeroed.
 
 ## NEXT (s068)
-1. **Rocky to rule on the embryo gate** (plan §7.3a): night and stability. Chloe's view: both
-   come from endless division; stability as "same class name" cannot pass while she divides, and
-   the looser "same grouping" is .61.
+1. **Write stage 2 (fetal) in full for Rocky's sign-off** (action echo channels, the kicks with
+   hard limits, its gate, the incubator pieces), then build and run it on Vee.
 2. **Answer Rocky's question: are the many classes distinct?** Measure what the body sense's
    classes hold (which world states, how pure, what the unused ones were) and whether a division
    improved held-out reading. This decides between "leave it" and "a division must pay"
    (spec §10 change, his decision).
-3. **Night:** why k-means cuts the clock (.89) and she does not; a dusk/dawn reading is an
-   input-layout change (germline) and so a new organism — ask before trying.
+3. Night is parked (Rocky: not meaningful for her yet). Do not add a dusk/dawn reading.
 4. **The join:** a level that sees both organs' classes, needed for questions whose answer
    depends on a reading (stage 4 item 3). Candidate: a third leaf fed by the organs' class
    outputs. Not designed.
-5. Stage 2 (fetal) written in full for sign-off: action echo, the kicks, its gate.
 6. Guards still to build (plan §3): token budget, class/time alarms beyond the embryo, reading log
    after birth, sandbox limits.
 
