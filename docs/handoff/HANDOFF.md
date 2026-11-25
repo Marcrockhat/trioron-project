@@ -69,6 +69,28 @@ because she never stops dividing. She is still an embryo.**
     dusk/dawn reading). Rocky did not answer. The embryo run then showed the window does NOT
     rescue night (.52 against k-means .85), so the first option is dead.
 
+## Late s067 — flat classes, composer, blur (plan §9; toy leaves, NOT Vee; nothing adopted)
+- Rocky's questions and ideas, in order: how many classes does a human hold (Chloe: ~1e5
+  recognisable things, built from parts — from memory, not looked up); what is a flat class;
+  why did the composer never grow; trigger it by directed questions from the matron; "fish can
+  be fiiish, fishhh, fsh" and "baby eyes are blur when they were born"; world blur or organ
+  blur; when to sharpen; "sharpen at very slow rate probably relative to her size". Rocky said
+  he worries whether the approach is right; Chloe told him it cannot be known, only tested, and
+  that she has not clearly beaten plain clustering yet.
+- **Composer: trial counter 0 in all three organs after 120 days.** Not resources, not dreaming,
+  not mis-wired: a trial needs a class with mean coherence < .55 and hers are .82–.99.
+- **Composer probe** (`composer_probe.py`): world variation .3 teaches a same/different relation
+  (.87, with the matron's labels .97; clean world .52–.73; variation .6 drowns it). Composer
+  fires only when other readings are on/off.
+- **Organ-blur probe** (`blur_probe.py`): blurred start + one-step, need-driven, size-slowed
+  sharpening on trial → 92 classes against 387 with a better reading (.99 / .96) in a clean
+  world; in a more variable world 121 against 587 but stuck too blurred (.77 / .85).
+- **Rocky's standing (s067): 2a result and next step not yet ruled on.** Open for him: is fetal
+  2a passed; vary her scripted world more; organ blur for Vee (a phasecyte development change,
+  spec §10, and for an existing organism it may mean a new one); stage 2b by stress.
+- Chloe's agreed distinction: variation belongs to the WORLD, blur to the ORGAN; sharpen when
+  settled AND still unresolved (frustrated / corrected), per reading, on trial.
+
 ## What was found (all in `docs/design/vee_development.md` §6.7–6.9, §7.3a)
 1. **Birth check** (`birth_check.py`; 3 seeds; rich genesis → 20 embryo days → 40 pilot facts in
    four waves, each wording heard at a moment of the running world → held-out wordings in another
@@ -103,6 +125,7 @@ because she never stops dividing. She is still an embryo.**
 - `experiments/incubator/vee_body.py` — her germline: 148-number layout, the fixed language
   sense, rich genesis pool, `Body` with two organs (`ear`, `soma`), stage-file guard, RAM
   ceiling (85 %), whole-body save.
+- `experiments/incubator/composer_probe.py`, `blur_probe.py` — the two toy probes of plan §9.
 - `experiments/incubator/fetal.py` — stage 2a driver (`live`, `gate`); `world.py` `step(action)` with the six kicks;
   `vee_body.py` echo in `moment`, `changes`, `kin_pool`, `Body.grow_kin` (third organ, 43 numbers).
 - `experiments/incubator/embryo.py` — stage 1 driver (`live`, `gate`); saved after every

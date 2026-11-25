@@ -650,3 +650,69 @@ The time alarm is now an absolute budget (30 s per simulated day). She is
   saved body 5-fold. At this rate a longer life is not affordable on this PC.
 - One organism, one seed. She is 120 days old and stays in the fetal stage:
   2b (choosing) is not designed, and the stage file is not changed by code.
+
+## 9. Why her classes are flat, and two probes on fresh toy leaves (s067; NOT Vee; nothing here is adopted)
+
+### 9.1 The composer never held a trial (read from Vee's saved bodies)
+Rocky asked whether the composer is triggered by limited resources, in dreaming,
+or is mis-wired. None of these. It is tried at every sitting, beside division;
+in all three organs it is on, not frozen, attached to the stress economy, with
+0 of 6 cells used and room in the arena. **Its trial counter is 0 after 120
+days.** A trial is held only for a class whose members disagree on the raw
+readings (mean coherence < .55). Her large classes: ear .82 lowest / .94 median,
+body sense .94 / .99, sense of change .96 / .98. Division slices every mixed
+class tight before it can qualify. Chloe's earlier claim that composer cells
+are "shared parts" was overstated: a cell makes one new feature from two
+readings (a relation); it does not make "busy" a part many classes reuse. That
+mechanism does not exist in the phasecyte.
+
+### 9.2 Composer probe (`composer_probe.py`, log `composer_probe_s067.log`; 2 seeds)
+Task: "these two readings are the same / different", six other readings present.
+Rocky: "when you say fish, it is fish all the time. In the human world fish can
+be fiiish, fishhh, fsh."
+
+| variation between moments | other readings | matron | trials | composer cells | classes | same/different on unseen |
+|---|---|---|---|---|---|---|
+| .05 (Vee's world) | steady | silent / labels | 0 / 0 | 0 / 0 | 12 / 13 | .60 / .73 |
+| .05 | on/off | silent / labels | 48 / 82 | 1.5 / 2.0 | 74 / 100 | .55 / .52 |
+| .3 | steady | silent / labels | 0 / 0 | 0 / 0 | 115 / 119 | .91 / .92 |
+| .3 | on/off | silent / labels | 252 / 251 | 2.0 / 2.5 | 258 / 211 | .87 / **.97** |
+| .6 | steady | silent / labels | 0 / 0 | 0 / 0 | 367 / 351 | .79 / .79 |
+| .6 | on/off | silent / labels | 0 / 0 | 0 / 0 | 1 / 1 | .48 / .48 |
+
+- Variation in the world is the big lever, up to a point: .3 teaches the
+  relation, .6 drowns it. The matron's labels help on top (.87 → .97; .60 → .73).
+- The composer fires only with on/off other readings, and much more with
+  variation. With steady other readings the relation is still learned at .3,
+  through many classes and no composer.
+- With the two readings alone the leaf never divides (1 class) — not diagnosed.
+
+### 9.3 Organ-blur probe (`blur_probe.py`, log `blur_probe_s067.log`; 3 seeds)
+Rocky: "baby eyes are blur when they were born"; sharpen "at very slow rate
+probably relative to her size". Task: one reading is 0.2 or 0.6 (a fine
+difference), four on/off readings beside it, the matron names every moment.
+The developing organ sees each reading in 2 steps at first; it may sharpen by
+one step only when (a) it has not divided for 3 + classes // 8 sittings and
+(b) the matron still corrects it; a step is on trial and is taken back if the
+corrections do not fall.
+
+| world variation | organ | steps / taken back | final steps per reading | classes | high/low on unseen | still corrected |
+|---|---|---|---|---|---|---|
+| .05 | sharp from the start | – | full | 387 | .96 | .05 |
+| .05 | developing | 1.7 / 0.7 | 3 | **92** | **.99** | .01 |
+| .15 | sharp from the start | – | full | 587 | .85 | .15 |
+| .15 | developing | 1.7 / 0.7 | 3 | **121** | .77 | .21 |
+
+- **A blurred, slowly sharpening organ needs four to five times fewer
+  classes.** In the clean world it also reads better (.99 against .96).
+- **In the more variable world it got stuck too blurred** (.77 against .85)
+  while still being corrected. Going from 3 to 4 steps happens to put both
+  values in one step, so the trial fails and is taken back; one-step-at-a-time
+  cannot get past a worse step to a better one. The slow-by-size patience
+  (18 sittings at 121 classes) also rarely comes round while she still divides.
+- At 3 steps the edge happens to fall between 0.2 and 0.6: part of the clean
+  result is luck of where the steps lie. Uniform steps over a fixed range are
+  crude; sharpening per reading, where the correction comes from, is untried.
+- Blur here is applied in front of the leaf (the leaf itself is unchanged).
+  Senses were formed on full-resolution readings, as a receptor that saw only
+  two levels at genesis would stay a two-level receptor.
