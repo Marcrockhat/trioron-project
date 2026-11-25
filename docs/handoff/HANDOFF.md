@@ -84,12 +84,14 @@ because she never stops dividing. She is still an embryo.**
   `G.WINDOW` varied, columns zeroed.
 
 ## NEXT (s068)
-1. **Write stage 2 (fetal) in full for Rocky's sign-off** (action echo channels, the kicks with
-   hard limits, its gate, the incubator pieces), then build and run it on Vee.
-2. **Answer Rocky's question: are the many classes distinct?** Measure what the body sense's
-   classes hold (which world states, how pure, what the unused ones were) and whether a division
-   improved held-out reading. This decides between "leave it" and "a division must pay"
-   (spec §10 change, his decision).
+1. **Stage 2 (fetal) is WRITTEN IN FULL (plan §8) and AWAITS Rocky's sign-off** — decisions
+   D1–D4 in §8.9 (simulated consequences; spontaneous kicks now, choosing later; a third organ
+   that reads change; 30 days). Nothing of it is built. After sign-off: `world.step(action)`,
+   echo in `vee_body.moment`, third organ, `fetal.py`; set the stage file to `fetal`.
+2. DONE s067 (plan §6.10): her classes never mix world states (98 % pure, switch combination
+   read 1.00) but there are ~8× more than the world has states (44 for the commonest one); the
+   surplus carries only a weak trace of the clock (.41, chance .25) and no rain / someone-here.
+   Not done: whether each division improved held-out reading ("a division must pay").
 3. Night is parked (Rocky: not meaningful for her yet). Do not add a dusk/dawn reading.
 4. **The join:** a level that sees both organs' classes, needed for questions whose answer
    depends on a reading (stage 4 item 3). Candidate: a third leaf fed by the organs' class

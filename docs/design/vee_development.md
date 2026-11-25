@@ -361,6 +361,23 @@ organs may follow. The language block is not turned down.
   gate reports the count, the classes in use and the time per day; it does
   not fail on the count. Sittings stay at 48 moments as signed.
 
+### 6.10 Are her many classes distinct? (Rocky's question, s067; read from Vee's saved body, nothing changed)
+
+Her world has 16 combinations of its four switches (busy, memory full, place,
+window). After 30 days her body sense has 141 classes; 105 still claim a
+moment she lived.
+
+- **They never mix world states**: 98 % of the moments in a class share one
+  switch combination; her class gives the combination 1.00.
+- **There are about eight times more of them than the world has states**: the
+  commonest state (quiet, roomy, home, window closed) alone holds 44 classes.
+- **The surplus carries little**: time of day in 6-hour blocks .41 (chance
+  .25, the switches alone .27) — a weak trace of the clock; rain and
+  "someone is here" are NOT read (.90 / .83, below always guessing "no").
+
+So: distinct, yes — no class is a blur of two states. Needed, no — most are
+several slices of one state. One organism, one seed.
+
 ## 7. Stage 1 in full — the embryo (signed off s066; gate not yet passable, see §6.5–6.6)
 
 ### 7.1 What she receives
@@ -454,3 +471,96 @@ rather than tune until it passes.
    the real machine? Proposal: simulated only in the embryo; live readings
    join after birth.
 3. Half of the moments with ambient text, 30 days: starting values only.
+
+## 8. Stage 2 in full — fetal: body and first kicks (DRAFT s067, awaiting Rocky's sign-off; nothing built)
+
+### 8.0 Is she really here already? (Rocky: "It's fast, isn't it?")
+Fast in our time: her 30 days took 15 seconds, because the world is scripted
+and her input is 148 numbers. What the embryo gate showed is narrow: she
+reads four on/off states of a simulated world about as well as plain
+clustering, on one seed, after two criteria (night, stability) were relaxed
+by ruling. That is "her senses formed", not more. Stage 2 is where the first
+thing clustering cannot do is asked of her: telling her own doing from the
+world's.
+
+### 8.1 What changes
+- **Her input does not change** (148 numbers, fixed at the germline). The 8
+  action-echo channels, silent so far, come alive.
+- **The world gains her actions.** `world.py` answers each action in the
+  readings she already has. Simulated, like the embryo (decision D1).
+- **A third organ is born**: a sense of change (8.4).
+- Nobody addresses her; nothing is labelled; presence = nobody.
+
+### 8.2 The kicks
+One action at most per moment. A kick is over within the moment unless noted.
+
+| action | what the world does | reading that moves | lasts |
+|---|---|---|---|
+| still | nothing | — | — |
+| work | a short burst of computing | CPU busy now, load 1 min (not processes, not traffic — unlike a busy world) | fades in 1–2 moments |
+| hold | takes a little memory | her own memory, RAM used (a little) | until let go |
+| let go | releases what she holds | the same, back | — |
+| mark | leaves a mark in her scratch space | marks (echo 8) | stays, also across days |
+| wipe | removes one mark | marks | — |
+
+Hard limits, in the script: at most 4 holds at once, at most 8 marks, work
+never raises CPU above what a busy world gives.
+
+### 8.3 The echo block (8 numbers, zero until this stage)
+1–6: what she did in the moment just past (+1 for that action, −1 for the
+other five; all zero is never sent again once the stage starts). 7: how much
+she holds (0–4 → −1..1). 8: how many marks exist (0–8 → −1..1).
+
+### 8.4 Who decides the kicks, and the new organ
+- **Stage 2a — spontaneous kicks.** She does not choose. Kicks fire by
+  themselves, about one moment in six, each action equally often (a baby's
+  kicks are not decisions). This is all that is proposed for sign-off.
+- **Stage 2b — she chooses** (stay still unless something calls for action;
+  the "no thrashing" gate of §2). NOT designed: the phasecyte finds classes;
+  it has no way to pick an action. This needs a motor mechanism that does not
+  exist yet (decision D2). 2b is not part of this sign-off.
+- **Sense of change (third organ).** A phasecyte leaf that reads, from the
+  same input stream, the echo block and how each environment reading changed
+  since the previous moment. The body sense sees states; this one sees what
+  just happened. Born at the start of stage 2, its senses formed on the
+  first two fetal days.
+
+### 8.5 Length
+30 further simulated days (2,880 moments, about 480 kicks, 80 of each
+action). Text stays present in half the moments.
+
+### 8.6 The gate (on 5 further days she does not live; control = k-means on the numbers the organ reads)
+| criterion | measured as | pass |
+|---|---|---|
+| she feels her kicks | which action was just done, read from the sense of change | clearly above chance (1/6) and not more than .05 under the control |
+| she knows what a kick moves | echo shown, changes hidden: the class she falls in points at the reading that really moves | right for at least 4 of the 5 acting kicks |
+| she tells her doing from the world's | **echo hidden**: a CPU rise is hers (CPU alone) or the world's (CPU, processes and traffic together); a memory rise is hers (small, her own memory too) or the world's | clearly above chance (.5); the control is reported |
+| lasting and fading | marks and holds still read on later moments; work no longer | reported |
+| nothing lost | busy, memory, place, window from the body sense | within .05 of the embryo values (.99 / .95 / 1.00 / 1.00) |
+| the ear | text present | not below the embryo value (.75) by more than .05 |
+| cost | time per day, classes per organ, classes in use | reported; alarm if a day takes twice day 5's time |
+
+### 8.7 Risks I expect
+- Her own work makes the CPU busy: the body sense may start reading "the
+  world is busy" when it is only her. The "nothing lost" row shows it.
+- The third criterion is the hard one and may fail: with the echo hidden she
+  has only the pattern of the change to go on.
+- The sense of change will also keep dividing (§6.9).
+- All consequences are scripted; she learns the script. Real consequences on
+  the real machine come only after birth.
+
+### 8.8 Incubator for this stage
+- `world.py`: `step(action)`; the kicks and their limits. `vee_body.py`: the
+  echo in `moment`, the third organ. `fetal.py`: driver (`live`, `gate`),
+  stage file must say `fetal`, state saved every simulated day, every moment,
+  kick and hidden state logged.
+- The stage file is changed from `embryo` to `fetal` only on Rocky's sign-off.
+- Cost: no helper tokens; seconds of compute.
+
+### 8.9 Decisions for Rocky
+- **D1.** Consequences simulated in this stage (as the embryo world), real
+  machine after birth? Proposed: yes.
+- **D2.** Spontaneous kicks now (2a); choosing (2b) later, once there is a
+  way for her to choose. How she should choose is open — proposals welcome.
+- **D3.** A third organ that reads change. Proposed: yes.
+- **D4.** 30 days, one kick in six moments: starting values.
