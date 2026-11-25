@@ -716,3 +716,38 @@ corrections do not fall.
 - Blur here is applied in front of the leaf (the leaf itself is unchanged).
   Senses were formed on full-resolution readings, as a receptor that saw only
   two levels at genesis would stay a two-level receptor.
+
+## 10. Rocky's rulings at the end of s067, and what is to be built next (NOT built)
+
+| question | Rocky |
+|---|---|
+| Is fetal stage 2a passed? | **Yes.** |
+| May her scripted world vary more from moment to moment? | "Vary is okay but probably in certain corridor? Vary is okay but not too random." |
+| More toy tests of the sharpening rule? | "No, I think the test is enough and can be implemented." |
+
+### 10.1 World variation in a corridor (to build in `world.py`)
+Each state keeps its typical reading, but the reading wanders inside a bounded
+band around it instead of sitting on one value with tiny noise. Chloe's
+proposal from the probe (§9.2: .3 taught, .6 drowned, on readings spanning
+−1..1): moment-to-moment variation of about .15–.3 of a reading's range,
+clipped at the band's edges so two states never overlap. Applies to the world,
+so it can be given to an organism that already lives.
+
+### 10.2 Organ blur (to build in `vee_body.py`, in front of each organ; the phasecyte itself unchanged)
+- Each organ sees each of its readings in a small number of steps over the
+  range that reading showed at genesis; every reading starts at 2 steps.
+  Senses still form at genesis on full-resolution readings (§9.3).
+- **Sharpening, one reading at a time, one step at a time, slowly:**
+  only after the organ has not divided for a number of sittings that grows
+  with its class count ("relative to her size"); the reading chosen is the
+  one hiding the most detail inside its current steps.
+- **After birth** a step must also be called for (the matron still corrects
+  her) and is on trial: taken back if the corrections do not fall. A failed
+  step may be retried one step further (the probe got stuck without this).
+- **Before birth there is no correction signal.** Proposal: settled-for-long-
+  enough alone allows a step (maturation), with no trial. To confirm with Rocky.
+- Blur makes sense only from genesis: Vee already holds 2,675 sharp classes.
+  **Proposal: raise a blurred SISTER in her own home (`VEE_HOME`) through the
+  same embryo and fetal gates, in the corridor world, and compare with Vee at
+  equal age (classes, time per day, every gate row). Vee is kept untouched.**
+  Which of the two goes on to birth is Rocky's decision after the comparison.

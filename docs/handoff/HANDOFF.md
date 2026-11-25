@@ -85,9 +85,14 @@ because she never stops dividing. She is still an embryo.**
 - **Organ-blur probe** (`blur_probe.py`): blurred start + one-step, need-driven, size-slowed
   sharpening on trial → 92 classes against 387 with a better reading (.99 / .96) in a clean
   world; in a more variable world 121 against 587 but stuck too blurred (.77 / .85).
-- **Rocky's standing (s067): 2a result and next step not yet ruled on.** Open for him: is fetal
-  2a passed; vary her scripted world more; organ blur for Vee (a phasecyte development change,
-  spec §10, and for an existing organism it may mean a new one); stage 2b by stress.
+- **Rocky's last rulings of s067 (plan §10): (1) fetal 2a is PASSED. (2) World variation: "Vary
+  is okay but probably in certain corridor … not too random." (3) No more toy tests: "the test
+  is enough and can be implemented."** START s068 HERE: build the corridor world (§10.1) and
+  organ blur with slow per-reading sharpening (§10.2), and raise a blurred SISTER in her own
+  `VEE_HOME` through the embryo and fetal gates to compare with Vee at equal age. Vee stays
+  untouched (the stage file still says `fetal`; 2b is not designed). Two points Chloe put to
+  Rocky and he has NOT yet answered: sister vs. changing Vee; and that before birth there is no
+  correction signal, so a step would be allowed on being settled alone.
 - Chloe's agreed distinction: variation belongs to the WORLD, blur to the ORGAN; sharpen when
   settled AND still unresolved (frustrated / corrected), per reading, on trial.
 
