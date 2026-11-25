@@ -1159,7 +1159,7 @@ class MixedStreamController:
         full deposit history instead of drifting with membership
         pollution (the s031 freeze-decay). Synthetic members never feed
         the sketches back (update uses window members only)."""
-        if self.manifold is None:
+        if self.manifold is None or getattr(self, "no_anneal", False):   # probe switch (s069)
             return
         self._sync_tags()
         for k, c in enumerate(self.classes):

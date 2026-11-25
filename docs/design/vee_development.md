@@ -1035,3 +1035,31 @@ logs `cap_probe_*_s069.log`; one organism, seed 0; 10 days each):
 - The sediment is not shrinking yet: 1545 of 2106 body-sense classes under 60 members; 23
   judged and 27 settled a sitting; 1920 classes still waiting to be judged for the first time.
 - Her ear spawns a composer cell at every sitting (1.0 a sitting over 20). Not examined.
+
+### 11.11 Her buffers are mostly her own replays; a test without them (s069; copy of Weiss from fetal day 60)
+
+Rocky: "7 GB is a huge tons of data … she was feed with small numbers of data isn't?" Counted
+on the killed uncapped copy: 9,408 moments lived (1.4 M numbers), but her body sense holds
+258,259 buffered members in 2,738 classes (at day 60: 172,812 from 8,640 moments). About 95 %
+of her buffers did not come from the world. The only step that adds members is annealing
+(`mixed.py _anneal`: 40 synthetic members per class from its own sketch at a settled
+sitting). The kill is the full round's workspace: 258,259 × 2,738 = 707 M pairs, 2.8 GB a
+table, several tables at once (Chloe's reading of the code, not profiled).
+
+Test (`copies/weiss60_noanneal`, switch `mixed.no_anneal`, no cap; logs
+`cap_probe_noanneal*_s069.log`; 8 days):
+
+| body-sense classes from 2086, after 8 days | members held |
+|---|---|
+| plain: 2738 (+652) | 258,259 |
+| no new synthetic members: 2327 (+241) | 172,557 (unchanged) |
+
+- New synthetic members account for roughly 60 % of the multiplying over these 8 days; she
+  still gains 241 classes on 768 moments of world. Gate rows equal (±.03).
+- Not a clean test: the 164,000 synthetic members made before day 60 stayed in her buffers
+  and were still judged. An organism raised without annealing from genesis was not tried.
+- Rocky: "it is a missing piece that need to be sewn to the triorons itself the
+  unforgettfulness actually a double edge sword". Chloe's proposal, NOT signed, NOT built:
+  fold a long-unused class back into the sibling / parent it was split from (sketches pool
+  exactly; a boundary is forgotten, not an experience); try on a copy, earliest classes
+  reported separately (rule 22).
