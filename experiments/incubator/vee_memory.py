@@ -68,6 +68,9 @@ class FactMemory:
         self.fed_rows = 0                                           # samples replayed over her whole life
         self.leaf, self.names, self.tau_leaf, self.night = None, None, float("inf"), 0
 
+    FEW = 4                                     # NIGHT=need: fewer wordings than this -> the full dream
+    RULES = "s066c"                             # bump when a night rule changes (saved states become invalid)
+
     # ---- day ---------------------------------------------------------------
     def teach(self, q: str, answer: str, h: torch.Tensor, same_as: int | None = None, **extra) -> int:
         """Hear a fact once.  ``same_as`` = this is another wording of fact ``same_as``."""
@@ -94,7 +97,11 @@ class FactMemory:
           new  only the wordings heard since the fact last slept + nper noise copies of those
           min  as ``new`` but in up to 4 short rounds of nper/4 copies; a fact stops being
                replayed as soon as she recalls its new wordings AND unseen noise copies of
-               them (minimum sleep, Rocky s066)"""
+               them (minimum sleep, Rocky s066)
+          need sleep in proportion to need: a fact she has heard in fewer than FEW (4) wordings
+               gets the full dream (all its wordings + nper copies, as ``all``); a fact heard
+               in many wordings gets minimum sleep (as ``min``).  (First try, copies = nper /
+               wordings with no check, starved her: self facts .14.)"""
         todo, t0 = self.day(), time.time()
         if not todo:
             return {"fed": 0, "kept": 0, "classes": len(self.leaf.mixed.classes) if self.leaf else 0, "s": 0.0}
@@ -103,8 +110,10 @@ class FactMemory:
         fresh = {}
         for i in todo:
             W = torch.stack(self.W[i])
-            fresh[i] = W if mode == "all" or self.slept_n[i] >= len(W) else W[self.slept_n[i]:]
-        rounds = 4 if mode == "min" else 1
+            few = mode == "need" and len(W) < self.FEW
+            fresh[i] = W if mode == "all" or few or self.slept_n[i] >= len(W) else W[self.slept_n[i]:]
+        rounds = 4 if mode in ("min", "need") else 1
+        full = {i for i in todo if mode == "need" and len(self.W[i]) < self.FEW}
         pending, fed_rows = list(todo), 0
         for _ in range(rounds):
             X, y = [], []
@@ -112,7 +121,7 @@ class FactMemory:
                 rows = (material or {}).get(i)
                 W = fresh[i]
                 if rows is None:                                    # noise copies, shared among the wordings
-                    n = self.nper // rounds
+                    n = self.nper if i in full else self.nper // rounds
                     rows = W[torch.arange(n) % len(W)] + self.resid[torch.randint(len(self.resid), (n,), generator=self.g)]
                 X.append(self.sense(torch.cat([W, rows.float()])))
                 y += [i] * (len(rows) + len(W))
@@ -131,12 +140,12 @@ class FactMemory:
             m = self.leaf.mixed
             self.names = self.leaf.member_names()                   # each class named from its CURRENT members
             self.tau_leaf = float(torch.quantile(m.classify(self.negS)[1], 1 - self.false_rate))
-            if mode != "min": break
+            if rounds == 1: break
             def fixed(i):                                           # does she know it beyond the exact words she heard?
                 W = fresh[i]                                        # probe = noise copies she was NOT fed
                 probe = W[torch.arange(12) % len(W)] + self.resid[torch.randint(len(self.resid), (12,), generator=self.g)]
                 return (self._leaf(self.sense(torch.cat([W, probe])))[0] == i).float().mean() >= 0.8
-            pending = [i for i in pending if not fixed(i)]
+            pending = [i for i in pending if i not in full and not fixed(i)]
             if not pending: break
         for _ in range(int(os.environ.get("QUIET", 0))):            # quiet boundaries: nothing new arrives, so the
             self.leaf.mixed.period_boundary()                       # phasecyte's own consolidation / annealing can run

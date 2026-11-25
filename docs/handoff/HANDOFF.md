@@ -202,6 +202,25 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   copies, not the old wordings (`new` saved little). Untested next idea: sleep per fact in
   proportion to how FEW real wordings it has (much dreaming for a fact heard once, little for a
   fact heard often). Saving the leaf after sleep is still not built.
+- **Sleep in proportion to need + saved state (Rocky s066: "test the sleep in proportion to need
+  and save her state. And then we can proceed with raising her") — DONE.**
+  `NIGHT=need` (now the default in `vee_life.py`; `FactMemory` default stays `all`): a fact heard
+  in fewer than `FEW`=4 wordings gets the full dream (all wordings + 40 copies); a fact heard in
+  many wordings gets minimum sleep. (First definition, copies = 40 / wordings with no check,
+  starved her: self facts .14.) Her 15-day life: replay 63 s (all: 281 s), 4,665 samples
+  (10,175), 222 classes (344), self right .89 (.83), near answered with another fact .87 (.73),
+  small talk answered with another fact .67 (.47; n=15 — every reduced-sleep rule was worse
+  here, .53–.67; probably real: the diffuse "do not know" class gets less dreaming). Self-test,
+  facts heard once, 3 seeds: later facts .92 (= all), childhood w0 .93, run 100 s (all ~240 s).
+  **State:** `vee_life.wake()` saves the whole `FactMemory` after every night
+  (`LIFE.state.<rule>.pt`, torch pickle, ~130 MB — mostly the noise-residual matrix; could be
+  slimmed), validated by a digest of the event prefix + `FactMemory.RULES`; waking loads it and
+  replays only later events (0 s vs 63 s). Verified: ten nights, save, load, five more nights =
+  the life relived from birth (100 of 100 exam answers identical, 222 = 222 classes). Saving is
+  not freezing. The console (`vee_memory.wake`) still replays its own life — not switched over.
+  **NEXT = raise her.** Open question put to Rocky: the environment sense fixes the length of
+  her input at birth, so adding it means a rebirth (her 15 recorded days can be relived with
+  readings attached); otherwise continue the language-only life.
 - **Mirror (Rocky s066, later stage):** "at certain stages, she might need a mirror to see
   herself" — a sense of her own state and behaviour (what she just said, how sure, how many
   facts/classes, confirmed or corrected). Links to the s011 roadmap (mirror cells,
