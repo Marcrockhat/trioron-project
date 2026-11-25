@@ -34,6 +34,7 @@ from trioron.senses.hidden_state import HiddenStateSense
 E = lambda k, d: int(os.environ.get(k, d))
 SEEDS, DAYS, TEST = E("SEEDS", 3), E("DAYS", 20), E("TEST_DAYS", 5)
 LANG, RES, WINDOW = 64, 48, 48
+P_TEXT = float(os.environ.get("P_TEXT", 0.5))                  # share of moments with a text present
 
 
 def stream(seed, S2, topic, kick_from=None):
@@ -43,7 +44,7 @@ def stream(seed, S2, topic, kick_from=None):
     for t in range((DAYS + TEST) * PER_DAY):
         raw, hid = w.step()
         lang, kind = torch.zeros(LANG), -1
-        if g.random() < 0.5:
+        if g.random() < P_TEXT:
             i = int(g.integers(len(S2))); lang, kind = S2[i], int(topic[i])
         k = (not k) if gk.random() < 1 / 10 else k
         res = torch.zeros(RES)
@@ -66,7 +67,7 @@ def genesis_pool(seed, S2, width):
         w.busy, w.full, w.elsewhere, w.window = (bool(g.random() < 0.5) for _ in range(4))
         w.t = int(g.integers(PER_DAY * 7))
         raw, _ = w.step()
-        lang = S2[int(g.integers(len(S2)))] if g.random() < 0.5 else torch.zeros(LANG)
+        lang = S2[int(g.integers(len(S2)))] if g.random() < P_TEXT else torch.zeros(LANG)
         pres = torch.tensor(g.choice([-1.0, 1.0], 3)).float()
         res = torch.tensor(g.standard_normal(RES)).float()
         rows.append(torch.cat([lang, torch.tensor(environment.vector(raw)).float(), pres, res])[:width])

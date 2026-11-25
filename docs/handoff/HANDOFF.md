@@ -13,6 +13,22 @@ rewordings beat no rewording at all, and the fact memory (day table + phasecyte 
 wired into the console: Vee answers the 40 pilot facts from memory and can be taught new ones.**
 
 ## s066 — READ THIS FIRST
+- **START HERE (s067). Rocky: "let's work through it one by one." Vee is NOT being raised; the
+  plan is `docs/design/vee_development.md` (stages 0–1 signed). Work list, in order:**
+  1. DONE s066 — why graded world states were not read: **the language block is too loud**
+     (plan §6.6). No text → busy 1.00, memory .98. Language × 0.5 or less with text in half the
+     moments → busy .95–.97, memory .84–.97. Night stays weak (.6) even with no text: the clock
+     is a smooth circle, not a switch — the gate's day/night criterion must be rethought.
+  1b. NEXT — does a language block turned down (× 0.5 / × 0.25) still support fact recall after
+     birth? Rerun the pilot/self recall with the 148-number input. Pick the block balance from
+     both results and write it into plan §6.1.
+  2. Check 1 under rich genesis needs a permutation-free agreement measure (e.g. adjusted Rand).
+  3. Collect ~3,000–5,000 Simple-Wikipedia sentence readings (`wiki.py`, ~35 min of the reflex)
+     and refit the language sense on sentences + questions (plan §6.2).
+  4. Class count still rising at day 20 (and 158 classes at day 60) — self-arrest criterion.
+  5. Only then build `vee_body.py` / `embryo.py` and run stage 1 against its gate.
+  Scratch diagnostics (`diag1.py`, `diag2.py`) were in the session scratchpad and are NOT in the
+  repo; they are ~30 lines over `germline_checks.py` (`G.P_TEXT`, `G.DAYS`, language scale).
 - **STOP RULE (Rocky, end of s066): do not raise Vee further until he signs the plan.** "We need
   to design the curriculum and the incubator before it runs rampant." Senses and perception
   come BEFORE "true birth"; basic knowledge and common sense before acting on the machine; she

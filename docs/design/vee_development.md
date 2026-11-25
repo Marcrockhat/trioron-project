@@ -262,7 +262,34 @@ place, a closed window).
   k-means. The stage-1 gate would fail today on those three.
 - Class count is still rising at day 20 (+17–34 % over the last third).
 
-## 7. Stage 1 in full — the embryo (signed off s066; gate not yet passable, see §6.5)
+### 6.6 Why graded states were not read — DIAGNOSED (s066, scratch scripts; 2 seeds, rich genesis, 20 days; her classes / k-means)
+
+| life | busy | memory full | night | window | classes used on unseen days | share of moments in her 3 biggest classes |
+|---|---|---|---|---|---|---|
+| text in half the moments | .71 / .90 | .64 / .77 | .58 / .62 | 1.00 / .87 | 14 of 47 | .55 |
+| no text at all | 1.00 / 1.00 | .98 / .95 | .61 / .83 | .97 / .94 | 43 of 72 | .11 |
+| text always | .64 / .63 | .59 / .59 | .53 / .47 | .91 / .71 | 82 of 96 | .10 |
+| half text, 60 days | .75 / .87 | .63 / .80 | .57 / .68 | 1.00 / .84 | 21 of 158 | .53 |
+| half text, language block × 0.5 | .97 / .97 | .84 / .90 | .77 / .81 | .98 / .91 | 36 of 92 | .24 |
+| half text, language block × 0.25 | .95 / 1.00 | .97 / .96 | .62 / .86 | .98 / .96 | 32 of 85 | .19 |
+| half text, language block × 0.1 | .97 / 1.00 | .97 / .95 | .60 / .86 | 1.00 / .95 | 44 of 81 | .09 |
+
+- **Cause: the language block is too loud.** With no text she reads busy and
+  memory perfectly. When a random sentence is present its 64 numbers swamp the
+  33 environment numbers and the moment falls into a few catch-all classes
+  (three classes held 55 % of her life). More days do not help. The receptors
+  are NOT scale-free between blocks, as §6.1 had assumed.
+- **Fix that works in the embryo: turn the language block down** (× 0.5 or
+  less): busy .95–.97 and memory .84–.97 with text present in half the moments.
+- **Night is a separate matter.** It is weak even with no text (.61). The clock
+  is a smooth position on a circle (two numbers), not a switch; she only sees
+  day and night sharply through the window. The gate should ask for the clock
+  differently (or accept day/night only when the window is open) — to settle.
+- **Not yet known:** whether a language block turned down that far still lets
+  her tell sentences apart after birth (stage 4). That is the next check: fact
+  recall with the 148-number input at language × 0.5 / 0.25.
+
+## 7. Stage 1 in full — the embryo (signed off s066; gate not yet passable, see §6.5–6.6)
 
 ### 7.1 What she receives
 A stream of moments. Nobody addresses her (presence = nobody), nothing is
