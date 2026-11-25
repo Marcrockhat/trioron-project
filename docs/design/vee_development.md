@@ -1063,3 +1063,48 @@ Test (`copies/weiss60_noanneal`, switch `mixed.no_anneal`, no cap; logs
   fold a long-unused class back into the sibling / parent it was split from (sketches pool
   exactly; a boundary is forgotten, not an experience); try on a copy, earliest classes
   reported separately (rule 22).
+
+### 11.12 Letting go: the fading trace and the fold (s069; Rocky: "B is good then. Lets try it"; opt-in, tried on a copy only)
+
+Rocky: "The answer should be days. No one remember facts after 30 days if it is not keep
+replayed." Checked (ideas, not proof, rule 30): learned once and never replayed, recall is
+mostly gone within a month but a trace remains (Ebbinghaus; Murre & Dros 2015 replication to
+31 days); learned well, it lasts decades, the length predicted by how well it was learned
+(Bahrick 1984, 733 people, 50 years).
+
+**Built** (`trioron/pcll/sitting.py`, `SittingCap(fold=True)`; `mixed.py _fold_stale`): each
+class keeps a fading trace of use: every sitting all traces × FADE = 25^(−1/60), plus the
+members the class received from the WORLD (replays never feed it). Under 1.0 the class is due
+and is folded into its nearest kin (the live class under the closest shared ancestor, most
+alike by template); the survivor keeps its own members in front, the sketches pool exactly,
+nothing is deleted. 25 members last 30 days unused, 400 about 56. At most
+`max(1, ceil(sqrt(classes) · 0.1))` folds a sitting (spec §4.3's recycle rate).
+
+**Her trace, rebuilt from her 90-day life log with her classes as they are at fetal day 60**
+(an approximation): classes that claim NO moment she ever lived: ear 23 of 137, body sense
+**1,935 of 2,086**, sense of change 55 of 114. About 150 body-sense classes do all the work.
+187 of her earliest 208 body-sense classes were due.
+
+**Trial** (`copies/weiss60_fold`, cap + round + fold, fetal day 60 → 90; logs
+`cap_probe_fold*_s069.log`; one organism, seed 0), against Weiss herself at day 60:
+
+| | Weiss d60 | copy at d90, cap + round + fold |
+|---|---|---|
+| classes ear / body sense / change | 137 / 2086 / 114 | 120 / 1945 / 52 |
+| folds (60 sittings) | – | 76 / 236 / 66 |
+| feels her kicks (k-means 1.00) | .94 | .92 FAIL |
+| CPU / memory rise, hers or the world's | .95 / .59 | .98 / .59 FAIL |
+| nothing lost: busy / memory / place / window | 1.00 / .93 / .98 / .98 | .98 / **.96** / .96 / .96 (memory now passes) |
+| the ear: text present | .91 | .95 |
+| s a day | 46 | 45–65 |
+| body-sense members held; body file | 172,812; 177 MB | **253,772; 226 MB** |
+
+- The class count falls for the first time in any organism; no reading fell by more than
+  .02; "memory full" rose to within the gate. 1,704 body-sense classes are still due: at 5 a
+  sitting a full clearing takes about 170 more days.
+- **Neither faster nor smaller.** Days are slower than cap + round alone (24–58 s), and she
+  holds MORE members: annealing kept writing replays into every class. Rocky expected faster
+  growth; not seen in 30 days. Chloe's reading: the replays, not the class count, now set
+  her footprint and much of her time; not profiled.
+- The fold took her ear's and her sense of change's earliest classes (all 76 and all 66
+  folds were among their first 400 names); in the body sense 5 of 236. The readings held.
