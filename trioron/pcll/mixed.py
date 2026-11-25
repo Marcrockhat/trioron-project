@@ -432,6 +432,9 @@ class MixedStreamController:
                 self._consolidate()                # settle membership [D20a]
         if quiet:
             self._anneal()                         # then re-anchor [D15]
+        if sitting is not None and not self.freeze \
+                and getattr(sitting, "fold", False):
+            self._fold_stale(sitting)              # letting go (sitting.py)
 
         return self._report(arena, "match", None, status, grow, n_div,
                             spawns=n_spawn, pruned=n_pruned,
@@ -1120,6 +1123,73 @@ class MixedStreamController:
         if dead:
             self._retire_classes(dead)
         return int(moved.sum())
+
+    def _fold_stale(self, sitting) -> int:
+        """Letting go (sitting.py): each class whose trace of use has faded
+        is folded into its NEAREST KIN — the live class under the closest
+        shared ancestor, the most alike by template if several. The
+        survivor keeps its own members in front (the folded class's are
+        the first to roll out of the buffer); the sketches pool exactly,
+        so the folded class's whole history stays. Returns folds made."""
+        if len(self.bufs) < 2:
+            return 0
+        names = [c.name for c in self.classes]
+        due = sitting.stale(names, [len(b) for b in self.bufs])
+        if not due:
+            return 0
+        self._sync_tags()
+        chain, under = {}, {}
+        for k, c in enumerate(self.classes):
+            nid = self._node.get(c.name)
+            a = self._parent_node.get(nid) if nid is not None else None
+            chain[k] = []
+            while a is not None:
+                chain[k].append(a)
+                under.setdefault(a, set()).add(k)
+                a = self._parent_node.get(a)
+        arena = self.substrate.arena
+        drop, kept = {}, set()                     # folded idx → survivor idx
+        for k in due:
+            if k in kept:
+                continue                           # it just took a class in
+            for a in chain[k]:
+                kin = [j for j in under[a] if j != k and j not in drop
+                       and len(self.bufs[j])]
+                if not kin:
+                    continue
+                j = kin[0] if len(kin) == 1 or not len(self.bufs[k]) else max(
+                    kin, key=lambda j: template_sim(self.bufs[k], self.bufs[j]))
+                drop[k] = j
+                kept.add(j)
+                break
+        gone = set()
+        for k, j in drop.items():
+            ck, cd = self.classes[j], self.classes[k]
+            self.bufs[j] = torch.cat([self.bufs[k], self.bufs[j]])[-BUF:]
+            self.tags[j] = torch.cat([self.tags[k], self.tags[j]])[-BUF:]
+            if cd.cell_id >= 0:
+                arena.state[cd.cell_id] = CellState.DORMANT
+                if ck.cell_id >= 0:
+                    arena.parent[cd.cell_id] = ck.cell_id
+            if self.manifold is not None:
+                self.manifold.merge(ck.name, cd.name)
+            if self.label_taps is not None:
+                self.label_taps.merge_counts(ck.name, cd.name)
+            for p in self._watch:
+                if cd.name in p.lineage:
+                    p.lineage.discard(cd.name)
+                    p.lineage.add(ck.name)
+            sitting.folded(self.periods, cd.name, ck.name)
+            gone.add(cd.name)
+        if self.stress is not None:                # bets on a folded class dissolve
+            self.stress.pending = [
+                (g, s) for g, s in self.stress.pending
+                if not (isinstance(s, tuple) and len(s) == 4
+                        and (s[0] in gone or s[1] in gone))]
+        self.classes = [c for k, c in enumerate(self.classes) if k not in drop]
+        self.bufs = [b for k, b in enumerate(self.bufs) if k not in drop]
+        self.tags = [t for k, t in enumerate(self.tags) if k not in drop]
+        return len(drop)
 
     def _retire_classes(self, idxs: List[int]) -> None:
         """Drop classes consolidation emptied: astrocyte row DORMANT,

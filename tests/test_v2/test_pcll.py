@@ -486,3 +486,29 @@ def test_sitting_cap_bounds_the_judging():
     assert s.choose(["a", "b"], 2) == []                # nothing new: nobody judged
     s.receive(["a", "b"], torch.tensor([1, 1, 0, -1]))
     assert s.choose(["a", "b"], 3) == [1, 0]            # busiest first
+
+
+def test_stale_classes_fold_into_kin():
+    """s069: with fold on, a class the world stops feeding fades and is folded
+    into kin — the class count falls, its sketch history is kept in the survivor."""
+    from trioron.pcll import PhasecyteLeaf
+    from trioron.pcll.sitting import SittingCap, FADE
+    assert abs(25 * FADE ** 60 - 1.0) < 1e-6
+    g = torch.Generator().manual_seed(0)
+    centres = torch.randn(12, 6, generator=g) * 3
+    draw = lambda n, hi: centres[torch.randint(hi, (n,), generator=g)] + 0.05 * torch.randn(n, 6, generator=g)
+    X = draw(4000, 12)
+    leaf = PhasecyteLeaf(lambda x: x, X[:200], 0, 0, window=200, class_cap=None, composer=False, verbose=False)
+    leaf.mixed.sitting = cap = SittingCap(fold=True)
+    for i in range(200, 4000, 200):
+        leaf.mixed.observe(X[i:i + 200]); leaf.sub.end_task()
+    before = len(leaf.mixed.classes)
+    total = sum(s._n for s in leaf.mixed.manifold.sketches.values())
+    assert before > 3 and not cap.folds
+    for _ in range(150):                               # the world narrows to two of its states
+        leaf.mixed.observe(draw(200, 2)); leaf.sub.end_task()
+    assert cap.folds and len(leaf.mixed.classes) < before
+    assert len(leaf.mixed.classes) == len(leaf.mixed.bufs) == len(leaf.mixed.tags)
+    assert sum(s._n for s in leaf.mixed.manifold.sketches.values()) >= total   # nothing deleted
+    best, _ = leaf.mixed.classify(draw(200, 2))
+    assert (best >= 0).all()
