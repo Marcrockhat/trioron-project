@@ -100,3 +100,24 @@ def test_dormant_grad_mask():
 def test_pressure_uncapped():
     sub = _make_substrate()
     assert sub.pressure == 0.0
+
+
+def test_arena_enlarge_keeps_everything():
+    """Arena.enlarge: same ids, same values, same forward; fresh slots as in a new arena."""
+    import pytest
+    torch.manual_seed(0)
+    sub = _make_substrate(capacity=16)
+    a = sub.arena
+    x = torch.randn(5, 4)
+    y0, cur, ecur = sub.forward(x).clone(), a.cursor, a.edge_cursor
+    w0, par0 = a.edge_weight[:ecur].clone(), a.parent[:cur].clone()
+    a.enlarge()
+    assert a.capacity == 32 and (a.cursor, a.edge_cursor) == (cur, ecur)
+    assert torch.equal(a.edge_weight[:ecur], w0) and torch.equal(a.parent[:cur], par0)
+    assert not a.alive[cur:].any() and (a.parent[cur:] == -1).all() and a.forward_inclusion[cur:].all()
+    assert (a.branch_alpha[cur:, 0] == 1).all() and (a.n_branches[cur:] == 1).all()
+    assert torch.equal(sub.forward(x), y0)
+    a.alloc(20)                                    # past the old 16 slots
+    capped = Arena(Envelope(max_cells=8))
+    with pytest.raises(RuntimeError):
+        capped.enlarge()

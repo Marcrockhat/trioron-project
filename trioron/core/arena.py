@@ -143,6 +143,34 @@ class Arena:
         self.phenotype_cache[start : start + n] = LINEAR
         return ids
 
+    def enlarge(self, capacity: int | None = None) -> None:
+        """Give the arena more slots (default: double).  A boundary operation
+        like compaction, never part of :meth:`alloc` — growth itself stays
+        append-only (commitment 3).  Cell and edge ids, the cursors and every
+        stored value are unchanged; fresh slots hold what a new arena holds.
+        Refused past ``envelope.max_cells``.  The tensors are replaced, so an
+        optimizer built on the old ones must be rebuilt by the caller."""
+        new = capacity or 2 * self.capacity
+        if new <= self.capacity:
+            return
+        if self.envelope.max_cells is not None and new > self.envelope.max_cells:
+            raise RuntimeError(
+                f"Arena cannot enlarge to {new}: envelope.max_cells = {self.envelope.max_cells}")
+        fresh = Arena(self.envelope, device=self.device, capacity=new, branch_cap=self.branch_cap)
+        sizes = (self.capacity, self._edge_capacity)
+        for name, old in list(self.__dict__.items()):
+            big = fresh.__dict__.get(name)
+            if (not isinstance(old, torch.Tensor) or name.startswith("pool_")
+                    or not isinstance(big, torch.Tensor)
+                    or old.shape[0] not in sizes or big.shape[0] == old.shape[0]):
+                continue
+            with torch.no_grad():
+                big[: old.shape[0]] = old
+            if old.requires_grad:
+                big.requires_grad_(True)
+            setattr(self, name, big)
+        self.capacity, self._edge_capacity = new, fresh._edge_capacity
+
     # ── Edge mutation ─────────────────────────────────────────────
 
     def add_edges(

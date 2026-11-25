@@ -439,3 +439,23 @@ def test_member_names_reads_current_members_not_ledger():
     best, _ = leaf.mixed.classify(X)
     ok = best >= 0
     assert (names[best[ok]] == y[ok]).float().mean() > 0.8
+
+
+def test_class_rows_outgrow_the_arena():
+    """s069: with no cell cap a class always gets its arena row — the arena
+    enlarges at the boundary instead of leaving the class rowless (-2)."""
+    from trioron.pcll import PhasecyteLeaf
+    from trioron.pcll import mixed as mx
+    g = torch.Generator().manual_seed(0)
+    centres = torch.randn(12, 6, generator=g) * 3
+    X = (centres[torch.randint(12, (3000,), generator=g)] + 0.05 * torch.randn(3000, 6, generator=g))
+    mk = lambda cap: PhasecyteLeaf(lambda x: x, X[:200], 0, 0, window=200, class_cap=None,
+                                   composer=False, capacity=cap, verbose=False)
+    start = mk(8192).sub.arena.cursor + mx.ROW_HEADROOM      # an arena 'full' from the first class on
+    leaf = mk(start)
+    a = leaf.sub.arena
+    for i in range(200, 3000, 200):
+        leaf.mixed.observe(X[i:i + 200]); leaf.sub.end_task()
+    assert len(leaf.mixed.classes) > 1
+    assert a.capacity > start
+    assert all(c.cell_id >= 0 for c in leaf.mixed.classes)

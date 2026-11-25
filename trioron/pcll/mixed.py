@@ -62,6 +62,7 @@ from .resolve import EMPTY, FRUSTRATED, RESOLVED
 from .signature import LearnedClass
 from .stress import DISCRIMINATION
 
+ROW_HEADROOM = 64   # free arena rows kept ahead of class births (uncapped envelope)
 DIV_TRIES = 4   # dims judged per division when the composer arm is on
                 # (§4b item 4; the division-only path keeps the M2
                 # worst-dim semantics, tries=1)
@@ -1263,9 +1264,14 @@ class MixedStreamController:
             c.T = b.mean(0)
             c.m = torch.full_like(c.m, float(len(b)))
             if c.cell_id == -1:
+                # uncapped: the arena follows her, with room left for the
+                # composer's spawns before the next boundary
+                if arena.cursor + ROW_HEADROOM > arena.capacity and \
+                        arena.envelope.max_cells is None:
+                    arena.enlarge()
                 try:
                     cid = int(arena.alloc(1).item())
-                except RuntimeError:
+                except RuntimeError:       # a set cell cap: no row
                     c.cell_id = -2
                     continue
                 arena.forward_inclusion[cid] = False
