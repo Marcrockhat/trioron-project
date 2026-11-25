@@ -30,8 +30,12 @@ DAYS, TEST, P_TEXT, P_KICK = E("DAYS", 30), E("TEST_DAYS", 5), E("P_TEXT", 0.5),
 DAY_BUDGET = E("DAY_BUDGET", 30.0)
 CORRIDOR = 0.0              # set from her own world in gate(): unseen days come from the same kind of world
 LOG = f"{vb.HOME}/fetal_log.pt"
-EMBRYO = {"busy": 0.99, "full": 0.95, "elsewhere": 1.00, "window": 1.00}     # her embryo gate values (plan §7.3a)
+EMBRYO = {"busy": 0.99, "full": 0.95, "elsewhere": 1.00, "window": 1.00}     # Vee's embryo gate values (plan §7.3a)
 EAR_EMBRYO = 0.75
+_own = f"{vb.HOME}/embryo_values.json"      # another organism's own embryo gate values, written by hand from her gate log
+if os.path.exists(_own):
+    import json
+    EMBRYO = json.load(open(_own)); EAR_EMBRYO = EMBRYO.pop("ear")
 # what each acting kick really moves, as columns of the kin organ's 35 change numbers
 # (33 environment readings, then held, marks); environment.NAMES gives the order
 MOVES = {"work": {8, 10}, "hold": {5, 6, 26, 33}, "let go": {5, 6, 26, 33}, "mark": {34}, "wipe": {34}}

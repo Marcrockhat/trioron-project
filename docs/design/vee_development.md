@@ -755,8 +755,12 @@ so it can be given to an organism that already lives.
 
 ## 11. The sister: a new genesis (s068; Rocky: "lets start with a new genesis")
 
-A second organism, raised from genesis in her own home, `outputs/incubator/sister/`
-(`VEE_HOME`; the directory name is a placeholder — **her name is Rocky's to give**).
+**Names (Rocky, s068): the first sister is Weiss, the second is Wile.** Homes:
+`outputs/incubator/weiss/` (was `sister/`; her s068 logs are named `sister_*`) and
+`outputs/incubator/wile/` (was `sister2/`; logs `sister2_*`). Wile = Weiss's
+germline plus "none" and the ladders from her first moment (§11.5).
+
+Weiss: a second organism, raised from genesis in her own home (`VEE_HOME`).
 Vee is not touched. Same germline as Vee except the two things under test: the
 same 148-number layout, the same language sense (Vee's `sense.pt`, copied), the
 same seed (0), so she lives the same course of world events and hears the same
@@ -827,3 +831,25 @@ The time alarm is now an absolute budget (30 s a simulated day, rule 9).
 - Her fetal stage is NOT entered: the embryo gate is read by Rocky first.
 - `world.py`, old quirk: a work kick in an already busy world lowers the CPU
   reading to .85. Left as is so Vee's world stays identical.
+
+### 11.6 Weiss's embryo gate (s068; logs `sister_embryo_s068.log`, `sister_embryo_gate_s068.log`; one organism, seed 0, same course of events as Vee)
+
+| | Vee | Weiss |
+|---|---|---|
+| busy / memory full / place / window (k-means) | .99 / .95 / 1.00 / 1.00 (1.00 / .99 / .93 / .99) | 1.00 / 1.00 / 1.00 / 1.00 (1.00 / .99 / .90 / .99) |
+| night, reported | .55 (.89) | .92 (.85) |
+| ear: text present | .75 | .93 |
+| stability day 20 → 30, same grouping | .61 | .89 |
+| body sense classes day 20 → 30; ear | 86 → 141; 13 | 61 → 82; 44 |
+| composer cells ear / body sense (trials) | 0 / 0 (0) | 4 / 0 (55 / 0) |
+| time per simulated day | 0.5 s | 126 s (last five days); stopped once by the 30 s guard on day 6, budget raised to 900 s (Rocky: "we can raise the daily budget") |
+| sharpening steps | – | none in 30 days: never settled for 3 + classes // 8 sittings |
+
+- The gate passes every row. Corridor and blur are tested together; which of
+  them gave what is not known (no sharp organism was raised in the corridor).
+- Night is partly luck of the cut: one clock number cut in the middle splits
+  the day at 06:00 / 18:00.
+- The cost is the ear's composer search (it never held a trial in Vee).
+- **Rocky, s068: "Yes"** to her fetal stage. Stage file set to `fetal` by
+  hand; her own embryo values are in `embryo_values.json` for the "nothing
+  lost" rows. Her sense of change is born at same / changed (§11.5).

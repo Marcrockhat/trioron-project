@@ -163,31 +163,79 @@ def trial_ratio(q: torch.Tensor, spec: ComposerSpec,
     return r, (1.0 - null_r(q, spec, g)) / (1.0 - r)
 
 
+def _carve_cols(phi: torch.Tensor) -> torch.Tensor:
+    """``carve_r`` for many composed dims at once: phi [n, M] -> r [M].
+    The same circular 2-means and best-child coherence, column by column
+    (s068: the search is the cost of a mixed organ; one pass over all
+    candidates replaces a Python call per candidate)."""
+    n = len(phi)
+    z = torch.exp(1j * phi)
+    m = z.mean(0)
+    sd = torch.sqrt((-2 * torch.log(m.abs().double().clamp(min=1e-6))).clamp(min=1e-4)).to(phi.dtype)
+    mu = torch.angle(m)
+    c0, c1 = mu - sd, mu + sd
+    for _ in range(10):
+        side = (1 - torch.cos(phi - c1)) < (1 - torch.cos(phi - c0))
+        n1 = side.sum(0)
+        s1, s0 = (z * side).sum(0), (z * ~side).sum(0)
+        c0 = torch.where(n1 < n, torch.angle(s0 / (n - n1).clamp(min=1)), c0)
+        c1 = torch.where(n1 > 0, torch.angle(s1 / n1.clamp(min=1)), c1)
+    n1 = side.sum(0)
+    r1 = ((z * side).sum(0) / n1.clamp(min=1)).abs()
+    r0 = ((z * ~side).sum(0) / (n - n1).clamp(min=1)).abs()
+    return torch.where(torch.minimum(n1, n - n1) < MIN_CHILD, torch.zeros_like(r0), torch.maximum(r0, r1))
+
+
+def _carve_many(q: torch.Tensor, specs: List[ComposerSpec], chunk: int = 4096) -> List[float]:
+    """``carve_r(q, spec)`` for every spec, in order."""
+    out: List[float] = []
+    for k in range(0, len(specs), chunk):
+        phi = torch.stack([2 * math.pi * sp.pockets(q) / N_QUANTA for sp in specs[k:k + chunk]], 1)
+        out += _carve_cols(phi).tolist()
+    return out
+
+
+def _null_r(q: torch.Tensor, spec: ComposerSpec, g: torch.Generator) -> float:
+    """``null_r`` with its three shuffles carved in one pass (same draws,
+    same order)."""
+    cols = []
+    for _ in range(3):
+        shuf = q.clone()
+        shuf[:, spec.j] = q[torch.randperm(len(q), generator=g), spec.j]
+        cols.append(2 * math.pi * spec.pockets(shuf) / N_QUANTA)
+    r = _carve_cols(torch.stack(cols, 1)).tolist()
+    return r[0] / 3 + r[1] / 3 + r[2] / 3
+
+
+def _ratio(r: float, q: torch.Tensor, spec: ComposerSpec, g: torch.Generator) -> float:
+    return 0.0 if r < SPAWN_R or r >= 1.0 else (1.0 - _null_r(q, spec, g)) / (1.0 - r)
+
+
 def best_candidate(q: torch.Tensor, wired: List[int],
                    taken: Set[ComposerSpec], seed: int
                    ) -> Tuple[Optional[ComposerSpec], float, float]:
     """Overproduce candidates over importance-gated pairs; select on one
     half, confirm on the held-out half (failure modes 1-3). Returns
-    (spec, carve, ratio) of the winner, or (None, 0, ratio-floor)."""
+    (spec, carve, ratio) of the winner, or (None, 0, ratio-floor).
+
+    The carve of every candidate on the first half is computed in one
+    pass; the permutation nulls and the held-out half then run in the
+    original candidate order, so the random draws are the same."""
     best, best_ratio, best_r = None, NULL_RATIO, 0.0
     if len(q) < 4 * MIN_CHILD:        # split-half must seat 2×2 children
         return best, best_r, best_ratio
     g = torch.Generator().manual_seed(seed)
     half = len(q) // 2
     q1, q2 = q[:half], q[half:]
-    for i in wired:
-        for j in wired:
-            if j <= i:
-                continue
-            for spec in candidates(i, j):
-                if spec in taken:
-                    continue
-                r1, ratio1 = trial_ratio(q1, spec, g)
-                if ratio1 <= best_ratio:
-                    continue
-                _, ratio2 = trial_ratio(q2, spec, g)
-                if ratio2 > NULL_RATIO:
-                    best, best_ratio, best_r = spec, ratio1, r1
+    specs = [spec for i in wired for j in wired if j > i
+             for spec in candidates(i, j) if spec not in taken]
+    for spec, r1 in zip(specs, _carve_many(q1, specs)):
+        ratio1 = _ratio(r1, q1, spec, g)
+        if ratio1 <= best_ratio:
+            continue
+        ratio2 = _ratio(_carve_many(q2, [spec])[0], q2, spec, g)
+        if ratio2 > NULL_RATIO:
+            best, best_ratio, best_r = spec, ratio1, r1
     return best, best_r, best_ratio
 
 
