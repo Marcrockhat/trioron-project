@@ -407,6 +407,30 @@ class TestD20Membership:
         moved = m._consolidate()
         assert moved >= 30                          # strays went home
 
+    def test_margins_in_chunks_equal_the_whole_table(self, monkeypatch):
+        """[s070] the best class and its margin are taken inside each
+        row chunk; the members x classes table is never held whole.
+        Bit-identical to the whole table, raw-E and margin ranking."""
+        import trioron.pcll.mixed as mx
+        m, z = self._mixed()
+        g = torch.Generator().manual_seed(4)
+        m.bufs.append(z(1000 * torch.rand(80, 4, generator=g)))  # a weak template
+        Z = z(1000 * torch.rand(501, 4, generator=g))
+        T = torch.stack([b.mean(0) for b in m.bufs])
+        E = (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1)
+        sig = ((T.abs() ** 2).sum(-1) / 2).sqrt().clamp_min(1e-9)
+        monkeypatch.setattr(mx, "EVIDENCE_ELEMS", 7 * 3 * 4)     # 7 rows a chunk
+        assert torch.equal(m._evidence(Z, T), E)
+        for settled, ref in ((0, E), (m.SETTLE_STREAK, E / sig)):
+            m._settled = settled
+            best, marg = m._margins(Z)
+            want = ref.argmax(1)
+            assert torch.equal(best, want)
+            assert torch.equal(
+                marg, (E / sig).gather(1, want.unsqueeze(1)).squeeze(1))
+        best, marg = m._margins(Z[:0])                           # no rows
+        assert best.shape == (0,) and marg.shape == (0,)
+
     def test_classify_reject_option(self):
         m, z = self._mixed()
         g = torch.Generator().manual_seed(3)

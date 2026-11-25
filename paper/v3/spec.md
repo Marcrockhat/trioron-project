@@ -3590,7 +3590,7 @@ package dependencies) because the scheduler performs the injection and
 | `stress.py` | empty/ambiguity stress drivers, habituation, conserved council vote routing; per-class settlement (settle/decide/attach_subjects), gene-targeted composer transfers | 10.6, 10.8 |
 | `progenitor.py` | germline (progenitor + council + vote book) and period-1 perception generation: census, first sitting, natal replay, handover | 10.6 |
 | `division.py` | split-vs-keep judgment: worst-dim (or multi-try) circular 2-means, per-dim acceptance, noise-slicing null | 10.7 |
-| `mixed.py` | the mixed-stream boundary meeting: membership, canonical frame, judgment, trials orchestration, execution, annealing, freeze, state_dict | 10.7–10.9 |
+| `mixed.py` | the mixed-stream boundary meeting: membership, canonical frame, judgment, trials orchestration, execution, annealing, freeze, state_dict; membership never holds the members × classes table whole — best class and margin taken per row chunk, bit-identical (s070, v0.3.5) | 10.7–10.9 |
 | `composer.py` | genome candidate set + affine-folded spawns, residual-incoherence trial statistic, importance gating, prune, ComposerPending | 10.8 |
 | `labels.py` | label tap bank: labels as reference carriers — per-label demodulation taps over receptor pockets (write-only from learning's side; naming/mixture readout) | s034 first cut; spec § pending gates |
 | `manifold.py` | per-class pocket-space μ/σ sketches on class astrocyte rows: annealing, σ-readout, replay, persistence | 10.9 |

@@ -69,6 +69,11 @@ DIV_TRIES = 4   # dims judged per division when the composer arm is on
                 # worst-dim semantics, tries=1)
 
 
+EVIDENCE_ELEMS = 25_000_000   # complex elements one evidence chunk may hold
+                              # (~200 MB); bounds the peak of every
+                              # members × classes comparison
+
+
 class MixedStreamController:
     """Attach after period 1; owns the boundary meeting for periods 2+."""
 
@@ -468,14 +473,16 @@ class MixedStreamController:
         sum is over F in the same order; chunking only partitions
         rows) with bounded peak memory — the full intermediate at
         image scale (51k pooled members × 128 classes × 128 dims,
-        complex64) is ~6.7 GB and killed WSL2 headroom [s034]."""
-        rows = max(1, int(25_000_000 / max(1, T.shape[0] * T.shape[1])))
+        complex64) is ~6.7 GB and killed WSL2 headroom [s034]. The
+        chunks are written into ONE table (a list + cat held two)."""
+        rows = max(1, int(EVIDENCE_ELEMS / max(1, T.shape[0] * T.shape[1])))
         if len(Z) <= rows:
             return (Z.unsqueeze(1) * T.conj().unsqueeze(0)).real.sum(-1)
-        return torch.cat([
-            (Z[i:i + rows].unsqueeze(1) * T.conj().unsqueeze(0))
-            .real.sum(-1)
-            for i in range(0, len(Z), rows)])
+        E = torch.empty(len(Z), T.shape[0], dtype=T.real.dtype)
+        for i in range(0, len(Z), rows):
+            E[i:i + rows] = (Z[i:i + rows].unsqueeze(1)
+                             * T.conj().unsqueeze(0)).real.sum(-1)
+        return E
 
     def _margins(self, Z: torch.Tensor):
         """Per-row (raw-E best class, that class's margin) — the
@@ -484,13 +491,28 @@ class MixedStreamController:
         for the chosen class: σ_c = √(Σ|T_c|²/2), margin = E/σ.
         NOTE (s033, for Rocky): argmaxing E/σ INSTEAD of raw E (the
         resolver's own ranking) measured +0.051 on the M2 gate — a
-        candidate default change, not taken silently."""
+        candidate default change, not taken silently.
+
+        The members × classes table is NEVER held whole [s070]: only a
+        row's best class and that class's margin are kept, so they are
+        taken inside each row chunk and written in place. Bit-identical
+        to the whole table; without it a full round at 172,812 members
+        × 2,086 classes peaked 4.2 GB over a 177 MB organism (three
+        tables alive at once) and the kernel killed an uncapped one
+        near 2,700 classes."""
         T = torch.stack([b.mean(0) for b in self.bufs])
-        E = self._evidence(Z, T)
         sig = ((T.abs() ** 2).sum(-1) / 2).sqrt().clamp_min(1e-9)
         use_margin = self.member_margin and self._skeptical
-        best = (E / sig).argmax(1) if use_margin else E.argmax(1)
-        marg = (E / sig).gather(1, best.unsqueeze(1)).squeeze(1)
+        rows = max(1, int(EVIDENCE_ELEMS / max(1, T.shape[0] * T.shape[1])))
+        best = torch.empty(len(Z), dtype=torch.long)
+        marg = torch.empty(len(Z), dtype=sig.dtype)
+        for i in range(0, len(Z), rows):
+            E = self._evidence(Z[i:i + rows], T)       # one chunk, no cat
+            S = E / sig
+            k = S.argmax(1) if use_margin else E.argmax(1)
+            best[i:i + rows] = k
+            marg[i:i + rows] = S.gather(1, k.unsqueeze(1)).squeeze(1)
+            del E, S, k
         return best, marg
 
     GATE_FRAC = 0.6     # adaptive gate floor as a fraction of the coherent
