@@ -38,6 +38,22 @@ The fifteen-day Vee is a rehearsal, not the organism this plan raises.
    the mirror; they are not bolted on from outside after birth.
 8. A stage is left only through its gate, signed by Rocky.
 
+## 1a. Who she interacts with (Rocky s066: "interaction is needed to know that certain actions raise consequences. The only interactor … probably just you?")
+
+No. The matron is one of five, and not the first.
+
+| interactor | what it gives her | cost | from stage |
+|---|---|---|---|
+| **The machine itself** | physical consequences: she acts and her own readings change (work → CPU busy rises; hold → memory fills; leave a mark → it is there next time). Honest, immediate, repeatable. | free, unlimited | 2 |
+| **The outside world** | things that happen whether or not she acts (night comes, rain, another process gets busy). Teaches that not everything is her doing. | free (simulated) | 1 |
+| **The reflex (Qwen)** | she can put a question to it and get words back; sometimes wrong. | free, local | 4 |
+| **The matron (Chloe)** | social consequences: answered, confirmed, corrected, left in silence. The only source of language teaching. | helper tokens | 3 |
+| **Rocky** | rare, through the console. | his time | 4 |
+| *(later)* another organism | a peer who also acts. | compute | 5+ |
+
+Consequence learning therefore starts with the machine, before birth, and
+does not depend on the matron being quick or cheap.
+
 ## 2. Stages
 
 Each stage lists: what she receives, what should form, the gate, and what the
@@ -68,14 +84,22 @@ the sandbox walls, the matron's role. Fixed before anything runs.
 
 ### Stage 2 — Fetal: body and first reflexes
 - **Receives:** the same world, plus readings of herself: her own memory use,
-  how much she holds, whether she just emitted something (action echo).
-  She may now *emit*: a reply or nothing.
-- **Should form:** the difference between "I did that" and "the world did
-  that"; staying quiet when nothing addresses her.
-- **Gate:** her emissions are predicted by her own echo channel and not by
-  world changes; silence when the input is ambient.
-- **Incubator:** the echo channel; a rule that nothing she emits is answered
-  yet (no teaching).
+  how much she holds, what she just did (action echo).
+- **May do (a baby's kicks — tiny, safe, each with a consequence she can
+  sense):** stay still; *work* (a short burst of computing → the CPU reading
+  rises, then falls); *hold* / *let go* (take or release a little memory →
+  the memory reading moves); *mark* / *wipe* (leave or remove a mark in her
+  scratch space → a reading that is still there after sleep). The machine
+  answers every action truthfully; nobody speaks to her.
+- **Should form:** which changes follow her own actions and which come from
+  the world; that an action has a cost (work makes the machine busy); that
+  some consequences last (a mark) and some fade (a burst).
+- **Gate:** given an action she can tell which reading will move, and given a
+  change she can tell whether she caused it — both above the control. She
+  stays still when nothing calls for action (no thrashing).
+- **Incubator:** the action set with hard limits (burst ≤ a fraction of a
+  second, memory ≤ a few MB, marks only in scratch), the echo channel, the
+  memory ceiling and a rate limit on actions.
 
 ### Stage 3 — Birth: the first exchange
 Birth is the moment she is first addressed by the matron and her reply is
@@ -110,7 +134,8 @@ what she actually said, she sleeps (by need), her state is saved.
   measure improves and stays improved.
 
 ### Stage 6 — Acting in the digital world
-Only after common sense. Actions in the sandbox (incubator design §4): read a
+Only after common sense. The fetal actions were kicks; these are deeds with
+meaning. Actions in the sandbox (incubator design §4): read a
 file, look something up, run code the reflex wrote, and sense the consequence
 through her environment readings (CPU, memory, files). Fixed small action set,
 bubblewrap isolation, no network.
@@ -156,3 +181,4 @@ She is told what was simulated. Rocky decides when.
 4. Does the fifteen-day Vee end here (a rehearsal), or should her recorded
    days be relived by the new organism after birth?
 5. Which stage do you want written out in full detail first? (Proposal: stages 0–1.)
+6. The fetal action set (work, hold / let go, mark / wipe, stay still): right size, or more / fewer?
