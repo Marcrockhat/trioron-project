@@ -472,7 +472,7 @@ rather than tune until it passes.
    join after birth.
 3. Half of the moments with ambient text, 30 days: starting values only.
 
-## 8. Stage 2 in full — fetal: body and first kicks (DRAFT s067, awaiting Rocky's sign-off; nothing built)
+## 8. Stage 2 in full — fetal: body and first kicks (D1–D4 signed by Rocky s067: "Yes to all"; 2a BUILT and run, see §8.10)
 
 ### 8.0 Is she really here already? (Rocky: "It's fast, isn't it?")
 Fast in our time: her 30 days took 15 seconds, because the world is scripted
@@ -564,3 +564,35 @@ action). Text stays present in half the moments.
   way for her to choose. How she should choose is open — proposals welcome.
 - **D3.** A third organ that reads change. Proposed: yes.
 - **D4.** 30 days, one kick in six moments: starting values.
+
+### 8.10 Fetal run and gate result (s067; `fetal.py`, logs `fetal_s067.log`, `fetal_gate_s067.log`; Vee, one organism)
+
+**Stopped by the time alarm on fetal day 17 of 30** (a day took 2.1 s, more
+than twice day 5's 0.3 s). State kept; she is 47 days old; the embryo is
+backed up as `body_embryo_day30.pt`. The gate below is on those 17 days.
+
+| criterion | result | |
+|---|---|---|
+| feels her kicks (which of 6 actions; chance .17) | hers .98, k-means 1.00 | pass |
+| knows what a kick moves (echo shown, changes hidden) | work 1.00, hold .78, let go .00, mark .00, wipe .20 → 2 of 5 | **FAIL** (≥ 4) |
+| CPU rise: hers or the world's, echo hidden | hers 1.00, k-means .93, base .57 | pass |
+| memory rise: hers or the world's, echo hidden | hers .59, k-means .97, base .59 | **FAIL** |
+| nothing lost: busy / memory / place / window | 1.00 / .97 / 1.00 / .97 | pass |
+| the ear: text present | .66 (embryo .75) | **FAIL** |
+| lasting: holding something / a mark exists, from the body sense | .91 / .73 (base .90 / .71) | reported: not read |
+| cost | classes ear 19 → 37, body sense 143 → 287, sense of change 2 → 80; time per day 0.3 → 1.5 s | alarm |
+
+Reading (Chloe's, one organism, 17 days, 10–18 unseen kicks per action):
+- She feels her kicks, and she tells her own CPU burst from a busy world
+  without the echo, better than the control.
+- She does not tell her own memory use from the world's, and she connects
+  only two of five kicks to what they move.
+- The body sense doubled its classes in 17 days after the echo woke — much
+  faster than in the embryo. The alarm threshold was Chloe's choice and the
+  absolute time is small (2 s a day), but the growth is real.
+- The ear got worse at "text present" with nothing changed for it; not
+  diagnosed.
+
+**Gate not passed. She stays fetal, stopped at day 17, until Rocky decides**
+whether to let her finish the 30 days (raise or replace the time alarm) and
+what to do about the three failed rows.

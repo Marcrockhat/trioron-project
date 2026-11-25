@@ -12,6 +12,17 @@ and must NEVER enter her input:
     window     the window to the outside is open
 
     w = World(seed);  raw, hidden = w.step();  x = environment.vector(raw)
+
+Stage 2 (fetal, plan §8.2): ``step(action)`` lets her kick.  The world answers in the
+readings she already has; ``raw["held"]`` and ``raw["marks"]`` feed her echo block.
+    still    nothing
+    work     CPU busy now and load 1 min rise (not processes, not traffic); fades next moment
+    hold     takes a little memory (her own memory, RAM used); until let go; at most 4
+    let go   releases one hold
+    mark     leaves a mark; stays; at most 8
+    wipe     removes one mark
+An action that cannot happen (let go with nothing held, …) does nothing.  Actions use no
+random numbers, so the world's own course is the same with or without her.
 """
 from __future__ import annotations
 import math, os, sys
@@ -19,20 +30,32 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 
 PER_DAY = 96
+ACTIONS = ("still", "work", "hold", "let go", "mark", "wipe")
+MAX_HELD, MAX_MARKS = 4, 8
 HIDDEN = ("night", "busy", "full", "elsewhere", "window")
 
 
 class World:
+    held = marks = 0            # defaults for a world saved before she could kick (the embryo's)
+    worked = 0.0
+
     def __init__(self, seed: int = 0, noise: float = 0.05):
         self.r, self.noise, self.t = np.random.default_rng(seed), noise, 0
         self.busy = self.full = self.elsewhere = self.window = self.rain = self.someone = False
         self.load5 = 0.1
+        self.held = self.marks = 0
+        self.worked = 0.0                                         # what is left of her last burst
 
     def _flip(self, state: bool, mean_on: float, mean_off: float) -> bool:
         """Markov switch with mean dwell times in moments."""
         return (not state) if self.r.random() < 1 / (mean_on if state else mean_off) else state
 
-    def step(self) -> tuple[dict, dict]:
+    def can(self, action: int) -> bool:
+        a = ACTIONS[action]
+        return {"hold": self.held < MAX_HELD, "let go": self.held > 0, "mark": self.marks < MAX_MARKS,
+                "wipe": self.marks > 0}.get(a, True)
+
+    def step(self, action: int = 0) -> tuple[dict, dict]:
         r, n = self.r, lambda v, s=1.0: float(v + self.noise * s * self.r.standard_normal())
         hour = (self.t % PER_DAY) / 4
         night = hour < 6 or hour >= 18
@@ -58,6 +81,15 @@ class World:
             "daylight": n(light) if w else None, "temperature_c": n(22 + 8 * light, 20) if w else None,
             "rain": self.rain if w else None, "someone_here": self.someone if w else None,
         }
+        a = ACTIONS[action] if self.can(action) else "still"
+        self.held += (a == "hold") - (a == "let go")
+        self.marks += (a == "mark") - (a == "wipe")
+        self.worked = 0.5 if a == "work" else 0.4 * self.worked       # a burst, then it fades
+        if self.worked > 0.05:                                        # never above what a busy world gives
+            raw["busy"] = min(raw["busy"] + self.worked, 0.85); raw["load1"] = min(raw["load1"] + self.worked, 0.9)
+        raw["ram_used"] = min(raw["ram_used"] + 0.05 * self.held, 1.0)
+        raw["own_mb"] += 300 * self.held
+        raw["held"], raw["marks"] = self.held, self.marks
         hidden = {"night": night, "busy": self.busy, "full": self.full, "elsewhere": self.elsewhere, "window": w}
         self.t += 1
         return raw, hidden

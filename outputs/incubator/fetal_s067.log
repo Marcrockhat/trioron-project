@@ -1,0 +1,18 @@
+[kin is born: 38 receptors of 43; she is 30 days old]
+  fetal day   1: classes {'ear': 19, 'soma': 143, 'kin': 2}, 0.3 s
+  fetal day   2: classes {'ear': 16, 'soma': 146, 'kin': 4}, 0.3 s
+  fetal day   3: classes {'ear': 20, 'soma': 150, 'kin': 6}, 0.3 s
+  fetal day   4: classes {'ear': 24, 'soma': 153, 'kin': 8}, 0.3 s
+  fetal day   5: classes {'ear': 26, 'soma': 155, 'kin': 11}, 0.3 s
+  fetal day   6: classes {'ear': 20, 'soma': 159, 'kin': 18}, 0.9 s
+  fetal day   7: classes {'ear': 29, 'soma': 173, 'kin': 21}, 0.6 s
+  fetal day   8: classes {'ear': 21, 'soma': 176, 'kin': 20}, 0.7 s
+  fetal day   9: classes {'ear': 25, 'soma': 179, 'kin': 30}, 0.7 s
+  fetal day  10: classes {'ear': 31, 'soma': 179, 'kin': 29}, 0.9 s
+  fetal day  11: classes {'ear': 24, 'soma': 210, 'kin': 36}, 1.0 s
+  fetal day  12: classes {'ear': 31, 'soma': 209, 'kin': 35}, 1.2 s
+  fetal day  13: classes {'ear': 27, 'soma': 242, 'kin': 51}, 1.2 s
+  fetal day  14: classes {'ear': 34, 'soma': 261, 'kin': 50}, 1.9 s
+  fetal day  15: classes {'ear': 36, 'soma': 267, 'kin': 66}, 1.0 s
+  fetal day  16: classes {'ear': 29, 'soma': 270, 'kin': 64}, 1.4 s
+  fetal day  17: classes {'ear': 37, 'soma': 287, 'kin': 80}, 2.1 s

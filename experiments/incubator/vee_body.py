@@ -14,8 +14,13 @@ Two organs read that one input (s067, plan §6.7 — in ONE leaf text and world 
 for the same classes and no loudness of the language block serves both):
   ear    a phasecyte leaf over the language block
   soma   a phasecyte leaf over everything else (environment, presence, reserved)
-Both live every moment (the ear hears silence as zeros).  The level that joins them
-is not built yet.
+  kin    (stage 2, plan §8.4) her sense of change: the echo block and how every
+         environment reading, what she holds and her marks moved since the moment before
+Ear and soma live every moment (the ear hears silence as zeros); kin is born at the
+fetal stage.  The level that joins them is not built yet.
+
+Echo block (plan §8.3): 1-6 what she did in the moment just past (+1 that action, -1 the
+others), 7 how much she holds, 8 how many marks exist; all zero before stage 2.
 
 The language sense is fitted ONCE (Wikipedia sentence readings + stage-2 question
 readings, §6.2), stored in HOME/sense.pt and never refitted.
@@ -69,13 +74,39 @@ def language_sense() -> HiddenStateSense:
 
 
 # ---- one moment ----------------------------------------------------------------
-def moment(lang: torch.Tensor | None, raw: dict, presence=NOBODY) -> torch.Tensor:
-    """Her input at one moment.  ``lang`` = sensed text (64, unscaled) or None; ``raw`` = environment readings."""
+def moment(lang: torch.Tensor | None, raw: dict, presence=NOBODY, action: int | None = None) -> torch.Tensor:
+    """Her input at one moment.  ``lang`` = sensed text (64, unscaled) or None; ``raw`` = environment
+    readings; ``action`` = what she did in the moment just past (None = the echo is still silent)."""
     x = torch.zeros(WIDTH)
     if lang is not None: x[:LANG] = LANG_SCALE * lang
     x[64:97] = torch.tensor(environment.vector(raw))
     x[97:100] = torch.tensor(presence)
+    if action is not None:
+        x[100:106] = -1.0; x[100 + action] = 1.0
+        x[106] = 2 * raw.get("held", 0) / 4 - 1; x[107] = 2 * raw.get("marks", 0) / 8 - 1
     return x
+
+
+def changes(X: torch.Tensor, prev: torch.Tensor | None = None) -> torch.Tensor:
+    """What the kin organ reads from a run of consecutive moments: echo (8) | change of the 33
+    environment readings | change of held and marks.  [N, 43].  ``prev`` = the moment before X[0]."""
+    P = torch.cat([X[:1] if prev is None else prev[None], X[:-1]])
+    return torch.cat([X[:, 100:108], X[:, 64:97] - P[:, 64:97], X[:, 106:108] - P[:, 106:108]], 1)
+
+
+def kin_pool(seed: int, n: int = 10 * WINDOW) -> torch.Tensor:
+    """What the kin organ's senses form on: a stretch of world in which kicks fire in half the
+    moments and the world's switches flip often (spontaneous activity, as at genesis)."""
+    from world import ACTIONS
+    w, g = World(600 + seed), np.random.default_rng(3600 + seed)
+    rows = []
+    for _ in range(n + 1):
+        if g.random() < 0.2: w.busy, w.full, w.window = (bool(g.random() < 0.5) for _ in range(3))
+        ok = [a for a in range(1, len(ACTIONS)) if w.can(a)]
+        a = int(g.choice(ok)) if g.random() < 0.5 else 0
+        rows.append(moment(None, w.step(a)[0], action=a))
+    X = torch.stack(rows)
+    return changes(X[1:], X[0])
 
 
 def genesis_pool(seed: int, ambient: torch.Tensor, n: int = 10 * WINDOW, p_text: float = 0.5) -> torch.Tensor:
@@ -121,10 +152,20 @@ class Body:
         self.extra: dict = {}                       # what a driver must carry across saves (world, logs, …)
 
     def organs(self) -> dict:
-        return {"ear": self.ear, "soma": self.soma}
+        o = {"ear": self.ear, "soma": self.soma}
+        if getattr(self, "kin", None) is not None: o["kin"] = self.kin
+        return o
 
-    @staticmethod
-    def part(organ: str, X: torch.Tensor) -> torch.Tensor:
+    def grow_kin(self, pool: torch.Tensor) -> None:
+        """Stage 2: the sense of change is born (a third leaf)."""
+        self.kin = PhasecyteLeaf(lambda x: x, pool, self.seed, 2, window=WINDOW, class_cap=None,
+                                 manifold=True, composer=True, verbose=False)
+        self.receptors["kin"] = int(self.kin.sub.scheduler._plan.receptor_ids.numel())
+        self.prev = None                            # the moment before the next one she lives
+
+    def part(self, organ: str, X: torch.Tensor, prev: torch.Tensor | None = None) -> torch.Tensor:
+        """The numbers one organ reads.  For kin, X must be consecutive moments."""
+        if organ == "kin": return changes(X, prev)
         return X[:, :LANG] if organ == "ear" else X[:, LANG:]
 
     @property
@@ -137,8 +178,9 @@ class Body:
         if ram_used() > RAM_CEILING:
             raise SystemExit(f"memory ceiling: host RAM {ram_used():.0%} used > {RAM_CEILING:.0%}; she is not fed")
         for k, l in self.organs().items():
-            l.mixed.observe(self.part(k, X), labels=labels if k == "ear" else None)
+            l.mixed.observe(self.part(k, X, getattr(self, "prev", None)), labels=labels if k == "ear" else None)
             l.sub.end_task()
+        self.prev = X[-1].clone()
         self.moments += len(X)
 
     def read(self, X: torch.Tensor, organ: str = "soma") -> tuple[torch.Tensor, torch.Tensor]:

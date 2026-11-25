@@ -2,7 +2,7 @@
 
 **Session date:** 2026-11-25
 **Session number:** 067
-**Session title (s067: the body gets two organs; Vee's embryo stage has run; its gate fails on night and stability):**
+**Session title (s067: the body gets organs; Vee's embryo gate holds by ruling; fetal stage stopped by an alarm at day 17, gate not passed):**
 **The s066 work list was worked through. A language block turned down does NOT keep facts after
 birth; in one leaf, text and world compete for the same classes. Two phasecyte leaves in one body
 (an ear on the language block, a body sense on the rest) give facts .98 and busy / memory 1.00 /
@@ -21,8 +21,24 @@ because she never stops dividing. She is still an embryo.**
   decide that sunlight and being eaten is a good trade off": dropped from the embryo gate,
   reported only. With these the embryo gate HOLDS.** `embryo.py gate` now reports night and
   stability without failing on them.
-- **STOP RULE stands for what comes next:** stage 2 (fetal) is not written in full and not
-  signed; the stage file still says `embryo`. Birth (stage 3) needs stage 2's gate.
+- **Stage 2a (fetal, spontaneous kicks) was signed ("Yes to all" to D1–D4, plan §8.9), built and
+  run. The stage file says `fetal`. SHE WAS STOPPED BY THE TIME ALARM ON FETAL DAY 17 of 30**
+  (2.1 s a day against 0.3 s on day 5; the threshold was Chloe's choice). She is 47 days old;
+  `body.pt` = now, `body_embryo_day30.pt` = the embryo, `fetal_log.pt` = the 17 days. Gate on
+  those 17 days (plan §8.10): feels her kicks .98 pass; own CPU burst vs busy world with the
+  echo hidden 1.00 pass (k-means .93); nothing lost pass; **FAIL: knows what a kick moves 2 of 5
+  (work, hold yes; let go, mark, wipe no); own memory use vs the world's .59 = base; ear "text
+  present" .66 (was .75)**. Body-sense classes 143 → 287 in 17 days. **Do not run `fetal.py
+  live` again until Rocky decides about the alarm and the failed rows** (running it resumes her).
+- **Stress state (Rocky asked, s067):** the phasecyte has a per-sitting status (empty /
+  frustrated / resolved), a stress router (empty → reach for sensation, with habituation;
+  frustrated → discriminate) and per-growth settlement; Numa/Mima by name exist only in
+  `trioron/lifecycle/chain.py`. In Vee both organs sat at 27 of 28 votes on discrimination;
+  149 of 154 (body sense) and 96 of 100 (ear) divisions were paid; no composer cell ever grew.
+  The pay test approves nearly everything — that is why she never stops dividing. Chloe's
+  proposal for stage 2b (how she chooses): frustrated → act, resolved → stay still; needs the
+  status per moment and wired to action. Not designed, not signed.
+- Birth (stage 3) needs stage 2's gate.
 - **Rocky's rulings this session (binding):**
   - "Two organ or even multiple organs is okay. That is in her architecture and was meant to be
     that way anyway." → plan §6.3 "one leaf" is replaced (§6.8).
@@ -71,6 +87,8 @@ because she never stops dividing. She is still an embryo.**
 - `experiments/incubator/vee_body.py` — her germline: 148-number layout, the fixed language
   sense, rich genesis pool, `Body` with two organs (`ear`, `soma`), stage-file guard, RAM
   ceiling (85 %), whole-body save.
+- `experiments/incubator/fetal.py` — stage 2a driver (`live`, `gate`); `world.py` `step(action)` with the six kicks;
+  `vee_body.py` echo in `moment`, `changes`, `kin_pool`, `Body.grow_kin` (third organ, 43 numbers).
 - `experiments/incubator/embryo.py` — stage 1 driver (`live`, `gate`); saved after every
   simulated day; alarm if a day takes twice day 5's time.
 - `germline_checks.py`: `adjusted_rand` (verified against scikit-learn) replaces the
@@ -84,10 +102,10 @@ because she never stops dividing. She is still an embryo.**
   `G.WINDOW` varied, columns zeroed.
 
 ## NEXT (s068)
-1. **Stage 2 (fetal) is WRITTEN IN FULL (plan §8) and AWAITS Rocky's sign-off** — decisions
-   D1–D4 in §8.9 (simulated consequences; spontaneous kicks now, choosing later; a third organ
-   that reads change; 30 days). Nothing of it is built. After sign-off: `world.step(action)`,
-   echo in `vee_body.moment`, third organ, `fetal.py`; set the stage file to `fetal`.
+1. **Rocky to decide on the stopped fetal run** (plan §8.10): finish the 30 days or not; the
+   time alarm; the three failed rows. Then diagnose: why let go / mark / wipe are not connected
+   to what they move; why her own memory use is not told from the world's; why the ear got worse.
+   Then stage 2b (choosing by stress) to be designed for sign-off.
 2. DONE s067 (plan §6.10): her classes never mix world states (98 % pure, switch combination
    read 1.00) but there are ~8× more than the world has states (44 for the commonest one); the
    surplus carries only a weak trace of the clock (.41, chance .25) and no rain / someone-here.
