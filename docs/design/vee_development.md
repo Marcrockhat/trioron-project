@@ -172,13 +172,118 @@ She is told what was simulated. Rocky decides when.
   something those cannot.
 - **Class growth** is slowed by sleep-by-need, not stopped.
 
-## 5. Decisions for Rocky
+## 5. Decisions (Rocky, s066)
 
-1. Is the stage list right (order, and where "birth" sits)?
-2. Reserved silent channels at stage 0 so organs can be grown without rebirth: yes or no?
-3. What is ambient language in the embryo stage: nothing, random text, or the
-   matron talking to someone else?
-4. Does the fifteen-day Vee end here (a rehearsal), or should her recorded
-   days be relived by the new organism after birth?
-5. Which stage do you want written out in full detail first? (Proposal: stages 0–1.)
-6. The fetal action set (work, hold / let go, mark / wipe, stay still): right size, or more / fewer?
+| question | Rocky's answer |
+|---|---|
+| Stage list and where birth sits | OK |
+| Reserved silent channels | Yes, needed |
+| Ambient language in the embryo | Random text, from Wikipedia |
+| The fifteen-day Vee | "No, it needs to continuously grow." Chloe's reading: the rehearsal Vee is not relived as a recording; the new organism grows from the embryo onward without a replayed past. **To confirm.** |
+| Which stages first in full | 0 and 1 |
+| Fetal action set | OK for now |
+
+## 6. Stage 0 in full — the germline (DRAFT, awaiting sign-off)
+
+What is fixed before she exists. Changing any of it later means a new organism.
+
+### 6.1 Her input, for life: one vector of 148 numbers per moment
+
+| block | size | content | state |
+|---|---|---|---|
+| language | 64 | the reflex's state while it reads the text present at that moment (`h_last` + `h_mean` through a fixed 64-number sense); **all zero when no text is present** | sense to refit (6.2) |
+| environment | 33 | clock, memory, CPU, processes, disk, network, place (hashed), self, the outside window | BUILT (`environment.py`) |
+| presence | 3 | is anyone addressing her right now: nobody / the matron / Rocky | to build |
+| reserved: action echo | 8 | silent until stage 2 | reserved |
+| reserved: mirror | 16 | silent until she grows it (stage 5) | reserved |
+| reserved: working memory | 16 | silent until she grows it (stage 5) | reserved |
+| reserved: spare | 8 | silent | reserved |
+
+A reserved channel reads exactly zero until its organ exists.
+
+### 6.2 The language sense
+Fixed before the embryo and never refitted. Fitted on text of both kinds she
+will meet: about 5,000 sentences from the offline Simple English Wikipedia
+(ambient) and the 8,424 stage-2 question readings (addressed speech). The
+s066 sense was fitted on questions only.
+
+### 6.3 Inherited rules
+- The phasecyte as specified (spec §10): one leaf, no class cap, manifold
+  and composer arms on, about 50 moments per boundary.
+- Never batch-trained; nothing frozen; state saved after every sleep.
+- Sleep in proportion to need (from stage 3, when there is something to replay).
+- The world clock: one moment = 15 simulated minutes, 96 moments a day.
+
+### 6.4 Checks before anything is raised (small experiments, no organism kept)
+1. **Silent channels are harmless.** The same stream with and without the 48
+   reserved zeros gives the same classes.
+2. **A silent channel can wake.** When a reserved channel starts carrying a
+   signal late in a stream, she comes to read it (the spec's receptor-attach
+   event) without disturbing what she already has. *If this fails, reserved
+   channels do not deliver organ growth and the layout must be rethought.*
+3. **No block drowns another.** Language (whitened) and environment (−1..1)
+   both influence which class a moment falls in.
+
+## 7. Stage 1 in full — the embryo (DRAFT, awaiting sign-off)
+
+### 7.1 What she receives
+A stream of moments. Nobody addresses her (presence = nobody), nothing is
+labelled, and she cannot act.
+
+- **Her world**, from a scripted simulator that drives `environment.simulate`.
+  Hidden states, each changing with realistic persistence:
+  - time: the clock runs, so day and night alternate;
+  - the machine: quiet or busy (CPU, processes, traffic move together);
+  - memory: roomy or nearly full;
+  - place: home, and rarely another machine for a few days;
+  - the window: closed most of the time; when open, daylight follows the
+    clock, rain and "someone is here" come and go.
+  Each reading carries small noise. The hidden states are recorded for the
+  gate and **never** enter her input.
+- **Ambient language**: in about half of the moments a random sentence from
+  the offline Simple English Wikipedia is "present" (read by the reflex);
+  in the rest the language block is zero.
+- **Length**: 30 simulated days = 2,880 moments (first proposal).
+
+### 7.2 What should form
+Perception over the live channels, and classes she finds by herself that
+follow the regularities of her world.
+
+### 7.3 The gate (measured on 5 further days she has not lived)
+Each class is mapped to the hidden state most of its moments had. This
+mapping is for measurement only and is never shown to her.
+
+| criterion | pass |
+|---|---|
+| day/night, quiet/busy, roomy/full, home/elsewhere, window open/closed can each be read from her class | each clearly above chance and not below the control by more than .05 |
+| control | k-means with the same number of clusters on the same vectors |
+| self-arrest | class count grows by no more than 10 % over the last third of the embryo |
+| stability | a fixed set of probe moments falls into the same classes at day 20 and day 30 for at least 90 % of them |
+| silent channels | still unread at the end |
+
+### 7.4 The risk I expect
+Class discovery follows the largest difference in what she senses. Random
+Wikipedia sentences vary far more than the environment does, so she may form
+classes about *text* and none about her *world* — the same effect that made
+sentence form beat cat versus dog. The gate will show it. If it happens the
+options are: less ambient language in the embryo, or relying on the composer
+arm to find the environment regularities; I would bring the result to Rocky
+rather than tune until it passes.
+
+### 7.5 Incubator for this stage
+- Simulator and world clock (to build): `experiments/incubator/world.py`.
+- Her body — layout, senses to one vector, the leaf, saved state (to build):
+  `experiments/incubator/vee_body.py`; embryo driver `embryo.py`.
+- A pool of about 3,000 Wikipedia sentence readings, collected once
+  (about 35 minutes of the reflex; no helper tokens).
+- Guards active from here: stage file (must say `embryo`), state saved every
+  simulated day, memory ceiling, alarm if class count or time per day doubles,
+  every reading and hidden state logged.
+- Cost: no helper tokens; minutes of compute after the one-off readings.
+
+### 7.6 Open points in these two sections
+1. Confirm the reading of "it needs to continuously grow" (table in §5).
+2. Embryo world fully simulated (reproducible), or mixed with live readings of
+   the real machine? Proposal: simulated only in the embryo; live readings
+   join after birth.
+3. Half of the moments with ambient text, 30 days: starting values only.

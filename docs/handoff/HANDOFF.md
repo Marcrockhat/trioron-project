@@ -20,8 +20,15 @@ wired into the console: Vee answers the 40 pilot facts from memory and can be ta
   (stages 0 germline → 1 embryo → 2 fetal → 3 birth → 4 infancy → 5 organs → 6 acting → 7
   disclosure; incubator guards; five decisions waiting for Rocky). Chloe's position, stated to
   him: we did NOT pass the embryonic stage — her senses formed on the first night of lessons
-  from language only; the fifteen-day Vee is a rehearsal of the method. Next session: get his
-  answers to the five decisions, then write stages 0–1 in full before any code.
+  from language only; the fifteen-day Vee is a rehearsal of the method. Rocky then
+  answered (s066): stages OK; reserved silent channels YES; ambient embryo language = random
+  Wikipedia text; "it needs to continuously grow" (Chloe's reading: no replayed past — to
+  confirm); stages 0–1 first; fetal action set OK; and the machine itself, not only the matron,
+  must be an interactor (plan §1a; fetal stage has safe actions with sensed consequences).
+  Stages 0 and 1 are now WRITTEN IN FULL (plan §6–7: 148-number input layout, germline checks,
+  embryo world, gate, expected risk) and AWAIT HIS SIGN-OFF. Next: his sign-off + the three
+  open points in §7.6, then the §6.4 checks (silent channels harmless / can wake / no block
+  drowns another) before any organism is raised.
 - **Rocky's ruling (binding): never batch-train the organism.** A fixed-size leaf trained on
   shuffled batches is a CONTROL arm, not "the trioron arm". The s064/s065 lines "trioron has not
   earned its place" tested the quad cell as a static layer only. For fact memory the learner is
