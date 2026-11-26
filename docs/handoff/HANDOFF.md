@@ -255,6 +255,51 @@ days, 125 min, peak 1.44 GB.
 - One copy each, one seed. On this evidence relative stillness makes him sharpen and gives
   no gate row; it cost one. Not switched on in Weiss.
 
+## Vee grafted to Weiss (s070; in memory only, no home changed; Rocky: "try to graft Vee to Weiss and check if the class reduced")
+Two things were tried. trioron's arena graft (`lifecycle/graft.py`, spec §5.3) was NOT run:
+it transplants arena cells and nothing in `trioron/pcll/` uses it; a phasecyte organ's
+knowledge is its classes' members.
+
+**1. Her classes merged into his** (`experiments/incubator/graft_probe.py`, log
+`graft_probe_s070.log`; Chloe's routine, only the settling `_consolidate` is trioron's).
+Vee's members are read back to the numbers she sensed (checked on her lived log: mean error
+.0003–.02), seen through his blur and receptors, added as classes beside his, then his
+consolidation round runs 4 times.
+
+| organ | his | hers | joined | after 4 rounds (his / hers left) | Weiss alone, same rounds |
+|---|---|---|---|---|---|
+| ear | 178 | 344 | 522 | 487 (160 / 327) | 166 |
+| body sense | 1,769 | 1,781 | 3,550 | 2,067 (1,646 / 421) | 1,673 |
+| sense of change | 93 | 550 | 643 | 498 (93 / 405) | 93 |
+
+The joined count falls below the sum (body sense −42 %: 1,360 of her classes dissolve into
+his) but he ends with MORE classes than he had in every organ. No gate was read on it; the
+fold was not run (grafted classes have no trace of use). 21 min, peak 2.2 GB.
+
+**2. Two brains in one body** (Rocky: "these are two different brain in an organism"; the
+nest; `experiments/incubator/nest_probe.py`, log `nest_probe_s070.log`). Her three organs
+beside his, nothing merged; trioron's own nest router (`ManifoldRouter`, full covariance,
+fitted from each leaf's lived log) picks one leaf a moment. Weiss's gate, his world, his
+unseen days; her brain only classifies (it has not lived his world). 1 min, peak 4.8 GB.
+
+| row | his brain | her brain | the nest (routed) |
+|---|---|---|---|
+| feels the kicks (k-means 1.00) | .93 FAIL | 1.00 | 1.00 |
+| what a kick moves | 5 of 5 | 5 of 5 ("work" .78) | 5 of 5 ("work" .78) |
+| CPU rise (base .57) | .98 | .98 | .95 |
+| memory rise (base .59, pass above .64) | .59 FAIL | **.86** | .62 FAIL |
+| nothing lost: busy / full / elsewhere / window | 1.00 / .95 / 1.00 / 1.00 | 1.00 / **.99** / 1.00 / 1.00 | .99 / .95 / .99 / 1.00 |
+| ear: text present (his embryo .93, pass from .88) | .97 | .75 FAIL | .89 |
+
+- **Her sense of change and body sense pass every row of HIS gate in HIS world without
+  having lived it; her ear does not (.75), his does.**
+- **The router is the weak part**: it gives her brain .24 / .39 / .74 of his world's moments
+  (change / body / ear) and only .62 / .80 / .76 of her own lived moments, so the routed
+  nest is a muddle of the two (memory rise .62).
+- Read from the columns (each row depends on one organ): her sense of change + her body
+  sense + his ear would pass every row. That body was not built or run; nest classes would
+  be 178 + 1,781 + 550. Living on brings Vee's uncapped, sharp organs into a living body.
+
 ## What was built / released (committed and pushed)
 - `trioron/pcll/mixed.py`: `_margins` in row chunks written in place, `_evidence` one table,
   `EVIDENCE_ELEMS`. Spec §9 partition row for `mixed.py` notes it. Test added.

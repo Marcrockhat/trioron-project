@@ -1,0 +1,21 @@
+# two brains, in memory only: outputs/incubator/weiss (180 fetal days, classes {'ear': 178, 'soma': 1769, 'kin': 93}) with the organs of outputs/incubator/vee (90 fetal days, classes {'ear': 344, 'soma': 1781, 'kin': 550}); classes in the nest {'ear': 522, 'soma': 3550, 'kin': 643}
+  moments of HIS world the router gives to her brain: sense of change 0.237, body sense 0.389, ear 0.738; of HER lived moments: 0.623, 0.799, 0.760
+  read: his
+  read: hers
+  read: nest
+
+  row                                                   his brain  her brain   the nest
+  1 feels the kicks (k-means 1.00)                           0.93       1.00       1.00
+  2 what 'work' moves                                        1.00       0.78       0.78
+  2 what 'hold' moves                                        1.00       1.00       1.00
+  2 what 'let go' moves                                      1.00       1.00       1.00
+  2 what 'mark' moves                                        1.00       1.00       1.00
+  2 what 'wipe' moves                                        1.00       1.00       1.00
+  2 right, of 5 (>= 4)                                       5.00       5.00       5.00
+  3 CPU rise, echo hidden (base 0.57)                        0.98       0.98       0.95
+  3 memory rise, echo hidden (base 0.59)                     0.59       0.86       0.62
+  4 nothing lost: busy (embryo 1.00)                         1.00       1.00       0.99
+  4 nothing lost: full (embryo 1.00)                         0.95       0.99       0.95
+  4 nothing lost: elsewhere (embryo 1.00)                    1.00       1.00       0.99
+  4 nothing lost: window (embryo 1.00)                       1.00       1.00       1.00
+  4 ear: text present (embryo 0.93)                          0.97       0.75       0.89

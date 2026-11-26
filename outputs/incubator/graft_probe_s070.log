@@ -1,0 +1,43 @@
+# graft, in memory only: donor outputs/incubator/vee/body.pt (11520 moments) into recipient outputs/incubator/weiss/body.pt; at most 4 rounds
+
+== ear: recipient 178 classes (12623 members), donor 344 classes (74625 members)
+   reading back the donor's senses, on her last 3 lived days: mean error 0.0005, largest 0.5492 (her numbers span -3.52 .. 3.96)
+     recipient alone, round 1: 6670 members moved, classes 178 -> 166, 0 s
+     recipient alone, round 2: 1405 members moved, classes 166 -> 166, 0 s
+     recipient alone, round 3: 791 members moved, classes 166 -> 166, 0 s
+     recipient alone, round 4: 375 members moved, classes 166 -> 166, 0 s
+   before the graft, her members placed in HIS classes: they land in 152 of his 178; 41 of her 344 classes land whole in one class of his (median class of hers spreads over 6)
+   grafted 344 of her classes (median 196 distinct patterns a class as he sees them); joined 522 classes
+     joined, round 1: 62322 members moved, classes 522 -> 492, 8 s
+     joined, round 2: 23352 members moved, classes 492 -> 488, 5 s
+     joined, round 3: 12591 members moved, classes 488 -> 488, 4 s
+     joined, round 4: 7916 members moved, classes 488 -> 487, 4 s
+   RESULT ear: his 178 + hers 344 = 522 joined -> 487 after the rounds (160 of his, 327 of hers; members held in his 8332, in hers 45430); recipient alone after the same rounds: 166
+
+== soma: recipient 1769 classes (296251 members), donor 1781 classes (141994 members)
+   reading back the donor's senses, on her last 3 lived days: mean error 0.0003, largest 0.0020 (her numbers span -1.00 .. 1.00)
+     recipient alone, round 1: 126500 members moved, classes 1769 -> 1673, 107 s
+     recipient alone, round 2: 52220 members moved, classes 1673 -> 1673, 91 s
+     recipient alone, round 3: 28869 members moved, classes 1673 -> 1673, 88 s
+     recipient alone, round 4: 17804 members moved, classes 1673 -> 1673, 84 s
+   before the graft, her members placed in HIS classes: they land in 124 of his 1769; 60 of her 1781 classes land whole in one class of his (median class of hers spreads over 4)
+   grafted 1781 of her classes (median 16 distinct patterns a class as he sees them); joined 3550 classes
+     joined, round 1: 264610 members moved, classes 3550 -> 2115, 352 s
+     joined, round 2: 72873 members moved, classes 2115 -> 2076, 170 s
+     joined, round 3: 38739 members moved, classes 2076 -> 2068, 133 s
+     joined, round 4: 23546 members moved, classes 2068 -> 2067, 125 s
+   RESULT soma: his 1769 + hers 1781 = 3550 joined -> 2067 after the rounds (1646 of his, 421 of hers; members held in his 216314, in hers 63725); recipient alone after the same rounds: 1673
+
+== kin: recipient 93 classes (36606 members), donor 550 classes (150592 members)
+   reading back the donor's senses, on her last 3 lived days: mean error 0.0193, largest 1.0000 (her numbers span -2.00 .. 2.00)
+     recipient alone, round 1: 2303 members moved, classes 93 -> 93, 0 s
+     recipient alone, round 2: 687 members moved, classes 93 -> 93, 0 s
+     recipient alone, round 3: 425 members moved, classes 93 -> 93, 0 s
+     recipient alone, round 4: 309 members moved, classes 93 -> 93, 0 s
+   before the graft, her members placed in HIS classes: they land in 83 of his 93; 0 of her 550 classes land whole in one class of his (median class of hers spreads over 6)
+   grafted 550 of her classes (median 115 distinct patterns a class as he sees them); joined 643 classes
+     joined, round 1: 139053 members moved, classes 643 -> 498, 10 s
+     joined, round 2: 16217 members moved, classes 498 -> 498, 5 s
+     joined, round 3: 5553 members moved, classes 498 -> 498, 4 s
+     joined, round 4: 2597 members moved, classes 498 -> 498, 4 s
+   RESULT kin: his 93 + hers 550 = 643 joined -> 498 after the rounds (93 of his, 405 of hers; members held in his 31816, in hers 67577); recipient alone after the same rounds: 93
