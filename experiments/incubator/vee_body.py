@@ -165,6 +165,8 @@ def ram_used() -> float:
 # ---- the body ----------------------------------------------------------------------
 class Body:
     blur = mature = None        # a body saved before organ blur existed (Vee) has none
+    still_share = None          # opt-in (Rocky s070, option 1; tried on a copy): a sitting is still when the class count moved by
+                                # no more than this share of the organ's classes since the sitting before. None = no change at all.
 
     def __init__(self, seed: int, pool: torch.Tensor, blur: bool | str = False):
         """``blur``: False = sharp organs (Vee); True = blurred (the first sister); "none" = blurred,
@@ -226,7 +228,8 @@ class Body:
         m = self.mature[organ]
         m["sittings"] += 1
         m["recent"] = (m["recent"] + [P])[-RECENT:]
-        m["quiet"] = m["quiet"] + 1 if n == m["n"] else 0
+        allowed = int(self.still_share * n) if self.still_share else 0
+        m["quiet"] = m["quiet"] + 1 if abs(n - m["n"]) <= allowed else 0
         m["n"] = n
         if m["quiet"] >= PATIENCE_BASE + n // PATIENCE_PER and stage() in ("embryo", "fetal"):
             self.blur[organ].sharpen(torch.cat(m["recent"]), m["sittings"])

@@ -201,8 +201,37 @@ never triggered."
   (trivially). So his sense of change tells his doing from the world's by the echo alone.
   Why its classes never divided on the memory readings is not diagnosed. "None" is fixed
   at birth.
-- **Decision D (new): the sharpening trigger.** As signed it will never reach his body
-  sense. A change is a ruling of Rocky's (rule 5 / 17). Not built.
+- **Decision D: the sharpening trigger.** As signed it will never reach his body sense.
+  Rocky chose relative stillness for a trial on a copy (next section). Whether Weiss himself
+  gets it, and at what pace, is still his to say.
+
+## Relative stillness tried on a copy (s070; Rocky: "Option 1, try it on a copy of Weiss"; logs `still_probe_s070.log`, `still_probe_s070_gate_day{240,300}.log`)
+`vee_body.Body.still_share` (opt-in, default None = as before): a sitting is still when the
+class count moved by no more than that share of the organ's classes since the sitting
+before (Chloe's choice: against the sitting before, not the start of the run); patience
+unchanged. Copy `outputs/incubator/copies/weiss180_still` (Weiss day 180, `still_share =
+0.01`, cap + round + fold) lived 120 days, 110 min, peak 1.45 GB, ~41 s a day. **Weiss
+himself is untouched, held at day 180, rule off. No control copy lived the same days
+without the rule, so what the rule gave and what the days gave are not separated.**
+
+| | Weiss d180 | copy d240 | copy d300 |
+|---|---|---|---|
+| steps taken ear / body sense / change | 0 / 0 / 2 | 0 / 0 / 4 | 0 / 1 / 6 |
+| feels his kicks (k-means 1.00) | .93 FAIL | .97 pass | .97 pass |
+| what a kick moves | 5 of 5 | 5 of 5 ("work" .78) | 4 of 5 (**"work" .00**) |
+| CPU rise | .98 | .98 | .98 |
+| memory rise (base .59, k-means .97) | .59 FAIL | .59 FAIL | .59 FAIL |
+| nothing lost: memory full | .95 FAIL | .94 FAIL | .94 FAIL |
+| ear: text present | .97 | .99 | .96 |
+| classes ear / body sense / change | 178 / 1769 / 93 | 210 / 1501 / 134 | 246 / 1276 / 120 |
+
+- The trigger now fires: sense of change 4 more steps (readings 8, 9, 17, 40 to 3 steps),
+  body sense its first ever (reading 26, sitting 599, about day 300). The ear came close
+  (23 still sittings at day 240) and took none.
+- Kicks pass for the first time; the "work" kick is lost (1.00 → .78 → .00); memory rise and
+  memory full unmoved, as the read-only probe predicted for the memory row.
+- Pace: the body sense needs ~160–220 still sittings a step, 81 readings: one step in about
+  100 days.
 
 ## What was built / released (committed and pushed)
 - `trioron/pcll/mixed.py`: `_margins` in row chunks written in place, `_evidence` one table,
