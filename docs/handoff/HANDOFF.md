@@ -211,8 +211,7 @@ class count moved by no more than that share of the organ's classes since the si
 before (Chloe's choice: against the sitting before, not the start of the run); patience
 unchanged. Copy `outputs/incubator/copies/weiss180_still` (Weiss day 180, `still_share =
 0.01`, cap + round + fold) lived 120 days, 110 min, peak 1.45 GB, ~41 s a day. **Weiss
-himself is untouched, held at day 180, rule off. No control copy lived the same days
-without the rule, so what the rule gave and what the days gave are not separated.**
+himself is untouched, held at day 180, rule off.** A control was then run (below).
 
 | | Weiss d180 | copy d240 | copy d300 |
 |---|---|---|---|
@@ -232,6 +231,29 @@ without the rule, so what the rule gave and what the days gave are not separated
   memory full unmoved, as the read-only probe predicted for the memory row.
 - Pace: the body sense needs ~160–220 still sittings a step, 81 readings: one step in about
   100 days.
+
+### The control (Rocky: "Okay run the control."; logs `still_control_s070.log`, `still_control_s070_gate_day{240,300}.log`)
+Copy `outputs/incubator/copies/weiss180_control`: the same day-180 body, rule off, same 120
+days, 125 min, peak 1.44 GB.
+
+| day 300 | rule on (`weiss180_still`) | rule off (control) |
+|---|---|---|
+| steps taken ear / body sense / change | 0 / 1 / 6 | 0 / 0 / 2 (none new) |
+| feels his kicks | .97 pass (d240 .97) | .99 pass (d240 .98) |
+| what a kick moves | 4 of 5, "work" .00 (d240 .78) | 5 of 5, all 1.00 (d240 all 1.00) |
+| CPU rise / memory rise | .98 / .59 FAIL | .98 / .59 FAIL |
+| nothing lost: memory full | .94 FAIL (d240 .94) | .93 FAIL (d240 .90) |
+| nothing lost: busy / elsewhere / window | .99 / 1.00 / 1.00 | .99 / 1.00 / .97 |
+| ear: text present | .96 | .98 |
+| classes ear / body sense / change | 246 / 1276 / 120 | 240 / 1351 / 125 |
+
+- **The kicks row passes from the days alone** (.93 at d180 → .98 → .99 with no sharpening):
+  "not yet" was right for that row (rule 8). Sharpening did not give it.
+- **The lost "work" kick came with the sharpening**: kept at 1.00 in the control, .78 then
+  .00 in the copy whose sense of change took 4 steps. Which step cost it is not read.
+- Memory rise unmoved in both. Memory full within .90–.94 in both: no difference to claim.
+- One copy each, one seed. On this evidence relative stillness makes him sharpen and gives
+  no gate row; it cost one. Not switched on in Weiss.
 
 ## What was built / released (committed and pushed)
 - `trioron/pcll/mixed.py`: `_margins` in row chunks written in place, `_evidence` one table,
