@@ -173,6 +173,37 @@ in three 30-day runs, body copy and gate at each. 57 min of living, peak 1.23 GB
   like something in what he senses or how the gate reads him, not like too little time.
   Not diagnosed (Open 1). Wile had the memory row; the difference between them is unread.
 
+## Why the Ws do not sharpen, and the memory row (s070, read-only; `experiments/incubator/blur_row_probe.py`, logs `blur_row_probe_{weiss,wile}_s070.log`)
+Rocky: "they should have their sense sharpened gradually and there must be reason why it
+never triggered."
+- **The trigger cannot fire in a large organ.** An organ sharpens when its class count has
+  not changed for 3 + classes // 8 sittings in a row (`vee_body._mature`). Weiss at day 180:
+
+  | organ | classes | still sittings needed | longest still run in 180 days (daily log, 2 sittings a day) | steps taken |
+  |---|---|---|---|---|
+  | ear | 178 | 25 | ~6 | 0 |
+  | body sense | 1,769 | 224 | ~2 | 0 |
+  | sense of change | 93 | 14 | ~14 | 2 (reading 7: 2 → 3 → 5, sittings 192, 228) |
+
+  The rule asks for no change at all, for longer the bigger she is; a big organ gains or
+  loses a class at almost every sitting (the fold's retirements also reset the count). Wile
+  the same (ear 2 steps in her first 7 sittings, nothing since). Steps per sitting are not
+  logged; the runs are read from daily counts.
+- **Blur is NOT why the memory-rise row fails — Chloe's guess was wrong.** Through his 2-step
+  view the two kinds of event are different: only 2 of 736 lived events look alike, and a
+  reader of his view alone (each seen pattern votes) scores .93 on the unseen 29 (finer
+  steps score lower on so few events: .86 / .66 / .59 at 3 / 5 / 7). His classes do not use
+  it: 489 of the 736 lived events fall in one class holding both kinds (129 the world's,
+  360 his). Wile's classes hold one kind each (.93).
+- A difference found: Weiss was born without "none", so the gate's hidden echo (zeros) is
+  seen by him as all six action flags on, a pattern he never lived; Wile sees silence.
+  With the echo shown as "no kick" instead he still scores .59; with the true echo 1.00
+  (trivially). So his sense of change tells his doing from the world's by the echo alone.
+  Why its classes never divided on the memory readings is not diagnosed. "None" is fixed
+  at birth.
+- **Decision D (new): the sharpening trigger.** As signed it will never reach his body
+  sense. A change is a ruling of Rocky's (rule 5 / 17). Not built.
+
 ## What was built / released (committed and pushed)
 - `trioron/pcll/mixed.py`: `_margins` in row chunks written in place, `_evidence` one table,
   `EVIDENCE_ELEMS`. Spec §9 partition row for `mixed.py` notes it. Test added.

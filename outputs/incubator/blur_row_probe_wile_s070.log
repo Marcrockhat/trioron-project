@@ -1,0 +1,42 @@
+# outputs/incubator/wile: 30 fetal days, 60 days old; classes {'ear': 119, 'soma': 347, 'kin': 187}; read only
+
+A  the sharpening trigger (2 sittings a day)
+   ear   classes   119: needs   17 still sittings in a row; still now   0; sittings lived 120; steps taken 2 [(4, 5, 3), (7, 36, 3)]
+         by her daily log: class count equal to the day before on 3 of 29 days; longest run of such days 1 (about 2 sittings)
+         readings that can sharpen 64 of 64; steps now [0, 0, 62, 2] (index = steps)
+   soma  classes   347: needs   46 still sittings in a row; still now   0; sittings lived 120; steps taken 0 []
+         by her daily log: class count equal to the day before on 1 of 29 days; longest run of such days 1 (about 2 sittings)
+         readings that can sharpen 65 of 84; steps now [0, 0, 65] (index = steps)
+   kin   classes   187: needs   26 still sittings in a row; still now   0; sittings lived 60; steps taken 0 []
+         by her daily log: class count equal to the day before on 1 of 29 days; longest run of such days 1 (about 2 sittings)
+         readings that can sharpen 16 of 43; steps now [0, 0, 16] (index = steps)
+
+B  gate row 3 through her blur (lived events vote, unseen events are scored)
+
+   CPU rise: lived 267 events (112 hers), unseen 40 (17 hers), base 0.57
+     full numbers, the readings that differ most between hers and the world's (kin column: hers mean / world's mean, range she was born with):
+       col 19: -0.062 / +0.996   range ±1.445, 'changed' from 0.482; steps now 2; can sharpen True
+       col 18: +0.555 / +1.441   range ±1.941, 'changed' from 0.647; steps now 2; can sharpen True
+       col 25: -0.042 / +0.574   range ±0.802, 'changed' from 0.267; steps now 2; can sharpen True
+       col 24: -0.030 / +0.576   range ±0.781, 'changed' from 0.260; steps now 2; can sharpen True
+       col 16: +0.277 / +0.763   range ±1.038, 'changed' from 0.346; steps now 2; can sharpen True
+     as she sees now           :   55 distinct patterns on the lived events, 1 of them hold both kinds (2 of 267 lived events cannot be told apart); best reader of this view on the unseen: 0.90
+     every change at 3 steps   :   96 distinct patterns on the lived events, 0 of them hold both kinds (0 of 267 lived events cannot be told apart); best reader of this view on the unseen: 0.85
+     every change at 5 steps   :  225 distinct patterns on the lived events, 0 of them hold both kinds (0 of 267 lived events cannot be told apart); best reader of this view on the unseen: 0.70
+     every change at 7 steps   :  263 distinct patterns on the lived events, 0 of them hold both kinds (0 of 267 lived events cannot be told apart); best reader of this view on the unseen: 0.60
+     unblurred                 :  267 distinct patterns; exact-pattern reader 0.57 (k-means in the gate reads these numbers)
+     her classes: the lived events fall in 14 classes; (world's, hers) per class, largest first: [[62, 3], [42, 0], [29, 2], [0, 30], [0, 26], [21, 1]]; her score 0.98
+
+   memory rise: lived 122 events (92 hers), unseen 29 (17 hers), base 0.59
+     full numbers, the readings that differ most between hers and the world's (kin column: hers mean / world's mean, range she was born with):
+       col 14: -0.097 / -1.045   range ±1.479, 'changed' from 0.493; steps now 2; can sharpen True
+       col 13: +0.097 / +1.045   range ±1.479, 'changed' from 0.493; steps now 2; can sharpen True
+       col 15: +0.009 / +0.559   range ±0.742, 'changed' from 0.247; steps now 2; can sharpen True
+       col 38: -0.022 / -0.133   range ±2.000, 'changed' from 0.667; steps now 2; can sharpen False
+       col 18: +0.019 / +0.125   range ±1.941, 'changed' from 0.647; steps now 2; can sharpen True
+     as she sees now           :   34 distinct patterns on the lived events, 0 of them hold both kinds (0 of 122 lived events cannot be told apart); best reader of this view on the unseen: 0.90
+     every change at 3 steps   :   60 distinct patterns on the lived events, 0 of them hold both kinds (0 of 122 lived events cannot be told apart); best reader of this view on the unseen: 0.72
+     every change at 5 steps   :  104 distinct patterns on the lived events, 0 of them hold both kinds (0 of 122 lived events cannot be told apart); best reader of this view on the unseen: 0.59
+     every change at 7 steps   :  122 distinct patterns on the lived events, 0 of them hold both kinds (0 of 122 lived events cannot be told apart); best reader of this view on the unseen: 0.59
+     unblurred                 :  122 distinct patterns; exact-pattern reader 0.59 (k-means in the gate reads these numbers)
+     her classes: the lived events fall in 13 classes; (world's, hers) per class, largest first: [[0, 31], [0, 28], [26, 0], [1, 9], [0, 8], [0, 5]]; her score 0.93
