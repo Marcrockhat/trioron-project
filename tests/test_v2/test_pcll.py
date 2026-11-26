@@ -536,3 +536,75 @@ def test_stale_classes_fold_into_kin():
     assert sum(s._n for s in leaf.mixed.manifold.sketches.values()) >= total   # nothing deleted
     best, _ = leaf.mixed.classify(draw(200, 2))
     assert (best >= 0).all()
+
+
+def test_numa_ledger_settles_or_takes_back():
+    """s071: a provisional pair settles (Numa) after two coherent batches of
+    world members on its split dim, and is handed back (Mima) when a batch
+    is incoherent or the trial runs out; a pair that lost a child is void."""
+    from trioron.pcll.numa import NumaLedger
+    g = torch.Generator().manual_seed(0)
+    ph = lambda ang: torch.exp(1j * ang)
+    tight = lambda n, c: ph(c + 0.05 * torch.randn(n, 1, generator=g))
+    loose = lambda n: ph(6.28 * torch.rand(n, 1, generator=g))
+    names = ["a", "b"]
+    member = torch.cat([torch.zeros(25), torch.ones(25)]).long()
+    led = NumaLedger()
+    led.born(0, "a", "b", 0, 0.72)
+    assert led.on_trial("a") and led.on_trial("b")
+    led.receive(names, member, torch.cat([tight(25, 0.0), tight(25, 2.0)]))
+    assert led.verdicts(1, names) == [] and led.on_trial("a")       # first batch passed: not yet settled
+    led.receive(names, member, torch.cat([tight(25, 0.0), tight(25, 2.0)]))
+    assert led.verdicts(2, names) == [] and not led.on_trial("a")   # the re-test passed: Numa
+    assert led.counts == {"born": 1, "numa": 1, "mima": 0, "gone": 0}
+    led.born(2, "a", "b", 0, 0.72)                                  # a split the world does not hold
+    led.receive(names, member, torch.cat([tight(25, 0.0), loose(25)]))
+    assert led.verdicts(3, names) == [("b", "a")] and led.counts["mima"] == 1
+    led.born(3, "a", "b", 0, 0.72)                                  # the world never feeds it
+    assert led.verdicts(62, names) == [] and led.verdicts(63, names) == [("b", "a")]
+    led.born(63, "a", "b", 0, 0.72)                                 # one child left by another road
+    assert led.verdicts(64, ["a"]) == [] and led.counts["gone"] == 1 and led.net == 1 - 2
+    assert len(led.taken_back) == 2 and not led.pairs and not led.child
+
+
+def test_numa_rule_on_a_leaf():
+    """s071: with the rule on, classes are still discovered and real modes
+    settle; a provisional class is neither divided nor replayed; a pair the
+    world never feeds is joined again with nothing deleted. Off (the
+    default) the leaf is exactly as before."""
+    from trioron.pcll import PhasecyteLeaf
+    from trioron.pcll.numa import NumaLedger
+    g = torch.Generator().manual_seed(0)
+    centres = torch.randn(12, 6, generator=g) * 3
+    draw = lambda n, hi: centres[torch.randint(hi, (n,), generator=g)] + 0.05 * torch.randn(n, 6, generator=g)
+    X = draw(6000, 12)
+    mk = lambda: PhasecyteLeaf(lambda x: x, X[:200], 0, 0, window=200, class_cap=None, composer=False, verbose=False)
+    plain, ruled = mk(), mk()
+    assert plain.mixed.numa is None
+    ruled.mixed.numa = led = NumaLedger()
+    for i in range(200, 6000, 200):
+        for leaf in (plain, ruled):
+            leaf.mixed.observe(X[i:i + 200]); leaf.sub.end_task()
+    assert led.counts["born"] > 0 and led.counts["numa"] > 0
+    assert 1 < len(ruled.mixed.classes) <= len(plain.mixed.classes)
+    assert led.counts["born"] == led.counts["numa"] + led.counts["mima"] + led.counts["gone"] + len(led.pairs)
+    best, _ = ruled.mixed.classify(draw(400, 12))
+    assert (best >= 0).float().mean() > 0.9
+    # a pair on credit that the world stops feeding: taken back, nothing deleted
+    m = ruled.mixed
+    for key in list(led.pairs):
+        led._close(key, m.periods, "gone")
+    a, b = m.classes[-2].name, m.classes[-1].name
+    led.born(m.periods, a, b, 0, 0.72)
+    before = len(m.classes)
+    total = sum(s._n for s in m.manifold.sketches.values())
+    held = len(m.bufs[-1])
+    quiet = centres[:1] + 0.05 * torch.randn(200, 6, generator=g)   # the world narrows to one state
+    for _ in range(led.trial + 1):
+        m.observe(quiet); ruled.sub.end_task()
+        if led.on_trial(b):
+            assert len(m.bufs[[c.name for c in m.classes].index(b)]) <= held   # no replays on credit
+    names = [c.name for c in m.classes]
+    assert not led.on_trial(a) and led.taken_back and (a in names) != (b in names)
+    assert len(m.classes) == len(m.bufs) == len(m.tags) < before + 2 * led.counts["born"]
+    assert sum(s._n for s in m.manifold.sketches.values()) >= total

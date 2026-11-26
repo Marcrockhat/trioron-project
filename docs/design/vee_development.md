@@ -1108,3 +1108,228 @@ nothing is deleted. 25 members last 30 days unused, 400 about 56. At most
   her footprint and much of her time; not profiled.
 - The fold took her ear's and her sense of change's earliest classes (all 76 and all 66
   folds were among their first 400 names); in the body sense 5 of 236. The readings held.
+
+## 12. Stage 2b — he chooses (DRAFT, s071; NOT signed, NOT built, nothing run)
+
+Written at Rocky's word, s071: "We need to design 2b though." For Wile (Rocky says "he"),
+who passed every row of the 2a gate at fetal day 90 (one organism, seed 0; log
+`wile_fetal_gate_day90_s071.log`). Everything below is Chloe's proposal.
+
+### 12.1 What is missing, and what is already there
+- §2's stage-2 gate also asks: "She stays still when nothing calls for action (no
+  thrashing)." In 2a he does not choose, so this was never asked of him.
+- A phasecyte finds classes; it cannot pick an action (§8.4). But his sense of change
+  already holds what choosing needs: shown an action with the changes left blank, the class
+  he falls in points at the reading that action moves (gate row 2: 5 of 5, each 1.00). That
+  is a forecast of a kick's consequence, learned by him, and it needs no new learner.
+- What he has no trace of is a want. Nothing in his world calls for anything.
+
+### 12.2 The proposal: inhibition first, then one relief
+The first voluntary control in a body is holding a reflex back, not starting a movement
+(an idea, not proof, rule 30). So 2b does not replace the spontaneous kicks; it lets him
+answer them.
+- **Urges.** Kicks keep arising by themselves as in 2a (about one moment in six, each
+  possible action equally often). An urge is now a proposal, not yet an act.
+- **Strain (inherited, the one new thing in his germline rules).** Two readings he already
+  has are uncomfortable when high: RAM used and CPU busy. "High" = the upper step of that
+  reading as his body sees it through his blur. No new input: his 148 numbers do not change.
+- **Forecast.** For a candidate action he is shown that action's echo with the changes
+  blank; the class he falls in gives its usual change (the mean change of the lived moments
+  that class claimed, as gate row 2 reads it). Kept as a small table beside the organ,
+  updated at each sitting. The phasecyte's rules are untouched.
+- **Holding back.** If a reading is strained and the forecast for the urge raises that
+  reading, the urge is not carried out (he stays still). Expected: no work while the
+  machine is busy, no hold while memory is full.
+- **Relief.** If a reading is strained, there is no urge, and some possible action's
+  forecast lowers that reading, he does that action. In this world there is exactly one:
+  let go, while memory is full and he holds something.
+- **Otherwise** he does what 2a did. Nothing else is chosen.
+- Honest limit: the rule "avoid what raises strain, do what lowers it" is given, not
+  learned. What is his own is the forecast. 2b therefore tests whether what he learned in
+  2a is good enough to act on; it is a reflex, as the stage's title says. A policy he learns
+  himself (reward from the matron, a motor organ) is after birth and not designed here.
+
+### 12.3 What changes in the incubator
+- `world.py`: nothing. It already answers every action.
+- `fetal.py` (or a new `fetal_choose.py`, one concept per file): the urge, the strain
+  reading, the forecast table, holding back and relief; every moment logs urge, strain,
+  forecast and what he did. Stage file must say `fetal_b`, set by hand on Rocky's yes.
+- No helper tokens. The matron does not speak; nobody addresses him.
+
+### 12.4 Length
+30 further days (Chloe's starting value), a copy kept and the gate read at the end.
+
+### 12.5 The gate (5 further unseen days; control = the same body with choosing off, i.e. 2a's spontaneous kicker, on the same days and the same urges)
+| criterion | measured as | pass |
+|---|---|---|
+| he holds back | of the urges whose real consequence raises a strained reading, the share carried out | under half the control's share (the control carries out all) |
+| he does not freeze | of the urges under no strain, the share carried out | at least .95 |
+| he relieves | moments from "memory full and holding" to the first let go | median under half the control's |
+| no thrashing | actions a day | not above the control's |
+| the forecast is his | the same gate with his forecast table shuffled between actions | holding back and relief fall to the control's level (reported; shows the choice comes from what he learned) |
+| nothing lost | every row of the 2a gate (§8.6) | still passes |
+| cost | time per day, classes per organ, classes in use | reported |
+
+### 12.6 Risks I expect
+- Strain is rare: memory is full about 3/8 of the time and he holds something in only part
+  of it; relief may rest on few events. The counts are reported with the row.
+- `world.py`'s old quirk: a work kick in an already busy world lowers the CPU reading to
+  .85. His forecast for work may therefore be blurred in exactly the case that matters.
+- Holding back removes the kicks under strain from his experience, so his sense of change
+  stops being fed those cases. Whether the forecast then fades is read at the gate.
+- "He reads holding something from the body sense" is at base (.90 / .90). The echo's own
+  number 7 tells him directly, so 2b does not depend on that reading.
+- His size: at fetal day 90 an uncapped day takes 105–532 s. 30 more uncapped days may not
+  fit the 900 s budget. The rules he lives under in 2b are a separate ruling (rule 25).
+
+### 12.7 Decisions for Rocky
+- **F1.** Inhibition and relief on spontaneous urges, as in 12.2? Or should he start actions
+  of his own beyond relief (then the world must give him a reason: say what calls).
+- **F2.** Strain as an inherited rule on two readings (RAM used, CPU busy)? Others to add
+  or drop?
+- **F3.** Is 2b required before birth, or may birth (stage 3) be written in parallel?
+- **F4.** The mechanism tried first on a copy of Wile for 10 days (rule 27), then on him?
+- **F5.** The rules his organs live under during 2b: uncapped as born, or cap + round +
+  fold after a trial on a copy.
+
+## 13. Growth must pay: the Numa rule for class growth (DRAFT, s071; NOT signed, NOT built, nothing run)
+
+Written at Rocky's word, s071: "Yes, write the Numa rule for class growth first." Principle 7
+and `incubator_matron.md` §5 say a growth event is provisional and settles only if a
+held-out measure improves and the improvement persists. Nothing in an organism does this.
+Everything below is Chloe's proposal. It is a change to the phasecyte's rules (rule 25).
+
+### 13.1 What happens now (read from `trioron/pcll/mixed.py`, `division.py`)
+- A class divides when its buffer splits cleanly on one dimension (`try_divide`: at least
+  60 members, each child at least 25, both children more coherent than the parent). The
+  two children exist at once and for good. Nothing tests them later; nothing takes a
+  division back. (The settlement of a division by the stress council, spec §10 D13, is not
+  running in the organisms: they are built without it.)
+- The buffer that is judged is mostly not the world. At a settled sitting every class gets
+  40 replays from its own sketch (`_anneal`); about 95 % of a body sense's members are
+  replays (§11.11). So a class can divide on its own replays, and its children are fed
+  replays in turn: growth that the world never asked for looks alive.
+- The arithmetic: Wile has lived 120 days = 11,520 moments. His body sense holds 4,540
+  classes, 2.5 moments a class; a division needs 60 members. About 122 classes were in use
+  in his last 10 days. (One organism, seed 0.)
+
+### 13.2 The rule
+1. **Born on credit.** When a class divides, the two children are a provisional pair. A
+   ledger keeps: the pair, the parent, the dimension it split on, the coherence the split
+   had to beat, the sitting of birth. (`_execute` already produces exactly this record.)
+2. **Only the world pays.** For each provisional child the ledger keeps what it received
+   from the world since birth (the count, and its coherence on the split dimension over
+   those members only). Replays never count, as in the fold's trace (§11.12).
+3. **No growth on credit.** A provisional class is not judged for division and receives no
+   replays until it settles. It classifies and receives world members like any class.
+4. **Numa (it settles).** Both children receive a first batch of 25 world members, each
+   batch still coherent on the split dimension above the mark; then a second batch of 25
+   NEW world members each, coherent again. The second batch is the re-test: evidence the
+   division never saw. From then the pair are ordinary classes.
+5. **Mima (it is taken back).** A batch fails the mark, or the pair has not gathered its
+   two batches within 60 sittings (30 days, the fold's own horizon). The two children are
+   joined again into the parent: members together, sketches pooled exactly (the fold's
+   routine). Nothing lived is deleted; a boundary is taken back.
+6. **The ledger is reported** with every gate, per organ: born, Numa, Mima, still on trial,
+   and net Numa (Numa − Mima). This is the standing record `incubator_matron.md` §5 asks.
+7. **Not retroactive.** Classes that exist when the rule is switched on are left as they
+   are (the fold deals with those, if Rocky wants it).
+
+25 (the smallest child `try_divide` allows), two batches, and 60 sittings are Chloe's values.
+
+### 13.3 What I expect, and what could go wrong
+- Class growth becomes bounded by what he has lived: a settled division costs at least 100
+  world members, so on the order of 100–200 body-sense classes at his age instead of 4,540.
+  An estimate from the arithmetic, not a measurement.
+- **He passed his gate with the 4,540.** Whether he passes it with a few hundred is not
+  known. The classes in use suggest yes; only a trial tells.
+- Slower: a rare mode needs 50 real recurrences before its class settles. This agrees
+  with rule 17 ("very slowly") but could starve the memory-full row, the last to pass.
+- With no replays in provisional classes their templates may drift (what annealing was
+  built against, s031). Watched in the trial.
+- It may make the cap and the fold unnecessary for an organism raised with it from early
+  on; for Wile as he is now it does nothing about the classes he already holds.
+
+### 13.4 Where it would live
+`trioron/pcll/numa.py` (one concept per file), opt-in like `sitting.py`: off unless set on
+an organ, so benches, CI and the other organisms are untouched. Spec §9 partition row
+first. Tests: a toy leaf with one true mode pair and one replay-only split.
+
+### 13.5 How it is tried (rule 27: never on him)
+1. Toy leaf: a true two-mode class settles (Numa); a class split only by its replays is
+   taken back (Mima).
+2. A copy of Wile from his **fetal day 30** body (347 body-sense classes), rule on, uncapped,
+   lived to day 90 with the same world and kicks. The control exists already: Wile himself
+   (4,540 classes, every gate row passed at day 90). Read: the gate at 60 and 90, the
+   ledger, classes, time per day, members held.
+3. Only after that, and on Rocky's yes: the rule for a living organism.
+
+### 13.6 The fourth organ: what is taken back is kept (Rocky s071; a sketch, not a design)
+Rocky: "more classes means more creativity though but it will raise a confused organism.
+Can you raise another organism to chew on this classes instead? The fourth organs?"
+- **Proposal.** A boundary taken back (Mima) is not forgotten: its record (the parent, the
+  split dimension, the two children's sketches; about 1 KB each, no buffers) goes to a
+  fourth organ. The three working organs stay small and are never confused by it: the
+  fourth organ takes no part in classifying, is never judged and never replayed.
+- **When it is consulted.** Only for moments the working organ refuses (no class claims
+  them: the margin gate, spec §10 D20b). If a held boundary fits such moments, it is put
+  on trial again as a provisional pair in the working organ (rule 13.2 from step 1). An
+  idea he once had, which the world now shows.
+- **What is honest to say.** Most of what would land there is cut from his own replays,
+  not from the world; whether any of it is ever called back is unknown, and "creativity"
+  is a hope until a held boundary settles as Numa on its second trial. That count would
+  be the organ's own gate row.
+- It needs no new input (his 148 numbers are untouched). Whether it is an organ in his
+  body or a second organism beside him, and whether it does anything while he sleeps, is
+  open.
+
+### 13.7 Decisions for Rocky
+- **G1.** The rule as in 13.2? In particular step 3 (no division and no replays on credit)
+  and the values (25, two batches, 60 sittings).
+- **G2.** Build it opt-in and run the toy test and the copy trial of 13.5?
+- **G3.** The fourth organ: keep what is taken back, as in 13.6? In his body or beside
+  him? Built with the rule, or after the copy trial shows how much is taken back?
+- **G4.** Order: this before 2b (§12), as said; 2b's sign-off (F1–F5) waits.
+
+### 13.8 Signed, built, and the first copy trial (s071)
+Rocky, s071, on G1–G4: "Yes to all, build it and run the copy trial." (G3 as Chloe
+recommended: the fourth organ in his body, after the trial; NOT built.) Built:
+`trioron/pcll/numa.py` (`NumaLedger`, opt-in: `leaf.mixed.numa = NumaLedger()`), hooks in
+`mixed.py` (the fold's joining routine is now `_fold_pairs`, shared), spec §9 rows, two tests,
+`experiments/incubator/numa_probe.py`. A plain copy of Wile's day-30 body with the new code and
+the rule off relived his days 31 and 32 with identical class counts: the hooks are neutral and
+Wile himself is the control.
+
+**Trial** (`copies/wile30_numa`: Wile's fetal day-30 body, rule on in all three organs,
+uncapped, to day 90; logs `numa_probe_s071.log`, `numa_probe_s071_gate_day{60,90}.log`; one
+organism, seed 0), against Wile himself (`wile_fetal_gate_day{60,90}_s071.log`):
+
+| | Wile d60 | copy d60 | Wile d90 | copy d90 |
+|---|---|---|---|---|
+| feels his kicks (k-means 1.00) | .97 | .95 | .98 | .98 |
+| what a kick moves | 5 of 5 | 5 of 5 | 5 of 5 | 5 of 5 |
+| CPU / memory rise, his or the world's | .98 / .97 | .98 / .97 | .95 / .97 | .98 / .97 |
+| nothing lost: memory full (embryo .96, needs .91) | .90 FAIL | .93 | .95 | **.89 FAIL** |
+| nothing lost: busy / place / window | 1.00 / 1.00 / .99 | 1.00 each | 1.00 each | 1.00 each |
+| the ear: text present | 1.00 | 1.00 | 1.00 | 1.00 |
+| gate | not passed | **all pass** | **all pass** | not passed |
+| classes ear / body sense / change | 175 / 1352 / 402 | 149 / 428 / 232 | 231 / 4540 / 710 | 163 / 424 / 222 |
+| s a day (last five); body file | 37; 137 MB | 24; 99 MB | 259; 455 MB | 53; 107 MB |
+
+Ledger at day 90 (born / Numa / Mima / gone / on trial): ear 116 / 0 / 72 / 0 / 44; body sense
+181 / 1 / 88 / 2 / 90; sense of change 109 / 0 / 57 / 1 / 51. Peak memory living 0.98 GB.
+- **One Numa in 406 divisions.** His classes stayed at about their day-30 count, a provisional
+  pair on almost every active class.
+- Body sense: 85 of 88 Mima ran out of time; in 60 of them one child received nothing from
+  the world in 30 days (unpaid growth, as the rule supposes); 8 had passed a first batch and
+  ran out before the second (the rule too slow for them). Ear: 44 of 72 gathered a batch and
+  failed it. Sense of change: all 57 ran out of time, 24 with a child never fed.
+- Kicks (.89 at day 30) and memory rise (.93) rose to .98 / .97 with no net new classes:
+  those rows come from the days, not from growth. Memory full read .93 then .89, around its
+  line, where Wile's own rose to .95 with growth: Chloe's reading is that this row needs some
+  real growth which the values starve; one copy does not settle it.
+- **Chloe was wrong** in 13.3: "100–200 body-sense classes". The rule is not retroactive, so
+  the copy kept the 347 it had.
+- No value was changed after the result. Chloe's proposal, NOT signed, NOT run: a pair stays
+  on trial until it has gathered its batches; it is taken back only when a batch fails or a
+  child receives nothing from the world for 60 sittings.

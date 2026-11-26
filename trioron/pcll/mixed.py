@@ -60,6 +60,7 @@ from .labels import LabelTapBank
 from .lockin import LockInView, deposit, matched_k, reset
 from .resolve import EMPTY, FRUSTRATED, RESOLVED
 from .signature import LearnedClass
+from .numa import NumaLedger
 from .sitting import SittingCap
 from .stress import DISCRIMINATION
 
@@ -113,6 +114,9 @@ class MixedStreamController:
         # organism saved before it existed is unchanged.
         self.sitting: Optional[SittingCap] = (
             SittingCap() if sitting_cap else None)
+        # Growth must pay (numa.py): None = a division is final at once.
+        # Opt-in, set on the controller; read with getattr like the cap.
+        self.numa: Optional[NumaLedger] = None
         self.receptor_ids = substrate.scheduler._plan.receptor_ids
         if self.receptor_ids.numel() == 0:
             raise ValueError("substrate has no RECEPTOR cells")
@@ -358,6 +362,9 @@ class MixedStreamController:
                 [self.classes[int(m)].name if m >= 0 else None
                  for m in member], window_labels)
         self._feed_fresh(q, member)                # future deposits [D9]
+        numa = getattr(self, "numa", None)
+        if numa is not None and not self.freeze:   # only the world pays
+            numa.receive([c.name for c in self.classes], member, Z)
         if self.manifold is not None and member is not None:
             for k, c in enumerate(self.classes):   # sketches eat REAL members
                 rows = q[member == k]
@@ -380,6 +387,8 @@ class MixedStreamController:
             for k, b in enumerate(self.bufs):
                 if judged is not None and k not in judged:
                     continue                       # left for the next sleep
+                if numa is not None and numa.on_trial(self.classes[k].name):
+                    continue                       # no growth on credit
                 if self.class_cap is not None and \
                         len(self.bufs) + len(candidates) >= self.class_cap:
                     break                          # envelope guard, at commit
@@ -406,6 +415,9 @@ class MixedStreamController:
             records = []
             if candidates:
                 n_div, records = self._execute(arena, candidates)
+                if numa is not None:               # born on credit
+                    for a_, b_, d_, f_ in records:
+                        numa.born(self.periods, a_, b_, d_, f_)
             for _, spec, names, pairs in spawns:
                 records += self._spawn(spec, names, pairs)
             n_spawn = len(spawns)
@@ -440,6 +452,11 @@ class MixedStreamController:
         if sitting is not None and not self.freeze \
                 and getattr(sitting, "fold", False):
             self._fold_stale(sitting)              # letting go (sitting.py)
+        if numa is not None and not self.freeze:   # Mima: taken back
+            at = {c.name: k for k, c in enumerate(self.classes)}
+            back = numa.verdicts(self.periods, list(at))
+            if back:
+                self._fold_pairs({at[d]: at[k] for d, k in back})
 
         return self._report(arena, "match", None, status, grow, n_div,
                             spawns=n_spawn, pruned=n_pruned,
@@ -957,6 +974,8 @@ class MixedStreamController:
             # right of the column shift left or they would silently
             # testify on the wrong dim (found s033: a division split on
             # a composed dim, then its composer was pruned)
+            if getattr(self, "numa", None) is not None:
+                self.numa.pruned(col)
             if self.stress is not None:
                 kept = []
                 for group, subject in self.stress.pending:
@@ -1184,7 +1203,19 @@ class MixedStreamController:
                 drop[k] = j
                 kept.add(j)
                 break
-        gone = set()
+        for folded, kept_name in self._fold_pairs(drop):
+            sitting.folded(self.periods, folded, kept_name)
+        return len(drop)
+
+    def _fold_pairs(self, drop: dict) -> List[tuple]:
+        """Fold class index k into class index j for each k → j of
+        ``drop``: the survivor keeps its own members in front, the
+        sketches pool exactly, the folded row goes DORMANT. Shared by
+        letting go (`_fold_stale`) and the Numa rule's taking back
+        (numa.py). Returns (folded name, survivor name) per fold."""
+        arena = self.substrate.arena
+        self._sync_tags()
+        gone, out = set(), []
         for k, j in drop.items():
             ck, cd = self.classes[j], self.classes[k]
             self.bufs[j] = torch.cat([self.bufs[k], self.bufs[j]])[-BUF:]
@@ -1201,7 +1232,7 @@ class MixedStreamController:
                 if cd.name in p.lineage:
                     p.lineage.discard(cd.name)
                     p.lineage.add(ck.name)
-            sitting.folded(self.periods, cd.name, ck.name)
+            out.append((cd.name, ck.name))
             gone.add(cd.name)
         if self.stress is not None:                # bets on a folded class dissolve
             self.stress.pending = [
@@ -1211,7 +1242,7 @@ class MixedStreamController:
         self.classes = [c for k, c in enumerate(self.classes) if k not in drop]
         self.bufs = [b for k, b in enumerate(self.bufs) if k not in drop]
         self.tags = [t for k, t in enumerate(self.tags) if k not in drop]
-        return len(drop)
+        return out
 
     def _retire_classes(self, idxs: List[int]) -> None:
         """Drop classes consolidation emptied: astrocyte row DORMANT,
@@ -1254,7 +1285,10 @@ class MixedStreamController:
         if self.manifold is None or getattr(self, "no_anneal", False):   # probe switch (s069)
             return
         self._sync_tags()
+        numa = getattr(self, "numa", None)
         for k, c in enumerate(self.classes):
+            if numa is not None and numa.on_trial(c.name):
+                continue                           # no replays on credit
             z = self.manifold.anneal_phasors(c.name)
             if z is None or z.shape[1] != self.bufs[k].shape[1]:
                 continue

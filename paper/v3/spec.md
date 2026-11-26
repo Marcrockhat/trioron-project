@@ -3591,6 +3591,8 @@ package dependencies) because the scheduler performs the injection and
 | `progenitor.py` | germline (progenitor + council + vote book) and period-1 perception generation: census, first sitting, natal replay, handover | 10.6 |
 | `division.py` | split-vs-keep judgment: worst-dim (or multi-try) circular 2-means, per-dim acceptance, noise-slicing null | 10.7 |
 | `mixed.py` | the mixed-stream boundary meeting: membership, canonical frame, judgment, trials orchestration, execution, annealing, freeze, state_dict; membership never holds the members × classes table whole — best class and margin taken per row chunk, bit-identical (s070, v0.3.5) | 10.7–10.9 |
+| `sitting.py` | opt-in sitting cap for the incubator organisms: which classes are judged at a boundary (square-root cap, busiest first), the consolidation round in instalments, the fading trace and the fold (s069; not the default) | 10.7 |
+| `numa.py` | opt-in Numa rule for class growth (`NumaLedger`): a division's children are a provisional pair, paid only by world members (never replays), no division and no replays while on trial; two coherent batches settle it (Numa), a failed batch or an expired trial hands the pair back to be joined (Mima) (s071; not the default) | 10.7 |
 | `composer.py` | genome candidate set + affine-folded spawns, residual-incoherence trial statistic, importance gating, prune, ComposerPending | 10.8 |
 | `labels.py` | label tap bank: labels as reference carriers — per-label demodulation taps over receptor pockets (write-only from learning's side; naming/mixture readout) | s034 first cut; spec § pending gates |
 | `manifold.py` | per-class pocket-space μ/σ sketches on class astrocyte rows: annealing, σ-readout, replay, persistence | 10.9 |
