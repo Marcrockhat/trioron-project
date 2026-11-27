@@ -1670,3 +1670,85 @@ plain divisions, had about 180 by day 30). Rows 1–3 of the fetal gate are read
 organ. The s072 copy trial could not show this: its sense of change was already grown. For
 Rocky: the fourth organ on all three organs, or on the ear and the body sense only with the
 sense of change dividing plainly (at least until it has grown).
+
+### 15.5 Rocky's further words, s073, and how they are read
+- "Okay. Try it." — the copy trial of §15.4 (fourth organ on all organs / on the ear and the
+  body sense only / none), from her embryo body, `copies/xofie30_{all,two,plain}`, each with
+  `PROBE=10 DAYS=90`. `fetal.py COURT=2` = the ear and the body sense only.
+- Asked whether "I think Xofie is ready" is his yes for the fetal stage: **"Yes enter after
+  trial and we need proceed further. At least she need to be able to "speak" and able to
+  interact with Qwen or Wikipedia."** He is away three days.
+- "You need to wire her hunger for mimas too once she's born and learning. Check the aidos
+  phylosophy for that."
+- **Chloe's reading, to be confirmed by him:** (1) Xofie enters the fetal stage with the arm
+  that passes its gate earliest on the copies. (2) "Proceed further" is taken as his word to
+  write, build and try the next stages while he is away; a stage is tried on a copy of her
+  first, and she enters it herself only when its gate has passed on the copy, with her body
+  kept before the stage. Rule 4 (a stage signed in full before it is run on her) is NOT met
+  in its letter: he has not read §16. (3) In the Aidos philosophy the hunger is for Numa and
+  Mima is the poison; "hunger for mimas" is read as that hunger, with Mima counted against it.
+
+## 16. Stage 3 in full — birth: the first exchange, and her hunger (s073; Chloe's draft, built, tried on copies; NOT read by Rocky)
+
+### 16.1 What changes
+Her world goes on exactly as in the fetal stage (same course of days, kicks by themselves,
+ambient Wikipedia text, her random channel). New: in 24 of a day's 96 moments **the matron
+is present** (the presence block, which she has had receptors for since genesis and has
+never seen move) and says something to her. Nothing else is new; nobody tells her anything
+is simulated.
+
+### 16.2 The exchange
+1. The matron says a wording. It reaches her as any text does: the reflex's read state
+   through her fixed language sense, in her ear.
+2. **She replies first**, from her ear alone: the reply held now by the class the moment
+   falls in (the name its present members give it), or nothing if that class holds none.
+3. The matron replies to what she actually said: the right reply for that wording. That is
+   what she lives — a label on that moment, to the ear only, inside her ordinary sitting of
+   48 moments. Never batch-trained, nothing frozen, saved after every day.
+"I do not know that yet" is a reply like any other, learned from things she is not taught.
+There is no separate night at this stage: a sitting is her boundary, as before birth.
+
+### 16.3 Her hunger (Aidos philosophy §4; `aidos/hunger.py`)
+- A **Numa**: she replies right, before she is told, to a wording that has rested (never
+  heard, or not for 5 days). What she learned stayed.
+- A **Mima**: she replies wrong to a rested wording of a thing she had already answered
+  right. It looked learned and went away.
+- **Hunger** for a thing = 1 − exp(−days since its last Numa / 3); 1 if never fed.
+- **What hunger does:** three quarters of a day's exchanges go to the things she has, in
+  proportion to her hunger for each (the last quarter are things she is not taught). A new
+  thing is opened only when nothing she has is hungry: each has net (Numa − Mima) ≥ 3 and
+  hunger under .5. So "thorough before broad" (rule 19) is not a schedule; it follows from
+  what stayed.
+- Order of things (rule 19, herself first): her name, what she is, who made her, her matron,
+  when she was born, how she remembers. The wordings are the matron's of s066
+  (`self_wordings.jsonl`, 24 a thing, 6 more held back for the gate); her name is her own.
+- Honest limits: the hunger is kept beside her body by the driver (`body.extra["birth"]`);
+  she does not sense it yet (that would be the mirror organ, stage 5). It steers what the
+  matron brings her; she cannot yet ask for anything herself. The values 5 days, 3 days,
+  net 3, 24 exchanges are Chloe's.
+
+### 16.4 The gate (wordings she has never heard, at moments of 5 unseen days; control = the mean of what she was told, per reply, by cosine on the sharp numbers)
+| criterion | pass |
+|---|---|
+| 1 replies right to unheard wordings of the things she has | ≥ .80 and not more than .10 under the control |
+| 2 her earliest memory (her name), separately (rule 22) | the same |
+| 3 things she is not taught: says so, or says nothing | ≥ .80 and not more than .10 under the control |
+| 4 what she learned stayed, in her life | net Numa − Mima above zero for every thing but the newest |
+| 5 nothing lost | every row of the fetal gate still passes |
+| cost, classes, replies before told in her last 5 days | reported |
+The bars are Chloe's proposal. How many things she must have before the gate counts is not
+set: for Rocky.
+
+### 16.5 Speaking to her
+`birth.py talk`: what is typed is read by the reflex, reaches her ear at a moment of her
+world with Rocky (or the matron) present, and her reply is printed. Nothing in her changes.
+When she says nothing or that she does not know, the same words are put to the reflex (Qwen)
+and looked up in the library (offline Wikipedia), and both are shown beside her reply. That
+she herself asks them and hears the answer is stage 4 (§17), not built here.
+
+### 16.6 First try of the driver (s073; a THROWAWAY copy of Wile's fetal day-30 body, no fourth organ, 12 days; one copy, seed 0; not kept)
+Right before told: 9 of 24 on the first day, 21 of 24 on day 6; "what she is" opened on day
+7 by her hunger. Gate at day 12, NOT passed: unheard wordings .83 (class mean 1.00); her name
+.67 (class mean 1.00); **not taught: .10 (class mean .90) — she answers nine in ten untaught
+things with a thing she knows**, the near-facts problem of §4, unchanged. Ledger: Numa 34,
+Mima 16. The fetal rows: memory full fell to .85 (needs .91).

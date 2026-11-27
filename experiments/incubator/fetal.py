@@ -23,7 +23,8 @@ let her finish; the first alarm, twice day 5's 0.3 s, stopped her on day 17 at 2
 Env: DAYS=30 TEST_DAYS=5 P_TEXT=0.5 P_KICK=0.1667 DAY_BUDGET=30
      COURT=0       read at kin's birth only (her first fetal day): 1 = every organ gets a fourth organ
                    (trioron/organs/fourth.py) as its court from this stage on (Rocky s073: "Plain embryo,
-                   fourth organ after"); carried by her body afterwards
+                   fourth organ after"); 2 = the ear and the body sense only, the newborn sense of
+                   change divides plainly; carried by her body afterwards
      PROBE=0       read the gate every PROBE days while living and stop at the first pass (0 = off)
      NOISE_CH=-1   a probe for COPIES only (Rocky s072: "add one factor that only filled by random
                    numbers"): that input channel (a spare one, 140..147) carries a fresh random number
@@ -93,8 +94,9 @@ def live(ambient):
         print(f"[kin is born: {body.receptors['kin']} receptors of 43; she is {ex['day']} days old]", flush=True)
         if COURT:
             from trioron.organs import FourthOrgan
-            for leaf in body.organs().values(): leaf.mixed.court = FourthOrgan()
-            print(f"[the fourth organ is switched on in {list(body.organs())}]", flush=True)
+            on = [k for k in body.organs() if COURT == 1 or k != "kin"]
+            for k in on: body.organs()[k].mixed.court = FourthOrgan()
+            print(f"[the fourth organ is switched on in {on}]", flush=True)
     else:
         log = torch.load(LOG, weights_only=False)
     while ex["fetal_day"] < DAYS:
