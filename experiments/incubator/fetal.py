@@ -170,7 +170,8 @@ def gate(ambient) -> bool:
         print("\n# the same gate, read with the fourth organ's held children added")
         fine = _gate(ambient, body, True)
         for k, l in body.organs().items():
-            c = l.mixed.court
+            c = getattr(l.mixed, "court", None)
+            if c is None: continue
             print(f"  fourth organ, {k}: {c.size()}; heard {c.counts['heard']}, held {c.counts['held']}, settled and carried out {c.counts['carried']}, "
                   f"asleep (failed / unfed / void) {c.counts['failed']} / {c.counts['starved']} / {c.counts['void']}, gone {c.counts['gone']}, "
                   f"woken {c.counts['woken']} (settled {c.counts['woken_numa']}), inner born / settled / dropped {c.counts['inner']} / {c.counts['inner_numa']} / {c.counts['inner_dropped']}")

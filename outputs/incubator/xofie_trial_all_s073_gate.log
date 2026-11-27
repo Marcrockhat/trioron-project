@@ -1,0 +1,47 @@
+# fetal gate: 90 fetal days lived (120 days old), 5 unseen days; classes {'ear': 57, 'soma': 152, 'kin': 21}; receptors {'ear': 64, 'soma': 81, 'kin': 38}; kicks 1489 lived
+1 feels her kicks (which action, mean recall over 6):  hers 0.95  k-means 0.77  chance .17   pass
+2 knows what 'work' moves (changes hidden): 0.83 of 18 kicks point at the right reading
+2 knows what 'hold' moves (changes hidden): 1.00 of 18 kicks point at the right reading
+2 knows what 'let go' moves (changes hidden): 0.86 of 14 kicks point at the right reading
+2 knows what 'mark' moves (changes hidden): 1.00 of 15 kicks point at the right reading
+2 knows what 'wipe' moves (changes hidden): 1.00 of 10 kicks point at the right reading
+2 right for 5 of 5 acting kicks   pass (>= 4)
+3 CPU rise: hers or the world's, echo hidden (40 unseen events, 17 hers):  hers 1.00  k-means 0.98  base 0.57   pass
+3 memory rise: hers or the world's, echo hidden (29 unseen events, 17 hers):  hers 0.59  k-means 0.59  base 0.59   FAIL
+  lasting (reported): holding something, read from the body sense 0.90 (base 0.90)
+  lasting (reported): a mark exists, read from the body sense 0.71 (base 0.71)
+4 nothing lost: busy       0.88 (embryo 0.99, base 0.78)   FAIL
+4 nothing lost: full       0.76 (embryo 0.95, base 0.68)   FAIL
+4 nothing lost: elsewhere  1.00 (embryo 1.00, base 0.40)   pass
+4 nothing lost: window     0.92 (embryo 1.00, base 0.77)   FAIL
+4 the ear: text present 1.00 (embryo 1.00, base 0.50)   pass
+cost (reported): classes {'ear': 54, 'soma': 124, 'kin': 1} on fetal day 1 -> {'ear': 57, 'soma': 152, 'kin': 21}; used in her last 10 days {'ear': 37, 'soma': 20, 'kin': 16}; mean day 34.6 s (first 5: 17.1, last 5: 43.9)
+
+GATE: NOT passed — for Rocky to read; no stage is promoted by code
+
+# the same gate, read with the fourth organ's held children added
+# fetal gate: 90 fetal days lived (120 days old), 5 unseen days; classes {'ear': 57, 'soma': 152, 'kin': 21}; receptors {'ear': 64, 'soma': 81, 'kin': 38}; kicks 1489 lived
+1 feels her kicks (which action, mean recall over 6):  hers 0.95  k-means 0.77  chance .17   pass
+2 knows what 'work' moves (changes hidden): 0.39 of 18 kicks point at the right reading
+2 knows what 'hold' moves (changes hidden): 0.67 of 18 kicks point at the right reading
+2 knows what 'let go' moves (changes hidden): 0.86 of 14 kicks point at the right reading
+2 knows what 'mark' moves (changes hidden): 1.00 of 15 kicks point at the right reading
+2 knows what 'wipe' moves (changes hidden): 1.00 of 10 kicks point at the right reading
+2 right for 4 of 5 acting kicks   pass (>= 4)
+3 CPU rise: hers or the world's, echo hidden (40 unseen events, 17 hers):  hers 1.00  k-means 0.98  base 0.57   pass
+3 memory rise: hers or the world's, echo hidden (29 unseen events, 17 hers):  hers 0.79  k-means 0.59  base 0.59   pass
+  lasting (reported): holding something, read from the body sense 0.89 (base 0.90)
+  lasting (reported): a mark exists, read from the body sense 0.71 (base 0.71)
+4 nothing lost: busy       0.99 (embryo 0.99, base 0.78)   pass
+4 nothing lost: full       0.87 (embryo 0.95, base 0.68)   FAIL
+4 nothing lost: elsewhere  1.00 (embryo 1.00, base 0.40)   pass
+4 nothing lost: window     1.00 (embryo 1.00, base 0.77)   pass
+4 the ear: text present 1.00 (embryo 1.00, base 0.50)   pass
+cost (reported): classes {'ear': 54, 'soma': 124, 'kin': 1} on fetal day 1 -> {'ear': 57, 'soma': 152, 'kin': 21}; used in her last 10 days {'ear': 176, 'soma': 79, 'kin': 73}; mean day 34.6 s (first 5: 17.1, last 5: 43.9)
+
+GATE: NOT passed — for Rocky to read; no stage is promoted by code
+  fourth organ, ear: {'parents': 37, 'top': 91, 'pairs': 125, 'settled_inner': 0, 'members': 5436, 'asleep': 43}; heard 4945, held 215, settled and carried out 3, asleep (failed / unfed / void) 38 / 5 / 81, gone 4, woken 10 (settled 0), inner born / settled / dropped 93 / 0 / 9
+  fourth organ, soma: {'parents': 123, 'top': 246, 'pairs': 261, 'settled_inner': 0, 'members': 3168, 'asleep': 378}; heard 17774, held 639, settled and carried out 28, asleep (failed / unfed / void) 32 / 346 / 0, gone 39, woken 133 (settled 2), inner born / settled / dropped 205 / 3 / 19
+  fourth organ, kin: {'parents': 21, 'top': 52, 'pairs': 101, 'settled_inner': 6, 'members': 6974, 'asleep': 40}; heard 1749, held 115, settled and carried out 20, asleep (failed / unfed / void) 12 / 28 / 0, gone 25, woken 1 (settled 0), inner born / settled / dropped 182 / 13 / 32
+
+GATE, either reading: working organs NOT passed; with the fourth organ NOT passed

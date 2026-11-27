@@ -1,0 +1,20 @@
+# fetal gate: 70 fetal days lived (100 days old), 5 unseen days; classes {'ear': 188, 'soma': 2094, 'kin': 447}; receptors {'ear': 64, 'soma': 81, 'kin': 38}; kicks 1183 lived
+1 feels her kicks (which action, mean recall over 6):  hers 0.99  k-means 1.00  chance .17   pass
+2 knows what 'work' moves (changes hidden): 0.00 of 18 kicks point at the right reading
+2 knows what 'hold' moves (changes hidden): 0.94 of 18 kicks point at the right reading
+2 knows what 'let go' moves (changes hidden): 1.00 of 14 kicks point at the right reading
+2 knows what 'mark' moves (changes hidden): 1.00 of 15 kicks point at the right reading
+2 knows what 'wipe' moves (changes hidden): 1.00 of 10 kicks point at the right reading
+2 right for 4 of 5 acting kicks   pass (>= 4)
+3 CPU rise: hers or the world's, echo hidden (40 unseen events, 17 hers):  hers 0.98  k-means 0.98  base 0.57   pass
+3 memory rise: hers or the world's, echo hidden (29 unseen events, 17 hers):  hers 0.97  k-means 0.97  base 0.59   pass
+  lasting (reported): holding something, read from the body sense 0.83 (base 0.90)
+  lasting (reported): a mark exists, read from the body sense 0.71 (base 0.71)
+4 nothing lost: busy       0.97 (embryo 0.99, base 0.78)   pass
+4 nothing lost: full       0.93 (embryo 0.95, base 0.68)   pass
+4 nothing lost: elsewhere  1.00 (embryo 1.00, base 0.40)   pass
+4 nothing lost: window     1.00 (embryo 1.00, base 0.77)   pass
+4 the ear: text present 1.00 (embryo 1.00, base 0.50)   pass
+cost (reported): classes {'ear': 54, 'soma': 126, 'kin': 2} on fetal day 1 -> {'ear': 188, 'soma': 2094, 'kin': 447}; used in her last 10 days {'ear': 96, 'soma': 103, 'kin': 178}; mean day 33.9 s (first 5: 17.2, last 5: 51.8)
+
+GATE: all criteria pass — for Rocky to read; no stage is promoted by code

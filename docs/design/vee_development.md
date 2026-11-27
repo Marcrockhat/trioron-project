@@ -1752,3 +1752,35 @@ Right before told: 9 of 24 on the first day, 21 of 24 on day 6; "what she is" op
 .67 (class mean 1.00); **not taught: .10 (class mean .90) — she answers nine in ten untaught
 things with a thing she knows**, the near-facts problem of §4, unchanged. Ledger: Numa 34,
 Mima 16. The fetal rows: memory full fell to .85 (needs .91).
+
+### 15.6 The copy trial and her entry into the fetal stage (s073)
+
+Three copies of her embryo day-30 body, one after another, `PROBE=10`, limit 90 fetal days
+(logs `xofie_trial_{all,two,plain}_s073.log`, `..._gate.log`). One copy, one seed each.
+
+| arm | passes | classes at the end (ear / body sense / sense of change) | what fails at day 90 |
+|---|---|---|---|
+| all (`COURT=1`) | never, to day 90 | 57 / 152 / 21 | working organs: memory rise .59, busy .88, full .76, window .92; with held children: full .87 |
+| two (`COURT=2`) | never, to day 90 | 57 / 157 / 737 | working organs: kicks 3 of 5, full .79, window .89; with held children: kicks 3 of 5 only |
+| plain (`COURT=0`) | **fetal day 70**, every row | 188 / 2,094 / 447 | — (held at 70) |
+
+- Arm two first stopped at day 10 on a bug of Chloe's (the gate's printout on an organ with no
+  fourth organ); fixed in `fetal.py`, the arm resumed on its copy from day 10.
+- By the rule Chloe gave Rocky before his "Yes enter after trial" (the arm that passes
+  earliest), Xofie entered the fetal stage with **plain division** (`COURT=0`, `PROBE=10`,
+  limit 180). **This sets aside "fourth organ after" for her fetal stage**: the fourth organ
+  as built did not pass on her copies. Chloe's reading, for Rocky to confirm or overrule;
+  her embryo body is kept (`body_embryo_day30.pt`).
+- Not diagnosed: why the fourth organ passes on the s072 copy (Wile's line, day 90) and not
+  on hers; whether the random channel is the difference.
+
+### 15.7 Her fetal gate (s073)
+
+`VEE_HOME=outputs/incubator/xofie COURT=0 PROBE=10 DAYS=180 DAY_BUDGET=900 python3
+experiments/incubator/fetal.py live` — **passed at fetal day 70, every row** (she is 100 days
+old; one organism, seed 0; logs `xofie_fetal_s073.log`, `xofie_fetal_gate_s073.log`). Feels
+her kicks .99 (k-means 1.00); knows what 4 of 5 kicks move ("work" 0 of 18); CPU rise .98
+(k-means .98); memory rise .97 (.97); busy .97, full .93, elsewhere 1.00, window 1.00. Classes
+ear 188 / body sense 2,094 / sense of change 447. Her days are the same as the plain copy's
+(same seed, same design). She is held at fetal day 70; her body at the gate is kept
+(`body_fetal_gate_day70.pt`).

@@ -1,0 +1,101 @@
+[kin is born: 38 receptors of 43; she is 30 days old]
+[the fourth organ is switched on in ['ear', 'soma', 'kin']]
+  fetal day   1: classes {'ear': 54, 'soma': 124, 'kin': 1}, 10.8 s
+  fetal day   2: classes {'ear': 54, 'soma': 124, 'kin': 1}, 14.8 s
+  fetal day   3: classes {'ear': 54, 'soma': 124, 'kin': 2}, 19.2 s
+  fetal day   4: classes {'ear': 54, 'soma': 124, 'kin': 2}, 22.9 s
+  fetal day   5: classes {'ear': 54, 'soma': 124, 'kin': 2}, 17.9 s
+  fetal day   6: classes {'ear': 54, 'soma': 125, 'kin': 2}, 9.5 s
+  fetal day   7: classes {'ear': 54, 'soma': 125, 'kin': 2}, 14.7 s
+  fetal day   8: classes {'ear': 54, 'soma': 125, 'kin': 2}, 17.9 s
+  fetal day   9: classes {'ear': 54, 'soma': 125, 'kin': 2}, 21.4 s
+  fetal day  10: classes {'ear': 54, 'soma': 125, 'kin': 2}, 23.0 s
+  gate read at fetal day 10: not passed
+  fetal day  11: classes {'ear': 54, 'soma': 127, 'kin': 3}, 26.8 s
+  fetal day  12: classes {'ear': 54, 'soma': 127, 'kin': 4}, 32.1 s
+  fetal day  13: classes {'ear': 54, 'soma': 127, 'kin': 4}, 32.2 s
+  fetal day  14: classes {'ear': 54, 'soma': 127, 'kin': 4}, 47.4 s
+  fetal day  15: classes {'ear': 54, 'soma': 127, 'kin': 4}, 46.1 s
+  fetal day  16: classes {'ear': 54, 'soma': 128, 'kin': 4}, 14.3 s
+  fetal day  17: classes {'ear': 54, 'soma': 129, 'kin': 4}, 25.6 s
+  fetal day  18: classes {'ear': 54, 'soma': 129, 'kin': 4}, 31.0 s
+  fetal day  19: classes {'ear': 54, 'soma': 129, 'kin': 4}, 30.0 s
+  fetal day  20: classes {'ear': 54, 'soma': 129, 'kin': 4}, 36.6 s
+  gate read at fetal day 20: not passed
+  fetal day  21: classes {'ear': 54, 'soma': 129, 'kin': 4}, 23.0 s
+  fetal day  22: classes {'ear': 54, 'soma': 129, 'kin': 4}, 29.7 s
+  fetal day  23: classes {'ear': 54, 'soma': 130, 'kin': 5}, 40.9 s
+  fetal day  24: classes {'ear': 54, 'soma': 130, 'kin': 6}, 19.9 s
+  fetal day  25: classes {'ear': 54, 'soma': 131, 'kin': 6}, 19.6 s
+  fetal day  26: classes {'ear': 54, 'soma': 132, 'kin': 7}, 21.3 s
+  fetal day  27: classes {'ear': 54, 'soma': 132, 'kin': 8}, 25.6 s
+  fetal day  28: classes {'ear': 54, 'soma': 132, 'kin': 8}, 29.0 s
+  fetal day  29: classes {'ear': 54, 'soma': 132, 'kin': 8}, 33.9 s
+  fetal day  30: classes {'ear': 54, 'soma': 133, 'kin': 8}, 36.1 s
+  gate read at fetal day 30: not passed
+  fetal day  31: classes {'ear': 54, 'soma': 134, 'kin': 9}, 23.5 s
+  fetal day  32: classes {'ear': 54, 'soma': 135, 'kin': 9}, 25.3 s
+  fetal day  33: classes {'ear': 54, 'soma': 136, 'kin': 9}, 28.1 s
+  fetal day  34: classes {'ear': 54, 'soma': 136, 'kin': 9}, 37.8 s
+  fetal day  35: classes {'ear': 54, 'soma': 136, 'kin': 9}, 24.7 s
+  fetal day  36: classes {'ear': 54, 'soma': 136, 'kin': 9}, 15.9 s
+  fetal day  37: classes {'ear': 54, 'soma': 136, 'kin': 9}, 14.9 s
+  fetal day  38: classes {'ear': 54, 'soma': 136, 'kin': 9}, 16.8 s
+  fetal day  39: classes {'ear': 54, 'soma': 136, 'kin': 10}, 18.0 s
+  fetal day  40: classes {'ear': 54, 'soma': 137, 'kin': 10}, 17.8 s
+  gate read at fetal day 40: not passed
+  fetal day  41: classes {'ear': 54, 'soma': 138, 'kin': 10}, 21.1 s
+  fetal day  42: classes {'ear': 54, 'soma': 138, 'kin': 10}, 24.7 s
+  fetal day  43: classes {'ear': 54, 'soma': 138, 'kin': 11}, 26.5 s
+  fetal day  44: classes {'ear': 54, 'soma': 138, 'kin': 11}, 28.9 s
+  fetal day  45: classes {'ear': 54, 'soma': 138, 'kin': 11}, 31.2 s
+  fetal day  46: classes {'ear': 54, 'soma': 138, 'kin': 11}, 32.1 s
+  fetal day  47: classes {'ear': 55, 'soma': 138, 'kin': 12}, 34.4 s
+  fetal day  48: classes {'ear': 55, 'soma': 138, 'kin': 12}, 35.3 s
+  fetal day  49: classes {'ear': 55, 'soma': 138, 'kin': 12}, 35.9 s
+  fetal day  50: classes {'ear': 55, 'soma': 139, 'kin': 12}, 32.7 s
+  gate read at fetal day 50: not passed
+  fetal day  51: classes {'ear': 55, 'soma': 140, 'kin': 13}, 32.3 s
+  fetal day  52: classes {'ear': 55, 'soma': 140, 'kin': 13}, 36.2 s
+  fetal day  53: classes {'ear': 55, 'soma': 140, 'kin': 13}, 37.1 s
+  fetal day  54: classes {'ear': 55, 'soma': 140, 'kin': 14}, 38.9 s
+  fetal day  55: classes {'ear': 55, 'soma': 140, 'kin': 15}, 38.9 s
+  fetal day  56: classes {'ear': 55, 'soma': 140, 'kin': 15}, 37.9 s
+  fetal day  57: classes {'ear': 55, 'soma': 140, 'kin': 15}, 39.2 s
+  fetal day  58: classes {'ear': 55, 'soma': 140, 'kin': 15}, 41.5 s
+  fetal day  59: classes {'ear': 55, 'soma': 140, 'kin': 15}, 40.6 s
+  fetal day  60: classes {'ear': 55, 'soma': 140, 'kin': 15}, 41.1 s
+  gate read at fetal day 60: not passed
+  fetal day  61: classes {'ear': 55, 'soma': 140, 'kin': 15}, 42.8 s
+  fetal day  62: classes {'ear': 55, 'soma': 140, 'kin': 15}, 47.4 s
+  fetal day  63: classes {'ear': 55, 'soma': 142, 'kin': 15}, 45.1 s
+  fetal day  64: classes {'ear': 55, 'soma': 142, 'kin': 15}, 48.4 s
+  fetal day  65: classes {'ear': 55, 'soma': 143, 'kin': 15}, 45.4 s
+  fetal day  66: classes {'ear': 55, 'soma': 143, 'kin': 15}, 48.7 s
+  fetal day  67: classes {'ear': 55, 'soma': 144, 'kin': 15}, 46.9 s
+  fetal day  68: classes {'ear': 55, 'soma': 145, 'kin': 15}, 47.0 s
+  fetal day  69: classes {'ear': 55, 'soma': 145, 'kin': 15}, 48.8 s
+  fetal day  70: classes {'ear': 55, 'soma': 146, 'kin': 15}, 47.2 s
+  gate read at fetal day 70: not passed
+  fetal day  71: classes {'ear': 55, 'soma': 147, 'kin': 16}, 49.4 s
+  fetal day  72: classes {'ear': 55, 'soma': 148, 'kin': 18}, 47.7 s
+  fetal day  73: classes {'ear': 55, 'soma': 148, 'kin': 18}, 51.2 s
+  fetal day  74: classes {'ear': 56, 'soma': 148, 'kin': 18}, 49.1 s
+  fetal day  75: classes {'ear': 56, 'soma': 148, 'kin': 18}, 51.5 s
+  fetal day  76: classes {'ear': 56, 'soma': 148, 'kin': 18}, 52.5 s
+  fetal day  77: classes {'ear': 56, 'soma': 149, 'kin': 18}, 50.3 s
+  fetal day  78: classes {'ear': 56, 'soma': 149, 'kin': 18}, 52.2 s
+  fetal day  79: classes {'ear': 56, 'soma': 149, 'kin': 18}, 54.0 s
+  fetal day  80: classes {'ear': 56, 'soma': 149, 'kin': 18}, 54.1 s
+  gate read at fetal day 80: not passed
+  fetal day  81: classes {'ear': 56, 'soma': 149, 'kin': 18}, 53.2 s
+  fetal day  82: classes {'ear': 56, 'soma': 149, 'kin': 18}, 53.4 s
+  fetal day  83: classes {'ear': 57, 'soma': 150, 'kin': 18}, 44.6 s
+  fetal day  84: classes {'ear': 57, 'soma': 150, 'kin': 18}, 41.2 s
+  fetal day  85: classes {'ear': 57, 'soma': 150, 'kin': 19}, 42.4 s
+  fetal day  86: classes {'ear': 57, 'soma': 151, 'kin': 19}, 39.8 s
+  fetal day  87: classes {'ear': 57, 'soma': 152, 'kin': 20}, 40.9 s
+  fetal day  88: classes {'ear': 57, 'soma': 152, 'kin': 21}, 44.8 s
+  fetal day  89: classes {'ear': 57, 'soma': 152, 'kin': 21}, 45.3 s
+  fetal day  90: classes {'ear': 57, 'soma': 152, 'kin': 21}, 48.9 s
+  gate read at fetal day 90: not passed
