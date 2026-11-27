@@ -1593,3 +1593,80 @@ the working organs receive no division at all. Logs `still_probe_s072*.log`.
 - Held children that never settle make the second reading worse at day 60 (.86, window .93).
 - The pass is at the line in both copies (memory full .91, needs .91). It is one seed and 5
   unseen days; it would not take much to read .90.
+
+## 15. Xofie: the fourth organism (s073; Rocky: "the fourth organism name will be Xofie. With hope that she will carry the wisdom of all her three siblings")
+
+Rocky's words, s073. On genesis: **"Yes, genesis"**. On what she inherits: **"I meant the
+final design. When I said wisdom is what we learned from our past experiments with her
+siblings."** On the random channel: **"Yes, from genesis"**. On growth: **"Plain embryo,
+fourth organ after"**.
+
+### 15.1 What she is born with
+Nothing of a sibling's body: she starts from one class an organ. What she carries is the
+design the three taught:
+- the 148-number layout and Vee's language sense (`sense.pt`, copied, never refitted);
+- Weiss's corridor world (c = 0.6, §11.1);
+- Wile's organs: blurred, a silent reading ("none") a state of its own, the ladders from her
+  first moment (§11.5). Wile is the only sibling whose fetal gate passed;
+- **one random channel from genesis** (§13.10): input channel 140, N(0,1) every moment from a
+  stream of its own, so her world's course and the sentences she hears are the same as her
+  siblings', day for day (seed 0). It is part of her body for life (`extra["noise_ch"]`), not
+  a setting of a run. Rule 16 is amended for it, in Chloe's wording from Rocky's s072 words;
+- **the embryo is plain** (divisions carried out in the working organs, as Wile); **the fourth
+  organ (§14) is switched on at the fetal stage**, where keeping divisions out of the working
+  organs is what helped (§14.8). Not wired yet; the fetal stage waits on Rocky's yes.
+- Not hers: the sitting cap, the Numa rule inside the working organs (§13), the fading trace
+  and the fold (§11.12), the cranium (§11.9). None of them earned a place.
+
+Home `outputs/incubator/xofie/`. Born with
+`VEE_HOME=outputs/incubator/xofie CORRIDOR=0.6 BLUR=2 NOISE_CH=140 SEED=0 DAYS=30
+DAY_BUDGET=900 python3 experiments/incubator/embryo.py live`.
+
+### 15.2 What was changed in the drivers for her
+`embryo.py`: `NOISE_CH` is read at genesis only and then carried by her body; the probe days
+carry the channel too. `fetal.py` takes the channel from her body (the variable stays for
+copies, still refused outside `copies/`). Checked on two throwaway toy homes, three days:
+without the channel the days print as Wile's did; with it, column 140 is the only input
+column that differs, the hidden course and the sentences are the same.
+
+**The gate's control is weaker with the channel, said plainly.** The embryo gate's control is
+k-means "on the numbers the body sense reads" (§7.3), and those numbers now hold a column of
+pure noise with a spread larger than any reading's, which k-means cannot ignore. The gate is
+read as written (rule 5). A second k-means that is not shown the random channel is printed
+beside every row, reported, so the harder comparison can be seen.
+
+### 15.3 Her embryo gate (s073; logs `xofie_embryo_s073.log`, `xofie_embryo_gate_s073.log`; ONE organism, seed 0)
+30 embryo days, kept as `body_embryo_day30.pt`. The gate passes every row.
+
+| state | Xofie | k-means (gate's control) | k-means not shown the random channel (reported) | base | Wile |
+|---|---|---|---|---|---|
+| busy | .99 | 1.00 | 1.00 | .74 | 1.00 |
+| memory full | .95 | .96 | .97 | .62 | .96 |
+| elsewhere | 1.00 | .88 | .94 | .87 | 1.00 |
+| window | 1.00 | .98 | .99 | .86 | 1.00 |
+| night (reported) | .92 | .78 | | .50 | .91 |
+| night, window open (reported) | .76 | .88 | | .31 | .85 |
+| text present, ear (reported) | 1.00 | | | .49 | 1.00 |
+
+- Classes: ear 54, body sense 124 (Wile: 54 / 100). Ear sharpened the same two readings at the
+  same sittings as Wile; the body sense took no step. Stability day 20 → 30: same grouping .79
+  (Wile .87). Classes used in her last 10 days: 68 of 124.
+- Against the harder control (k-means without the random column) every gated row is still
+  within .05, so the pass does not lean on the weakened control.
+- Not measured: how many of her body-sense divisions split on the random column (no witness
+  was on; a witness was not checked for neutrality, §13.10).
+- A mean day took 22.9 s (last five 12.1 s) against Wile's 154 s on the same course of days.
+  Not diagnosed; the code was rebuilt in s072 since Wile's embryo.
+- `embryo_values.json` written by hand from this log (busy .99, full .95, elsewhere 1.00,
+  window 1.00, ear 1.00) for the fetal gate's "nothing lost" rows.
+
+### 15.4 The fetal stage: wired, NOT entered
+`fetal.py` reads `COURT=1` at kin's birth only and gives every organ a fourth organ; her body
+carries it afterwards. Checked on a throwaway copy of her embryo body for three fetal days
+(deleted after): the three courts are on, channel 140 goes on from her own stream.
+**A risk seen in that check, said plainly:** her sense of change is born at the fetal stage
+with ONE class, and with the fourth organ on it reached 2 classes in three days (Wile's, with
+plain divisions, had about 180 by day 30). Rows 1–3 of the fetal gate are read from that
+organ. The s072 copy trial could not show this: its sense of change was already grown. For
+Rocky: the fourth organ on all three organs, or on the ear and the body sense only with the
+sense of change dividing plainly (at least until it has grown).

@@ -21,10 +21,15 @@ Alarm (stop, state kept): a simulated day takes more than DAY_BUDGET seconds (Ro
 let her finish; the first alarm, twice day 5's 0.3 s, stopped her on day 17 at 2.1 s).
 
 Env: DAYS=30 TEST_DAYS=5 P_TEXT=0.5 P_KICK=0.1667 DAY_BUDGET=30
+     COURT=0       read at kin's birth only (her first fetal day): 1 = every organ gets a fourth organ
+                   (trioron/organs/fourth.py) as its court from this stage on (Rocky s073: "Plain embryo,
+                   fourth organ after"); carried by her body afterwards
      PROBE=0       read the gate every PROBE days while living and stop at the first pass (0 = off)
      NOISE_CH=-1   a probe for COPIES only (Rocky s072: "add one factor that only filled by random
                    numbers"): that input channel (a spare one, 140..147) carries a fresh random number
-                   every moment, from a stream of its own, so the world and the kicks are unchanged
+                   every moment, from a stream of its own, so the world and the kicks are unchanged.
+                   An organism born with a random channel (embryo.py, rule 16 as amended s073) carries it
+                   in her body (extra["noise_ch"]) and its stream goes on here; the variable is not used.
 """
 from __future__ import annotations
 import contextlib, io, math, os, sys, time
@@ -42,6 +47,7 @@ DAYS, TEST, P_TEXT, P_KICK = E("DAYS", 30), E("TEST_DAYS", 5), E("P_TEXT", 0.5),
 DAY_BUDGET = E("DAY_BUDGET", 30.0)
 NOISE_CH = E("NOISE_CH", -1)
 PROBE = E("PROBE", 0)
+COURT = E("COURT", 0)
 assert NOISE_CH < 0 or "/copies/" in os.path.abspath(vb.HOME), "the random channel is tried on copies only (rule 27)"
 CORRIDOR = 0.0              # set from her own world in gate(): unseen days come from the same kind of world
 LOG = f"{vb.HOME}/fetal_log.pt"
@@ -70,14 +76,25 @@ def day_of(world: World, g: np.random.Generator, k: np.random.Generator, ambient
     return torch.stack(X), torch.tensor(Hd).long(), torch.tensor(T), torch.tensor(A)
 
 
+def own_channel(body) -> None:
+    """Her random channel is her body's, set at genesis; the variable is for copies only."""
+    global NOISE_CH
+    NOISE_CH = body.extra.get("noise_ch", NOISE_CH)
+
+
 def live(ambient):
     body = vb.Body.load()
     ex = body.extra
+    own_channel(body)
     if "kin" not in body.organs():
         body.grow_kin(vb.kin_pool(body.seed, corridor=ex["world"].corridor))
         ex["kicks"], ex["fetal_day"] = np.random.default_rng(4000 + body.seed), 0
         log = {"X": [], "hidden": [], "text": [], "action": [], "classes": [], "secs": []}
         print(f"[kin is born: {body.receptors['kin']} receptors of 43; she is {ex['day']} days old]", flush=True)
+        if COURT:
+            from trioron.organs import FourthOrgan
+            for leaf in body.organs().values(): leaf.mixed.court = FourthOrgan()
+            print(f"[the fourth organ is switched on in {list(body.organs())}]", flush=True)
     else:
         log = torch.load(LOG, weights_only=False)
     while ex["fetal_day"] < DAYS:
@@ -145,6 +162,7 @@ def reader(body, fine: bool):
 
 def gate(ambient) -> bool:
     body = vb.Body.load()
+    own_channel(body)
     ok = _gate(ambient, body, False)
     if any(getattr(l.mixed, "court", None) is not None for l in body.organs().values()):
         print("\n# the same gate, read with the fourth organ's held children added")

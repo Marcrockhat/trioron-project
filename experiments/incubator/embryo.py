@@ -20,6 +20,8 @@ Set at genesis only, then carried by her body for life (s068, plan §11):
     CORRIDOR=0.6   her world varies inside a corridor (world.py); 0 = Vee's world
     BLUR=1         her organs start blurred and sharpen slowly (blur.py); 0 = Vee's organs;
                    2 = blurred, and a silent reading ("none") is a state of its own
+    NOISE_CH=-1    one spare input channel (140..147) that carries a fresh random number every moment,
+                   from a stream of its own (Rocky s072 / s073, rule 16 as amended; plan §15); -1 = none
 
 Env: DAYS=30 TEST_DAYS=5 P_TEXT=0.5 SEED=0 DAY_BUDGET=30  VEE_HOME=outputs/incubator/vee
 """
@@ -36,16 +38,19 @@ from world import HIDDEN, PER_DAY, World
 E = lambda k, d: type(d)(os.environ.get(k, d))
 DAYS, TEST, P_TEXT, SEED = E("DAYS", 30), E("TEST_DAYS", 5), E("P_TEXT", 0.5), E("SEED", 0)
 CORRIDOR, BLUR, DAY_BUDGET = E("CORRIDOR", 0.0), E("BLUR", 0), E("DAY_BUDGET", 30.0)
+NOISE_CH = E("NOISE_CH", -1)                # read at genesis only; afterwards her body carries it (extra["noise_ch"])
 LOG = f"{vb.HOME}/embryo_log.pt"
 
 
-def day_of(world: World, g: np.random.Generator, ambient: torch.Tensor):
-    """One simulated day: inputs [96, 148], hidden states [96, 5], sentence index [96] (-1 = no text)."""
+def day_of(world: World, g: np.random.Generator, ambient: torch.Tensor, noise: np.random.Generator | None = None, ch: int = -1):
+    """One simulated day: inputs [96, 148], hidden states [96, 5], sentence index [96] (-1 = no text).
+    ``noise``, ``ch``: her random channel, if she has one (its own stream; the world's course is unchanged)."""
     X, Hd, T = [], [], []
     for _ in range(PER_DAY):
         raw, hid = world.step()
         i = int(g.integers(len(ambient))) if g.random() < P_TEXT else -1
         X.append(vb.moment(ambient[i] if i >= 0 else None, raw))
+        if noise is not None: X[-1][ch] = float(noise.standard_normal())
         Hd.append([hid[h] for h in HIDDEN]); T.append(i)
     return torch.stack(X), torch.tensor(Hd).long(), torch.tensor(T)
 
@@ -56,12 +61,15 @@ def live(ambient):
     else:
         body = vb.Body(SEED, vb.genesis_pool(SEED, ambient, p_text=P_TEXT, corridor=CORRIDOR), blur={0: False, 1: True, 2: "none"}[BLUR])
         body.extra = {"world": World(SEED, corridor=CORRIDOR), "rng": np.random.default_rng(1000 + SEED), "day": 0}
+        if NOISE_CH >= 0:
+            assert vb.LAYOUT["spare"][0] <= NOISE_CH < vb.LAYOUT["spare"][1], "the random channel is a spare one (140..147)"
+            body.extra["noise_ch"], body.extra["noise"] = NOISE_CH, np.random.default_rng(5000 + SEED)
         log = {"X": [], "hidden": [], "text": [], "classes": [], "ear": [], "secs": [], "names": []}
-        print(f"[genesis: {body.receptors} receptors of {vb.WIDTH}; world corridor {CORRIDOR}; organs {('sharp', 'blurred', 'blurred, with none')[BLUR]}]", flush=True)
+        print(f"[genesis: {body.receptors} receptors of {vb.WIDTH}; world corridor {CORRIDOR}; organs {('sharp', 'blurred', 'blurred, with none')[BLUR]}; random channel {body.extra.get('noise_ch', 'none')}]", flush=True)
     ex = body.extra
     while ex["day"] < DAYS:
         t0 = time.time()
-        X, Hd, T = day_of(ex["world"], ex["rng"], ambient)
+        X, Hd, T = day_of(ex["world"], ex["rng"], ambient, ex.get("noise"), ex.get("noise_ch", -1))
         for i in range(0, PER_DAY, vb.WINDOW):
             body.live(X[i:i + vb.WINDOW])
         ex["day"] += 1
@@ -80,33 +88,38 @@ def sharpness(body) -> str:
     return ", steps taken " + str({k: len(b.history) for k, b in body.blur.items()})
 
 
-def probe(ambient, corridor: float = 0.0):
+def probe(ambient, corridor: float = 0.0, ch: int = -1):
     """A fixed set of moments she never lives (another world run), for stability and the gate.
     The rare state is made to occur: she is elsewhere from the start of the third day
     (it then lasts as long as the world lets it), so home / elsewhere can be scored."""
     w, g = World(9000 + SEED, corridor=corridor), np.random.default_rng(9500 + SEED)
+    nz = np.random.default_rng(9800 + SEED) if ch >= 0 else None
     days = []
     for d in range(TEST):
         if d == 2: w.elsewhere = True
-        days.append(day_of(w, g, ambient))
+        days.append(day_of(w, g, ambient, nz, ch))
     return torch.cat([d[0] for d in days]), torch.cat([d[1] for d in days]), torch.cat([d[2] for d in days])
 
 
 def probe_names(body, ambient) -> list[str]:
     names = body.class_names()
-    return [names[int(c)] if c >= 0 else "-" for c in body.read(probe(ambient, body.extra["world"].corridor)[0])[0]]
+    return [names[int(c)] if c >= 0 else "-" for c in body.read(probe(ambient, body.extra["world"].corridor, body.extra.get("noise_ch", -1))[0])[0]]
 
 
 def gate(ambient):
     body, log = vb.Body.load(), torch.load(LOG, weights_only=False)
     X, Hd = torch.cat(log["X"]), torch.cat(log["hidden"])
-    Xp, Hp, Tp = probe(ambient, body.extra["world"].corridor)
+    ch = body.extra.get("noise_ch", -1)
+    Xp, Hp, Tp = probe(ambient, body.extra["world"].corridor, ch)
     n, k = len(X), body.classes["soma"]
     cls = body.read(torch.cat([X, Xp]))[0]
     km = torch.cdist(torch.cat([X, Xp])[:, vb.LANG:], kmeans(X[:, vb.LANG:], k, SEED)).argmin(1)   # control on the numbers the soma reads
     Hall = torch.cat([Hd, Hp])
+    if ch >= 0:                                                   # a second control (reported): k-means not shown her random channel
+        keep = torch.arange(vb.LANG, vb.WIDTH) != ch
+        km2 = torch.cdist(torch.cat([X, Xp])[:, vb.LANG:][:, keep], kmeans(X[:, vb.LANG:][:, keep], k, SEED)).argmin(1)
     print(f"# embryo gate: {body.extra['day']} days lived, {TEST} unseen days; soma {k} classes, ear {body.classes['ear']}; receptors {body.receptors}; "
-          f"{vb.WINDOW} moments a sitting, text in {P_TEXT} of moments; world corridor {body.extra['world'].corridor}")
+          f"{vb.WINDOW} moments a sitting, text in {P_TEXT} of moments; world corridor {body.extra['world'].corridor}; random channel {ch if ch >= 0 else 'none'}")
     if body.blur is not None:
         import environment
         for o, b in body.blur.items():
@@ -122,7 +135,8 @@ def gate(ambient):
         if h == "night":                                          # Rocky s067: night is not meaningful for her yet
             print(f"{h:22} {a:>11.2f} {c:>8.2f} {b:>6.2f}   (reported, not gated — Rocky s067)"); continue
         ok &= v
-        print(f"{h:22} {a:>11.2f} {c:>8.2f} {b:>6.2f}   {'pass' if v else 'FAIL'}")
+        more = f"   (k-means without the random channel {readable(km2, Hall[:, j], n)[0]:.2f}, reported)" if ch >= 0 else ""
+        print(f"{h:22} {a:>11.2f} {c:>8.2f} {b:>6.2f}   {'pass' if v else 'FAIL'}{more}")
     win = Hall[:, HIDDEN.index("window")] == 1                    # night, seen through the open window only
     nw = int(win[:n].sum())
     a, b = readable(cls[win], Hall[win][:, 0], nw); c, _ = readable(km[win], Hall[win][:, 0], nw)
@@ -145,7 +159,9 @@ def gate(ambient):
         print("stability: not measured (needs day 20 and the last day)")
     used = cls[n:].unique().numel(); top3 = torch.bincount(cls[n:].clamp(min=0)).topk(min(3, k)).values.sum().item() / len(Xp)
     print(f"classes used on unseen days: {used} of {k}; share of unseen moments in her 3 biggest classes {top3:.2f}")
-    print(f"silent channels: all {vb.RES} reserved channels read exactly zero through the embryo: {bool((X[:, vb.WIDTH - vb.RES:] == 0).all())}")
+    quiet = [j for j in range(vb.WIDTH - vb.RES, vb.WIDTH) if j != ch]
+    print(f"silent channels: all {len(quiet)} silent reserved channels read exactly zero through the embryo: {bool((X[:, quiet] == 0).all())}"
+          + (f"; channel {ch} is her random channel (mean {X[:, ch].mean():+.2f}, spread {X[:, ch].std():.2f})" if ch >= 0 else ""))
     live = cls[max(0, n - 10 * PER_DAY):n].unique().numel()
     print(f"classes she used in her last 10 days: {live} of {k}")
     print(f"mean day {np.mean(log['secs']):.1f} s (first 5: {np.mean(log['secs'][:5]):.1f}, last 5: {np.mean(log['secs'][-5:]):.1f})")

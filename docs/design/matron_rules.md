@@ -47,7 +47,12 @@ Read this at the start of every session that touches an organism.
 14. Her class count need not settle now; cost and classes in use are watched
     and reported (s067).
 15. What is not meaningful for her yet is not demanded of her yet (s067: night).
-16. Her world may vary, inside a corridor, never at random (s067).
+16. Her world may vary, inside a corridor, never at random (s067). One input
+    channel alone is random, from genesis and for life, for an organism born
+    with it (s072, Rocky: "a channel of random value is needed probably to
+    simulate the real world nad only this channel is random, the rest is
+    not"; s073: part of Xofie's world "from genesis"). The amendment's wording
+    is Chloe's, from those words; Rocky may reword it.
 17. An organ starts blurred and sharpens very slowly, relative to her size:
     before birth when she has been settled long enough; after birth only when
     the matron's corrections call for it and the step pays (s067). A level
