@@ -1226,8 +1226,10 @@ Everything below is Chloe's proposal. It is a change to the phasecyte's rules (r
    batch still coherent on the split dimension above the mark; then a second batch of 25
    NEW world members each, coherent again. The second batch is the re-test: evidence the
    division never saw. From then the pair are ordinary classes.
-5. **Mima (it is taken back).** A batch fails the mark, or the pair has not gathered its
-   two batches within 60 sittings (30 days, the fold's own horizon). The two children are
+5. **Mima (it is taken back).** A batch fails the mark, or (s072, Rocky's ruling on H, see
+   13.9) one of the children receives nothing from the world for 60 sittings on end. A pair
+   the world keeps feeding stays on trial until it has its batches. (As first signed and
+   tried in s071: the pair had 60 sittings in all.) The two children are
    joined again into the parent: members together, sketches pooled exactly (the fold's
    routine). Nothing lived is deleted; a boundary is taken back.
 6. **The ledger is reported** with every gate, per organ: born, Numa, Mima, still on trial,
@@ -1333,3 +1335,261 @@ Ledger at day 90 (born / Numa / Mima / gone / on trial): ear 116 / 0 / 72 / 0 / 
 - No value was changed after the result. Chloe's proposal, NOT signed, NOT run: a pair stays
   on trial until it has gathered its batches; it is taken back only when a batch fails or a
   child receives nothing from the world for 60 sittings.
+
+### 13.9 The trial length changed (s072)
+Rocky, s072: "the numa gate seems not enough and make the organism learn less", and on H:
+"Yeah change the trial lenght first." Changed in `numa.py`: a pair is taken back when a batch
+fails or when a child goes unfed by the world for 60 sittings on end; there is no limit on
+the whole trial. Each Mima's record now says why (`failed` / `starved` / `void`); the ledger
+also counts the world's rows that no class claimed. Test extended (a pair fed slowly stays
+on trial past 60 sittings and settles). 25 / 2 / 60 are unchanged.
+
+**Second copy trial** (`copies/wile30_numa2`: Wile's fetal day-30 body, the changed rule on in
+all three organs, uncapped, to day 90; logs `numa_probe2_s072.log`,
+`numa_probe2_s072_gate_day{60,90}.log`; one organism, seed 0):
+
+| | Wile d90 | first copy d90 | second copy d60 | second copy d90 |
+|---|---|---|---|---|
+| feels his kicks | .98 | .98 | .97 | .95 |
+| what a kick moves | 5 of 5 | 5 of 5 | 5 of 5 | 4 of 5 (**"work" 0 of 18**) |
+| CPU / memory rise | .95 / .97 | .98 / .97 | .98 / .97 | .98 / .97 |
+| memory full (needs .91) | .95 | .89 FAIL | .90 FAIL | prints .91, FAIL (under the line) |
+| busy / place / window; ear | 1.00 each; 1.00 | 1.00 each; 1.00 | .99 / 1.00 / .99; 1.00 | 1.00 each; 1.00 |
+| gate | all pass | not passed | not passed | not passed |
+| classes ear / body sense / change | 231 / 4,540 / 710 | 163 / 424 / 222 | 149 / 428 / 215 | 165 / 438 / 217 |
+| s a day (last five); body file | 259; 455 MB | 53; 107 MB | 25; 97 MB | 41; 107 MB |
+
+Ledger at day 90 (born / Numa / Mima / gone / on trial): ear 95 / 0 / 49 / 0 / 46; body sense
+172 / 3 / 67 / 5 / 97; sense of change 82 / 1 / 26 / 2 / 53. Sittings on trial, median /
+longest: 64 / 119, 45 / 120, 51 / 120.
+- **Four Numa in 349 divisions** (first trial: one in 406). The longer trial did not let
+  growth pay. Pairs now wait instead of being taken back: 196 pairs are on trial at day 90,
+  some since the first day of the trial, undivided and unreplayed.
+- The arithmetic the values overlooked: an organ gets 48 world moments a sitting (5,760 in
+  the 60 days) for some 430 classes. A pair needs 100 of them to settle. Divisions are found
+  on buffers of 60 members that are mostly replays; the world cannot confirm them at that
+  rate. Chloe's reading, from two copies of one organism.
+- The ear's Mima all failed a batch (49 of 49); the body sense's mostly went unfed (62 of 67).
+- The "work" kick's consequence is lost at day 90 (0 of 18; 1.00 at day 60 and in the first
+  copy). Not diagnosed.
+- **The world's rows that no class claimed: 3 of 17,280.** The working organs almost never
+  refuse a moment, so the record-keeper of 13.6 (consulted on refusals) would never be asked.
+- No value was changed after the result. The gate is not relaxed.
+
+### 13.10 One random channel (s072; copies only)
+Rocky, s072: "Can you add one factor that only filled by random numbers?" and: "I agreed that
+it is varied and not random, but judging on how the architecture work, a channel of random
+value is needed probably to simulate the real world nad only this channel is random, the rest
+is not." Rule 16 stands; the channel is not given to Wile and not written into the rules.
+- **Built** opt-in in `fetal.py` (`NOISE_CH=140`, refused outside `copies/`): input channel
+  140, a spare one, carries a fresh N(0,1) number every moment from a stream of its own, so
+  the world and the kicks are unchanged. The body sense formed receptors on the spare
+  channels at genesis (its column 73); through his blur he sees low / high. The ear and the
+  sense of change do not read it. `NumaLedger(witness=True)` judges nothing and writes down
+  each division's split column; `numa_probe.py dims <channel>` counts the divisions on it.
+- **Two copies of Wile's day-30 body to day 60** (logs `noise_probe_s072.log`,
+  `noise_probe_wile30_noise_{numa,plain}_s072_gate_day60.log`; one organism, seed 0):
+
+| day 60 | rule on, random channel | rule on, none (13.9) | rule off, random channel | Wile (rule off, none) |
+|---|---|---|---|---|
+| feels his kicks | .96 | .97 | .96 | .97 |
+| what a kick moves | 5 of 5 | 5 of 5 | 5 of 5 | 5 of 5 |
+| CPU / memory rise | .98 / .97 | .98 / .97 | .98 / .97 | .98 / .97 |
+| memory full (needs .91) | .93 | .90 FAIL | prints .91, FAIL | .90 FAIL |
+| gate | **all pass** | not passed | not passed | not passed |
+| classes ear / body sense / change | 149 / 426 / 223 | 149 / 428 / 215 | 175 / 885 / 436 | 175 / 1,352 / 402 |
+| body-sense divisions, on the random column | 9 of 89 (all 9 on trial) | | 33 of 569 | |
+
+- He divides on the random column: about one division in ten (rule on) and one in seventeen
+  (rule off). It is among his most divided columns, not the first.
+- The gate rows did not fall with the channel present. Memory full read .93 against .90
+  without it: within what one reading of 480 moments can tell apart (Chloe's estimate).
+- "Holding something" read from the body sense fell to .75 (base .90) in the rule-on copy;
+  a reported row, not a gate row.
+- The rule-off copy grew fewer body-sense classes than Wile over the same days (885 against
+  1,352). Not diagnosed; the witness was not checked for neutrality on its own.
+- **What the Numa rule cannot do, by its construction:** a division on the random column
+  splits low from high, and the world really does give low moments to one child and high
+  moments to the other, so its batches will be coherent on the split column. The rule tells
+  what the world shows from what only replays show; it does not tell what means something
+  from what means nothing. Not yet observed (none of the 9 has gathered its batches).
+- **Day 90 of the rule-on copy, and Chloe was wrong in the point above**
+  (`noise_probe_wile30_noise_numa_s072_gate_day90.log`). 24 of the body sense's 174 divisions
+  split on the random column (its third most divided). None settled: 8 were taken back, all
+  because one child was never fed (world members 103 / 0, 117 / 0, 115 / 0 …), and the 16
+  still on trial show the same (one has 97 / 10, the rest x / 0). The world's low and high
+  moments do NOT fall to the two children: one child takes every moment and the other only
+  ever held replays. So the rule as changed in 13.9 does take the random divisions back, by
+  starvation and not by incoherence. Why one child takes all is not diagnosed (membership is
+  judged over all 81 columns, of which the split is one).
+- The gate at day 90 is not passed: memory full .90, and the "work" kick reads 0 of 18, as in
+  the copy without the channel (13.9). Both losses come with the changed rule's days 60–90,
+  not with the channel. Kicks .96, memory rise 1.00, the rest pass; classes 165 / 436 / 221.
+
+## 14. The fourth organ, living (drafted and signed s072; built opt-in; one copy trial, 14.7)
+
+Rocky, s071: "more classes means more creativity though but it will raise a confused
+organism. Can you raise another organism to chew on this classes instead?" In s072 he chose
+the living organ over the record-keeper of 13.6 ("On 1. it is b"), to be designed after the
+trial of 13.9. Everything below is Chloe's proposal; it changes the phasecyte's rules
+(rule 25) and is written before anything is built (rule 4).
+
+### 14.1 The idea
+The trial of a division moves out of the working organ. A working organ (ear, body sense,
+sense of change) that finds a division does not carry it out: it hands the candidate to the
+fourth organ and stays as it was, the parent whole, replayed and classifying as before. The
+fourth organ lives the candidate: it holds the two children as real classes, fed by the
+world, and judges them by the Numa rule. What settles there is carried out in the working
+organ as a final division. What does not settle stays in the fourth organ.
+
+### 14.2 What it holds and how it is fed
+- For each candidate: the working organ and parent it came from, the dimension, the mark,
+  the two children's templates, and the WORLD members only (no replays ever enter it).
+- Each of the three working organs reads its own numbers, so a held pair lives in the space
+  of the organ it came from. The fourth organ is one organ with three chambers, not one
+  class list: classes from different organs are never compared.
+- Feeding costs him no new input: every moment the world gives to a parent in a working
+  organ is shown to that parent's held pairs, and falls to one child or the other.
+- Numa: two coherent batches of 25 world members per child, as 13.2. Then the working organ
+  divides that parent, once and for good.
+- A failed batch: the pair is not deleted. It stays, asleep (its record, about 1 KB, no
+  members), and is woken if the parent later offers the same dimension again.
+- Unfed for 60 sittings: asleep likewise.
+
+### 14.3 Where the creativity would be
+- Held children may divide again INSIDE the fourth organ, on world members only. This is the
+  place where fine distinctions are allowed that the working organs must not carry yet.
+- Every gate row is read twice and reported: from the working organs alone (the gate), and
+  with the fourth organ's living classes added (reported only). If the second reading is
+  higher, the fourth organ knows something the working organs do not yet.
+
+### 14.4 What I expect, and what could go wrong
+- The working organs are never confused by a class on credit and never lose replays: the two
+  costs of the rule as built (13.2 step 3) disappear.
+- It may be the Numa rule again in another place: if the trial of 13.9 already settles real
+  divisions, the gain of 14 is only the unconfused working organ. The trial is read first.
+- Its size is not bounded by the working organs' size. A bound is needed (14.5, J3).
+- A parent with several held pairs settles at most one at a time; the others are judged
+  against a parent that no longer exists and must be re-attached to a child or put asleep.
+
+### 14.5 Decisions for Rocky
+- **J1.** The trial in the fourth organ (14.1), replacing the trial inside the working
+  organ? Or both (the working organ's own rule kept, the fourth organ only for Mima)?
+- **J2.** May held children divide again inside it (14.3)?
+- **J3.** Its bound: at most one living pair per working class and dimension, the rest
+  asleep (Chloe's value), or another.
+- **J4.** In Wile's body (one more organ in `Body`), tried first on a copy from his day-30
+  body like 13.5, against the copy of 13.9 and Wile himself.
+
+
+### 14.6 Signed, built (s072)
+Rocky, s072: "Lets put the fourth organ and wrap all the three siblings. Rebuild the code,
+and make sure we clearly separate the organs and the triorons core." Asked what he meant, he
+chose (his selections among Chloe's options, and one answer in his own words):
+- the siblings: **"Retire all three, raise a new one"** — Vee, Weiss and Wile are closed,
+  their homes kept; a new organism is born on the rebuilt code with four organs.
+- the fourth organ: **"As drafted, gate reads both"** — J1 (the trial happens in the fourth
+  organ, replacing the trial inside the working organ), J2 (held children may divide inside
+  it), J3 (one living pair per class and column), J4 (a copy first), and J5: every gate row
+  is read from the working organs alone and with the fourth organ's held children added.
+- how the fetal stage ends: **"You need to put a probe when the gate passed and then the
+  fetal state is passed (a relative gate)."**
+- the code: **`trioron/organs/`** as a package beside the core.
+
+**How Chloe built J5 and the relative gate (hers to answer for):**
+- The gate is passed when ONE of the two readings passes every row. Both are printed.
+- `PROBE=n`: the gate is read every n days on the saved body; at the first reading that
+  passes, a copy is kept, living stops and the organism is HELD. No stage is promoted by
+  code (rule 3 stands): "the fetal stage is passed" is reported, and the next stage is
+  entered on Rocky's yes.
+
+**Built:** `trioron/organs/` (spec §9.17): `blur.py`, `sitting.py`, `numa.py` moved in,
+`fourth.py` new (`FourthOrgan`, set as `leaf.mixed.court`). `pcll/mixed.py` no longer
+imports or names a rule; it keeps three empty places (`sitting`, `numa`, `court`) and hands
+candidates over at one point (`court.hear`), feeds the held from the world's rows
+(`court.receive`) and reports a carried-out division (`court.carried_out`). Tests:
+`test_core_names_no_organ_rule`, `test_fourth_organ_tries_divisions_for_a_leaf`; the gate
+reworked to read both ways prints the same reading as before on an organism without a
+fourth organ (checked on `copies/wile30_numa2`). KEEP = 120 world members a held child,
+DEPTH = 3, and an asleep pair is not heard again for 60 sittings: Chloe's values.
+
+**A difference from the draft, said plainly:** a moment falls to a held child by the
+children's templates over ALL the organ's columns, as membership works in the working organ,
+not by the split column alone. By the split column alone the batch test would pass by
+construction for any column the world moves, the random one included.
+
+### 14.7 The copy trial (s072; one copy, seed 0)
+
+A copy of Wile's day-30 body (`copies/wile30_fourth`), the fourth organ set on all three
+organs, the random channel on (input 140), lived to fetal day 90. The gate read both ways at
+days 60 and 90, 5 unseen days each. Logs: `fourth_probe_s072.log`,
+`fourth_probe_s072_gate_day{60,90}.log`.
+
+| | day 60 | day 90 |
+|---|---|---|
+| classes ear / body sense / change | 119 / 348 / 182 | 119 / 354 / 182 (day 30: 119 / 346 / 182) |
+| feels his kicks | .89 FAIL (both readings) | .97 pass (both) |
+| what a kick moves | 5 of 5 | 5 of 5 ("work" 18 of 18) |
+| CPU rise / memory rise | .98 / .97 | .98 / .97 |
+| memory full, working organs | .90 FAIL | .91 pass |
+| memory full, held children added | .90 FAIL | .95 pass |
+| gate | NOT passed, either reading | passed, both readings |
+| body sense: held so far / settled and carried out | 718 / 2 | 1,162 / 8 |
+| body sense: asleep failed / unfed | 0 / 0 | 9 / 655 |
+| ear, change: settled | 0, 0 | 0, 0 |
+| pairs on the random column: held / settled / unfed | 49 / 0 / 0 | 84 / 0 / 43 |
+| seconds a day | 45 | 68 (day 31: 22) |
+
+**What it shows.**
+- The gate passes at day 90 with 354 body-sense classes. Wile passed the same gate at day 90
+  with 4,540; the two copies with the trial inside the working organ did not pass at day 90
+  (memory full .90, the "work" kick lost). Here the "work" kick is kept.
+- Almost nothing was carried out: 8 divisions of 1,162 heard in the body sense, none in the
+  ear or the sense of change. The working organs at day 90 are nearly the day-30 body. So the
+  pass is not shown to come from what the fourth organ settled.
+- The held children do carry something: memory full reads .95 with them against .91 without.
+  The same reading costs "elsewhere" .03 (1.00 → .97) and "holding" .05 (reported row).
+- No pair on the random column settled; 43 went unfed, as in 13.10.
+- Inner pairs: 109 born in all three organs, none settled.
+
+**What it does not show (said plainly).**
+- No control was run of the same copy with division simply off. A body that does not grow at
+  all may pass at day 90 as well; then the fourth organ's part is the .04 on memory full and
+  no more. This control is owed before the fourth organ is credited.
+- Day 60 fails and day 90 passes on rows that sit at the line (.89/.97, .90/.91). One copy,
+  one seed, 5 unseen days: the pass at day 90 is thin on the working organs alone.
+- The cost rises with the days (22 s → 68 s a day) while the working organs stay the same
+  size; the fourth organ is where the time goes (6,133 members held in the body sense). It
+  was not followed past day 90.
+- The batch (25 × 2) is still out of scale with his world: 8 settled in 60 days.
+
+### 14.8 The control: nothing ever carried out (s072; one copy, seed 0)
+
+The owed control (`copies/wile30_still`): the same day-30 body, the same days, the random
+channel on, a fourth organ whose pairs can never settle (`numa_probe.py setup <source> 30 still`), so
+the working organs receive no division at all. Logs `still_probe_s072*.log`.
+
+| | day 60 | day 90 |
+|---|---|---|
+| classes ear / body sense / change | 119 / 346 / 182 | 119 / 346 / 182 |
+| feels his kicks | .89 FAIL | .97 pass |
+| what a kick moves | 5 of 5 | 5 of 5 ("work" 18 of 18) |
+| CPU rise / memory rise | .98 / .97 | .98 / .97 |
+| memory full, working organs | .89 FAIL | .91 pass |
+| memory full, held children added | .86 FAIL (window .93 FAIL) | .91 pass |
+| gate | NOT passed, either reading | passed, both readings |
+
+**What it shows, said plainly.**
+- **The control passes the gate at day 90 as well.** A body that has not gained one class
+  since day 30 passes every row. The pass in 14.7 is therefore NOT the fourth organ's doing,
+  and not the doing of the 8 divisions it carried out.
+- What the fourth organ did in 14.7 is what the control also does: it kept divisions out of
+  the working organs. That alone keeps the "work" kick and brings memory full to the line by
+  day 90. The rows that failed at day 30 (.89 kicks, .85 memory full) rise with the days.
+- Wile's 4,540 classes were not needed for this gate. Chloe's reading in §13.8 and §13.9,
+  that memory full needs some real growth, is not supported: with no growth it reads .91.
+- The one thing left to the fourth organ's credit: with its held children added, memory full
+  reads .95 in 14.7 against .91 here. One copy, one seed, a row at its line.
+- Held children that never settle make the second reading worse at day 60 (.86, window .93).
+- The pass is at the line in both copies (memory full .91, needs .91). It is one seed and 5
+  unseen days; it would not take much to read .90.

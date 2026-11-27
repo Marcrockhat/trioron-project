@@ -490,7 +490,7 @@ def test_sitting_cap_bounds_the_judging():
     a class with nothing new is not judged again, and classes are still
     discovered; off (the default) nothing is recorded."""
     from trioron.pcll import PhasecyteLeaf
-    from trioron.pcll.sitting import SittingCap
+    from trioron.organs.sitting import SittingCap
     g = torch.Generator().manual_seed(0)
     centres = torch.randn(12, 6, generator=g) * 3
     X = (centres[torch.randint(12, (6000,), generator=g)] + 0.05 * torch.randn(6000, 6, generator=g))
@@ -516,7 +516,7 @@ def test_stale_classes_fold_into_kin():
     """s069: with fold on, a class the world stops feeding fades and is folded
     into kin — the class count falls, its sketch history is kept in the survivor."""
     from trioron.pcll import PhasecyteLeaf
-    from trioron.pcll.sitting import SittingCap, FADE
+    from trioron.organs.sitting import SittingCap, FADE
     assert abs(25 * FADE ** 60 - 1.0) < 1e-6
     g = torch.Generator().manual_seed(0)
     centres = torch.randn(12, 6, generator=g) * 3
@@ -539,10 +539,12 @@ def test_stale_classes_fold_into_kin():
 
 
 def test_numa_ledger_settles_or_takes_back():
-    """s071: a provisional pair settles (Numa) after two coherent batches of
-    world members on its split dim, and is handed back (Mima) when a batch
-    is incoherent or the trial runs out; a pair that lost a child is void."""
-    from trioron.pcll.numa import NumaLedger
+    """s071/s072: a provisional pair settles (Numa) after two coherent
+    batches of world members on its split dim, and is handed back (Mima)
+    when a batch is incoherent or a child goes unfed by the world for the
+    trial length; a pair the world feeds slowly stays on trial; a pair that
+    lost a child is void."""
+    from trioron.organs.numa import NumaLedger
     g = torch.Generator().manual_seed(0)
     ph = lambda ang: torch.exp(1j * ang)
     tight = lambda n, c: ph(c + 0.05 * torch.randn(n, 1, generator=g))
@@ -562,8 +564,20 @@ def test_numa_ledger_settles_or_takes_back():
     assert led.verdicts(3, names) == [("b", "a")] and led.counts["mima"] == 1
     led.born(3, "a", "b", 0, 0.72)                                  # the world never feeds it
     assert led.verdicts(62, names) == [] and led.verdicts(63, names) == [("b", "a")]
-    led.born(63, "a", "b", 0, 0.72)                                 # one child left by another road
-    assert led.verdicts(64, ["a"]) == [] and led.counts["gone"] == 1 and led.net == 1 - 2
+    led.born(63, "a", "b", 0, 0.72)                                 # fed slowly: on trial past the old limit, then Numa
+    one = torch.tensor([0, 1])
+    for t in range(64, 64 + 50):                                    # one member each, every third boundary
+        if t % 3 == 0:
+            led.receive(names, one, torch.cat([tight(1, 0.0), tight(1, 2.0)]))
+        assert led.verdicts(t, names) == [] and led.on_trial("a")
+    for t in range(114, 300):
+        led.receive(names, one, torch.cat([tight(1, 0.0), tight(1, 2.0)]))
+        assert led.verdicts(t, names) == []
+        if not led.on_trial("a"):
+            break
+    assert t > 63 + led.trial and led.counts["numa"] == 2 and led.taken_back[-1]["why"] == "starved"
+    led.born(t, "a", "b", 0, 0.72)                                  # one child left by another road
+    assert led.verdicts(t + 1, ["a"]) == [] and led.counts["gone"] == 1 and led.net == 2 - 2
     assert len(led.taken_back) == 2 and not led.pairs and not led.child
 
 
@@ -573,7 +587,7 @@ def test_numa_rule_on_a_leaf():
     world never feeds is joined again with nothing deleted. Off (the
     default) the leaf is exactly as before."""
     from trioron.pcll import PhasecyteLeaf
-    from trioron.pcll.numa import NumaLedger
+    from trioron.organs.numa import NumaLedger
     g = torch.Generator().manual_seed(0)
     centres = torch.randn(12, 6, generator=g) * 3
     draw = lambda n, hi: centres[torch.randint(hi, (n,), generator=g)] + 0.05 * torch.randn(n, 6, generator=g)
@@ -608,3 +622,64 @@ def test_numa_rule_on_a_leaf():
     assert not led.on_trial(a) and led.taken_back and (a in names) != (b in names)
     assert len(m.classes) == len(m.bufs) == len(m.tags) < before + 2 * led.counts["born"]
     assert sum(s._n for s in m.manifold.sketches.values()) >= total
+
+
+def test_core_names_no_organ_rule():
+    """s072 (Rocky: "clearly separate the organs and the triorons core"): nothing under
+    trioron/core or trioron/pcll imports trioron/organs; the organs import the core."""
+    import pathlib, re
+    root = pathlib.Path(__file__).resolve().parents[2] / "trioron"
+    for sub in ("core", "pcll", "learning", "lifecycle"):
+        for f in (root / sub).rglob("*.py"):
+            assert not re.search(r"^\s*(from|import)\s+(trioron\.organs|\.\.organs|\.\.\.organs)", f.read_text(), re.M), f
+    import trioron.organs as organs
+    assert organs.NumaLedger.__module__ == "trioron.organs.numa"
+    import trioron.pcll.numa as old                      # bodies saved before the move still load
+    assert old.NumaLedger is organs.NumaLedger
+
+
+def test_fourth_organ_tries_divisions_for_a_leaf():
+    """s072: with the fourth organ as an organ's court, a candidate division is held there and
+    fed by the world only; the organ divides when the pair settles; classes are still
+    discovered, more slowly; the fine reading is at least as fine as the organ's own; a pair
+    one of whose children the world never feeds falls asleep and nothing is divided."""
+    from trioron.pcll import PhasecyteLeaf
+    from trioron.organs import FourthOrgan
+    g = torch.Generator().manual_seed(0)
+    centres = torch.randn(12, 6, generator=g) * 3
+    draw = lambda n, hi: centres[torch.randint(hi, (n,), generator=g)] + 0.05 * torch.randn(n, 6, generator=g)
+    X = draw(12000, 12)
+    mk = lambda: PhasecyteLeaf(lambda x: x, X[:200], 0, 0, window=200, class_cap=None, composer=False, verbose=False)
+    plain, ruled = mk(), mk()
+    assert plain.mixed.court is None
+    ruled.mixed.court = org = FourthOrgan()
+    seen = []
+    for i in range(200, 12000, 200):
+        for leaf in (plain, ruled):
+            leaf.mixed.observe(X[i:i + 200]); leaf.sub.end_task()
+        seen.append(len(ruled.mixed.classes))
+    c = org.counts
+    assert c["held"] > 0 and c["numa"] > 0 and c["carried"] == c["numa"]
+    assert 1 < len(ruled.mixed.classes) <= len(plain.mixed.classes)
+    assert seen[0] == 1                                   # nothing is divided at once: the trial comes first
+    m = ruled.mixed
+    T = draw(600, 12)
+    best, _ = m.classify(T)
+    assert (best >= 0).float().mean() > 0.9
+    Z = torch.exp(1j * 2 * math.pi * m.pockets_of(T) / N_QUANTA)
+    fine = org.refine([k.name for k in m.classes], best, Z)
+    assert len(set(fine)) >= len(set(best.tolist()))
+    # a pair the world feeds on one side only: asleep, the parent whole, not heard again at once
+    k = int(torch.bincount(best[best >= 0]).argmax())
+    name, b = m.classes[k].name, m.bufs[k]
+    side = torch.zeros(len(b), dtype=torch.bool); side[: len(b) // 2] = True
+    far = b.clone(); far[side] = far[side] * torch.exp(torch.tensor(1j * 2.5))     # a child nowhere in the world
+    org.held.pop(name, None); org.rest.clear()
+    before, slept = len(m.classes), c["starved"]
+    out = org.hear([x.name for x in m.classes], [far if j == k else x for j, x in enumerate(m.bufs)], [(k, (side, 0))], m.periods)
+    assert out == [] and 0 in org.held[name]
+    quiet = centres[:1] + 0.05 * torch.randn(200, 6, generator=g)
+    for _ in range(org.trial + 2):
+        m.observe(draw(200, 12)); ruled.sub.end_task()
+    assert c["starved"] + c["failed"] > slept + 0 or name not in [x.name for x in m.classes]
+    assert org.size()["members"] >= 0 and len(m.classes) == len(m.bufs) == len(m.tags)

@@ -1,200 +1,207 @@
 # Trioron Handoff
 
-**Session date:** 2026-11-26 to 2026-11-27
-**Session number:** 071
-**Session title:** Wile reopened, passes the fetal gate at day 90; the Numa rule for class growth built and tried on a copy; stage 2b drafted
+**Session date:** 2026-11-27
+**Session number:** 072
+**Session title:** The Numa trial lengthened; one random channel; the fourth organ built as a living organ; the organs separated from the core (`trioron/organs/`); Vee, Weiss and Wile retired, a new organism to be raised
 
-**Summary.** (1) Rocky asked again for the s070 graft numbers, the memory-rise row, the
-difference between the three organisms and the fetal gate (all explained from the record;
-nothing new measured). (2) He reopened **Wile** (retired in s070) and let him live uncapped
-to fetal day 60, then 90: **the gate passes every row at day 90**, at the cost of 4,540
-body-sense classes and days of up to 532 s. Rocky: "So we finally find the solution. Wile is
-the key for the development." He now says "him" of Wile. (3) Stage 2b (he chooses) drafted
-for sign-off, plan §12: NOT signed. (4) Rocky: "The numas concept is not wired isn't?"
-Correct; the Numa rule for class growth was written (plan §13), signed ("Yes to all, build it
-and run the copy trial"), built opt-in (`trioron/pcll/numa.py`) and tried on a copy of Wile
-from his day-30 body: classes bounded (424 against 4,540), four times cheaper, gate passes at
-day 60 and misses one row at day 90 (memory full .89, needs .91), and only one division in
-406 settled as Numa. (5) His fourth-organ idea (keep what is taken back) is sketched in plan
-§13.6, NOT built. Rocky ended the session: "Okay lets wrap things up and meet in a new
-session."
+**Summary.** (1) Rocky: "the numa gate seems not enough and make the organism learn less".
+The trial length was changed first (decision H), tried on a second copy: 4 Numa in 349
+divisions, gate not passed at day 60 or 90. (2) He asked for one input channel of random
+numbers, as a stand-in for the real world's randomness (the rest of the world stays varied,
+not random). Built on copies only. Chloe predicted the Numa rule could not reject divisions
+on that channel and was wrong: none of them settled. (3) Rocky: "Lets put the fourth organ
+and wrap all the three siblings. Rebuild the code, and make sure we clearly separate the
+organs and the triorons core." Done in code: `trioron/organs/` holds everything a body is
+made of; the core names no organ rule; the fourth organ is a living organ that tries
+divisions outside the working organ; the gate reads both ways; a relative gate (`PROBE`)
+stops the fetal stage at the first pass. One copy trial with the fourth organ passes the
+fetal gate at day 90 with 354 body-sense classes (Wile needed 4,540). **But the control
+(the same copy with no division ever carried out, 346 classes) passes at day 90 too: the
+pass is not the fourth organ's doing.** The body is now in `trioron/organs/` as well.
+(4) Vee, Weiss and Wile are retired (homes kept). **The new organism is NOT born: it needs
+Rocky's name and his yes.**
 
-## READ THIS FIRST (s072)
-- Read `docs/design/matron_rules.md` and `docs/design/vee_development.md` **§12 and §13**
-  before touching an organism. The plan still has NO s070 section (the s070 handoff at
-  `0247e27` is that record).
-- **Two living organisms, one retired, on this PC only, uncommitted. Never delete, overwrite
+## READ THIS FIRST (s073)
+- Read `docs/design/matron_rules.md` and `docs/design/vee_development.md` **§13.9, §13.10
+  and §14** before touching an organism. The plan still has NO s070 section (the s070
+  handoff at `0247e27` is that record).
+- **No living organism. Three retired, on this PC only, uncommitted. Never delete, overwrite
   or refit any home:**
-  - `outputs/incubator/wile/` — **Wile, 120 days old, fetal day 90**, stage `fetal`,
-    uncapped, no opt-in rule on. **Reopened by Rocky in s071** ("Yes, reopen Wile and
-    increase her fetal day"). Copies `body_embryo_day30`, `body_fetal_day{30,60,90}.pt`.
-    **HELD at day 90: Rocky's word reached day 90 only.** Gate passed at day 90 by the
-    script's verdict; no stage is promoted, and there is no signed stage to enter.
-  - `outputs/incubator/weiss/` — Weiss, 210 days old, fetal day 180, cap + round + fold,
-    gate not passed. Untouched in s071. **HELD at day 180.**
-  - `outputs/incubator/vee/` — Vee, fetal day 90. RETIRED (s070). Untouched.
-- Copies (not organisms, may be deleted): `outputs/incubator/copies/` now also holds
-  `wile30_numa` (the Numa trial, at day 90, with `body_fetal_day{60,90}.pt`) and
-  `wile30_plaincheck` (rule off, day 32; only a check). The s069–s070 copies are still there.
-- Wile uncapped cannot live much longer as he is: his last five days averaged 259 s, the
-  slowest 532 s of the 900 s budget, body file 455 MB. Chloe's estimate, not measured: a
-  further uncapped stretch hits the budget within days.
+  - `outputs/incubator/wile/` — Wile, fetal day 90, gate passed (s071). RETIRED s072.
+  - `outputs/incubator/weiss/` — Weiss, fetal day 180, gate not passed. RETIRED s072.
+  - `outputs/incubator/vee/` — Vee, fetal day 90. RETIRED s070. Her `sense.pt` is the
+    language sense a new organism copies into its home before genesis.
+  Rocky, s072, asked what "wrap all the three siblings" means: **"Retire all three, raise a
+  new one"**. None of the three was touched this session (only read, for copies).
+- Copies (not organisms, may be deleted) under `outputs/incubator/copies/`, new in s072:
+  `wile30_numa2`, `wile30_noise_numa`, `wile30_noise_plain`, `wile30_fourth`, `wile30_still`.
+- **The new organism waits on Rocky** (see "Decisions waiting"). Nothing was born, no home
+  made, no stage file written.
 
 ## Rocky's rulings this session (his words)
-- On Wile's day-30 gate: "If you see Wile, it only failed at tiny margin isn't?" Then: "Yes,
-  reopen Wile and increase her fetal day." Asked how far and under which rules: to day 60,
-  uncapped as born. After day 60: "Yes, let her live to day 90".
-- After day 90: "So we finally find the solution. Wile is the key for the development. How
-  is the interaction with him?" (Chloe's answer: none yet; birth is the first exchange.)
-- "On the size we found the solution by using folding isn't? We need to design 2b though."
-  (Chloe: only partly; the cap bounds the time, the fold lowers the count, neither made her
-  smaller, and none of it was tried on Wile.)
-- "The numas concept is not wired isn't?" Then: "Yes, write the Numa rule for class growth
-  first. One thing that I keep wondering more classes means more creativity though but it
-  will raise a confused organism. Can you raise another organism to chew on this classes
-  instead? The fourth organs?"
-- On G1–G4 of plan §13.7: "Yes to all, build it and run the copy trial."
+- "Yeah change the trial lenght first. I forgot about that. On 1. it is b. on 2. Test the
+  lenght first." (1 b = the fourth organ as a *living* organ, not a record-keeper.)
+- "Can you add one factor that only filled by random numbers?" Then: "I mean I agreed that
+  it is varied and not random, but judging on how the architecture work, a channel of random
+  value is needed probably to simulate the real world nad only this channel is random, the
+  rest is not."
+- "I think we can agreed that the enchancement fix our problem but too long fetal days is
+  bad too (as you meant by giving meanings). Lets put the fourth organ and wrap all the
+  three siblings. Rebuild the code, and make sure we clearly separate the organs and the
+  triorons core."
+- Asked four questions, he chose: siblings **"Retire all three, raise a new one"**; the
+  fourth organ **"As drafted, gate reads both"** (plan §14.5 J1–J5); how the fetal stage
+  ends, in his own words: **"You need to put a probe when the gate passed and then the fetal
+  state is passed (a relative gate)."**; the code **`trioron/organs/`**.
 
-## 1. Wile, fetal day 30 → 90, uncapped (logs `wile_fetal_d{60,90}_s071.log`, `wile_fetal_gate_day{60,90}_s071.log`; one organism, seed 0)
-Started from his day-30 body (identical to its copy). No alarm.
+## 1. The code, rebuilt in three layers (spec §9.17; all 32 phasecyte tests pass)
+1. **The learners** — `trioron/core`, `learning`, `lifecycle`, `pcll`. They import nothing
+   from `organs/` and name no organ rule (`test_core_names_no_organ_rule` enforces it).
+   `pcll/mixed.py` keeps three empty places an organ may fill: `sitting`, `numa`, `court`.
+2. **The organs** — `trioron/organs/`: `layout.py` (the 148 numbers, `can_be_silent`,
+   `changes`), `home.py` (`HOME`, the stage file, the RAM ceiling), `body.py` (`Body`),
+   `blur.py`, `sitting.py` (`SittingCap`), `numa.py` (`NumaLedger`), `fourth.py`
+   (`FourthOrgan`). Imports the learners, never `experiments/`.
+3. **The world** — `experiments/incubator/`: world, drivers, gates, probes.
+   `vee_body.py` keeps only `moment`, the genesis pools and the one-time fitting of the
+   language sense, and re-exports the body under its old names.
+- **Old bodies still load:** aliases for `trioron.pcll.numa`, `trioron.pcll.sitting` live in
+  `organs/__init__.py`; `experiments/incubator/blur.py` and `vee_body.py` are shims. Checked:
+  Wile's body loads; the day-90 gate of `copies/wile30_fourth` prints identically before and
+  after the body was moved.
+- `MixedStreamController(sitting_cap=True)` now raises and points to
+  `leaf.mixed.sitting = SittingCap()`.
 
-| fetal gate | d30 (s069) | d60 | d90 |
-|---|---|---|---|
-| feels his kicks (k-means 1.00) | .89 FAIL | .97 | .98 |
-| what a kick moves | 5 of 5 ("mark" .67) | 5 of 5 ("hold" .89) | 5 of 5, each 1.00 |
-| CPU rise, his / world's (base .57) | .98 | .98 | .95 (k-means 1.00) |
-| memory rise (base .59) | .93 | .97 (k-means .97) | .97 (k-means .93) |
-| nothing lost: memory full (embryo .96, needs .91) | .85 FAIL | .90 FAIL | .95 |
-| nothing lost: busy / place / window | 1.00 / 1.00 / .99 | 1.00 / 1.00 / .99 | 1.00 / 1.00 / 1.00 |
-| ear: text present (embryo 1.00) | 1.00 | 1.00 | 1.00 |
-| gate | not passed | not passed | **all criteria pass** |
-| classes ear / body sense / change | 119 / 347 / 187 | 175 / 1,352 / 402 | 231 / 4,540 / 710 |
-| in use, last 10 days | 64 / 64 / 84 | 92 / 99 / 130 | 116 / 122 / 143 |
+## 2. The Numa rule, trial lengthened (plan §13.9; `copies/wile30_numa2`; one copy, seed 0)
+A pair now stays on trial until it has its batches; it is taken back when a batch fails or a
+child goes unfed by the world for 60 boundaries ("starved"). Result from Wile's day-30 body:
+4 Numa in 349 divisions; gate not passed at day 60 (memory full .90) nor at day 90 (memory
+full under the line, "work" kick 0 of 18); 196 pairs still on trial. 3 of 17,280 world rows
+were refused by every class, so a record-keeper fourth organ would never be consulted.
+Chloe's reading: 48 world moments a sitting cannot confirm divisions that need 100 members;
+the batch (25 × 2) is out of scale with his world. Logs `numa_probe2_s072*.log`.
 
-- Reported rows "holding something" (.90) and "a mark exists" (.71) from the body sense sit
-  at their base: he does not read them there.
-- Days 11–49 s to day 60, then 32–532 s; body file 70 → 137 → 455 MB; the gate reading at
-  day 90 peaked 1.85 GB (peak while living not measured).
-- Weiss fails memory rise at .59 after 180 days; Wile reads .93–.97. Wile differs from Weiss
-  in "none" AND the ladders from his first moment: not separated. Vee (sharp world, sharp
-  organs) also passed every row at days 60 and 90.
+## 3. One random channel (plan §13.10; copies only; one seed)
+Input channel 140 (a spare) carries N(0,1) every moment, from its own generator
+(`NOISE_CH=140`; `fetal.py` refuses it outside `copies/`). It reaches the body sense only
+(its column 73).
+- Rule on (`wile30_noise_numa`): gate **passes at day 60** (memory full .93; 426 body-sense
+  classes), **not at day 90** (memory full .90, "work" 0 of 18).
+- Rule off (`wile30_noise_plain`, day 60): 885 body-sense classes, 33 of 569 divisions on
+  the random column, gate not passed. (Wile at day 60 without the channel: 1,352 classes;
+  why fewer with it is not diagnosed.)
+- **Chloe was wrong:** she predicted the Numa rule could not reject divisions on the random
+  column. None of 24 settled; 8 were taken back, all "starved": one child receives every
+  world row. Why is not diagnosed.
+- The losses between day 60 and 90 appear in both rule-on copies, with and without the
+  channel: they come with the rule in the working organ, not with the channel.
+- **Rule 16 ("never at random") is NOT amended.** It needs Rocky's wording before the
+  channel is part of a living organism's world.
 
-## 2. Stage 2b — he chooses (plan §12; DRAFT, NOT signed, NOT built)
-Kicks keep arising by themselves as urges. Inherited strain on two readings (RAM used, CPU
-busy, upper step as he sees them). For a candidate action his sense of change gives a
-forecast (the class he falls in with the changes blank, as gate row 2 reads it). He holds
-back an urge that raises a strained reading, and does the one action that lowers it (let go
-while memory is full and he holds something). The rule is given; the forecast is his. Gate:
-holds back, does not freeze, relieves, no thrashing, nothing lost; control = the same body
-with choosing off. **Decisions F1–F5 wait on Rocky** (plan §12.7); he put the Numa rule
-first, so 2b waits behind it.
+## 4. The fourth organ, living (plan §14; `trioron/organs/fourth.py`)
+A candidate division is not carried out in the working organ. It is held in the fourth organ
+as a living pair, fed by the world's rows only, judged by the Numa test (25 × 2). What
+settles is carried out in the working organ; what fails or goes unfed falls asleep (60
+sittings) and may be woken; held children may divide inside (depth 3); one living pair per
+class and column. Switch on: `leaf.mixed.court = FourthOrgan()` on each organ, then save.
+- **Different from the draft, said to Rocky:** a moment falls to a held child by the
+  children's templates over ALL the organ's columns, not by the split column alone (by the
+  split column alone the test would pass by construction).
+- **The gate reads both ways** (`fetal.py gate`): the working organs alone, and with the held
+  children added (`FourthOrgan.refine`). Chloe built "reads both" as: passed when ONE reading
+  passes every row; both printed. Rocky has not confirmed this reading of his answer.
+- **The relative gate:** `PROBE=n` reads the gate every n days while living and stops at the
+  first pass (copy `body_fetal_gate_day{N}`, organism HELD). It promotes no stage.
+- **Copy trial** (`copies/wile30_fourth`, random channel on, Wile's day-30 body → day 90;
+  logs `fourth_probe_s072*.log`; one copy, seed 0):
 
-## 3. The Numa rule for class growth (plan §13; signed, built opt-in, one copy trial)
-- **Found in the code:** a division is final at once; the buffer it is judged on is mostly
-  the class's own replays (40 a class at a settled sitting), so a class can divide on what
-  the world never showed; the organisms run without the stress council's settlement.
-- **The rule:** the two children of a division are a provisional pair; only members the
-  world gave count; a provisional class is not divided and gets no replays; two coherent
-  batches of 25 world members each settle it (Numa); a failed batch, or 60 sittings without
-  the batches, joins the children again by the fold's routine (Mima); a pair that lost a
-  child by another road is "gone". Not retroactive. 25 / 2 / 60 are Chloe's values.
-- **Built:** `trioron/pcll/numa.py` (`NumaLedger`; switch on with
-  `leaf.mixed.numa = NumaLedger()` on each organ, then save); hooks in `mixed.py`
-  (`_fold_stale`'s joining is now `_fold_pairs`, shared; behaviour-neutral, old fold tests
-  pass); spec §9 rows for `numa.py` and `sitting.py`; tests
-  `test_numa_ledger_settles_or_takes_back`, `test_numa_rule_on_a_leaf`;
-  `experiments/incubator/numa_probe.py` (`setup <source home> <day> [plain]`, `ledger`).
-- **Neutrality check:** a plain copy of Wile's day-30 body with the new code, rule off,
-  relived his days 31 and 32 with identical class counts. Wile himself is the control.
-- **Trial** (`copies/wile30_numa`, rule on in all three organs, uncapped, day 30 → 90; logs
-  `numa_probe_s071.log`, `numa_probe_s071_gate_day{60,90}.log`; one organism, seed 0):
+| | day 60 | day 90 |
+|---|---|---|
+| classes ear / body sense / change | 119 / 348 / 182 | 119 / 354 / 182 |
+| feels his kicks | .89 FAIL | .97 |
+| what a kick moves | 5 of 5 | 5 of 5 |
+| CPU / memory rise | .98 / .97 | .98 / .97 |
+| memory full, working organs / with held children | .90 / .90 FAIL | .91 / .95 |
+| gate | not passed, either reading | **passed, both readings** |
+| body sense: heard / settled and carried out | 718 / 2 | 1,162 / 8 |
+| pairs on the random column: held / settled | 49 / 0 | 84 / 0 |
+| seconds a day | 45 | 68 |
 
-| | Wile d60 | copy d60 | Wile d90 | copy d90 |
-|---|---|---|---|---|
-| feels his kicks | .97 | .95 | .98 | .98 |
-| what a kick moves | 5 of 5 | 5 of 5 | 5 of 5 | 5 of 5, each 1.00 |
-| CPU / memory rise | .98 / .97 | .98 / .97 | .95 / .97 | .98 / .97 |
-| memory full (needs .91) | .90 FAIL | .93 | .95 | **.89 FAIL** |
-| busy / place / window; ear | 1.00 / 1.00 / .99; 1.00 | 1.00 each; 1.00 | 1.00 each; 1.00 | 1.00 each; 1.00 |
-| gate | not passed | **all pass** | **all pass** | not passed |
-| classes ear / body sense / change | 175 / 1,352 / 402 | 149 / 428 / 232 | 231 / 4,540 / 710 | 163 / 424 / 222 |
-| s a day (last five); body file | 37; 137 MB | 24; 99 MB | 259; 455 MB | 53; 107 MB |
-
-  Ledger at day 90 (born / Numa / Mima / gone / on trial): ear 116 / 0 / 72 / 0 / 44; body
-  sense 181 / 1 / 88 / 2 / 90; sense of change 109 / 0 / 57 / 1 / 51. Peak memory 0.98 GB.
-- **One Numa in 406 divisions:** in effect his classes were frozen near their day-30 count.
-  Body sense: 85 of 88 Mima ran out of time, 60 of them with a child the world never fed in
-  30 days (unpaid growth), 8 after passing a first batch (the rule too slow for them). Ear:
-  44 of 72 gathered a batch and failed it. Sense of change: all 57 ran out of time.
-- Kicks and memory rise rose (.89 → .98, .93 → .97) with no net new classes: those rows come
-  from the days. Memory full read .93 then .89 around its line while Wile's own rose to .95
-  with growth: Chloe's reading is that this row needs some real growth the values starve;
-  one copy does not settle it.
-- **Chloe was wrong** in plan §13.3 ("100–200 body-sense classes"): the rule is not
-  retroactive, the copy kept its 347.
-- No value was changed after the result. The gate is not relaxed.
-- **The fourth organ** (plan §13.6; Rocky's idea; sketch only): a boundary taken back goes
-  to a fourth organ as a small record, consulted only for moments the working organ refuses,
-  and put on trial again if it fits them. Rocky's "yes to all" took Chloe's recommendation:
-  in his body, after the trial. NOT built. `NumaLedger.taken_back` already keeps each Mima's
-  record (no sketches).
+  Almost nothing was carried out (8 of 1,162; none in the ear or the sense of change), so
+  the working organs at day 90 are nearly the day-30 body. The pass on the working organs
+  alone is thin (rows at the line). The held children add .04 on memory full.
+- **The control** (`copies/wile30_still`: a fourth organ that can never settle a pair, so the
+  working organs get no division at all; logs `still_probe_s072*.log`; plan §14.8): classes
+  stay 119 / 346 / 182; day 60 not passed (kicks .89, memory full .89); **day 90 passed, both
+  readings** (kicks .97, memory full .91, "work" 18 of 18).
+- **So, said plainly:** a body that has not gained one class since day 30 passes the fetal
+  gate at day 90. The pass is not the fourth organ's doing. What helps is that divisions are
+  kept OUT of the working organs; the failing rows rise with the days. Wile's 4,540 classes
+  were not needed for this gate, and Chloe's earlier reading that memory full needs real
+  growth is not supported. The fourth organ's only credit is .95 against .91 on memory full
+  in the second reading: one copy, one seed, a row at its line (needs .91).
 
 ## Decisions waiting on Rocky
-- **H (newest, asked, not answered). The trial length of the Numa rule.** Chloe's proposal:
-  a pair stays on trial until it has gathered its batches; it is taken back only when a
-  batch fails or a child receives nothing from the world for 60 sittings. A second copy
-  trial from Wile's day-30 body, about 40 minutes. Or leave the rule, or something else.
-- **I. Wile himself.** He passed; he is held at day 90 uncapped and cannot go far as he is.
-  Which rules he lives under next (uncapped, cap + round + fold, the Numa rule once a copy
-  trial satisfies Rocky) is a rule change on his organs (rule 25): his yes, copy first.
-- **F1–F5. Stage 2b** (plan §12.7), including F3: is 2b required before birth?
-- **G3 follow-up.** The fourth organ, now that the trial shows how much is taken back (217
-  boundaries in 60 days on the copy).
-- Carried from s070, unanswered: **E** (the organ-wise body of Vee's and Weiss's organs),
-  **A** (kin-only placement in the round), **B** (the resting footprint), **C** (Weiss after
-  day 180), **D** (the sharpening trigger). Rocky's turn to Wile may make E, C and D moot;
-  that is his to say.
+- **K. The new organism.** Its name; his yes for genesis. And with it:
+  - K1. Is the random channel part of its world from genesis? Then rule 16 needs his wording,
+    and the `copies/`-only assert in `fetal.py` is lifted for it.
+  - K2. Born like Wile (blur with "none", ladders from the first moment)? Chloe's proposal.
+  - K3. The relative gate's interval (Chloe's value: every 10 days), and whether the embryo
+    stage ends by a relative gate too.
+  - K4. The fourth organ from genesis on all organs. **Said plainly:** a newborn starts from
+    one class an organ and can grow only as fast as the fourth organ settles (8 divisions in
+    60 days on the copy). With batch 25 × 2 it may stay too coarse to pass the embryo gate.
+    The batch scale (asked in s072, not answered) decides this.
+- **M. What the control means for the fourth organ.** The gate passes with growth simply
+  stopped after day 30. Chloe's question to Rocky: is the fourth organ still wanted from
+  genesis (where growth IS needed, from one class), and at what batch scale?
+- **L. "Gate reads both"**: one reading passing is enough (as built), or both must pass?
+- **F1–F5. Stage 2b** (plan §12.7), unanswered.
+- Carried s070 decisions E, A–D concern Vee and Weiss; with all three retired Chloe takes
+  them as moot unless Rocky says otherwise.
 
-## What was built / committed (all pushed)
-- `818e38e`: `trioron/pcll/numa.py`, `mixed.py` hooks, tests, spec §9 rows,
-  `experiments/incubator/numa_probe.py`, plan §12 (2b draft) and §13 (the rule, the trial),
-  the seven `*_s071.log` files. Not released: `main` and PyPI stay at v0.3.5.
-- Tests: 170 pass; the same **four v2 tests fail as before** (not looked at):
+## What was built / committed
+- `trioron/organs/` (seven files), `pcll/mixed.py` (rules out, three places, court hooks),
+  `experiments/incubator/fetal.py` (`NOISE_CH`, `PROBE`, gate both ways), `numa_probe.py`
+  (modes `witness`, `fourth`, `still`; `dims`), `vee_body.py` and `blur.py` shims, tests,
+  spec §9.17, plan §13.9, §13.10, §14, the `*_s072.log` files.
+- Tests: 172 pass; the same four v2 tests fail as before (not run this time, not looked at):
   `test_learning.py::TestCredit::test_lock_after_sustained_engagement`,
   `::test_cooldown_prevents_immediate_relock`, `test_lifecycle.py::TestGrowth::
   test_growth_trigger_logic`, `::TestDreamCycle::test_dream_locks_eligible_cells`.
-- NOT done: plan section for s070; the manual's phasecyte line ("constant in samples seen");
-  `mixed.py` is ~1,540 lines (over the 500-line discipline, not split); the gate script
-  still prints "her". Chloe did not read `docs/TRIORON_MANUAL.md` or the spec sections at
-  the start of this session (the handoff, the matron's rules and plan §8, §11 were read).
+- NOT done: the new organism; rule 16; plan section for s070; the manual's phasecyte line;
+  `mixed.py` is ~1,560 lines (over the 500-line discipline, not split); the gate script
+  still prints "her"; the last part of `test_fourth_organ_tries_divisions_for_a_leaf` (the
+  unfed case) asserts little.
 
 ## Open / not diagnosed
-1. Whether memory full needs real class growth (the copy's .93 → .89 against Wile's .95).
-2. Why the ear's provisional pairs fail their batch (44 of 72) where the other organs' run
-   out of time; the ear also spawns a composer cell at every sitting (carried).
-3. Which of "none" and the ladders-from-first-moment gives Wile his memory-rise row.
-4. Under the rule a class taken back may divide again at the next sitting: the churn was
-   not counted.
-5. Carried from s070: why Weiss's sense of change never divided on the memory readings;
-   which sharpening step cost the "work" kick; why the nest router cannot tell two brains
-   apart; whether replays protect anything over a long time; the second cause of
-   multiplying; why only .29 of the ear's members sit in their best class; stop-and-resume
-   not exactly equal to living straight through; the `world.py` work-kick quirk.
+1. Why, in a pair split on the random column, one child takes every world row.
+2. Why the "work" kick is lost by day 90 when pairs are tried inside the working organ, and
+   kept with the fourth organ.
+3. What a fetal body needs class growth for after day 30, if the gate passes without any;
+   whether the gate measures what growth would give.
+4. The fourth organ's cost grows with the days (22 → 68 s a day in 60 days) while the working
+   organs do not; not followed past day 90. Inner pairs: 109 born, none settled.
+5. Why the rule-off copy with the random channel has fewer classes at day 60 than Wile.
+6. Carried: the ear's failing batches; which of "none" and the ladders gives Wile his
+   memory-rise row; stop-and-resume not exactly equal to living straight through; the
+   `world.py` work-kick quirk; the older s070 items (handoff at `10e0003`).
 
-## NEXT (s072)
-0. Rocky's answer to H first, then I. Act only on his answers. Wile stays HELD at fetal day
-   90, Weiss at day 180.
-1. On his yes to H: change the trial length in `numa.py` (and plan §13.2, the test), run the
-   second copy trial from Wile's day-30 body exactly as the first:
-   `VEE_HOME=outputs/incubator/copies/<name> python3 experiments/incubator/numa_probe.py
-   setup outputs/incubator/wile 30`, then `DAYS=60 DAY_BUDGET=900 python3
-   experiments/incubator/fetal.py live`, copy `body.pt` to `body_fetal_day60.pt`,
-   `fetal.py gate`, `numa_probe.py ledger`; the same to day 90.
-2. Stage 2b's sign-off (F1–F5); stage 3 (birth) is not written in full.
-3. Write the plan section for s070 from the handoff at `0247e27`; correct the manual's
-   phasecyte line.
-4. Carried, untouched: the join of the organs; guards (token budget, sandbox limits); the
-   s066 fact-memory list (s067 handoff at `d22ebd2`).
+## NEXT (s073)
+0. Rocky's answers to K and L first. Nothing is born without his name and yes.
+1. On his yes: a new home `outputs/incubator/<name>/`, copy `outputs/incubator/vee/sense.pt`
+   into it, genesis and embryo with `embryo.py` (read it first: it must set
+   `leaf.mixed.court = FourthOrgan()` on each organ at genesis, which is NOT wired yet),
+   stage file by hand on his word, fetal with `PROBE=<n> DAYS=<limit> python3
+   experiments/incubator/fetal.py live`.
+2. If the batch scale is to change: a copy first, from Wile's day-30 body:
+   `VEE_HOME=outputs/incubator/copies/<name> NOISE_CH=140 python3
+   experiments/incubator/numa_probe.py setup outputs/incubator/wile 30 fourth`, then
+   `DAYS=60 DAY_BUDGET=900 python3 experiments/incubator/fetal.py live`, `fetal.py gate`,
+   `numa_probe.py dims 140`.
+3. Stage 2b's sign-off (F1–F5); stage 3 (birth) is not written in full.
+4. Carried: plan section for s070; the manual's phasecyte line; the join of the organs;
+   guards (token budget, sandbox limits).
 
 ## Standing rules (carried)
 - `docs/design/matron_rules.md` binds the matron. In role with an organism, no word of
@@ -203,23 +210,18 @@ first, so 2b waits behind it.
   control. One organism on one seed is said to be so.
 - Incubator organism: no parameter cap, 85 % of host RAM, swap excluded; benches / CI keep
   50 K. Paper is repo-only. Helper budget ≤ 50 % of the weekly limit (none spent in
-  s069–s071).
+  s069–s072).
 - One heavy process at a time on this PC (6 cores, 7.6 GB). `python3`, not `python`.
   `pkill -f` / `pgrep -f` hit the shell — kill by PID.
-- While a chain of organism runs is going, do not edit `experiments/incubator/` or
-  `trioron/pcll/` unless the change is neutral for them: later stages import the new code.
+- While a chain of organism runs is going, do not edit `experiments/incubator/`,
+  `trioron/pcll/` or `trioron/organs/` unless the change is neutral for them.
 - A long background job in this harness can be killed without a message; check the log's
   last day before trusting "finished".
-- How to switch the s069–s070 opt-in rules on in a living organism (ONLY on his yes): set
-  `l.mixed.sitting = SittingCap()` or `SittingCap(fold=True)` on each organ, save; for the
-  fold rebuild traces first (`trace_rebuild.py`); relative stillness `body.still_share`.
 
 ## State of the build / pointers
 - Branch `conscience-core`, pushed. `main` is at the v0.3.5 release commit `b4b6789`.
 - Local to this PC, uncommitted by rule: the three homes, `copies/`, `outputs/incubator/
-  wiki_sent.*`, the s064–s066 matron-written data, `*.err`. Logs `*_s071.log` committed.
-- A new organism's language sense: copy `outputs/incubator/vee/sense.pt` into her home
-  before genesis.
+  wiki_sent.*`, the s064–s066 matron-written data, `*.err`. Logs `*_s072.log` committed.
 - Environment: Qwen GGUF at `~/models/qwen2.5-1.5b-instruct-gguf/`; Simple-Wikipedia ZIM at
   `~/data/wikipedia/`; bubblewrap installed; Python 3.10.12, torch 2.11.0, WSL2.
 
@@ -229,6 +231,6 @@ first, so 2b waits behind it.
 `notebooks/` checkpoints, output PNGs / uncommitted logs untracked; `outputs/data/**` caches.
 
 ---
-History pointers (no dated archives): s070 handoff at 0247e27 (fuller s070 tables at
-4f7039a); s069 at 05a3ef1; s068 at fc11bd9; s067 at d22ebd2; s066 at b7aff0e; s064 at
-e67b6ce.
+History pointers (no dated archives): s071 handoff at 10e0003; s070 at 0247e27 (fuller
+tables at 4f7039a); s069 at 05a3ef1; s068 at fc11bd9; s067 at d22ebd2; s066 at b7aff0e; s064
+at e67b6ce.

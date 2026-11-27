@@ -1,6 +1,6 @@
 """The sitting under a cap — which classes the council judges at a boundary.
 
-Opt-in (``MixedStreamController(sitting_cap=True)``); off, every class is
+Opt-in (``leaf.mixed.sitting = SittingCap()``); off, every class is
 judged at every boundary exactly as before. Written for the incubator
 organisms (docs/design/vee_development.md §11.9, Rocky s069: "Square
 root"): without it a sitting's work grows with the class count and never

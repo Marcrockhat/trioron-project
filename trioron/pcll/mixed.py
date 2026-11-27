@@ -60,8 +60,6 @@ from .labels import LabelTapBank
 from .lockin import LockInView, deposit, matched_k, reset
 from .resolve import EMPTY, FRUSTRATED, RESOLVED
 from .signature import LearnedClass
-from .numa import NumaLedger
-from .sitting import SittingCap
 from .stress import DISCRIMINATION
 
 ROW_HEADROOM = 64   # free arena rows kept ahead of class births (uncapped envelope)
@@ -90,6 +88,9 @@ class MixedStreamController:
                  label_supervise: bool = True,
                  class_cap: Optional[int] = CLASS_CAP,
                  sitting_cap: bool = False) -> None:
+        if sitting_cap:
+            raise ValueError("the sitting cap is an organ rule (s072): set "
+                             "mixed.sitting = trioron.organs.SittingCap()")
         # MEMBERSHIP-QUALITY DEFAULTS (Rocky's ruling, s033; M2
         # baseline re-recorded). The factorial said the pieces only
         # work TOGETHER, and the re-record proved it the hard way: the
@@ -109,14 +110,18 @@ class MixedStreamController:
         # s036 ruling is to bench BOTH arms (capped vs uncapped) since
         # the 128 was never derived (s035 audit Q4).
         self.class_cap = class_cap if class_cap else None
-        # The sitting under a cap (sitting.py): None = every class is
-        # judged at every boundary. Opt-in; read with getattr so an
-        # organism saved before it existed is unchanged.
-        self.sitting: Optional[SittingCap] = (
-            SittingCap() if sitting_cap else None)
-        # Growth must pay (numa.py): None = a division is final at once.
-        # Opt-in, set on the controller; read with getattr like the cap.
-        self.numa: Optional[NumaLedger] = None
+        # ORGAN RULES (trioron/organs/, s072). The core names no rule and
+        # imports none: these are three empty places a body may fill on
+        # its organs, each read with getattr so an organism saved before
+        # a place existed is unchanged. None = the core's own behaviour.
+        #   sitting  which classes are judged at a boundary (organs/sitting.py)
+        #   numa     a division's children on trial in place (organs/numa.py)
+        #   court    a division is tried elsewhere first: candidates are
+        #            handed over and only what is returned is carried out
+        #            (organs/fourth.py)
+        self.sitting = None
+        self.numa = None
+        self.court = None
         self.receptor_ids = substrate.scheduler._plan.receptor_ids
         if self.receptor_ids.numel() == 0:
             raise ValueError("substrate has no RECEPTOR cells")
@@ -365,6 +370,10 @@ class MixedStreamController:
         numa = getattr(self, "numa", None)
         if numa is not None and not self.freeze:   # only the world pays
             numa.receive([c.name for c in self.classes], member, Z)
+        court = getattr(self, "court", None)
+        if court is not None and not self.freeze:  # the world feeds the held
+            court.receive([c.name for c in self.classes], member, Z,
+                          self.periods)
         if self.manifold is not None and member is not None:
             for k, c in enumerate(self.classes):   # sketches eat REAL members
                 rows = q[member == k]
@@ -413,8 +422,18 @@ class MixedStreamController:
             won = {s[0] for s in spawns}           # composer beat division
             candidates = [(k, v) for k, v in candidates if k not in won]
             records = []
+            if court is not None and not self.freeze:
+                # tried elsewhere: the candidates are handed over; what
+                # comes back (settled earlier) is carried out now
+                parents = [c.name for c in self.classes]
+                candidates = court.hear(parents, self.bufs, candidates,
+                                        self.periods)
             if candidates:
+                tried = [self.classes[k].name for k, _ in sorted(candidates)]
                 n_div, records = self._execute(arena, candidates)
+                if court is not None and not self.freeze:
+                    for parent, (a_, b_, _, _) in zip(tried, records):
+                        court.carried_out(parent, a_, b_)
                 if numa is not None:               # born on credit
                     for a_, b_, d_, f_ in records:
                         numa.born(self.periods, a_, b_, d_, f_)
@@ -976,6 +995,8 @@ class MixedStreamController:
             # a composed dim, then its composer was pruned)
             if getattr(self, "numa", None) is not None:
                 self.numa.pruned(col)
+            if getattr(self, "court", None) is not None:
+                self.court.pruned(col)
             if self.stress is not None:
                 kept = []
                 for group, subject in self.stress.pending:

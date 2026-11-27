@@ -1,0 +1,27 @@
+# fetal gate: 60 fetal days lived (90 days old), 5 unseen days; classes {'ear': 149, 'soma': 426, 'kin': 223}; receptors {'ear': 64, 'soma': 81, 'kin': 38}; kicks 1023 lived
+1 feels her kicks (which action, mean recall over 6):  hers 0.96  k-means 1.00  chance .17   pass
+2 knows what 'work' moves (changes hidden): 1.00 of 18 kicks point at the right reading
+2 knows what 'hold' moves (changes hidden): 0.89 of 18 kicks point at the right reading
+2 knows what 'let go' moves (changes hidden): 1.00 of 14 kicks point at the right reading
+2 knows what 'mark' moves (changes hidden): 0.93 of 15 kicks point at the right reading
+2 knows what 'wipe' moves (changes hidden): 1.00 of 10 kicks point at the right reading
+2 right for 5 of 5 acting kicks   pass (>= 4)
+3 CPU rise: hers or the world's, echo hidden (40 unseen events, 17 hers):  hers 0.98  k-means 0.98  base 0.57   pass
+3 memory rise: hers or the world's, echo hidden (29 unseen events, 17 hers):  hers 0.97  k-means 0.97  base 0.59   pass
+  lasting (reported): holding something, read from the body sense 0.75 (base 0.90)
+  lasting (reported): a mark exists, read from the body sense 0.71 (base 0.71)
+4 nothing lost: busy       1.00 (embryo 1.00, base 0.78)   pass
+4 nothing lost: full       0.93 (embryo 0.96, base 0.68)   pass
+4 nothing lost: elsewhere  1.00 (embryo 1.00, base 0.40)   pass
+4 nothing lost: window     0.99 (embryo 1.00, base 0.77)   pass
+4 the ear: text present 1.00 (embryo 1.00, base 0.50)   pass
+cost (reported): classes {'ear': 55, 'soma': 109, 'kin': 2} on fetal day 1 -> {'ear': 149, 'soma': 426, 'kin': 223}; used in her last 10 days {'ear': 89, 'soma': 54, 'kin': 88}; mean day 26.8 s (first 5: 33.6, last 5: 31.4)
+
+GATE: all criteria pass — for Rocky to read; no stage is promoted by code
+# ledger at fetal day 60; classes {'ear': 149, 'soma': 426, 'kin': 223}
+  ear: born 52, Numa 0, Mima 22, gone 0, on trial 30, net -22; of the Mima: 0 went unfed, 22 failed a batch or lost their column; 0 had both children fed by the world; members held 8173; world rows refused 0 of 2880; sittings on trial (median / longest) 32 / 59
+  soma: born 89, Numa 0, Mima 1, gone 3, on trial 85, net -1; of the Mima: 0 went unfed, 1 failed a batch or lost their column; 1 had both children fed by the world; members held 47695; world rows refused 0 of 2880; sittings on trial (median / longest) 48 / 60
+  kin: born 61, Numa 0, Mima 0, gone 2, on trial 59, net 0; of the Mima: 0 went unfed, 0 failed a batch or lost their column; 0 had both children fed by the world; members held 45574; world rows refused 0 of 2880; sittings on trial (median / longest) 38 / 60
+# input channel 140 moves column(s) [73] of the body sense's 81 (fetal day 60, classes {'ear': 149, 'soma': 426, 'kin': 223})
+  divisions born 89, on that column 9; settled 0, on it 0; taken back 1, on it 0; on trial 85, on it 9
+  the columns most divided on: 2 (19), 3 (13), 33 (10), 73 (9), 1 (7), 0 (7), 28 (6), 39 (4)

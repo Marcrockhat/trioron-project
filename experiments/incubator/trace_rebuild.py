@@ -14,7 +14,7 @@ import torch
 sys.path.insert(0, os.getcwd())
 sys.path.insert(0, os.path.dirname(__file__))
 import vee_body as vb
-from trioron.pcll.sitting import FADE, TRACE_FLOOR, SittingCap
+from trioron.organs.sitting import FADE, TRACE_FLOOR, SittingCap
 
 body = vb.Body.load()
 days = [(X, f) for f in ("embryo_log.pt", "fetal_log.pt") if os.path.exists(f"{vb.HOME}/{f}")

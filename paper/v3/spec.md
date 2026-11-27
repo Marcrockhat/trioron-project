@@ -3307,6 +3307,7 @@ trioron/
 ├── bases/                     # modular construction recipes
 ├── learning/                  # credit, frustration, dream, manifold
 ├── pcll/                      # Phasecyte — Phase-Coherent Lock-in Learning (§10, partition §9.15)
+├── organs/                    # what a body is made of: layout, home, body, blur, sitting cap, Numa rule, fourth organ (§9.17)
 ├── lifecycle/                 # growth, evolution, ship, graft, compact
 ├── senses/                    # input encodings: chord words, LLM hidden state (§9.16)
 ├── organisms/                 # saveable organisms w/ a stable API: Logophosis, Kinopsis, Vee (§9.16)
@@ -3590,9 +3591,7 @@ package dependencies) because the scheduler performs the injection and
 | `stress.py` | empty/ambiguity stress drivers, habituation, conserved council vote routing; per-class settlement (settle/decide/attach_subjects), gene-targeted composer transfers | 10.6, 10.8 |
 | `progenitor.py` | germline (progenitor + council + vote book) and period-1 perception generation: census, first sitting, natal replay, handover | 10.6 |
 | `division.py` | split-vs-keep judgment: worst-dim (or multi-try) circular 2-means, per-dim acceptance, noise-slicing null | 10.7 |
-| `mixed.py` | the mixed-stream boundary meeting: membership, canonical frame, judgment, trials orchestration, execution, annealing, freeze, state_dict; membership never holds the members × classes table whole — best class and margin taken per row chunk, bit-identical (s070, v0.3.5) | 10.7–10.9 |
-| `sitting.py` | opt-in sitting cap for the incubator organisms: which classes are judged at a boundary (square-root cap, busiest first), the consolidation round in instalments, the fading trace and the fold (s069; not the default) | 10.7 |
-| `numa.py` | opt-in Numa rule for class growth (`NumaLedger`): a division's children are a provisional pair, paid only by world members (never replays), no division and no replays while on trial; two coherent batches settle it (Numa), a failed batch or an expired trial hands the pair back to be joined (Mima) (s071; not the default) | 10.7 |
+| `mixed.py` | the mixed-stream boundary meeting: membership, canonical frame, judgment, trials orchestration, execution, annealing, freeze, state_dict; membership never holds the members × classes table whole — best class and margin taken per row chunk, bit-identical (s070, v0.3.5). Names no organ rule and imports none: it keeps three empty places (`sitting`, `numa`, `court`) that a body may fill on an organ (§9.17, s072) | 10.7–10.9 |
 | `composer.py` | genome candidate set + affine-folded spawns, residual-incoherence trial statistic, importance gating, prune, ComposerPending | 10.8 |
 | `labels.py` | label tap bank: labels as reference carriers — per-label demodulation taps over receptor pockets (write-only from learning's side; naming/mixture readout) | s034 first cut; spec § pending gates |
 | `manifold.py` | per-class pocket-space μ/σ sketches on class astrocyte rows: annealing, σ-readout, replay, persistence | 10.9 |
@@ -3639,6 +3638,48 @@ do NOT rewake + train free; lock only fragile primitives (s063 handoff).
 Pickles are whole-object (`torch.save(self)`); a Phasecyte Link 0 carries its
 capacity-4096 substrate (~40 MB) — `dream_distill`/compaction of Link 0 is
 open work.
+
+### 9.17 `organs/` — what a body is made of (s072)
+
+Rocky, s072: "Rebuild the code, and make sure we clearly separate the organs
+and the triorons core." Three layers, one direction of import:
+
+1. **The learners** — `core/`, `learning/`, `lifecycle/`, `pcll/`. They import
+   nothing from `organs/` and name no organ rule. `pcll/mixed.py` keeps three
+   empty places on the controller, each `None` by default and read with
+   `getattr`: `sitting` (which classes are judged), `numa` (a division on trial
+   in place), `court` (a division tried elsewhere before it is carried out).
+   Enforced by `tests/test_v2/test_pcll.py::test_core_names_no_organ_rule`.
+2. **The organs** — `organs/`. What belongs to one organ or to a body of
+   organs. Imports the learners; never `experiments/`.
+3. **The world** — `experiments/incubator/`: the world, the drivers, the gates,
+   the probes. Nothing an organism is made of.
+
+All of it is opt-in for the incubator organisms (§6.1 exemption); benches and
+CI are untouched. Bodies saved before the move name the rules by their old
+modules (`trioron.pcll.numa`, `trioron.pcll.sitting`, `blur`); the aliases that
+keep them readable live in `organs/__init__.py` and
+`experiments/incubator/blur.py`, not in the core.
+
+| file | responsibility | spec section |
+|---|---|---|
+| `__init__.py` | the organs' surface (`Blur`, `SittingCap`, `NumaLedger`, `FourthOrgan`, `Body`) and the aliases for bodies saved before the move | 9.17 |
+| `blur.py` | organ blur: an organ sees each reading in a few steps and sharpens one reading one rung at a time; levels 2 → 3 → 5, changes 2 → 3 → 5 → 7, "none" a state of its own (s067–s068; moved from `experiments/incubator/` s072) | 10.7 |
+| `sitting.py` | the sitting cap: which classes are judged at a boundary (square-root cap, busiest first), the consolidation round in instalments, the fading trace and the fold (s069; moved from `pcll/` s072) | 10.7 |
+| `numa.py` | the Numa rule for class growth (`NumaLedger`): a division's children are a provisional pair inside the working organ, paid only by world members, no division and no replays while on trial; two coherent batches settle it (Numa); a failed batch, or a child unfed by the world for 60 boundaries, hands the pair back to be joined (Mima). `witness=True` judges nothing and records each division's split column (s071, trial length s072; moved from `pcll/` s072) | 10.7 |
+| `fourth.py` | the fourth organ (`FourthOrgan`, set as an organ's `court`): a candidate division is held here as a living pair fed by the world only and judged by the Numa rule; what settles is handed back and carried out in the working organ; what fails falls asleep and may be woken; held children may divide again inside (to depth 3); `refine` gives the fine reading a gate may use beside the organ's own (s072; plan §14) | 10.7 |
+
+| `layout.py` | the input a body reads, fixed for its life: the 148 numbers and their blocks (`LAYOUT`, `WIDTH`, `LANG`, `RES`), the presence codes, which numbers can be silent (`can_be_silent`), and what the sense of change reads from consecutive moments (`changes`) (s066–s068; moved from `experiments/incubator/vee_body.py` s072) | 10.7 |
+| `home.py` | where a body is kept and the guards on it: `HOME` (from `VEE_HOME`), the stage file (`stage`, `require_stage` — a stage is entered by Rocky, never by code), the RAM ceiling (`ram_used`, 85% of host RAM) (moved s072) | 6.1 |
+| `body.py` | the body (`Body`): its organs (ear, body sense, sense of change) as phasecyte leaves, one sitting lived as a stream (`live`), what an organ sees (`seen`, with blur), maturing before birth, reading without learning (`read`), and the saved state (`save` / `load`, the whole body, atomic) (s066–s070; moved s072) | 10.7 |
+
+`experiments/incubator/vee_body.py` keeps what comes from the world: `moment`
+(world readings placed into the layout), the pools senses form on
+(`genesis_pool`, `kin_pool`), and the one-time fitting of the language sense
+from the incubator's readings (`language_sense`; the fitted sense is a file in
+the home and is only loaded afterwards). It re-exports the three files above
+under their old names, so the drivers and every body saved as `vee_body.Body`
+read as before.
 
 ## 10. Phasecyte — Phase-Coherent Lock-in Learning (PCLL)
 
