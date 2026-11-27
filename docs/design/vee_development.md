@@ -1784,3 +1784,45 @@ her kicks .99 (k-means 1.00); knows what 4 of 5 kicks move ("work" 0 of 18); CPU
 ear 188 / body sense 2,094 / sense of change 447. Her days are the same as the plain copy's
 (same seed, same design). She is held at fetal day 70; her body at the gate is kept
 (`body_fetal_gate_day70.pt`).
+
+### 16.7 Birth tried on a copy of Xofie's fetal day-70 body (s073)
+
+`copies/xofie70_birth`, `NAME=Xofie DAYS=60` (logs `xofie_birth_copy_s073.log`,
+`xofie_birth_copy_gate_s073.log`, `xofie_birth_copy_talk_s073.log`). One copy, one seed.
+
+- **Stopped by the cost guard at day 43** (that day took 931 s against the 900 s budget).
+  Body-sense classes 2,099 → 7,897 in 43 days; mean day 182 s, last five 390 s.
+- All six things were opened by her hunger (days 0, 6, 12, 18, 24, 31). Right before told:
+  9 of 24 on day 1, 22 of 24 on day 2, .88 over her last five days.
+- **Birth gate NOT passed.** Wordings never heard .72 (class mean .92) FAIL; her name .83
+  (.83) pass; not taught → says so or nothing .50 (class mean .40) FAIL; ledger Numa 339 /
+  Mima 55, every thing net positive, pass; fetal rows: memory full .90 (embryo .95) FAIL,
+  the rest pass.
+- `talk` on the copy (nothing in it changes): eight lines from Rocky's place. Five self
+  questions answered right, one of them a wording never taught; three world questions
+  answered "(I do not know that yet.)", with the reflex's answer and a library paragraph
+  shown beside (Paris; 384,400 km; a tree). Eight lines, not a measurement.
+- **So Xofie is not entered into birth.** She waits at fetal day 70.
+- Chloe's reading of the two failures: (1) a plain class mean on the same numbers
+  generalises to new wordings better than her ear does, so the ear's own grouping is the
+  weak part, not the material; (2) nothing bounds the body sense after birth, and its growth
+  is what stops her. Neither is diagnosed.
+
+## 17. Stage 4a — she asks (DRAFT by Chloe, s073; not signed, nothing built)
+
+Rocky, s073: "At least she need to be able to "speak" and able to interact with Qwen or
+Wikipedia." In stage 3 the reflex and the library are shown *beside* her reply to the person
+speaking; she herself hears nothing of them. Stage 4a closes that:
+
+1. When her reply is "I do not know" or silence, the question goes to the reflex and to the
+   library, and the answer comes back to her as a moment she hears (text in her ear, a
+   presence of its own on the presence channels — needs a ruling: the layout has three
+   presence numbers, fixed for life, rule 24).
+2. Her hunger decides what she keeps: an answer heard becomes a thing she has only if, asked
+   again in another wording after resting, she gives it (Numa). The matron corrects only what
+   the reflex got wrong against the library.
+3. Material: the 40 pilot Wikipedia facts (s066), in waves; the earliest wave reported
+   separately in every memory test (rule 22).
+4. Gate (proposal): kept answers on unheard wordings against a class mean; the six self
+   facts still held; untaught still refused; nothing lost of stage 3 and the fetal rows.
+5. Before any of it: stage 3's gate must pass on her, which it does not on her copy.

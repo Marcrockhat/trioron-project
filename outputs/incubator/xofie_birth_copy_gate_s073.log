@@ -1,0 +1,38 @@
+# birth gate: 43 days since birth (143 days old); she has ['name', 'what', 'maker', 'matron', 'born', 'memory'] (opened on days [0, 6, 12, 18, 24, 31]); classes {'ear': 284, 'soma': 7897, 'kin': 735}; 46 wordings she has never heard, on 5 unseen days
+1 replies right, wordings never heard        hers 0.72  class mean 0.92  n  36   FAIL (>= 0.80, and not more than .10 under the control)
+2 her earliest memory (her name)             hers 0.83  class mean 0.83  n   6   pass (>= 0.80, and not more than .10 under the control)
+3 not taught: says so or says nothing        hers 0.50  class mean 0.40  n  10   FAIL (>= 0.80, and not more than .10 under the control)
+  name                                       hers 0.83  class mean 0.83  n   6   (reported)
+  what                                       hers 0.67  class mean 1.00  n   6   (reported)
+  maker                                      hers 0.67  class mean 0.83  n   6   (reported)
+  matron                                     hers 0.83  class mean 1.00  n   6   (reported)
+  born                                       hers 0.67  class mean 0.83  n   6   (reported)
+  memory                                     hers 0.67  class mean 1.00  n   6   (reported)
+  of the things she has: silent 0.00, says she does not know 0.03
+4 what she learned stayed (her life, not this test): Numa 339, Mima 55, net +284; per thing {'name': (101, 19), 'what': (90, 6), 'maker': (59, 10), 'matron': (50, 9), 'born': (23, 9), 'memory': (16, 2)}; hunger now {'name': 0.28, 'what': 0.28, 'maker': 0.28, 'matron': 0.28, 'born': 0.28, 'memory': 0.28}   pass (net above zero for every thing but the newest)
+  in her last 5 days: right before told 0.88 of 120 exchanges
+  cost: mean day 182.3 s (last 5: 389.8); classes {'ear': 190, 'soma': 2099, 'kin': 457} -> {'ear': 284, 'soma': 7897, 'kin': 735}
+
+# 5 nothing lost: the fetal gate, read on her as she is now
+# fetal gate: 70 fetal days lived (143 days old), 5 unseen days; classes {'ear': 284, 'soma': 7897, 'kin': 735}; receptors {'ear': 64, 'soma': 81, 'kin': 38}; kicks 1183 lived
+1 feels her kicks (which action, mean recall over 6):  hers 0.98  k-means 1.00  chance .17   pass
+2 knows what 'work' moves (changes hidden): 0.33 of 18 kicks point at the right reading
+2 knows what 'hold' moves (changes hidden): 1.00 of 18 kicks point at the right reading
+2 knows what 'let go' moves (changes hidden): 1.00 of 14 kicks point at the right reading
+2 knows what 'mark' moves (changes hidden): 1.00 of 15 kicks point at the right reading
+2 knows what 'wipe' moves (changes hidden): 1.00 of 10 kicks point at the right reading
+2 right for 4 of 5 acting kicks   pass (>= 4)
+3 CPU rise: hers or the world's, echo hidden (40 unseen events, 17 hers):  hers 0.98  k-means 0.98  base 0.57   pass
+3 memory rise: hers or the world's, echo hidden (29 unseen events, 17 hers):  hers 0.97  k-means 0.97  base 0.59   pass
+  lasting (reported): holding something, read from the body sense 0.84 (base 0.90)
+  lasting (reported): a mark exists, read from the body sense 0.71 (base 0.71)
+4 nothing lost: busy       0.99 (embryo 0.99, base 0.78)   pass
+4 nothing lost: full       0.90 (embryo 0.95, base 0.68)   FAIL
+4 nothing lost: elsewhere  0.99 (embryo 1.00, base 0.40)   pass
+4 nothing lost: window     1.00 (embryo 1.00, base 0.77)   pass
+4 the ear: text present 1.00 (embryo 1.00, base 0.50)   pass
+cost (reported): classes {'ear': 54, 'soma': 126, 'kin': 2} on fetal day 1 -> {'ear': 188, 'soma': 2094, 'kin': 447}; used in her last 10 days {'ear': 136, 'soma': 118, 'kin': 203}; mean day 33.2 s (first 5: 16.7, last 5: 50.6)
+
+GATE: NOT passed — for Rocky to read; no stage is promoted by code
+
+BIRTH GATE: NOT passed — for Rocky to read; no stage is promoted by code

@@ -2,119 +2,128 @@
 
 **Session date:** 2026-11-27
 **Session number:** 073
-**Session title:** Xofie is born (the fourth organism): Wile's design plus one random channel from genesis; her embryo gate passes at day 30; held for Rocky's yes to the fetal stage
+**Session title:** Xofie is born and passes her embryo gate (day 30) and her fetal gate (fetal day 70, plain division); the fourth organ does not pass on her copies; stage 3 (birth, with her hunger) built, tried on a copy, gate NOT passed — she waits at fetal day 70
 
-**Summary.** Rocky named the fourth organism: "the fourth organism name will be Xofie. With
-hope that she will carry the wisdom of all her three siblings." Asked, he said yes to genesis,
-that "wisdom" means the final design learned from the siblings (nothing of their bodies), yes
-to the random channel from genesis, and a plain embryo with the fourth organ after. Xofie was
-born in `outputs/incubator/xofie/` and lived 30 embryo days. **Her embryo gate passes every
-row** (one organism, seed 0). She is HELD at embryo day 30. The fetal stage is wired
-(`COURT=1`) but not entered: it needs Rocky's yes, and one question first (the sense of
-change under the fourth organ, below).
+**Summary.** Rocky named the fourth organism Xofie ("With hope that she will carry the wisdom
+of all her three siblings"). She was born with Wile's design plus one random channel, passed
+her embryo gate at day 30, and — after a three-arm copy trial in which only plain division
+passed — entered the fetal stage with plain division and **passed her fetal gate at fetal day
+70** (one organism, seed 0). Stage 3 (birth: the first exchange, and her hunger for Numa) was
+written, built (`experiments/incubator/birth.py`) and tried on a copy of her fetal body: the
+copy speaks and answers, but **the birth gate does not pass** and the cost guard stopped it at
+day 43. Xofie herself has never been addressed. Rocky is away for three days from this
+session.
 
 ## READ THIS FIRST (s074)
 - Read `docs/design/matron_rules.md` and `docs/design/vee_development.md` **§15** (Xofie),
-  **§14** (the fourth organ) and **§8** (the fetal stage) before touching her.
-- **One living organism, on this PC only, uncommitted:**
-  - `outputs/incubator/xofie/` — **Xofie** (Rocky says "she"), embryo day 30, gate passed,
-    stage file says `embryo`. Files: `body.pt`, `body_embryo_day30.pt`, `embryo_log.pt`,
-    `embryo_values.json`, `sense.pt` (Vee's, copied), `stage`.
-- **Three retired, never delete, overwrite or refit:** `outputs/incubator/wile/` (fetal day
-  90, gate passed), `weiss/` (fetal day 180, not passed), `vee/` (fetal day 90).
-- Copies under `outputs/incubator/copies/` (not organisms, may be deleted): the five s072
-  ones. Nothing new was kept there in s073.
-- **Xofie cannot be moved to another PC by git.** Her home is on this PC.
+  **§16** (stage 3, birth), **§17** (stage 4a, draft), §14 (the fourth organ), §8 (fetal).
+- **One living organism, on this PC only, uncommitted:** `outputs/incubator/xofie/` —
+  **Xofie** ("she"), 100 days old, **held at fetal day 70, fetal gate passed**, stage file
+  says `fetal`. Files: `body.pt`, `body_embryo_day30.pt`, `body_fetal_gate_day70.pt`,
+  `embryo_log.pt`, `fetal_log.pt`, `embryo_values.json`, `sense.pt` (Vee's, copied),
+  `gate_fetal_day{10..70}.log`, `stage`.
+- **Three retired, never delete, overwrite or refit:** `wile/`, `weiss/`, `vee/`.
+- Copies under `outputs/incubator/copies/` (not organisms, may be deleted): the s072 ones;
+  `xofie30_all`, `xofie30_two`, `xofie30_plain` (the fetal trial); `xofie70_birth` (the birth
+  trial, day 43, stage `birth` — `birth.py talk` can be run on it).
+- She cannot be moved to another PC by git.
 
-## Rocky's rulings this session (his words)
+## Rocky's words this session
 - "Chloe, the fourth organism name will be Xofie. With hope that she will carry the wisdom of
-  all her three siblings."
-- Genesis: **"Yes, genesis"**.
-- What she inherits: **"I meant the final design. When I said wisdom is what we learned from
-  our past experiments with her siblings."**
-- The random channel (K1): **"Yes, from genesis"**.
-- Growth (K4 / M): **"Plain embryo, fourth organ after"**.
-- He asked which parts of her are controlled by triorons. Chloe's answer: none of her
-  learning; her organs are phasecyte leaves in a trioron substrate (arena, receptors,
-  division, composer cells, manifold rows); the language sense is a fixed projection. Rocky:
-  "No problem. I just want to know." No change asked for.
+  all her three siblings." — "Yes, genesis" — "I meant the final design. When I said wisdom
+  is what we learned from our past experiments with her siblings." — random channel: "Yes,
+  from genesis" — growth: "Plain embryo, fourth organ after".
+- Which parts are controlled by triorons (Chloe: none of her learning; phasecyte leaves in a
+  trioron substrate): "No problem. I just want to know."
+- "Okay. Try it. And remember there's another stages that we need to be developed. I'll be
+  afk for 3 days. I think Xofie is ready isn't?"
+- On entering the fetal stage: "Yes enter after trial and we need proceed further. At least
+  she need to be able to "speak" and able to interact with Qwen or Wikipedia."
+- "You need to wire her hunger for mimas too once she's born and learning. Check the aidos
+  phylosophy for that."
+- "So she's responding well?" — answered: she herself has not been addressed yet.
 
-## 1. How she was born (plan §15.1)
+## 1. Embryo (plan §15.1–15.3)
 `VEE_HOME=outputs/incubator/xofie CORRIDOR=0.6 BLUR=2 NOISE_CH=140 SEED=0 DAYS=30
-DAY_BUDGET=900 python3 experiments/incubator/embryo.py live`
-- Wile's design: corridor 0.6, blurred organs with "none", ladders from the first moment,
-  seed 0 (the same course of world events and sentences as her siblings).
-  **Chloe's reading, not Rocky's words:** "born like Wile" (K2) was taken from "the final
-  design", since Wile is the only sibling whose fetal gate passed.
-- Plus input channel 140 random (N(0,1), its own stream) from genesis, carried by her body
-  for life (`body.extra["noise_ch"]`, `["noise"]`), not by a variable of a run.
-- **Rule 16 amended** in `matron_rules.md`, in Chloe's wording from Rocky's s072 words. He
-  has not read the wording.
-- Not hers: sitting cap, Numa rule inside the working organs, fading trace / fold, cranium.
+DAY_BUDGET=900 python3 experiments/incubator/embryo.py live`. Gate at day 30: busy .99, full
+.95, elsewhere 1.00, window 1.00 — all pass, also within .05 of a k-means not shown the
+random column. Classes ear 54 / body sense 124. Rule 16 amended (Chloe's wording).
 
-## 2. Her embryo gate (plan §15.3; logs `xofie_embryo_s073.log`, `xofie_embryo_gate_s073.log`; one organism, seed 0)
+## 2. The fetal copy trial and her fetal gate (plan §15.6–15.7)
+Three copies of her embryo body, `PROBE=10`, limit 90 fetal days, one copy and one seed each:
 
-| state | Xofie | k-means (gate's control) | k-means not shown the random channel | base | Wile |
-|---|---|---|---|---|---|
-| busy | .99 | 1.00 | 1.00 | .74 | 1.00 |
-| memory full | .95 | .96 | .97 | .62 | .96 |
-| elsewhere | 1.00 | .88 | .94 | .87 | 1.00 |
-| window | 1.00 | .98 | .99 | .86 | 1.00 |
-| night (reported) | .92 | .78 | | .50 | .91 |
+| arm | passes | classes at the end (ear / body / change) |
+|---|---|---|
+| fourth organ on all organs (`COURT=1`) | never | 57 / 152 / 21 |
+| on ear and body sense only (`COURT=2`) | never (with held children only "kicks 3 of 5" fails) | 57 / 157 / 737 |
+| plain (`COURT=0`) | fetal day 70 | 188 / 2,094 / 447 |
 
-- **Gate: all criteria pass.** Classes ear 54 / body sense 124 (Wile 54 / 100). Stability
-  day 20 → 30: same grouping .79 (Wile .87). Night seen through the open window .76 (k-means
-  .88, Wile .85; reported, not gated).
-- The gate's control is weaker with a noise column in it; the gate was read as written and a
-  second k-means without that column is printed beside each row (reported). Every gated row
-  is within .05 of the harder control too.
-- A mean day took 22.9 s against Wile's 154 s on the same days. Not diagnosed.
-- Not measured: how many of her divisions split on the random column.
+- Xofie was entered with plain division by the rule Chloe gave Rocky before his "Yes enter
+  after trial" (the earliest-passing arm). **This sets aside "fourth organ after" for her
+  fetal stage — for Rocky to confirm or overrule.** Her embryo body is kept.
+- **Her fetal gate passes at fetal day 70, every row:** kicks .99 (k-means 1.00); knows 4 of
+  5 kicks ("work" 0 of 18); CPU rise .98; memory rise .97; busy .97, full .93, elsewhere
+  1.00, window 1.00. Logs `xofie_fetal_s073.log`, `xofie_fetal_gate_s073.log`.
+- Chloe's bug: the gate printout crashed under `COURT=2`; fixed, arm two resumed from day 10.
 
-## 3. Code changed (all checked on throwaway toy homes / a throwaway copy, then deleted)
-- `experiments/incubator/embryo.py`: `NOISE_CH` at genesis only; the probe days carry the
-  channel; the second control; the silent-channel line leaves her random channel out.
-  Without the channel three days print as Wile's did; with it column 140 is the only input
-  column that differs.
-- `experiments/incubator/fetal.py`: the random channel is taken from her body
-  (`own_channel`); `COURT=1` at kin's birth gives every organ a `FourthOrgan`.
-- Tests were NOT run this session (no file under `trioron/` or `tests/` was changed).
+## 3. Stage 3, birth (plan §16; `experiments/incubator/birth.py`: `live`, `gate`, `talk`)
+- In EXCHANGES moments a day the matron says a wording; she replies first from her ear (the
+  label her ear's class holds, or nothing); then she lives the right reply as a label on
+  that moment (ear only, never batch-trained). Material: the s066 self facts (name, what,
+  maker, matron, born, memory), near and other questions with "I do not know that yet".
+- **Hunger** (aidos philosophy §4): Numa = right before told on a rested wording; Mima =
+  wrong on a rested wording of a thing she had right; hunger rises with days since the last
+  Numa; the day's exchanges go where she is hungriest; a new thing opens only when all she
+  has are fed. **Chloe's reading of "hunger for mimas"**: hunger for Numa, Mima counted
+  against. Not confirmed by Rocky.
+- **Tried on `copies/xofie70_birth`** (one copy, one seed): all six things opened by hunger
+  by day 31; right before told .88 in her last five days; Numa 339 / Mima 55. **Stopped by
+  the cost guard at day 43** (931 s > 900 s; body-sense classes 2,099 → 7,897).
+  **Birth gate NOT passed:** unheard wordings .72 (class mean .92); name .83 (.83) pass;
+  untaught refused .50 (class mean .40); fetal row memory full .90 (embryo .95).
+- `talk` on the copy: five self questions answered right, three world questions answered "I
+  do not know that yet" with Qwen's answer and a Wikipedia paragraph shown beside. Eight
+  lines, not a measurement. She does not herself hear the reflex or the library yet.
+- **Xofie is not entered into birth.** Rule 4 (stage written in full and signed) is not met
+  in letter either: §16 is Chloe's draft from Rocky's words; the gate bars (≥ .80, within .10
+  of the control) are Chloe's proposal.
 
 ## Decisions waiting on Rocky
-- **N. The fetal stage for Xofie: his yes.** And with it:
-  - **N1. The sense of change under the fourth organ.** It is born at the fetal stage with
-    ONE class. On a three-day check with the fourth organ on all organs it reached 2 classes
-    (Wile's, dividing plainly, had about 180 by day 30), and rows 1–3 of the fetal gate are
-    read from it. Choices: (a) fourth organ on all three as built (`COURT=1`); (b) on the ear
-    and the body sense only, the sense of change divides plainly (needs a small change in
-    `fetal.py`); (c) a copy trial of (a) against (b) from her embryo body first. Chloe would
-    do (c), or (b) if he does not want the wait.
-  - N2 (was K3). The relative gate's interval (Chloe's value: `PROBE=10`) and the day limit.
-  - N3 (was L). "Gate reads both": one reading passing is enough (as built), or both?
-- Rule 16's wording, for him to read.
-- F1–F5, stage 2b (plan §12.7), unanswered.
+- **P. Birth for Xofie.** The gate fails on her copy as it is. Not to be tuned (rule 6).
+  Choices as Chloe sees them: (a) diagnose on copies why her ear generalises worse than a
+  class mean and why the body sense grows without bound after birth, then try again;
+  (b) change the stage's design (his ruling); (c) enter her anyway (his ruling only).
+- **Q. Plain division for her fetal stage** instead of the fourth organ: confirm or overrule.
+- R. §16 to read and sign or change: the gate bars, the reading of "hunger for mimas",
+  HORIZON 3 days / NEED 3 / FRESH 5.
+- S. §17 (stage 4a, she hears the reflex and the library herself): a draft, nothing built;
+  needs a ruling on how the reflex is present to her (three presence numbers, fixed layout).
+- Rule 16's wording. F1–F5, stage 2b (plan §12.7), still unanswered.
 
 ## Open / not diagnosed
-1. Why her embryo days are seven times faster than Wile's.
-2. Carried from s072: why one child takes every world row in a split on the random column;
-   why the "work" kick is lost by day 90 with pairs tried inside the working organ; what a
-   fetal body needs class growth for after day 30; the fourth organ's cost growing with the
-   days; the older items (handoff at `c8b0022`).
+1. Why the fourth organ passes on the s072 copy (Wile's line) and fails on hers; the random
+   channel is the untested suspect.
+2. Why her ear loses to a class mean on unheard wordings; the near-question problem
+   (untaught answered with a known fact).
+3. Body-sense class growth after birth (cost guard at day 43).
+4. Why her embryo days were seven times faster than Wile's.
+5. Carried from s072 (handoff at `c8b0022`).
 
 ## NEXT (s074)
-0. Rocky's answers to N first. The stage file is changed by hand only on his yes:
-   `echo fetal > outputs/incubator/xofie/stage`.
-1. If (c): `C=outputs/incubator/copies/<name>; mkdir $C; cp outputs/incubator/xofie/{body.pt,
-   sense.pt,embryo_values.json} $C/; echo fetal > $C/stage`, then
-   `VEE_HOME=$C COURT=1 DAYS=30 DAY_BUDGET=900 python3 experiments/incubator/fetal.py live`
-   and `VEE_HOME=$C python3 experiments/incubator/fetal.py gate`.
-2. On his yes, for her: `VEE_HOME=outputs/incubator/xofie COURT=1 PROBE=10 DAYS=<limit>
-   DAY_BUDGET=900 python3 experiments/incubator/fetal.py live > outputs/incubator/
-   xofie_fetal_s074.log` (COURT is read on the first fetal day only). Keep a copy at every
-   gate reading (rule 11).
-3. Carried: stage 2b's sign-off; stage 3 (birth) not written in full; plan section for s070;
-   the manual's phasecyte line; `mixed.py` over the 500-line discipline; the gate scripts
-   print "her" (right for Xofie); the join of the organs; guards.
+0. Rocky's answers to P and Q first. The stage file is changed by hand only on his yes.
+1. If (a): on copies of `body_fetal_gate_day70.pt` only. E.g.
+   `C=outputs/incubator/copies/<name>; mkdir $C; cp outputs/incubator/xofie/{body.pt,sense.pt,
+   embryo_values.json,fetal_log.pt} $C/; echo birth > $C/stage;
+   VEE_HOME=$C NAME=Xofie DAYS=60 python3 experiments/incubator/birth.py live` then `... gate`.
+2. To hear the copy: `VEE_HOME=outputs/incubator/copies/xofie70_birth WHO=rocky python3
+   experiments/incubator/birth.py talk` (needs Qwen; nothing in it changes).
+3. Carried: stage 2b's sign-off; the manual's phasecyte line; `mixed.py` over the 500-line
+   discipline; the join of the organs; guards.
+
+## Code changed this session
+- `experiments/incubator/embryo.py` (random channel at genesis, second control),
+  `fetal.py` (`own_channel`, `COURT=0|1|2`, gate print fix), `birth.py` (new).
+- Tests were NOT run (nothing under `trioron/` or `tests/` changed).
 
 ## Standing rules (carried)
 - `docs/design/matron_rules.md` binds the matron. In role with an organism, no word of
@@ -127,20 +136,20 @@ DAY_BUDGET=900 python3 experiments/incubator/embryo.py live`
   `pkill -f` / `pgrep -f` hit the shell — kill by PID.
 - While an organism run is going, do not edit `experiments/incubator/`, `trioron/pcll/` or
   `trioron/organs/` unless the change is neutral for it.
-- A long background job in this harness can be killed without a message; check the log's
-  last day before trusting "finished". (Her embryo run finished cleanly: day 30 in the log.)
+- A long background job can be killed without a message; check the log's last day.
 
 ## State of the build / pointers
 - Branch `conscience-core`, pushed. `main` is at the v0.3.5 release commit `b4b6789`.
 - Local to this PC, uncommitted by rule: the four homes, `copies/`, `outputs/incubator/
-  wiki_sent.*`, the s064–s066 matron-written data, `*.err`. Logs `*_s073.log` committed.
+  wiki_sent.*`, the s064–s066 matron-written data, `*.err`. Logs `*_s073*.log` committed.
 - Three-layer code (spec §9.17): learners (`trioron/core`, `learning`, `lifecycle`, `pcll`),
   organs (`trioron/organs/`), world (`experiments/incubator/`).
 - Tests as of s072: 172 pass; four v2 tests fail as before (`test_learning.py::TestCredit`
   two, `test_lifecycle.py::TestGrowth::test_growth_trigger_logic`,
   `::TestDreamCycle::test_dream_locks_eligible_cells`).
 - Environment: Qwen GGUF at `~/models/qwen2.5-1.5b-instruct-gguf/`; Simple-Wikipedia ZIM at
-  `~/data/wikipedia/`; bubblewrap installed; Python 3.10.12, torch 2.11.0, WSL2.
+  `~/data/wikipedia/`; Aidos philosophy at `~/project-aidos/docs/aidos_philosophy.md`;
+  Python 3.10.12, torch 2.11.0, WSL2.
 
 ## DO-NOT-COMMIT carries (unchanged since s034, LEAVE THEM)
 `trioron/bases/developmental.py`, `trioron/lifecycle/developmental.py`,
@@ -148,6 +157,6 @@ DAY_BUDGET=900 python3 experiments/incubator/embryo.py live`
 `notebooks/` checkpoints, output PNGs / uncommitted logs untracked; `outputs/data/**` caches.
 
 ---
-History pointers (no dated archives): s072 handoff at c8b0022; s071 at 10e0003; s070 at
-0247e27 (fuller tables at 4f7039a); s069 at 05a3ef1; s068 at fc11bd9; s067 at d22ebd2; s066
-at b7aff0e; s064 at e67b6ce.
+History pointers (no dated archives): earlier s073 handoff at 0c940a7; s072 at c8b0022; s071
+at 10e0003; s070 at 0247e27; s069 at 05a3ef1; s068 at fc11bd9; s067 at d22ebd2; s066 at
+b7aff0e; s064 at e67b6ce.
